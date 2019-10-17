@@ -1,0 +1,26 @@
+<!--
+  templateType: page
+  isAvailableForNewContent: true
+-->
+<!doctype html>
+<html lang="{{ html_lang }}" {{ html_lang_dir }}>
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="{{ page_meta.meta_description }}">
+    <title>{{ page_meta.html_title }}</title>
+    {% if site_settings.favicon_src %}<link rel="shortcut icon" href="{{ site_settings.favicon_src }}" />{% endif %}
+
+    {#
+      `standard_header_includes` is required to be in the `head` tag.
+      The HubSpot CMS uses the variable to output `link` tag for CSS and other HTML as necessary.
+      #}
+    {{ standard_header_includes }}
+  </head>
+  <body>
+    {#
+      `standard_footer_includes` is required and should be placed before the closing body element.
+      The HubSpot CMS uses the variable to add `script` tags and other HTML like debug information.
+     #}
+    {{ standard_footer_includes }}
+  </body>
+</html>

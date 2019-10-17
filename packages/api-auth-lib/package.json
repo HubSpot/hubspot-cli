@@ -1,0 +1,19 @@
+{
+  "name": "@hubspot/api-auth-lib",
+  "version": "0.0.26",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "moment": "^2.24.0",
+    "open": "^6.4.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7"
+  },
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

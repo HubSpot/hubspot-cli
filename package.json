@@ -1,0 +1,37 @@
+{
+  "name": "hubspot-cms-tools",
+  "version": "1.0.0",
+  "description": "Tooling for interacting with the HubSpot CMS",
+  "repository": "https://github.com/HubSpot/hubspot-cms-tools",
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "husky": "^1.3.1",
+    "lerna": "^3.13.1",
+    "lint-staged": "^8.1.4",
+    "prettier": "^1.18.2"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "eslint . && prettier --list-different 'packages/**/*.{js,json}'",
+    "prettier:write": "prettier --write 'packages/**/*.{js,json}'",
+    "publish-release": "yarn lerna publish --conventional-graduate",
+    "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
+    "test": "jest"
+  },
+  "lint-staged": {
+    "**/*.{js,scss,css}": [
+      "prettier -l",
+      "eslint"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "dependencies": {
+    "jest": "^24.8.0"
+  }
+}

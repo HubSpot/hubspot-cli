@@ -1,0 +1,27 @@
+{
+  "name": "@hubspot/cms-lib",
+  "version": "0.0.26",
+  "description": "Library for working with the HubSpot CMS",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "chokidar": "^3.0.1",
+    "content-disposition": "^0.5.3",
+    "findup-sync": "^3.0.0",
+    "fs-extra": "^8.1.0",
+    "ignore": "^5.1.4",
+    "js-yaml": "^3.12.2",
+    "p-queue": "^6.0.2",
+    "prettier": "1.16.4",
+    "request": "^2.87.0",
+    "request-promise-native": "^1.0.7",
+    "unixify": "1.0.0"
+  },
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

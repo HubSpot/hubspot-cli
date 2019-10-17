@@ -1,0 +1,24 @@
+{
+  "name": "@hubspot/cms-cli",
+  "version": "0.0.26",
+  "description": "CLI for interacting with the HubSpot CMS",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@hubspot/api-auth-lib": "^0.0.26",
+    "@hubspot/cms-lib": "^0.0.26",
+    "commander": "^2.16.0",
+    "inquirer": "^6.3.1",
+    "shelljs": "0.8.3",
+    "update-notifier": "3.0.1"
+  },
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "bin": {
+    "hs": "./bin/hs.js",
+    "hscms": "./bin/hscms.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

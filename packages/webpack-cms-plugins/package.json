@@ -1,0 +1,19 @@
+{
+  "name": "@hubspot/webpack-cms-plugins",
+  "version": "0.0.26",
+  "description": "Webpack plugins for using with the HubSpot CMS",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.yarnpkg.com"
+  },
+  "repository": {},
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "dependencies": {
+    "@hubspot/cms-lib": "^0.0.26"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@hubspot/create-cms-project",
+  "version": "0.0.26",
+  "description": "Create HubSpot CMS projects",
+  "license": "Apache-2.0",
+  "bin": {
+    "create-cms-project": "./index.js"
+  },
+  "keywords": [
+    "hubspot",
+    "cms"
+  ],
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "commander": "^2.19.0",
+    "execa": "^1.0.0",
+    "fs-extra": "^7.0.1",
+    "hosted-git-info": "^2.7.1",
+    "validate-npm-package-name": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
