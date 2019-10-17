@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Tooling for interacting with the HubSpot CMS",
   "repository": "https://github.com/HubSpot/hubspot-cms-tools",
+  "private": true,
   "devDependencies": {
     "eslint": "^6.5.1",
     "husky": "^1.3.1",
