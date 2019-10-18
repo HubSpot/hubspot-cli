@@ -1,6 +1,4 @@
-const path = require('path');
-
-const { deleteFile, deleteFolder } = require('@hubspot/cms-lib/api/fileMapper');
+const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
 const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
@@ -44,39 +42,18 @@ function configureRemoveCommand(program) {
 
       trackCommandUsage(COMMAND_NAME, {}, portalId);
 
-      const ext = path.extname(hsPath);
-
-      // Note: module directories (e.g. Foo.module) are treated like files
-      if (!ext) {
-        deleteFolder(portalId, hsPath)
-          .then(() => {
-            logger.log(`Deleted "${hsPath}" from portal ${portalId}`);
+      try {
+        await deleteFile(portalId, hsPath);
+        logger.log(`Deleted "${hsPath}" from portal ${portalId}`);
+      } catch (error) {
+        logger.error(`Deleting "${hsPath}" from portal ${portalId} failed`);
+        logApiErrorInstance(
+          error,
+          new ApiErrorContext({
+            portalId,
+            request: hsPath,
           })
-          .catch(error => {
-            logger.error(`Deleting "${hsPath}" from portal ${portalId} failed`);
-            logApiErrorInstance(
-              error,
-              new ApiErrorContext({
-                portalId,
-                request: hsPath,
-              })
-            );
-          });
-      } else {
-        deleteFile(portalId, hsPath)
-          .then(() => {
-            logger.log(`Deleted "${hsPath}" from portal ${portalId}`);
-          })
-          .catch(error => {
-            logger.error(`Deleting "${hsPath}" from portal ${portalId} failed`);
-            logApiErrorInstance(
-              error,
-              new ApiErrorContext({
-                portalId,
-                request: hsPath,
-              })
-            );
-          });
+        );
       }
     });
 
