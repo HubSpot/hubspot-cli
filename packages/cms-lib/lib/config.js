@@ -103,8 +103,10 @@ const getPortalId = nameOrId => {
       name = config.defaultPortal;
     }
   } else {
-    if (/^\d+$/.test(nameOrId)) {
-      portalId = parseInt(portal, 10);
+    if (typeof nameOrId === 'number') {
+      portalId = nameOrId;
+    } else if (/^\d+$/.test(nameOrId)) {
+      portalId = parseInt(nameOrId, 10);
     } else {
       name = nameOrId;
     }
