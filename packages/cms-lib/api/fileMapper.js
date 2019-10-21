@@ -4,6 +4,7 @@ const contentDisposition = require('content-disposition');
 const http = require('../http');
 const { getCwd } = require('../path');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { logger } = require('../logger');
 
 const FILE_MAPPER_API_PATH = 'content/filemapper/v1';
 
@@ -115,7 +116,7 @@ async function download(portalId, filepath, options = {}) {
 }
 
 /**
- * Delete file by path
+ * Delete a file or folder by path
  *
  * @async
  * @param {number} portalId
@@ -133,6 +134,7 @@ async function deleteFile(portalId, filePath, options = {}) {
 /**
  * Delete folder by path
  *
+ * @deprecated since 1.0.1 - use `deleteFile()` instead.
  * @async
  * @param {number} portalId
  * @param {string} folderPath
@@ -140,6 +142,9 @@ async function deleteFile(portalId, filePath, options = {}) {
  * @returns {Promise}
  */
 async function deleteFolder(portalId, folderPath, options = {}) {
+  logger.warn(
+    '`cms-lib/api/fileMapper#deleteFolder()` is deprecated. Use `cms-lib/api/fileMapper#deleteFile()` instead.'
+  );
   return http.delete(portalId, {
     uri: `${FILE_MAPPER_API_PATH}/delete/folder/${folderPath}`,
     ...options,
