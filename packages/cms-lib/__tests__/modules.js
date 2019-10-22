@@ -1,4 +1,25 @@
-const { validateSrcAndDestPaths, ValidationIds } = require('../modules');
+const path = require('path');
+
+const {
+  isModuleFolder,
+  isModuleFolderChild,
+  validateSrcAndDestPaths,
+  ValidationIds,
+} = require('../modules');
+
+const folderPaths = ['', '/', 'foo', '/foo'];
+
+const moduleFolderPaths = folderPaths.reduce((acc, folder) => {
+  return acc.concat(
+    path.join(folder, 'widget.module'),
+    path.join(folder, 'my widget.module')
+  );
+}, []);
+
+const filePaths = [...folderPaths, ...moduleFolderPaths].reduce(
+  (acc, folder) => acc.concat(path.join(folder, 'file.js')),
+  []
+);
 
 jest.mock('../lib/walk', () => ({
   // Given a filepath folder of 'boilerplate/'
@@ -16,6 +37,56 @@ jest.mock('../lib/walk', () => ({
 }));
 
 describe('cms-lib/modules', () => {
+  describe('isModuleFolder()', () => {
+    it('should return true for module folder paths', () => {
+      moduleFolderPaths.forEach(filepath => {
+        expect(isModuleFolder(filepath)).toBe(true);
+      });
+    });
+    it('should return false for non-module folder paths', () => {
+      folderPaths.forEach(filepath => {
+        expect(isModuleFolder(filepath)).toBe(false);
+      });
+    });
+    it('should return false for file paths', () => {
+      filePaths.forEach(filepath => {
+        expect(isModuleFolder(filepath)).toBe(false);
+      });
+    });
+  });
+  describe('isModuleFolderChild()', () => {
+    const moduleFolderChildren = moduleFolderPaths.reduce((acc, folder) => {
+      return acc.concat(
+        path.join(folder, 'a'),
+        path.join(folder, 'a/b'),
+        path.join(folder, 'file.js'),
+        path.join(folder, 'a/file.js'),
+        path.join(folder, 'a/b/file.js')
+      );
+    }, []);
+    it('should return true for child files/folders of module folders', () => {
+      moduleFolderChildren.forEach(filepath => {
+        expect(isModuleFolderChild(filepath)).toBe(true);
+      });
+    });
+    it('should return false for module folders', () => {
+      moduleFolderPaths.forEach(filepath => {
+        expect(isModuleFolderChild(filepath)).toBe(false);
+      });
+    });
+    it('should return false for folder paths not within a module folder', () => {
+      folderPaths.forEach(filepath => {
+        expect(isModuleFolderChild(filepath)).toBe(false);
+      });
+    });
+    it('should return false for file paths not within a module folder', () => {
+      folderPaths
+        .map(folder => path.join(folder, 'file.js'))
+        .forEach(filepath => {
+          expect(isModuleFolderChild(filepath)).toBe(false);
+        });
+    });
+  });
   describe('validateSrcAndDestPaths()', () => {
     const emptyArgs = [
       {
@@ -46,6 +117,14 @@ describe('cms-lib/modules', () => {
       });
     });
     describe('Guard input conditions', () => {
+      describe('`src` is a module folder as is `dest`', () => {
+        const src = 'foo.module';
+        const dest = 'modules/foo.module';
+        it(`upload ${src} ${dest}`, async () => {
+          const result = await validateSrcAndDestPaths(src, dest);
+          expect(result.length).toBe(0);
+        });
+      });
       describe('`src` is a module folder but `dest` is not', () => {
         const src = 'foo.module';
         const dest = 'bar';

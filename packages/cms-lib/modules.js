@@ -4,11 +4,22 @@ const { getCwd, getExt } = require('./path');
 const { walk } = require('./lib/walk');
 const { MODULE_EXTENSION } = require('./lib/constants');
 
+const splitPath = filepath => {
+  if (typeof filepath !== 'string') return [];
+  filepath = filepath.trim();
+  if (!filepath) return [];
+  const splitRegex = new RegExp(`${path.posix.sep}+|${path.win32.sep}+`);
+  return filepath.split(splitRegex).filter(Boolean);
+};
+
 const isModuleFolder = filepath => getExt(filepath) === MODULE_EXTENSION;
 const isModuleFolderChild = filepath => {
-  if (typeof filepath !== 'string') return false;
-  if (isModuleFolder(filepath)) return true;
-  return filepath.split(/\/|\\/).some(folder => isModuleFolder(folder));
+  const pathParts = splitPath(filepath);
+  const { length } = pathParts;
+  // Not a child path?
+  if (length <= 1) return false;
+  // Check if any parent folders are module folders.
+  return pathParts.slice(0, length - 1).some(isModuleFolder);
 };
 
 // Ids for testing
@@ -78,6 +89,8 @@ async function validateSrcAndDestPaths(src, dest) {
 }
 
 module.exports = {
+  isModuleFolder,
+  isModuleFolderChild,
   validateSrcAndDestPaths,
   ValidationIds,
 };
