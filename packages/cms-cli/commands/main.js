@@ -18,6 +18,7 @@ function configureMainCommand(program) {
     .command('lint <path>', 'lint a file or folder for HubL syntax', {
       noHelp: true,
     })
+    .command('hubdb <subcommand> <src>', 'manage hubdb tables')
     .command('remove <path>', 'delete a file or folder from HubSpot')
     .alias('rm');
 
