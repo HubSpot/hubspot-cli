@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 
-const { createTable, createRows } = require('./api/hubdb');
+const { createTable, createRows, publishTable } = require('./api/hubdb');
 
 async function createHubDbTable(portalId, src) {
   try {
@@ -45,6 +45,8 @@ async function createHubDbTable(portalId, src) {
   if (rowsToUpdate.length > 0) {
     response = await createRows(portalId, id, rowsToUpdate);
   }
+
+  await publishTable(portalId, id);
 
   return {
     tableId: id,
