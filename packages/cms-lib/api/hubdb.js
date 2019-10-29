@@ -7,6 +7,12 @@ async function fetchTables(portalId) {
   });
 }
 
+async function fetchTable(portalId, tableId) {
+  return http.get(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
+  });
+}
+
 async function createTable(portalId, schema) {
   return http.post(portalId, {
     uri: `${HUBDB_API_PATH}/tables`,
@@ -34,9 +40,10 @@ async function createRows(portalId, tableId, rows) {
   });
 }
 
-async function fetchRows(portalId, tableId) {
+async function fetchRows(portalId, tableId, query = {}) {
   return http.get(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows`,
+    query,
   });
 }
 
@@ -44,6 +51,7 @@ module.exports = {
   createRows,
   createTable,
   fetchRows,
+  fetchTable,
   fetchTables,
   publishTable,
   updateRows,

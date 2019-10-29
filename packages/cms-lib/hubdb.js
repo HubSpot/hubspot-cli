@@ -1,7 +1,14 @@
 const path = require('path');
 const fs = require('fs-extra');
+const prettier = require('prettier');
 
-const { createTable, createRows, publishTable } = require('./api/hubdb');
+const {
+  createTable,
+  createRows,
+  fetchTable,
+  fetchRows,
+  publishTable,
+} = require('./api/hubdb');
 
 async function createHubDbTable(portalId, src) {
   try {
@@ -57,6 +64,90 @@ async function createHubDbTable(portalId, src) {
   };
 }
 
+function convertToJSON(table, rows) {
+  const {
+    allowChildTables,
+    allowPublicApiAccess,
+    columns,
+    dynamicMetaTags,
+    enableChildTablePages,
+    label,
+    name,
+    useForPages,
+  } = table;
+
+  const cleanedColumns = columns
+    .filter(column => !column.deleted)
+    .map(column => {
+      const cleanedColumn = {
+        ...column,
+      };
+
+      delete cleanedColumn.id;
+      delete cleanedColumn.deleted;
+      delete cleanedColumn.foreignIdsByName;
+      delete cleanedColumn.foreignIdsById;
+
+      return cleanedColumn;
+    });
+
+  const cleanedRows = rows.map(row => {
+    const values = {};
+
+    columns.forEach(col => {
+      const { name, id } = col;
+      if (row.values[id] !== null) {
+        values[name] = row.values[id];
+      }
+    });
+    return {
+      path: row.path,
+      name: row.name,
+      isSoftEditable: row.isSoftEditable,
+      values,
+    };
+  });
+
+  return {
+    name,
+    useForPages,
+    label,
+    allowChildTables,
+    allowPublicApiAccess,
+    dynamicMetaTags,
+    enableChildTablePages,
+    columns: cleanedColumns,
+    rows: cleanedRows,
+  };
+}
+
+async function downloadHubDbTable(portalId, tableId, dest) {
+  const table = await fetchTable(portalId, tableId);
+
+  let totalRows = null;
+  let rows = [];
+  let count = 0;
+  let offset = 0;
+  while (totalRows === null || count < totalRows) {
+    const response = await fetchRows(portalId, tableId, { offset });
+    if (totalRows === null) {
+      totalRows = response.total;
+    }
+
+    count += response.objects.length;
+    offset += response.objects.length;
+    rows = rows.concat(response.objects);
+  }
+
+  const tableToWrite = JSON.stringify(convertToJSON(table, rows));
+  const tableJson = prettier.format(tableToWrite, {
+    parser: 'json',
+  });
+
+  await fs.writeFileSync(dest, tableJson);
+}
+
 module.exports = {
   createHubDbTable,
+  downloadHubDbTable,
 };
