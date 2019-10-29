@@ -6,6 +6,7 @@ const { getCwd } = require('@hubspot/cms-lib/path');
 const { createHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
 const { validateConfig, validatePortal } = require('../lib/validation');
+const { addHelpUsageTracking } = require('../lib/usageTracking');
 const { version } = require('../package.json');
 
 const {
@@ -17,12 +18,24 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
-function configureHubDbCommand(program, bin) {
+
+function configureHubDbCommand(program) {
   program
     .version(version)
     .description('Manage HubDB tables')
-    .arguments('<subcommand> <src>')
-    .action(async (subcommand, src, command = {}) => {
+    .command('create <src>', 'create a HubDB table')
+
+  addLoggerOptions(program);
+  addHelpUsageTracking(program);
+
+}
+
+function configureHubDbCreateCommand(program) {
+  program
+    .version(version)
+    .description('Create HubDB tables')
+    .arguments('<src>')
+    .action(async (src, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
@@ -33,23 +46,17 @@ function configureHubDbCommand(program, bin) {
       }
       const portalId = getPortalId(command);
 
-      switch (subcommand) {
-        case 'create':
-          try {
-            const table = await createHubDbTable(
-              portalId,
-              path.resolve(getCwd(), src)
-            );
-            logger.log(
-              `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
-            );
-          } catch (e) {
-            logger.error(`Creating the table at "${src}" failed`);
-            logger.error(e.message);
-          }
-          break;
-        default:
-          logger.error(`The command "${bin} hubdb ${subcommand}" is not valid`);
+      try {
+        const table = await createHubDbTable(
+          portalId,
+          path.resolve(getCwd(), src)
+        );
+        logger.log(
+          `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
+        );
+      } catch (e) {
+        logger.error(`Creating the table at "${src}" failed`);
+        logger.error(e.message);
       }
     });
 
@@ -60,4 +67,5 @@ function configureHubDbCommand(program, bin) {
 
 module.exports = {
   configureHubDbCommand,
+  configureHubDbCreateCommand,
 };
