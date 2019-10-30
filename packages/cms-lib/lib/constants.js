@@ -10,6 +10,7 @@ const ALLOWED_EXTENSIONS = new Set([
   'png',
   'gif',
   'map',
+  'svg',
   'ttf',
   'woff',
   'woff2',
