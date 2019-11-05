@@ -21,6 +21,26 @@ const convertToLocalFileSystemPath = _path => {
   }
 };
 
+/**
+ * Splits a filepath for the local file system sources.
+ *
+ * @param {string} filepath
+ * @returns {string[]}
+ */
+const splitLocalPath = filepath => {
+  return path.normalize(filepath).split(path.sep);
+};
+
+/**
+ * Splits a filepath for remote sources (HubSpot).
+ *
+ * @param {string} filepath
+ * @returns {string[]}
+ */
+const splitHubSpotPath = filepath => {
+  return convertToUnixPath(filepath).split(path.posix.sep);
+};
+
 const getCwd = () => {
   if (process.env.INIT_CWD) {
     return process.env.INIT_CWD;
@@ -55,4 +75,6 @@ module.exports = {
   getCwd,
   getExt,
   isAllowedExtension,
+  splitLocalPath,
+  splitHubSpotPath,
 };
