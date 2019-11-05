@@ -7,14 +7,15 @@ const convertToUnixPath = _path => {
 };
 
 const convertToWindowsPath = _path => {
-  return path.normalize(_path).replace(/\//g, '\\');
+  const rgx = new RegExp(`\\${path.posix.sep}`, 'g');
+  return path.normalize(_path).replace(rgx, path.win32.sep);
 };
 
 const convertToLocalFileSystemPath = _path => {
   switch (path.sep) {
-    case '/':
+    case path.posix.sep:
       return convertToUnixPath(_path);
-    case '\\':
+    case path.win32.sep:
       return convertToWindowsPath(_path);
     default:
       return path.normalize(_path);
@@ -75,6 +76,6 @@ module.exports = {
   getCwd,
   getExt,
   isAllowedExtension,
-  splitLocalPath,
   splitHubSpotPath,
+  splitLocalPath,
 };
