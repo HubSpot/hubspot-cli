@@ -93,7 +93,10 @@ function configureUploadCommand(program) {
         portalId
       );
 
-      const srcDestIssues = await validateSrcAndDestPaths(src, dest);
+      const srcDestIssues = await validateSrcAndDestPaths(
+        { isLocal: true, path: src },
+        { isHubSpot: true, path: dest }
+      );
       if (srcDestIssues.length) {
         srcDestIssues.forEach(({ message }) => logger.error(message));
         process.exit(1);

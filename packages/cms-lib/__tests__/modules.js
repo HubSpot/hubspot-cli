@@ -21,6 +21,11 @@ const filePaths = [...folderPaths, ...moduleFolderPaths].reduce(
   []
 );
 
+const isLocal = true;
+const isHubSpot = true;
+const emptyLocal = { isLocal, path: '' };
+const emptyHubSpot = { isHubSpot, path: '' };
+
 jest.mock('../lib/walk', () => ({
   // Given a filepath folder of 'boilerplate/'
   walk: jest
@@ -55,60 +60,66 @@ describe('cms-lib/modules', () => {
     });
   });
   describe('isModuleFolderChild()', () => {
-    const moduleFolderChildren = moduleFolderPaths.reduce((acc, folder) => {
-      return acc.concat(
-        path.join(folder, 'a'),
-        path.join(folder, 'a/b'),
-        path.join(folder, 'file.js'),
-        path.join(folder, 'a/file.js'),
-        path.join(folder, 'a/b/file.js')
-      );
-    }, []);
+    const createInputs = paths => {
+      return paths.map(p => ({ isHubSpot, path: p }));
+    };
+    const moduleFolderChildrenInputs = moduleFolderPaths.reduce(
+      (acc, folder) => {
+        return acc.concat(
+          { isHubSpot, path: path.join(folder, 'a') },
+          { isHubSpot, path: path.join(folder, 'a/b') },
+          { isHubSpot, path: path.join(folder, 'file.js') },
+          { isHubSpot, path: path.join(folder, 'a/file.js') },
+          { isHubSpot, path: path.join(folder, 'a/b/file.js') }
+        );
+      },
+      []
+    );
     it('should return true for child files/folders of module folders', () => {
-      moduleFolderChildren.forEach(filepath => {
-        expect(isModuleFolderChild(filepath)).toBe(true);
+      moduleFolderChildrenInputs.forEach(input => {
+        expect(isModuleFolderChild(input)).toBe(true);
       });
     });
     it('should return false for module folders', () => {
-      moduleFolderPaths.forEach(filepath => {
+      createInputs(moduleFolderPaths).forEach(filepath => {
         expect(isModuleFolderChild(filepath)).toBe(false);
       });
     });
     it('should return false for folder paths not within a module folder', () => {
-      folderPaths.forEach(filepath => {
+      createInputs(folderPaths).forEach(filepath => {
         expect(isModuleFolderChild(filepath)).toBe(false);
       });
     });
     it('should return false for file paths not within a module folder', () => {
-      folderPaths
-        .map(folder => path.join(folder, 'file.js'))
-        .forEach(filepath => {
-          expect(isModuleFolderChild(filepath)).toBe(false);
-        });
+      createInputs(
+        folderPaths.map(folder => path.join(folder, 'file.js'))
+      ).forEach(filepath => {
+        expect(isModuleFolderChild(filepath)).toBe(false);
+      });
     });
   });
   describe('validateSrcAndDestPaths()', () => {
-    const emptyArgs = [
+    const simpleTestCases = [
       {
         args: [],
         ids: [ValidationIds.SRC_REQUIRED, ValidationIds.DEST_REQUIRED],
       },
-      { args: [''], ids: [ValidationIds.DEST_REQUIRED] },
-      { args: [null, ''], ids: [ValidationIds.SRC_REQUIRED] },
-      { args: ['', ''], ids: [] },
-      { args: ['x', 'x'], ids: [] },
+      { args: [emptyLocal], ids: [ValidationIds.DEST_REQUIRED] },
+      { args: [null, emptyHubSpot], ids: [ValidationIds.SRC_REQUIRED] },
+      { args: [emptyLocal, emptyHubSpot], ids: [] },
+      { args: [{ isLocal, path: 'x' }, { isHubSpot, path: 'x' }], ids: [] },
     ];
     it('should be an async function', () => {
       expect(validateSrcAndDestPaths() instanceof Promise).toBe(true);
     });
     it('should return an array', () => {
-      emptyArgs.forEach(async ({ args }) => {
+      simpleTestCases.forEach(async ({ args }) => {
         const result = await validateSrcAndDestPaths(...args);
         expect(Array.isArray(result)).toBe(true);
       });
     });
     it('should require `src` and `dest` string params', async () => {
-      emptyArgs.forEach(async ({ args, ids }) => {
+      simpleTestCases.forEach(async ({ args, ids }) => {
         const result = await validateSrcAndDestPaths(...args);
         expect(result.length).toBe(ids.length);
         ids.forEach((id, idx) => {
@@ -118,17 +129,17 @@ describe('cms-lib/modules', () => {
     });
     describe('Guard input conditions', () => {
       describe('`src` is a module folder as is `dest`', () => {
-        const src = 'foo.module';
-        const dest = 'modules/foo.module';
-        it(`upload ${src} ${dest}`, async () => {
+        const src = { isLocal, path: 'foo.module' };
+        const dest = { isHubSpot, path: 'modules/foo.module' };
+        it(`upload ${src.path} ${dest.path}`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(0);
         });
       });
       describe('`src` is a module folder but `dest` is not', () => {
-        const src = 'foo.module';
-        const dest = 'bar';
-        it(`upload ${src} ${dest}`, async () => {
+        const src = { isLocal, path: 'foo.module' };
+        const dest = { isHubSpot, path: 'bar' };
+        it(`upload ${src.path} ${dest.path}`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(
@@ -137,9 +148,9 @@ describe('cms-lib/modules', () => {
         });
       });
       describe('`src` is a .module folder and dest is within a module. (Nesting)', () => {
-        const src = 'foo.module';
-        const dest = 'bar.module/zzz';
-        it(`upload ${src}, ${dest}`, async () => {
+        const src = { isLocal, path: 'foo.module' };
+        const dest = { isHubSpot, path: 'bar.module/zzz' };
+        it(`upload ${src.path} ${dest.path}`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(
@@ -148,9 +159,9 @@ describe('cms-lib/modules', () => {
         });
       });
       describe('src is a folder that includes modules and dest is within a module. (Nesting)', () => {
-        const src = 'boilerplate';
-        const dest = 'bar.module/zzz';
-        it(`upload ${src} ${dest}`, async () => {
+        const src = { isLocal, path: 'boilerplate' };
+        const dest = { isHubSpot, path: 'bar.module/zzz' };
+        it(`upload ${src.path} ${dest.path}`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(ValidationIds.MODULE_NESTING);

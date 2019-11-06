@@ -1,20 +1,57 @@
 const path = require('path');
 const fs = require('fs-extra');
-const { getCwd, getExt } = require('./path');
+const { getCwd, getExt, splitHubSpotPath, splitLocalPath } = require('./path');
 const { walk } = require('./lib/walk');
 const { MODULE_EXTENSION } = require('./lib/constants');
 
-const splitPath = filepath => {
-  if (typeof filepath !== 'string') return [];
-  filepath = filepath.trim();
-  if (!filepath) return [];
-  const splitRegex = new RegExp(`${path.posix.sep}+|${path.win32.sep}+`);
-  return filepath.split(splitRegex).filter(Boolean);
+const isBool = x => !!x === x;
+
+/**
+ * @typedef {object} PathInput
+ * @property {string} path
+ * @property {boolean} isLocal
+ * @property {boolean} isHubSpot
+ */
+
+/**
+ * @param {PathInput} pathInput
+ * @returns {boolean}
+ */
+const isPathInput = pathInput => {
+  return !!(
+    pathInput &&
+    typeof pathInput.path === 'string' &&
+    (isBool(pathInput.isLocal) || isBool(pathInput.isHubSpot))
+  );
 };
 
-const isModuleFolder = filepath => getExt(filepath) === MODULE_EXTENSION;
-const isModuleFolderChild = filepath => {
-  const pathParts = splitPath(filepath);
+const throwInvalidPathInput = pathInput => {
+  if (isPathInput(pathInput)) return;
+  throw new TypeError('Expected PathInput');
+};
+
+/**
+ * @param {PathInput|string} pathInput
+ * @returns {boolean}
+ */
+const isModuleFolder = pathInput => {
+  const _path = isPathInput(pathInput) ? pathInput.path : pathInput;
+  return getExt(_path) === MODULE_EXTENSION;
+};
+
+/**
+ * @param {PathInput} pathInput
+ * @returns {boolean}
+ * @throws {TypeError}
+ */
+const isModuleFolderChild = pathInput => {
+  throwInvalidPathInput(pathInput);
+  let pathParts = [];
+  if (pathInput.isLocal) {
+    pathParts = splitLocalPath(pathInput.path);
+  } else if (pathInput.isHubSpot) {
+    pathParts = splitHubSpotPath(pathInput.path);
+  }
   const { length } = pathParts;
   // Not a child path?
   if (length <= 1) return false;
@@ -33,14 +70,19 @@ const ValidationIds = {
 
 const getValidationResult = (id, message) => ({ id, message });
 
+/**
+ * @param {PathInput} src
+ * @param {PathInput} dest
+ * @returns {object[]}
+ */
 async function validateSrcAndDestPaths(src, dest) {
   const results = [];
-  if (typeof src !== 'string') {
+  if (!isPathInput(src)) {
     results.push(
       getValidationResult(ValidationIds.SRC_REQUIRED, '`src` is required.')
     );
   }
-  if (typeof dest !== 'string') {
+  if (!isPathInput(dest)) {
     results.push(
       getValidationResult(ValidationIds.DEST_REQUIRED, '`dest` is required.')
     );
@@ -48,10 +90,17 @@ async function validateSrcAndDestPaths(src, dest) {
   if (results.length) {
     return results;
   }
-  const absoluteSrc = path.resolve(getCwd(), src);
+  const [_src, _dest] = [src, dest].map(inputPath => {
+    const result = { ...inputPath };
+    if (result.isLocal) {
+      result.path = path.resolve(getCwd(), result.path);
+    }
+    return result;
+  });
   // src is a .module folder and dest is within a module. (Nesting)
   // e.g. `upload foo.module bar.module/zzz`
-  if (isModuleFolder(absoluteSrc) && isModuleFolderChild(dest)) {
+  // e.g. `fetch bar.module/zzz foo.module`
+  if (isModuleFolder(_src) && isModuleFolderChild(_dest)) {
     return results.concat(
       getValidationResult(
         ValidationIds.MODULE_TO_MODULE_NESTING,
@@ -61,7 +110,8 @@ async function validateSrcAndDestPaths(src, dest) {
   }
   // src is a .module folder but dest is not
   // e.g. `upload foo.module bar`
-  if (isModuleFolder(absoluteSrc) && !isModuleFolder(dest)) {
+  // e.g. `fetch bar foo.module`
+  if (isModuleFolder(_src) && !isModuleFolder(_dest)) {
     return results.concat(
       getValidationResult(
         ValidationIds.MODULE_FOLDER_REQUIRED,
@@ -70,11 +120,13 @@ async function validateSrcAndDestPaths(src, dest) {
     );
   }
   // src is a folder that includes modules and dest is within a module. (Nesting)
-  if (isModuleFolderChild(dest)) {
-    const stat = await fs.stat(absoluteSrc);
+  if (_src.isLocal && isModuleFolderChild(_dest)) {
+    const stat = await fs.stat(_src.path);
     if (stat.isDirectory()) {
-      const files = await walk(absoluteSrc);
-      const srcHasModulesChildren = files.some(isModuleFolderChild);
+      const files = await walk(_src.path);
+      const srcHasModulesChildren = files.some(file =>
+        isModuleFolderChild({ ..._src, path: file })
+      );
       if (srcHasModulesChildren) {
         return results.concat(
           getValidationResult(
