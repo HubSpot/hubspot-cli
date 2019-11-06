@@ -23,13 +23,29 @@ const convertToLocalFileSystemPath = _path => {
 };
 
 /**
+ * @param {string[]} parts
+ */
+const removeTrailingSlashFromSplits = parts => {
+  if (parts.length > 1 && parts[parts.length - 1] === '') {
+    return parts.slice(0, parts.length - 1);
+  }
+  return parts;
+};
+
+/**
  * Splits a filepath for the local file system sources.
  *
  * @param {string} filepath
+ * @param {object} pathImplementation - For testing
  * @returns {string[]}
  */
-const splitLocalPath = filepath => {
-  return path.normalize(filepath).split(path.sep);
+const splitLocalPath = (filepath, pathImplementation = path) => {
+  if (!filepath) return [];
+  const sep = pathImplementation.sep;
+  const rgx = new RegExp(`\\${sep}+`, 'g');
+  filepath = filepath.replace(rgx, sep);
+  const parts = pathImplementation.normalize(filepath).split(rgx);
+  return removeTrailingSlashFromSplits(parts);
 };
 
 /**
@@ -39,7 +55,16 @@ const splitLocalPath = filepath => {
  * @returns {string[]}
  */
 const splitHubSpotPath = filepath => {
-  return convertToUnixPath(filepath).split(path.posix.sep);
+  if (!filepath) return [];
+  const sep = path.posix.sep;
+  const rgx = new RegExp(`\\${sep}+`, 'g');
+  filepath = filepath.replace(rgx, sep);
+  const parts = convertToUnixPath(filepath).split(rgx);
+  // Restore root if present
+  if (parts[0] === '') {
+    parts[0] = '/';
+  }
+  return removeTrailingSlashFromSplits(parts);
 };
 
 const getCwd = () => {
