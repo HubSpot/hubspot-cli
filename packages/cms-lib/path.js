@@ -33,7 +33,7 @@ const removeTrailingSlashFromSplits = parts => {
 };
 
 /**
- * Splits a filepath for the local file system sources.
+ * Splits a filepath for local file system sources.
  *
  * @param {string} filepath
  * @param {object} pathImplementation - For testing
@@ -43,7 +43,6 @@ const splitLocalPath = (filepath, pathImplementation = path) => {
   if (!filepath) return [];
   const { sep } = pathImplementation;
   const rgx = new RegExp(`\\${sep}+`, 'g');
-  filepath = filepath.replace(rgx, sep);
   const parts = pathImplementation.normalize(filepath).split(rgx);
   // Restore posix root if present
   if (sep === path.posix.sep && parts[0] === '') {
@@ -62,7 +61,6 @@ const splitHubSpotPath = filepath => {
   if (!filepath) return [];
   const sep = path.posix.sep;
   const rgx = new RegExp(`\\${sep}+`, 'g');
-  filepath = filepath.replace(rgx, sep);
   const parts = convertToUnixPath(filepath).split(rgx);
   // Restore root if present
   if (parts[0] === '') {
