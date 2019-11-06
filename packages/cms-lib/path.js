@@ -41,10 +41,14 @@ const removeTrailingSlashFromSplits = parts => {
  */
 const splitLocalPath = (filepath, pathImplementation = path) => {
   if (!filepath) return [];
-  const sep = pathImplementation.sep;
+  const { sep } = pathImplementation;
   const rgx = new RegExp(`\\${sep}+`, 'g');
   filepath = filepath.replace(rgx, sep);
   const parts = pathImplementation.normalize(filepath).split(rgx);
+  // Restore posix root if present
+  if (sep === path.posix.sep && parts[0] === '') {
+    parts[0] = '/';
+  }
   return removeTrailingSlashFromSplits(parts);
 };
 
