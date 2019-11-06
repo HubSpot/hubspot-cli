@@ -59,8 +59,7 @@ const splitLocalPath = (filepath, pathImplementation = path) => {
  */
 const splitHubSpotPath = filepath => {
   if (!filepath) return [];
-  const sep = path.posix.sep;
-  const rgx = new RegExp(`\\${sep}+`, 'g');
+  const rgx = new RegExp(`\\${path.posix.sep}+`, 'g');
   const parts = convertToUnixPath(filepath).split(rgx);
   // Restore root if present
   if (parts[0] === '') {
