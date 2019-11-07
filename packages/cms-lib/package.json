@@ -4,6 +4,10 @@
   "description": "Library for working with the HubSpot CMS",
   "license": "Apache-2.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+  },
   "dependencies": {
     "chalk": "^2.4.2",
     "chokidar": "^3.0.1",

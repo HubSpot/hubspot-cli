@@ -3,6 +3,10 @@
   "version": "1.0.2-beta.0",
   "description": "CLI for interacting with the HubSpot CMS",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+  },
   "dependencies": {
     "@hubspot/api-auth-lib": "^1.0.1",
     "@hubspot/cms-lib": "^1.0.2-beta.0",
