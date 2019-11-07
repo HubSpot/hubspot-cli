@@ -95,6 +95,8 @@ describe('cms-lib/modules', () => {
       },
       { args: [emptyLocal], ids: [ValidationIds.DEST_REQUIRED] },
       { args: [null, emptyHubSpot], ids: [ValidationIds.SRC_REQUIRED] },
+      { args: [emptyLocal, { isHubSpot }], ids: [ValidationIds.DEST_REQUIRED] },
+      { args: [{ isLocal }, emptyHubSpot], ids: [ValidationIds.SRC_REQUIRED] },
       { args: [emptyLocal, emptyHubSpot], ids: [] },
       { args: [{ isLocal, path: 'x' }, { isHubSpot, path: 'x' }], ids: [] },
     ];
