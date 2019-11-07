@@ -26,35 +26,9 @@ const isHubSpot = true;
 const emptyLocal = { isLocal, path: '' };
 const emptyHubSpot = { isHubSpot, path: '' };
 
-jest.mock('../lib/walk', () => {
-  const { join, resolve } = require('path');
-  // Mock file system results in pattern of:
-  //  "*/boilerplate/modules/My Footer.module/fields.json"
-  // So a request for the "boilerplate" dir will work.
-  const testDir = 'boilerplate';
-  const testFiles = [
-    'fields.json',
-    'meta.json',
-    'module.css',
-    'module.html',
-    'module.js',
-  ].map(name => join('modules', 'My Footer.module', name));
-  return {
-    // Given a filepath folder of 'boilerplate/'
-    walk: jest.fn(dir => {
-      const requestDir = resolve(dir);
-      const boilerplateDir = resolve(testDir);
-      if (requestDir !== boilerplateDir) {
-        return Promise.reject(
-          new Error(
-            `ENOENT: no such file or directory, scandir '${requestDir}'`
-          )
-        );
-      }
-      return Promise.resolve(testFiles.map(file => join(boilerplateDir, file)));
-    }),
-  };
-});
+// Seems you can't use nested manual mocks.
+// ca. 2016 https://github.com/facebook/jest/issues/335#issuecomment-250400941
+jest.mock('../lib/walk', () => require('../lib/__mocks__/walk'));
 
 describe('cms-lib/modules', () => {
   describe('isModuleFolder()', () => {
