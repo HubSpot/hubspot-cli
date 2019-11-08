@@ -42,12 +42,21 @@ describe('cms-lib/modules', () => {
       expect(isModuleFolder(input)).toBe(true);
       input = { isLocal, path: path.join('dir', 'My Module.module') };
       expect(isModuleFolder(input)).toBe(true);
-      input = { isLocal, path: path.join('dir', 'My Module.module', path.sep) };
-      expect(isModuleFolder(input)).toBe(true);
       // HubSpot
       input = { isHubSpot, path: 'My Module.module' };
       expect(isModuleFolder(input)).toBe(true);
       input = { isHubSpot, path: 'dir/My Module.module' };
+      expect(isModuleFolder(input)).toBe(true);
+    });
+    it('should disregard trailing slashes', () => {
+      let input;
+      // Local
+      input = { isLocal, path: path.join('My Module.module', path.sep) };
+      expect(isModuleFolder(input)).toBe(true);
+      input = { isLocal, path: path.join('dir', 'My Module.module', path.sep) };
+      expect(isModuleFolder(input)).toBe(true);
+      // HubSpot
+      input = { isHubSpot, path: 'My Module.module/' };
       expect(isModuleFolder(input)).toBe(true);
       input = { isHubSpot, path: 'dir/My Module.module/' };
       expect(isModuleFolder(input)).toBe(true);
