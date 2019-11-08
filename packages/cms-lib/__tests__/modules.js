@@ -64,11 +64,19 @@ describe('cms-lib/modules', () => {
     it('should return false for non-module folder paths', () => {
       let input;
       // Local
+      input = { isLocal, path: '' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isLocal, path: path.sep };
+      expect(isModuleFolder(input)).toBe(false);
       input = { isLocal, path: 'dir' };
       expect(isModuleFolder(input)).toBe(false);
       input = { isLocal, path: path.join('My Module.module', 'dir') };
       expect(isModuleFolder(input)).toBe(false);
       // HubSpot
+      input = { isHubSpot, path: '' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isHubSpot, path: '/' };
+      expect(isModuleFolder(input)).toBe(false);
       input = { isHubSpot, path: 'dir' };
       expect(isModuleFolder(input)).toBe(false);
       input = { isHubSpot, path: 'My Module.module/dir' };
