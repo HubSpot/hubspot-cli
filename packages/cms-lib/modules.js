@@ -31,11 +31,14 @@ const throwInvalidPathInput = pathInput => {
 };
 
 /**
- * @param {PathInput|string} pathInput
+ * @param {PathInput} pathInput
  * @returns {boolean}
  */
 const isModuleFolder = pathInput => {
-  const _path = isPathInput(pathInput) ? pathInput.path : pathInput;
+  throwInvalidPathInput(pathInput);
+  const _path = pathInput.isHubSpot
+    ? path.posix.normalize(pathInput.path)
+    : path.normalize(pathInput.path);
   return getExt(_path) === MODULE_EXTENSION;
 };
 
@@ -56,7 +59,9 @@ const isModuleFolderChild = pathInput => {
   // Not a child path?
   if (length <= 1) return false;
   // Check if any parent folders are module folders.
-  return pathParts.slice(0, length - 1).some(isModuleFolder);
+  return pathParts
+    .slice(0, length - 1)
+    .some(part => isModuleFolder({ ...pathInput, path: part }));
 };
 
 // Ids for testing
@@ -94,6 +99,8 @@ async function validateSrcAndDestPaths(src, dest) {
     const result = { ...inputPath };
     if (result.isLocal) {
       result.path = path.resolve(getCwd(), result.path);
+    } else if (result.isHubSpot) {
+      result.path = path.posix.normalize(result.path);
     }
     return result;
   });

@@ -16,11 +16,6 @@ const moduleFolderPaths = folderPaths.reduce((acc, folder) => {
   );
 }, []);
 
-const filePaths = [...folderPaths, ...moduleFolderPaths].reduce(
-  (acc, folder) => acc.concat(path.join(folder, 'file.js')),
-  []
-);
-
 const isLocal = true;
 const isHubSpot = true;
 const emptyLocal = { isLocal, path: '' };
@@ -32,20 +27,56 @@ jest.mock('../lib/walk', () => require('../lib/__mocks__/walk'));
 
 describe('cms-lib/modules', () => {
   describe('isModuleFolder()', () => {
+    it('should throw on invalid input', () => {
+      expect(() => isModuleFolder('foo')).toThrow();
+      expect(() => isModuleFolder({ path: 'foo' })).toThrow();
+      expect(() => isModuleFolder({ isLocal })).toThrow();
+      expect(() => isModuleFolder({ isHubSpot })).toThrow();
+      expect(() => isModuleFolder({ isHubSpot, path: 'foo' })).not.toThrow();
+      expect(() => isModuleFolder({ isLocal, path: 'foo' })).not.toThrow();
+    });
     it('should return true for module folder paths', () => {
-      moduleFolderPaths.forEach(filepath => {
-        expect(isModuleFolder(filepath)).toBe(true);
-      });
+      let input;
+      // Local
+      input = { isLocal, path: 'My Module.module' };
+      expect(isModuleFolder(input)).toBe(true);
+      input = { isLocal, path: path.join('dir', 'My Module.module') };
+      expect(isModuleFolder(input)).toBe(true);
+      input = { isLocal, path: path.join('dir', 'My Module.module', path.sep) };
+      expect(isModuleFolder(input)).toBe(true);
+      // HubSpot
+      input = { isHubSpot, path: 'My Module.module' };
+      expect(isModuleFolder(input)).toBe(true);
+      input = { isHubSpot, path: 'dir/My Module.module' };
+      expect(isModuleFolder(input)).toBe(true);
+      input = { isHubSpot, path: 'dir/My Module.module/' };
+      expect(isModuleFolder(input)).toBe(true);
     });
     it('should return false for non-module folder paths', () => {
-      folderPaths.forEach(filepath => {
-        expect(isModuleFolder(filepath)).toBe(false);
-      });
+      let input;
+      // Local
+      input = { isLocal, path: 'dir' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isLocal, path: path.join('My Module.module', 'dir') };
+      expect(isModuleFolder(input)).toBe(false);
+      // HubSpot
+      input = { isHubSpot, path: 'dir' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isHubSpot, path: 'My Module.module/dir' };
+      expect(isModuleFolder(input)).toBe(false);
     });
     it('should return false for file paths', () => {
-      filePaths.forEach(filepath => {
-        expect(isModuleFolder(filepath)).toBe(false);
-      });
+      let input;
+      // Local
+      input = { isLocal, path: 'fields.json' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isLocal, path: path.join('My Module.module', 'fields.json') };
+      expect(isModuleFolder(input)).toBe(false);
+      // HubSpot
+      input = { isHubSpot, path: 'fields.json' };
+      expect(isModuleFolder(input)).toBe(false);
+      input = { isHubSpot, path: 'My Module.module/fields.json' };
+      expect(isModuleFolder(input)).toBe(false);
     });
   });
   describe('isModuleFolderChild()', () => {
