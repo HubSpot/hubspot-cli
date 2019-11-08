@@ -3,6 +3,10 @@
   "version": "1.0.1",
   "license": "Apache-2.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+  },
   "dependencies": {
     "express": "^4.16.3",
     "moment": "^2.24.0",
