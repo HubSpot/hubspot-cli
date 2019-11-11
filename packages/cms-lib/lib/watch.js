@@ -49,7 +49,7 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
     });
 }
 
-function watch(portalId, src, dest, { mode, cwd }) {
+function watch(portalId, src, dest, { mode, cwd, remove }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   const watcher = chokidar.watch(src, {
@@ -75,30 +75,32 @@ function watch(portalId, src, dest, { mode, cwd }) {
     uploadFile(portalId, file, destPath, { mode, cwd });
   });
 
-  watcher.on('unlink', filePath => {
-    const remotePath = getDesignManagerPath(filePath);
+  if (remove) {
+    watcher.on('unlink', filePath => {
+      const remotePath = getDesignManagerPath(filePath);
 
-    if (shouldIgnoreFile(filePath, cwd)) {
-      logger.debug(`Skipping ${filePath} due to an ignore rule`);
-      return;
-    }
+      if (shouldIgnoreFile(filePath, cwd)) {
+        logger.debug(`Skipping ${filePath} due to an ignore rule`);
+        return;
+      }
 
-    logger.debug('Attempting to delete file "%s"', remotePath);
-    deleteFile(portalId, remotePath)
-      .then(() => {
-        logger.log('Deleted file "%s"', remotePath);
-      })
-      .catch(error => {
-        logger.error('Deleting file "%s" failed', remotePath);
-        logApiErrorInstance(
-          error,
-          new ApiErrorContext({
-            portalId,
-            request: remotePath,
-          })
-        );
-      });
-  });
+      logger.debug('Attempting to delete file "%s"', remotePath);
+      deleteFile(portalId, remotePath)
+        .then(() => {
+          logger.log('Deleted file "%s"', remotePath);
+        })
+        .catch(error => {
+          logger.error('Deleting file "%s" failed', remotePath);
+          logApiErrorInstance(
+            error,
+            new ApiErrorContext({
+              portalId,
+              request: remotePath,
+            })
+          );
+        });
+    });
+  }
 
   watcher.on('change', file => {
     const destPath = getDesignManagerPath(file);

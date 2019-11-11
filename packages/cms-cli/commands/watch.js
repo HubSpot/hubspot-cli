@@ -35,10 +35,11 @@ function configureWatchCommand(program) {
       'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS'
     )
     .arguments('<src> <dest>')
+    .option('--remove', 'remove remote files when removed locally')
     .action(async (src, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
-      const { config: configPath } = command;
+      const { config: configPath, remove } = command;
       loadConfig(configPath);
 
       if (
@@ -75,6 +76,7 @@ function configureWatchCommand(program) {
       watch(portalId, absoluteSrcPath, dest, {
         mode,
         cwd: getCwd(),
+        remove,
       });
     });
 
