@@ -18,7 +18,7 @@ const testFiles = [
   'module.js',
 ].map(name => path.join('modules', 'Card Section.module', name));
 
-walk.walk = dir => {
+walk.walk = jest.fn(dir => {
   const requestDir = path.resolve(dir);
   const boilerplateDir = path.resolve(testDir);
   if (requestDir !== boilerplateDir) {
@@ -29,6 +29,6 @@ walk.walk = dir => {
   return Promise.resolve(
     testFiles.map(file => path.join(boilerplateDir, file))
   );
-};
+});
 
 module.exports = walk;
