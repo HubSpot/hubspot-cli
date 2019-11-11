@@ -183,25 +183,81 @@ describe('cms-lib/modules', () => {
         });
       });
     });
-    describe('Guard input conditions', () => {
+    it('should normalize paths', async () => {
+      const modName = 'Car Section.module';
+      let src = { isLocal, path: modName };
+      let dest = { isHubSpot, path: `${modName}/js/../` };
+      let result = await validateSrcAndDestPaths(src, dest);
+      expect(result.length).toBe(0);
+      src = { isLocal, path: path.join(modName, 'js', '..') };
+      dest = { isHubSpot, path: modName };
+      result = await validateSrcAndDestPaths(src, dest);
+      expect(result.length).toBe(0);
+      src = { isLocal, path: modName };
+      dest = { isHubSpot, path: `${modName}/js/main.js/../` };
+      result = await validateSrcAndDestPaths(src, dest);
+      expect(result.length).toBe(1);
+      src = {
+        isLocal,
+        path: path.join(modName, 'js', 'main.js', '..', path.sep),
+      };
+      dest = { isHubSpot, path: modName };
+      result = await validateSrcAndDestPaths(src, dest);
+      expect(result.length).toBe(0);
+    });
+    describe('hs upload', () => {
       describe('VALID: `src` is a module folder as is `dest`', () => {
         let src = { isLocal, path: 'Card Section.module' };
-        let dest = { isHubSpot, path: 'remote/Card Section.module' };
-        it(`upload ${src.path} ${dest.path}`, async () => {
+        let dest = { isHubSpot, path: 'Card Section.module' };
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(0);
         });
-        src = { isLocal, path: path.join('dir', '..', 'Card Section.module') };
-        dest = { isHubSpot, path: 'remote/dir/../Card Section.module/' };
-        it(`upload ${src.path} ${dest.path}`, async () => {
+        src = {
+          isLocal,
+          path: path.join('boilerplate', 'modules', 'Card Section.module'),
+        };
+        dest = { isHubSpot, path: 'remote/Card Section.module/' };
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(0);
         });
       });
       describe('INVALID: `src` is a module folder but `dest` is not', () => {
-        const src = { isLocal, path: 'foo.module' };
-        const dest = { isHubSpot, path: 'bar' };
-        it(`upload ${src.path} ${dest.path}`, async () => {
+        let src = { isLocal, path: 'Card Section.module' };
+        let dest = { isHubSpot, path: 'Card Section' };
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
+          const result = await validateSrcAndDestPaths(src, dest);
+          expect(result.length).toBe(1);
+          expect(result[0] && result[0].id).toBe(
+            ValidationIds.MODULE_FOLDER_REQUIRED
+          );
+        });
+        // src = { isLocal, path: 'Card Section.module' };
+        src = {
+          isLocal,
+          path: path.join('boilerplate', 'modules', 'Card Section.module'),
+        };
+        dest = { isHubSpot, path: 'fields.json' };
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
+          const result = await validateSrcAndDestPaths(src, dest);
+          expect(result.length).toBe(1);
+          expect(result[0] && result[0].id).toBe(
+            ValidationIds.MODULE_FOLDER_REQUIRED
+          );
+        });
+        src = {
+          isLocal,
+          path: path.join(
+            'boilerplate',
+            'modules',
+            'Card Section.module',
+            'js',
+            '..'
+          ),
+        };
+        dest = { isHubSpot, path: 'remote/boilerplate/modules/' };
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(
@@ -212,7 +268,7 @@ describe('cms-lib/modules', () => {
       describe('`src` is a .module folder and dest is within a module. (Nesting)', () => {
         const src = { isLocal, path: 'foo.module' };
         const dest = { isHubSpot, path: 'bar.module/zzz' };
-        it(`upload ${src.path} ${dest.path}`, async () => {
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(
@@ -223,7 +279,7 @@ describe('cms-lib/modules', () => {
       describe('src is a folder that includes modules and dest is within a module. (Nesting)', () => {
         const src = { isLocal, path: 'boilerplate' };
         const dest = { isHubSpot, path: 'bar.module/zzz' };
-        it(`upload ${src.path} ${dest.path}`, async () => {
+        it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
           expect(result[0] && result[0].id).toBe(ValidationIds.MODULE_NESTING);

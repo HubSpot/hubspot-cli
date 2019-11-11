@@ -142,6 +142,7 @@ async function validateSrcAndDestPaths(src, dest) {
       }
     }
   }
+  // TODO: Add local FS check for dest.isLocal to support `fetch`
   return results;
 }
 
