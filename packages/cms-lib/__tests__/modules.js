@@ -27,27 +27,30 @@ describe('cms-lib/modules', () => {
     it('should return true for module folder paths', () => {
       let input;
       // Local
-      input = { isLocal, path: 'My Module.module' };
+      input = { isLocal, path: 'Card Section.module' };
       expect(isModuleFolder(input)).toBe(true);
-      input = { isLocal, path: path.join('dir', 'My Module.module') };
+      input = { isLocal, path: path.join('dir', 'Card Section.module') };
       expect(isModuleFolder(input)).toBe(true);
       // HubSpot
-      input = { isHubSpot, path: 'My Module.module' };
+      input = { isHubSpot, path: 'Card Section.module' };
       expect(isModuleFolder(input)).toBe(true);
-      input = { isHubSpot, path: 'dir/My Module.module' };
+      input = { isHubSpot, path: 'dir/Card Section.module' };
       expect(isModuleFolder(input)).toBe(true);
     });
     it('should disregard trailing slashes', () => {
       let input;
       // Local
-      input = { isLocal, path: path.join('My Module.module', path.sep) };
+      input = { isLocal, path: path.join('Card Section.module', path.sep) };
       expect(isModuleFolder(input)).toBe(true);
-      input = { isLocal, path: path.join('dir', 'My Module.module', path.sep) };
+      input = {
+        isLocal,
+        path: path.join('dir', 'Card Section.module', path.sep),
+      };
       expect(isModuleFolder(input)).toBe(true);
       // HubSpot
-      input = { isHubSpot, path: 'My Module.module/' };
+      input = { isHubSpot, path: 'Card Section.module/' };
       expect(isModuleFolder(input)).toBe(true);
-      input = { isHubSpot, path: 'dir/My Module.module/' };
+      input = { isHubSpot, path: 'dir/Card Section.module/' };
       expect(isModuleFolder(input)).toBe(true);
     });
     it('should return false for non-module folder paths', () => {
@@ -59,7 +62,7 @@ describe('cms-lib/modules', () => {
       expect(isModuleFolder(input)).toBe(false);
       input = { isLocal, path: 'dir' };
       expect(isModuleFolder(input)).toBe(false);
-      input = { isLocal, path: path.join('My Module.module', 'dir') };
+      input = { isLocal, path: path.join('Card Section.module', 'dir') };
       expect(isModuleFolder(input)).toBe(false);
       // HubSpot
       input = { isHubSpot, path: '' };
@@ -68,7 +71,7 @@ describe('cms-lib/modules', () => {
       expect(isModuleFolder(input)).toBe(false);
       input = { isHubSpot, path: 'dir' };
       expect(isModuleFolder(input)).toBe(false);
-      input = { isHubSpot, path: 'My Module.module/dir' };
+      input = { isHubSpot, path: 'Card Section.module/dir' };
       expect(isModuleFolder(input)).toBe(false);
     });
     it('should return false for file paths', () => {
@@ -76,12 +79,15 @@ describe('cms-lib/modules', () => {
       // Local
       input = { isLocal, path: 'fields.json' };
       expect(isModuleFolder(input)).toBe(false);
-      input = { isLocal, path: path.join('My Module.module', 'fields.json') };
+      input = {
+        isLocal,
+        path: path.join('Card Section.module', 'fields.json'),
+      };
       expect(isModuleFolder(input)).toBe(false);
       // HubSpot
       input = { isHubSpot, path: 'fields.json' };
       expect(isModuleFolder(input)).toBe(false);
-      input = { isHubSpot, path: 'My Module.module/fields.json' };
+      input = { isHubSpot, path: 'Card Section.module/fields.json' };
       expect(isModuleFolder(input)).toBe(false);
     });
   });
@@ -89,34 +95,37 @@ describe('cms-lib/modules', () => {
     it('should return true for child files/folders of module folders', () => {
       let input;
       // Local
-      input = { isLocal, path: path.join('My Module.module', 'dir') };
-      expect(isModuleFolderChild(input)).toBe(true);
-      input = { isLocal, path: path.join('My Module.module', 'fields.json') };
+      input = { isLocal, path: path.join('Card Section.module', 'dir') };
       expect(isModuleFolderChild(input)).toBe(true);
       input = {
         isLocal,
-        path: path.join('dir', 'My Module.module', 'dir', 'fields.json'),
+        path: path.join('Card Section.module', 'fields.json'),
+      };
+      expect(isModuleFolderChild(input)).toBe(true);
+      input = {
+        isLocal,
+        path: path.join('dir', 'Card Section.module', 'dir', 'fields.json'),
       };
       expect(isModuleFolderChild(input)).toBe(true);
       // HubSpot
-      input = { isHubSpot, path: 'My Module.module/dir' };
+      input = { isHubSpot, path: 'Card Section.module/dir' };
       expect(isModuleFolderChild(input)).toBe(true);
-      input = { isHubSpot, path: 'My Module.module/fields.json' };
+      input = { isHubSpot, path: 'Card Section.module/fields.json' };
       expect(isModuleFolderChild(input)).toBe(true);
-      input = { isHubSpot, path: 'dir/My Module.module/dir/fields.json' };
+      input = { isHubSpot, path: 'dir/Card Section.module/dir/fields.json' };
       expect(isModuleFolderChild(input)).toBe(true);
     });
     it('should return false for module folders', () => {
       let input;
       // Local
-      input = { isLocal, path: path.join('dir', 'My Module.module') };
+      input = { isLocal, path: path.join('dir', 'Card Section.module') };
       expect(isModuleFolderChild(input)).toBe(false);
-      input = { isLocal, path: 'My Module.module' };
+      input = { isLocal, path: 'Card Section.module' };
       expect(isModuleFolderChild(input)).toBe(false);
       // HubSpot
-      input = { isHubSpot, path: 'dir/My Module.module' };
+      input = { isHubSpot, path: 'dir/Card Section.module' };
       expect(isModuleFolderChild(input)).toBe(false);
-      input = { isHubSpot, path: 'My Module.module' };
+      input = { isHubSpot, path: 'Card Section.module' };
       expect(isModuleFolderChild(input)).toBe(false);
     });
     it('should return false for folder/file paths not within a module folder', () => {
@@ -175,15 +184,21 @@ describe('cms-lib/modules', () => {
       });
     });
     describe('Guard input conditions', () => {
-      describe('`src` is a module folder as is `dest`', () => {
-        const src = { isLocal, path: 'foo.module' };
-        const dest = { isHubSpot, path: 'modules/foo.module' };
+      describe('VALID: `src` is a module folder as is `dest`', () => {
+        let src = { isLocal, path: 'Card Section.module' };
+        let dest = { isHubSpot, path: 'remote/Card Section.module' };
+        it(`upload ${src.path} ${dest.path}`, async () => {
+          const result = await validateSrcAndDestPaths(src, dest);
+          expect(result.length).toBe(0);
+        });
+        src = { isLocal, path: path.join('dir', '..', 'Card Section.module') };
+        dest = { isHubSpot, path: 'remote/dir/../Card Section.module/' };
         it(`upload ${src.path} ${dest.path}`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(0);
         });
       });
-      describe('`src` is a module folder but `dest` is not', () => {
+      describe('INVALID: `src` is a module folder but `dest` is not', () => {
         const src = { isLocal, path: 'foo.module' };
         const dest = { isHubSpot, path: 'bar' };
         it(`upload ${src.path} ${dest.path}`, async () => {

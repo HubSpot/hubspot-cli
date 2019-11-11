@@ -16,7 +16,7 @@ const testFiles = [
   'module.css',
   'module.html',
   'module.js',
-].map(name => path.join('modules', 'My Footer.module', name));
+].map(name => path.join('modules', 'Card Section.module', name));
 
 walk.walk = dir => {
   const requestDir = path.resolve(dir);

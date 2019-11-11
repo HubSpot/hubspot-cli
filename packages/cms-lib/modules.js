@@ -106,7 +106,6 @@ async function validateSrcAndDestPaths(src, dest) {
   });
   // src is a .module folder and dest is within a module. (Nesting)
   // e.g. `upload foo.module bar.module/zzz`
-  // e.g. `fetch bar.module/zzz foo.module`
   if (isModuleFolder(_src) && isModuleFolderChild(_dest)) {
     return results.concat(
       getValidationResult(
@@ -117,7 +116,6 @@ async function validateSrcAndDestPaths(src, dest) {
   }
   // src is a .module folder but dest is not
   // e.g. `upload foo.module bar`
-  // e.g. `fetch bar foo.module`
   if (isModuleFolder(_src) && !isModuleFolder(_dest)) {
     return results.concat(
       getValidationResult(
