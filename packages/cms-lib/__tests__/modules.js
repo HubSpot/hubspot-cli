@@ -184,24 +184,23 @@ describe('cms-lib/modules', () => {
       });
     });
     it('should normalize paths', async () => {
-      const modName = 'Car Section.module';
-      let src = { isLocal, path: modName };
-      let dest = { isHubSpot, path: `${modName}/js/../` };
+      let src = { isLocal, path: 'Car Section.module' };
+      let dest = { isHubSpot, path: 'Car Section.module/js/../' };
       let result = await validateSrcAndDestPaths(src, dest);
       expect(result.length).toBe(0);
-      src = { isLocal, path: path.join(modName, 'js', '..') };
-      dest = { isHubSpot, path: modName };
+      src = { isLocal, path: path.join('Car Section.module', 'js', '..') };
+      dest = { isHubSpot, path: 'Car Section.module' };
       result = await validateSrcAndDestPaths(src, dest);
       expect(result.length).toBe(0);
-      src = { isLocal, path: modName };
-      dest = { isHubSpot, path: `${modName}/js/main.js/../` };
+      src = { isLocal, path: 'Car Section.module' };
+      dest = { isHubSpot, path: 'Car Section.module/js/main.js/../' };
       result = await validateSrcAndDestPaths(src, dest);
       expect(result.length).toBe(1);
       src = {
         isLocal,
-        path: path.join(modName, 'js', 'main.js', '..', path.sep),
+        path: path.join('Car Section.module', 'js', 'main.js', '..', path.sep),
       };
-      dest = { isHubSpot, path: modName };
+      dest = { isHubSpot, path: 'Car Section.module' };
       result = await validateSrcAndDestPaths(src, dest);
       expect(result.length).toBe(0);
     });
