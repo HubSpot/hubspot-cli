@@ -7,6 +7,8 @@ const {
   ValidationIds,
 } = require('../modules');
 
+const walk = require('../lib/walk');
+
 const isLocal = true;
 const isHubSpot = true;
 
@@ -204,6 +206,13 @@ describe('cms-lib/modules', () => {
       result = await validateSrcAndDestPaths(src, dest);
       expect(result.length).toBe(0);
     });
+    it('should walk local files if needed', async () => {
+      const src = { isLocal, path: 'boilerplate' };
+      const dest = { isHubSpot, path: 'Card Section.module/js' };
+      const spy = jest.spyOn(walk, 'walk');
+      await validateSrcAndDestPaths(src, dest);
+      expect(spy).toHaveBeenCalled();
+    });
     describe('hs upload', () => {
       describe('VALID: `src` is a module folder as is `dest`', () => {
         let src = { isLocal, path: 'Card Section.module' };
@@ -232,7 +241,6 @@ describe('cms-lib/modules', () => {
             ValidationIds.MODULE_FOLDER_REQUIRED
           );
         });
-        // src = { isLocal, path: 'Card Section.module' };
         src = {
           isLocal,
           path: path.join('boilerplate', 'modules', 'Card Section.module'),
@@ -247,13 +255,7 @@ describe('cms-lib/modules', () => {
         });
         src = {
           isLocal,
-          path: path.join(
-            'boilerplate',
-            'modules',
-            'Card Section.module',
-            'js',
-            '..'
-          ),
+          path: path.join('boilerplate', 'modules', 'Card Section.module'),
         };
         dest = { isHubSpot, path: 'remote/boilerplate/modules/' };
         it(`upload "${src.path}" "${dest.path}"`, async () => {
@@ -264,9 +266,9 @@ describe('cms-lib/modules', () => {
           );
         });
       });
-      describe('`src` is a .module folder and dest is within a module. (Nesting)', () => {
-        const src = { isLocal, path: 'foo.module' };
-        const dest = { isHubSpot, path: 'bar.module/zzz' };
+      describe('INVALID: `src` is a .module folder and `dest` is within a module. (Nesting)', () => {
+        const src = { isLocal, path: 'Car Section.module' };
+        const dest = { isHubSpot, path: 'Car Section.module/js' };
         it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
@@ -275,9 +277,9 @@ describe('cms-lib/modules', () => {
           );
         });
       });
-      describe('src is a folder that includes modules and dest is within a module. (Nesting)', () => {
+      describe('INVALID: `src` is a folder that includes modules and `dest` is within a module. (Nesting)', () => {
         const src = { isLocal, path: 'boilerplate' };
-        const dest = { isHubSpot, path: 'bar.module/zzz' };
+        const dest = { isHubSpot, path: 'Card Section.module/js' };
         it(`upload "${src.path}" "${dest.path}"`, async () => {
           const result = await validateSrcAndDestPaths(src, dest);
           expect(result.length).toBe(1);
