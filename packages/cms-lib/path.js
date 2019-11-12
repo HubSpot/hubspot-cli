@@ -7,18 +7,65 @@ const convertToUnixPath = _path => {
 };
 
 const convertToWindowsPath = _path => {
-  return path.normalize(_path).replace(/\//g, '\\');
+  const rgx = new RegExp(`\\${path.posix.sep}`, 'g');
+  return path.normalize(_path).replace(rgx, path.win32.sep);
 };
 
 const convertToLocalFileSystemPath = _path => {
   switch (path.sep) {
-    case '/':
+    case path.posix.sep:
       return convertToUnixPath(_path);
-    case '\\':
+    case path.win32.sep:
       return convertToWindowsPath(_path);
     default:
       return path.normalize(_path);
   }
+};
+
+/**
+ * @param {string[]} parts
+ */
+const removeTrailingSlashFromSplits = parts => {
+  if (parts.length > 1 && parts[parts.length - 1] === '') {
+    return parts.slice(0, parts.length - 1);
+  }
+  return parts;
+};
+
+/**
+ * Splits a filepath for local file system sources.
+ *
+ * @param {string} filepath
+ * @param {object} pathImplementation - For testing
+ * @returns {string[]}
+ */
+const splitLocalPath = (filepath, pathImplementation = path) => {
+  if (!filepath) return [];
+  const { sep } = pathImplementation;
+  const rgx = new RegExp(`\\${sep}+`, 'g');
+  const parts = pathImplementation.normalize(filepath).split(rgx);
+  // Restore posix root if present
+  if (sep === path.posix.sep && parts[0] === '') {
+    parts[0] = '/';
+  }
+  return removeTrailingSlashFromSplits(parts);
+};
+
+/**
+ * Splits a filepath for remote sources (HubSpot).
+ *
+ * @param {string} filepath
+ * @returns {string[]}
+ */
+const splitHubSpotPath = filepath => {
+  if (!filepath) return [];
+  const rgx = new RegExp(`\\${path.posix.sep}+`, 'g');
+  const parts = convertToUnixPath(filepath).split(rgx);
+  // Restore root if present
+  if (parts[0] === '') {
+    parts[0] = '/';
+  }
+  return removeTrailingSlashFromSplits(parts);
 };
 
 const getCwd = () => {
@@ -55,4 +102,6 @@ module.exports = {
   getCwd,
   getExt,
   isAllowedExtension,
+  splitHubSpotPath,
+  splitLocalPath,
 };
