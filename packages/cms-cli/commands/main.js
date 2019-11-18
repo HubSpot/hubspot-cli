@@ -6,6 +6,9 @@ function configureMainCommand(program) {
   program
     .version(version)
     .description('Tools for working with the HubSpot CMS')
+    .command('init [type]', 'initialize a hubspot config file', {
+      noHelp: true,
+    })
     .command('auth [type]', 'configure authentication with HubSpot')
     .command('upload <src> <dest>', 'upload a file or folder to HubSpot')
     .command('fetch <src> [dest]', 'fetch a file or folder')
