@@ -12,6 +12,7 @@
     "@hubspot/cms-lib": "^1.0.2",
     "commander": "^2.16.0",
     "inquirer": "^6.3.1",
+    "js-yaml": "^3.13.1",
     "shelljs": "0.8.3",
     "update-notifier": "3.0.1"
   },
