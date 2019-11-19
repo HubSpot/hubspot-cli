@@ -6,7 +6,7 @@ function configureMainCommand(program) {
   program
     .version(version)
     .description('Tools for working with the HubSpot CMS')
-    .command('init [type]', 'initialize a hubspot config file', {
+    .command('init', 'initialize a hubspot config file', {
       noHelp: true,
     })
     .command('auth [type]', 'configure authentication with HubSpot')
