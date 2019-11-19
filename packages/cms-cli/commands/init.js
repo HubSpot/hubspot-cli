@@ -65,17 +65,11 @@ function initializeConfigCommand(program) {
         process.exit(1);
       }
 
-      const { portalName } = await promptUser(PORTAL_NAME);
-      const { portalId } = await promptUser(PORTAL_ID);
-      const { apiKey } = await promptUser(PORTAL_API_KEY);
-
-      const configData = generateConfigData({
-        portalName,
-        portalId,
-        apiKey,
-      });
-
-      generateHubSpotConfigYAML(configData);
+      generateHubSpotConfigYAML(
+        generateConfigData(
+          await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY])
+        )
+      );
       trackCommandUsage(COMMAND_NAME);
     });
 
