@@ -8,16 +8,16 @@ const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+} = require('@hubspot/cms-lib/lib/constants');
+const { logger } = require('@hubspot/cms-lib/logger');
+const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} = require('@hubspot/cms-lib/lib/constants');
 const { PORTAL_API_KEY, PORTAL_ID, PORTAL_NAME } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { logger } = require('@hubspot/cms-lib/logger');
 
 const COMMAND_NAME = 'init';
 
