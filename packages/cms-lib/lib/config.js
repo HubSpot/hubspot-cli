@@ -94,7 +94,10 @@ const setConfig = updatedConfig => {
 const getConfigPath = path => {
   return (
     path ||
-    findup([DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME, 'hubspot.config.yaml'])
+    findup([
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
+    ])
   );
 };
 
