@@ -1,14 +1,13 @@
 const { version } = require('../package.json');
 const inquirer = require('inquirer');
-const yaml = require('js-yaml');
-const fs = require('fs');
-const { logger } = require('@hubspot/cms-lib/logger');
-
 const {
-  addConfigOptions,
-  addLoggerOptions,
-  setLogLevel,
-} = require('../lib/commonOpts');
+  getConfigPath,
+  writeNewPortalApiKeyConfig,
+} = require('@hubspot/cms-lib/lib/config');
+const {
+  logFileSystemErrorInstance,
+} = require('@hubspot/cms-lib/errorHandlers');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
   trackCommandUsage,
@@ -17,37 +16,10 @@ const {
 const { PORTAL_API_KEY, PORTAL_ID, PORTAL_NAME } = require('../lib/prompts');
 
 const COMMAND_NAME = 'init';
-const HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yaml';
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
   return prompt(promptConfig);
-};
-
-const generateHubSpotConfigYAML = configData => {
-  logger.log('Generating hubspot.config.yaml');
-  try {
-    fs.writeFileSync(HUBSPOT_CONFIG_YAML_FILE_NAME, yaml.safeDump(configData));
-    logger.log('Successfully generated hubspot.config.yaml');
-  } catch (e) {
-    logger.error(e);
-  }
-};
-
-const generateConfigData = ({ portalName, portalId, apiKey }) => {
-  logger.log('Generating config data');
-  return {
-    defaultPortal: portalName,
-    portals: [
-      {
-        name: portalName,
-        portalId,
-        authType: 'apikey',
-        apiKey,
-        env: 'PROD',
-      },
-    ],
-  };
 };
 
 function initializeConfigCommand(program) {
@@ -58,23 +30,24 @@ function initializeConfigCommand(program) {
       setLogLevel(options);
       logDebugInfo(options);
 
-      if (fs.existsSync(HUBSPOT_CONFIG_YAML_FILE_NAME)) {
-        const configFileExistsError = `The config file '${process.cwd()}/${HUBSPOT_CONFIG_YAML_FILE_NAME}' already exists.`;
+      const configPath = getConfigPath();
 
-        logger.error(configFileExistsError);
+      if (configPath) {
+        const configFileExistsError = `The config file '${configPath}' already exists.`;
+
+        logFileSystemErrorInstance(configFileExistsError, {
+          filepath: configPath,
+        });
         process.exit(1);
       }
 
-      generateHubSpotConfigYAML(
-        generateConfigData(
-          await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY])
-        )
+      writeNewPortalApiKeyConfig(
+        await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY])
       );
       trackCommandUsage(COMMAND_NAME);
     });
 
   addLoggerOptions(program);
-  addConfigOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

@@ -1,5 +1,5 @@
 const API_KEY_REGEX = new RegExp(
-  '^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})',
+  '^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})$',
   'i'
 );
 
@@ -40,7 +40,7 @@ const CLIENT_SECRET = {
 };
 
 const PORTAL_NAME = {
-  name: 'portalName',
+  name: 'name',
   message: 'Enter a name for your portal:',
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
