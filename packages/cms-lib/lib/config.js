@@ -7,9 +7,7 @@ const {
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
 const { getCwd } = require('../path');
-const { Mode } = require('./constants');
-
-const DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yml';
+const { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME, Mode } = require('./constants');
 
 let _config;
 let _configPath;

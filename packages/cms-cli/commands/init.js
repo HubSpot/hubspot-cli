@@ -7,13 +7,17 @@ const {
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
-const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+} = require('@hubspot/cms-lib/lib/constants');
 const { PORTAL_API_KEY, PORTAL_ID, PORTAL_NAME } = require('../lib/prompts');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
+const { logDebugInfo } = require('../lib/debugInfo');
+const { logger } = require('@hubspot/cms-lib/logger');
 
 const COMMAND_NAME = 'init';
 
@@ -25,7 +29,9 @@ const promptUser = async promptConfig => {
 function initializeConfigCommand(program) {
   program
     .version(version)
-    .description('Initialize hubspot.config.yaml for a HubSpot portal')
+    .description(
+      `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
+    )
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
@@ -33,17 +39,24 @@ function initializeConfigCommand(program) {
       const configPath = getConfigPath();
 
       if (configPath) {
-        const configFileExistsError = `The config file '${configPath}' already exists.`;
-
-        logFileSystemErrorInstance(configFileExistsError, {
-          filepath: configPath,
-        });
+        logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
 
-      writeNewPortalApiKeyConfig(
-        await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY])
-      );
+      const configData = await promptUser([
+        PORTAL_NAME,
+        PORTAL_ID,
+        PORTAL_API_KEY,
+      ]);
+
+      try {
+        writeNewPortalApiKeyConfig(configData);
+      } catch (err) {
+        logFileSystemErrorInstance(err, {
+          filepath: configPath,
+          configData,
+        });
+      }
       trackCommandUsage(COMMAND_NAME);
     });
 
