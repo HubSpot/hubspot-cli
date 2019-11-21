@@ -1,4 +1,4 @@
-const API_KEY_REGEX = /^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})$/gi;
+const API_KEY_REGEX = /^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})$/i;
 
 const PORTAL_ID = {
   name: 'portalId',
@@ -51,7 +51,7 @@ const PORTAL_API_KEY = {
   name: 'apiKey',
   message: 'Enter the API key for your portal:',
   validate(val) {
-    if (!val.match(API_KEY_REGEX)) {
+    if (!API_KEY_REGEX.test(val)) {
       return 'This is not a valid portal API key. Please try again.';
     }
     return true;
