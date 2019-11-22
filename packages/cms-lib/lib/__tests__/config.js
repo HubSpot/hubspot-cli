@@ -1,4 +1,12 @@
-const { setConfig, getPortalId } = require('../config');
+const {
+  loadConfig,
+  setConfig,
+  getConfig,
+  getPortalId,
+  getConfigPath,
+  writeNewPortalApiKeyConfig,
+} = require('../config');
+const { getCwd } = require('../../path');
 
 describe('lib/config', () => {
   describe('getPortalId()', () => {
@@ -30,6 +38,31 @@ describe('lib/config', () => {
     });
     it('returns defaultPortal from config', () => {
       expect(getPortalId()).toEqual(456);
+    });
+  });
+
+  describe('writeNewPortalApiKeyConfig()', () => {
+    const configOptions = {
+      name: 'MYPORTAL',
+      portalId: 123,
+      apiKey: 'secret',
+    };
+
+    beforeEach(() => {
+      writeNewPortalApiKeyConfig(configOptions);
+    });
+
+    it('sets the configPath to current working directory', () => {
+      expect(getConfigPath()).toContain(getCwd());
+    });
+    it('sets the config properties using the options passed', () => {
+      const defaultPortalConfig = getConfig().portals[0];
+      Object.keys(configOptions).forEach(prop => {
+        expect(defaultPortalConfig[prop]).toEqual(configOptions[prop]);
+      });
+    });
+    it('generates a config file', () => {
+      expect(loadConfig).not.toThrow();
     });
   });
 });

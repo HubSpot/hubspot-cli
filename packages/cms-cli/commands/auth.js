@@ -20,44 +20,11 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
+const { PORTAL_ID, CLIENT_ID, CLIENT_SECRET } = require('../lib/prompts');
 
 const getAuthContext = async () => {
   const prompt = inquirer.createPromptModule();
-  return prompt([
-    {
-      name: 'portalId',
-      message: 'Enter the HubSpot CMS portal ID:',
-      type: 'number',
-      validate(val) {
-        if (!Number.isNaN(val) && val > 0) {
-          return true;
-        }
-        return 'A HubSpot portal ID must be provided.';
-      },
-    },
-    {
-      name: 'clientId',
-      message: 'Enter your OAuth2 client ID:',
-      validate(val) {
-        if (typeof val !== 'string' || val.length !== 36) {
-          return 'The OAuth2 client ID is 36 characters long. Please try again.';
-        }
-        return true;
-      },
-    },
-    {
-      name: 'clientSecret',
-      message: 'Enter your OAuth2 client secret:',
-      validate(val) {
-        if (typeof val !== 'string' || val.length !== 36) {
-          return 'The OAuth2 client secret is 36 characters long. Please try again.';
-        } else if (val[0] === '*') {
-          return 'Please copy actual OAuth2 client secret not the asterisks used to hide it.';
-        }
-        return true;
-      },
-    },
-  ]);
+  return prompt([PORTAL_ID, CLIENT_ID, CLIENT_SECRET]);
 };
 
 const COMMAND_NAME = 'auth';

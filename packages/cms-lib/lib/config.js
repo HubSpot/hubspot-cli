@@ -6,7 +6,8 @@ const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
-const { Mode } = require('./constants');
+const { getCwd } = require('../path');
+const { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME, Mode } = require('./constants');
 
 let _config;
 let _configPath;
@@ -52,9 +53,11 @@ const parseConfig = configSource => {
 };
 
 const loadConfig = path => {
-  _configPath = path || findup(['hubspot.config.yml', 'hubspot.config.yaml']);
+  _configPath = getConfigPath(path);
   if (!_configPath) {
-    logger.error('A hubspot.config.yml file could not be found');
+    logger.error(
+      `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+    );
     return;
   }
 
@@ -86,6 +89,24 @@ const getConfig = () => _config;
 const setConfig = updatedConfig => {
   _config = updatedConfig;
   return _config;
+};
+
+const getConfigPath = path => {
+  return (
+    path ||
+    findup([
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
+    ])
+  );
+};
+
+const setConfigPath = path => {
+  return (_configPath = path);
+};
+
+const getConfigEnv = environment => {
+  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
 };
 
 const getPortalConfig = portalId => {
@@ -157,8 +178,7 @@ const updatePortalConfig = configOptions => {
       tokenInfo,
     };
   }
-  const env =
-    environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
+  const env = getConfigEnv(environment);
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
@@ -184,12 +204,36 @@ const updatePortalConfig = configOptions => {
   writeConfig();
 };
 
+const writeNewPortalApiKeyConfig = configOptions => {
+  setConfig(getNewPortalApiKeyConfig(configOptions));
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  writeConfig();
+};
+
+const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
+  logger.log('Generating config data');
+  return {
+    defaultPortal: name,
+    portals: [
+      {
+        name,
+        portalId,
+        apiKey,
+        authType: 'apikey',
+        env: getConfigEnv(environment),
+      },
+    ],
+  };
+};
+
 module.exports = {
   getAndLoadConfigIfNeeded,
   getConfig,
+  getConfigPath,
   setConfig,
   loadConfig,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
+  writeNewPortalApiKeyConfig,
 };
