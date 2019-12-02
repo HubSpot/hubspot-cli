@@ -69,11 +69,7 @@ const loadConfig = path => {
   _config = parsed;
 
   if (!_config) {
-    logger.debug('The config file was empty config');
-    logger.debug('Initializing an empty config');
-    _config = {
-      portals: [],
-    };
+    initializeEmptyConfig();
   }
 };
 
@@ -204,9 +200,13 @@ const updatePortalConfig = configOptions => {
   writeConfig();
 };
 
+const setDefaultConfigPath = () => {
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+};
+
 const writeNewPortalApiKeyConfig = configOptions => {
   setConfig(getNewPortalApiKeyConfig(configOptions));
-  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  setDefaultConfigPath();
   writeConfig();
 };
 
@@ -226,6 +226,19 @@ const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
   };
 };
 
+const initializeEmptyConfig = () => {
+  logger.debug('The config file was empty config');
+  logger.debug('Initializing an empty config');
+  _config = {
+    portals: [],
+  };
+};
+
+const createEmptyConfigFile = () => {
+  setDefaultConfigPath();
+  fs.writeFileSync(_configPath, '');
+};
+
 module.exports = {
   getAndLoadConfigIfNeeded,
   getConfig,
@@ -236,4 +249,5 @@ module.exports = {
   getPortalId,
   updatePortalConfig,
   writeNewPortalApiKeyConfig,
+  createEmptyConfigFile,
 };
