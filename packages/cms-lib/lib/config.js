@@ -69,7 +69,11 @@ const loadConfig = path => {
   _config = parsed;
 
   if (!_config) {
-    initializeEmptyConfig();
+    logger.debug('The config file was empty config');
+    logger.debug('Initializing an empty config');
+    _config = {
+      portals: [],
+    };
   }
 };
 
@@ -223,14 +227,6 @@ const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
         env: getConfigEnv(environment),
       },
     ],
-  };
-};
-
-const initializeEmptyConfig = () => {
-  logger.debug('The config file was empty config');
-  logger.debug('Initializing an empty config');
-  _config = {
-    portals: [],
   };
 };
 
