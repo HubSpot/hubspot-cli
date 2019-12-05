@@ -24,7 +24,26 @@ const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
+const AUTH_METHODS = {
+  api: 'apiKey',
+  oauth: 'oauth2',
+};
 const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
+
+const AUTH_METHOD_PROMPT_CONFIG = {
+  type: 'list',
+  name: 'authMethod',
+  choices: [
+    {
+      value: AUTH_METHODS.oauth,
+      name: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`,
+    },
+    {
+      value: AUTH_METHODS.api,
+      name: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
+    },
+  ],
+};
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
@@ -45,7 +64,7 @@ const oauthConfigSetup = () => {
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: 'oauth',
+    authType: AUTH_METHODS.oauth,
   });
 };
 
@@ -62,7 +81,7 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: 'apiKey',
+    authType: AUTH_METHODS.api,
   });
 };
 
@@ -87,7 +106,9 @@ function initializeConfigCommand(program) {
         process.exit(1);
       }
 
-      if (options.api) {
+      const { authMethod } = await promptUser(AUTH_METHOD_PROMPT_CONFIG);
+
+      if (authMethod === AUTH_METHODS.api) {
         apiKeyConfigSetup({
           configPath,
         });
