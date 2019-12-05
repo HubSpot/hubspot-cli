@@ -70,6 +70,7 @@ function configureAuthCommand(program) {
           portalId: answers.portalId,
         });
         logger.log('Configuration updated');
+        process.exit();
       } catch (err) {
         logErrorInstance(err);
       }
