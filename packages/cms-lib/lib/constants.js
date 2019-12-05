@@ -32,6 +32,8 @@ const DEFAULT_MODE = Mode.publish;
 
 const DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yml';
 
+const EMPTY_CONFIG_FILE_CONTENTS = '';
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -39,4 +41,5 @@ module.exports = {
   MODULE_EXTENSION,
   DEFAULT_MODE,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  EMPTY_CONFIG_FILE_CONTENTS,
 };

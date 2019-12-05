@@ -5,6 +5,7 @@ const {
   getConfigPath,
   writeNewPortalApiKeyConfig,
   createEmptyConfigFile,
+  deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const {
   logFileSystemErrorInstance,
@@ -33,10 +34,12 @@ const promptUser = async promptConfig => {
 const oauthConfigSetup = () => {
   try {
     createEmptyConfigFile();
-    spawn(HS_AUTH_OAUTH_COMMAND, {
+    const authProcess = spawn(HS_AUTH_OAUTH_COMMAND, {
       stdio: 'inherit',
       shell: true,
     });
+
+    authProcess.on('close', deleteEmptyConfigFile);
   } catch (e) {
     logErrorInstance(e, HS_AUTH_OAUTH_COMMAND);
   }

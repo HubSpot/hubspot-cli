@@ -7,7 +7,11 @@ const {
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
 const { getCwd } = require('../path');
-const { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME, Mode } = require('./constants');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  EMPTY_CONFIG_FILE_CONTENTS,
+  Mode,
+} = require('./constants');
 
 let _config;
 let _configPath;
@@ -230,9 +234,26 @@ const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
   };
 };
 
+const configFileExists = () => {
+  return _configPath && fs.existsSync(_configPath);
+};
+
+const configFileIsBlank = () => {
+  return _configPath && fs.readFileSync(_configPath).length === 0;
+};
+
 const createEmptyConfigFile = () => {
-  setDefaultConfigPath();
-  fs.writeFileSync(_configPath, '');
+  if (!_configPath) {
+    setDefaultConfigPath();
+  }
+
+  return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
+};
+
+const deleteEmptyConfigFile = () => {
+  return (
+    configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
+  );
 };
 
 module.exports = {
@@ -246,4 +267,5 @@ module.exports = {
   updatePortalConfig,
   writeNewPortalApiKeyConfig,
   createEmptyConfigFile,
+  deleteEmptyConfigFile,
 };
