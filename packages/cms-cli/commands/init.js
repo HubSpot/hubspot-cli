@@ -24,11 +24,15 @@ const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
+const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
 const AUTH_METHODS = {
   api: 'apiKey',
   oauth: 'oauth2',
 };
-const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
+const AUTH_DESCRIPTIONS = {
+  [AUTH_METHODS.api]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
+  [AUTH_METHODS.oauth]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`,
+};
 
 const AUTH_METHOD_PROMPT_CONFIG = {
   type: 'list',
@@ -36,11 +40,11 @@ const AUTH_METHOD_PROMPT_CONFIG = {
   choices: [
     {
       value: AUTH_METHODS.oauth,
-      name: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`,
+      name: AUTH_DESCRIPTIONS.oauth,
     },
     {
       value: AUTH_METHODS.api,
-      name: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
+      name: AUTH_DESCRIPTIONS.api,
     },
   ],
 };
@@ -91,31 +95,34 @@ function initializeConfigCommand(program) {
     .description(
       `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option(
-      '--api',
-      `create ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using API key for authentication`
-    )
+    .option('--api', AUTH_DESCRIPTIONS.api)
+    .option('--oauth', AUTH_DESCRIPTIONS.oauth)
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
 
       const configPath = getConfigPath();
+      let authMethod;
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
 
-      const { authMethod } = await promptUser(AUTH_METHOD_PROMPT_CONFIG);
+      if (!options.api && !options.oauth) {
+        ({ authMethod } = await promptUser(AUTH_METHOD_PROMPT_CONFIG));
+      }
 
-      if (authMethod === AUTH_METHODS.api) {
+      if (options.api || authMethod === AUTH_METHODS.api) {
         apiKeyConfigSetup({
           configPath,
         });
-      } else {
+      } else if (options.oauth || authMethod === AUTH_METHODS.api) {
         oauthConfigSetup({
           options,
         });
+      } else {
+        logErrorInstance('Unrecognized auth method passed to hs init');
       }
     });
 
