@@ -22,59 +22,60 @@ const {
 } = require('../lib/usageTracking');
 const { PORTAL_ID, CLIENT_ID, CLIENT_SECRET } = require('../lib/prompts');
 
-const getAuthContext = async () => {
+const getAuthContext = () => {
   const prompt = inquirer.createPromptModule();
   return prompt([PORTAL_ID, CLIENT_ID, CLIENT_SECRET]);
 };
 
 const COMMAND_NAME = 'auth';
 
+async function authAction(type, options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+
+  if (!validateConfig()) {
+    process.exit(1);
+  }
+
+  if (type !== 'oauth2') {
+    logger.error("The only supported authentication protocol is 'oauth2'");
+    return;
+  }
+  const answers = await getAuthContext();
+  const portalId = parseInt(answers.portalId, 10);
+  const config = getPortalConfig(portalId) || {};
+  const oauth = new OAuth2Manager(
+    {
+      ...answers,
+      environment: config.env || 'prod',
+      scopes: ['content'],
+    },
+    logger
+  );
+  trackCommandUsage(COMMAND_NAME);
+  logger.log('Authorizing');
+  await oauth.authorize();
+  logger.log('Updating configuration');
+  try {
+    updatePortalConfig({
+      ...oauth.toObj(),
+      authType: 'oauth2',
+      portalId: answers.portalId,
+    });
+    logger.log('Configuration updated');
+  } catch (err) {
+    logErrorInstance(err);
+  }
+}
+
 function configureAuthCommand(program) {
   program
     .version(version)
     .description('Configure authentication for a HubSpot account')
     .arguments('<type>')
-    .action(async (type, options) => {
-      setLogLevel(options);
-      logDebugInfo(options);
-      const { config: configPath } = options;
-      loadConfig(configPath);
-
-      if (!validateConfig()) {
-        process.exit(1);
-      }
-
-      if (type !== 'oauth2') {
-        logger.error("The only supported authentication protocol is 'oauth2'");
-        return;
-      }
-      const answers = await getAuthContext();
-      const portalId = parseInt(answers.portalId, 10);
-      const config = getPortalConfig(portalId) || {};
-      const oauth = new OAuth2Manager(
-        {
-          ...answers,
-          environment: config.env || 'prod',
-          scopes: ['content'],
-        },
-        logger
-      );
-      trackCommandUsage(COMMAND_NAME);
-      logger.log('Authorizing');
-      await oauth.authorize();
-      logger.log('Updating configuration');
-      try {
-        updatePortalConfig({
-          ...oauth.toObj(),
-          authType: 'oauth2',
-          portalId: answers.portalId,
-        });
-        logger.log('Configuration updated');
-        process.exit();
-      } catch (err) {
-        logErrorInstance(err);
-      }
-    });
+    .action(authAction);
 
   addLoggerOptions(program);
   addConfigOptions(program);
@@ -83,4 +84,5 @@ function configureAuthCommand(program) {
 
 module.exports = {
   configureAuthCommand,
+  authAction,
 };

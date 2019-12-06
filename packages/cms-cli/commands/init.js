@@ -1,6 +1,5 @@
 const { version } = require('../package.json');
 const inquirer = require('inquirer');
-const { spawn } = require('child_process');
 const {
   getConfigPath,
   writeNewPortalApiKeyConfig,
@@ -13,57 +12,38 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  AUTH_METHODS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { PORTAL_API_KEY, PORTAL_ID, PORTAL_NAME } = require('../lib/prompts');
+const {
+  PORTAL_API_KEY,
+  PORTAL_ID,
+  PORTAL_NAME,
+  AUTH_METHOD,
+} = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
+const { authAction } = require('./auth');
 
 const COMMAND_NAME = 'init';
-const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
-const CAPITAL_LETTER_REGEX = /(?=[A-Z])/;
-const AUTH_METHODS = {
-  oauth: 'oauth2',
-  api: 'apiKey',
-};
-
-const AUTH_METHOD_PROMPT_CONFIG = {
-  type: 'list',
-  name: 'authMethod',
-  message: 'Choose authentication method',
-  default: AUTH_METHODS.oauth,
-  choices: Object.keys(AUTH_METHODS).map(method => {
-    const authMethod = AUTH_METHODS[method];
-    return {
-      value: authMethod,
-      name: authMethod
-        .split(CAPITAL_LETTER_REGEX)
-        .join(' ')
-        .toLowerCase(),
-    };
-  }),
-};
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
   return prompt(promptConfig);
 };
 
-const oauthConfigSetup = () => {
+const oauthConfigSetup = async ({ options }) => {
   try {
     createEmptyConfigFile();
-    const authProcess = spawn(HS_AUTH_OAUTH_COMMAND, {
-      stdio: 'inherit',
-      shell: true,
-    });
-
-    authProcess.on('close', deleteEmptyConfigFile);
+    process.on('exit', deleteEmptyConfigFile);
+    await authAction(AUTH_METHODS.oauth, options);
   } catch (e) {
-    logErrorInstance(e, HS_AUTH_OAUTH_COMMAND);
+    deleteEmptyConfigFile();
+    logErrorInstance(e, AUTH_METHODS.oauth);
   }
 
   trackCommandUsage(COMMAND_NAME, {
@@ -115,7 +95,7 @@ function initializeConfigCommand(program) {
       }
 
       if (!options.api && !options.oauth) {
-        ({ authMethod } = await promptUser(AUTH_METHOD_PROMPT_CONFIG));
+        ({ authMethod } = await promptUser(AUTH_METHOD));
       }
 
       if (options.api || authMethod === AUTH_METHODS.api) {

@@ -1,4 +1,5 @@
-const API_KEY_REGEX = /^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})$/i;
+const { API_KEY_REGEX, CAPITAL_LETTER_REGEX } = require('./regex');
+const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
 
 const PORTAL_ID = {
   name: 'portalId',
@@ -58,10 +59,28 @@ const PORTAL_API_KEY = {
   },
 };
 
+const AUTH_METHOD = {
+  type: 'list',
+  name: 'authMethod',
+  message: 'Choose authentication method',
+  default: AUTH_METHODS.oauth,
+  choices: Object.keys(AUTH_METHODS).map(method => {
+    const authMethod = AUTH_METHODS[method];
+    return {
+      value: authMethod,
+      name: authMethod
+        .split(CAPITAL_LETTER_REGEX)
+        .join(' ')
+        .toLowerCase(),
+    };
+  }),
+};
+
 module.exports = {
   PORTAL_API_KEY,
   PORTAL_ID,
   PORTAL_NAME,
   CLIENT_ID,
   CLIENT_SECRET,
+  AUTH_METHOD,
 };

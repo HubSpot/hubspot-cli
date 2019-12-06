@@ -34,6 +34,11 @@ const DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yml';
 
 const EMPTY_CONFIG_FILE_CONTENTS = '';
 
+const AUTH_METHODS = {
+  oauth: 'oauth2',
+  api: 'apiKey',
+};
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -42,4 +47,5 @@ module.exports = {
   DEFAULT_MODE,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
+  AUTH_METHODS,
 };
