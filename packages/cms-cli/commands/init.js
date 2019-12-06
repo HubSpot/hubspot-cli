@@ -25,28 +25,31 @@ const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
 const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
+const SPLIT_ON_CAPITALS_REGEX = /(?=[A-Z])/;
 const AUTH_METHODS = {
-  api: 'apiKey',
   oauth: 'oauth2',
+  api: 'apiKey',
 };
 const AUTH_DESCRIPTIONS = {
-  [AUTH_METHODS.api]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
   [AUTH_METHODS.oauth]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`,
+  [AUTH_METHODS.api]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
 };
 
 const AUTH_METHOD_PROMPT_CONFIG = {
   type: 'list',
   name: 'authMethod',
-  choices: [
-    {
-      value: AUTH_METHODS.oauth,
-      name: AUTH_DESCRIPTIONS.oauth,
-    },
-    {
-      value: AUTH_METHODS.api,
-      name: AUTH_DESCRIPTIONS.api,
-    },
-  ],
+  message: 'Choose authentication method',
+  default: AUTH_METHODS.oauth,
+  choices: Object.keys(AUTH_METHODS).map(method => {
+    const authMethod = AUTH_METHODS[method];
+    return {
+      value: authMethod,
+      name: authMethod
+        .split(SPLIT_ON_CAPITALS_REGEX)
+        .join(' ')
+        .toLowerCase(),
+    };
+  }),
 };
 
 const promptUser = async promptConfig => {
@@ -117,7 +120,7 @@ function initializeConfigCommand(program) {
         apiKeyConfigSetup({
           configPath,
         });
-      } else if (options.oauth || authMethod === AUTH_METHODS.api) {
+      } else if (options.oauth || authMethod === AUTH_METHODS.oauth) {
         oauthConfigSetup({
           options,
         });
