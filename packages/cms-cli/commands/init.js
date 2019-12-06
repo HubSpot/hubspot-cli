@@ -99,11 +99,11 @@ function initializeConfigCommand(program) {
       }
 
       if (options.api || authMethod === AUTH_METHODS.api) {
-        apiKeyConfigSetup({
+        return apiKeyConfigSetup({
           configPath,
         });
       } else if (options.oauth || authMethod === AUTH_METHODS.oauth) {
-        oauthConfigSetup({
+        return oauthConfigSetup({
           options,
         });
       } else {
