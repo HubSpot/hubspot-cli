@@ -25,14 +25,10 @@ const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
 const HS_AUTH_OAUTH_COMMAND = 'hs auth oauth2';
-const SPLIT_ON_CAPITALS_REGEX = /(?=[A-Z])/;
+const CAPITAL_LETTER_REGEX = /(?=[A-Z])/;
 const AUTH_METHODS = {
   oauth: 'oauth2',
   api: 'apiKey',
-};
-const AUTH_DESCRIPTIONS = {
-  [AUTH_METHODS.oauth]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`,
-  [AUTH_METHODS.api]: `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`,
 };
 
 const AUTH_METHOD_PROMPT_CONFIG = {
@@ -45,7 +41,7 @@ const AUTH_METHOD_PROMPT_CONFIG = {
     return {
       value: authMethod,
       name: authMethod
-        .split(SPLIT_ON_CAPITALS_REGEX)
+        .split(CAPITAL_LETTER_REGEX)
         .join(' ')
         .toLowerCase(),
     };
@@ -96,10 +92,16 @@ function initializeConfigCommand(program) {
   program
     .version(version)
     .description(
-      `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
+      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option('--api', AUTH_DESCRIPTIONS.api)
-    .option('--oauth', AUTH_DESCRIPTIONS.oauth)
+    .option(
+      '--api',
+      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`
+    )
+    .option(
+      '--oauth',
+      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`
+    )
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
