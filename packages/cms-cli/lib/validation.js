@@ -83,6 +83,10 @@ async function validatePortal(command) {
       logger.error(e.message);
       return false;
     }
+
+  } else if (authType === 'usertoken') {
+    // TODO: add some checks :)
+    return true;
   } else if (!apiKey) {
     logger.error(
       `The portalId ${portalId} is missing authentication configuration`

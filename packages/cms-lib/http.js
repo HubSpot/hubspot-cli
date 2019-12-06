@@ -1,7 +1,8 @@
 const request = require('request');
 const requestPN = require('request-promise-native');
-const { version } = require('./package.json');
-const { getPortalConfig, getAndLoadConfigIfNeeded } = require('./lib/config');
+const { getPortalConfig } = require('./lib/config');
+const { getRequestOptions } = require('./http/requestOptions');
+const { accessTokenForUserToken } = require('./http/userToken');
 const { getOauthManager } = require('./oauth');
 
 const withOauth = async (portalId, portalConfig, requestOptions) => {
@@ -17,20 +18,15 @@ const withOauth = async (portalId, portalConfig, requestOptions) => {
   };
 };
 
-const getRequestOptions = (options = {}, requestOptions = {}) => {
-  const { env } = options;
-  const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
+const withUserToken = async (portalId, portalConfig, requestOptions) => {
+  const { headers } = requestOptions;
+  const accessToken = await accessTokenForUserToken(portalId);
   return {
-    baseUrl: `https://${httpUseLocalhost ? 'local' : 'api'}.hubapi${
-      env === 'QA' ? 'qa' : ''
-    }.com`,
-    headers: {
-      'User-Agent': `HubSpot CMS Tools/${version}`,
-    },
-    json: true,
-    simple: true,
-    timeout: httpTimeout || 15000,
     ...requestOptions,
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${accessToken}`,
+    },
   };
 };
 
@@ -53,6 +49,10 @@ const withAuth = async (portalId, options) => {
     portalId,
     getRequestOptions({ env }, options)
   );
+
+  if (authType === 'usertoken') {
+    return withUserToken(portalId, portalConfig, requestOptions);
+  }
 
   if (authType === 'oauth2') {
     return withOauth(portalId, portalConfig, requestOptions);
