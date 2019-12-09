@@ -40,14 +40,14 @@ const oauthConfigSetup = async ({ options }) => {
   try {
     createEmptyConfigFile();
     process.on('exit', deleteEmptyConfigFile);
-    await authAction(AUTH_METHODS.oauth, options);
+    await authAction(AUTH_METHODS.oauth.value, options);
   } catch (e) {
     deleteEmptyConfigFile();
-    logErrorInstance(e, AUTH_METHODS.oauth);
+    logErrorInstance(e, AUTH_METHODS.oauth.value);
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.oauth,
+    authType: AUTH_METHODS.oauth.value,
   });
 };
 
@@ -64,7 +64,7 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.api,
+    authType: AUTH_METHODS.api.value,
   });
 };
 
@@ -74,40 +74,27 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option(
-      '--api',
-      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.api}`
-    )
-    .option(
-      '--oauth',
-      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} using ${AUTH_METHODS.oauth}`
-    )
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
 
       const configPath = getConfigPath();
-      let authMethod;
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
 
-      if (!options.api && !options.oauth) {
-        ({ authMethod } = await promptUser(AUTH_METHOD));
-      }
+      const { authMethod } = await promptUser(AUTH_METHOD);
 
-      if (options.api || authMethod === AUTH_METHODS.api) {
+      if (authMethod === AUTH_METHODS.api.value) {
         return apiKeyConfigSetup({
           configPath,
         });
-      } else if (options.oauth || authMethod === AUTH_METHODS.oauth) {
+      } else if (authMethod === AUTH_METHODS.oauth.value) {
         return oauthConfigSetup({
           options,
         });
-      } else {
-        logErrorInstance('Unrecognized auth method passed to hs init');
       }
     });
 
