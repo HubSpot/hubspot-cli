@@ -1,5 +1,4 @@
 const { version } = require('../package.json');
-const inquirer = require('inquirer');
 const {
   getConfigPath,
   updatePortalConfig,
@@ -20,22 +19,12 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const {
-  PORTAL_API_KEY,
-  PORTAL_ID,
-  PORTAL_NAME,
-  AUTH_METHOD,
-} = require('../lib/prompts');
+const { promptUser, API_KEY_FLOW, AUTH_METHOD } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authAction } = require('./auth');
 
 const COMMAND_NAME = 'init';
-
-const promptUser = async promptConfig => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
-};
 
 const oauthConfigSetup = async ({ options }) => {
   try {
@@ -53,7 +42,7 @@ const oauthConfigSetup = async ({ options }) => {
 };
 
 const apiKeyConfigSetup = async ({ configPath }) => {
-  const configData = await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY]);
+  const configData = await promptUser(API_KEY_FLOW);
 
   try {
     createEmptyConfigFile();

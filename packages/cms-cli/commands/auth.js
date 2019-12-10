@@ -1,5 +1,4 @@
 const { version } = require('../package.json');
-const inquirer = require('inquirer');
 const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
 const {
   loadConfig,
@@ -21,21 +20,10 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const {
-  PORTAL_NAME,
-  PORTAL_ID,
-  CLIENT_ID,
-  CLIENT_SECRET,
-} = require('../lib/prompts');
+const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
-
 const REQUIRED_SCOPES = ['content'];
-
-const getAuthContext = async () => {
-  const prompt = inquirer.createPromptModule();
-  return prompt([PORTAL_NAME, PORTAL_ID, CLIENT_ID, CLIENT_SECRET]);
-};
 
 const setupOauth = (answers, portalId) => {
   const config = getPortalConfig(portalId) || {};
@@ -70,7 +58,7 @@ const addOauthToPortalConfig = (oauth, portalId) => {
 };
 
 const addNewAuthorizedOauthToConfig = async () => {
-  const answers = await getAuthContext();
+  const answers = await promptUser(OAUTH_FLOW);
   const portalId = parseInt(answers.portalId, 10);
   const oauth = setupOauth(answers, portalId);
 
