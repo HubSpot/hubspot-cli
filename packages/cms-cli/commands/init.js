@@ -8,7 +8,6 @@ const {
 } = require('@hubspot/cms-lib/lib/config');
 const {
   logFileSystemErrorInstance,
-  logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -19,21 +18,30 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { promptUser, API_KEY_FLOW, AUTH_METHOD } = require('../lib/prompts');
+const {
+  promptUser,
+  OAUTH_FLOW,
+  API_KEY_FLOW,
+  AUTH_METHOD,
+} = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { authAction } = require('./auth');
+const { addNewAuthorizedOauthToConfig } = require('./auth');
 
 const COMMAND_NAME = 'init';
 
-const oauthConfigSetup = async ({ options }) => {
+const oauthConfigSetup = async ({ configPath }) => {
+  const configData = await promptUser(OAUTH_FLOW);
+
   try {
     createEmptyConfigFile();
     process.on('exit', deleteEmptyConfigFile);
-    await authAction(AUTH_METHODS.oauth.value, options);
-  } catch (e) {
-    deleteEmptyConfigFile();
-    logErrorInstance(e, AUTH_METHODS.oauth.value);
+    await addNewAuthorizedOauthToConfig(configData);
+  } catch (err) {
+    logFileSystemErrorInstance(err, {
+      filepath: configPath,
+      configData,
+    });
   }
 
   trackCommandUsage(COMMAND_NAME, {
@@ -86,7 +94,7 @@ function initializeConfigCommand(program) {
         });
       } else if (authMethod === AUTH_METHODS.oauth.value) {
         return oauthConfigSetup({
-          options,
+          configPath,
         });
       }
     });
