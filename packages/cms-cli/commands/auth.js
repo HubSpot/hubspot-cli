@@ -30,6 +30,8 @@ const {
 
 const COMMAND_NAME = 'auth';
 
+const REQUIRED_SCOPES = ['content'];
+
 const getAuthContext = async () => {
   const prompt = inquirer.createPromptModule();
   return prompt([PORTAL_NAME, PORTAL_ID, CLIENT_ID, CLIENT_SECRET]);
@@ -41,7 +43,7 @@ const setupOauth = (answers, portalId) => {
     {
       ...answers,
       environment: config.env || 'prod',
-      scopes: ['content'],
+      scopes: REQUIRED_SCOPES,
     },
     logger
   );
