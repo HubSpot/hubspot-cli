@@ -69,6 +69,15 @@ const addOauthToPortalConfig = (oauth, portalId) => {
   }
 };
 
+const addNewAuthorizedOauthToConfig = async () => {
+  const answers = await getAuthContext();
+  const portalId = parseInt(answers.portalId, 10);
+  const oauth = setupOauth(answers, portalId);
+
+  await authorizeOauth(oauth);
+  addOauthToPortalConfig(oauth, portalId);
+};
+
 async function authAction(type, options) {
   setLogLevel(options);
   logDebugInfo(options);
@@ -85,13 +94,9 @@ async function authAction(type, options) {
     );
     return;
   }
-  const answers = await getAuthContext();
-  const portalId = parseInt(answers.portalId, 10);
-  const oauth = setupOauth(answers, portalId);
 
   trackCommandUsage(COMMAND_NAME);
-  authorizeOauth(oauth);
-  addOauthToPortalConfig(oauth, portalId);
+  await addNewAuthorizedOauthToConfig();
 }
 
 function configureAuthCommand(program) {
