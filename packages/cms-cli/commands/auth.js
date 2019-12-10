@@ -1,13 +1,11 @@
 const { version } = require('../package.json');
-const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
-const {
-  loadConfig,
-  getPortalConfig,
-  updatePortalConfig,
-} = require('@hubspot/cms-lib');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
+const {
+  setupOauth,
+  addOauthToPortalConfig,
+} = require('@hubspot/cms-lib/oauth');
 
 const { validateConfig } = require('../lib/validation');
 const {
@@ -25,45 +23,15 @@ const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 const COMMAND_NAME = 'auth';
 const REQUIRED_SCOPES = ['content'];
 
-const setupOauth = (answers, portalId) => {
-  const config = getPortalConfig(portalId) || {};
-  return new OAuth2Manager(
-    {
-      ...answers,
-      environment: config.env || 'prod',
-      scopes: REQUIRED_SCOPES,
-    },
-    logger
-  );
-};
-
-const authorizeOauth = async oauth => {
+const addNewAuthorizedOauthToConfig = async configData => {
+  const portalId = parseInt(configData.portalId, 10);
+  const oauth = setupOauth(portalId, {
+    ...configData,
+    scopes: REQUIRED_SCOPES,
+  });
   logger.log('Authorizing');
   await oauth.authorize();
-};
-
-const addOauthToPortalConfig = (oauth, portalId) => {
-  logger.log('Updating configuration');
-  try {
-    updatePortalConfig({
-      ...oauth.toObj(),
-      authType: AUTH_METHODS.oauth.value,
-      portalId,
-    });
-    logger.log('Configuration updated');
-    process.exit();
-  } catch (err) {
-    logErrorInstance(err);
-  }
-};
-
-const addNewAuthorizedOauthToConfig = async () => {
-  const answers = await promptUser(OAUTH_FLOW);
-  const portalId = parseInt(answers.portalId, 10);
-  const oauth = setupOauth(answers, portalId);
-
-  await authorizeOauth(oauth);
-  addOauthToPortalConfig(oauth, portalId);
+  addOauthToPortalConfig(portalId, oauth);
 };
 
 async function authAction(type, options) {
@@ -83,8 +51,9 @@ async function authAction(type, options) {
     return;
   }
 
+  const configData = await promptUser(OAUTH_FLOW);
   trackCommandUsage(COMMAND_NAME);
-  await addNewAuthorizedOauthToConfig();
+  await addNewAuthorizedOauthToConfig(configData);
 }
 
 function configureAuthCommand(program) {
@@ -101,5 +70,5 @@ function configureAuthCommand(program) {
 
 module.exports = {
   configureAuthCommand,
-  authAction,
+  addNewAuthorizedOauthToConfig,
 };

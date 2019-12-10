@@ -73,7 +73,7 @@ const AUTH_METHOD = {
   choices: Object.keys(AUTH_METHODS).map(method => AUTH_METHODS[method]),
 };
 
-const OAUTH_FLOW = [PORTAL_NAME, PORTAL_ID, CLIENT_ID, CLIENT_SECRET];
+const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
 
 module.exports = {
