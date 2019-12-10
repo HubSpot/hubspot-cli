@@ -2,7 +2,8 @@ const { version } = require('../package.json');
 const inquirer = require('inquirer');
 const {
   getConfigPath,
-  writeNewPortalApiKeyConfig,
+  updatePortalConfig,
+  updateDefaultPortal,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
@@ -55,7 +56,10 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   const configData = await promptUser([PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY]);
 
   try {
-    writeNewPortalApiKeyConfig(configData);
+    createEmptyConfigFile();
+    process.on('exit', deleteEmptyConfigFile);
+    updateDefaultPortal(configData.name);
+    updatePortalConfig(configData);
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,

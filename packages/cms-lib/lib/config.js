@@ -163,6 +163,8 @@ const updatePortalConfig = configOptions => {
     scopes,
     tokenInfo,
     defaultMode,
+    name,
+    apiKey,
   } = configOptions;
 
   if (!portalId) {
@@ -186,10 +188,12 @@ const updatePortalConfig = configOptions => {
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
+    name,
     env,
     portalId,
     authType,
     auth,
+    apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
   };
 
@@ -208,30 +212,26 @@ const updatePortalConfig = configOptions => {
   writeConfig();
 };
 
-const setDefaultConfigPath = () => {
-  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
-};
+/**
+ * @throws {Error}
+ */
+const updateDefaultPortal = defaultPortal => {
+  if (
+    !defaultPortal ||
+    (typeof defaultPortal !== 'number' && typeof defaultPortal !== 'string')
+  ) {
+    throw new Error(
+      'A defaultPortal with value of number or string is required to update the config'
+    );
+  }
 
-const writeNewPortalApiKeyConfig = configOptions => {
-  setConfig(getNewPortalApiKeyConfig(configOptions));
-  setDefaultConfigPath();
+  const config = getAndLoadConfigIfNeeded();
+  config.defaultPortal = defaultPortal;
   writeConfig();
 };
 
-const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
-  logger.log('Generating config data');
-  return {
-    defaultPortal: name,
-    portals: [
-      {
-        name,
-        portalId,
-        apiKey,
-        authType: 'apikey',
-        env: getConfigEnv(environment),
-      },
-    ],
-  };
+const setDefaultConfigPath = () => {
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
 };
 
 const configFileExists = () => {
@@ -265,7 +265,7 @@ module.exports = {
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
-  writeNewPortalApiKeyConfig,
+  updateDefaultPortal,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 };
