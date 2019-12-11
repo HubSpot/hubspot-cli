@@ -32,6 +32,21 @@ const DEFAULT_MODE = Mode.publish;
 
 const DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yml';
 
+const EMPTY_CONFIG_FILE_CONTENTS = '';
+
+const AUTH_METHODS = {
+  oauth: {
+    value: 'oauth2',
+    name: 'OAuth2',
+  },
+  api: {
+    value: 'apiKey',
+    name: 'API Key',
+  },
+};
+
+const DEFAULT_OAUTH_SCOPES = ['content'];
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -39,4 +54,7 @@ module.exports = {
   MODULE_EXTENSION,
   DEFAULT_MODE,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  EMPTY_CONFIG_FILE_CONTENTS,
+  AUTH_METHODS,
+  DEFAULT_OAUTH_SCOPES,
 };

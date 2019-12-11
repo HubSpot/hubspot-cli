@@ -1,4 +1,11 @@
-const API_KEY_REGEX = /^([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})$/i;
+const inquirer = require('inquirer');
+const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
+const { API_KEY_REGEX } = require('./regex');
+
+const promptUser = async promptConfig => {
+  const prompt = inquirer.createPromptModule();
+  return prompt(promptConfig);
+};
 
 const PORTAL_ID = {
   name: 'portalId',
@@ -58,10 +65,25 @@ const PORTAL_API_KEY = {
   },
 };
 
+const AUTH_METHOD = {
+  type: 'list',
+  name: 'authMethod',
+  message: 'Choose authentication method',
+  default: AUTH_METHODS.oauth.value,
+  choices: Object.keys(AUTH_METHODS).map(method => AUTH_METHODS[method]),
+};
+
+const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET];
+const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+
 module.exports = {
+  promptUser,
   PORTAL_API_KEY,
   PORTAL_ID,
   PORTAL_NAME,
   CLIENT_ID,
   CLIENT_SECRET,
+  AUTH_METHOD,
+  OAUTH_FLOW,
+  API_KEY_FLOW,
 };

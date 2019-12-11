@@ -1,36 +1,80 @@
 const { version } = require('../package.json');
-const inquirer = require('inquirer');
 const {
   getConfigPath,
-  writeNewPortalApiKeyConfig,
+  updatePortalConfig,
+  updateDefaultPortal,
+  createEmptyConfigFile,
+  deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  AUTH_METHODS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { PORTAL_API_KEY, PORTAL_ID, PORTAL_NAME } = require('../lib/prompts');
+const {
+  promptUser,
+  OAUTH_FLOW,
+  API_KEY_FLOW,
+  AUTH_METHOD,
+} = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
 
-const promptUser = async promptConfig => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
+const oauthConfigSetup = async ({ configPath }) => {
+  const configData = await promptUser(OAUTH_FLOW);
+
+  try {
+    createEmptyConfigFile();
+    process.on('exit', deleteEmptyConfigFile);
+    await authenticateWithOauth(configData);
+    process.exit();
+  } catch (err) {
+    logFileSystemErrorInstance(err, {
+      filepath: configPath,
+      configData,
+    });
+  }
+
+  trackCommandUsage(COMMAND_NAME, {
+    authType: AUTH_METHODS.oauth.value,
+  });
+};
+
+const apiKeyConfigSetup = async ({ configPath }) => {
+  const configData = await promptUser(API_KEY_FLOW);
+
+  try {
+    createEmptyConfigFile();
+    process.on('exit', deleteEmptyConfigFile);
+    updateDefaultPortal(configData.name);
+    updatePortalConfig(configData);
+  } catch (err) {
+    logFileSystemErrorInstance(err, {
+      filepath: configPath,
+      configData,
+    });
+  }
+
+  trackCommandUsage(COMMAND_NAME, {
+    authType: AUTH_METHODS.api.value,
+  });
 };
 
 function initializeConfigCommand(program) {
   program
     .version(version)
     .description(
-      `Initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
+      `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
     .action(async options => {
       setLogLevel(options);
@@ -43,21 +87,17 @@ function initializeConfigCommand(program) {
         process.exit(1);
       }
 
-      const configData = await promptUser([
-        PORTAL_NAME,
-        PORTAL_ID,
-        PORTAL_API_KEY,
-      ]);
+      const { authMethod } = await promptUser(AUTH_METHOD);
 
-      try {
-        writeNewPortalApiKeyConfig(configData);
-      } catch (err) {
-        logFileSystemErrorInstance(err, {
-          filepath: configPath,
-          configData,
+      if (authMethod === AUTH_METHODS.api.value) {
+        return apiKeyConfigSetup({
+          configPath,
+        });
+      } else if (authMethod === AUTH_METHODS.oauth.value) {
+        return oauthConfigSetup({
+          configPath,
         });
       }
-      trackCommandUsage(COMMAND_NAME);
     });
 
   addLoggerOptions(program);
