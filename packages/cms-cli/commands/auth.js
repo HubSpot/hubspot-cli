@@ -2,10 +2,7 @@ const { version } = require('../package.json');
 const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
-const {
-  setupOauth,
-  addOauthToPortalConfig,
-} = require('@hubspot/cms-lib/oauth');
+const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 
 const { validateConfig } = require('../lib/validation');
 const {
@@ -21,18 +18,6 @@ const {
 const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
-const REQUIRED_SCOPES = ['content'];
-
-const addNewAuthorizedOauthToConfig = async configData => {
-  const portalId = parseInt(configData.portalId, 10);
-  const oauth = setupOauth(portalId, {
-    ...configData,
-    scopes: REQUIRED_SCOPES,
-  });
-  logger.log('Authorizing');
-  await oauth.authorize();
-  addOauthToPortalConfig(portalId, oauth);
-};
 
 async function authAction(type, options) {
   setLogLevel(options);
@@ -53,7 +38,8 @@ async function authAction(type, options) {
 
   const configData = await promptUser(OAUTH_FLOW);
   trackCommandUsage(COMMAND_NAME);
-  await addNewAuthorizedOauthToConfig(configData);
+  await authenticateWithOauth(configData);
+  process.exit();
 }
 
 function configureAuthCommand(program) {
@@ -70,5 +56,4 @@ function configureAuthCommand(program) {
 
 module.exports = {
   configureAuthCommand,
-  addNewAuthorizedOauthToConfig,
 };

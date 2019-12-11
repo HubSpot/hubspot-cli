@@ -45,6 +45,8 @@ const AUTH_METHODS = {
   },
 };
 
+const DEFAULT_OAUTH_SCOPES = ['content'];
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -54,4 +56,5 @@ module.exports = {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   AUTH_METHODS,
+  DEFAULT_OAUTH_SCOPES,
 };

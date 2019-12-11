@@ -14,6 +14,7 @@ const {
   AUTH_METHODS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -26,7 +27,6 @@ const {
 } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { addNewAuthorizedOauthToConfig } = require('./auth');
 
 const COMMAND_NAME = 'init';
 
@@ -36,7 +36,8 @@ const oauthConfigSetup = async ({ configPath }) => {
   try {
     createEmptyConfigFile();
     process.on('exit', deleteEmptyConfigFile);
-    await addNewAuthorizedOauthToConfig(configData);
+    await authenticateWithOauth(configData);
+    process.exit();
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,
