@@ -227,7 +227,14 @@ const updateDefaultPortal = defaultPortal => {
 
   const config = getAndLoadConfigIfNeeded();
   config.defaultPortal = defaultPortal;
+  setDefaultConfigPathIfUnset();
   writeConfig();
+};
+
+const setDefaultConfigPathIfUnset = () => {
+  if (!_configPath) {
+    setDefaultConfigPath();
+  }
 };
 
 const setDefaultConfigPath = () => {
@@ -243,9 +250,7 @@ const configFileIsBlank = () => {
 };
 
 const createEmptyConfigFile = () => {
-  if (!_configPath) {
-    setDefaultConfigPath();
-  }
+  setDefaultConfigPathIfUnset();
 
   return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
 };
