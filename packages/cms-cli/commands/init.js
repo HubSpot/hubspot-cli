@@ -38,8 +38,6 @@ const oauthConfigSetup = async ({ configPath }) => {
   const configData = await promptUser(OAUTH_FLOW);
 
   try {
-    createEmptyConfigFile();
-    process.on('exit', deleteEmptyConfigFile);
     await authenticateWithOauth(configData);
     process.exit();
   } catch (err) {
@@ -63,8 +61,6 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   const configData = await promptUser(API_KEY_FLOW);
 
   try {
-    createEmptyConfigFile();
-    process.on('exit', deleteEmptyConfigFile);
     updateDefaultPortal(configData.name);
     updatePortalConfig(configData);
   } catch (err) {
@@ -96,6 +92,9 @@ function initializeConfigCommand(program) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
+
+      createEmptyConfigFile();
+      process.on('exit', deleteEmptyConfigFile);
 
       const { authMethod } = await promptUser(AUTH_METHOD);
 
