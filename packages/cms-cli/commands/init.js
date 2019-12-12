@@ -31,6 +31,10 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const COMMAND_NAME = 'init';
 
 const oauthConfigSetup = async ({ configPath }) => {
+  trackCommandUsage(COMMAND_NAME, {
+    authMethod: AUTH_METHODS.api.value,
+    status: 'started',
+  });
   const configData = await promptUser(OAUTH_FLOW);
 
   try {
@@ -46,11 +50,16 @@ const oauthConfigSetup = async ({ configPath }) => {
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.oauth.value,
+    authMethod: AUTH_METHODS.oauth.value,
+    status: 'complete',
   });
 };
 
 const apiKeyConfigSetup = async ({ configPath }) => {
+  trackCommandUsage(COMMAND_NAME, {
+    authMethod: AUTH_METHODS.api.value,
+    status: 'started',
+  });
   const configData = await promptUser(API_KEY_FLOW);
 
   try {
@@ -66,7 +75,8 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   }
 
   trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.api.value,
+    authMethod: AUTH_METHODS.api.value,
+    status: 'complete',
   });
 };
 
