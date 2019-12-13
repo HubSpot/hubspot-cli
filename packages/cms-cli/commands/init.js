@@ -17,7 +17,7 @@ const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
-  trackCommandAction,
+  trackAuthAction,
 } = require('../lib/usageTracking');
 const {
   promptUser,
@@ -60,13 +60,9 @@ const AUTH_METHOD_FLOW = {
   },
 };
 
-const trackAuthMethodStatus = (authMethod, status) => {
-  return trackCommandAction(COMMAND_NAME, `${authMethod} ${status}`);
-};
-
 const completeConfigSetup = async ({ authMethod, configPath }) => {
   const flow = AUTH_METHOD_FLOW[authMethod];
-  trackAuthMethodStatus(authMethod, TRACKING_STATUS.STARTED);
+  trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.STARTED);
 
   try {
     flow.setup(await flow.prompt());
@@ -76,7 +72,7 @@ const completeConfigSetup = async ({ authMethod, configPath }) => {
     });
   }
 
-  trackAuthMethodStatus(authMethod, TRACKING_STATUS.COMPLETE);
+  trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.COMPLETE);
 };
 
 function initializeConfigCommand(program) {

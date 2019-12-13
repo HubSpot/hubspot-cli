@@ -75,13 +75,28 @@ const addHelpUsageTracking = (program, command) => {
   });
 };
 
-const trackCommandAction = (command, action, ...rest) => {
-  return trackCommandUsage(`${command}: ${action}`, ...rest);
+const trackAuthAction = async (command, authType, step) => {
+  if (!isTrackingAllowed()) {
+    return;
+  }
+  try {
+    return await trackUsage('cli-interaction', EventClass.INTERACTION, {
+      action: 'cli-auth',
+      os: getPlatform(),
+      nodeVersion: process.version,
+      version,
+      command,
+      authType,
+      step,
+    });
+  } catch (e) {
+    logger.debug('Auth action tracking failed: %s', e.message);
+  }
 };
 
 module.exports = {
   trackCommandUsage,
   trackHelpUsage,
   addHelpUsageTracking,
-  trackCommandAction,
+  trackAuthAction,
 };
