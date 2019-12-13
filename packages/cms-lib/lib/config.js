@@ -264,6 +264,10 @@ const configFileIsBlank = () => {
 const createEmptyConfigFile = ({ deleteOnExitIfBlank }) => {
   setDefaultConfigPathIfUnset();
 
+  if (configFileExists()) {
+    return;
+  }
+
   if (deleteOnExitIfBlank) {
     process.on('exit', deleteEmptyConfigFile);
   }
