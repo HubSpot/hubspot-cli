@@ -28,12 +28,18 @@ const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
+const TRACKING_STATUS = {
+  STARTED: 'started',
+  COMPLETE: 'complete',
+};
+
+const trackAuthMethodStatus = (authMethod, status) => {
+  return trackCommandUsage(`${authMethod} ${status}`);
+};
 
 const oauthConfigSetup = async ({ configPath }) => {
-  trackCommandUsage(COMMAND_NAME, {
-    authMethod: AUTH_METHODS.api.value,
-    status: 'started',
-  });
+  const authMethod = AUTH_METHODS.oauth.value;
+  trackAuthMethodStatus(authMethod, TRACKING_STATUS.STARTED);
   const configData = await promptUser(OAUTH_FLOW);
 
   try {
@@ -49,17 +55,12 @@ const oauthConfigSetup = async ({ configPath }) => {
     });
   }
 
-  trackCommandUsage(COMMAND_NAME, {
-    authMethod: AUTH_METHODS.oauth.value,
-    status: 'complete',
-  });
+  trackAuthMethodStatus(authMethod, TRACKING_STATUS.COMPLETE);
 };
 
 const apiKeyConfigSetup = async ({ configPath }) => {
-  trackCommandUsage(COMMAND_NAME, {
-    authMethod: AUTH_METHODS.api.value,
-    status: 'started',
-  });
+  const authMethod = AUTH_METHODS.api.value;
+  trackAuthMethodStatus(authMethod, TRACKING_STATUS.STARTED);
   const configData = await promptUser(API_KEY_FLOW);
 
   try {
@@ -75,10 +76,7 @@ const apiKeyConfigSetup = async ({ configPath }) => {
     });
   }
 
-  trackCommandUsage(COMMAND_NAME, {
-    authMethod: AUTH_METHODS.api.value,
-    status: 'complete',
-  });
+  trackAuthMethodStatus(authMethod, TRACKING_STATUS.COMPLETE);
 };
 
 function initializeConfigCommand(program) {
@@ -90,6 +88,7 @@ function initializeConfigCommand(program) {
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
+      trackCommandUsage(COMMAND_NAME);
 
       const configPath = getConfigPath();
 
