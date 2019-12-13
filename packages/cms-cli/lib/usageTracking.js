@@ -1,8 +1,6 @@
 const { trackUsage } = require('@hubspot/cms-lib/api/fileMapper');
-const {
-  getAndLoadConfigIfNeeded,
-  getPortalConfig,
-} = require('@hubspot/cms-lib');
+const { getPortalConfig } = require('@hubspot/cms-lib');
+const { isTrackingAllowed } = require('@hubspot/cms-lib/lib/config');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { version } = require('../package.json');
 const { getPlatform } = require('./environment');
@@ -14,11 +12,6 @@ const EventClass = {
   VIEW: 'VIEW',
   ACTIVATION: 'ACTIVATION',
 };
-
-function isTrackingAllowed() {
-  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
-  return allowUsageTracking !== false;
-}
 
 function trackCommandUsage(command, meta = {}, portalId) {
   if (!isTrackingAllowed()) {

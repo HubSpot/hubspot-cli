@@ -56,12 +56,14 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = path => {
+const loadConfig = (path, options = {}) => {
   _configPath = getConfigPath(path);
   if (!_configPath) {
-    logger.error(
-      `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
-    );
+    if (!options.silenceErrors) {
+      logger.error(
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+      );
+    }
     return;
   }
 
@@ -81,9 +83,19 @@ const loadConfig = path => {
   }
 };
 
+const isTrackingAllowed = () => {
+  if (!configFileExists() || configFileIsBlank()) {
+    return true;
+  }
+  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
+  return allowUsageTracking !== false;
+};
+
 const getAndLoadConfigIfNeeded = () => {
   if (!_config) {
-    loadConfig();
+    loadConfig(null, {
+      silenceErrors: true,
+    });
   }
   return _config;
 };
@@ -277,4 +289,5 @@ module.exports = {
   updateDefaultPortal,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  isTrackingAllowed,
 };
