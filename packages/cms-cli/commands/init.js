@@ -4,7 +4,6 @@ const {
   updatePortalConfig,
   updateDefaultPortal,
   createEmptyConfigFile,
-  deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const {
   logFileSystemErrorInstance,
@@ -38,6 +37,9 @@ const oauthConfigSetup = async ({ configPath }) => {
   const configData = await promptUser(OAUTH_FLOW);
 
   try {
+    createEmptyConfigFile({
+      deleteOnExitIfBlank: true,
+    });
     await authenticateWithOauth(configData);
     process.exit();
   } catch (err) {
@@ -61,6 +63,9 @@ const apiKeyConfigSetup = async ({ configPath }) => {
   const configData = await promptUser(API_KEY_FLOW);
 
   try {
+    createEmptyConfigFile({
+      deleteOnExitIfBlank: true,
+    });
     updateDefaultPortal(configData.name);
     updatePortalConfig(configData);
   } catch (err) {
@@ -92,9 +97,6 @@ function initializeConfigCommand(program) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
-
-      createEmptyConfigFile();
-      process.on('exit', deleteEmptyConfigFile);
 
       const { authMethod } = await promptUser(AUTH_METHOD);
 
