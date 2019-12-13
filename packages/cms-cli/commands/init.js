@@ -32,47 +32,46 @@ const TRACKING_STATUS = {
   STARTED: 'started',
   COMPLETE: 'complete',
 };
+const AUTH_METHOD_FLOW = {
+  [AUTH_METHODS.api.value]: {
+    prompt: async () => {
+      return promptUser(API_KEY_FLOW);
+    },
+    setup: async configData => {
+      createEmptyConfigFile({
+        deleteOnExitIfBlank: true,
+      });
+      updateDefaultPortal(configData.name);
+      updatePortalConfig(configData);
+    },
+  },
+  [AUTH_METHODS.oauth.value]: {
+    prompt: async () => {
+      return promptUser(OAUTH_FLOW);
+    },
+    setup: async configData => {
+      createEmptyConfigFile({
+        deleteOnExitIfBlank: true,
+      });
+      await authenticateWithOauth(configData);
+      process.exit();
+    },
+  },
+};
 
 const trackAuthMethodStatus = (authMethod, status) => {
   return trackCommandUsage(`${authMethod} ${status}`);
 };
 
-const oauthConfigSetup = async ({ configPath }) => {
-  const authMethod = AUTH_METHODS.oauth.value;
+const completeConfigSetup = async ({ authMethod, configPath }) => {
+  const flow = AUTH_METHOD_FLOW[authMethod];
   trackAuthMethodStatus(authMethod, TRACKING_STATUS.STARTED);
-  const configData = await promptUser(OAUTH_FLOW);
 
   try {
-    createEmptyConfigFile({
-      deleteOnExitIfBlank: true,
-    });
-    await authenticateWithOauth(configData);
-    process.exit();
+    flow.setup(await flow.prompt());
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,
-      configData,
-    });
-  }
-
-  trackAuthMethodStatus(authMethod, TRACKING_STATUS.COMPLETE);
-};
-
-const apiKeyConfigSetup = async ({ configPath }) => {
-  const authMethod = AUTH_METHODS.api.value;
-  trackAuthMethodStatus(authMethod, TRACKING_STATUS.STARTED);
-  const configData = await promptUser(API_KEY_FLOW);
-
-  try {
-    createEmptyConfigFile({
-      deleteOnExitIfBlank: true,
-    });
-    updateDefaultPortal(configData.name);
-    updatePortalConfig(configData);
-  } catch (err) {
-    logFileSystemErrorInstance(err, {
-      filepath: configPath,
-      configData,
     });
   }
 
@@ -98,16 +97,10 @@ function initializeConfigCommand(program) {
       }
 
       const { authMethod } = await promptUser(AUTH_METHOD);
-
-      if (authMethod === AUTH_METHODS.api.value) {
-        return apiKeyConfigSetup({
-          configPath,
-        });
-      } else if (authMethod === AUTH_METHODS.oauth.value) {
-        return oauthConfigSetup({
-          configPath,
-        });
-      }
+      return completeConfigSetup({
+        authMethod,
+        configPath,
+      });
     });
 
   addLoggerOptions(program);
