@@ -17,6 +17,7 @@ const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
+  trackCommandAction,
 } = require('../lib/usageTracking');
 const {
   promptUser,
@@ -60,7 +61,7 @@ const AUTH_METHOD_FLOW = {
 };
 
 const trackAuthMethodStatus = (authMethod, status) => {
-  return trackCommandUsage(`${authMethod} ${status}`);
+  return trackCommandAction(COMMAND_NAME, `${authMethod} ${status}`);
 };
 
 const completeConfigSetup = async ({ authMethod, configPath }) => {

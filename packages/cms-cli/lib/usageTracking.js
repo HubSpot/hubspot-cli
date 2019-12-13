@@ -75,8 +75,13 @@ const addHelpUsageTracking = (program, command) => {
   });
 };
 
+const trackCommandAction = (command, action, ...rest) => {
+  return trackCommandUsage(`${command}: ${action}`, ...rest);
+};
+
 module.exports = {
   trackCommandUsage,
   trackHelpUsage,
   addHelpUsageTracking,
+  trackCommandAction,
 };
