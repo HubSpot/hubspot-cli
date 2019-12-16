@@ -4,6 +4,7 @@ const {
   updatePortalConfig,
   updateDefaultPortal,
   createEmptyConfigFile,
+  deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const {
   logFileSystemErrorInstance,
@@ -39,9 +40,8 @@ const AUTH_METHOD_FLOW = {
       return promptUser(API_KEY_FLOW);
     },
     setup: async configData => {
-      createEmptyConfigFile({
-        deleteOnExitIfBlank: true,
-      });
+      createEmptyConfigFile();
+      process.on('exit', deleteEmptyConfigFile);
       updateDefaultPortal(configData.name);
       updatePortalConfig(configData);
     },
@@ -51,9 +51,8 @@ const AUTH_METHOD_FLOW = {
       return promptUser(OAUTH_FLOW);
     },
     setup: async configData => {
-      createEmptyConfigFile({
-        deleteOnExitIfBlank: true,
-      });
+      createEmptyConfigFile();
+      process.on('exit', deleteEmptyConfigFile);
       await authenticateWithOauth(configData);
       process.exit();
     },
