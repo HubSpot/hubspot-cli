@@ -16,5 +16,5 @@ Before releasing a new version, it is a good idea to release a prerelease so tha
 ## Publishing a prerelease
 
 1. Run `yarn publish-prerelease`. The publish command will handle bumping the version, tagging via git, and publishing the packages to NPM under the `next` dist-tag.
-1. If there are publishing errors, you can run again via `yarn lerna publish from-package` ([Docs][from-package]).
+1. If there are publishing errors, you can run again via `yarn lerna publish from-package --dist-tag next` ([Docs][from-package]).
 
