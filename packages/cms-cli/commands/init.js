@@ -18,6 +18,7 @@ const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
+  trackAuthAction,
 } = require('../lib/usageTracking');
 const {
   promptUser,
@@ -29,45 +30,48 @@ const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
-
-const oauthConfigSetup = async ({ configPath }) => {
-  const configData = await promptUser(OAUTH_FLOW);
-
-  try {
-    createEmptyConfigFile();
-    process.on('exit', deleteEmptyConfigFile);
-    await authenticateWithOauth(configData);
-    process.exit();
-  } catch (err) {
-    logFileSystemErrorInstance(err, {
-      filepath: configPath,
-      configData,
-    });
-  }
-
-  trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.oauth.value,
-  });
+const TRACKING_STATUS = {
+  STARTED: 'started',
+  COMPLETE: 'complete',
+};
+const AUTH_METHOD_FLOW = {
+  [AUTH_METHODS.api.value]: {
+    prompt: async () => {
+      return promptUser(API_KEY_FLOW);
+    },
+    setup: async configData => {
+      createEmptyConfigFile();
+      process.on('exit', deleteEmptyConfigFile);
+      updateDefaultPortal(configData.name);
+      updatePortalConfig(configData);
+    },
+  },
+  [AUTH_METHODS.oauth.value]: {
+    prompt: async () => {
+      return promptUser(OAUTH_FLOW);
+    },
+    setup: async configData => {
+      createEmptyConfigFile();
+      process.on('exit', deleteEmptyConfigFile);
+      await authenticateWithOauth(configData);
+      process.exit();
+    },
+  },
 };
 
-const apiKeyConfigSetup = async ({ configPath }) => {
-  const configData = await promptUser(API_KEY_FLOW);
+const completeConfigSetup = async ({ authMethod, configPath }) => {
+  const flow = AUTH_METHOD_FLOW[authMethod];
+  trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.STARTED);
 
   try {
-    createEmptyConfigFile();
-    process.on('exit', deleteEmptyConfigFile);
-    updateDefaultPortal(configData.name);
-    updatePortalConfig(configData);
+    flow.setup(await flow.prompt());
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,
-      configData,
     });
   }
 
-  trackCommandUsage(COMMAND_NAME, {
-    authType: AUTH_METHODS.api.value,
-  });
+  trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.COMPLETE);
 };
 
 function initializeConfigCommand(program) {
@@ -79,6 +83,7 @@ function initializeConfigCommand(program) {
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
+      trackCommandUsage(COMMAND_NAME);
 
       const configPath = getConfigPath();
 
@@ -88,16 +93,10 @@ function initializeConfigCommand(program) {
       }
 
       const { authMethod } = await promptUser(AUTH_METHOD);
-
-      if (authMethod === AUTH_METHODS.api.value) {
-        return apiKeyConfigSetup({
-          configPath,
-        });
-      } else if (authMethod === AUTH_METHODS.oauth.value) {
-        return oauthConfigSetup({
-          configPath,
-        });
-      }
+      return completeConfigSetup({
+        authMethod,
+        configPath,
+      });
     });
 
   addLoggerOptions(program);
