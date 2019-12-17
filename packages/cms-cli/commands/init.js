@@ -88,7 +88,9 @@ function initializeConfigCommand(program) {
       const configPath = getConfigPath();
 
       if (configPath) {
-        logger.error(`The config file '${configPath}' already exists.`);
+        logger.error(
+          `The config file '${configPath}' already exists. Run 'hs config' to add or update an entry to the config file.`
+        );
         process.exit(1);
       }
 
