@@ -54,6 +54,7 @@ function watch(portalId, src, dest, { mode, cwd, remove }) {
 
   const watcher = chokidar.watch(src, {
     ignoreInitial: true,
+    ignored: (file) => shouldIgnoreFile(file, cwd),
   });
 
   const getDesignManagerPath = file => {
