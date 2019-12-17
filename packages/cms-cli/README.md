@@ -61,13 +61,13 @@ Show all commands
 hs help
 ```
 
-Upload a file or directory to HubSpot
+Upload a file or directory to the Design Manager
 
 ```bash
 hs upload --portal=DEV [src] [dest]
 ```
 
-Fetch a file or directory by path
+Fetch a file or directory by path from the Design Manager
 
 ```bash
 hs fetch --portal=DEV [path] [dest]
@@ -76,19 +76,19 @@ hs fetch --portal=DEV [path] [dest]
 hs fetch --portal=DEV --overwrite [path] [dest]
 ```
 
-Watch a directory of files and automatically upload changes
+Watch a directory of files and automatically upload changes to the Design Manager
 
 ```bash
 hs watch --portal=DEV [src] [dest]
 ```
 
-Create a new asset
+Create a new asset locally
 
 ```bash
 hs create [type] [dest]
 ```
 
-Delete a file or directory from HubSpot
+Delete a file or directory from the Design Manager
 
 ```bash
 hs remove --portal=DEV [path]
@@ -99,3 +99,11 @@ Authenticate against a portal using OAuth2
 ```bash
 hs auth oauth2
 ```
+
+Upload a file or directory to the File Manager
+
+```bash
+hs filemanager upload --portal=DEV [src] [dest]
+```
+
+**Note:** Uploading to the File Manager is only supported when using the `apiKey` at this point.
