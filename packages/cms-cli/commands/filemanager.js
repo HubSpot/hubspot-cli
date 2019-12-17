@@ -29,7 +29,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 
-const COMMAND_NAME = 'upload';
+const COMMAND_NAME = 'filemanager-upload';
 
 function configureFileManagerCommand(program) {
   program
