@@ -6,11 +6,12 @@ const { AUTH_METHODS, DEFAULT_OAUTH_SCOPES } = require('./lib/constants');
 const oauthManagers = new Map();
 
 const writeOauthTokenInfo = (portalConfig, tokenInfo) => {
-  const { portalId, authType, auth, env } = portalConfig;
+  const { portalId, authType, auth, env, name } = portalConfig;
 
   logger.debug(`Updating Oauth2 token info for portalId: ${portalId}`);
 
   updatePortalConfig({
+    name,
     environment: env,
     portalId,
     authType,
