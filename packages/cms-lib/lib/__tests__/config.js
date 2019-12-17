@@ -1,12 +1,11 @@
 const {
-  loadConfig,
   setConfig,
   getConfig,
   getPortalId,
-  getConfigPath,
-  writeNewPortalApiKeyConfig,
+  updateDefaultPortal,
+  deleteEmptyConfigFile,
 } = require('../config');
-const { getCwd } = require('../../path');
+jest.mock('fs');
 
 describe('lib/config', () => {
   describe('getPortalId()', () => {
@@ -41,28 +40,37 @@ describe('lib/config', () => {
     });
   });
 
-  describe('writeNewPortalApiKeyConfig()', () => {
-    const configOptions = {
-      name: 'MYPORTAL',
-      portalId: 123,
-      apiKey: 'secret',
-    };
+  describe('updateDefaultPortal()', () => {
+    const myPortalName = 'Foo';
 
     beforeEach(() => {
-      writeNewPortalApiKeyConfig(configOptions);
+      updateDefaultPortal(myPortalName);
     });
 
-    it('sets the configPath to current working directory', () => {
-      expect(getConfigPath()).toContain(getCwd());
+    it('sets the defaultPortal in the config', () => {
+      expect(getConfig().defaultPortal).toEqual(myPortalName);
     });
-    it('sets the config properties using the options passed', () => {
-      const defaultPortalConfig = getConfig().portals[0];
-      Object.keys(configOptions).forEach(prop => {
-        expect(defaultPortalConfig[prop]).toEqual(configOptions[prop]);
-      });
+  });
+
+  describe('deleteEmptyConfigFile()', () => {
+    const fs = require('fs');
+
+    it('does not delete config file if there are contents', () => {
+      fs.__setReadFile('defaultPortal: Foo');
+      fs.__setExistsValue(true);
+      fs.unlinkSync = jest.fn();
+
+      deleteEmptyConfigFile();
+      expect(fs.unlinkSync).not.toHaveBeenCalled();
     });
-    it('generates a config file', () => {
-      expect(loadConfig).not.toThrow();
+
+    it('deletes config file if empty', () => {
+      fs.__setReadFile('');
+      fs.__setExistsValue(true);
+      fs.unlinkSync = jest.fn();
+
+      deleteEmptyConfigFile();
+      expect(fs.unlinkSync).toHaveBeenCalled();
     });
   });
 });
