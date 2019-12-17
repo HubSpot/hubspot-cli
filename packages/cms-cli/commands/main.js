@@ -22,6 +22,10 @@ function configureMainCommand(program) {
     .command('hubdb <subcommand> <src>', 'manage hubdb tables', {
       noHelp: true,
     })
+    .command(
+      'filemanager <subcommand>',
+      'commands for working with the File Manager'
+    )
     .command('remove <path>', 'delete a file or folder from HubSpot')
     .alias('rm');
 
