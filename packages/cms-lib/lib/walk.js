@@ -26,7 +26,8 @@ function walk(dir) {
       if (error) {
         reject(error);
       }
-      processFiles(files).then(foldersContents => {
+      const displayedFiles = files.filter(item => !/(^|\/)\.[^/.]/g.test(item));
+      processFiles(displayedFiles).then(foldersContents => {
         resolve(
           foldersContents.reduce(
             (all, folderContents) => all.concat(folderContents),
