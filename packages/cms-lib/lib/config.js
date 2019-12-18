@@ -16,11 +16,34 @@ const {
 let _config;
 let _configPath;
 
+const getOrderedConfig = unorderedConfig => {
+  const {
+    defaultPortal,
+    defaultMode,
+    httpTimeout,
+    allowsUsageTracking,
+    portals,
+    ...rest
+  } = unorderedConfig;
+
+  return {
+    defaultPortal,
+    defaultMode,
+    httpTimeout,
+    allowsUsageTracking,
+    portals,
+    ...rest,
+  };
+};
+
 const writeConfig = () => {
   logger.debug(`Writing current config to ${_configPath}`);
+
   fs.writeFileSync(
     _configPath,
-    yaml.safeDump(JSON.parse(JSON.stringify(_config, null, 2)))
+    yaml.safeDump(
+      JSON.parse(JSON.stringify(getOrderedConfig(_config), null, 2))
+    )
   );
 };
 
