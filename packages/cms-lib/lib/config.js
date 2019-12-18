@@ -38,7 +38,6 @@ const getOrderedConfig = unorderedConfig => {
 
 const writeConfig = () => {
   logger.debug(`Writing current config to ${_configPath}`);
-
   fs.writeFileSync(
     _configPath,
     yaml.safeDump(
