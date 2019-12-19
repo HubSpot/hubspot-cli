@@ -72,7 +72,9 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
     uploadFolder(portalId, src, dest, { mode, cwd }).then(() => {
-      logger.log(`Completed uploading files in ${src} to ${dest} in ${portalId}`);
+      logger.log(
+        `Completed uploading files in ${src} to ${dest} in ${portalId}`
+      );
     });
   }
 
