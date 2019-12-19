@@ -13,7 +13,8 @@
     "commander": "^2.16.0",
     "inquirer": "^6.3.1",
     "shelljs": "0.8.3",
-    "update-notifier": "3.0.1"
+    "update-notifier": "3.0.1",
+    "yargs": "^15.0.2"
   },
   "engines": {
     "node": ">=8.9.1"
