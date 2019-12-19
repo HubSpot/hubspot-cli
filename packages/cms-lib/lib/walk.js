@@ -7,9 +7,12 @@ function walk(dir) {
       files.map(file => {
         return new Promise((resolve, reject) => {
           const filepath = path.join(dir, file);
-          fs.stat(filepath, (error, stats) => {
+          fs.lstat(filepath, (error, stats) => {
             if (error) {
               reject(error);
+            }
+            if (stats.isSymbolicLink()) {
+              resolve(filepath);
             }
             if (stats.isDirectory()) {
               walk(filepath).then(resolve);
@@ -26,8 +29,7 @@ function walk(dir) {
       if (error) {
         reject(error);
       }
-      const displayedFiles = files.filter(item => !/(^|\/)\.[^/.]/g.test(item));
-      processFiles(displayedFiles).then(foldersContents => {
+      processFiles(files).then(foldersContents => {
         resolve(
           foldersContents.reduce(
             (all, folderContents) => all.concat(folderContents),
