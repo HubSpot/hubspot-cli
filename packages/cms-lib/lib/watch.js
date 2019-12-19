@@ -49,7 +49,7 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
     });
 }
 
-function watch(portalId, src, dest, { mode, cwd, remove }) {
+function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   const watcher = chokidar.watch(src, {
@@ -62,13 +62,15 @@ function watch(portalId, src, dest, { mode, cwd, remove }) {
     return convertToUnixPath(path.join(dest, relativePath));
   };
 
-  // Use uploadFolder so that failures of initial upload are retried
-  uploadFolder(portalId, src, dest, { mode, cwd }).then(() => {
-    logger.log(`Completed uploading files in ${src} to ${dest} in ${portalId}`);
-  });
+  if (!disableInitial) {
+    // Use uploadFolder so that failures of initial upload are retried
+    uploadFolder(portalId, src, dest, { mode, cwd }).then(() => {
+      logger.log(`Completed uploading files in ${src} to ${dest} in ${portalId}`);
+    });
+  }
 
   watcher.on('ready', () => {
-    logger.debug(`File watcher is ready and watching ${src}`);
+    logger.log(`Watcher is ready and watching ${src}`);
   });
 
   watcher.on('add', file => {
