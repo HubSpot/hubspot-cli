@@ -1,5 +1,6 @@
 const path = require('path');
 const chokidar = require('chokidar');
+const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
 const {
@@ -13,6 +14,10 @@ const { getFileMapperApiQueryFromMode } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
+
+const queue = new PQueue({
+  concurrency: 10,
+});
 
 function uploadFile(portalId, file, dest, { mode, cwd }) {
   if (!isAllowedExtension(file)) {
@@ -28,25 +33,27 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
   const apiOptions = {
     qs: getFileMapperApiQueryFromMode(mode),
   };
-  upload(portalId, file, dest, apiOptions)
-    .then(() => {
-      logger.log('Uploaded file "%s" to "%s"', file, dest);
-    })
-    .catch(() => {
-      logger.debug('Uploading file "%s" to "%s" failed', file, dest);
-      logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-      upload(portalId, file, dest, apiOptions).catch(error => {
-        logger.error('Uploading file "%s" to "%s" failed', file, dest);
-        logApiUploadErrorInstance(
-          error,
-          new ApiErrorContext({
-            portalId,
-            request: dest,
-            payload: file,
-          })
-        );
+  queue.add(() => {
+    upload(portalId, file, dest, apiOptions)
+      .then(() => {
+        logger.log('Uploaded file "%s" to "%s"', file, dest);
+      })
+      .catch(() => {
+        logger.debug('Uploading file "%s" to "%s" failed', file, dest);
+        logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
+        upload(portalId, file, dest, apiOptions).catch(error => {
+          logger.error('Uploading file "%s" to "%s" failed', file, dest);
+          logApiUploadErrorInstance(
+            error,
+            new ApiErrorContext({
+              portalId,
+              request: dest,
+              payload: file,
+            })
+          );
+        });
       });
-    });
+  });
 }
 
 function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
@@ -88,20 +95,22 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
       }
 
       logger.debug('Attempting to delete file "%s"', remotePath);
-      deleteFile(portalId, remotePath)
-        .then(() => {
-          logger.log('Deleted file "%s"', remotePath);
-        })
-        .catch(error => {
-          logger.error('Deleting file "%s" failed', remotePath);
-          logApiErrorInstance(
-            error,
-            new ApiErrorContext({
-              portalId,
-              request: remotePath,
-            })
-          );
-        });
+      queue.add(() => {
+        deleteFile(portalId, remotePath)
+          .then(() => {
+            logger.log('Deleted file "%s"', remotePath);
+          })
+          .catch(error => {
+            logger.error('Deleting file "%s" failed', remotePath);
+            logApiErrorInstance(
+              error,
+              new ApiErrorContext({
+                portalId,
+                request: remotePath,
+              })
+            );
+          });
+      });
     });
   }
 
