@@ -17,6 +17,7 @@ const ALLOWED_EXTENSIONS = new Set([
 ]);
 const HUBL_EXTENSIONS = new Set(['css', 'html', 'js']);
 const MODULE_EXTENSION = 'module';
+const FUNCTIONS_EXTENSION = 'functions';
 
 /**
  * `draft` for buffer APIs.
@@ -52,6 +53,7 @@ module.exports = {
   ALLOWED_EXTENSIONS,
   HUBL_EXTENSIONS,
   MODULE_EXTENSION,
+  FUNCTIONS_EXTENSION,
   DEFAULT_MODE,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
