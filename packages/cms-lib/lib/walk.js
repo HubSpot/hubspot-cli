@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { logger } = require('../logger');
 
 function walk(dir) {
   const processFiles = files => {
@@ -12,7 +13,8 @@ function walk(dir) {
               reject(error);
             }
             if (stats.isSymbolicLink()) {
-              resolve(filepath);
+              logger.debug(`Skipping Symlink in walk: ${filepath}`);
+              reject(error);
             }
             if (stats.isDirectory()) {
               walk(filepath).then(resolve);
@@ -20,6 +22,10 @@ function walk(dir) {
               resolve(filepath);
             }
           });
+        }).catch(error => {
+          if (error) {
+            logger.error(error);
+          }
         });
       })
     );
