@@ -43,7 +43,10 @@ const AUTH_METHOD_FLOW = {
       createEmptyConfigFile();
       process.on('exit', deleteEmptyConfigFile);
       updateDefaultPortal(configData.name);
-      updatePortalConfig(configData);
+      updatePortalConfig({
+        ...configData,
+        authType: 'apikey',
+      });
     },
   },
   [AUTH_METHODS.oauth.value]: {
