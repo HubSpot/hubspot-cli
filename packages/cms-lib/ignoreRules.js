@@ -3,10 +3,10 @@ const path = require('path');
 const ignore = require('ignore');
 const findup = require('findup-sync');
 
-const hiddenFilesRegEx = /(^|\/)\.[^/.]/g;
-const ignoreRules = ignore()
-  .add('node_modules')
-  .add(hiddenFilesRegEx);
+const ignoreRules = ignore().add([
+  'node_modules', // dependencies
+  '.*', // hidden files/folders
+]);
 
 let configPath = null;
 let loaded = false;
