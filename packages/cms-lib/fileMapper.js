@@ -15,7 +15,11 @@ const {
   convertToLocalFileSystemPath,
 } = require('./path');
 const { fetchFileStream, download } = require('./api/fileMapper');
-const { Mode, MODULE_EXTENSION, FUNCTIONS_EXTENSION } = require('./lib/constants');
+const {
+  Mode,
+  MODULE_EXTENSION,
+  FUNCTIONS_EXTENSION,
+} = require('./lib/constants');
 
 const queue = new PQueue({
   concurrency: 10,
