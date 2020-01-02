@@ -21,7 +21,9 @@
   },
   "bin": {
     "hs": "./bin/hs.js",
-    "hscms": "./bin/hscms.js"
+    "hscms": "./bin/hscms.js",
+    "_hs": "./bin/_hs.js",
+    "_hscms": "./bin/_hscms.js"
   },
   "publishConfig": {
     "access": "public"
