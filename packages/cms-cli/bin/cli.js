@@ -22,6 +22,7 @@ module.exports = scriptName => {
   yargs
     .scriptName(scriptName)
     .usage('Tools for working with the HubSpot CMS')
+    .middleware([setLogLevel])
     .exitProcess(false)
     .fail((msg, err /*, _yargs*/) => {
       if (msg) logger.error(msg);
@@ -41,8 +42,6 @@ module.exports = scriptName => {
   addLoggerOptions(yargs, true);
 
   const { argv } = yargs;
-
-  setLogLevel(argv);
   if (argv.help) {
     trackHelpUsage(getCommandName(argv));
   }
