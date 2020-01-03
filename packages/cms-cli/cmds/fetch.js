@@ -61,7 +61,7 @@ exports.builder = yargs => {
   return yargs;
 };
 
-exports.handler = async argv => {
+exports.handler = argv => {
   const { src, dest, portalId, mode, isValidInput } = argv;
   if (!isValidInput) {
     process.exit(1);
