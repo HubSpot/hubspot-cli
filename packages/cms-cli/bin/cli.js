@@ -4,6 +4,12 @@ const updateNotifier = require('update-notifier');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
+const {
+  addLoggerOptions,
+  getCommandName,
+  setLogLevel,
+} = require('../lib/commonOpts');
+const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
 
 module.exports = scriptName => {
@@ -13,23 +19,33 @@ module.exports = scriptName => {
     shouldNotifyInNpmScript: true,
   });
 
-  const argv = yargs
+  yargs
     .scriptName(scriptName)
     .usage('Tools for working with the HubSpot CMS')
-    .commandDir('../cmds')
-    .demandCommand(1, 'Please specifiy a command')
-    .strict()
-    .fail((msg, err, _yargs) => {
+    .exitProcess(false)
+    .fail((msg, err /*, _yargs*/) => {
       if (msg) logger.error(msg);
       if (err) logErrorInstance(err);
-      console.log();
-      console.log(_yargs.help());
-      process.exit(1);
+      // console.log();
+      // console.log(_yargs.help());
+      // // process.exit(1);
     })
-    .help().argv;
+    .commandDir('../cmds')
+    .demandCommand(
+      1,
+      `Please specifiy a command or run \`${scriptName} --help\` for a list of available commands`
+    )
+    .recommendCommands()
+    .strict();
 
-  // addLoggerOptions(program);
-  // addHelpUsageTracking(program);
+  addLoggerOptions(yargs, true);
+
+  const { argv } = yargs;
+
+  setLogLevel(argv);
+  if (argv.help) {
+    trackHelpUsage(getCommandName(argv));
+  }
 
   return argv;
 };
