@@ -53,21 +53,15 @@ const addOverwriteOptions = (program, useYargs = false) => {
   program.option('--overwrite', 'overwrite existing files', false);
 };
 
-const addModeOptions = (program, { read, write }, useYargs = false) => {
-  const modes = `<${Object.values(Mode).join(' | ')}>`;
-  const help = read
-    ? `read from ${modes}`
-    : write
-    ? `write to ${modes}`
-    : `${modes}`;
+const addModeOptions = (program, useYargs = false) => {
   if (useYargs) {
     return program.option('mode', {
       alias: 'm',
       choices: Object.values(Mode),
-      describe: help,
+      describe: 'API mode to read/write',
     });
   }
-  program.option('--mode <mode>', help);
+  program.option('--mode <mode>', 'API mode to read/write');
 };
 
 const setLogLevel = (options = {}) => {

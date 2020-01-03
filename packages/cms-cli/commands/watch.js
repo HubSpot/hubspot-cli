@@ -83,7 +83,7 @@ function configureWatchCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
-  addModeOptions(program, { write: true });
+  addModeOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

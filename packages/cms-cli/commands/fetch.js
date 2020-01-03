@@ -71,7 +71,7 @@ function configureFetchCommand(program) {
   addPortalOptions(program);
   addLoggerOptions(program);
   addOverwriteOptions(program);
-  addModeOptions(program, { read: true });
+  addModeOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

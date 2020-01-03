@@ -57,7 +57,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addOverwriteOptions(yargs, true);
-  addModeOptions(yargs, { read: true }, true);
+  addModeOptions(yargs, true);
   return yargs;
 };
 
