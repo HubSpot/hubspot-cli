@@ -56,19 +56,15 @@ exports.builder = yargs => {
 
 exports.handler = async argv => {
   const { src, dest, portalId, mode } = argv;
-
   if (typeof src !== 'string') {
     process.exit(1);
   }
-
   if (
     !(validateConfig() && (await validatePortal(argv)) && validateMode(argv))
   ) {
     process.exit(1);
   }
-
   trackCommandUsage(COMMAND_NAME, { mode }, portalId);
-
   // Fetch and write file/folder.
   downloadFileOrFolder({ portalId, src, dest, mode, options: argv });
 };
