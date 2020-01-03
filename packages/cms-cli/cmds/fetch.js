@@ -21,6 +21,22 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'fetch';
 
+const parseInputs = argv => {
+  loadConfig(argv.config);
+  const dest = resolveLocalPath(argv.dest);
+  const portalId = getPortalId(argv);
+  const mode = getMode(argv);
+  return { dest, portalId, mode };
+};
+
+const validateInputs = async argv => {
+  return {
+    isValidInput:
+      typeof argv.src === 'string' &&
+      (validateConfig() && validateMode(argv) && (await validatePortal(argv))),
+  };
+};
+
 exports.command = `${COMMAND_NAME} <src> [dest]`;
 
 exports.describe =
@@ -37,16 +53,7 @@ exports.builder = yargs => {
       describe: 'Local filesystem path',
       type: 'string',
     })
-    .middleware([
-      logDebugInfo,
-      argv => {
-        loadConfig(argv.config);
-        const dest = resolveLocalPath(argv.dest);
-        const portalId = getPortalId(argv);
-        const mode = getMode(argv);
-        return { dest, portalId, mode };
-      },
-    ]);
+    .middleware([logDebugInfo, parseInputs, validateInputs]);
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addOverwriteOptions(yargs, true);
@@ -55,13 +62,8 @@ exports.builder = yargs => {
 };
 
 exports.handler = async argv => {
-  const { src, dest, portalId, mode } = argv;
-  if (typeof src !== 'string') {
-    process.exit(1);
-  }
-  if (
-    !(validateConfig() && (await validatePortal(argv)) && validateMode(argv))
-  ) {
+  const { src, dest, portalId, mode, isValidInput } = argv;
+  if (!isValidInput) {
     process.exit(1);
   }
   trackCommandUsage(COMMAND_NAME, { mode }, portalId);
