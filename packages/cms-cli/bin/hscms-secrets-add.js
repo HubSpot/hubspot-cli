@@ -1,4 +1,4 @@
-#!/usr/bin/en node
+#!/usr/bin/env node
 
 const { Command } = require('commander');
 
