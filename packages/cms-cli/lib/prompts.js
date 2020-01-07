@@ -80,13 +80,14 @@ const AUTH_METHOD = {
 const SCOPES = {
   type: 'checkbox',
   name: 'scopes',
-  message: 'Select scopes',
+  message:
+    'Select access scopes(see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes for more info)',
   default: DEFAULT_OAUTH_SCOPES,
   choices: OAUTH_SCOPES,
 };
 
-const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET];
-const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
+const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY, SCOPES];
 
 module.exports = {
   promptUser,

@@ -50,16 +50,17 @@ const DEFAULT_OAUTH_SCOPES = ['content'];
 
 const OAUTH_SCOPES = [
   {
-    name: 'Some description for content',
+    name: 'All CMS APIs, Calendar API, Email and Email Events APIs',
     value: 'content',
+    checked: true,
   },
   {
-    name: 'Some description for hubdb',
+    name: 'HubDB API',
     value: 'hubdb',
   },
   {
-    name: 'Some description for filemanager',
-    value: 'filemanager',
+    name: 'File Manager API',
+    value: 'files',
   },
 ];
 
