@@ -48,6 +48,21 @@ const AUTH_METHODS = {
 
 const DEFAULT_OAUTH_SCOPES = ['content'];
 
+const OAUTH_SCOPES = [
+  {
+    name: 'Some description for content',
+    value: 'content',
+  },
+  {
+    name: 'Some description for hubdb',
+    value: 'hubdb',
+  },
+  {
+    name: 'Some description for filemanager',
+    value: 'filemanager',
+  },
+];
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -59,4 +74,5 @@ module.exports = {
   EMPTY_CONFIG_FILE_CONTENTS,
   AUTH_METHODS,
   DEFAULT_OAUTH_SCOPES,
+  OAUTH_SCOPES,
 };
