@@ -9,4 +9,5 @@ npm-debug.log.*
 *.log
 .DS_Store
 coverage
+function.log
 
