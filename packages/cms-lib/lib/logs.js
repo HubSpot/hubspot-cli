@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const moment = require('moment');
 const { logger } = require('../logger');
 
@@ -42,10 +43,11 @@ const processLogs = logs => {
 const toFile = logs => {
   logger.debug(`Writing function logs to ${FUNCTION_LOG_PATH}`);
   fs.writeFileSync(FUNCTION_LOG_PATH, processLogs(logs));
+  console.log(`Function logs saved to ${path.resolve(FUNCTION_LOG_PATH)}`);
 };
 
 const outputLogs = logs => {
-  logger.log(logs);
+  console.log(processLogs(logs));
 };
 
 module.exports = {

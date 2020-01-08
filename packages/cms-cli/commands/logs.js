@@ -1,17 +1,27 @@
 const { version } = require('../package.json');
 const { promptUser, FUNCTION_PATH } = require('../lib/prompts');
+const { toFile, outputLogs } = require('@hubspot/cms-lib/lib/logs');
+const { logger } = require('@hubspot/cms-lib/logger');
+
+// TODO - Remove mocked data
 const { RESULTS } = require('@hubspot/cms-lib/lib/mocks');
-const { /*toFile,*/ outputLogs } = require('@hubspot/cms-lib/lib/logs');
 
 function getLogs(program) {
   program
     .version(version)
     .description(`get logs for a function`)
-    .action(async () => {
+    .option('-f, --file', 'output logs to file')
+    .action(async options => {
       const { functionPath } = await promptUser(FUNCTION_PATH);
-      console.log('Getting function with path: ', functionPath);
-      outputLogs(RESULTS);
-      // toFile(RESULTS);
+      logger.log(
+        `Getting function logs for function with path: ${functionPath}`
+      );
+
+      if (options && options.file) {
+        return toFile(RESULTS);
+      }
+
+      return outputLogs(RESULTS);
     });
 }
 
