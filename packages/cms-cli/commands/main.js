@@ -30,6 +30,9 @@ function configureMainCommand(program) {
     .alias('rm')
     .command('secrets', 'manage HubSpot secrets', {
       noHelp: true,
+    })
+    .command('logs', 'get logs for a function', {
+      noHelp: true,
     });
 
   addLoggerOptions(program);
