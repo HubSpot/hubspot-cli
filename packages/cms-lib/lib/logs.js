@@ -36,18 +36,25 @@ const formatExecutionTime = log => {
   return `(Execution Time: ${log.executionTime}ms)`;
 };
 
-const processLogs = logs => {
-  return logs.map(log => logHandler[log.status](log)).join('');
+const processLog = log => {
+  return logHandler[log.status](log);
 };
 
-const toFile = logs => {
+const processLogs = logsResp => {
+  if (logsResp.results && logsResp.results.length) {
+    return logsResp.results.map(processLog).join('');
+  }
+  return processLog(logsResp);
+};
+
+const toFile = logsResp => {
   logger.debug(`Writing function logs to ${FUNCTION_LOG_PATH}`);
-  fs.writeFileSync(FUNCTION_LOG_PATH, processLogs(logs));
+  fs.writeFileSync(FUNCTION_LOG_PATH, processLogs(logsResp));
   console.log(`Function logs saved to ${path.resolve(FUNCTION_LOG_PATH)}`);
 };
 
-const outputLogs = logs => {
-  console.log(processLogs(logs));
+const outputLogs = logsResp => {
+  console.log(processLogs(logsResp));
 };
 
 module.exports = {
