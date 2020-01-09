@@ -52,7 +52,7 @@ function getLogs(program) {
       logger.debug(
         `Getting ${
           getLatestLogOnly ? 'latest ' : ''
-        }function logs for function with path: ${functionPath}`
+        }logs for function with path: ${functionPath}`
       );
 
       const functionResp = await getFunctionByPath(
@@ -63,13 +63,10 @@ function getLogs(program) {
           functionPath,
           portalId,
         });
+        process.exit(1);
       });
 
-      if (!functionResp || !functionResp.id) {
-        return;
-      }
-
-      logger.debug(`Retrieving logs for functionId ${functionResp.id}`);
+      logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (getLatestLogOnly) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);

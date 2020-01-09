@@ -31,7 +31,7 @@ function configureMainCommand(program) {
     .command('secrets', 'manage HubSpot secrets', {
       noHelp: true,
     })
-    .command('logs', 'gets logs', {
+    .command('logs', 'get logs for remote function', {
       noHelp: true,
     });
 

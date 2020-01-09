@@ -9,7 +9,7 @@ const logHandler = {
   HANDLED_ERROR: log => {
     return `${formatTimestamp(log)} ${log.status}: ${log.error.type}: ${
       log.error.message
-    } ${formatExecutionTime(log)}\n${formatStacktrace(
+    } ${formatExecutionTime(log)}\n${formatStackTrace(
       log.error.stackTrace[0]
     )}`;
   },
@@ -20,7 +20,7 @@ const logHandler = {
   },
 };
 
-const formatStacktrace = stackTrace => {
+const formatStackTrace = stackTrace => {
   return stackTrace
     .map(trace => {
       return `  at ${trace}\n`;
@@ -41,7 +41,9 @@ const processLog = log => {
 };
 
 const processLogs = logsResp => {
-  if (logsResp.results && logsResp.results.length) {
+  if (logsResp.results && !logsResp.results.length) {
+    return 'No logs found.';
+  } else if (logsResp.results && logsResp.results.length) {
     return logsResp.results.map(processLog).join('');
   }
   return processLog(logsResp);
