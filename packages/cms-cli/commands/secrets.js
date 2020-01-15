@@ -1,11 +1,6 @@
-const path = require('path');
 const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { getCwd } = require('@hubspot/cms-lib/path');
-const {
-  createHubDbTable,
-  downloadHubDbTable,
-} = require('@hubspot/cms-lib/hubdb');
+const { addSecret, deleteSecret } = require('@hubspot/cms-lib/api/secrets');
 
 const { validateConfig, validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -20,23 +15,23 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
-function configureHubDbCommand(program) {
+function configureSecretsCommand(program) {
   program
     .version(version)
-    .description('Manage HubDB tables')
-    .command('create <src>', 'create a HubDB table')
-    .command('fetch <tableId> <dest>', 'fetch a HubDB table');
+    .description('Manage secrets')
+    .command('add <secret-name> <secret-value>', 'add a HubSpot secret')
+    .command('delete <secret-name>', 'delete a HubSpot secret');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
 }
 
-function configureHubDbCreateCommand(program) {
+function configureSecretsAddCommand(program) {
   program
     .version(version)
-    .description('Create HubDB tables')
-    .arguments('<src>')
-    .action(async (src, command = {}) => {
+    .description('Add a HubSpot secret')
+    .arguments('<secret-name> <secret-value>')
+    .action(async (secretName, secretValue, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
@@ -48,15 +43,12 @@ function configureHubDbCreateCommand(program) {
       const portalId = getPortalId(command);
 
       try {
-        const table = await createHubDbTable(
-          portalId,
-          path.resolve(getCwd(), src)
-        );
+        await addSecret(portalId, secretName, secretValue);
         logger.log(
-          `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
+          `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logger.error(`Creating the table at "${src}" failed`);
+        logger.error(`Adding secret "${secretName}" failed`);
         logger.error(e.message);
       }
     });
@@ -66,12 +58,12 @@ function configureHubDbCreateCommand(program) {
   addConfigOptions(program);
 }
 
-function configureHubDbFetchCommand(program) {
+function configureSecretsDeleteCommand(program) {
   program
     .version(version)
-    .description('Fetch a HubDB table')
-    .arguments('<tableId> <dest>')
-    .action(async (tableId, dest, command = {}) => {
+    .description('Delete a HubSpot secret')
+    .arguments('<secret-name>')
+    .action(async (secretName, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
@@ -81,15 +73,15 @@ function configureHubDbFetchCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(command);
+
       try {
-        await downloadHubDbTable(
-          portalId,
-          tableId,
-          path.resolve(getCwd(), dest)
+        await deleteSecret(portalId, secretName);
+        logger.log(
+          `The secret "${secretName}" was deleted from the HubSpot portal: ${portalId}`
         );
-        logger.log(`Downloaded HubDB table ${tableId} to ${dest}`);
       } catch (e) {
-        logger.error(e);
+        logger.error(`Deleting secret "${secretName}" failed`);
+        logger.error(e.message);
       }
     });
 
@@ -99,7 +91,7 @@ function configureHubDbFetchCommand(program) {
 }
 
 module.exports = {
-  configureHubDbCommand,
-  configureHubDbCreateCommand,
-  configureHubDbFetchCommand,
+  configureSecretsCommand,
+  configureSecretsAddCommand,
+  configureSecretsDeleteCommand,
 };

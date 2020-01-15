@@ -1,5 +1,9 @@
 const inquirer = require('inquirer');
-const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
+const {
+  AUTH_METHODS,
+  OAUTH_SCOPES,
+  DEFAULT_OAUTH_SCOPES,
+} = require('@hubspot/cms-lib/lib/constants');
 const { API_KEY_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {
@@ -73,8 +77,28 @@ const AUTH_METHOD = {
   choices: Object.keys(AUTH_METHODS).map(method => AUTH_METHODS[method]),
 };
 
-const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET];
-const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+const SCOPES = {
+  type: 'checkbox',
+  name: 'scopes',
+  message:
+    'Select access scopes(see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes for more info)',
+  default: DEFAULT_OAUTH_SCOPES,
+  choices: OAUTH_SCOPES,
+};
+
+const FUNCTION_PATH = {
+  name: 'functionPath',
+  message: 'Enter the remote function path:',
+  validate(val) {
+    if (typeof val !== 'string' || !val.length) {
+      return 'Function path cannot be blank. Please try again.';
+    }
+    return true;
+  },
+};
+
+const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
+const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY, SCOPES];
 
 module.exports = {
   promptUser,
@@ -84,6 +108,8 @@ module.exports = {
   CLIENT_ID,
   CLIENT_SECRET,
   AUTH_METHOD,
+  SCOPES,
   OAUTH_FLOW,
   API_KEY_FLOW,
+  FUNCTION_PATH,
 };
