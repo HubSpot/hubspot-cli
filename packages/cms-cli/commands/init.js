@@ -48,6 +48,9 @@ const AUTH_METHOD_FLOW = {
         ...configData,
         authType: 'apikey',
       });
+      logger.log(
+        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.api.name}.`
+      );
     },
   },
   [AUTH_METHODS.oauth.value]: {
@@ -58,6 +61,9 @@ const AUTH_METHOD_FLOW = {
       createEmptyConfigFile();
       handleExit();
       await authenticateWithOauth(configData);
+      logger.log(
+        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
+      );
       process.exit();
     },
   },
