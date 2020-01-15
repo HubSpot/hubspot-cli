@@ -20,7 +20,6 @@
     "execa": "^1.0.0",
     "fs-extra": "^7.0.1",
     "hosted-git-info": "^2.7.1",
-    "node-cleanup": "^2.1.2",
     "validate-npm-package-name": "^3.0.0"
   },
   "engines": {

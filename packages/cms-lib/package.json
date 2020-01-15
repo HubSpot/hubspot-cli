@@ -16,7 +16,6 @@
     "fs-extra": "^8.1.0",
     "ignore": "^5.1.4",
     "js-yaml": "^3.12.2",
-    "node-cleanup": "^2.1.2",
     "p-queue": "^6.0.2",
     "prettier": "1.16.4",
     "request": "^2.87.0",
