@@ -72,10 +72,10 @@ const PORTAL_API_KEY = {
 };
 
 const AUTH_METHOD = {
-  type: 'list',
+  type: 'rawlist',
   name: 'authMethod',
   message: 'Choose authentication method',
-  default: AUTH_METHODS.oauth.value,
+  default: 0,
   choices: Object.keys(AUTH_METHODS).map(method => AUTH_METHODS[method]),
 };
 
