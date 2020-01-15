@@ -4,7 +4,7 @@ const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cms-lib/lib/constants');
-const { API_KEY_REGEX } = require('./regex');
+const { API_KEY_REGEX, STRING_WITH_NO_SPACES } = require('./regex');
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
@@ -53,6 +53,8 @@ const PORTAL_NAME = {
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
       return 'Portal name cannot be blank. Please try again.';
+    } else if (!STRING_WITH_NO_SPACES.test(val)) {
+      return 'Portal name cannot contain spaces. Please try again.';
     }
     return true;
   },
