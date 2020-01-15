@@ -4,7 +4,7 @@ const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cms-lib/lib/constants');
-const { API_KEY_REGEX, STRING_WITH_NO_SPACES } = require('./regex');
+const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
@@ -19,7 +19,7 @@ const PORTAL_ID = {
     if (!Number.isNaN(val) && val > 0) {
       return true;
     }
-    return 'A HubSpot portal ID must be provided.';
+    return 'A valid ID must be provided. Please try again.';
   },
 };
 
@@ -28,7 +28,7 @@ const CLIENT_ID = {
   message: 'Enter your OAuth2 client ID:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 36) {
-      return 'The OAuth2 client ID is 36 characters long. Please try again.';
+      return 'The client ID is 36 characters long. Please try again.';
     }
     return true;
   },
@@ -41,7 +41,7 @@ const CLIENT_SECRET = {
     if (typeof val !== 'string' || val.length !== 36) {
       return 'The OAuth2 client secret is 36 characters long. Please try again.';
     } else if (val[0] === '*') {
-      return 'Please copy actual OAuth2 client secret not the asterisks used to hide it.';
+      return 'Please copy the actual OAuth2 client secret not the asterisks used to hide it.';
     }
     return true;
   },
@@ -52,9 +52,9 @@ const PORTAL_NAME = {
   message: 'Enter a name for your portal:',
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
-      return 'Portal name cannot be blank. Please try again.';
-    } else if (!STRING_WITH_NO_SPACES.test(val)) {
-      return 'Portal name cannot contain spaces. Please try again.';
+      return 'Name cannot be blank. Please try again.';
+    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
+      return 'Name cannot contain spaces. Please try again.';
     }
     return true;
   },
@@ -65,7 +65,7 @@ const PORTAL_API_KEY = {
   message: 'Enter the API key for your portal:',
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
-      return 'This is not a valid portal API key. Please try again.';
+      return 'This is not a valid API key. Please try again.';
     }
     return true;
   },
