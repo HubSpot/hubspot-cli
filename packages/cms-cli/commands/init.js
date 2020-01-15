@@ -1,3 +1,4 @@
+const nodeCleanup = require('node-cleanup');
 const { version } = require('../package.json');
 const {
   getConfigPath,
@@ -41,7 +42,7 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      process.on('exit', deleteEmptyConfigFile);
+      handleExit();
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
@@ -55,11 +56,18 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      process.on('exit', deleteEmptyConfigFile);
+      handleExit();
       await authenticateWithOauth(configData);
       process.exit();
     },
   },
+};
+
+const handleExit = () => {
+  nodeCleanup(() => {
+    deleteEmptyConfigFile();
+    return true;
+  });
 };
 
 const completeConfigSetup = async ({ authMethod, configPath }) => {
