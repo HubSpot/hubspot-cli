@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { logger } = require('../logger');
-const { logFileSystemErrorInstance } = require('../errorHandlers');
 
 const STAT_TYPES = {
   FILE: 'file',
@@ -23,11 +21,11 @@ const generateFilePromise = (dir, file) => {
         });
       }
       if (stats.isDirectory()) {
-        walk(filepath).then(fileContents => {
+        walk(filepath).then(files => {
           return resolve({
             filepath,
             type: STAT_TYPES.DIRECTORY,
-            fileContents,
+            files,
           });
         });
       } else if (stats.isFile()) {
@@ -37,24 +35,20 @@ const generateFilePromise = (dir, file) => {
         });
       }
     });
-  }).catch(logger.error);
+  });
 };
 
-const filesDataReducer = (all, fileData) => {
-  try {
-    switch (fileData.type) {
-      case STAT_TYPES.FILE:
-        return all.concat(fileData.filepath);
-      case STAT_TYPES.DIRECTORY:
-        return all.concat(fileData.fileContents);
-      case STAT_TYPES.SYMBOLIC_LINK:
-        // Skip symlinks
-        return all;
-      default:
-        return all;
-    }
-  } catch (e) {
-    logFileSystemErrorInstance(e, fileData);
+const filesDataReducer = (allFiles, fileData) => {
+  switch (fileData.type) {
+    case STAT_TYPES.FILE:
+      return allFiles.concat(fileData.filepath);
+    case STAT_TYPES.DIRECTORY:
+      return allFiles.concat(fileData.fileContents);
+    case STAT_TYPES.SYMBOLIC_LINK:
+      // Skip symlinks
+      return allFiles;
+    default:
+      return allFiles;
   }
 };
 
