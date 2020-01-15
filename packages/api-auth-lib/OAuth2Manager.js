@@ -107,7 +107,7 @@ class OAuth2Manager {
       );
 
       nodeCleanup(() => {
-        server.close();
+        server && server.close();
         return true;
       });
     });
