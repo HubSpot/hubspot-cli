@@ -2,7 +2,6 @@ const express = require('express');
 const request = require('request-promise-native');
 const moment = require('moment');
 const open = require('open');
-const nodeCleanup = require('node-cleanup');
 
 const { HubSpotAuthError } = require('./Errors');
 
@@ -106,11 +105,17 @@ class OAuth2Manager {
         this.logger.log(`Waiting for authorization...`)
       );
 
-      nodeCleanup(() => {
-        server && server.close();
-        return true;
-      });
+      this.handleServerOnProcessEnd(server);
     });
+  }
+
+  handleServerOnProcessEnd(server) {
+    const shutdownServerIfRunning = () => {
+      server && server.close();
+    };
+
+    process.on('exit', shutdownServerIfRunning);
+    process.on('SIGINT', shutdownServerIfRunning);
   }
 
   async fetchAccessToken(exchangeProof) {

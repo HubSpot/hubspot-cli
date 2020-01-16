@@ -1,4 +1,3 @@
-const nodeCleanup = require('node-cleanup');
 const { version } = require('../package.json');
 const {
   getConfigPath,
@@ -70,10 +69,8 @@ const AUTH_METHOD_FLOW = {
 };
 
 const handleExit = () => {
-  nodeCleanup(() => {
-    deleteEmptyConfigFile();
-    return true;
-  });
+  process.on('exit', deleteEmptyConfigFile);
+  process.on('SIGINT', deleteEmptyConfigFile);
 };
 
 const completeConfigSetup = async ({ authMethod, configPath }) => {

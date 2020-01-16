@@ -10,7 +10,6 @@
   "dependencies": {
     "express": "^4.16.3",
     "moment": "^2.24.0",
-    "node-cleanup": "^2.1.2",
     "open": "^6.4.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7"

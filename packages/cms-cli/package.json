@@ -12,7 +12,6 @@
     "@hubspot/cms-lib": "^1.0.5-beta.1",
     "commander": "^2.16.0",
     "inquirer": "^6.3.1",
-    "node-cleanup": "^2.1.2",
     "shelljs": "0.8.3",
     "update-notifier": "3.0.1"
   },
