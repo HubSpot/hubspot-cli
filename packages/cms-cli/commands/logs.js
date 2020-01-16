@@ -1,5 +1,4 @@
 const { version } = require('../package.json');
-const { promptUser, FUNCTION_PATH } = require('../lib/prompts');
 const {
   addLoggerOptions,
   addPortalOptions,
@@ -27,11 +26,12 @@ function getLogs(program) {
   program
     .version(version)
     .description(`get logs for a function`)
+    .arguments('<function_path>')
     .option('-f, --file', 'output logs to file')
     .option('--latest', 'retrieve most recent log only')
-    .action(async options => {
+    .action(async (functionPath, options) => {
       const { config: configPath } = options;
-      const portalId = getPortalId(options);
+      const portalId = getPortalId(program);
       const getLatestLogOnly = options && options.latest;
       const logToFile = options && options.file;
       let logsResp;
@@ -48,7 +48,6 @@ function getLogs(program) {
         portalId
       );
 
-      const { functionPath } = await promptUser(FUNCTION_PATH);
       logger.debug(
         `Getting ${
           getLatestLogOnly ? 'latest ' : ''
