@@ -34,6 +34,10 @@ const TRACKING_STATUS = {
   STARTED: 'started',
   COMPLETE: 'complete',
 };
+const handleExit = () => {
+  process.on('exit', deleteEmptyConfigFile);
+  process.on('SIGINT', deleteEmptyConfigFile);
+};
 const AUTH_METHOD_FLOW = {
   [AUTH_METHODS.api.value]: {
     prompt: async () => {
@@ -66,11 +70,6 @@ const AUTH_METHOD_FLOW = {
       process.exit();
     },
   },
-};
-
-const handleExit = () => {
-  process.on('exit', deleteEmptyConfigFile);
-  process.on('SIGINT', deleteEmptyConfigFile);
 };
 
 const completeConfigSetup = async ({ authMethod, configPath }) => {
