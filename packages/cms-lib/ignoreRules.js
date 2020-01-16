@@ -8,7 +8,7 @@ const findup = require('findup-sync');
 const ignoreList = [
   '**/node_modules', // dependencies
   '**/.*', // hidden files/folders
-  '**/npm-debug.log', // Error log for npm
+  '**/*.log', // Error log for npm
   '**/*.swp', // Swap file for vim state
 
   // # macOS
