@@ -13,13 +13,14 @@ const promptUser = async promptConfig => {
 
 const PORTAL_ID = {
   name: 'portalId',
-  message: 'Enter the HubSpot CMS portal ID:',
+  message:
+    'Enter the Hub ID for your account (found under the DOMAIN column at https://app.hubspot.com/myaccounts-beta):',
   type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
       return true;
     }
-    return 'A valid ID must be provided. Please try again.';
+    return 'A valid Hub ID must be provided. Please try again.';
   },
 };
 
@@ -49,12 +50,13 @@ const CLIENT_SECRET = {
 
 const PORTAL_NAME = {
   name: 'name',
-  message: 'Enter a name for your portal:',
+  message:
+    'Enter a unique nickname that will be used to reference this account:',
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
-      return 'Name cannot be blank. Please try again.';
+      return 'The nickname cannot be blank. Please try again.';
     } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-      return 'Name cannot contain spaces. Please try again.';
+      return 'The nickname cannot contain spaces. Please try again.';
     }
     return true;
   },
