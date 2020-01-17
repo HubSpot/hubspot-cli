@@ -27,7 +27,13 @@ function configureMainCommand(program) {
       'commands for working with the File Manager'
     )
     .command('remove <path>', 'delete a file or folder from HubSpot')
-    .alias('rm');
+    .alias('rm')
+    .command('secrets', 'manage HubSpot secrets', {
+      noHelp: true,
+    })
+    .command('logs', 'get logs for a function', {
+      noHelp: true,
+    });
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
