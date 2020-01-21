@@ -17,7 +17,6 @@ const {
   validateMode,
 } = require('../lib/validation');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { trackCommandUsage } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'fetch';
 
@@ -66,7 +65,10 @@ exports.handler = argv => {
   if (!isValidInput) {
     process.exit(1);
   }
-  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
   // Fetch and write file/folder.
   downloadFileOrFolder({ portalId, src, dest, mode, options: argv });
+  return {
+    COMMAND_NAME,
+    argv,
+  };
 };

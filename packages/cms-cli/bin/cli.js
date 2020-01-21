@@ -9,7 +9,7 @@ const {
   getCommandName,
   setLogLevel,
 } = require('../lib/commonOpts');
-const { trackHelpUsage } = require('../lib/usageTracking');
+const { trackHelpUsage, trackCommandUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
 
 module.exports = scriptName => {
@@ -37,7 +37,11 @@ module.exports = scriptName => {
       `Please specifiy a command or run \`${scriptName} --help\` for a list of available commands`
     )
     .recommendCommands()
-    .strict();
+    .strict()
+    .onFinishCommand(async ({ COMMAND_NAME, argv }) => {
+      const { portalId, mode } = argv;
+      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+    });
 
   addLoggerOptions(yargs, true);
 
