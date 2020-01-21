@@ -20,21 +20,35 @@ const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'fetch';
 
-const parseInputs = argv => {
-  loadConfig(argv.config);
-  const dest = resolveLocalPath(argv.dest);
-  const portalId = getPortalId(argv);
-  const mode = getMode(argv);
-  return { dest, portalId, mode };
+const validateInputs = async argv => {
+  let dest;
+  let portalId;
+  let mode;
+  try {
+    loadConfig(argv.config);
+    dest = resolveLocalPath(argv.dest);
+    portalId = getPortalId(argv);
+    mode = getMode(argv);
+  } catch (e) {
+    // noop
+  }
+  const resultArgs = { ...argv, dest, portalId, mode };
+  if (
+    typeof src !== 'string' ||
+    typeof dest !== 'string' ||
+    !validateConfig() ||
+    !validateMode(resultArgs) ||
+    !(await validatePortal(resultArgs))
+  ) {
+    // Required missing positionals will be logged by yargs
+    process.exit(1);
+  }
+  return resultArgs;
 };
 
-const validateInputs = async argv => {
-  return {
-    isValidInput:
-      typeof argv.src === 'string' &&
-      (validateConfig() && validateMode(argv) && (await validatePortal(argv))),
-  };
-};
+/*
+ * Module
+ */
 
 exports.command = `${COMMAND_NAME} <src> [dest]`;
 
@@ -52,7 +66,7 @@ exports.builder = yargs => {
       describe: 'Local filesystem path',
       type: 'string',
     })
-    .middleware([logDebugInfo, parseInputs, validateInputs]);
+    .middleware([logDebugInfo, validateInputs]);
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addOverwriteOptions(yargs, true);
@@ -61,10 +75,7 @@ exports.builder = yargs => {
 };
 
 exports.handler = argv => {
-  const { src, dest, portalId, mode, isValidInput } = argv;
-  if (!isValidInput) {
-    process.exit(1);
-  }
+  const { src, dest, portalId, mode } = argv;
   // Fetch and write file/folder.
   downloadFileOrFolder({ portalId, src, dest, mode, options: argv });
   return {

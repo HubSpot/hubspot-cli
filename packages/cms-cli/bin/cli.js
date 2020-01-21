@@ -38,9 +38,11 @@ module.exports = scriptName => {
     )
     .recommendCommands()
     .strict()
-    .onFinishCommand(async ({ COMMAND_NAME, argv }) => {
-      const { portalId, mode } = argv;
-      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+    .onFinishCommand(({ COMMAND_NAME, argv }) => {
+      if (COMMAND_NAME && argv) {
+        const { portalId, mode, type } = argv;
+        trackCommandUsage(COMMAND_NAME, { mode, type }, portalId);
+      }
     });
 
   addLoggerOptions(yargs, true);
