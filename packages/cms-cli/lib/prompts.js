@@ -64,7 +64,8 @@ const PORTAL_NAME = {
 
 const PORTAL_API_KEY = {
   name: 'apiKey',
-  message: 'Enter the API key for your portal:',
+  message:
+    'Enter the API key for your portal (found at https://app.hubspot.com/l/api-key):',
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
       return 'This is not a valid API key. Please try again.';
