@@ -3,10 +3,11 @@ const fs = require('fs-extra');
 const { version } = require('../package.json');
 
 const { logger } = require('@hubspot/cms-lib/logger');
-const { getCwd } = require('@hubspot/cms-lib/path');
+const { createTheme } = require('@hubspot/cms-lib/themes');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
+const { resolveLocalPath } = require('../lib/filesystem');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -14,9 +15,15 @@ const {
 
 const COMMAND_NAME = 'create';
 
+const TYPES = {
+  module: 'module',
+  template: 'template',
+  theme: 'theme',
+};
+
 const ASSET_PATHS = {
-  module: path.resolve(__dirname, '../defaults/Sample.module'),
-  template: path.resolve(__dirname, '../defaults/template.html'),
+  [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
+  [TYPES.template]: path.resolve(__dirname, '../defaults/template.html'),
 };
 
 const createModule = (name, dest) => {
@@ -52,23 +59,22 @@ function configureCreateCommand(program) {
     .version(version)
     .description('Create assets from boilerplate.')
     .arguments('<type> <name> [dest]')
-    .action((type, name, dest, options = {}) => {
-      setLogLevel(options);
-      logDebugInfo(options);
-      const assetPath = ASSET_PATHS[type];
-      if (!assetPath) {
+    .option('--clone', 'git clone theme repository', false)
+    .option('--ssh', 'use SSH to clone git theme repository', false)
+    .option('--skip-install', 'skip installation of theme dependencies', false)
+    .action((type, name, dest) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      type = typeof type === 'string' && type.toLowerCase();
+      if (!type || !TYPES[type]) {
         logger.error(`The asset type ${type} is not supported`);
         return;
       }
 
-      // For some reason, when `dest` is not passed from the CLI, commander passes `program`
-      const destPath =
-        !dest || typeof dest === 'object'
-          ? getCwd()
-          : path.resolve(getCwd(), dest);
+      dest = resolveLocalPath(dest);
 
       try {
-        const stats = fs.statSync(destPath);
+        const stats = fs.statSync(dest);
         if (!stats.isDirectory()) {
           logger.error(`The "${dest}" is not a path to a directory`);
           return;
@@ -81,13 +87,17 @@ function configureCreateCommand(program) {
       trackCommandUsage(COMMAND_NAME, { assetType: type });
 
       switch (type) {
-        case 'module':
-          createModule(name, destPath);
+        case TYPES.module:
+          createModule(name, dest);
           break;
-        case 'template':
-          createTemplate(name, destPath);
+        case TYPES.template:
+          createTemplate(name, dest);
+          break;
+        case TYPES.theme:
+          createTheme(name, dest, program);
           break;
         default:
+          break;
       }
     });
 
