@@ -104,7 +104,18 @@ class OAuth2Manager {
       server = app.listen(PORT, () =>
         this.logger.log(`Waiting for authorization...`)
       );
+
+      this.handleServerOnProcessEnd(server);
     });
+  }
+
+  handleServerOnProcessEnd(server) {
+    const shutdownServerIfRunning = () => {
+      server && server.close();
+    };
+
+    process.on('exit', shutdownServerIfRunning);
+    process.on('SIGINT', shutdownServerIfRunning);
   }
 
   async fetchAccessToken(exchangeProof) {

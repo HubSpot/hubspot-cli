@@ -34,6 +34,10 @@ const TRACKING_STATUS = {
   STARTED: 'started',
   COMPLETE: 'complete',
 };
+const handleExit = () => {
+  process.on('exit', deleteEmptyConfigFile);
+  process.on('SIGINT', deleteEmptyConfigFile);
+};
 const AUTH_METHOD_FLOW = {
   [AUTH_METHODS.api.value]: {
     prompt: async () => {
@@ -41,12 +45,15 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      process.on('exit', deleteEmptyConfigFile);
+      handleExit();
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
         authType: 'apikey',
       });
+      logger.log(
+        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.api.name}.`
+      );
     },
   },
   [AUTH_METHODS.oauth.value]: {
@@ -55,8 +62,11 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      process.on('exit', deleteEmptyConfigFile);
+      handleExit();
       await authenticateWithOauth(configData);
+      logger.log(
+        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
+      );
       process.exit();
     },
   },
