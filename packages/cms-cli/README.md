@@ -27,28 +27,25 @@ npm install @hubspot/cms-cli --save-dev
 
 Once the `@hubspot/cms-cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed.  The config can be at the project level or higher up in the directory tree.
 
+
 ### Authentication
 
 There are two ways that the tools can authenticate with HubSpot.
 
 #### OAuth2 (recommended)
 
-1. Create a developer app
-2. Run `yarn hs auth oauth2` or `npx hs auth oauth2` and follow the steps
+1. [Create a developer app](https://developers.hubspot.com/docs/faq/how-do-i-create-an-app-in-hubspot)
+2. Run `yarn hs init` or `npx hs init`
+3. Select `OAuth2` and follow the steps
+
+_**Note:** The Portal ID used should be the CMS Portal ID(not the developer app ID). Client ID and Client Secret are from the developer app._
 
 #### HubSpot API Key
 
-1. Set up an [API key](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key) for the portal.
-2. Add an entry in the config file
+1. [Set up an API Key for the CMS Portal](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
+2. Run `yarn hs init` or `npx hs init`
+3. Select `API Key` and follow the steps entering the API Key from step 1
 
-```yaml
-defaultPortal: 'DEV'
-portals:
-  - name: 'DEV'
-    portalId: 123
-    authType: 'apikey'
-    apiKey: 'd1234567-123e-7890-b123-aaa80164b4cb'
-```
 
 ### Commands
 
@@ -61,13 +58,13 @@ Show all commands
 hs help
 ```
 
-Upload a file or directory to HubSpot
+Upload a file or directory to the Design Manager
 
 ```bash
 hs upload --portal=DEV [src] [dest]
 ```
 
-Fetch a file or directory by path
+Fetch a file or directory by path from the Design Manager
 
 ```bash
 hs fetch --portal=DEV [path] [dest]
@@ -76,19 +73,19 @@ hs fetch --portal=DEV [path] [dest]
 hs fetch --portal=DEV --overwrite [path] [dest]
 ```
 
-Watch a directory of files and automatically upload changes
+Watch a directory of files and automatically upload changes to the Design Manager
 
 ```bash
 hs watch --portal=DEV [src] [dest]
 ```
 
-Create a new asset
+Create a new asset locally
 
 ```bash
 hs create [type] [dest]
 ```
 
-Delete a file or directory from HubSpot
+Delete a file or directory from the Design Manager
 
 ```bash
 hs remove --portal=DEV [path]
@@ -99,3 +96,11 @@ Authenticate against a portal using OAuth2
 ```bash
 hs auth oauth2
 ```
+
+Upload a file or directory to the File Manager
+
+```bash
+hs filemanager upload --portal=DEV [src] [dest]
+```
+
+**Note:** Uploading to the File Manager is only supported when using the `apiKey` at this point.

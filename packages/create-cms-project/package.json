@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/create-cms-project",
-  "version": "1.0.2",
+  "version": "1.0.5-beta.3",
   "description": "Create HubSpot CMS projects",
   "license": "Apache-2.0",
   "repository": {

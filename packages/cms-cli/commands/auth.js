@@ -1,13 +1,8 @@
 const { version } = require('../package.json');
-const inquirer = require('inquirer');
-const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
-const {
-  loadConfig,
-  getPortalConfig,
-  updatePortalConfig,
-} = require('@hubspot/cms-lib');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
+const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 
 const { validateConfig } = require('../lib/validation');
 const {
@@ -20,60 +15,39 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { PORTAL_ID, CLIENT_ID, CLIENT_SECRET } = require('../lib/prompts');
-
-const getAuthContext = async () => {
-  const prompt = inquirer.createPromptModule();
-  return prompt([PORTAL_ID, CLIENT_ID, CLIENT_SECRET]);
-};
+const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
+
+async function authAction(type, options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+
+  if (!validateConfig()) {
+    process.exit(1);
+  }
+
+  if (type !== AUTH_METHODS.oauth.value) {
+    logger.error(
+      `The only supported authentication protocol is '${AUTH_METHODS.oauth.value}'`
+    );
+    return;
+  }
+
+  const configData = await promptUser(OAUTH_FLOW);
+  trackCommandUsage(COMMAND_NAME);
+  await authenticateWithOauth(configData);
+  process.exit();
+}
 
 function configureAuthCommand(program) {
   program
     .version(version)
     .description('Configure authentication for a HubSpot account')
     .arguments('<type>')
-    .action(async (type, options) => {
-      setLogLevel(options);
-      logDebugInfo(options);
-      const { config: configPath } = options;
-      loadConfig(configPath);
-
-      if (!validateConfig()) {
-        process.exit(1);
-      }
-
-      if (type !== 'oauth2') {
-        logger.error("The only supported authentication protocol is 'oauth2'");
-        return;
-      }
-      const answers = await getAuthContext();
-      const portalId = parseInt(answers.portalId, 10);
-      const config = getPortalConfig(portalId) || {};
-      const oauth = new OAuth2Manager(
-        {
-          ...answers,
-          environment: config.env || 'prod',
-          scopes: ['content'],
-        },
-        logger
-      );
-      trackCommandUsage(COMMAND_NAME);
-      logger.log('Authorizing');
-      await oauth.authorize();
-      logger.log('Updating configuration');
-      try {
-        updatePortalConfig({
-          ...oauth.toObj(),
-          authType: 'oauth2',
-          portalId: answers.portalId,
-        });
-        logger.log('Configuration updated');
-      } catch (err) {
-        logErrorInstance(err);
-      }
-    });
+    .action(authAction);
 
   addLoggerOptions(program);
   addConfigOptions(program);

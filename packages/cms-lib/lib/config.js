@@ -7,16 +7,42 @@ const {
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
 const { getCwd } = require('../path');
-const { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME, Mode } = require('./constants');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  EMPTY_CONFIG_FILE_CONTENTS,
+  Mode,
+} = require('./constants');
 
 let _config;
 let _configPath;
+
+const getOrderedConfig = unorderedConfig => {
+  const {
+    defaultPortal,
+    defaultMode,
+    httpTimeout,
+    allowsUsageTracking,
+    portals,
+    ...rest
+  } = unorderedConfig;
+
+  return {
+    defaultPortal,
+    defaultMode,
+    httpTimeout,
+    allowsUsageTracking,
+    portals,
+    ...rest,
+  };
+};
 
 const writeConfig = () => {
   logger.debug(`Writing current config to ${_configPath}`);
   fs.writeFileSync(
     _configPath,
-    yaml.safeDump(JSON.parse(JSON.stringify(_config, null, 2)))
+    yaml.safeDump(
+      JSON.parse(JSON.stringify(getOrderedConfig(_config), null, 2))
+    )
   );
 };
 
@@ -52,12 +78,14 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = path => {
+const loadConfig = (path, options = {}) => {
   _configPath = getConfigPath(path);
   if (!_configPath) {
-    logger.error(
-      `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
-    );
+    if (!options.silenceErrors) {
+      logger.error(
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+      );
+    }
     return;
   }
 
@@ -77,9 +105,19 @@ const loadConfig = path => {
   }
 };
 
+const isTrackingAllowed = () => {
+  if (!configFileExists() || configFileIsBlank()) {
+    return true;
+  }
+  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
+  return allowUsageTracking !== false;
+};
+
 const getAndLoadConfigIfNeeded = () => {
   if (!_config) {
-    loadConfig();
+    loadConfig(null, {
+      silenceErrors: true,
+    });
   }
   return _config;
 };
@@ -159,6 +197,8 @@ const updatePortalConfig = configOptions => {
     scopes,
     tokenInfo,
     defaultMode,
+    name,
+    apiKey,
   } = configOptions;
 
   if (!portalId) {
@@ -182,10 +222,12 @@ const updatePortalConfig = configOptions => {
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
+    name,
     env,
     portalId,
     authType,
     auth,
+    apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
   };
 
@@ -204,26 +246,57 @@ const updatePortalConfig = configOptions => {
   writeConfig();
 };
 
-const writeNewPortalApiKeyConfig = configOptions => {
-  setConfig(getNewPortalApiKeyConfig(configOptions));
-  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+/**
+ * @throws {Error}
+ */
+const updateDefaultPortal = defaultPortal => {
+  if (
+    !defaultPortal ||
+    (typeof defaultPortal !== 'number' && typeof defaultPortal !== 'string')
+  ) {
+    throw new Error(
+      'A defaultPortal with value of number or string is required to update the config'
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.defaultPortal = defaultPortal;
+  setDefaultConfigPathIfUnset();
   writeConfig();
 };
 
-const getNewPortalApiKeyConfig = ({ name, portalId, apiKey, environment }) => {
-  logger.log('Generating config data');
-  return {
-    defaultPortal: name,
-    portals: [
-      {
-        name,
-        portalId,
-        apiKey,
-        authType: 'apikey',
-        env: getConfigEnv(environment),
-      },
-    ],
-  };
+const setDefaultConfigPathIfUnset = () => {
+  if (!_configPath) {
+    setDefaultConfigPath();
+  }
+};
+
+const setDefaultConfigPath = () => {
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+};
+
+const configFileExists = () => {
+  return _configPath && fs.existsSync(_configPath);
+};
+
+const configFileIsBlank = () => {
+  return _configPath && fs.readFileSync(_configPath).length === 0;
+};
+
+const createEmptyConfigFile = () => {
+  setDefaultConfigPathIfUnset();
+
+  if (configFileExists()) {
+    return;
+  }
+
+  return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
+};
+
+const deleteEmptyConfigFile = () => {
+  return (
+    configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
+  );
 };
 
 module.exports = {
@@ -235,5 +308,8 @@ module.exports = {
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
-  writeNewPortalApiKeyConfig,
+  updateDefaultPortal,
+  createEmptyConfigFile,
+  deleteEmptyConfigFile,
+  isTrackingAllowed,
 };

@@ -36,10 +36,11 @@ function configureWatchCommand(program) {
     )
     .arguments('<src> <dest>')
     .option('--remove', 'remove remote files when removed locally')
+    .option('--disable-initial', 'disable initial upload of watched directory')
     .action(async (src, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
-      const { config: configPath, remove } = command;
+      const { config: configPath, remove, disableInitial } = command;
       loadConfig(configPath);
 
       if (
@@ -77,6 +78,7 @@ function configureWatchCommand(program) {
         mode,
         cwd: getCwd(),
         remove,
+        disableInitial,
       });
     });
 
