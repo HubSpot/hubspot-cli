@@ -72,6 +72,7 @@ async function createProject(projectName, options) {
   fs.ensureDirSync(dest);
   await cloneBoilerplate(dest, options);
   await installDeps(dest, options);
+  console.log(`Success: your new project has been created in ${dest}.`);
 }
 
 exports = module.exports = createProject;
