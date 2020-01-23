@@ -18,7 +18,7 @@ const COMMAND_NAME = 'create';
 const TYPES = {
   module: 'module',
   template: 'template',
-  theme: 'theme',
+  'website-theme': 'website-theme',
 };
 
 const ASSET_PATHS = {
