@@ -12,7 +12,6 @@
     "chalk": "^2.4.2",
     "chokidar": "^3.0.1",
     "content-disposition": "^0.5.3",
-    "execa": "^4.0.0",
     "extract-zip": "^1.6.7",
     "findup-sync": "^3.0.0",
     "fs-extra": "^8.1.0",
