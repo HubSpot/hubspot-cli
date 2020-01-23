@@ -90,17 +90,6 @@ const SCOPES = {
   choices: OAUTH_SCOPES,
 };
 
-const FUNCTION_PATH = {
-  name: 'functionPath',
-  message: 'Enter the remote function path:',
-  validate(val) {
-    if (typeof val !== 'string' || !val.length) {
-      return 'The function path may not be blank. Please try again.';
-    }
-    return true;
-  },
-};
-
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY, SCOPES];
 
@@ -115,5 +104,4 @@ module.exports = {
   SCOPES,
   OAUTH_FLOW,
   API_KEY_FLOW,
-  FUNCTION_PATH,
 };
