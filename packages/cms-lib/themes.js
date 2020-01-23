@@ -1,90 +1,112 @@
 const fs = require('fs-extra');
-// const path = require('path');
-// const hostedGitInfo = require('hosted-git-info');
-// const validateNpmPackageName = require('validate-npm-package-name');
-const execa = require('execa');
+const path = require('path');
+const os = require('os');
+const { promisify } = require('util');
+const request = require('request-promise-native');
+const extractZip = require('extract-zip');
 
 const { logger } = require('./logger');
 // const { getCwd } = require('./path');
-const { canUseYarn } = require('./lib/env');
+const {
+  logFileSystemErrorInstance,
+  logErrorInstance,
+} = require('./errorHandlers');
 
-const DEFAULT_THEME_REPO = 'HubSpot/cms-theme-boilerplate';
+const extract = promisify(extractZip);
 
-// function validateThemePackageName(name) {
-//   const validationResult = validateNpmPackageName(name);
-//   if (validationResult.validForNewPackages) return true;
-//   const [errors, warnings] = validationResult;
-//   const groupName =
-//     `Could not create a theme called "${name}" because of npm naming restrictions`
-//   logger.group(groupName);
-//   if (errors) errors.forEach(err => logger.error(err));
-//   if (warnings) warnings.forEach(err => logger.warn(err));
-//   logger.groupEnd(groupName);
-//   return false;
-// }
+const ZIP_CONTENT_TYPE = 'application/zip';
+
+const THEME_BOILERPLATE_ZIP_URI =
+  'https://github.com/HubSpot/cms-theme-boilerplate/archive/master.zip';
+
+const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
- *
- * @param {String} dest
- * @param {Object} options
+ * @returns {Buffer|Null}
  */
-async function cloneBoilerplate(dest, { ssh }) {
-  const url = ssh
-    ? `git@github.com:${DEFAULT_THEME_REPO}.git`
-    : `https://github.com/${DEFAULT_THEME_REPO}.git`;
-  logger.log('Cloning repo with %s...', ssh ? 'SSH' : 'HTTPS');
+async function downloadCmsThemeBoilerplate() {
+  let zip = null;
   try {
-    await execa('git', ['clone', url, dest, '--single-branch'], {
-      stdio: 'pipe',
+    zip = await request.get(THEME_BOILERPLATE_ZIP_URI, {
+      encoding: null,
+      headers: {
+        'content-type': ZIP_CONTENT_TYPE,
+        accept: ZIP_CONTENT_TYPE,
+      },
     });
-    logger.log('Clone completed');
-  } catch (error) {
-    logger.error('Clone failed');
-    logger.error(error);
+  } catch (err) {
+    logger.error('An error occured fetching the theme source.');
+    logErrorInstance(err);
   }
+  return zip;
 }
 
 /**
  *
- * @param {string} dest
- * @param {object} options
- * @returns {Promise}
+ * @param {Buffer} zip
+ * @returns {String|Null}
  */
-async function installDeps(dest, { skipInstall }) {
-  if (skipInstall) {
-    logger.log('Skipping install deps');
-    return;
-  }
-  const currentDir = process.cwd();
-  process.chdir(dest);
-  logger.log('Installing deps...');
+async function extractThemeZip(zip) {
+  if (!zip) return null;
+  // Write zip to disk
+  let tmpFolder;
+  let tmpZipPath;
   try {
-    const useYarn = canUseYarn();
-    logger.log('...installing with `%s`...', useYarn ? 'yarn' : 'npm');
-    (await useYarn) ? execa('yarn', ['install']) : execa('npm', ['install']);
-    logger.log('Deps installed');
-  } catch (error) {
-    logger.error('Deps install failed');
-    logger.error(error);
+    tmpFolder = fs.mkdtempSync(
+      path.join(os.tmpdir(), TMP_BOILERPLATE_FOLDER_PREFIX)
+    );
+    tmpZipPath = path.join(tmpFolder, 'boilerplate.zip');
+    await fs.ensureFile(tmpZipPath);
+    await fs.writeFile(tmpZipPath, zip, {
+      mode: 0o777,
+    });
+  } catch (err) {
+    logger.error('An error occured writing temp theme source.');
+    if (tmpFolder) {
+      logFileSystemErrorInstance(err, {
+        filepath: tmpFolder,
+        write: true,
+      });
+    } else {
+      logErrorInstance(err);
+    }
+    return null;
   }
-  process.chdir(currentDir);
+  // Extract zip
+  let extractPath = null;
+  try {
+    const tmpExtractPath = path.join(tmpFolder, 'extracted');
+    await extract(tmpZipPath, { dir: tmpExtractPath });
+    extractPath = tmpExtractPath;
+  } catch (err) {
+    logger.error('An error occured extracting theme source.');
+    logErrorInstance(err);
+  }
+  return extractPath;
+}
+
+async function copyThemeBoilerplateToDest(src, dest) {
+  if (!src || !dest) return;
+  try {
+    const files = await fs.readdir(src);
+    const rootDir = files[0];
+    const themeSrcDir = path.join(src, rootDir, 'src');
+    await fs.copy(themeSrcDir, dest);
+  } catch (err) {
+    logger.error(`An error occured copying theme source to "${dest}".`);
+    logFileSystemErrorInstance(err);
+  }
 }
 
 /**
  *
- * @param {string} src
- * @param {string} dest
- * @param {object} options
+ * @param {String} src
+ * @param {String} dest
  */
-async function createTheme(src, dest, options = {}) {
-  // const { clone, ssh } = options;
-  await fs.ensureDir(dest);
-  // clone repo
-  // download zip
-  // copy local dir
-  // unzip local zip
-  await cloneBoilerplate(dest, options);
-  await installDeps(dest, options);
+async function createTheme(src, dest) {
+  const zip = await downloadCmsThemeBoilerplate();
+  const extractFolder = await extractThemeZip(zip);
+  await copyThemeBoilerplateToDest(extractFolder, dest);
 }
 
 module.exports = {
