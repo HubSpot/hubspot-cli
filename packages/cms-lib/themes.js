@@ -91,7 +91,7 @@ async function extractThemeZip(zip) {
  */
 async function copyThemeBoilerplateToDest(src, dest) {
   try {
-    logger.log('Copying theme source to "%s"', dest);
+    logger.log(`Copying theme source to ${dest}`);
     const files = await fs.readdir(src);
     const rootDir = files[0];
     const themeSrcDir = path.join(src, rootDir, 'src');
@@ -99,7 +99,7 @@ async function copyThemeBoilerplateToDest(src, dest) {
     logger.log('Completed copying theme source.');
     return true;
   } catch (err) {
-    logger.error(`An error occured copying theme source to "${dest}".`);
+    logger.error(`An error occured copying theme source to ${dest}.`);
     logFileSystemErrorInstance(err, {
       filepath: dest,
       write: true,
@@ -113,12 +113,18 @@ async function copyThemeBoilerplateToDest(src, dest) {
  * @param {String} dest - Dir top write theme src to.
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function createTheme(dest) {
+async function createTheme(dest, options) {
   const zip = await downloadCmsThemeBoilerplate();
   if (!zip) return false;
   const extractFolder = await extractThemeZip(zip);
   if (!extractFolder) return false;
-  return copyThemeBoilerplateToDest(extractFolder, dest);
+  const success = await copyThemeBoilerplateToDest(extractFolder, dest);
+  if (success) {
+    logger.log(
+      `Success: your new ${options.type} project has been created in ${dest}.`
+    );
+  }
+  return success;
 }
 
 module.exports = {
