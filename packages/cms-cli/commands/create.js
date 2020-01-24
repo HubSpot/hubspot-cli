@@ -58,6 +58,8 @@ function configureCreateCommand(program) {
   program
     .version(version)
     .description('Create assets from boilerplate.')
+    // For a theme this is `website-theme <dest>`
+    // TODO: Yargs allows an array of commands.
     .arguments('<type> <name> [dest]')
     .action((type, name, dest) => {
       setLogLevel(program);
@@ -66,6 +68,11 @@ function configureCreateCommand(program) {
       if (!type || !TYPES[type]) {
         logger.error(`The asset type ${type} is not supported`);
         return;
+      }
+
+      // TODO: In yargs use `.implies()`
+      if (type === TYPES['website-theme']) {
+        dest = name;
       }
 
       dest = resolveLocalPath(dest);
