@@ -43,7 +43,7 @@ const filesDataReducer = (allFiles, fileData) => {
     case STAT_TYPES.FILE:
       return allFiles.concat(fileData.filepath);
     case STAT_TYPES.DIRECTORY:
-      return allFiles.concat(fileData.fileContents);
+      return allFiles.concat(fileData.files);
     case STAT_TYPES.SYMBOLIC_LINK:
       // Skip symlinks
       return allFiles;
