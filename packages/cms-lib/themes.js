@@ -47,22 +47,22 @@ async function downloadCmsThemeBoilerplate() {
 async function extractThemeZip(zip) {
   logger.log('Extracting theme source...');
   // Write zip to disk
-  let tmpFolder;
+  let tmpDir;
   let tmpZipPath;
   try {
-    tmpFolder = await fs.mkdtemp(
+    tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), TMP_BOILERPLATE_FOLDER_PREFIX)
     );
-    tmpZipPath = path.join(tmpFolder, 'boilerplate.zip');
+    tmpZipPath = path.join(tmpDir, 'boilerplate.zip');
     await fs.ensureFile(tmpZipPath);
     await fs.writeFile(tmpZipPath, zip, {
       mode: 0o777,
     });
   } catch (err) {
     logger.error('An error occured writing temp theme source.');
-    if (tmpFolder) {
+    if (tmpDir || tmpZipPath) {
       logFileSystemErrorInstance(err, {
-        filepath: tmpFolder,
+        filepath: tmpDir || tmpZipPath,
         write: true,
       });
     } else {
@@ -71,17 +71,17 @@ async function extractThemeZip(zip) {
     return null;
   }
   // Extract zip
-  let extractPath = null;
+  let extractDir = null;
   try {
-    const tmpExtractPath = path.join(tmpFolder, 'extracted');
+    const tmpExtractPath = path.join(tmpDir, 'extracted');
     await extract(tmpZipPath, { dir: tmpExtractPath });
-    extractPath = tmpExtractPath;
+    extractDir = tmpExtractPath;
   } catch (err) {
     logger.error('An error occured extracting theme source.');
     logErrorInstance(err);
   }
   logger.log('Completed theme source extraction.');
-  return extractPath;
+  return { extractDir, tmpDir };
 }
 
 /**
@@ -116,13 +116,17 @@ async function copyThemeBoilerplateToDest(src, dest) {
 async function createTheme(dest, options) {
   const zip = await downloadCmsThemeBoilerplate();
   if (!zip) return false;
-  const extractFolder = await extractThemeZip(zip);
-  if (!extractFolder) return false;
-  const success = await copyThemeBoilerplateToDest(extractFolder, dest);
+  const { extractDir, tmpDir } = (await extractThemeZip(zip)) || {};
+  const success =
+    extractDir != null && (await copyThemeBoilerplateToDest(extractDir, dest));
   if (success) {
     logger.log(
       `Success: your new ${options.type} project has been created in ${dest}.`
     );
+  }
+  if (tmpDir) {
+    // Try cleaning up resources from os's tempdir
+    fs.rmdir(tmpDir, () => {});
   }
   return success;
 }
