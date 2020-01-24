@@ -113,7 +113,7 @@ async function copyThemeBoilerplateToDest(src, dest) {
  * @param {String} dest - Dir top write theme src to.
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function createTheme(dest, options) {
+async function createTheme(dest, type) {
   const zip = await downloadCmsThemeBoilerplate();
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractThemeZip(zip)) || {};
@@ -121,7 +121,7 @@ async function createTheme(dest, options) {
     extractDir != null && (await copyThemeBoilerplateToDest(extractDir, dest));
   if (success) {
     logger.log(
-      `Success: your new ${options.type} project has been created in ${dest}.`
+      `Success: your new ${type} project has been created in ${dest}.`
     );
   }
   if (tmpDir) {
