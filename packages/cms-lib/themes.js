@@ -7,7 +7,6 @@ const request = require('request-promise-native');
 const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
-// const { getCwd } = require('./path');
 const {
   logFileSystemErrorInstance,
   logErrorInstance,
