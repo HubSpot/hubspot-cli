@@ -94,7 +94,10 @@ async function copyThemeBoilerplateToDest(src, dest) {
     await fs.copy(themeSrcDir, dest);
   } catch (err) {
     logger.error(`An error occured copying theme source to "${dest}".`);
-    logFileSystemErrorInstance(err);
+    logFileSystemErrorInstance(err, {
+      filepath: dest,
+      write: true,
+    });
   }
 }
 
