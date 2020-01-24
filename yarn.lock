@@ -2957,7 +2957,7 @@ fb-watchman@^2.0.0:
 
 fd-slicer@~1.0.1:
   version "1.0.1"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/fd-slicer/-/fd-slicer-1.0.1.tgz#8b5bcbd9ec327c5041bf9ab023fd6750f1177e65"
+  resolved "https://registry.yarnpkg.com/fd-slicer/-/fd-slicer-1.0.1.tgz#8b5bcbd9ec327c5041bf9ab023fd6750f1177e65"
   integrity sha1-i1vL2ewyfFBBv5qwI/1nUPEXfmU=
   dependencies:
     pend "~1.2.0"
@@ -5907,7 +5907,7 @@ path-type@^3.0.0:
 
 pend@~1.2.0:
   version "1.2.0"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/pend/-/pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50"
+  resolved "https://registry.yarnpkg.com/pend/-/pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50"
   integrity sha1-elfrVQpng/kRUzH89GY9XI4AelA=
 
 performance-now@^2.1.0:
@@ -7826,7 +7826,7 @@ yargs@^14.2.0:
 
 yauzl@2.4.1:
   version "2.4.1"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/yauzl/-/yauzl-2.4.1.tgz#9528f442dab1b2284e58b4379bb194e22e0c4005"
+  resolved "https://registry.yarnpkg.com/yauzl/-/yauzl-2.4.1.tgz#9528f442dab1b2284e58b4379bb194e22e0c4005"
   integrity sha1-lSj0QtqxsihOWLQ3m7GU4i4MQAU=
   dependencies:
     fd-slicer "~1.0.1"
