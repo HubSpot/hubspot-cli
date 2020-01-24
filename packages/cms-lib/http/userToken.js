@@ -7,7 +7,7 @@ async function refreshAccessToken(portalId, userToken, env = 'PROD') {
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `oauth/v1/cos-auth/refresh/${userToken}`,
+      uri: `localdevauth/v1/auth/refresh/${userToken}`,
     }
   );
 
