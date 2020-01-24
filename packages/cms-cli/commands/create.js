@@ -59,9 +59,6 @@ function configureCreateCommand(program) {
     .version(version)
     .description('Create assets from boilerplate.')
     .arguments('<type> <name> [dest]')
-    .option('--clone', 'git clone theme repository', false)
-    .option('--ssh', 'use SSH to clone git theme repository', false)
-    .option('--skip-install', 'skip installation of theme dependencies', false)
     .action((type, name, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
