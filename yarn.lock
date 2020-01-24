@@ -2903,7 +2903,7 @@ extglob@^2.0.4:
 
 extract-zip@^1.6.7:
   version "1.6.7"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/extract-zip/-/extract-zip-1.6.7.tgz#a840b4b8af6403264c8db57f4f1a74333ef81fe9"
+  resolved "https://registry.yarnpkg.com/extract-zip/-/extract-zip-1.6.7.tgz#a840b4b8af6403264c8db57f4f1a74333ef81fe9"
   integrity sha1-qEC0uK9kAyZMjbV/Txp0Mz74H+k=
   dependencies:
     concat-stream "1.6.2"
