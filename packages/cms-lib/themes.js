@@ -21,23 +21,24 @@ const ZIP_CONTENT_TYPE = 'application/zip';
 const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
- * @returns {Buffer|Null} Zip data buffer
+ * @returns {Buffer} Zip data buffer
  */
 async function downloadCmsThemeBoilerplate() {
-  let zip = null;
   try {
-    zip = await request.get(THEME_BOILERPLATE_ZIP_URI, {
+    logger.log('Fetching theme...');
+    const zip = await request.get(THEME_BOILERPLATE_ZIP_URI, {
       encoding: null,
       headers: {
         'content-type': ZIP_CONTENT_TYPE,
         accept: ZIP_CONTENT_TYPE,
       },
     });
+    logger.log('Completed theme fetch.');
+    return zip;
   } catch (err) {
     logger.error('An error occured fetching the theme source.');
     logErrorInstance(err);
   }
-  return zip;
 }
 
 /**
@@ -45,7 +46,7 @@ async function downloadCmsThemeBoilerplate() {
  * @returns {String|Null} Temp dir where zip has been extracted.
  */
 async function extractThemeZip(zip) {
-  if (!zip) return null;
+  logger.log('Extracting theme source...');
   // Write zip to disk
   let tmpFolder;
   let tmpZipPath;
@@ -80,20 +81,24 @@ async function extractThemeZip(zip) {
     logger.error('An error occured extracting theme source.');
     logErrorInstance(err);
   }
+  logger.log('Completed theme source extraction.');
   return extractPath;
 }
 
 /**
  * @param {String} src - Dir where boilerplate repo files have been extracted.
  * @param {String} dest - Dir to copy boilerplate src files to.
+ * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
 async function copyThemeBoilerplateToDest(src, dest) {
-  if (!src || !dest) return;
   try {
+    logger.log('Copying theme source to "%s"', dest);
     const files = await fs.readdir(src);
     const rootDir = files[0];
     const themeSrcDir = path.join(src, rootDir, 'src');
     await fs.copy(themeSrcDir, dest);
+    logger.log('Completed copying theme source.');
+    return true;
   } catch (err) {
     logger.error(`An error occured copying theme source to "${dest}".`);
     logFileSystemErrorInstance(err, {
@@ -101,16 +106,20 @@ async function copyThemeBoilerplateToDest(src, dest) {
       write: true,
     });
   }
+  return false;
 }
 
 /**
  * Writes a copy of the boilerplate theme to dest.
  * @param {String} dest - Dir top write theme src to.
+ * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createTheme(dest) {
   const zip = await downloadCmsThemeBoilerplate();
+  if (!zip) return false;
   const extractFolder = await extractThemeZip(zip);
-  await copyThemeBoilerplateToDest(extractFolder, dest);
+  if (!extractFolder) return false;
+  return copyThemeBoilerplateToDest(extractFolder, dest);
 }
 
 module.exports = {
