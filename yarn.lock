@@ -7541,7 +7541,7 @@ validate-npm-package-license@^3.0.1, validate-npm-package-license@^3.0.3:
 
 validate-npm-package-name@^3.0.0:
   version "3.0.0"
-  resolved "https://npm.hubteam.com/npm-nexus/repository/npm-all/validate-npm-package-name/-/validate-npm-package-name-3.0.0.tgz#5fa912d81eb7d0c74afc140de7317f0ca7df437e"
+  resolved "https://registry.yarnpkg.com/validate-npm-package-name/-/validate-npm-package-name-3.0.0.tgz#5fa912d81eb7d0c74afc140de7317f0ca7df437e"
   integrity sha1-X6kS2B630MdK/BQN5zF/DKffQ34=
   dependencies:
     builtins "^1.0.3"
