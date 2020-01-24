@@ -126,7 +126,11 @@ async function createTheme(dest, options) {
   }
   if (tmpDir) {
     // Try cleaning up resources from os's tempdir
-    fs.rmdir(tmpDir, () => {});
+    try {
+      fs.remove(tmpDir);
+    } catch (e) {
+      // noop
+    }
   }
   return success;
 }
