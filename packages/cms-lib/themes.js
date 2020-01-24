@@ -50,7 +50,7 @@ async function extractThemeZip(zip) {
   let tmpFolder;
   let tmpZipPath;
   try {
-    tmpFolder = fs.mkdtempSync(
+    tmpFolder = await fs.mkdtemp(
       path.join(os.tmpdir(), TMP_BOILERPLATE_FOLDER_PREFIX)
     );
     tmpZipPath = path.join(tmpFolder, 'boilerplate.zip');
