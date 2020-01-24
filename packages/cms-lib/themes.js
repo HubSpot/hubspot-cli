@@ -60,9 +60,9 @@ async function extractThemeZip(zip) {
     });
   } catch (err) {
     logger.error('An error occured writing temp theme source.');
-    if (tmpDir || tmpZipPath) {
+    if (tmpZipPath || tmpDir) {
       logFileSystemErrorInstance(err, {
-        filepath: tmpDir || tmpZipPath,
+        filepath: tmpZipPath || tmpDir,
         write: true,
       });
     } else {
