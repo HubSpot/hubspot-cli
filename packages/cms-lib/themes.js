@@ -2,8 +2,9 @@ const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
 const { promisify } = require('util');
+
 const request = require('request-promise-native');
-const extractZip = require('extract-zip');
+const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
 // const { getCwd } = require('./path');
@@ -12,17 +13,15 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
-const extract = promisify(extractZip);
-
-const ZIP_CONTENT_TYPE = 'application/zip';
-
+// TODO: When the boilerplate project cuts a release, use latest instead.
+// https://help.github.com/en/github/administering-a-repository/linking-to-releases#linking-to-the-latest-release
 const THEME_BOILERPLATE_ZIP_URI =
   'https://github.com/HubSpot/cms-theme-boilerplate/archive/master.zip';
-
+const ZIP_CONTENT_TYPE = 'application/zip';
 const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
- * @returns {Buffer|Null}
+ * @returns {Buffer|Null} Zip data buffer
  */
 async function downloadCmsThemeBoilerplate() {
   let zip = null;
@@ -42,9 +41,8 @@ async function downloadCmsThemeBoilerplate() {
 }
 
 /**
- *
  * @param {Buffer} zip
- * @returns {String|Null}
+ * @returns {String|Null} Temp dir where zip has been extracted.
  */
 async function extractThemeZip(zip) {
   if (!zip) return null;
@@ -85,6 +83,10 @@ async function extractThemeZip(zip) {
   return extractPath;
 }
 
+/**
+ * @param {String} src - Dir where boilerplate repo files have been extracted.
+ * @param {String} dest - Dir to copy boilerplate src files to.
+ */
 async function copyThemeBoilerplateToDest(src, dest) {
   if (!src || !dest) return;
   try {
@@ -102,11 +104,10 @@ async function copyThemeBoilerplateToDest(src, dest) {
 }
 
 /**
- *
- * @param {String} src
- * @param {String} dest
+ * Writes a copy of the boilerplate theme to dest.
+ * @param {String} dest - Dir top write theme src to.
  */
-async function createTheme(src, dest) {
+async function createTheme(dest) {
   const zip = await downloadCmsThemeBoilerplate();
   const extractFolder = await extractThemeZip(zip);
   await copyThemeBoilerplateToDest(extractFolder, dest);

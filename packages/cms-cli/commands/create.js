@@ -94,7 +94,7 @@ function configureCreateCommand(program) {
           createTemplate(name, dest);
           break;
         case TYPES['website-theme']:
-          createTheme(name, dest, program);
+          createTheme(dest, program);
           break;
         default:
           break;
