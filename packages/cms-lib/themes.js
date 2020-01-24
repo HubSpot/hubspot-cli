@@ -91,7 +91,7 @@ async function extractThemeZip(zip) {
  */
 async function copyThemeBoilerplateToDest(src, dest) {
   try {
-    logger.log(`Copying theme source to ${dest}`);
+    logger.log('Copying theme source...');
     const files = await fs.readdir(src);
     const rootDir = files[0];
     const themeSrcDir = path.join(src, rootDir, 'src');
