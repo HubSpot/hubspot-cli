@@ -7,7 +7,10 @@ async function refreshAccessToken(portalId, userToken, env = 'PROD') {
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `localdevauth/v1/auth/refresh/${userToken}`,
+      uri: `localdevauth/v1/auth/refresh`,
+      body: {
+        encodedOAuthRefreshToken: userToken,
+      },
     }
   );
 
@@ -15,7 +18,7 @@ async function refreshAccessToken(portalId, userToken, env = 'PROD') {
 }
 
 async function accessTokenForUserToken(portalId) {
-  const { auth, userToken, env, authType } = getPortalConfig(portalId);
+  const { auth, userToken, env, ...rest } = getPortalConfig(portalId);
 
   if (
     !auth ||
@@ -25,16 +28,17 @@ async function accessTokenForUserToken(portalId) {
       .add(30, 'minutes')
       .isAfter(moment(auth.tokenInfo.expiresAt))
   ) {
-    let accessToken;
+    let response;
     try {
-      accessToken = await refreshAccessToken(portalId, userToken, env);
+     response = await refreshAccessToken(portalId, userToken, env);
     } catch (e) {
       console.log(e);
     }
+    const accessToken = response.oauthAccessToken;
     updatePortalConfig({
+      ...rest,
       portalId,
       environment: env,
-      authType,
       tokenInfo: { accessToken, expiresAt: moment().add(600, 'seconds') },
     });
 
