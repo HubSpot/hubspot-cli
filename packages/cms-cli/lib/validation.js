@@ -83,7 +83,6 @@ async function validatePortal(command) {
       logger.error(e.message);
       return false;
     }
-
   } else if (authType === 'usertoken') {
     // TODO: add some checks :)
     return true;

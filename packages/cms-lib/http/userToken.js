@@ -30,7 +30,7 @@ async function accessTokenForUserToken(portalId) {
   ) {
     let response;
     try {
-     response = await refreshAccessToken(portalId, userToken, env);
+      response = await refreshAccessToken(portalId, userToken, env);
     } catch (e) {
       console.log(e);
     }
