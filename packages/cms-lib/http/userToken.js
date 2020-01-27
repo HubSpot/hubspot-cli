@@ -1,5 +1,7 @@
 const moment = require('moment');
 const request = require('request-promise-native');
+const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
+
 const { getRequestOptions } = require('./requestOptions');
 const { getPortalConfig, updatePortalConfig } = require('../lib/config');
 
@@ -32,7 +34,13 @@ async function accessTokenForUserToken(portalId) {
     try {
       response = await refreshAccessToken(portalId, userToken, env);
     } catch (e) {
-      console.log(e);
+      if (e.response) {
+        throw new HubSpotAuthError(
+          `Error while retrieving new access token: ${e.response.body.message}`
+        );
+      } else {
+        throw e;
+      }
     }
     const accessToken = response.oauthAccessToken;
     updatePortalConfig({

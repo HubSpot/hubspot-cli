@@ -1,6 +1,7 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getConfig, getPortalConfig, Mode } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
+const { accessTokenForUserToken } = require('@hubspot/cms-lib/http/userToken');
 const { getPortalId, getMode } = require('./commonOpts');
 
 /**
@@ -50,7 +51,7 @@ async function validatePortal(command) {
     return false;
   }
 
-  const { authType, auth, apiKey } = portalConfig;
+  const { authType, auth, apiKey, userToken } = portalConfig;
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {
@@ -84,8 +85,25 @@ async function validatePortal(command) {
       return false;
     }
   } else if (authType === 'usertoken') {
-    // TODO: add some checks :)
-    return true;
+    if (!userToken) {
+      logger.error(
+        `The portal "${portalId}" is configured to use a user token for authentication and is missing a "userToken" in the configuration file`
+      );
+      return false;
+    }
+
+    try {
+      const accessToken = await accessTokenForUserToken(portalId);
+      if (!accessToken) {
+        logger.error(
+          `An OAuth2 access token for portal "${portalId} could not be retrieved using the "userToken" provided`
+        );
+        return false;
+      }
+    } catch (e) {
+      logger.error(e.message);
+      return false;
+    }
   } else if (!apiKey) {
     logger.error(
       `The portalId ${portalId} is missing authentication configuration`
