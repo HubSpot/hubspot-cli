@@ -8,22 +8,49 @@ const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
 const {
+  logApiErrorInstance,
   logFileSystemErrorInstance,
   logErrorInstance,
 } = require('./errorHandlers');
 
 // TODO: When the boilerplate project cuts a release, use latest instead.
-// https://help.github.com/en/github/administering-a-repository/linking-to-releases#linking-to-the-latest-release
+// https://developer.github.com/v3/repos/releases/#get-the-latest-release
+// https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest
 const THEME_BOILERPLATE_ZIP_URI =
   'https://github.com/HubSpot/cms-theme-boilerplate/archive/master.zip';
 const ZIP_CONTENT_TYPE = 'application/zip';
 const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
- * @returns {Buffer} Zip data buffer
+ * https://developer.github.com/v3/repos/releases/#get-the-latest-release
+ * @param {String|Null} tag - Git tag to fetch for. If omitted latest will be fetched.
  */
-async function downloadCmsThemeBoilerplate() {
+async function fetchReleaseData(tag = null) {
+  const URI = tag
+    ? `https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/tags/${tag}`
+    : 'https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest';
   try {
+    return await request.get(URI);
+  } catch (err) {
+    logger.error(`Failed fetching release data for ${tag || 'latest'} theme.`);
+    logApiErrorInstance(err, {
+      request: URI,
+    });
+  }
+  return null;
+}
+
+/**
+ * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
+ * @returns {Buffer|Null} Zip data buffer
+ */
+async function downloadCmsThemeBoilerplate(/*tag = null*/) {
+  try {
+    // const releaseData = fetchReleaseData(tag);
+    // if (!releaseData) return;
+    // const { zipball_url: zipUrl, tag_name: tagName } = releaseData;
+    // logger.log(`Fetching theme ${tagName}...`);
+    // TODO: Use `zipUrl` when we start releases.
     logger.log('Fetching theme...');
     const zip = await request.get(THEME_BOILERPLATE_ZIP_URI, {
       encoding: null,
@@ -38,6 +65,7 @@ async function downloadCmsThemeBoilerplate() {
     logger.error('An error occured fetching the theme source.');
     logErrorInstance(err);
   }
+  return null;
 }
 
 /**
@@ -79,6 +107,7 @@ async function extractThemeZip(zip) {
   } catch (err) {
     logger.error('An error occured extracting theme source.');
     logErrorInstance(err);
+    return null;
   }
   logger.log('Completed theme source extraction.');
   return { extractDir, tmpDir };
@@ -109,6 +138,19 @@ async function copyThemeBoilerplateToDest(src, dest) {
 }
 
 /**
+ * Try cleaning up resources from os's tempdir
+ * @param {String} tmpDir
+ */
+function cleanupTemp(tmpDir) {
+  if (!tmpDir) return;
+  try {
+    fs.remove(tmpDir);
+  } catch (e) {
+    // noop
+  }
+}
+
+/**
  * Writes a copy of the boilerplate theme to dest.
  * @param {String} dest - Dir top write theme src to.
  * @returns {Boolean} `true` if successful, `false` otherwise.
@@ -124,17 +166,13 @@ async function createTheme(dest, type) {
       `Success: your new ${type} project has been created in ${dest}.`
     );
   }
-  if (tmpDir) {
-    // Try cleaning up resources from os's tempdir
-    try {
-      fs.remove(tmpDir);
-    } catch (e) {
-      // noop
-    }
-  }
+  cleanupTemp(tmpDir);
   return success;
 }
 
 module.exports = {
   createTheme,
+  downloadCmsThemeBoilerplate,
+  extractThemeZip,
+  fetchReleaseData,
 };
