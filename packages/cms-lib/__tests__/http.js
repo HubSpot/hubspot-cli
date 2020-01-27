@@ -84,6 +84,44 @@ describe('http', () => {
         },
       });
     });
+    it('adds authorization header when using a user token', async () => {
+      const accessToken = 'let-me-in';
+      const portal = {
+        id: 123,
+        authType: 'usertoken',
+        userToken: 'some-secret',
+        auth: {
+          tokenInfo: {
+            expiresAt: moment()
+              .add(2, 'hours')
+              .toISOString(),
+            accessToken,
+          },
+        },
+      };
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        portals: [portal],
+      });
+      getPortalConfig.mockReturnValue(portal);
+      await http.get(123, {
+        uri: 'some/endpoint/path',
+      });
+
+      expect(request.get).toBeCalledWith({
+        baseUrl: `https://api.hubapi.com`,
+        uri: 'some/endpoint/path',
+        headers: {
+          'User-Agent': `HubSpot CMS Tools/${version}`,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        json: true,
+        simple: true,
+        timeout: 15000,
+        qs: {
+          portalId: 123,
+        },
+      });
+    });
 
     it('supports setting a custom timeout', async () => {
       getAndLoadConfigIfNeeded.mockReturnValue({
