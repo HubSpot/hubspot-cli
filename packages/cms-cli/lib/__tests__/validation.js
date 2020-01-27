@@ -1,11 +1,14 @@
 const { getPortalConfig } = require('@hubspot/cms-lib');
+const { getOauthManager } = require('@hubspot/cms-lib/oauth');
+const { accessTokenForUserToken } = require('@hubspot/cms-lib/http/userToken');
+
 const { getPortalId } = require('../commonOpts');
 const { validatePortal } = require('../validation');
-const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 
 jest.mock('@hubspot/cms-lib');
 jest.mock('@hubspot/cms-lib/logger');
 jest.mock('@hubspot/cms-lib/oauth');
+jest.mock('@hubspot/cms-lib/http/userToken');
 jest.mock('../commonOpts');
 
 describe('validation', () => {
@@ -102,6 +105,30 @@ describe('validation', () => {
             refreshToken: 'def',
           },
         },
+      });
+      expect(await validatePortal({ portal: 123 })).toBe(true);
+    });
+    it('returns false if "usertoken" configured and getting an access token throws', async () => {
+      getPortalId.mockReturnValueOnce(123);
+      accessTokenForUserToken.mockImplementationOnce(() => {
+        throw new Error('It failed');
+      });
+      getPortalConfig.mockReturnValueOnce({
+        portalId: 123,
+        authType: 'usertoken',
+        userToken: 'foo',
+      });
+      expect(await validatePortal({ portal: 123 })).toBe(false);
+    });
+    it('returns true if "usertoken" configured and an access token is received', async () => {
+      getPortalId.mockReturnValueOnce(123);
+      accessTokenForUserToken.mockImplementationOnce(() => {
+        return 'secret-stuff';
+      });
+      getPortalConfig.mockReturnValueOnce({
+        portalId: 123,
+        authType: 'usertoken',
+        userToken: 'foo',
       });
       expect(await validatePortal({ portal: 123 })).toBe(true);
     });
