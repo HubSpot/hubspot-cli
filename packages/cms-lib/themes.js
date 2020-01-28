@@ -48,7 +48,7 @@ async function fetchReleaseData(tag = '') {
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadCmsThemeBoilerplate(tag) {
+async function downloadCmsThemeBoilerplate(tag = '') {
   try {
     const releaseData = await fetchReleaseData(tag);
     if (!releaseData) return;
@@ -156,7 +156,7 @@ function cleanupTemp(tmpDir) {
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createTheme(dest, type, options = {}) {
-  const tag = options.themeVersion || null;
+  const { themeVersion: tag } = options;
   const zip = await downloadCmsThemeBoilerplate(tag);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractThemeZip(zip)) || {};
