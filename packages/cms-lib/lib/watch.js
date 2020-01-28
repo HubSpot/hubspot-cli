@@ -12,7 +12,7 @@ const {
   logApiUploadErrorInstance,
 } = require('../errorHandlers');
 const { uploadFolder } = require('./uploadFolder');
-const { shouldIgnoreFile } = require('../ignoreRules');
+const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperApiQueryFromMode } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
@@ -120,6 +120,10 @@ function watch(
   { mode, cwd, remove, disableInitial, notify }
 ) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
+
+  if (notify) {
+    ignoreFile(notify);
+  }
 
   const watcher = chokidar.watch(src, {
     ignoreInitial: true,
