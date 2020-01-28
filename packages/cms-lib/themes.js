@@ -13,12 +13,8 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
-// TODO: When the boilerplate project cuts a release, use latest instead.
-// https://developer.github.com/v3/repos/releases/#get-the-latest-release
-// https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest
-const THEME_BOILERPLATE_ZIP_URI =
-  'https://github.com/HubSpot/cms-theme-boilerplate/archive/master.zip';
-const ZIP_CONTENT_TYPE = 'application/zip';
+// https://developer.github.com/v3/#user-agent-required
+const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
 const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
@@ -30,7 +26,10 @@ async function fetchReleaseData(tag = null) {
     ? `https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/tags/${tag}`
     : 'https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest';
   try {
-    return await request.get(URI);
+    return await request.get(URI, {
+      headers: { ...USER_AGENT_HEADERS },
+      json: true,
+    });
   } catch (err) {
     logger.error(`Failed fetching release data for ${tag || 'latest'} theme.`);
     logApiErrorInstance(err, {
@@ -44,20 +43,15 @@ async function fetchReleaseData(tag = null) {
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadCmsThemeBoilerplate(/*tag = null*/) {
+async function downloadCmsThemeBoilerplate(tag = null) {
   try {
-    // const releaseData = fetchReleaseData(tag);
-    // if (!releaseData) return;
-    // const { zipball_url: zipUrl, tag_name: tagName } = releaseData;
-    // logger.log(`Fetching theme ${tagName}...`);
-    // TODO: Use `zipUrl` when we start releases.
-    logger.log('Fetching theme...');
-    const zip = await request.get(THEME_BOILERPLATE_ZIP_URI, {
+    const releaseData = await fetchReleaseData(tag);
+    if (!releaseData) return;
+    const { zipball_url: zipUrl, tag_name: tagName } = releaseData;
+    logger.log(`Fetching theme ${tagName}...`);
+    const zip = await request.get(zipUrl, {
       encoding: null,
-      headers: {
-        'content-type': ZIP_CONTENT_TYPE,
-        accept: ZIP_CONTENT_TYPE,
-      },
+      headers: { ...USER_AGENT_HEADERS },
     });
     logger.log('Completed theme fetch.');
     return zip;
