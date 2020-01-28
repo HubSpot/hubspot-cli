@@ -3,6 +3,7 @@ const util = require('util');
 const path = require('path');
 const moment = require('moment');
 const { logger } = require('../logger');
+const { TIMESTAMP_FORMAT } = require('./constants');
 
 const FUNCTION_LOG_PATH = 'function.log';
 
@@ -34,7 +35,7 @@ const formatStackTrace = log => {
 };
 
 const formatTimestamp = log => {
-  return `[${moment(log.createdAt).format('MM/DD/YYYY hh:mm:ss a')}]`;
+  return `[${moment(log.createdAt).format(TIMESTAMP_FORMAT)}]`;
 };
 
 const formatPayload = log => {

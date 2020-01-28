@@ -1,8 +1,11 @@
 const path = require('path');
+const fs = require('fs');
+const moment = require('moment');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
+const { TIMESTAMP_FORMAT } = require('./constants');
 const {
   ApiErrorContext,
   logApiErrorInstance,
@@ -14,6 +17,21 @@ const { getFileMapperApiQueryFromMode } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
+
+const WATCH_ACTION = {
+  ADD: {
+    EVENT: 'add',
+    ACTION: 'Added',
+  },
+  REMOVE: {
+    EVENT: 'unlink',
+    ACTION: 'Removed',
+  },
+  CHANGE: {
+    EVENT: 'change',
+    ACTION: 'Changed',
+  },
+};
 
 const queue = new PQueue({
   concurrency: 10,
@@ -33,16 +51,17 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
   const apiOptions = {
     qs: getFileMapperApiQueryFromMode(mode),
   };
-  queue.add(() => {
-    upload(portalId, file, dest, apiOptions)
+  return queue.add(() => {
+    return upload(portalId, file, dest, apiOptions)
       .then(() => {
-        logger.log('Uploaded file "%s" to "%s"', file, dest);
+        logger.log(`Uploaded file ${file} to ${dest}`);
       })
       .catch(() => {
-        logger.debug('Uploading file "%s" to "%s" failed', file, dest);
+        const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
+        logger.debug(uploadFailureMessage);
         logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-        upload(portalId, file, dest, apiOptions).catch(error => {
-          logger.error('Uploading file "%s" to "%s" failed', file, dest);
+        return upload(portalId, file, dest, apiOptions).catch(error => {
+          logger.error(uploadFailureMessage);
           logApiUploadErrorInstance(
             error,
             new ApiErrorContext({
@@ -56,7 +75,50 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
   });
 }
 
-function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
+async function deleteRemotePath(portalId, filePath, remotePath, { cwd }) {
+  if (shouldIgnoreFile(filePath, cwd)) {
+    logger.debug(`Skipping ${filePath} due to an ignore rule`);
+    return;
+  }
+
+  logger.debug('Attempting to delete file "%s"', remotePath);
+  return queue.add(() => {
+    return deleteFile(portalId, remotePath)
+      .then(() => {
+        logger.log(`Deleted file ${remotePath}`);
+      })
+      .catch(error => {
+        logger.error(`Deleting file ${remotePath} failed`);
+        logApiErrorInstance(
+          error,
+          new ApiErrorContext({
+            portalId,
+            request: remotePath,
+          })
+        );
+      });
+  });
+}
+
+function triggerNotify(notify, actionType, filePath) {
+  if (notify) {
+    try {
+      fs.appendFileSync(
+        notify,
+        `${moment().format(TIMESTAMP_FORMAT)} ${actionType}: ${filePath}\n`
+      );
+    } catch (e) {
+      logger.error(`Unable to notify file ${notify}: ${e}`);
+    }
+  }
+}
+
+function watch(
+  portalId,
+  src,
+  dest,
+  { mode, cwd, remove, disableInitial, notify }
+) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   const watcher = chokidar.watch(src, {
@@ -71,7 +133,7 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
 
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
-    uploadFolder(portalId, src, dest, { mode, cwd }).then(() => {
+    uploadFolder(portalId, src, dest, { mode, cwd, notify }).then(() => {
       logger.log(
         `Completed uploading files in ${src} to ${dest} in ${portalId}`
       );
@@ -82,43 +144,32 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
     logger.log(`Watcher is ready and watching ${src}`);
   });
 
-  watcher.on('add', file => {
-    const destPath = getDesignManagerPath(file);
-    uploadFile(portalId, file, destPath, { mode, cwd });
+  watcher.on(WATCH_ACTION.ADD.EVENT, async filePath => {
+    const destPath = getDesignManagerPath(filePath);
+    await uploadFile(portalId, filePath, destPath, {
+      mode,
+      cwd,
+    });
+    triggerNotify(notify, WATCH_ACTION.ADD.ACTION, filePath);
   });
 
   if (remove) {
-    watcher.on('unlink', filePath => {
+    watcher.on(WATCH_ACTION.REMOVE.EVENT, async filePath => {
       const remotePath = getDesignManagerPath(filePath);
-
-      if (shouldIgnoreFile(filePath, cwd)) {
-        logger.debug(`Skipping ${filePath} due to an ignore rule`);
-        return;
-      }
-
-      logger.debug('Attempting to delete file "%s"', remotePath);
-      queue.add(() => {
-        deleteFile(portalId, remotePath)
-          .then(() => {
-            logger.log('Deleted file "%s"', remotePath);
-          })
-          .catch(error => {
-            logger.error('Deleting file "%s" failed', remotePath);
-            logApiErrorInstance(
-              error,
-              new ApiErrorContext({
-                portalId,
-                request: remotePath,
-              })
-            );
-          });
+      await deleteRemotePath(portalId, filePath, remotePath, {
+        cwd,
       });
+      triggerNotify(notify, WATCH_ACTION.REMOVE.ACTION, filePath);
     });
   }
 
-  watcher.on('change', file => {
-    const destPath = getDesignManagerPath(file);
-    uploadFile(portalId, file, destPath, { mode, cwd });
+  watcher.on(WATCH_ACTION.CHANGE.EVENT, async filePath => {
+    const destPath = getDesignManagerPath(filePath);
+    await uploadFile(portalId, filePath, destPath, {
+      mode,
+      cwd,
+    });
+    triggerNotify(notify, WATCH_ACTION.CHANGE.ACTION, filePath);
   });
 
   return watcher;
