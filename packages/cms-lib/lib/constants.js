@@ -64,7 +64,7 @@ const OAUTH_SCOPES = [
   },
 ];
 
-const TIMESTAMP_FORMAT = 'MM/DD/YYYY hh:mm:ssa';
+const TIMESTAMP_FORMAT = 'MM/DD/YYYY hh:mm:ss:SSa';
 
 module.exports = {
   Mode,
