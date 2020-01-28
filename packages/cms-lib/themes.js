@@ -8,7 +8,6 @@ const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
 const {
-  logApiErrorInstance,
   logFileSystemErrorInstance,
   logErrorInstance,
 } = require('./errorHandlers');
@@ -19,9 +18,13 @@ const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
  * https://developer.github.com/v3/repos/releases/#get-the-latest-release
- * @param {String|Null} tag - Git tag to fetch for. If omitted latest will be fetched.
+ * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  */
-async function fetchReleaseData(tag = null) {
+async function fetchReleaseData(tag = '') {
+  tag = tag.trim().toLowerCase();
+  if (tag.length && tag[0] !== 'v') {
+    tag = `v${tag}`;
+  }
   const URI = tag
     ? `https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/tags/${tag}`
     : 'https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest';
@@ -31,10 +34,12 @@ async function fetchReleaseData(tag = null) {
       json: true,
     });
   } catch (err) {
-    logger.error(`Failed fetching release data for ${tag || 'latest'} theme.`);
-    logApiErrorInstance(err, {
-      request: URI,
-    });
+    logger.error(
+      `Failed fetching release data for ${tag || 'latest'} theme boilerplate.`
+    );
+    if (tag && err.statusCode === 404) {
+      logger.error(`Theme boilerplate ${tag} not found.`);
+    }
   }
   return null;
 }
@@ -43,12 +48,12 @@ async function fetchReleaseData(tag = null) {
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadCmsThemeBoilerplate(tag = null) {
+async function downloadCmsThemeBoilerplate(tag) {
   try {
     const releaseData = await fetchReleaseData(tag);
     if (!releaseData) return;
-    const { zipball_url: zipUrl, tag_name: tagName } = releaseData;
-    logger.log(`Fetching theme ${tagName}...`);
+    const { zipball_url: zipUrl, name } = releaseData;
+    logger.log(`Fetching ${name}...`);
     const zip = await request.get(zipUrl, {
       encoding: null,
       headers: { ...USER_AGENT_HEADERS },
@@ -147,10 +152,12 @@ function cleanupTemp(tmpDir) {
 /**
  * Writes a copy of the boilerplate theme to dest.
  * @param {String} dest - Dir top write theme src to.
+ * @param {Object} options
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function createTheme(dest, type) {
-  const zip = await downloadCmsThemeBoilerplate();
+async function createTheme(dest, type, options = {}) {
+  const tag = options.themeVersion || null;
+  const zip = await downloadCmsThemeBoilerplate(tag);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractThemeZip(zip)) || {};
   const success =

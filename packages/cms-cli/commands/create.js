@@ -61,6 +61,11 @@ function configureCreateCommand(program) {
     // For a theme this is `website-theme <dest>`
     // TODO: Yargs allows an array of commands.
     .arguments('<type> <name> [dest]')
+    .option(
+      '--theme-version <theme-version>',
+      'Theme boilerplate version to use',
+      ''
+    )
     .action((type, name, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
@@ -98,7 +103,7 @@ function configureCreateCommand(program) {
           createTemplate(name, dest);
           break;
         case TYPES['website-theme']:
-          createTheme(dest, type);
+          createTheme(dest, type, program);
           break;
         default:
           break;
