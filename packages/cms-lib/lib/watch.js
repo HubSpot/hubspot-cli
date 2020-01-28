@@ -5,7 +5,6 @@ const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
-const { TIMESTAMP_FORMAT } = require('./constants');
 const {
   ApiErrorContext,
   logApiErrorInstance,
@@ -105,7 +104,7 @@ function triggerNotify(notify, actionType, filePath) {
     try {
       fs.appendFileSync(
         notify,
-        `${moment().format(TIMESTAMP_FORMAT)} ${actionType}: ${filePath}\n`
+        `${moment().toISOString()} ${actionType}: ${filePath}\n`
       );
     } catch (e) {
       logger.error(`Unable to notify file ${notify}: ${e}`);
