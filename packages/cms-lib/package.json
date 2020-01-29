@@ -21,6 +21,7 @@
     "prettier": "1.16.4",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.7",
+    "underscore": "^1.9.2",
     "unixify": "1.0.0"
   },
   "engines": {
