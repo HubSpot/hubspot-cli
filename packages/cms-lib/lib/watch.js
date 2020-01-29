@@ -50,8 +50,8 @@ function triggerNotify(notify, actionType, filePath) {
 function writeNotifyQueueToFile(notify) {
   if (notify) {
     try {
-      const notifyOutput = `${moment().toISOString()} Notify Triggered: \n`;
-      const output = notifyOutput.concat(notifyQueue.join(''));
+      const notifyOutput = `${moment().toISOString()} Notify Triggered\n`;
+      const output = notifyQueue.join('').concat(notifyOutput);
       fs.appendFileSync(notify, output);
       notifyQueue.length = 0;
     } catch (e) {
