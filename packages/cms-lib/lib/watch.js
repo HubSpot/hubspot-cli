@@ -43,6 +43,27 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
+function triggerNotify(notify, actionType, filePath) {
+  if (notify) {
+    notifyQueue.push(`${moment().toISOString()} ${actionType}: ${filePath}\n`);
+    debouncedWriteNotifyQueueToFile(notify);
+  }
+}
+
+function writeNotifyQueueToFile(notify) {
+  if (notify) {
+    try {
+      const output = '=== ${moment().toISOString()} ===\n'.concat(
+        notifyQueue.join('')
+      );
+      fs.appendFileSync(notify, output);
+      notifyQueue.length = 0;
+    } catch (e) {
+      logger.error(`Unable to notify file ${notify}: ${e}`);
+    }
+  }
+}
+
 function uploadFile(portalId, file, dest, { mode, cwd }) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
@@ -104,25 +125,6 @@ async function deleteRemotePath(portalId, filePath, remotePath, { cwd }) {
         );
       });
   });
-}
-
-function triggerNotify(notify, actionType, filePath) {
-  if (notify) {
-    notifyQueue.push(`${moment().toISOString()} ${actionType}: ${filePath}\n`);
-    debouncedWriteNotifyQueueToFile(notify);
-  }
-}
-
-function writeNotifyQueueToFile(notify) {
-  if (notify) {
-    try {
-      const output = notifyQueue.join('');
-      fs.appendFileSync(notify, output);
-      notifyQueue.length = 0;
-    } catch (e) {
-      logger.error(`Unable to notify file ${notify}: ${e}`);
-    }
-  }
 }
 
 function watch(
