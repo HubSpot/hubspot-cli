@@ -19,7 +19,6 @@
     "js-yaml": "^3.12.2",
     "moment": "^2.24.0",
     "p-queue": "^6.0.2",
-    "prettier": "1.16.4",
     "request": "^2.87.0",
     "request-promise-native": "^1.0.7",
     "unixify": "1.0.0"
