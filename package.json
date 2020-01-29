@@ -33,6 +33,7 @@
     }
   },
   "dependencies": {
-    "jest": "^24.8.0"
+    "jest": "^24.8.0",
+    "underscore": "^1.9.2"
   }
 }

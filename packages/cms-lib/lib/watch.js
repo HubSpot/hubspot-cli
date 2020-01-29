@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const moment = require('moment');
 const chokidar = require('chokidar');
+const _ = require('underscore');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
@@ -31,6 +32,12 @@ const WATCH_ACTION = {
     ACTION: 'Changed',
   },
 };
+
+const notifyQueue = [];
+const debouncedWriteNotifyQueueToFile = _.debounce(
+  writeNotifyQueueToFile,
+  1500
+);
 
 const queue = new PQueue({
   concurrency: 10,
@@ -101,11 +108,17 @@ async function deleteRemotePath(portalId, filePath, remotePath, { cwd }) {
 
 function triggerNotify(notify, actionType, filePath) {
   if (notify) {
+    notifyQueue.push(`${moment().toISOString()} ${actionType}: ${filePath}\n`);
+    debouncedWriteNotifyQueueToFile(notify);
+  }
+}
+
+function writeNotifyQueueToFile(notify) {
+  if (notify) {
     try {
-      fs.appendFileSync(
-        notify,
-        `${moment().toISOString()} ${actionType}: ${filePath}\n`
-      );
+      const output = notifyQueue.join('');
+      fs.appendFileSync(notify, output);
+      notifyQueue.length = 0;
     } catch (e) {
       logger.error(`Unable to notify file ${notify}: ${e}`);
     }
