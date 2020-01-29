@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const moment = require('moment');
 const chokidar = require('chokidar');
-const _ = require('underscore');
+const debounce = require('debounce');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
@@ -34,10 +34,7 @@ const WATCH_ACTION = {
 };
 
 const notifyQueue = [];
-const debouncedWriteNotifyQueueToFile = _.debounce(
-  writeNotifyQueueToFile,
-  1500
-);
+const debouncedWriteNotifyQueueToFile = debounce(writeNotifyQueueToFile, 1500);
 
 const queue = new PQueue({
   concurrency: 10,
