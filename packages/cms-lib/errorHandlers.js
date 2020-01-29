@@ -202,8 +202,7 @@ function logApiStatusCodeError(error, context) {
     case 404:
       if (context.request) {
         errorMessage.push(
-          `The ${action} failed because "${context.request}" was not found
-          in portal ${context.portalId}.`
+          `The ${action} failed because "${context.request}" was not found in portal ${context.portalId}.`
         );
       } else {
         errorMessage.push(`The ${messageDetail} was not found.`);
