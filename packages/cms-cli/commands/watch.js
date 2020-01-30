@@ -38,8 +38,8 @@ function configureWatchCommand(program) {
     .option('--remove', 'remove remote files when removed locally')
     .option('--disable-initial', 'disable initial upload of watched directory')
     .option(
-      '--notify <path/to/notificationFile.log>',
-      'log to file when detecting watched directory changes'
+      '--notify <path/to/file>',
+      'log to specified file when a watch task is triggered and after workers have gone idle'
     )
     .action(async (src, dest, command = {}) => {
       setLogLevel(command);
