@@ -22,11 +22,12 @@ const queue = new PQueue({
 async function uploadFile(portalId, file, destPath, apiOptions, notify) {
   const uploadPromise = upload(portalId, file, destPath, apiOptions);
 
-  if (notify) {
-    triggerNotify(notify, 'Uploaded', file, uploadPromise);
-  }
-  await uploadPromise;
-  logger.log('Uploaded file "%s" to "%s"', file, destPath);
+  triggerNotify(notify, 'Uploaded', file, uploadPromise);
+  uploadPromise.then(() => {
+    logger.log('Uploaded file "%s" to "%s"', file, destPath);
+  });
+
+  return uploadPromise;
 }
 
 /**
@@ -60,7 +61,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
       return async () => {
         logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
         try {
-          uploadFile(portalId, file, destPath, apiOptions, notify);
+          return uploadFile(portalId, file, destPath, apiOptions, notify);
         } catch (error) {
           if (isFatalError(error)) {
             throw error;
@@ -88,7 +89,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
       return async () => {
         logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
         try {
-          uploadFile(portalId, file, destPath, apiOptions, notify);
+          return uploadFile(portalId, file, destPath, apiOptions, notify);
         } catch (error) {
           logger.error('Uploading file "%s" to "%s" failed', file, destPath);
           if (isFatalError(error)) {
