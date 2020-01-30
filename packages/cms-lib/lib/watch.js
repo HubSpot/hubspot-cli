@@ -1,8 +1,5 @@
 const path = require('path');
-const fs = require('fs');
-const moment = require('moment');
 const chokidar = require('chokidar');
-const debounce = require('debounce');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
@@ -17,51 +14,11 @@ const { getFileMapperApiQueryFromMode } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
-
-const notifyQueue = [];
-const notifyPromises = [];
-const debouncedWaitForActionsToCompleteAndWriteQueueToFile = debounce(
-  waitForActionsToCompleteAndWriteQueueToFile,
-  1500
-);
+const { triggerNotify } = require('./notify');
 
 const queue = new PQueue({
   concurrency: 10,
 });
-
-function triggerNotify(filePathToNotify, actionType, filePath, actionPromise) {
-  if (filePathToNotify) {
-    notifyQueue.push(`${moment().toISOString()} ${actionType}: ${filePath}\n`);
-    notifyPromises.push(actionPromise);
-    debouncedWaitForActionsToCompleteAndWriteQueueToFile(filePathToNotify);
-  }
-}
-
-function waitForActionsToCompleteAndWriteQueueToFile(filePathToNotify) {
-  const actionOutput = notifyQueue.join('');
-  const allNotifyPromisesResolution = Promise.all(notifyPromises);
-
-  console.log(notifyPromises.length, notifyQueue.length);
-
-  notifyPromises.length = 0;
-  notifyQueue.length = 0;
-
-  allNotifyPromisesResolution.then(() => {
-    console.log(notifyPromises.length, notifyQueue.length);
-    const notifyOutput = `${moment().toISOString()} Notify Triggered\n`;
-    notifyFilePath(filePathToNotify, actionOutput.concat(notifyOutput));
-  });
-}
-
-function notifyFilePath(filePathToNotify, outputToWrite) {
-  if (filePathToNotify) {
-    try {
-      fs.appendFileSync(filePathToNotify, outputToWrite);
-    } catch (e) {
-      logger.error(`Unable to notify file ${filePathToNotify}: ${e}`);
-    }
-  }
-}
 
 function uploadFile(portalId, file, dest, { mode, cwd }) {
   if (!isAllowedExtension(file)) {
