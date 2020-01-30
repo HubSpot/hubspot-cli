@@ -18,44 +18,47 @@ const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 
-const WATCH_ACTION = {
-  ADD: {
-    EVENT: 'add',
-    ACTION: 'Added',
-  },
-  REMOVE: {
-    EVENT: 'unlink',
-    ACTION: 'Removed',
-  },
-  CHANGE: {
-    EVENT: 'change',
-    ACTION: 'Changed',
-  },
-};
-
 const notifyQueue = [];
-const debouncedWriteNotifyQueueToFile = debounce(writeNotifyQueueToFile, 1500);
+const notifyPromises = [];
+const debouncedWaitForActionsToCompleteAndWriteQueueToFile = debounce(
+  waitForActionsToCompleteAndWriteQueueToFile,
+  1500
+);
 
 const queue = new PQueue({
   concurrency: 10,
 });
 
-function triggerNotify(notify, actionType, filePath) {
-  if (notify) {
+function triggerNotify(filePathToNotify, actionType, filePath, actionPromise) {
+  if (filePathToNotify) {
     notifyQueue.push(`${moment().toISOString()} ${actionType}: ${filePath}\n`);
-    debouncedWriteNotifyQueueToFile(notify);
+    notifyPromises.push(actionPromise);
+    debouncedWaitForActionsToCompleteAndWriteQueueToFile(filePathToNotify);
   }
 }
 
-function writeNotifyQueueToFile(notify) {
-  if (notify) {
+function waitForActionsToCompleteAndWriteQueueToFile(filePathToNotify) {
+  const actionOutput = notifyQueue.join('');
+  const allNotifyPromisesResolution = Promise.all(notifyPromises);
+
+  console.log(notifyPromises.length, notifyQueue.length);
+
+  notifyPromises.length = 0;
+  notifyQueue.length = 0;
+
+  allNotifyPromisesResolution.then(() => {
+    console.log(notifyPromises.length, notifyQueue.length);
+    const notifyOutput = `${moment().toISOString()} Notify Triggered\n`;
+    notifyFilePath(filePathToNotify, actionOutput.concat(notifyOutput));
+  });
+}
+
+function notifyFilePath(filePathToNotify, outputToWrite) {
+  if (filePathToNotify) {
     try {
-      const notifyOutput = `${moment().toISOString()} Notify Triggered\n`;
-      const output = notifyQueue.join('').concat(notifyOutput);
-      fs.appendFileSync(notify, output);
-      notifyQueue.length = 0;
+      fs.appendFileSync(filePathToNotify, outputToWrite);
     } catch (e) {
-      logger.error(`Unable to notify file ${notify}: ${e}`);
+      logger.error(`Unable to notify file ${filePathToNotify}: ${e}`);
     }
   }
 }
@@ -98,25 +101,25 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
   });
 }
 
-async function deleteRemotePath(portalId, filePath, remotePath, { cwd }) {
+async function deleteRemoteFile(portalId, filePath, remoteFilePath, { cwd }) {
   if (shouldIgnoreFile(filePath, cwd)) {
     logger.debug(`Skipping ${filePath} due to an ignore rule`);
     return;
   }
 
-  logger.debug('Attempting to delete file "%s"', remotePath);
+  logger.debug('Attempting to delete file "%s"', remoteFilePath);
   return queue.add(() => {
-    return deleteFile(portalId, remotePath)
+    return deleteFile(portalId, remoteFilePath)
       .then(() => {
-        logger.log(`Deleted file ${remotePath}`);
+        logger.log(`Deleted file ${remoteFilePath}`);
       })
       .catch(error => {
-        logger.error(`Deleting file ${remotePath} failed`);
+        logger.error(`Deleting file ${remoteFilePath} failed`);
         logApiErrorInstance(
           error,
           new ApiErrorContext({
             portalId,
-            request: remotePath,
+            request: remoteFilePath,
           })
         );
       });
@@ -158,32 +161,32 @@ function watch(
     logger.log(`Watcher is ready and watching ${src}`);
   });
 
-  watcher.on(WATCH_ACTION.ADD.EVENT, async filePath => {
+  watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    await uploadFile(portalId, filePath, destPath, {
+    const uploadPromise = uploadFile(portalId, filePath, destPath, {
       mode,
       cwd,
     });
-    triggerNotify(notify, WATCH_ACTION.ADD.ACTION, filePath);
+    triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
 
   if (remove) {
-    watcher.on(WATCH_ACTION.REMOVE.EVENT, async filePath => {
+    watcher.on('unlink', async filePath => {
       const remotePath = getDesignManagerPath(filePath);
-      await deleteRemotePath(portalId, filePath, remotePath, {
+      const deletePromise = deleteRemoteFile(portalId, filePath, remotePath, {
         cwd,
       });
-      triggerNotify(notify, WATCH_ACTION.REMOVE.ACTION, filePath);
+      triggerNotify(notify, 'Removed', filePath, deletePromise);
     });
   }
 
-  watcher.on(WATCH_ACTION.CHANGE.EVENT, async filePath => {
+  watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    await uploadFile(portalId, filePath, destPath, {
+    const uploadPromise = uploadFile(portalId, filePath, destPath, {
       mode,
       cwd,
     });
-    triggerNotify(notify, WATCH_ACTION.CHANGE.ACTION, filePath);
+    triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });
 
   return watcher;
