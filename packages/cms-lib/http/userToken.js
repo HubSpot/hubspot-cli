@@ -1,26 +1,39 @@
 const moment = require('moment');
-const request = require('request-promise-native');
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
+const { fetchAccessToken } = require('../api/localDevAuth');
 
-const { getRequestOptions } = require('./requestOptions');
 const { getPortalConfig, updatePortalConfig } = require('../lib/config');
 
-async function refreshAccessToken(portalId, userToken, env = 'PROD') {
-  const requestOptions = getRequestOptions(
-    { env },
-    {
-      uri: `localdevauth/v1/auth/refresh`,
-      body: {
-        encodedOAuthRefreshToken: userToken,
-      },
-    }
-  );
+const refreshRequests = new Map();
 
-  return request.post(requestOptions);
+async function refreshAccessToken(portalId, userToken, env = 'PROD') {
+  const config = getPortalConfig(portalId);
+  let response;
+  try {
+    response = await fetchAccessToken(userToken, env);
+  } catch (e) {
+    if (e.response) {
+      throw new HubSpotAuthError(
+        `Error while retrieving new access token: ${e.response.body.message}`
+      );
+    } else {
+      throw e;
+    }
+  }
+  const accessToken = response.oauthAccessToken;
+  const expiresAt = moment(response.expiresAtMillis);
+  updatePortalConfig({
+    ...config,
+    portalId,
+    environment: env,
+    tokenInfo: { accessToken, expiresAt },
+  });
+
+  return accessToken;
 }
 
 async function accessTokenForUserToken(portalId) {
-  const { auth, userToken, env, ...rest } = getPortalConfig(portalId);
+  const { auth, userToken, env } = getPortalConfig(portalId);
 
   if (
     !auth ||
@@ -30,26 +43,19 @@ async function accessTokenForUserToken(portalId) {
       .add(30, 'minutes')
       .isAfter(moment(auth.tokenInfo.expiresAt))
   ) {
-    let response;
-    try {
-      response = await refreshAccessToken(portalId, userToken, env);
-    } catch (e) {
-      if (e.response) {
-        throw new HubSpotAuthError(
-          `Error while retrieving new access token: ${e.response.body.message}`
-        );
-      } else {
-        throw e;
-      }
+    const key = `${userToken}-${auth.tokenInfo.expiresAt}`;
+    if (refreshRequests.has(key)) {
+      return refreshRequests.get(key);
     }
-    const accessToken = response.oauthAccessToken;
-    updatePortalConfig({
-      ...rest,
-      portalId,
-      environment: env,
-      tokenInfo: { accessToken, expiresAt: moment().add(600, 'seconds') },
-    });
-
+    let accessToken;
+    try {
+      const refreshAccessPromise = refreshAccessToken(portalId, userToken, env);
+      refreshRequests.set(userToken, refreshAccessPromise);
+      accessToken = await refreshAccessPromise;
+    } catch (e) {
+      refreshRequests.delete(key);
+      throw e;
+    }
     return accessToken;
   }
 
