@@ -1,25 +1,10 @@
 const moment = require('moment');
-const request = require('request-promise-native');
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
+const { fetchAccessToken } = require('../api/localDevAuth');
 
-const { getRequestOptions } = require('./requestOptions');
 const { getPortalConfig, updatePortalConfig } = require('../lib/config');
 
 const refreshRequests = new Map();
-
-async function fetchAccessToken(userToken, env = 'PROD') {
-  const requestOptions = getRequestOptions(
-    { env },
-    {
-      uri: `localdevauth/v1/auth/refresh`,
-      body: {
-        encodedOAuthRefreshToken: userToken,
-      },
-    }
-  );
-
-  return request.post(requestOptions);
-}
 
 async function refreshAccessToken(portalId, userToken, env = 'PROD') {
   const config = getPortalConfig(portalId);
