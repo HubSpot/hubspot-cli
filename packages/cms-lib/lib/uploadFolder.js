@@ -104,6 +104,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd }) {
     };
   };
 
+  // Implemented using a for lop due to async/await
   for (let i = 0; i < filesByType.length; i++) {
     const filesToUpload = filesByType[i];
     await queue.addAll(filesToUpload.map(uploadFile));
