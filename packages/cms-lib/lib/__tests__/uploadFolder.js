@@ -7,7 +7,6 @@ jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 
-
 describe('uploadFolder', () => {
   describe('uploadFolder()', () => {
     it('uploads files in the correct order', async () => {
