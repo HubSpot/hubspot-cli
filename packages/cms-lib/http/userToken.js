@@ -43,14 +43,16 @@ async function accessTokenForUserToken(portalId) {
       .add(30, 'minutes')
       .isAfter(moment(auth.tokenInfo.expiresAt))
   ) {
-    const key = `${userToken}-${auth.tokenInfo.expiresAt}`;
+    const expiresAt =
+      auth && auth.tokenInfo ? auth.tokenInfo.expiresAt : 'fresh';
+    const key = `${userToken}-${expiresAt}`;
     if (refreshRequests.has(key)) {
       return refreshRequests.get(key);
     }
     let accessToken;
     try {
       const refreshAccessPromise = refreshAccessToken(portalId, userToken, env);
-      refreshRequests.set(userToken, refreshAccessPromise);
+      refreshRequests.set(key, refreshAccessPromise);
       accessToken = await refreshAccessPromise;
     } catch (e) {
       refreshRequests.delete(key);
