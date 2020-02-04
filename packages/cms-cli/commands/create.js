@@ -93,6 +93,7 @@ function configureCreateCommand(program) {
           filepath: dest,
           write: true,
         });
+        return;
       }
 
       trackCommandUsage(COMMAND_NAME, { assetType: type });
