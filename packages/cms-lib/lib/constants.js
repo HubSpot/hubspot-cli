@@ -46,6 +46,11 @@ const AUTH_METHODS = {
   },
 };
 
+const USER_TOKEN_AUTH_METHOD = {
+  value: 'userToken',
+  name: 'User Token',
+};
+
 const DEFAULT_OAUTH_SCOPES = ['content'];
 
 const OAUTH_SCOPES = [
@@ -76,4 +81,5 @@ module.exports = {
   AUTH_METHODS,
   DEFAULT_OAUTH_SCOPES,
   OAUTH_SCOPES,
+  USER_TOKEN_AUTH_METHOD,
 };

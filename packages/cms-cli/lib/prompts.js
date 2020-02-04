@@ -73,6 +73,23 @@ const PORTAL_API_KEY = {
   },
 };
 
+const USER_TOKEN_PREP = {
+  name: 'userTokenPrep',
+  message:
+    'In order to obtain a user token, we will open your default browser. You will need to generate a token and copy it for the next step. \n<Press enter when you are ready>',
+};
+
+const USER_TOKEN = {
+  name: 'userToken',
+  message: 'Enter the user token for your portal:',
+  validate(val) {
+    if (typeof val !== 'string' || val.length !== 151) {
+      return 'You did not enter a valid user token. Please try again.';
+    }
+    return true;
+  },
+};
+
 const AUTH_METHOD = {
   type: 'rawlist',
   name: 'authMethod',
@@ -92,16 +109,21 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+const USER_TOKEN_FLOW = [PORTAL_ID, PORTAL_NAME, USER_TOKEN_PREP];
 
 module.exports = {
   promptUser,
+  AUTH_METHOD,
+  CLIENT_ID,
+  CLIENT_SECRET,
   PORTAL_API_KEY,
   PORTAL_ID,
   PORTAL_NAME,
-  CLIENT_ID,
-  CLIENT_SECRET,
-  AUTH_METHOD,
   SCOPES,
-  OAUTH_FLOW,
+  USER_TOKEN,
+
+  // Flows
   API_KEY_FLOW,
+  OAUTH_FLOW,
+  USER_TOKEN_FLOW,
 };

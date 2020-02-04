@@ -199,6 +199,7 @@ const updatePortalConfig = configOptions => {
     defaultMode,
     name,
     apiKey,
+    userToken,
   } = configOptions;
 
   if (!portalId) {
@@ -229,6 +230,7 @@ const updatePortalConfig = configOptions => {
     auth,
     apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
+    userToken,
   };
 
   if (portalConfig) {

@@ -1,3 +1,4 @@
+const open = require('open');
 const { version } = require('../package.json');
 const {
   getConfigPath,
@@ -12,6 +13,7 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   AUTH_METHODS,
+  USER_TOKEN_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
@@ -25,6 +27,8 @@ const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   AUTH_METHOD,
+  USER_TOKEN_FLOW,
+  USER_TOKEN,
 } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -49,7 +53,7 @@ const AUTH_METHOD_FLOW = {
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
-        authType: 'apikey',
+        authType: AUTH_METHODS.api.value,
       });
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.api.name}.`
@@ -68,6 +72,30 @@ const AUTH_METHOD_FLOW = {
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
       );
       process.exit();
+    },
+  },
+  [USER_TOKEN_AUTH_METHOD.value]: {
+    prompt: async () => {
+      const firstPrompt = await promptUser(USER_TOKEN_FLOW);
+      open(`https://local.hubspot.com/user-token/${firstPrompt.portalId}`);
+      const secondPrompt = await promptUser(USER_TOKEN);
+
+      return {
+        ...firstPrompt,
+        ...secondPrompt,
+      };
+    },
+    setup: async configData => {
+      createEmptyConfigFile();
+      handleExit();
+      updateDefaultPortal(configData.name);
+      updatePortalConfig({
+        ...configData,
+        authType: USER_TOKEN_AUTH_METHOD.value,
+      });
+      logger.log(
+        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
+      );
     },
   },
 };
@@ -93,19 +121,27 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
+    .option('--user-token', 'try the new user token flow, it rules!')
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
       trackCommandUsage(COMMAND_NAME);
 
       const configPath = getConfigPath();
+      let authMethod;
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
 
-      const { authMethod } = await promptUser(AUTH_METHOD);
+      if (options.userToken) {
+        authMethod = USER_TOKEN_AUTH_METHOD.value;
+      } else {
+        authMethod = await promptUser(AUTH_METHOD).authMethod;
+      }
+
+      console.log('111', authMethod, configPath);
       return completeConfigSetup({
         authMethod,
         configPath,
