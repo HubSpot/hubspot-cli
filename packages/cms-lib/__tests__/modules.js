@@ -181,7 +181,10 @@ describe('cms-lib/modules', () => {
         ids: [],
       },
       {
-        args: [{ isLocal, path: 'x' }, { isHubSpot, path: 'x' }],
+        args: [
+          { isLocal, path: 'x' },
+          { isHubSpot, path: 'x' },
+        ],
         ids: [],
       },
     ];
