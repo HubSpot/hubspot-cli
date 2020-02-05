@@ -88,7 +88,7 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
   });
 
   if (remove) {
-    watcher.on('unlink', filePath => {
+    const deleteFileOrFolder = filePath => {
       const remotePath = getDesignManagerPath(filePath);
 
       if (shouldIgnoreFile(filePath, cwd)) {
@@ -96,14 +96,14 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
         return;
       }
 
-      logger.debug('Attempting to delete file "%s"', remotePath);
+      logger.debug('Attempting to delete file/folder "%s"', remotePath);
       queue.add(() => {
         deleteFile(portalId, remotePath)
           .then(() => {
-            logger.log('Deleted file "%s"', remotePath);
+            logger.log('Deleted file/folder "%s"', remotePath);
           })
           .catch(error => {
-            logger.error('Deleting file "%s" failed', remotePath);
+            logger.error('Deleting file/folder "%s" failed', remotePath);
             logApiErrorInstance(
               error,
               new ApiErrorContext({
@@ -113,7 +113,10 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
             );
           });
       });
-    });
+    };
+    
+    watcher.on('unlink', deleteFileOrFolder);
+    watcher.on('unlinkDir', deleteFileOrFolder);
   }
 
   watcher.on('change', file => {
