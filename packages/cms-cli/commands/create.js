@@ -2,6 +2,9 @@ const path = require('path');
 const fs = require('fs-extra');
 const { version } = require('../package.json');
 
+const {
+  logFileSystemErrorInstance,
+} = require('@hubspot/cms-lib/errorHandlers');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createTheme } = require('@hubspot/cms-lib/themes');
 
@@ -66,7 +69,7 @@ function configureCreateCommand(program) {
       'Theme boilerplate version to use',
       ''
     )
-    .action((type, name, dest) => {
+    .action(async (type, name, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
       type = typeof type === 'string' && type.toLowerCase();
@@ -83,13 +86,13 @@ function configureCreateCommand(program) {
       dest = resolveLocalPath(dest);
 
       try {
-        const stats = fs.statSync(dest);
-        if (!stats.isDirectory()) {
-          logger.error(`The "${dest}" is not a path to a directory`);
-          return;
-        }
+        await fs.ensureDir(dest);
       } catch (e) {
-        logger.error(`The "${dest}" is not a path to a directory`);
+        logger.error(`The "${dest}" is not a usable path to a directory`);
+        logFileSystemErrorInstance(e, {
+          filepath: dest,
+          write: true,
+        });
         return;
       }
 

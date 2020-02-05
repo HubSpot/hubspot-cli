@@ -1,5 +1,4 @@
 const path = require('path');
-const { default: PQueue } = require('p-queue');
 
 const { uploadFile } = require('./api/fileManager');
 const { walk } = require('./lib/walk');
@@ -12,10 +11,6 @@ const {
   logApiUploadErrorInstance,
   isFatalError,
 } = require('./errorHandlers');
-
-const queue = new PQueue({
-  concurrency: 10,
-});
 
 /**
  *
@@ -30,32 +25,30 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
 
   const filesToUpload = files.filter(createIgnoreFilter(cwd));
 
-  return queue.addAll(
-    filesToUpload.map(file => {
-      const relativePath = file.replace(regex, '');
-      const destPath = convertToUnixPath(path.join(dest, relativePath));
-      return async () => {
-        logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
-        try {
-          await uploadFile(portalId, file, destPath);
-          logger.log('Uploaded file "%s" to "%s"', file, destPath);
-        } catch (error) {
-          logger.error('Uploading file "%s" to "%s" failed', file, destPath);
-          if (isFatalError(error)) {
-            throw error;
-          }
-          logApiUploadErrorInstance(
-            error,
-            new ApiErrorContext({
-              portalId,
-              request: destPath,
-              payload: file,
-            })
-          );
-        }
-      };
-    })
-  );
+  const len = filesToUpload.length;
+  for (let index = 0; index < len; index++) {
+    const file = filesToUpload[index];
+    const relativePath = file.replace(regex, '');
+    const destPath = convertToUnixPath(path.join(dest, relativePath));
+    logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
+    try {
+      await uploadFile(portalId, file, destPath);
+      logger.log('Uploaded file "%s" to "%s"', file, destPath);
+    } catch (error) {
+      logger.error('Uploading file "%s" to "%s" failed', file, destPath);
+      if (isFatalError(error)) {
+        throw error;
+      }
+      logApiUploadErrorInstance(
+        error,
+        new ApiErrorContext({
+          portalId,
+          request: destPath,
+          payload: file,
+        })
+      );
+    }
+  }
 }
 
 module.exports = {

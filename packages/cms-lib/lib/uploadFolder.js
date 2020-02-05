@@ -7,7 +7,12 @@ const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
 const { walk } = require('./walk');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension } = require('../path');
+const {
+  convertToUnixPath,
+  isAllowedExtension,
+  getExt,
+  splitLocalPath,
+} = require('../path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -19,7 +24,7 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-async function uploadFile(portalId, file, destPath, apiOptions, notify) {
+async function uploadAndTrigger(portalId, file, destPath, apiOptions, notify) {
   const uploadPromise = upload(portalId, file, destPath, apiOptions);
 
   triggerNotify(notify, 'Uploaded', file, uploadPromise);
@@ -30,6 +35,30 @@ async function uploadFile(portalId, file, destPath, apiOptions, notify) {
   return uploadPromise;
 }
 
+function getFilesByType(files) {
+  const moduleFiles = [];
+  const cssAndJsFiles = [];
+  const otherFiles = [];
+  const templateFiles = [];
+
+  files.forEach(file => {
+    const parts = splitLocalPath(file);
+    const extension = getExt(file);
+
+    const moduleFolder = parts.find(part => part.endsWith('.module'));
+    if (moduleFolder) {
+      moduleFiles.push(file);
+    } else if (extension === 'js' || extension === 'css') {
+      cssAndJsFiles.push(file);
+    } else if (extension === 'html') {
+      templateFiles.push(file);
+    } else {
+      otherFiles.push(file);
+    }
+  });
+
+  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles];
+}
 /**
  *
  * @param {number} portalId
@@ -44,7 +73,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
   };
   const files = await walk(src);
 
-  const filesToUpload = files
+  const allowedFiles = files
     .filter(file => {
       if (!isAllowedExtension(file)) {
         return false;
@@ -53,37 +82,45 @@ async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
     })
     .filter(createIgnoreFilter(cwd));
 
+  const filesByType = getFilesByType(allowedFiles);
+
   const failures = [];
-  await queue.addAll(
-    filesToUpload.map(file => {
-      const relativePath = file.replace(regex, '');
-      const destPath = convertToUnixPath(path.join(dest, relativePath));
-      return async () => {
-        logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
-        try {
-          return uploadFile(portalId, file, destPath, apiOptions, notify);
-        } catch (error) {
-          if (isFatalError(error)) {
-            throw error;
-          }
-          logger.debug(
-            'Uploading file "%s" to "%s" failed so scheduled retry',
-            file,
-            destPath
-          );
-          if (error.response && error.response.body) {
-            logger.debug(error.response.body);
-          } else {
-            logger.debug(error.message);
-          }
-          failures.push({
-            file,
-            destPath,
-          });
+
+  const uploadFile = file => {
+    const relativePath = file.replace(regex, '');
+    const destPath = convertToUnixPath(path.join(dest, relativePath));
+    return async () => {
+      logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
+      try {
+        return uploadAndTrigger(portalId, file, destPath, apiOptions, notify);
+      } catch (error) {
+        if (isFatalError(error)) {
+          throw error;
         }
-      };
-    })
-  );
+        logger.debug(
+          'Uploading file "%s" to "%s" failed so scheduled retry',
+          file,
+          destPath
+        );
+        if (error.response && error.response.body) {
+          logger.debug(error.response.body);
+        } else {
+          logger.debug(error.message);
+        }
+        failures.push({
+          file,
+          destPath,
+        });
+      }
+    };
+  };
+
+  // Implemented using a for lop due to async/await
+  for (let i = 0; i < filesByType.length; i++) {
+    const filesToUpload = filesByType[i];
+    await queue.addAll(filesToUpload.map(uploadFile));
+  }
+
   return queue.addAll(
     failures.map(({ file, destPath }) => {
       return async () => {

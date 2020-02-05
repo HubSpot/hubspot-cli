@@ -160,12 +160,30 @@ describe('cms-lib/modules', () => {
         args: [],
         ids: [ValidationIds.SRC_REQUIRED, ValidationIds.DEST_REQUIRED],
       },
-      { args: [emptyLocal], ids: [ValidationIds.DEST_REQUIRED] },
-      { args: [null, emptyHubSpot], ids: [ValidationIds.SRC_REQUIRED] },
-      { args: [emptyLocal, { isHubSpot }], ids: [ValidationIds.DEST_REQUIRED] },
-      { args: [{ isLocal }, emptyHubSpot], ids: [ValidationIds.SRC_REQUIRED] },
-      { args: [emptyLocal, emptyHubSpot], ids: [] },
-      { args: [{ isLocal, path: 'x' }, { isHubSpot, path: 'x' }], ids: [] },
+      {
+        args: [emptyLocal],
+        ids: [ValidationIds.DEST_REQUIRED],
+      },
+      {
+        args: [null, emptyHubSpot],
+        ids: [ValidationIds.SRC_REQUIRED],
+      },
+      {
+        args: [emptyLocal, { isHubSpot }],
+        ids: [ValidationIds.DEST_REQUIRED],
+      },
+      {
+        args: [{ isLocal }, emptyHubSpot],
+        ids: [ValidationIds.SRC_REQUIRED],
+      },
+      {
+        args: [emptyLocal, emptyHubSpot],
+        ids: [],
+      },
+      {
+        args: [{ isLocal, path: 'x' }, { isHubSpot, path: 'x' }],
+        ids: [],
+      },
     ];
     it('should be an async function', () => {
       expect(validateSrcAndDestPaths() instanceof Promise).toBe(true);

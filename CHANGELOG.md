@@ -14,16 +14,47 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 Change Log
 ==========
 
-## Next
+## 1.0.7
 
 ### CMS CLI
 
- * Added *modes* to specify if read/write commands should use either the `draft` or `publish` mode.
- * Added the `--mode` option for use with commands `upload`, `watch`, and `fetch`.
- * Added the `defaultMode` field for use in `hubspot.config.yml` files.
- * Set the fallback mode to `publish`.
- * Removed the `--portalId` option. The `--portal` option accepts both portal ids and config names.
- * Consolidated uploading of files and folders into the `upload` command. The `sync` command is no longer supported, use `upload` instead.
+ * Fixed issue with duplicated folders when uploading to the Design Manager
+ * Added support for authentication using a user token
+ * Added `hs create website-theme` to support creating a new project using the HubSpot [CMS Theme Boilerplate](https://github.com/HubSpot/cms-theme-boilerplate)
+ * Improved error messaging
+ * Improved reliability when uploading a folder of files through making sure that templates and css/js files are uploaded
+   after modules and other files
+
+## 1.0.6
+
+## 1.0.5
+
+## 1.0.4
+
+## 1.0.3
+
+## 1.0.2
+
+## 1.0.1
+
+## 1.0.0
+
+## 0.0.26
+
+### CMS CLI
+
+ * Added better error messaging when the config file is malformed or unable to be read
+ * Added *modes* to specify if read/write commands should use either the `draft` or `publish` mode
+ * Added the `--mode` option for use with commands `upload`, `watch`, and `fetch`
+ * Added the `defaultMode` field for use in `hubspot.config.yml` files
+ * Set the fallback mode to `publish`
+ * Removed the `--portalId` option. The `--portal` option accepts both portal ids and config names
+ * Consolidated uploading of files and folders into the `upload` command. The `sync` command is no longer supported, use `upload` instead
+ * Limit number of concurrent requests when uploading and downloading files
+
+### Webpack CMS Plugins
+
+ * Added a `HubSpotAutoUploadPlugin` to make using [Webpack](https://https://webpack.js.org/) straightforward
 
 ## 0.0.21
 

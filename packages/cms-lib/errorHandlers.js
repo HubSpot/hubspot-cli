@@ -14,6 +14,8 @@ const isApiUploadValidationError = err =>
 const isSystemError = err =>
   err.errno != null && err.code != null && err.syscall != null;
 const isFatalError = err => err instanceof HubSpotAuthError;
+const contactSupportString =
+  'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
 const parseValidationErrors = (responseBody = {}) => {
   const errorMessages = [];
@@ -181,7 +183,7 @@ function logApiStatusCodeError(error, context) {
     const request = context.request
       ? `${action} ${preposition} "${context.request}"`
       : action;
-    messageDetail = `${request} on portal ${context.portalId}`;
+    messageDetail = `${request} in portal ${context.portalId}`;
   }
   const errorMessage = [];
   if (isPutOrPost && context.payload) {
@@ -208,12 +210,14 @@ function logApiStatusCodeError(error, context) {
       break;
     case 503:
       errorMessage.push(
-        `The ${messageDetail} could not be handled at this time. Please try again later.`
+        `The ${messageDetail} could not be handled at this time. ${contactSupportString}`
       );
       break;
     default:
       if (statusCode >= 500 && statusCode < 600) {
-        errorMessage.push(`The ${messageDetail} failed due to a server error.`);
+        errorMessage.push(
+          `The ${messageDetail} failed due to a server error. ${contactSupportString}`
+        );
       } else if (statusCode >= 400 && statusCode < 500) {
         errorMessage.push(`The ${messageDetail} failed due to a client error.`);
       } else {
