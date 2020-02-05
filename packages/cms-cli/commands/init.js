@@ -1,4 +1,5 @@
 const open = require('open');
+const moment = require('moment');
 const { version } = require('../package.json');
 const {
   getConfigPath,
@@ -17,6 +18,7 @@ const {
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
+const { getAccessToken } = require('@hubspot/cms-lib/http/userToken');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -76,23 +78,31 @@ const AUTH_METHOD_FLOW = {
   },
   [USER_TOKEN_AUTH_METHOD.value]: {
     prompt: async () => {
-      const firstPrompt = await promptUser(USER_TOKEN_FLOW);
-      open(`https://local.hubspot.com/user-token/${firstPrompt.portalId}`);
-      const secondPrompt = await promptUser(USER_TOKEN);
+      const { name } = await promptUser(USER_TOKEN_FLOW);
+      open(`https://app.hubspot.com/l/user-token`);
+      const { userToken } = await promptUser(USER_TOKEN);
 
       return {
-        ...firstPrompt,
-        ...secondPrompt,
+        userToken,
+        name,
       };
     },
     setup: async configData => {
       createEmptyConfigFile();
       handleExit();
-      updateDefaultPortal(configData.name);
+      const { userToken, name } = configData;
+      const response = await getAccessToken(userToken);
+      const portalId = response.hubId;
+      const accessToken = response.oauthAccessToken;
+      const expiresAt = moment(response.expiresAtMillis);
+
       updatePortalConfig({
-        ...configData,
+        portalId,
+        userToken,
         authType: USER_TOKEN_AUTH_METHOD.value,
+        tokenInfo: { accessToken, expiresAt },
       });
+      updateDefaultPortal(name);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
       );
@@ -121,7 +131,7 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option('--user-token', 'try the new user token flow, it rules!')
+    .option('--user-token', 'utilize user token for auth')
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
@@ -141,7 +151,6 @@ function initializeConfigCommand(program) {
         authMethod = await promptUser(AUTH_METHOD).authMethod;
       }
 
-      console.log('111', authMethod, configPath);
       return completeConfigSetup({
         authMethod,
         configPath,

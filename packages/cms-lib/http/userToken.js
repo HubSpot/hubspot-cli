@@ -6,8 +6,11 @@ const { getPortalConfig, updatePortalConfig } = require('../lib/config');
 
 const refreshRequests = new Map();
 
-async function refreshAccessToken(portalId, userToken, env = 'PROD') {
-  const config = getPortalConfig(portalId);
+function getRefreshKeyForUserToken(userToken, expiration) {
+  return `${userToken}-${expiration || 'fresh'}`;
+}
+
+async function getAccessToken(userToken, env = 'PROD') {
   let response;
   try {
     response = await fetchAccessToken(userToken, env);
@@ -20,50 +23,85 @@ async function refreshAccessToken(portalId, userToken, env = 'PROD') {
       throw e;
     }
   }
+
+  return response;
+}
+
+async function refreshAccessToken(userToken, env = 'PROD') {
+  const response = await getAccessToken(userToken, env);
+  const portalId = response.hubId;
   const accessToken = response.oauthAccessToken;
   const expiresAt = moment(response.expiresAtMillis);
-  updatePortalConfig({
-    ...config,
-    portalId,
-    environment: env,
-    tokenInfo: { accessToken, expiresAt },
-  });
+
+  updateTokenInfoForPortal(
+    {
+      accessToken,
+      expiresAt,
+    },
+    portalId
+  );
 
   return accessToken;
 }
 
-async function accessTokenForUserToken(portalId) {
-  const { auth, userToken, env } = getPortalConfig(portalId);
+function updateTokenInfoForPortal(tokenInfo, portalId) {
+  const config = getPortalConfig(portalId);
 
-  if (
-    !auth ||
-    !auth.tokenInfo ||
-    !auth.tokenInfo.accessToken ||
-    moment()
-      .add(30, 'minutes')
-      .isAfter(moment(auth.tokenInfo.expiresAt))
-  ) {
-    const expiresAt =
-      auth && auth.tokenInfo ? auth.tokenInfo.expiresAt : 'fresh';
-    const key = `${userToken}-${expiresAt}`;
-    if (refreshRequests.has(key)) {
-      return refreshRequests.get(key);
-    }
+  updatePortalConfig({
+    ...config,
+    portalId,
+    tokenInfo,
+  });
+}
+
+async function getNewAccessToken(userToken, authTokenInfo, env) {
+  const key = getRefreshKeyForUserToken(
+    userToken,
+    authTokenInfo && authTokenInfo.expiresAt
+  );
+  if (refreshRequests.has(key)) {
+    return refreshRequests.get(key);
+  }
+  {
     let accessToken;
     try {
-      const refreshAccessPromise = refreshAccessToken(portalId, userToken, env);
-      refreshRequests.set(key, refreshAccessPromise);
+      const refreshAccessPromise = refreshAccessToken(userToken, env);
+      if (key) {
+        refreshRequests.set(key, refreshAccessPromise);
+      }
       accessToken = await refreshAccessPromise;
     } catch (e) {
-      refreshRequests.delete(key);
+      if (key) {
+        refreshRequests.delete(key);
+      }
       throw e;
     }
     return accessToken;
+  }
+}
+
+async function accessTokenForUserToken(portalId) {
+  const { auth, userToken, env } = getPortalConfig(portalId);
+  const authTokenInfo = auth && auth.tokenInfo;
+  const authDataExists = authTokenInfo && auth.tokenInfo.accessToken;
+
+  if (
+    !authDataExists ||
+    moment()
+      .add(30, 'minutes')
+      .isAfter(moment(authTokenInfo.expiresAt))
+  ) {
+    return getNewAccessToken(
+      userToken,
+      authTokenInfo && authTokenInfo.expiresAt,
+      env
+    );
   }
 
   return auth.tokenInfo.accessToken;
 }
 
 module.exports = {
+  getAccessToken,
   accessTokenForUserToken,
 };
