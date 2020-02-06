@@ -78,7 +78,9 @@ const AUTH_METHOD_FLOW = {
   },
   [USER_TOKEN_AUTH_METHOD.value]: {
     prompt: userTokenPrompt,
-    setup: updateConfigWithUserTokenPromptData,
+    setup: async configData => {
+      await updateConfigWithUserTokenPromptData(configData, true);
+    },
   },
 };
 

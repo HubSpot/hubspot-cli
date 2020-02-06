@@ -19,6 +19,9 @@ const {
   USER_TOKEN,
 } = require('@hubspot/cms-cli/lib/prompts');
 
+/**
+ * Prompts user for portal name, then opens their browser to the shortlink to user-token-ui
+ */
 const userTokenPrompt = async () => {
   const { name } = await promptUser(USER_TOKEN_FLOW);
   open(`https://app.hubspot.com/l/user-token`);
@@ -30,7 +33,13 @@ const userTokenPrompt = async () => {
   };
 };
 
-const updateConfigWithUserTokenPromptData = async promptData => {
+/**
+ * Adds a portal to the config using authType: userToken
+ *
+ * @param {object} promptData inquirer prompt object containing userToken and name properties
+ * @param {boolean} makeDefault option to make the portal being added to the config the default portal
+ */
+const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
   const { userToken, name } = promptData;
@@ -42,10 +51,15 @@ const updateConfigWithUserTokenPromptData = async promptData => {
   updatePortalConfig({
     portalId,
     userToken,
+    name,
     authType: USER_TOKEN_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
-  updateDefaultPortal(name);
+
+  if (makeDefault) {
+    updateDefaultPortal(name);
+  }
+
   logger.log(
     `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
   );
