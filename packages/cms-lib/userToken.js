@@ -52,7 +52,7 @@ const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
     portalId,
     userToken,
     name,
-    authType: USER_TOKEN_AUTH_METHOD.value,
+    authType: USER_TOKEN_AUTH_METHOD.value.toLowerCase(),
     tokenInfo: { accessToken, expiresAt },
   });
 

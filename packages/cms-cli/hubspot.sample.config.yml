@@ -32,3 +32,13 @@ portals:
         refreshToken: 84d22710-4cb7-5581-ba05-35f9945e5e8e
         accessToken: >-
           CJDVnLanLRICEQIYyLu8LyDh9E4opf1GMhkAxGuU5XN_O2O2QhX0khw7cwIkPkBRHye-OfIADgLBAAADAIADAAAAAAAAAAJCGQC8a5TlhtSU8T-2mVLxOBpxS18aM42oGKk
+  - name: QA
+    portalId: 101702799
+    authType: usertoken
+    userToken: >-
+      By3Xx8o6Y616F-ORs7ErQl1Y2Vo2r28JxPi4UgJRInzsWs2-cJr5FOnnol12-9v_o7xMLXrA0wkaz_uKYp5oOB9XmS36mXvHPxAg2zLy9_dWYTgJE8uFU-u_2p0mg95XdJuIGQvs9HT
+    auth:
+      tokenInfo:
+        accessToken: >-
+          By3Xx8o6Y616F-ORs7ErQl1Y2Vo2r28JxPi4UgJRInzsWs2-cJr5FOnnol12-9v_o7xMLXrA0wkaz_uKYp5oOB9XmS36mXvHPxAg2zLy9_dWYTgJE8uFU-u_2p0mg95XdJuIGQvs9HT
+        expiresAt: '2020-02-05T20:51:09.857Z'
