@@ -81,7 +81,7 @@ const USER_TOKEN_PREP = {
 
 const USER_TOKEN = {
   name: 'userToken',
-  message: 'Enter your user token',
+  message: 'Enter your user token:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 151) {
       return 'You did not enter a valid user token. Please try again.';
