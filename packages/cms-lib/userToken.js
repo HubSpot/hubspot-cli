@@ -1,6 +1,14 @@
 const open = require('open');
 const moment = require('moment');
 const {
+  promptUser,
+  USER_TOKEN_FLOW,
+  USER_TOKEN,
+} = require('@hubspot/cms-cli/lib/prompts');
+
+const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
+const {
+  getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
   createEmptyConfigFile,
@@ -12,12 +20,99 @@ const {
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
 const { logger } = require('./logger');
-const { getAccessToken } = require('./http/userToken');
-const {
-  promptUser,
-  USER_TOKEN_FLOW,
-  USER_TOKEN,
-} = require('@hubspot/cms-cli/lib/prompts');
+const { fetchAccessToken } = require('./api/localDevAuth');
+
+const refreshRequests = new Map();
+
+function getRefreshKeyForUserToken(userToken, expiration) {
+  return `${userToken}-${expiration || 'fresh'}`;
+}
+
+async function getAccessToken(userToken, env = 'QA') {
+  let response;
+  try {
+    response = await fetchAccessToken(userToken, env);
+    return {
+      portalId: response.hubId,
+      accessToken: response.oauthAccessToken,
+      expiresAt: moment(response.expiresAtMillis),
+      scopeGroups: response.scopeGroups,
+      encodedOauthRefreshToken: response.encodedOauthRefreshToken,
+    };
+  } catch (e) {
+    if (e.response) {
+      throw new HubSpotAuthError(
+        `Error while retrieving new access token: ${e.response.body.message}`
+      );
+    } else {
+      throw e;
+    }
+  }
+}
+
+async function refreshAccessToken(userToken, env = 'PROD') {
+  const { accessToken, expiresAt, portalId } = await getAccessToken(
+    userToken,
+    env
+  );
+  const config = getPortalConfig(portalId);
+
+  updatePortalConfig({
+    ...config,
+    portalId,
+    tokenInfo: {
+      accessToken,
+      expiresAt,
+    },
+  });
+
+  return accessToken;
+}
+
+async function getNewAccessToken(userToken, authTokenInfo, env) {
+  const key = getRefreshKeyForUserToken(
+    userToken,
+    authTokenInfo && authTokenInfo.expiresAt
+  );
+  if (refreshRequests.has(key)) {
+    return refreshRequests.get(key);
+  }
+  let accessToken;
+  try {
+    const refreshAccessPromise = refreshAccessToken(userToken, env);
+    if (key) {
+      refreshRequests.set(key, refreshAccessPromise);
+    }
+    accessToken = await refreshAccessPromise;
+  } catch (e) {
+    if (key) {
+      refreshRequests.delete(key);
+    }
+    throw e;
+  }
+  return accessToken;
+}
+
+async function accessTokenForUserToken(portalId) {
+  const { auth, userToken, env } = getPortalConfig(portalId);
+  const authTokenInfo = auth && auth.tokenInfo;
+  const authDataExists = authTokenInfo && auth.tokenInfo.accessToken;
+
+  if (
+    !authDataExists ||
+    moment()
+      .add(30, 'minutes')
+      .isAfter(moment(authTokenInfo.expiresAt))
+  ) {
+    return getNewAccessToken(
+      userToken,
+      authTokenInfo && authTokenInfo.expiresAt,
+      env
+    );
+  }
+
+  return auth.tokenInfo.accessToken;
+}
 
 /**
  * Prompts user for portal name, then opens their browser to the shortlink to user-token-ui
@@ -43,10 +138,7 @@ const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
   const { userToken, name } = promptData;
-  const response = await getAccessToken(userToken);
-  const portalId = response.hubId;
-  const accessToken = response.oauthAccessToken;
-  const expiresAt = moment(response.expiresAtMillis);
+  const { portalId, accessToken, expiresAt } = await getAccessToken(userToken);
 
   updatePortalConfig({
     portalId,
@@ -66,6 +158,7 @@ const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
 };
 
 module.exports = {
+  accessTokenForUserToken,
   userTokenPrompt,
   updateConfigWithUserTokenPromptData,
 };

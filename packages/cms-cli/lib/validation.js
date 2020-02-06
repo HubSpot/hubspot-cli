@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getConfig, getPortalConfig, Mode } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
-const { accessTokenForUserToken } = require('@hubspot/cms-lib/http/userToken');
+const { accessTokenForUserToken } = require('@hubspot/cms-lib/userToken');
 const { getPortalId, getMode } = require('./commonOpts');
 
 /**

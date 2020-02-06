@@ -1,15 +1,12 @@
 const moment = require('moment');
-const {
-  getAndLoadConfigIfNeeded,
-  getPortalConfig,
-} = require('../../lib/config');
-const { fetchAccessToken } = require('../../api/localDevAuth');
+const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { fetchAccessToken } = require('../api/localDevAuth');
 
 const { accessTokenForUserToken } = require('../userToken');
 
-jest.mock('../../lib/config');
-jest.mock('../../logger');
-jest.mock('../../api/localDevAuth');
+jest.mock('../lib/config');
+jest.mock('../logger');
+jest.mock('../api/localDevAuth');
 
 describe('userToken', () => {
   describe('accessTokenForUserToken()', () => {

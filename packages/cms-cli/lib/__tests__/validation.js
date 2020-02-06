@@ -1,6 +1,6 @@
 const { getPortalConfig } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
-const { accessTokenForUserToken } = require('@hubspot/cms-lib/http/userToken');
+const { accessTokenForUserToken } = require('@hubspot/cms-lib/userToken');
 
 const { getPortalId } = require('../commonOpts');
 const { validatePortal } = require('../validation');
@@ -8,7 +8,7 @@ const { validatePortal } = require('../validation');
 jest.mock('@hubspot/cms-lib');
 jest.mock('@hubspot/cms-lib/logger');
 jest.mock('@hubspot/cms-lib/oauth');
-jest.mock('@hubspot/cms-lib/http/userToken');
+jest.mock('@hubspot/cms-lib/userToken');
 jest.mock('../commonOpts');
 
 describe('validation', () => {

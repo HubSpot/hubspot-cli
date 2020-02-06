@@ -2,7 +2,7 @@ const request = require('request');
 const requestPN = require('request-promise-native');
 const { getPortalConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
-const { accessTokenForUserToken } = require('./http/userToken');
+const { accessTokenForUserToken } = require('./userToken');
 const { getOauthManager } = require('./oauth');
 
 const withOauth = async (portalId, portalConfig, requestOptions) => {
