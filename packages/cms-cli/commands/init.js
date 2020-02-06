@@ -32,11 +32,7 @@ const {
   API_KEY_FLOW,
   AUTH_METHOD,
 } = require('../lib/prompts');
-const {
-  addLoggerOptions,
-  addTestingOptions,
-  setLogLevel,
-} = require('../lib/commonOpts');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
@@ -133,7 +129,6 @@ function initializeConfigCommand(program) {
     });
 
   addLoggerOptions(program);
-  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

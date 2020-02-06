@@ -136,7 +136,7 @@ describe('validation', () => {
       getPortalId.mockReturnValueOnce(123);
       getPortalConfig.mockReturnValueOnce({
         portalId: 123,
-        authType: 'apiKey',
+        authType: 'apikey',
         apiKey: 'my-secret-key',
       });
       expect(await validatePortal({ portal: 123 })).toBe(true);

@@ -43,11 +43,11 @@ async function authAction(type, options) {
   trackCommandUsage(COMMAND_NAME);
   let configData;
   switch (authType) {
-    case OAUTH_AUTH_METHOD.value.toLowerCase():
+    case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth(configData);
       break;
-    case USER_TOKEN_AUTH_METHOD.value.toLowerCase():
+    case USER_TOKEN_AUTH_METHOD.value:
       configData = await userTokenPrompt();
       await updateConfigWithUserTokenPromptData(configData);
       break;
@@ -57,7 +57,7 @@ async function authAction(type, options) {
           ', '
         )}.`
       );
-      return;
+      break;
   }
   process.exit();
 }

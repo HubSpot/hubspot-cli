@@ -28,7 +28,7 @@ function getRefreshKeyForUserToken(userToken, expiration) {
   return `${userToken}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(userToken, env = 'QA') {
+async function getAccessToken(userToken, env = 'PROD') {
   let response;
   try {
     response = await fetchAccessToken(userToken, env);
@@ -144,7 +144,7 @@ const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
     portalId,
     userToken,
     name,
-    authType: USER_TOKEN_AUTH_METHOD.value.toLowerCase(),
+    authType: USER_TOKEN_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
 
