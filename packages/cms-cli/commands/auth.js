@@ -9,7 +9,7 @@ const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   userTokenPrompt,
   updateConfigWithUserTokenPromptData,
-} = require('@hubspot/cms-lib/oauth');
+} = require('@hubspot/cms-lib/userToken');
 const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
@@ -24,7 +24,10 @@ const {
 const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
-const ALLOWED_AUTH_METHODS = [OAUTH_AUTH_METHOD, USER_TOKEN_AUTH_METHOD];
+const ALLOWED_AUTH_METHODS = [
+  OAUTH_AUTH_METHOD.value,
+  USER_TOKEN_AUTH_METHOD.value,
+];
 
 async function authAction(type, options) {
   setLogLevel(options);
