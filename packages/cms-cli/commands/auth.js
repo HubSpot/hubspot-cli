@@ -25,11 +25,12 @@ const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
-  OAUTH_AUTH_METHOD.value,
-  USER_TOKEN_AUTH_METHOD.value,
+  OAUTH_AUTH_METHOD.value.toLowerCase(),
+  USER_TOKEN_AUTH_METHOD.value.toLowerCase(),
 ];
 
 async function authAction(type, options) {
+  const authType = type.toLowerCase();
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -39,23 +40,14 @@ async function authAction(type, options) {
     process.exit(1);
   }
 
-  if (ALLOWED_AUTH_METHODS.indexOf(type) === -1) {
-    logger.error(
-      `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
-        ', '
-      )}.`
-    );
-    return;
-  }
-
   trackCommandUsage(COMMAND_NAME);
   let configData;
-  switch (type) {
-    case OAUTH_AUTH_METHOD.value:
+  switch (authType) {
+    case OAUTH_AUTH_METHOD.value.toLowerCase():
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth(configData);
       break;
-    case USER_TOKEN_AUTH_METHOD.value:
+    case USER_TOKEN_AUTH_METHOD.value.toLowerCase():
       configData = await userTokenPrompt();
       await updateConfigWithUserTokenPromptData(configData);
       break;
