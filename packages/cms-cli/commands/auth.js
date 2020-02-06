@@ -25,8 +25,8 @@ const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
-  OAUTH_AUTH_METHOD.value.toLowerCase(),
-  USER_TOKEN_AUTH_METHOD.value.toLowerCase(),
+  OAUTH_AUTH_METHOD.value,
+  USER_TOKEN_AUTH_METHOD.value,
 ];
 
 async function authAction(type, options) {

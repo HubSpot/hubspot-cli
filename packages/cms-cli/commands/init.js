@@ -51,7 +51,7 @@ const AUTH_METHOD_FLOW = {
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
-        authType: AUTH_METHODS.api.value.toLowerCase(),
+        authType: AUTH_METHODS.api.value,
       });
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.api.name}.`
