@@ -4,6 +4,7 @@ const moment = require('moment');
 const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -114,8 +115,7 @@ class OAuth2Manager {
       server && server.close();
     };
 
-    process.on('exit', shutdownServerIfRunning);
-    process.on('SIGINT', shutdownServerIfRunning);
+    handleExit(shutdownServerIfRunning);
   }
 
   async fetchAccessToken(exchangeProof) {

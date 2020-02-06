@@ -1,9 +1,15 @@
 const { version } = require('../package.json');
 const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { AUTH_METHODS } = require('@hubspot/cms-lib/lib/constants');
+const {
+  OAUTH_AUTH_METHOD,
+  USER_TOKEN_AUTH_METHOD,
+} = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
-
+const {
+  userTokenPrompt,
+  updateConfigWithUserTokenPromptData,
+} = require('@hubspot/cms-lib/oauth');
 const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
@@ -18,6 +24,7 @@ const {
 const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
+const ALLOWED_AUTH_METHODS = [OAUTH_AUTH_METHOD, USER_TOKEN_AUTH_METHOD];
 
 async function authAction(type, options) {
   setLogLevel(options);
@@ -29,16 +36,34 @@ async function authAction(type, options) {
     process.exit(1);
   }
 
-  if (type !== AUTH_METHODS.oauth.value) {
+  if (ALLOWED_AUTH_METHODS.indexOf(type) === -1) {
     logger.error(
-      `The only supported authentication protocol is '${AUTH_METHODS.oauth.value}'`
+      `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
+        ', '
+      )}.`
     );
     return;
   }
 
-  const configData = await promptUser(OAUTH_FLOW);
   trackCommandUsage(COMMAND_NAME);
-  await authenticateWithOauth(configData);
+  let configData;
+  switch (type) {
+    case OAUTH_AUTH_METHOD.value:
+      configData = await promptUser(OAUTH_FLOW);
+      await authenticateWithOauth(configData);
+      break;
+    case USER_TOKEN_AUTH_METHOD.value:
+      configData = await userTokenPrompt();
+      await updateConfigWithUserTokenPromptData(configData);
+      break;
+    default:
+      logger.error(
+        `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
+          ', '
+        )}.`
+      );
+      return;
+  }
   process.exit();
 }
 

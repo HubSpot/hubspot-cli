@@ -35,20 +35,24 @@ const DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME = 'hubspot.config.yml';
 
 const EMPTY_CONFIG_FILE_CONTENTS = '';
 
-const AUTH_METHODS = {
-  api: {
-    value: 'apiKey',
-    name: 'API Key',
-  },
-  oauth: {
-    value: 'oauth2',
-    name: 'OAuth2',
-  },
+const API_KEY_AUTH_METHOD = {
+  value: 'apiKey',
+  name: 'API Key',
+};
+
+const OAUTH_AUTH_METHOD = {
+  value: 'oauth2',
+  name: 'OAuth2',
 };
 
 const USER_TOKEN_AUTH_METHOD = {
   value: 'userToken',
   name: 'User Token',
+};
+
+const AUTH_METHODS = {
+  api: API_KEY_AUTH_METHOD,
+  oauth: OAUTH_AUTH_METHOD,
 };
 
 const DEFAULT_OAUTH_SCOPES = ['content'];

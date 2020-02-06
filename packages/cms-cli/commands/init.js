@@ -1,5 +1,3 @@
-const open = require('open');
-const moment = require('moment');
 const { version } = require('../package.json');
 const {
   getConfigPath,
@@ -16,9 +14,13 @@ const {
   AUTH_METHODS,
   USER_TOKEN_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
-const { getAccessToken } = require('@hubspot/cms-lib/http/userToken');
+const {
+  userTokenPrompt,
+  updateConfigWithUserTokenPromptData,
+} = require('@hubspot/cms-lib/userToken');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -29,20 +31,18 @@ const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   AUTH_METHOD,
-  USER_TOKEN_FLOW,
-  USER_TOKEN,
 } = require('../lib/prompts');
-const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
+const {
+  addLoggerOptions,
+  addTestingOptions,
+  setLogLevel,
+} = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
 const TRACKING_STATUS = {
   STARTED: 'started',
   COMPLETE: 'complete',
-};
-const handleExit = () => {
-  process.on('exit', deleteEmptyConfigFile);
-  process.on('SIGINT', deleteEmptyConfigFile);
 };
 const AUTH_METHOD_FLOW = {
   [AUTH_METHODS.api.value]: {
@@ -51,7 +51,7 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      handleExit();
+      handleExit(deleteEmptyConfigFile);
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
@@ -68,7 +68,7 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      handleExit();
+      handleExit(deleteEmptyConfigFile);
       await authenticateWithOauth(configData);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
@@ -77,36 +77,8 @@ const AUTH_METHOD_FLOW = {
     },
   },
   [USER_TOKEN_AUTH_METHOD.value]: {
-    prompt: async () => {
-      const { name } = await promptUser(USER_TOKEN_FLOW);
-      open(`https://app.hubspot.com/l/user-token`);
-      const { userToken } = await promptUser(USER_TOKEN);
-
-      return {
-        userToken,
-        name,
-      };
-    },
-    setup: async configData => {
-      createEmptyConfigFile();
-      handleExit();
-      const { userToken, name } = configData;
-      const response = await getAccessToken(userToken);
-      const portalId = response.hubId;
-      const accessToken = response.oauthAccessToken;
-      const expiresAt = moment(response.expiresAtMillis);
-
-      updatePortalConfig({
-        portalId,
-        userToken,
-        authType: USER_TOKEN_AUTH_METHOD.value,
-        tokenInfo: { accessToken, expiresAt },
-      });
-      updateDefaultPortal(name);
-      logger.log(
-        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
-      );
-    },
+    prompt: userTokenPrompt,
+    setup: updateConfigWithUserTokenPromptData,
   },
 };
 
@@ -148,16 +120,18 @@ function initializeConfigCommand(program) {
       if (options.userToken) {
         authMethod = USER_TOKEN_AUTH_METHOD.value;
       } else {
-        authMethod = await promptUser(AUTH_METHOD).authMethod;
+        const promptResp = await promptUser(AUTH_METHOD);
+        authMethod = promptResp.authMethod;
       }
 
-      return completeConfigSetup({
+      await completeConfigSetup({
         authMethod,
         configPath,
       });
     });
 
   addLoggerOptions(program);
+  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

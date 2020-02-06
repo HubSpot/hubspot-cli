@@ -62,22 +62,20 @@ async function getNewAccessToken(userToken, authTokenInfo, env) {
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
   }
-  {
-    let accessToken;
-    try {
-      const refreshAccessPromise = refreshAccessToken(userToken, env);
-      if (key) {
-        refreshRequests.set(key, refreshAccessPromise);
-      }
-      accessToken = await refreshAccessPromise;
-    } catch (e) {
-      if (key) {
-        refreshRequests.delete(key);
-      }
-      throw e;
+  let accessToken;
+  try {
+    const refreshAccessPromise = refreshAccessToken(userToken, env);
+    if (key) {
+      refreshRequests.set(key, refreshAccessPromise);
     }
-    return accessToken;
+    accessToken = await refreshAccessPromise;
+  } catch (e) {
+    if (key) {
+      refreshRequests.delete(key);
+    }
+    throw e;
   }
+  return accessToken;
 }
 
 async function accessTokenForUserToken(portalId) {

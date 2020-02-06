@@ -24,6 +24,10 @@ const addOverwriteOptions = program => {
   program.option('--overwrite', 'overwrite existing files', false);
 };
 
+const addTestingOptions = program => {
+  program.option('--qa', 'enable testing mode', () => true, false);
+};
+
 const addModeOptions = (program, { read, write }) => {
   const modes = `<${Object.values(Mode).join(' | ')}>`;
   const help = read
@@ -71,6 +75,7 @@ const getMode = (options = {}) => {
 module.exports = {
   addPortalOptions,
   addLoggerOptions,
+  addTestingOptions,
   addConfigOptions,
   addOverwriteOptions,
   addModeOptions,
