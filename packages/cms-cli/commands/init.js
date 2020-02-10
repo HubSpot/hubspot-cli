@@ -134,8 +134,6 @@ function initializeConfigCommand(program) {
         authMethod = promptResp.authMethod;
       }
 
-      console.log('Options.QA: ', options.qa);
-
       await completeConfigSetup({
         authMethod,
         configPath,

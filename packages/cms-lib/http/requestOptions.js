@@ -4,7 +4,6 @@ const { getHubSpotApiDomain } = require('../lib/environment');
 
 const getRequestOptions = (options = {}, requestOptions = {}) => {
   const { env } = options;
-  console.log('GRO env: ', env, options, requestOptions);
   const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
   return {
     baseUrl: getHubSpotApiDomain(env, httpUseLocalhost),

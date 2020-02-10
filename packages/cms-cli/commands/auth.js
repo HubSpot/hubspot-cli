@@ -33,7 +33,6 @@ const ALLOWED_AUTH_METHODS = [
 
 async function authAction(type, options) {
   const env = options.qa ? QA : PROD;
-  console.log('authAction env: ', env);
   const authType = type.toLowerCase();
   setLogLevel(options);
   logDebugInfo(options);

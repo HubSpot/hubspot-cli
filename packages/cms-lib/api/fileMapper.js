@@ -162,18 +162,15 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
   let env = PROD;
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
-    console.log('PortalId Provided: ', portalId, portalConfig);
     if (portalConfig && portalConfig.env) {
       env = portalConfig.env;
     }
   } else {
     const config = getAndLoadConfigIfNeeded();
-    console.log('PortalId Provided: ', portalId, config);
     if (config.env) {
       env = config.env;
     }
   }
-  console.log('Track usage');
   const requestOptions = http.getRequestOptions(
     { env },
     {

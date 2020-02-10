@@ -30,7 +30,6 @@ function getRefreshKeyForUserToken(userToken, expiration) {
 }
 
 async function getAccessToken(userToken, env = PROD) {
-  console.log('Env: ', env);
   let response;
   try {
     response = await fetchAccessToken(userToken, env);
@@ -120,7 +119,6 @@ async function accessTokenForUserToken(portalId) {
  * Prompts user for portal name, then opens their browser to the shortlink to user-token-ui
  */
 const userTokenPrompt = async (options = {}) => {
-  console.log('userToken Options env: ', options.env);
   const { name } = await promptUser(USER_TOKEN_FLOW);
   open(`${getHubSpotWebsiteDomain(options.env)}/l/user-token`);
   const { userToken } = await promptUser(USER_TOKEN);
@@ -144,7 +142,6 @@ const updateConfigWithUserToken = async (promptData, options = {}) => {
   handleExit(deleteEmptyConfigFile);
   const { userToken, name } = promptData;
   const { makeDefault, env, firstEntry } = options;
-  console.log('The env: ', env);
   const { portalId, accessToken, expiresAt } = await getAccessToken(
     userToken,
     env
