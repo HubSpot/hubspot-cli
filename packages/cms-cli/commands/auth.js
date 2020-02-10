@@ -8,7 +8,7 @@ const {
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   userTokenPrompt,
-  updateConfigWithUserTokenPromptData,
+  updateConfigWithUserToken,
 } = require('@hubspot/cms-lib/userToken');
 const { validateConfig } = require('../lib/validation');
 const {
@@ -49,7 +49,7 @@ async function authAction(type, options) {
       break;
     case USER_TOKEN_AUTH_METHOD.value:
       configData = await userTokenPrompt();
-      await updateConfigWithUserTokenPromptData(configData);
+      await updateConfigWithUserToken(configData);
       break;
     default:
       logger.error(

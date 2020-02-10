@@ -19,7 +19,7 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   userTokenPrompt,
-  updateConfigWithUserTokenPromptData,
+  updateConfigWithUserToken,
 } = require('@hubspot/cms-lib/userToken');
 const {
   trackCommandUsage,
@@ -75,7 +75,7 @@ const AUTH_METHOD_FLOW = {
   [USER_TOKEN_AUTH_METHOD.value]: {
     prompt: userTokenPrompt,
     setup: async configData => {
-      await updateConfigWithUserTokenPromptData(configData, true);
+      await updateConfigWithUserToken(configData, true);
     },
   },
 };

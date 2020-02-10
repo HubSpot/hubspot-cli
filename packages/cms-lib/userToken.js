@@ -131,13 +131,15 @@ const userTokenPrompt = async () => {
 /**
  * Adds a portal to the config using authType: userToken
  *
- * @param {object} promptData inquirer prompt object containing userToken and name properties
+ * @param {object} configData Data containing userToken and name properties
+ * @param {string} configData.userToken User token string to place in config
+ * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
-const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
+const updateConfigWithUserToken = async (configData, makeDefault) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
-  const { userToken, name } = promptData;
+  const { userToken, name } = configData;
   const { portalId, accessToken, expiresAt } = await getAccessToken(userToken);
 
   updatePortalConfig({
@@ -160,5 +162,5 @@ const updateConfigWithUserTokenPromptData = async (promptData, makeDefault) => {
 module.exports = {
   accessTokenForUserToken,
   userTokenPrompt,
-  updateConfigWithUserTokenPromptData,
+  updateConfigWithUserToken,
 };
