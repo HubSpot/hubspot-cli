@@ -128,13 +128,39 @@ function watch(
   });
 
   if (remove) {
-    watcher.on('unlink', async filePath => {
+    const deleteFileOrFolder = type => filePath => {
       const remotePath = getDesignManagerPath(filePath);
-      const deletePromise = deleteRemoteFile(portalId, filePath, remotePath, {
-        cwd,
+
+      if (shouldIgnoreFile(filePath, cwd)) {
+        logger.debug(`Skipping ${filePath} due to an ignore rule`);
+        return;
+      }
+
+      logger.debug('Attempting to delete %s "%s"', type, remotePath);
+      queue.add(() => {
+        const deletePromise = deleteRemoteFile(portalId, filePath, remotePath, {
+          cwd,
+        })
+          .then(() => {
+            logger.log('Deleted %s "%s"', type, remotePath);
+          })
+          .catch(error => {
+            logger.error('Deleting %s "%s" failed', type, remotePath);
+            logApiErrorInstance(
+              error,
+              new ApiErrorContext({
+                portalId,
+                request: remotePath,
+              })
+            );
+          });
+        triggerNotify(notify, 'Removed', filePath, deletePromise);
+        return deletePromise;
       });
-      triggerNotify(notify, 'Removed', filePath, deletePromise);
-    });
+    };
+
+    watcher.on('unlink', deleteFileOrFolder('file'));
+    watcher.on('unlinkDir', deleteFileOrFolder('folder'));
   }
 
   watcher.on('change', async filePath => {
