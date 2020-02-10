@@ -1,7 +1,9 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
+const { PROD } = require('../lib/environment');
 
-async function fetchAccessToken(userToken, env = 'PROD') {
+async function fetchAccessToken(userToken, env = PROD) {
+  console.log('Fetch access token: ', env);
   const requestOptions = getRequestOptions(
     { env },
     {

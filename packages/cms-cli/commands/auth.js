@@ -5,6 +5,7 @@ const {
   OAUTH_AUTH_METHOD,
   USER_TOKEN_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
+const { QA, PROD } = require('@hubspot/cms-lib/lib/environment');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   userTokenPrompt,
@@ -14,6 +15,7 @@ const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
   addLoggerOptions,
+  addTestingOptions,
   setLogLevel,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -30,6 +32,8 @@ const ALLOWED_AUTH_METHODS = [
 ];
 
 async function authAction(type, options) {
+  const env = options.qa ? QA : PROD;
+  console.log('authAction env: ', env);
   const authType = type.toLowerCase();
   setLogLevel(options);
   logDebugInfo(options);
@@ -40,25 +44,30 @@ async function authAction(type, options) {
     process.exit(1);
   }
 
-  trackCommandUsage(COMMAND_NAME);
   let configData;
   switch (authType) {
-    case OAUTH_AUTH_METHOD.value:
+    case OAUTH_AUTH_METHOD.value: {
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth(configData);
       break;
-    case USER_TOKEN_AUTH_METHOD.value:
-      configData = await userTokenPrompt();
-      await updateConfigWithUserToken(configData);
+    }
+    case USER_TOKEN_AUTH_METHOD.value: {
+      configData = await userTokenPrompt({ env });
+      await updateConfigWithUserToken(configData, {
+        env,
+      });
       break;
-    default:
+    }
+    default: {
       logger.error(
         `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
           ', '
         )}.`
       );
       break;
+    }
   }
+  trackCommandUsage(COMMAND_NAME);
   process.exit();
 }
 
@@ -71,6 +80,7 @@ function configureAuthCommand(program) {
 
   addLoggerOptions(program);
   addConfigOptions(program);
+  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

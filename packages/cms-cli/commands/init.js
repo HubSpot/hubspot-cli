@@ -14,6 +14,7 @@ const {
   AUTH_METHODS,
   USER_TOKEN_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
+const { QA, PROD } = require('@hubspot/cms-lib/lib/environment');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
@@ -32,7 +33,11 @@ const {
   API_KEY_FLOW,
   AUTH_METHOD,
 } = require('../lib/prompts');
-const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
+const {
+  addLoggerOptions,
+  addTestingOptions,
+  setLogLevel,
+} = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
@@ -73,19 +78,26 @@ const AUTH_METHOD_FLOW = {
     },
   },
   [USER_TOKEN_AUTH_METHOD.value]: {
-    prompt: userTokenPrompt,
+    prompt: async options => {
+      return userTokenPrompt(options);
+    },
     setup: async configData => {
-      await updateConfigWithUserToken(configData, true);
+      await updateConfigWithUserToken(configData, {
+        makeDefault: true,
+        env: configData.env,
+        firstEntry: true,
+      });
     },
   },
 };
 
-const completeConfigSetup = async ({ authMethod, configPath }) => {
+const completeConfigSetup = async ({ authMethod, configPath, env }) => {
   const flow = AUTH_METHOD_FLOW[authMethod];
   trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.STARTED);
 
   try {
-    flow.setup(await flow.prompt());
+    const promptData = await flow.prompt({ env });
+    await flow.setup({ ...promptData, env });
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,
@@ -122,13 +134,17 @@ function initializeConfigCommand(program) {
         authMethod = promptResp.authMethod;
       }
 
+      console.log('Options.QA: ', options.qa);
+
       await completeConfigSetup({
         authMethod,
         configPath,
+        env: options.qa ? QA : PROD,
       });
     });
 
   addLoggerOptions(program);
+  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

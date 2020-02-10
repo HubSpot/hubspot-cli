@@ -19,6 +19,7 @@ const {
   USER_TOKEN_AUTH_METHOD,
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
+const { PROD, getHubSpotWebsiteDomain } = require('./lib/environment');
 const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
 
@@ -28,7 +29,8 @@ function getRefreshKeyForUserToken(userToken, expiration) {
   return `${userToken}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(userToken, env = 'PROD') {
+async function getAccessToken(userToken, env = PROD) {
+  console.log('Env: ', env);
   let response;
   try {
     response = await fetchAccessToken(userToken, env);
@@ -50,7 +52,7 @@ async function getAccessToken(userToken, env = 'PROD') {
   }
 }
 
-async function refreshAccessToken(userToken, env = 'PROD') {
+async function refreshAccessToken(userToken, env = PROD) {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
     userToken,
     env
@@ -117,9 +119,10 @@ async function accessTokenForUserToken(portalId) {
 /**
  * Prompts user for portal name, then opens their browser to the shortlink to user-token-ui
  */
-const userTokenPrompt = async () => {
+const userTokenPrompt = async (options = {}) => {
+  console.log('userToken Options env: ', options.env);
   const { name } = await promptUser(USER_TOKEN_FLOW);
-  open(`https://app.hubspot.com/l/user-token`);
+  open(`${getHubSpotWebsiteDomain(options.env)}/l/user-token`);
   const { userToken } = await promptUser(USER_TOKEN);
 
   return {
@@ -136,11 +139,16 @@ const userTokenPrompt = async () => {
  * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
-const updateConfigWithUserToken = async (configData, makeDefault) => {
+const updateConfigWithUserToken = async (promptData, options = {}) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
-  const { userToken, name } = configData;
-  const { portalId, accessToken, expiresAt } = await getAccessToken(userToken);
+  const { userToken, name } = promptData;
+  const { makeDefault, env, firstEntry } = options;
+  console.log('The env: ', env);
+  const { portalId, accessToken, expiresAt } = await getAccessToken(
+    userToken,
+    env
+  );
 
   updatePortalConfig({
     portalId,
@@ -155,7 +163,9 @@ const updateConfigWithUserToken = async (configData, makeDefault) => {
   }
 
   logger.log(
-    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
+    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} ${
+      firstEntry ? 'created' : 'updated'
+    } with ${USER_TOKEN_AUTH_METHOD.name}.`
   );
 };
 

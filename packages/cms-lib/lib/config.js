@@ -2,6 +2,7 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
+const { getEnv } = require('./environment');
 const {
   logErrorInstance,
   logFileSystemErrorInstance,
@@ -144,7 +145,7 @@ const setConfigPath = path => {
 };
 
 const getConfigEnv = environment => {
-  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
+  return getEnv(environment);
 };
 
 const getPortalConfig = portalId => {

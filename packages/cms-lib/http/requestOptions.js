@@ -1,13 +1,13 @@
 const { version } = require('../package.json');
 const { getAndLoadConfigIfNeeded } = require('../lib/config');
+const { getHubSpotApiDomain } = require('../lib/environment');
 
 const getRequestOptions = (options = {}, requestOptions = {}) => {
   const { env } = options;
+  console.log('GRO env: ', env, options, requestOptions);
   const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
   return {
-    baseUrl: `https://${httpUseLocalhost ? 'local' : 'api'}.hubapi${
-      env === 'QA' ? 'qa' : ''
-    }.com`,
+    baseUrl: getHubSpotApiDomain(env, httpUseLocalhost),
     headers: {
       'User-Agent': `HubSpot CMS Tools/${version}`,
     },
