@@ -73,7 +73,7 @@ const PORTAL_API_KEY = {
   },
 };
 
-const USER_TOKEN_PREP = {
+const USER_TOKEN_BROWSER_OPEN_PREP = {
   name: 'userTokenPrep',
   message:
     'When you’re ready, we’ll open a secure page in your default browser where you can get your user token. If you need one, you’ll be able to generate one. Copy your user token so you can complete the next step.\n<Press enter when you are ready to continue>',
@@ -109,7 +109,7 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const USER_TOKEN_FLOW = [PORTAL_NAME, USER_TOKEN_PREP];
+const USER_TOKEN_FLOW = [PORTAL_NAME, USER_TOKEN_BROWSER_OPEN_PREP];
 
 module.exports = {
   promptUser,
