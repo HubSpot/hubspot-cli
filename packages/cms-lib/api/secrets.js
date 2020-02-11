@@ -1,6 +1,6 @@
 const http = require('../http');
 
-const SECRETS_API_PATH = 'cms-functions/v1/secrets';
+const SECRETS_API_PATH = 'cms/v3/functions/secrets';
 
 async function addSecret(portalId, key, value) {
   return http.post(portalId, {
