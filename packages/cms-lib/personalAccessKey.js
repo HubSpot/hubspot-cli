@@ -2,8 +2,8 @@ const open = require('open');
 const moment = require('moment');
 const {
   promptUser,
-  USER_TOKEN_FLOW,
-  USER_TOKEN,
+  PERSONAL_ACCESS_KEY_FLOW,
+  PERSONAL_ACCESS_KEY,
 } = require('@hubspot/cms-cli/lib/prompts');
 
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
@@ -16,7 +16,7 @@ const {
 } = require('./lib/config');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  USER_TOKEN_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
 const { logger } = require('./logger');
@@ -24,14 +24,14 @@ const { fetchAccessToken } = require('./api/localDevAuth');
 
 const refreshRequests = new Map();
 
-function getRefreshKeyForUserToken(userToken, expiration) {
-  return `${userToken}-${expiration || 'fresh'}`;
+function getRefreshKey(personalAccessKey, expiration) {
+  return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(userToken, env = 'PROD') {
+async function getAccessToken(personalAccessKey, env = 'PROD') {
   let response;
   try {
-    response = await fetchAccessToken(userToken, env);
+    response = await fetchAccessToken(personalAccessKey, env);
     return {
       portalId: response.hubId,
       accessToken: response.oauthAccessToken,
@@ -50,9 +50,9 @@ async function getAccessToken(userToken, env = 'PROD') {
   }
 }
 
-async function refreshAccessToken(userToken, env = 'PROD') {
+async function refreshAccessToken(personalAccessKey, env = 'PROD') {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
-    userToken,
+    personalAccessKey,
     env
   );
   const config = getPortalConfig(portalId);
@@ -69,9 +69,9 @@ async function refreshAccessToken(userToken, env = 'PROD') {
   return accessToken;
 }
 
-async function getNewAccessToken(userToken, authTokenInfo, env) {
-  const key = getRefreshKeyForUserToken(
-    userToken,
+async function getNewAccessToken(personalAccessKey, authTokenInfo, env) {
+  const key = getRefreshKey(
+    personalAccessKey,
     authTokenInfo && authTokenInfo.expiresAt
   );
   if (refreshRequests.has(key)) {
@@ -79,7 +79,7 @@ async function getNewAccessToken(userToken, authTokenInfo, env) {
   }
   let accessToken;
   try {
-    const refreshAccessPromise = refreshAccessToken(userToken, env);
+    const refreshAccessPromise = refreshAccessToken(personalAccessKey, env);
     if (key) {
       refreshRequests.set(key, refreshAccessPromise);
     }
@@ -93,8 +93,8 @@ async function getNewAccessToken(userToken, authTokenInfo, env) {
   return accessToken;
 }
 
-async function accessTokenForUserToken(portalId) {
-  const { auth, userToken, env } = getPortalConfig(portalId);
+async function accessTokenForPersonalAccessKey(portalId) {
+  const { auth, personalAccessKey, env } = getPortalConfig(portalId);
   const authTokenInfo = auth && auth.tokenInfo;
   const authDataExists = authTokenInfo && auth.tokenInfo.accessToken;
 
@@ -105,7 +105,7 @@ async function accessTokenForUserToken(portalId) {
       .isAfter(moment(authTokenInfo.expiresAt))
   ) {
     return getNewAccessToken(
-      userToken,
+      personalAccessKey,
       authTokenInfo && authTokenInfo.expiresAt,
       env
     );
@@ -115,38 +115,40 @@ async function accessTokenForUserToken(portalId) {
 }
 
 /**
- * Prompts user for portal name, then opens their browser to the shortlink to user-token-ui
+ * Prompts user for portal name, then opens their browser to the shortlink to personal-access-key
  */
-const userTokenPrompt = async () => {
-  const { name } = await promptUser(USER_TOKEN_FLOW);
-  open(`https://app.hubspot.com/l/user-token`);
-  const { userToken } = await promptUser(USER_TOKEN);
+const personalAccessKeyPrompt = async () => {
+  const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
+  open(`https://app.hubspot.com/l/personal-access-key`);
+  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
-    userToken,
+    personalAccessKey,
     name,
   };
 };
 
 /**
- * Adds a portal to the config using authType: userToken
+ * Adds a portal to the config using authType: personalAccessKey
  *
- * @param {object} configData Data containing userToken and name properties
- * @param {string} configData.userToken User token string to place in config
+ * @param {object} configData Data containing personalAccessKey and name properties
+ * @param {string} configData.personalAccessKey Personal access key string to place in config
  * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
-const updateConfigWithUserToken = async (configData, makeDefault) => {
+const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
-  const { userToken, name } = configData;
-  const { portalId, accessToken, expiresAt } = await getAccessToken(userToken);
+  const { personalAccessKey, name } = configData;
+  const { portalId, accessToken, expiresAt } = await getAccessToken(
+    personalAccessKey
+  );
 
   updatePortalConfig({
     portalId,
-    userToken,
+    personalAccessKey,
     name,
-    authType: USER_TOKEN_AUTH_METHOD.value,
+    authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
 
@@ -155,12 +157,12 @@ const updateConfigWithUserToken = async (configData, makeDefault) => {
   }
 
   logger.log(
-    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${USER_TOKEN_AUTH_METHOD.name}.`
+    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
   );
 };
 
 module.exports = {
-  accessTokenForUserToken,
-  userTokenPrompt,
-  updateConfigWithUserToken,
+  accessTokenForPersonalAccessKey,
+  personalAccessKeyPrompt,
+  updateConfigWithPersonalAccessKey,
 };

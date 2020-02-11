@@ -1,7 +1,9 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getConfig, getPortalConfig, Mode } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
-const { accessTokenForUserToken } = require('@hubspot/cms-lib/userToken');
+const {
+  accessTokenForPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 const { getPortalId, getMode } = require('./commonOpts');
 
 /**
@@ -51,7 +53,7 @@ async function validatePortal(command) {
     return false;
   }
 
-  const { authType, auth, apiKey, userToken } = portalConfig;
+  const { authType, auth, apiKey, personalAccessKey } = portalConfig;
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {
@@ -84,19 +86,19 @@ async function validatePortal(command) {
       logger.error(e.message);
       return false;
     }
-  } else if (authType === 'usertoken') {
-    if (!userToken) {
+  } else if (authType === 'personalaccesskey') {
+    if (!personalAccessKey) {
       logger.error(
-        `The portal "${portalId}" is configured to use a user token for authentication and is missing a "userToken" in the configuration file`
+        `The portal "${portalId}" is configured to use a personal access key for authentication and is missing a "personalAccessKey" in the configuration file`
       );
       return false;
     }
 
     try {
-      const accessToken = await accessTokenForUserToken(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(portalId);
       if (!accessToken) {
         logger.error(
-          `An OAuth2 access token for portal "${portalId} could not be retrieved using the "userToken" provided`
+          `An OAuth2 access token for portal "${portalId} could not be retrieved using the "personalAccessKey" provided`
         );
         return false;
       }

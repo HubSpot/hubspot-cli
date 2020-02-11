@@ -3,13 +3,13 @@ const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
-  USER_TOKEN_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
-  userTokenPrompt,
-  updateConfigWithUserToken,
-} = require('@hubspot/cms-lib/userToken');
+  personalAccessKeyPrompt,
+  updateConfigWithPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
@@ -26,7 +26,7 @@ const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
-  USER_TOKEN_AUTH_METHOD.value,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
 ];
 
 async function authAction(type, options) {
@@ -47,9 +47,9 @@ async function authAction(type, options) {
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth(configData);
       break;
-    case USER_TOKEN_AUTH_METHOD.value:
-      configData = await userTokenPrompt();
-      await updateConfigWithUserToken(configData);
+    case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
+      configData = await personalAccessKeyPrompt();
+      await updateConfigWithPersonalAccessKey(configData);
       break;
     default:
       logger.error(

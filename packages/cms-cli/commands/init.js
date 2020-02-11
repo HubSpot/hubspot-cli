@@ -12,15 +12,15 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   AUTH_METHODS,
-  USER_TOKEN_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
-  userTokenPrompt,
-  updateConfigWithUserToken,
-} = require('@hubspot/cms-lib/userToken');
+  personalAccessKeyPrompt,
+  updateConfigWithPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -72,10 +72,10 @@ const AUTH_METHOD_FLOW = {
       process.exit();
     },
   },
-  [USER_TOKEN_AUTH_METHOD.value]: {
-    prompt: userTokenPrompt,
+  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: {
+    prompt: personalAccessKeyPrompt,
     setup: async configData => {
-      await updateConfigWithUserToken(configData, true);
+      await updateConfigWithPersonalAccessKey(configData, true);
     },
   },
 };
@@ -101,7 +101,7 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option('--user-token', 'utilize user token for auth')
+    .option('--personal-access-key', 'utilize personal access key for auth')
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
@@ -115,8 +115,8 @@ function initializeConfigCommand(program) {
         process.exit(1);
       }
 
-      if (options.userToken) {
-        authMethod = USER_TOKEN_AUTH_METHOD.value;
+      if (options.personalAccessKey) {
+        authMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
       } else {
         const promptResp = await promptUser(AUTH_METHOD);
         authMethod = promptResp.authMethod;

@@ -1,6 +1,8 @@
 const { getPortalConfig } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
-const { accessTokenForUserToken } = require('@hubspot/cms-lib/userToken');
+const {
+  accessTokenForPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 
 const { getPortalId } = require('../commonOpts');
 const { validatePortal } = require('../validation');
@@ -8,7 +10,7 @@ const { validatePortal } = require('../validation');
 jest.mock('@hubspot/cms-lib');
 jest.mock('@hubspot/cms-lib/logger');
 jest.mock('@hubspot/cms-lib/oauth');
-jest.mock('@hubspot/cms-lib/userToken');
+jest.mock('@hubspot/cms-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
 describe('validation', () => {
@@ -108,27 +110,27 @@ describe('validation', () => {
       });
       expect(await validatePortal({ portal: 123 })).toBe(true);
     });
-    it('returns false if "usertoken" configured and getting an access token throws', async () => {
+    it('returns false if "personalaccesskey" configured and getting an access token throws', async () => {
       getPortalId.mockReturnValueOnce(123);
-      accessTokenForUserToken.mockImplementationOnce(() => {
+      accessTokenForPersonalAccessKey.mockImplementationOnce(() => {
         throw new Error('It failed');
       });
       getPortalConfig.mockReturnValueOnce({
         portalId: 123,
-        authType: 'usertoken',
-        userToken: 'foo',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'foo',
       });
       expect(await validatePortal({ portal: 123 })).toBe(false);
     });
-    it('returns true if "usertoken" configured and an access token is received', async () => {
+    it('returns true if "personalaccesskey" configured and an access token is received', async () => {
       getPortalId.mockReturnValueOnce(123);
-      accessTokenForUserToken.mockImplementationOnce(() => {
+      accessTokenForPersonalAccessKey.mockImplementationOnce(() => {
         return 'secret-stuff';
       });
       getPortalConfig.mockReturnValueOnce({
         portalId: 123,
-        authType: 'usertoken',
-        userToken: 'foo',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'foo',
       });
       expect(await validatePortal({ portal: 123 })).toBe(true);
     });

@@ -73,18 +73,18 @@ const PORTAL_API_KEY = {
   },
 };
 
-const USER_TOKEN_BROWSER_OPEN_PREP = {
-  name: 'userTokenPrep',
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
+  name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    'When you’re ready, we’ll open a secure page in your default browser where you can get your user token. If you need one, you’ll be able to generate one. Copy your user token so you can complete the next step.\n<Press enter when you are ready to continue>',
+    'When you’re ready, we’ll open a secure page in your default browser where you can get your personal access key. If you need one, you’ll be able to generate one. Copy your personal access key so you can complete the next step.\n<Press enter when you are ready to continue>',
 };
 
-const USER_TOKEN = {
-  name: 'userToken',
-  message: 'Enter your user token:',
+const PERSONAL_ACCESS_KEY = {
+  name: 'personalAccessKey',
+  message: 'Enter your personal access key:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 151) {
-      return 'You did not enter a valid user token. Please try again.';
+      return 'You did not enter a valid personal access key. Please try again.';
     }
     return true;
   },
@@ -109,7 +109,10 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const USER_TOKEN_FLOW = [PORTAL_NAME, USER_TOKEN_BROWSER_OPEN_PREP];
+const PERSONAL_ACCESS_KEY_FLOW = [
+  PORTAL_NAME,
+  PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+];
 
 module.exports = {
   promptUser,
@@ -120,10 +123,10 @@ module.exports = {
   PORTAL_ID,
   PORTAL_NAME,
   SCOPES,
-  USER_TOKEN,
+  PERSONAL_ACCESS_KEY,
 
   // Flows
   API_KEY_FLOW,
   OAUTH_FLOW,
-  USER_TOKEN_FLOW,
+  PERSONAL_ACCESS_KEY_FLOW,
 };
