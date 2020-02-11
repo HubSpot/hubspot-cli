@@ -47,7 +47,10 @@ async function authAction(type, options) {
   switch (authType) {
     case OAUTH_AUTH_METHOD.value: {
       configData = await promptUser(OAUTH_FLOW);
-      await authenticateWithOauth(configData);
+      await authenticateWithOauth({
+        ...configData,
+        env,
+      });
       break;
     }
     case USER_TOKEN_AUTH_METHOD.value: {
