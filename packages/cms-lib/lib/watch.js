@@ -114,7 +114,7 @@ function watch(portalId, src, dest, { mode, cwd, remove, disableInitial }) {
           });
       });
     };
-    
+
     watcher.on('unlink', deleteFileOrFolder('file'));
     watcher.on('unlinkDir', deleteFileOrFolder('folder'));
   }
