@@ -18,22 +18,10 @@ const {
   logApiUploadErrorInstance,
   isFatalError,
 } = require('../errorHandlers');
-const { triggerNotify } = require('./notify');
 
 const queue = new PQueue({
   concurrency: 10,
 });
-
-async function uploadAndTrigger(portalId, file, destPath, apiOptions, notify) {
-  const uploadPromise = upload(portalId, file, destPath, apiOptions);
-
-  triggerNotify(notify, 'Uploaded', file, uploadPromise);
-  uploadPromise.then(() => {
-    logger.log('Uploaded file "%s" to "%s"', file, destPath);
-  });
-
-  return uploadPromise;
-}
 
 function getFilesByType(files) {
   const moduleFiles = [];
@@ -92,7 +80,9 @@ async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
-        return uploadAndTrigger(portalId, file, destPath, apiOptions, notify);
+        return upload(portalId, file, destPath, apiOptions).then(() => {
+          logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        });
       } catch (error) {
         if (isFatalError(error)) {
           throw error;

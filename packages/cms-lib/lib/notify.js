@@ -41,10 +41,9 @@ function waitForActionsToCompleteAndWriteQueueToFile(filePathToNotify) {
     notifyPromises.splice(0, notifyPromises.length)
   );
 
-  allNotifyPromisesResolution.then(() => {
-    const notifyOutput = `${moment().toISOString()} Notify Triggered\n`;
-    notifyFilePath(filePathToNotify, actionOutput.concat(notifyOutput));
-  });
+  allNotifyPromisesResolution.then(
+    notifyFilePath(filePathToNotify, actionOutput)
+  );
 }
 
 /**
