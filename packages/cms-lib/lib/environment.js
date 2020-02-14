@@ -1,15 +1,21 @@
 'use es6';
 const { ENVIRONMENTS } = require('./constants');
 
+const getValueForEnv = (
+  env,
+  prodValue = ENVIRONMENTS.PROD,
+  qaValue = ENVIRONMENTS.QA
+) => {
+  return typeof env === 'string' && env.toLowerCase() === ENVIRONMENTS.QA
+    ? qaValue
+    : prodValue;
+};
+
 /**
  * Returns validated environment string
  * @param {string} env
  */
-const getEnv = env => {
-  return typeof env === 'string' && env.toLowerCase() === ENVIRONMENTS.QA
-    ? ENVIRONMENTS.QA
-    : ENVIRONMENTS.PROD;
-};
+const getEnv = env => getValueForEnv(env);
 
 /**
  * Returns the environment value to place within config
@@ -18,8 +24,7 @@ const getEnv = env => {
  * @param {string} env
  */
 const getEnvForConfig = env => {
-  console.log('env: ', env, ENVIRONMENTS);
-  return env.toLowerCase() === ENVIRONMENTS.PROD ? '' : ENVIRONMENTS.QA;
+  return getValueForEnv(env, '');
 };
 
 module.exports = {

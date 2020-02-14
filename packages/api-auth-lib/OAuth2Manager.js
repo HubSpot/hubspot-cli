@@ -5,6 +5,10 @@ const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
+const {
+  ENVIRONMENTS: { PROD },
+} = require('@hubspot/cms-lib/lib/constants');
+const { getEnv, getEnvForConfig } = require('@hubspot/cms-lib/lib/environment');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -16,7 +20,7 @@ class OAuth2Manager {
       clientId,
       clientSecret,
       scopes,
-      environment = 'prod',
+      env = PROD,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
@@ -27,7 +31,7 @@ class OAuth2Manager {
     this.scopes = scopes;
     this.tokenInfo = tokenInfo;
     this.portalId = portalId;
-    this.env = environment.toLowerCase() === 'prod' ? '' : 'qa';
+    this.env = getEnvForConfig(env);
     this.logger = logger;
     this.writeTokenInfo = writeTokenInfo;
     this.refreshTokenRequest = null;
@@ -189,7 +193,7 @@ class OAuth2Manager {
 
   toObj() {
     return {
-      environment: this.env ? 'qa' : 'prod',
+      env: getEnv(this.env),
       clientSecret: this.clientSecret,
       clientId: this.clientId,
       scopes: this.scopes,
@@ -203,7 +207,7 @@ class OAuth2Manager {
       return new OAuth2Manager(
         {
           ...rest,
-          environment: env && env.toLowerCase() === 'qa' ? 'qa' : 'prod',
+          env: getEnv(env),
           ...auth,
         },
         logger,
