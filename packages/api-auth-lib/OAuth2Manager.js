@@ -197,7 +197,9 @@ class OAuth2Manager {
       clientSecret: this.clientSecret,
       clientId: this.clientId,
       scopes: this.scopes,
-      tokenInfo: this.tokenInfo,
+      auth: {
+        tokenInfo: this.tokenInfo,
+      },
     };
   }
 
