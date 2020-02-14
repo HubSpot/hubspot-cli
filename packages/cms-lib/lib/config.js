@@ -215,10 +215,16 @@ const updateConfigProps = (portalConfig, configUpdates) => {
  * @param {object} configUpdates Object containing desired updates
  */
 const getUpdatedApiKeyConfig = (portalConfig, configUpdates) => {
+  const apiKey = configUpdates.apiKey || portalConfig.apiKey;
+
+  if (!apiKey) {
+    throw new Error('No apiKey passed to getUpdatedApiKeyConfig.');
+  }
+
   return {
     ...updateConfigProps(portalConfig, configUpdates),
     authType: API_KEY_AUTH_METHOD.value,
-    apiKey: configUpdates.apiKey || portalConfig.apiKey,
+    apiKey,
     auth: null,
     personalAccessKey: null,
   };
@@ -230,12 +236,28 @@ const getUpdatedApiKeyConfig = (portalConfig, configUpdates) => {
  * @param {object} configUpdates Object containing desired updates
  */
 const getUpdatedOauthConfig = (portalConfig, configUpdates) => {
-  return {
+  const auth = {
+    ...portalConfig.auth,
+    ...configUpdates.auth,
+  };
+  if (!auth) {
+    throw new Error('No auth data passed to getUpdatedOauthConfig.');
+  }
+
+  if (!auth.tokenInfo) {
+    throw new Error('No auth.tokenInfo data passed to getUpdatedOauthConfig.');
+  }
+
+  const config = {
     ...updateConfigProps(portalConfig, configUpdates),
     authType: OAUTH_AUTH_METHOD.value,
-    auth: configUpdates.auth,
-    apiKey: null,
+    auth,
   };
+
+  delete config.apiKey;
+  delete config.personalAccessKey;
+
+  return config;
 };
 
 /**
@@ -244,12 +266,34 @@ const getUpdatedOauthConfig = (portalConfig, configUpdates) => {
  * @param {object} configUpdates Object containing desired updates
  */
 const getUpdatedPersonalAccessKeyConfig = (portalConfig, configUpdates) => {
-  return {
+  const auth = {
+    ...portalConfig.auth,
+    ...configUpdates.auth,
+  };
+  if (!auth) {
+    throw new Error(
+      'No auth data passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
+  if (!auth.tokenInfo) {
+    throw new Error(
+      'No auth.tokenInfo data passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
+  const config = {
     ...updateConfigProps(portalConfig, configUpdates),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    auth: configUpdates.auth,
-    apiKey: null,
+    auth,
   };
+
+  delete config.apiKey;
+  delete config.auth.clientId;
+  delete config.auth.clientSecret;
+  delete config.auth.tokenInfo.refreshToken;
+
+  return config;
 };
 
 /**
@@ -296,14 +340,11 @@ const updatePortalConfig = configOptions => {
       updatedPortalConfig = getUpdatedApiKeyConfig(portalConfig, configOptions);
       break;
     }
-    default:
-      {
-        logger.log(
-          `Unrecognized authType: ${authType} passed to updatePortalConfig, no updates made.`
-        );
-      }
-
-      updatedPortalConfig = portalConfig;
+    default: {
+      throw new Error(
+        `Unrecognized authType: ${authType} passed to updatePortalConfig.`
+      );
+    }
   }
 
   if (portalConfig) {
