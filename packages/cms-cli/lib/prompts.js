@@ -13,9 +13,9 @@ const promptUser = async promptConfig => {
 
 const PORTAL_ID = {
   name: 'portalId',
+  type: 'number',
   message:
     'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta):',
-  type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
       return true;
@@ -26,6 +26,7 @@ const PORTAL_ID = {
 
 const CLIENT_ID = {
   name: 'clientId',
+  type: 'input',
   message: 'Enter your OAuth2 client ID:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 36) {
@@ -37,6 +38,7 @@ const CLIENT_ID = {
 
 const CLIENT_SECRET = {
   name: 'clientSecret',
+  type: 'input',
   message: 'Enter your OAuth2 client secret:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 36) {
@@ -50,6 +52,7 @@ const CLIENT_SECRET = {
 
 const PORTAL_NAME = {
   name: 'name',
+  type: 'input',
   message: 'Enter a unique name to reference your account:',
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
@@ -63,6 +66,7 @@ const PORTAL_NAME = {
 
 const PORTAL_API_KEY = {
   name: 'apiKey',
+  type: 'input',
   message:
     'Enter the API key for your portal (found at https://app.hubspot.com/l/api-key):',
   validate(val) {
@@ -73,18 +77,19 @@ const PORTAL_API_KEY = {
   },
 };
 
-const USER_TOKEN_BROWSER_OPEN_PREP = {
-  name: 'userTokenPrep',
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
+  name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    'When you’re ready, we’ll open a secure page in your default browser where you can get your user token. If you need one, you’ll be able to generate one. Copy your user token so you can complete the next step.\n<Press enter when you are ready to continue>',
+    'When you’re ready, we’ll open a secure page in your default browser where you can get your personal access key. If you need one, you’ll be able to generate one. Copy your personal access key so you can complete the next step.\n<Press enter when you are ready to continue>',
 };
 
-const USER_TOKEN = {
-  name: 'userToken',
-  message: 'Enter your user token:',
+const PERSONAL_ACCESS_KEY = {
+  name: 'personalAccessKey',
+  type: 'input',
+  message: 'Enter your personal access key:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 151) {
-      return 'You did not enter a valid user token. Please try again.';
+      return 'You did not enter a valid personal access key. Please try again.';
     }
     return true;
   },
@@ -109,7 +114,7 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const USER_TOKEN_FLOW = [PORTAL_NAME, USER_TOKEN_BROWSER_OPEN_PREP];
+const PERSONAL_ACCESS_KEY_FLOW = [PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP];
 
 module.exports = {
   promptUser,
@@ -120,10 +125,10 @@ module.exports = {
   PORTAL_ID,
   PORTAL_NAME,
   SCOPES,
-  USER_TOKEN,
+  PERSONAL_ACCESS_KEY,
 
   // Flows
   API_KEY_FLOW,
   OAUTH_FLOW,
-  USER_TOKEN_FLOW,
+  PERSONAL_ACCESS_KEY_FLOW,
 };

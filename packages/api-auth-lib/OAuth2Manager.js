@@ -6,8 +6,11 @@ const open = require('open');
 const { HubSpotAuthError } = require('./Errors');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
-  PROD,
+  ENVIRONMENTS: { PROD },
+} = require('@hubspot/cms-lib/lib/constants');
+const {
   getEnv,
+  getEnvForConfig,
   getHubSpotWebsiteDomain,
   getHubSpotApiDomain,
 } = require('@hubspot/cms-lib/lib/environment');
@@ -22,7 +25,7 @@ class OAuth2Manager {
       clientId,
       clientSecret,
       scopes,
-      environment = PROD,
+      env = PROD,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
@@ -33,7 +36,7 @@ class OAuth2Manager {
     this.scopes = scopes;
     this.tokenInfo = tokenInfo;
     this.portalId = portalId;
-    this.env = getEnv(environment);
+    this.env = getEnvForConfig(env);
     this.logger = logger;
     this.writeTokenInfo = writeTokenInfo;
     this.refreshTokenRequest = null;
@@ -195,11 +198,13 @@ class OAuth2Manager {
 
   toObj() {
     return {
-      environment: this.env,
+      env: getEnv(this.env),
       clientSecret: this.clientSecret,
       clientId: this.clientId,
       scopes: this.scopes,
-      tokenInfo: this.tokenInfo,
+      auth: {
+        tokenInfo: this.tokenInfo,
+      },
     };
   }
 
@@ -209,7 +214,7 @@ class OAuth2Manager {
       return new OAuth2Manager(
         {
           ...rest,
-          environment: getEnv(env),
+          env: getEnv(env),
           ...auth,
         },
         logger,

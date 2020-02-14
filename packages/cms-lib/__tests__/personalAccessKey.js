@@ -2,20 +2,20 @@ const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
 const { fetchAccessToken } = require('../api/localDevAuth');
 
-const { accessTokenForUserToken } = require('../userToken');
+const { accessTokenForPersonalAccessKey } = require('../personalAccessKey');
 
 jest.mock('../lib/config');
 jest.mock('../logger');
 jest.mock('../api/localDevAuth');
 
-describe('userToken', () => {
-  describe('accessTokenForUserToken()', () => {
+describe('personalAccessKey', () => {
+  describe('accessTokenForPersonalAccessKey()', () => {
     it('refreshes access token when access token is missing', async () => {
       const portalId = 123;
       const portal = {
         portalId,
-        authType: 'usertoken',
-        userToken: 'let-me-in',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'let-me-in',
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
         portals: [portal],
@@ -35,15 +35,15 @@ describe('userToken', () => {
           userId: 456,
         })
       );
-      const accessToken = await accessTokenForUserToken(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(portalId);
       expect(accessToken).toEqual(freshAccessToken);
     });
     it('refreshes access token when the existing token is expired', async () => {
       const portalId = 123;
       const portal = {
         portalId,
-        authType: 'usertoken',
-        userToken: 'let-me-in',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'let-me-in',
         auth: {
           tokenInfo: {
             expiresAt: moment()
@@ -71,7 +71,7 @@ describe('userToken', () => {
           userId: 456,
         })
       );
-      const accessToken = await accessTokenForUserToken(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(portalId);
       expect(accessToken).toEqual(freshAccessToken);
     });
   });

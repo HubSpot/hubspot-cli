@@ -1,14 +1,16 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
-const { PROD } = require('../lib/environment');
+const {
+  ENVIRONMENTS: { PROD },
+} = require('../lib/constants');
 
-async function fetchAccessToken(userToken, env = PROD) {
+async function fetchAccessToken(personalAccessKey, env = PROD) {
   const requestOptions = getRequestOptions(
     { env },
     {
       uri: `localdevauth/v1/auth/refresh`,
       body: {
-        encodedOAuthRefreshToken: userToken,
+        encodedOAuthRefreshToken: personalAccessKey,
       },
     }
   );

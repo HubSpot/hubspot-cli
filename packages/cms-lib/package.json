@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cms-lib",
-  "version": "1.0.7-beta.2",
+  "version": "1.0.8",
   "description": "Library for working with the HubSpot CMS",
   "license": "Apache-2.0",
   "main": "index.js",
@@ -12,6 +12,7 @@
     "chalk": "^2.4.2",
     "chokidar": "^3.0.1",
     "content-disposition": "^0.5.3",
+    "debounce": "^1.2.0",
     "extract-zip": "^1.6.7",
     "findup-sync": "^3.0.0",
     "fs-extra": "^8.1.0",

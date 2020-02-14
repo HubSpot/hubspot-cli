@@ -1,6 +1,6 @@
 const http = require('../http');
 
-const RESULTS_API_PATH = 'cms-functions/v1/results';
+const RESULTS_API_PATH = 'cms/v3/functions/results';
 
 async function getFunctionLogs(portalId, functionId) {
   return http.get(portalId, {

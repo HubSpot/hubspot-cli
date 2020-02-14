@@ -45,9 +45,9 @@ const OAUTH_AUTH_METHOD = {
   name: 'OAuth2',
 };
 
-const USER_TOKEN_AUTH_METHOD = {
-  value: 'usertoken',
-  name: 'User Token',
+const PERSONAL_ACCESS_KEY_AUTH_METHOD = {
+  value: 'personalaccesskey',
+  name: 'Personal Access Key',
 };
 
 const AUTH_METHODS = {
@@ -73,6 +73,11 @@ const OAUTH_SCOPES = [
   },
 ];
 
+const ENVIRONMENTS = {
+  PROD: 'prod',
+  QA: 'qa',
+};
+
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -87,5 +92,6 @@ module.exports = {
   OAUTH_SCOPES,
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
-  USER_TOKEN_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 };

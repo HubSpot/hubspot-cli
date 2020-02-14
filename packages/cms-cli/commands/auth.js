@@ -3,14 +3,15 @@ const { loadConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
-  USER_TOKEN_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
 const { QA, PROD } = require('@hubspot/cms-lib/lib/environment');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
+const { updatePortalConfig } = require('@hubspot/cms-lib/lib/config');
 const {
-  userTokenPrompt,
-  updateConfigWithUserToken,
-} = require('@hubspot/cms-lib/userToken');
+  personalAccessKeyPrompt,
+  updateConfigWithPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
@@ -23,12 +24,12 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
+const { promptUser, OAUTH_FLOW, PORTAL_NAME } = require('../lib/prompts');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
-  USER_TOKEN_AUTH_METHOD.value,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
 ];
 
 async function authAction(type, options) {
@@ -44,6 +45,8 @@ async function authAction(type, options) {
   }
 
   let configData;
+  let updatedConfig;
+  let promptAnswer;
   switch (authType) {
     case OAUTH_AUTH_METHOD.value: {
       configData = await promptUser(OAUTH_FLOW);
@@ -53,11 +56,19 @@ async function authAction(type, options) {
       });
       break;
     }
-    case USER_TOKEN_AUTH_METHOD.value: {
-      configData = await userTokenPrompt({ env });
-      await updateConfigWithUserToken(configData, {
+    case PERSONAL_ACCESS_KEY_AUTH_METHOD.value: {
+      configData = await personalAccessKeyPrompt({ env });
+      updatedConfig = await updateConfigWithPersonalAccessKey(configData, {
         env,
       });
+
+      if (!updatedConfig.name) {
+        promptAnswer = await promptUser([PORTAL_NAME]);
+        updatePortalConfig({
+          portalId: updatedConfig.portalId,
+          name: promptAnswer.name,
+        });
+      }
       break;
     }
     default: {

@@ -54,8 +54,13 @@ function createIgnoreFilter(cwd) {
   return file => !shouldIgnoreFile(file, cwd);
 }
 
+function ignoreFile(filePath) {
+  ignoreRules.add(filePath);
+}
+
 module.exports = {
   loadIgnoreConfig,
   shouldIgnoreFile,
   createIgnoreFilter,
+  ignoreFile,
 };

@@ -88,8 +88,8 @@ describe('http', () => {
       const accessToken = 'let-me-in';
       const portal = {
         id: 123,
-        authType: 'usertoken',
-        userToken: 'some-secret',
+        authType: 'personalaccesskey',
+        personalAccessKey: 'some-secret',
         auth: {
           tokenInfo: {
             expiresAt: moment()

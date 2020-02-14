@@ -2,7 +2,6 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
-const { getEnv } = require('./environment');
 const {
   logErrorInstance,
   logFileSystemErrorInstance,
@@ -12,10 +11,33 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('./constants');
 
 let _config;
 let _configPath;
+
+const getOrderedPortalConfig = unorderedPortalConfig => {
+  const {
+    name,
+    portalId,
+    env,
+    authType,
+    auth,
+    ...rest
+  } = unorderedPortalConfig;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+    auth,
+  };
+};
 
 const getOrderedConfig = unorderedConfig => {
   const {
@@ -32,7 +54,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals,
+    portals: portals.map(portal => getOrderedPortalConfig(portal)),
     ...rest,
   };
 };
@@ -95,7 +117,7 @@ const loadConfig = (path, options = {}) => {
   if (sourceError) return;
   const { parsed, error: parseError } = parseConfig(source);
   if (parseError) return;
-  _config = parsed;
+  _config = Object.freeze(parsed);
 
   if (!_config) {
     logger.debug('The config file was empty config');
@@ -144,10 +166,6 @@ const setConfigPath = path => {
   return (_configPath = path);
 };
 
-const getConfigEnv = environment => {
-  return getEnv(environment);
-};
-
 const getPortalConfig = portalId => {
   const config = getAndLoadConfigIfNeeded();
   return config.portals.find(portal => portal.portalId === portalId);
@@ -185,23 +203,153 @@ const getPortalId = nameOrId => {
   return null;
 };
 
+const getPortalName = portalId => {
+  return getPortalConfig(portalId).name;
+};
+
 /**
- * @throws {Error}
+ * Returns mode(draft/publish) or undefined if invalid mode
+ * @param {string} mode
+ */
+const getMode = mode => {
+  return Mode[mode && mode.toLowerCase()];
+};
+
+/**
+ * Updates non-authType-specific portalConfig properties
+ * @param {object} portalConfig
+ * @param {object} configUpdates
+ */
+const updateConfigProps = (portalConfig = {}, configUpdates = {}) => {
+  return {
+    ...portalConfig,
+    portalId: configUpdates.portalId,
+    name: configUpdates.name || portalConfig.name,
+    env: configUpdates.env || portalConfig.env,
+    defaultMode: getMode(configUpdates.defaultMode) || portalConfig.defaultMode,
+  };
+};
+
+/**
+ * Generates a portalConfig object from previous values and desired updates
+ * @param {object} portalConfig Existing apiKey portalConfig
+ * @param {object} configUpdates Object containing desired updates
+ */
+const getUpdatedApiKeyConfig = (portalConfig = {}, configUpdates = {}) => {
+  const apiKey = configUpdates.apiKey || portalConfig.apiKey;
+
+  if (!apiKey) {
+    throw new Error('No apiKey passed to getUpdatedApiKeyConfig.');
+  }
+
+  return {
+    ...updateConfigProps(portalConfig, configUpdates),
+    authType: API_KEY_AUTH_METHOD.value,
+    apiKey,
+    auth: null,
+    personalAccessKey: null,
+  };
+};
+
+/**
+ * Generates a portalConfig object from previous values and desired updates
+ * @param {object} portalConfig Existing oauth2 portalConfig
+ * @param {object} configUpdates Object containing desired updates
+ */
+const getUpdatedOauthConfig = (portalConfig = {}, configUpdates = {}) => {
+  const auth = {
+    ...portalConfig.auth,
+    ...configUpdates.auth,
+  };
+
+  if (!auth) {
+    throw new Error('No auth data passed to getUpdatedOauthConfig.');
+  }
+
+  if (!auth.tokenInfo) {
+    throw new Error('No auth.tokenInfo data passed to getUpdatedOauthConfig.');
+  }
+
+  const config = {
+    ...updateConfigProps(portalConfig, configUpdates),
+    authType: OAUTH_AUTH_METHOD.value,
+    auth,
+  };
+
+  delete config.apiKey;
+  delete config.personalAccessKey;
+
+  return config;
+};
+
+/**
+ * Generates a portalConfig object from previous values and desired updates
+ * @param {object} portalConfig Existing personalaccesskey portalConfig
+ * @param {object} configUpdates Object containing desired updates
+ */
+const getUpdatedPersonalAccessKeyConfig = (
+  portalConfig = {},
+  configUpdates = {}
+) => {
+  const personalAccessKey =
+    configUpdates.personalAccessKey || portalConfig.personalAccessKey;
+  const auth = {
+    ...portalConfig.auth,
+    ...configUpdates.auth,
+  };
+
+  if (!personalAccessKey) {
+    throw new Error(
+      'No personalAccessKey passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
+  if (!auth) {
+    throw new Error(
+      'No auth data passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
+  if (!auth.tokenInfo) {
+    throw new Error(
+      'No auth.tokenInfo data passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
+  const config = {
+    ...updateConfigProps(portalConfig, configUpdates),
+    authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    personalAccessKey,
+    auth,
+  };
+
+  delete config.apiKey;
+  delete config.auth.clientId;
+  delete config.auth.clientSecret;
+  delete config.auth.tokenInfo.refreshToken;
+
+  return config;
+};
+
+/**
+ *
+ * @param {object} configOptions An object containing properties to update in the portalConfig
+ * @param {number} configOptions.portalId Portal ID to add/make updates to
+ * @param {string} configOptions.authType Type of authentication used for this portalConfig
+ * @param {string} configOptions.env Environment that this portal is located in(QA/PROD)
+ * @param {string} configOptions.name Unique name used to reference this portalConfig
+ * @param {object} configOptions.apiKey API key used in authType: apikey
+ * @param {object} configOptions.defaultMode Default mode for uploads(draft or publish)
+ * @param {object} configOptions.personalAccessKey Personal Access Key used in authType: personalaccesskey
+ * @param {object} configOptions.auth Auth object used in oauth2 and personalaccesskey authTypes
+ * @param {object} configOptions.auth.clientId Client ID used for oauth2
+ * @param {object} configOptions.auth.clientSecret Client Secret used for oauth2
+ * @param {object} configOptions.auth.scopes Scopes that are allowed access with auth
+ * @param {object} configOptions.auth.tokenInfo Token Info used for oauth2 and personalaccesskey authTypes
+ *
  */
 const updatePortalConfig = configOptions => {
-  const {
-    portalId,
-    authType,
-    environment,
-    clientId,
-    clientSecret,
-    scopes,
-    tokenInfo,
-    defaultMode,
-    name,
-    apiKey,
-    userToken,
-  } = configOptions;
+  const { portalId } = configOptions;
 
   if (!portalId) {
     throw new Error('A portalId is required to update the config');
@@ -209,44 +357,47 @@ const updatePortalConfig = configOptions => {
 
   const config = getAndLoadConfigIfNeeded();
   const portalConfig = getPortalConfig(portalId);
+  const authType = configOptions.authType || portalConfig.authType;
+  let updatedPortalConfig;
 
-  let auth;
-  if (clientId || clientSecret || scopes || tokenInfo) {
-    auth = {
-      ...(portalConfig ? portalConfig.auth : {}),
-      clientId,
-      clientSecret,
-      scopes,
-      tokenInfo,
-    };
+  switch (authType) {
+    case PERSONAL_ACCESS_KEY_AUTH_METHOD.value: {
+      updatedPortalConfig = getUpdatedPersonalAccessKeyConfig(
+        portalConfig,
+        configOptions
+      );
+      break;
+    }
+    case OAUTH_AUTH_METHOD.value: {
+      updatedPortalConfig = getUpdatedOauthConfig(portalConfig, configOptions);
+      break;
+    }
+    case API_KEY_AUTH_METHOD.value: {
+      updatedPortalConfig = getUpdatedApiKeyConfig(portalConfig, configOptions);
+      break;
+    }
+    default: {
+      throw new Error(
+        `Unrecognized authType: ${authType} passed to updatePortalConfig.`
+      );
+    }
   }
-  const env = getConfigEnv(environment);
-  const mode = defaultMode && defaultMode.toLowerCase();
-  const nextPortalConfig = {
-    ...portalConfig,
-    name,
-    env,
-    portalId,
-    authType,
-    auth,
-    apiKey,
-    defaultMode: Mode[mode] ? mode : undefined,
-    userToken,
-  };
 
   if (portalConfig) {
     logger.debug(`Updating config for ${portalId}`);
     const index = config.portals.indexOf(portalConfig);
-    config.portals[index] = nextPortalConfig;
+    config.portals[index] = updatedPortalConfig;
   } else {
     logger.debug(`Adding config entry for ${portalId}`);
     if (config.portals) {
-      config.portals.push(nextPortalConfig);
+      config.portals.push(updatedPortalConfig);
     } else {
-      config.portals = [nextPortalConfig];
+      config.portals = [updatedPortalConfig];
     }
   }
   writeConfig();
+
+  return updatedPortalConfig;
 };
 
 /**
@@ -310,6 +461,7 @@ module.exports = {
   loadConfig,
   getPortalConfig,
   getPortalId,
+  getPortalName,
   updatePortalConfig,
   updateDefaultPortal,
   createEmptyConfigFile,
