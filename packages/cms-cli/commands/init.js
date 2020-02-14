@@ -31,6 +31,7 @@ const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   AUTH_METHOD,
+  PORTAL_NAME,
 } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -75,7 +76,14 @@ const AUTH_METHOD_FLOW = {
   [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: {
     prompt: personalAccessKeyPrompt,
     setup: async configData => {
-      await updateConfigWithPersonalAccessKey(configData, true);
+      const { portalId } = await updateConfigWithPersonalAccessKey(configData);
+      const promptAnswer = await promptUser([PORTAL_NAME]);
+      updatePortalConfig({
+        portalId,
+        name: promptAnswer.name,
+      });
+      updateDefaultPortal(promptAnswer.name);
+      process.exit();
     },
   },
 };

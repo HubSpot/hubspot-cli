@@ -200,9 +200,10 @@ const getMode = mode => {
  * @param {object} portalConfig
  * @param {object} configUpdates
  */
-const updateConfigProps = (portalConfig, configUpdates) => {
+const updateConfigProps = (portalConfig = {}, configUpdates = {}) => {
   return {
     ...portalConfig,
+    portalId: configUpdates.portalId,
     name: configUpdates.name || portalConfig.name,
     env: configUpdates.env || portalConfig.env,
     defaultMode: getMode(configUpdates.defaultMode) || portalConfig.defaultMode,
@@ -214,7 +215,7 @@ const updateConfigProps = (portalConfig, configUpdates) => {
  * @param {object} portalConfig Existing apiKey portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedApiKeyConfig = (portalConfig, configUpdates) => {
+const getUpdatedApiKeyConfig = (portalConfig = {}, configUpdates = {}) => {
   const apiKey = configUpdates.apiKey || portalConfig.apiKey;
 
   if (!apiKey) {
@@ -235,11 +236,12 @@ const getUpdatedApiKeyConfig = (portalConfig, configUpdates) => {
  * @param {object} portalConfig Existing oauth2 portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedOauthConfig = (portalConfig, configUpdates) => {
+const getUpdatedOauthConfig = (portalConfig = {}, configUpdates = {}) => {
   const auth = {
     ...portalConfig.auth,
     ...configUpdates.auth,
   };
+
   if (!auth) {
     throw new Error('No auth data passed to getUpdatedOauthConfig.');
   }
@@ -265,11 +267,23 @@ const getUpdatedOauthConfig = (portalConfig, configUpdates) => {
  * @param {object} portalConfig Existing personalaccesskey portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedPersonalAccessKeyConfig = (portalConfig, configUpdates) => {
+const getUpdatedPersonalAccessKeyConfig = (
+  portalConfig = {},
+  configUpdates = {}
+) => {
+  const personalAccessKey =
+    configUpdates.personalAccessKey || portalConfig.personalAccessKey;
   const auth = {
     ...portalConfig.auth,
     ...configUpdates.auth,
   };
+
+  if (!personalAccessKey) {
+    throw new Error(
+      'No personalAccessKey passed to getUpdatedPersonalAccessKeyConfig.'
+    );
+  }
+
   if (!auth) {
     throw new Error(
       'No auth data passed to getUpdatedPersonalAccessKeyConfig.'
@@ -285,6 +299,7 @@ const getUpdatedPersonalAccessKeyConfig = (portalConfig, configUpdates) => {
   const config = {
     ...updateConfigProps(portalConfig, configUpdates),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    personalAccessKey,
     auth,
   };
 
@@ -314,7 +329,7 @@ const getUpdatedPersonalAccessKeyConfig = (portalConfig, configUpdates) => {
  *
  */
 const updatePortalConfig = configOptions => {
-  const { portalId, authType } = configOptions;
+  const { portalId } = configOptions;
 
   if (!portalId) {
     throw new Error('A portalId is required to update the config');
@@ -322,6 +337,7 @@ const updatePortalConfig = configOptions => {
 
   const config = getAndLoadConfigIfNeeded();
   const portalConfig = getPortalConfig(portalId);
+  const authType = configOptions.authType || portalConfig.authType;
   let updatedPortalConfig;
 
   switch (authType) {

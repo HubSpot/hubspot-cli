@@ -17,6 +17,7 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
 const { logger } = require('./logger');
@@ -28,7 +29,7 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = 'PROD') {
+async function getAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env);
@@ -50,15 +51,13 @@ async function getAccessToken(personalAccessKey, env = 'PROD') {
   }
 }
 
-async function refreshAccessToken(personalAccessKey, env = 'PROD') {
+async function refreshAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
     personalAccessKey,
     env
   );
-  const config = getPortalConfig(portalId);
 
   updatePortalConfig({
-    ...config,
     portalId,
     tokenInfo: {
       accessToken,
@@ -136,21 +135,28 @@ const personalAccessKeyPrompt = async () => {
  * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
-const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
+const updateConfigWithPersonalAccessKey = async (
+  configData,
+  { makeDefault = false, env = ENVIRONMENTS.PROD } = {}
+) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
   const { personalAccessKey, name } = configData;
   const { portalId, accessToken, expiresAt } = await getAccessToken(
     personalAccessKey
   );
-
-  updatePortalConfig({
+  const updatedConfig = {
     portalId,
-    personalAccessKey,
     name,
+    env,
+    personalAccessKey,
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    tokenInfo: { accessToken, expiresAt },
-  });
+    auth: {
+      tokenInfo: { accessToken, expiresAt },
+    },
+  };
+
+  updatePortalConfig(updatedConfig);
 
   if (makeDefault) {
     updateDefaultPortal(name);
@@ -159,6 +165,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   logger.log(
     `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
   );
+
+  return updatedConfig;
 };
 
 module.exports = {

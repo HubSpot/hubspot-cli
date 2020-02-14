@@ -13,9 +13,9 @@ const promptUser = async promptConfig => {
 
 const PORTAL_ID = {
   name: 'portalId',
+  type: 'number',
   message:
     'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta):',
-  type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
       return true;
@@ -26,6 +26,7 @@ const PORTAL_ID = {
 
 const CLIENT_ID = {
   name: 'clientId',
+  type: 'input',
   message: 'Enter your OAuth2 client ID:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 36) {
@@ -37,6 +38,7 @@ const CLIENT_ID = {
 
 const CLIENT_SECRET = {
   name: 'clientSecret',
+  type: 'input',
   message: 'Enter your OAuth2 client secret:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 36) {
@@ -50,6 +52,7 @@ const CLIENT_SECRET = {
 
 const PORTAL_NAME = {
   name: 'name',
+  type: 'input',
   message: 'Enter a unique name to reference your account:',
   validate(val) {
     if (typeof val !== 'string' || !val.length) {
@@ -63,6 +66,7 @@ const PORTAL_NAME = {
 
 const PORTAL_API_KEY = {
   name: 'apiKey',
+  type: 'input',
   message:
     'Enter the API key for your portal (found at https://app.hubspot.com/l/api-key):',
   validate(val) {
@@ -81,6 +85,7 @@ const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
+  type: 'input',
   message: 'Enter your personal access key:',
   validate(val) {
     if (typeof val !== 'string' || val.length !== 151) {
@@ -109,10 +114,7 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const PERSONAL_ACCESS_KEY_FLOW = [
-  PORTAL_NAME,
-  PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
-];
+const PERSONAL_ACCESS_KEY_FLOW = [PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP];
 
 module.exports = {
   promptUser,
