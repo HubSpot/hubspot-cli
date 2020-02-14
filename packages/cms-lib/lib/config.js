@@ -19,6 +19,26 @@ const {
 let _config;
 let _configPath;
 
+const getOrderedPortalConfig = unorderedPortalConfig => {
+  const {
+    name,
+    portalId,
+    env,
+    authType,
+    auth,
+    ...rest
+  } = unorderedPortalConfig;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+    auth,
+  };
+};
+
 const getOrderedConfig = unorderedConfig => {
   const {
     defaultPortal,
@@ -34,7 +54,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals,
+    portals: portals.map(portal => getOrderedPortalConfig(portal)),
     ...rest,
   };
 };
