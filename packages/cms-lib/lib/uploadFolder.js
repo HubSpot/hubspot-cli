@@ -54,7 +54,7 @@ function getFilesByType(files) {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(portalId, src, dest, { mode, cwd }) {
+async function uploadFolder(portalId, src, dest, { mode, cwd, notify }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const apiOptions = {
     qs: getFileMapperApiQueryFromMode(mode),
@@ -80,8 +80,9 @@ async function uploadFolder(portalId, src, dest, { mode, cwd }) {
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
-        await upload(portalId, file, destPath, apiOptions);
-        logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        return upload(portalId, file, destPath, apiOptions).then(() => {
+          logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        });
       } catch (error) {
         if (isFatalError(error)) {
           throw error;
@@ -115,8 +116,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd }) {
       return async () => {
         logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
         try {
-          await upload(portalId, file, destPath, apiOptions);
-          logger.log('Uploaded file "%s" to "%s"', file, destPath);
+          return uploadFile(portalId, file, destPath, apiOptions, notify);
         } catch (error) {
           logger.error('Uploading file "%s" to "%s" failed', file, destPath);
           if (isFatalError(error)) {

@@ -34,7 +34,7 @@ const formatStackTrace = log => {
 };
 
 const formatTimestamp = log => {
-  return `[${moment(log.createdAt).format('MM/DD/YYYY hh:mm:ss a')}]`;
+  return `[${moment(log.createdAt).toISOString()}]`;
 };
 
 const formatPayload = log => {
