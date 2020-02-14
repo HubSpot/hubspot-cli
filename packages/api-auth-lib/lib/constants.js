@@ -15,9 +15,6 @@ const scopes = [
   'oauth',
 ];
 
-const environments = ['qa', 'prod'];
-
 module.exports = {
   scopes,
-  environments,
 };
