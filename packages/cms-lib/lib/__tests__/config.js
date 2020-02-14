@@ -3,9 +3,46 @@ const {
   getConfig,
   getPortalId,
   updateDefaultPortal,
+  updatePortalConfig,
   deleteEmptyConfigFile,
 } = require('../config');
 jest.mock('fs');
+
+const API_CONFIG = {
+  name: 'API',
+  portalId: 1,
+  authType: 'apikey',
+  apiKey: 'secret',
+};
+const OAUTH2_CONFIG = {
+  name: 'OAUTH2',
+  portalId: 2,
+  authType: 'oauth2',
+  auth: {
+    clientId: 'fakeClientId',
+    clientSecret: 'fakeClientSecret',
+    scopes: ['content'],
+    tokenInfo: {
+      expiresAt: '2020-01-01T00:00:00.000Z',
+      refreshToken: 'fakeRefreshToken',
+      accessToken: 'fakeAccessToken',
+    },
+  },
+};
+const PERSONAL_ACCESS_KEY_CONFIG = {
+  name: 'PERSONALACCESSKEY',
+  portalId: 3,
+  authType: 'personalaccesskey',
+  auth: {
+    scopes: ['content'],
+    tokenInfo: {
+      expiresAt: '2020-01-01T00:00:00.000Z',
+      accessToken: 'fakeAccessToken',
+    },
+    personalAccessKey: 'fakePersonalAccessKey',
+  },
+};
+const PORTALS = [API_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
 describe('lib/config', () => {
   describe('getPortalId()', () => {
@@ -37,6 +74,32 @@ describe('lib/config', () => {
     });
     it('returns defaultPortal from config', () => {
       expect(getPortalId()).toEqual(456);
+    });
+  });
+
+  describe('updatePortalConfig()', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('sets the config properly', () => {
+      expect(getConfig()).toEqual(CONFIG);
+    });
+
+    PORTALS.forEach(portalConfig => {
+      describe(`authType ${portalConfig.authType}`, () => {
+        it('does not modify the config if nothing is passed', () => {
+          const result = updatePortalConfig(portalConfig);
+          Object.keys(portalConfig).forEach(prop => {
+            expect(result[prop]).toEqual(portalConfig[prop]);
+          });
+        });
+      });
     });
   });
 
