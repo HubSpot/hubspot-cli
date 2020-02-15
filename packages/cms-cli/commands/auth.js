@@ -4,8 +4,8 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS: { QA, PROD },
 } = require('@hubspot/cms-lib/lib/constants');
-const { QA, PROD } = require('@hubspot/cms-lib/lib/environment');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const { updatePortalConfig } = require('@hubspot/cms-lib/lib/config');
 const {

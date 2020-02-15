@@ -144,7 +144,8 @@ const updateConfigWithPersonalAccessKey = async (
   handleExit(deleteEmptyConfigFile);
   const { personalAccessKey, name } = configData;
   const { portalId, accessToken, expiresAt } = await getAccessToken(
-    personalAccessKey
+    personalAccessKey,
+    env
   );
   const updatedConfig = {
     portalId,
