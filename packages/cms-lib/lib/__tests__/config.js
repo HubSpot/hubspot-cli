@@ -44,6 +44,10 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
 };
 const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
+const getPortalByAuthType = (config, authType) => {
+  return config.portals.filter(portal => portal.authType === authType)[0];
+};
+
 describe('lib/config', () => {
   describe('getPortalId()', () => {
     beforeEach(() => {
@@ -99,6 +103,73 @@ describe('lib/config', () => {
         });
       };
       expect(callingUpdatePortalConfigWithInvalidAuthType).toThrow();
+    });
+
+    it('does not add the env to the config if not specified or existing', () => {
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(getConfig().env).toBeFalsy();
+    });
+
+    it('sets the env in the config if specified', () => {
+      const env = 'QA';
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        env: env,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(env);
+    });
+
+    it('sets the env in the config if it was preexisting', () => {
+      const env = 'QA';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(env);
+    });
+
+    it('overwrites the existing env in the config if specified', () => {
+      const previousEnv = 'QA';
+      const newEnv = 'PROD';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousEnv }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        env: newEnv,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(newEnv);
     });
 
     describe('authType apikey', () => {

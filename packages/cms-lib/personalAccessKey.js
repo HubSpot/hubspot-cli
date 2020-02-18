@@ -10,14 +10,12 @@ const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const {
   getPortalConfig,
   updatePortalConfig,
-  updateDefaultPortal,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('./lib/config');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS,
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
 const { getHubSpotWebsiteDomain } = require('./lib/environment');
@@ -30,7 +28,7 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
+async function getAccessToken(personalAccessKey, env) {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env);
@@ -52,7 +50,7 @@ async function getAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   }
 }
 
-async function refreshAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
+async function refreshAccessToken(personalAccessKey, env) {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
     personalAccessKey,
     env
@@ -134,11 +132,10 @@ const personalAccessKeyPrompt = async options => {
  * @param {object} configData Data containing personalAccessKey and name properties
  * @param {string} configData.personalAccessKey Personal access key string to place in config
  * @param {string} configData.name Unique name to identify this config entry
- * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
 const updateConfigWithPersonalAccessKey = async (
   configData,
-  { makeDefault = false, env = ENVIRONMENTS.PROD, firstEntry = false } = {}
+  { env, firstEntry = false } = {}
 ) => {
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
@@ -159,10 +156,6 @@ const updateConfigWithPersonalAccessKey = async (
   };
 
   updatePortalConfig(updatedConfig);
-
-  if (makeDefault) {
-    updateDefaultPortal(name);
-  }
 
   logger.log(
     `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} ${

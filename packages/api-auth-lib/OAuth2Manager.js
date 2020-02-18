@@ -6,9 +6,6 @@ const open = require('open');
 const { HubSpotAuthError } = require('./Errors');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
-  ENVIRONMENTS: { PROD },
-} = require('@hubspot/cms-lib/lib/constants');
-const {
   getEnv,
   getEnvForConfig,
   getHubSpotWebsiteDomain,
@@ -25,7 +22,7 @@ class OAuth2Manager {
       clientId,
       clientSecret,
       scopes,
-      env = PROD,
+      env,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,

@@ -1,7 +1,7 @@
 const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
 const { updatePortalConfig, getPortalConfig } = require('./lib/config');
 const { logger, logErrorInstance } = require('./logger');
-const { OAUTH_AUTH_METHOD, ENVIRONMENTS } = require('./lib/constants');
+const { OAUTH_AUTH_METHOD } = require('./lib/constants');
 
 const oauthManagers = new Map();
 
@@ -39,7 +39,7 @@ const setupOauth = (portalId, portalConfig) => {
   return new OAuth2Manager(
     {
       ...portalConfig,
-      env: portalConfig.env || config.env || ENVIRONMENTS.PROD,
+      env: portalConfig.env || config.env || '',
     },
     logger
   );

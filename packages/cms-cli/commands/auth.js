@@ -4,7 +4,6 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS: { QA, PROD },
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const { updatePortalConfig } = require('@hubspot/cms-lib/lib/config');
@@ -33,7 +32,7 @@ const ALLOWED_AUTH_METHODS = [
 ];
 
 async function authAction(type, options) {
-  const env = options.qa ? QA : PROD;
+  const env = options.qa || '';
   const authType = type.toLowerCase();
   setLogLevel(options);
   logDebugInfo(options);
