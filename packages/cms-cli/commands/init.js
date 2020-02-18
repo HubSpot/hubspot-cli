@@ -72,6 +72,7 @@ const AUTH_METHOD_FLOW = {
       createEmptyConfigFile();
       handleExit(deleteEmptyConfigFile);
       await authenticateWithOauth(configData);
+      updateDefaultPortal(configData.portalId);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
       );
