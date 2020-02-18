@@ -13,7 +13,7 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   AUTH_METHODS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS: { QA, PROD },
+  ENVIRONMENTS: { QA },
 } = require('@hubspot/cms-lib/lib/constants');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -144,7 +144,7 @@ function initializeConfigCommand(program) {
       await completeConfigSetup({
         authMethod,
         configPath,
-        env: options.qa ? QA : PROD,
+        env: options.qa ? QA : '',
       });
     });
 
