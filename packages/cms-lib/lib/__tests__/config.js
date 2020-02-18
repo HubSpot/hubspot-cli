@@ -178,15 +178,14 @@ describe('lib/config', () => {
         });
       });
 
-      xit('throws an error if no api key is passed', () => {
+      it('throws an error if no api key is passed', () => {
         const callingUpdatePortalConfigWithNoApiKey = () => {
-          // setConfig({
-          //   portals: [],
-          // });
-          return updatePortalConfig({
+          setConfig({});
+          const modifiedApiKeyConfig = {
             ...API_KEY_CONFIG,
-            apiKey: undefined,
-          });
+          };
+          delete modifiedApiKeyConfig.apiKey;
+          return updatePortalConfig(modifiedApiKeyConfig);
         };
         expect(callingUpdatePortalConfigWithNoApiKey).toThrow();
       });
@@ -205,12 +204,14 @@ describe('lib/config', () => {
         });
       });
 
-      xit('throws an error if no auth data is passed', () => {
+      it('throws an error if no auth data is passed', () => {
         const callingUpdatePortalConfigWithNoAuthData = () => {
-          return updatePortalConfig({
+          setConfig({});
+          const modifiedOauth2Config = {
             ...OAUTH2_CONFIG,
-            auth: undefined,
-          });
+          };
+          delete modifiedOauth2Config.auth;
+          return updatePortalConfig(modifiedOauth2Config);
         };
         expect(callingUpdatePortalConfigWithNoAuthData).toThrow();
       });
@@ -229,12 +230,14 @@ describe('lib/config', () => {
         });
       });
 
-      xit('throws an error if no auth data is passed', () => {
+      it('throws an error if no auth data is passed', () => {
         const callingUpdatePortalConfigWithNoAuthData = () => {
-          return updatePortalConfig({
+          setConfig({});
+          const modifiedPersonalAccessKeyConfig = {
             ...PERSONAL_ACCESS_KEY_CONFIG,
-            auth: undefined,
-          });
+          };
+          delete modifiedPersonalAccessKeyConfig.auth;
+          return updatePortalConfig(modifiedPersonalAccessKeyConfig);
         };
         expect(callingUpdatePortalConfigWithNoAuthData).toThrow();
       });
