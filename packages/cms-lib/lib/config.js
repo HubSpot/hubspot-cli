@@ -220,7 +220,7 @@ const getMode = mode => {
  * @param {object} portalConfig
  * @param {object} configUpdates
  */
-const updateConfigProps = (portalConfig = {}, configUpdates = {}) => {
+const updatePortalConfigProps = (portalConfig = {}, configUpdates = {}) => {
   return {
     ...portalConfig,
     portalId: configUpdates.portalId,
@@ -235,15 +235,18 @@ const updateConfigProps = (portalConfig = {}, configUpdates = {}) => {
  * @param {object} portalConfig Existing apiKey portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedApiKeyConfig = (portalConfig = {}, configUpdates = {}) => {
+const getUpdatedApiKeyPortalConfig = (
+  portalConfig = {},
+  configUpdates = {}
+) => {
   const apiKey = configUpdates.apiKey || portalConfig.apiKey;
 
   if (!apiKey) {
-    throw new Error('No apiKey passed to getUpdatedApiKeyConfig.');
+    throw new Error('No apiKey passed to getUpdatedApiKeyPortalConfig.');
   }
 
   return {
-    ...updateConfigProps(portalConfig, configUpdates),
+    ...updatePortalConfigProps(portalConfig, configUpdates),
     authType: API_KEY_AUTH_METHOD.value,
     apiKey,
     auth: null,
@@ -256,22 +259,24 @@ const getUpdatedApiKeyConfig = (portalConfig = {}, configUpdates = {}) => {
  * @param {object} portalConfig Existing oauth2 portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedOauthConfig = (portalConfig = {}, configUpdates = {}) => {
+const getUpdatedOauthPortalConfig = (portalConfig = {}, configUpdates = {}) => {
   const auth = {
     ...portalConfig.auth,
     ...configUpdates.auth,
   };
 
   if (!auth) {
-    throw new Error('No auth data passed to getUpdatedOauthConfig.');
+    throw new Error('No auth data passed to getUpdatedOauthPortalConfig.');
   }
 
   if (!auth.tokenInfo) {
-    throw new Error('No auth.tokenInfo data passed to getUpdatedOauthConfig.');
+    throw new Error(
+      'No auth.tokenInfo data passed to getUpdatedOauthPortalConfig.'
+    );
   }
 
   const config = {
-    ...updateConfigProps(portalConfig, configUpdates),
+    ...updatePortalConfigProps(portalConfig, configUpdates),
     authType: OAUTH_AUTH_METHOD.value,
     auth,
   };
@@ -287,7 +292,7 @@ const getUpdatedOauthConfig = (portalConfig = {}, configUpdates = {}) => {
  * @param {object} portalConfig Existing personalaccesskey portalConfig
  * @param {object} configUpdates Object containing desired updates
  */
-const getUpdatedPersonalAccessKeyConfig = (
+const getUpdatedPersonalAccessKeyPortalConfig = (
   portalConfig = {},
   configUpdates = {}
 ) => {
@@ -300,24 +305,24 @@ const getUpdatedPersonalAccessKeyConfig = (
 
   if (!personalAccessKey) {
     throw new Error(
-      'No personalAccessKey passed to getUpdatedPersonalAccessKeyConfig.'
+      'No personalAccessKey passed to getUpdatedPersonalAccessKeyPortalConfig.'
     );
   }
 
   if (!auth) {
     throw new Error(
-      'No auth data passed to getUpdatedPersonalAccessKeyConfig.'
+      'No auth data passed to getUpdatedPersonalAccessKeyPortalConfig.'
     );
   }
 
   if (!auth.tokenInfo) {
     throw new Error(
-      'No auth.tokenInfo data passed to getUpdatedPersonalAccessKeyConfig.'
+      'No auth.tokenInfo data passed to getUpdatedPersonalAccessKeyPortalConfig.'
     );
   }
 
   const config = {
-    ...updateConfigProps(portalConfig, configUpdates),
+    ...updatePortalConfigProps(portalConfig, configUpdates),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     personalAccessKey,
     auth,
@@ -362,18 +367,24 @@ const updatePortalConfig = configOptions => {
 
   switch (authType) {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value: {
-      updatedPortalConfig = getUpdatedPersonalAccessKeyConfig(
+      updatedPortalConfig = getUpdatedPersonalAccessKeyPortalConfig(
         portalConfig,
         configOptions
       );
       break;
     }
     case OAUTH_AUTH_METHOD.value: {
-      updatedPortalConfig = getUpdatedOauthConfig(portalConfig, configOptions);
+      updatedPortalConfig = getUpdatedOauthPortalConfig(
+        portalConfig,
+        configOptions
+      );
       break;
     }
     case API_KEY_AUTH_METHOD.value: {
-      updatedPortalConfig = getUpdatedApiKeyConfig(portalConfig, configOptions);
+      updatedPortalConfig = getUpdatedApiKeyPortalConfig(
+        portalConfig,
+        configOptions
+      );
       break;
     }
     default: {
