@@ -49,6 +49,20 @@ const getPortalByAuthType = (config, authType) => {
 };
 
 describe('lib/config', () => {
+  describe('setConfig()', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('sets the config properly', () => {
+      expect(getConfig()).toEqual(CONFIG);
+    });
+  });
+
   describe('getPortalId()', () => {
     beforeEach(() => {
       setConfig({
@@ -82,10 +96,6 @@ describe('lib/config', () => {
 
     beforeEach(() => {
       setConfig(CONFIG);
-    });
-
-    it('sets the config properly', () => {
-      expect(getConfig()).toEqual(CONFIG);
     });
 
     it('throws an error if invalid authType is passed', () => {
