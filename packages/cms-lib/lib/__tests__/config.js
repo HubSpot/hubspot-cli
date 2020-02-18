@@ -39,8 +39,8 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
       expiresAt: '2020-01-01T00:00:00.000Z',
       accessToken: 'fakePersonalAccessKeyAccessToken',
     },
-    personalAccessKey: 'fakePersonalAccessKey',
   },
+  personalAccessKey: 'fakePersonalAccessKey',
 };
 const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
