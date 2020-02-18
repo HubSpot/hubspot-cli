@@ -10,13 +10,13 @@ jest.mock('fs');
 
 const API_KEY_CONFIG = {
   name: 'API',
-  portalId: 1,
+  portalId: 1111,
   authType: 'apikey',
   apiKey: 'secret',
 };
 const OAUTH2_CONFIG = {
   name: 'OAUTH2',
-  portalId: 2,
+  portalId: 2222,
   authType: 'oauth2',
   auth: {
     clientId: 'fakeClientId',
@@ -31,7 +31,7 @@ const OAUTH2_CONFIG = {
 };
 const PERSONAL_ACCESS_KEY_CONFIG = {
   name: 'PERSONALACCESSKEY',
-  portalId: 3,
+  portalId: 3333,
   authType: 'personalaccesskey',
   auth: {
     scopes: ['content'],
@@ -52,32 +52,25 @@ describe('lib/config', () => {
   describe('getPortalId()', () => {
     beforeEach(() => {
       setConfig({
-        defaultPortal: 'PROD',
-        portals: [
-          {
-            name: 'QA',
-            portalId: 123,
-            apiKey: 'secret',
-          },
-          {
-            name: 'PROD',
-            portalId: 456,
-            apiKey: 'secret',
-          },
-        ],
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: PORTALS,
       });
     });
     it('returns portalId from config when a name is passed', () => {
-      expect(getPortalId('QA')).toEqual(123);
+      expect(getPortalId(API_KEY_CONFIG.name)).toEqual(API_KEY_CONFIG.portalId);
     });
     it('returns portalId from config when a string id is passed', () => {
-      expect(getPortalId('123')).toEqual(123);
+      expect(getPortalId(API_KEY_CONFIG.portalId.toString())).toEqual(
+        API_KEY_CONFIG.portalId
+      );
     });
     it('returns portalId from config when a numeric id is passed', () => {
-      expect(getPortalId(123)).toEqual(123);
+      expect(getPortalId(API_KEY_CONFIG.portalId)).toEqual(
+        API_KEY_CONFIG.portalId
+      );
     });
     it('returns defaultPortal from config', () => {
-      expect(getPortalId()).toEqual(456);
+      expect(getPortalId()).toEqual(PERSONAL_ACCESS_KEY_CONFIG.portalId);
     });
   });
 
