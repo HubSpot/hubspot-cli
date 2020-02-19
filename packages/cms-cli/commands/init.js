@@ -69,17 +69,9 @@ const AUTH_METHOD_FLOW = {
       return promptUser(OAUTH_FLOW);
     },
     setup: async configData => {
-      const { clientSecret, clientId, scopes } = configData;
       createEmptyConfigFile();
       handleExit(deleteEmptyConfigFile);
-      const { portalId } = await authenticateWithOauth({
-        ...configData,
-        auth: {
-          clientSecret,
-          clientId,
-          scopes,
-        },
-      });
+      const { portalId } = await authenticateWithOauth(configData);
       const promptAnswer = await promptUser([PORTAL_NAME]);
       updatePortalConfig({
         portalId,
