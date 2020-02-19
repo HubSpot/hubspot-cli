@@ -1,11 +1,15 @@
 const { Mode } = require('../constants');
-const main = require('./file');
+const {
+  configFileExists,
+  configFileIsBlank,
+  getAndLoadConfigIfNeeded,
+} = require('./file');
 
 const isTrackingAllowed = () => {
-  if (!main.configFileExists() || main.configFileIsBlank()) {
+  if (!configFileExists() || configFileIsBlank()) {
     return true;
   }
-  const { allowUsageTracking } = main.getAndLoadConfigIfNeeded();
+  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
   return allowUsageTracking !== false;
 };
 

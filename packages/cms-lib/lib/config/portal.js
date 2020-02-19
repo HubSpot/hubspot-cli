@@ -9,32 +9,11 @@ const {
   setDefaultConfigPathIfUnset,
   writeConfig,
 } = require('./file');
-const { getMode } = require('./helpers');
 const { getUpdatedApiKeyPortalConfig } = require('./apiKey');
 const { getUpdatedOauthPortalConfig } = require('./oauth2');
 const {
   getUpdatedPersonalAccessKeyPortalConfig,
 } = require('./personalAccessKey');
-
-const getOrderedPortalConfig = unorderedPortalConfig => {
-  const {
-    name,
-    portalId,
-    env,
-    authType,
-    auth,
-    ...rest
-  } = unorderedPortalConfig;
-
-  return {
-    name,
-    portalId,
-    env,
-    authType,
-    ...rest,
-    auth,
-  };
-};
 
 const getPortalConfig = portalId => {
   const config = getAndLoadConfigIfNeeded();
@@ -88,7 +67,7 @@ const updatePortalConfigProps = (portalConfig = {}, configUpdates = {}) => {
     portalId: configUpdates.portalId,
     name: configUpdates.name || portalConfig.name,
     env: configUpdates.env || portalConfig.env,
-    defaultMode: getMode(configUpdates.defaultMode) || portalConfig.defaultMode,
+    defaultMode: configUpdates.defaultMode || portalConfig.defaultMode,
   };
 };
 
@@ -188,7 +167,6 @@ const updateDefaultPortal = defaultPortal => {
 };
 
 module.exports = {
-  getOrderedPortalConfig,
   getPortalConfig,
   getPortalId,
   getPortalName,

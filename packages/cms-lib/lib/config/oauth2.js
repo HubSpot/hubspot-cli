@@ -1,5 +1,5 @@
 const { OAUTH_AUTH_METHOD } = require('../constants');
-const { updatePortalConfigProps } = require('./file');
+const { updatePortalConfigProps } = require('./portal');
 
 /**
  * Generates a portalConfig object from previous values and desired updates

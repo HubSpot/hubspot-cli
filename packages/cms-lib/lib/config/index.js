@@ -6,15 +6,15 @@ const {
   getConfigPath,
   loadConfig,
   setConfig,
-} = require('./config/file');
+} = require('./file');
 const {
   getPortalConfig,
   getPortalId,
   getPortalName,
   updatePortalConfig,
   updateDefaultPortal,
-} = require('./config/portal');
-const { isTrackingAllowed } = require('./config/helpers');
+} = require('./portal');
+const { isTrackingAllowed } = require('./helpers');
 
 module.exports = {
   // File methods

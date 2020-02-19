@@ -11,10 +11,29 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
 } = require('../constants');
-const { getOrderedPortalConfig } = require('./portal');
 
 let _config;
 let _configPath;
+
+const getOrderedPortalConfig = unorderedPortalConfig => {
+  const {
+    name,
+    portalId,
+    env,
+    authType,
+    auth,
+    ...rest
+  } = unorderedPortalConfig;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+    auth,
+  };
+};
 
 const getOrderedConfig = unorderedConfig => {
   const {
@@ -178,6 +197,7 @@ module.exports = {
   getConfig,
   getConfigPath,
   setConfig,
+  setDefaultConfigPathIfUnset,
   loadConfig,
   writeConfig,
 };
