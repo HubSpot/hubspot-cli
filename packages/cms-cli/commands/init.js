@@ -13,8 +13,8 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   AUTH_METHODS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS: { QA },
 } = require('@hubspot/cms-lib/lib/constants');
+const { QA } = require('@hubspot/cms-lib/lib/constants/environment');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');

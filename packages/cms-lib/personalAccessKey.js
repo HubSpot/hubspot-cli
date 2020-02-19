@@ -16,8 +16,8 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS: { PROD },
 } = require('./lib/constants');
+const { PROD } = require('./lib/constants/environment');
 const { handleExit } = require('./lib/process');
 const { getHubSpotWebsiteDomain } = require('./lib/environment');
 const { logger } = require('./logger');

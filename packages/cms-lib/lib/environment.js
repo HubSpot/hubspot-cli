@@ -1,11 +1,7 @@
-const { ENVIRONMENTS } = require('./constants');
+const { QA, PROD } = require('./constants/environment');
 
-const getValueForEnv = (
-  env,
-  prodValue = ENVIRONMENTS.PROD,
-  qaValue = ENVIRONMENTS.QA
-) => {
-  return typeof env === 'string' && env.toLowerCase() === ENVIRONMENTS.QA
+const getValueForEnv = (env, prodValue = PROD, qaValue = QA) => {
+  return typeof env === 'string' && env.toLowerCase() === QA
     ? qaValue
     : prodValue;
 };
@@ -27,14 +23,12 @@ const getEnvForConfig = env => {
 };
 
 const getHubSpotWebsiteDomain = env => {
-  return `https://app.hubspot${
-    getEnv(env) === ENVIRONMENTS.PROD ? '' : ENVIRONMENTS.QA
-  }.com`;
+  return `https://app.hubspot${getEnv(env) === PROD ? '' : QA}.com`;
 };
 
 const getHubSpotApiDomain = (env, useLocalHost) => {
   return `https://${useLocalHost ? 'local' : 'api'}.hubapi${
-    getEnv(env) === ENVIRONMENTS.PROD ? '' : ENVIRONMENTS.QA
+    getEnv(env) === PROD ? '' : QA
   }.com`;
 };
 
