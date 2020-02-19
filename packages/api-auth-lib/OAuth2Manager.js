@@ -20,15 +20,17 @@ class OAuth2Manager {
     {
       portalId,
       env,
-      auth = { clientId: null, clientSecret: null, scopes: [] },
+      clientId,
+      clientSecret,
+      scopes,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
     writeTokenInfo
   ) {
-    this.clientId = auth.clientId;
-    this.clientSecret = auth.clientSecret;
-    this.scopes = auth.scopes;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.scopes = scopes;
     this.tokenInfo = tokenInfo;
     this.portalId = portalId;
     this.env = getEnvForConfig(env);
