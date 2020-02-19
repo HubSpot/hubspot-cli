@@ -4,7 +4,9 @@ const contentDisposition = require('content-disposition');
 const http = require('../http');
 const { getCwd } = require('../path');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
-const { PROD } = require('../lib/constants/environment');
+const {
+  ENVIRONMENTS: { PROD },
+} = require('../lib/constants');
 const { logger } = require('../logger');
 
 const FILE_MAPPER_API_PATH = 'content/filemapper/v1';
