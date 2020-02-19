@@ -25,7 +25,7 @@ const addOverwriteOptions = program => {
 };
 
 const addTestingOptions = program => {
-  program.option('--qa', 'run command in qa mode', false);
+  program.option('--qa', 'use QA environment for command', false);
 };
 
 const addModeOptions = (program, { read, write }) => {
