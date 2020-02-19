@@ -245,13 +245,16 @@ const getUpdatedApiKeyPortalConfig = (
     throw new Error('No apiKey passed to getUpdatedApiKeyPortalConfig.');
   }
 
-  return {
+  const config = {
     ...updatePortalConfigProps(portalConfig, configUpdates),
     authType: API_KEY_AUTH_METHOD.value,
     apiKey,
-    auth: null,
-    personalAccessKey: null,
   };
+
+  delete config.auth;
+  delete config.personalAccessKey;
+
+  return config;
 };
 
 /**
