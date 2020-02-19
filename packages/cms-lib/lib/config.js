@@ -117,14 +117,14 @@ const loadConfig = (path, options = {}) => {
   if (sourceError) return;
   const { parsed, error: parseError } = parseConfig(source);
   if (parseError) return;
-  _config = Object.freeze(parsed);
+  setConfig(Object.freeze(parsed));
 
   if (!_config) {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
-    _config = {
+    setConfig({
       portals: [],
-    };
+    });
   }
 };
 
