@@ -16,6 +16,7 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS: { PROD },
 } = require('./lib/constants');
 const { handleExit } = require('./lib/process');
 const { getHubSpotWebsiteDomain } = require('./lib/environment');
@@ -50,7 +51,7 @@ async function getAccessToken(personalAccessKey, env) {
   }
 }
 
-async function refreshAccessToken(personalAccessKey, env) {
+async function refreshAccessToken(personalAccessKey, env = PROD) {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
     personalAccessKey,
     env
