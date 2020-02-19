@@ -2,7 +2,7 @@ const request = require('request');
 const requestPN = require('request-promise-native');
 const { getPortalConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
-const { accessTokenForUserToken } = require('./http/userToken');
+const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
 const { getOauthManager } = require('./oauth');
 
 const withOauth = async (portalId, portalConfig, requestOptions) => {
@@ -18,9 +18,13 @@ const withOauth = async (portalId, portalConfig, requestOptions) => {
   };
 };
 
-const withUserToken = async (portalId, portalConfig, requestOptions) => {
+const withPersonalAccessKey = async (
+  portalId,
+  portalConfig,
+  requestOptions
+) => {
   const { headers } = requestOptions;
-  const accessToken = await accessTokenForUserToken(portalId);
+  const accessToken = await accessTokenForPersonalAccessKey(portalId);
   return {
     ...requestOptions,
     headers: {
@@ -50,8 +54,8 @@ const withAuth = async (portalId, options) => {
     getRequestOptions({ env }, options)
   );
 
-  if (authType === 'usertoken') {
-    return withUserToken(portalId, portalConfig, requestOptions);
+  if (authType === 'personalaccesskey') {
+    return withPersonalAccessKey(portalId, portalConfig, requestOptions);
   }
 
   if (authType === 'oauth2') {

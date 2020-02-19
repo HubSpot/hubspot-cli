@@ -73,6 +73,23 @@ const PORTAL_API_KEY = {
   },
 };
 
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
+  name: 'personalAcessKeyBrowserOpenPrep',
+  message:
+    'When you’re ready, we’ll open a secure page in your default browser where you can get your personal access key. If you need one, you’ll be able to generate one. Copy your personal access key so you can complete the next step.\n<Press enter when you are ready to continue>',
+};
+
+const PERSONAL_ACCESS_KEY = {
+  name: 'personalAccessKey',
+  message: 'Enter your personal access key:',
+  validate(val) {
+    if (typeof val !== 'string' || val.length !== 151) {
+      return 'You did not enter a valid personal access key. Please try again.';
+    }
+    return true;
+  },
+};
+
 const AUTH_METHOD = {
   type: 'rawlist',
   name: 'authMethod',
@@ -92,16 +109,24 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+const PERSONAL_ACCESS_KEY_FLOW = [
+  PORTAL_NAME,
+  PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+];
 
 module.exports = {
   promptUser,
+  AUTH_METHOD,
+  CLIENT_ID,
+  CLIENT_SECRET,
   PORTAL_API_KEY,
   PORTAL_ID,
   PORTAL_NAME,
-  CLIENT_ID,
-  CLIENT_SECRET,
-  AUTH_METHOD,
   SCOPES,
-  OAUTH_FLOW,
+  PERSONAL_ACCESS_KEY,
+
+  // Flows
   API_KEY_FLOW,
+  OAUTH_FLOW,
+  PERSONAL_ACCESS_KEY_FLOW,
 };

@@ -12,9 +12,15 @@ const {
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   AUTH_METHODS,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
+const {
+  personalAccessKeyPrompt,
+  updateConfigWithPersonalAccessKey,
+} = require('@hubspot/cms-lib/personalAccessKey');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -34,10 +40,6 @@ const TRACKING_STATUS = {
   STARTED: 'started',
   COMPLETE: 'complete',
 };
-const handleExit = () => {
-  process.on('exit', deleteEmptyConfigFile);
-  process.on('SIGINT', deleteEmptyConfigFile);
-};
 const AUTH_METHOD_FLOW = {
   [AUTH_METHODS.api.value]: {
     prompt: async () => {
@@ -45,11 +47,11 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      handleExit();
+      handleExit(deleteEmptyConfigFile);
       updateDefaultPortal(configData.name);
       updatePortalConfig({
         ...configData,
-        authType: 'apikey',
+        authType: AUTH_METHODS.api.value,
       });
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.api.name}.`
@@ -62,12 +64,18 @@ const AUTH_METHOD_FLOW = {
     },
     setup: async configData => {
       createEmptyConfigFile();
-      handleExit();
+      handleExit(deleteEmptyConfigFile);
       await authenticateWithOauth(configData);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
       );
       process.exit();
+    },
+  },
+  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: {
+    prompt: personalAccessKeyPrompt,
+    setup: async configData => {
+      await updateConfigWithPersonalAccessKey(configData, true);
     },
   },
 };
@@ -93,20 +101,28 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
+    .option('--personal-access-key', 'utilize personal access key for auth')
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
       trackCommandUsage(COMMAND_NAME);
 
       const configPath = getConfigPath();
+      let authMethod;
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
         process.exit(1);
       }
 
-      const { authMethod } = await promptUser(AUTH_METHOD);
-      return completeConfigSetup({
+      if (options.personalAccessKey) {
+        authMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+      } else {
+        const promptResp = await promptUser(AUTH_METHOD);
+        authMethod = promptResp.authMethod;
+      }
+
+      await completeConfigSetup({
         authMethod,
         configPath,
       });
