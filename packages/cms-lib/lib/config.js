@@ -340,21 +340,22 @@ const getUpdatedPersonalAccessKeyPortalConfig = (
 };
 
 /**
- *
+ * Method to update an existing portal config or create a new one
  * @param {object} configOptions An object containing properties to update in the portalConfig
  * @param {number} configOptions.portalId Portal ID to add/make updates to
  * @param {string} configOptions.authType Type of authentication used for this portalConfig
  * @param {string} configOptions.env Environment that this portal is located in(QA/PROD)
  * @param {string} configOptions.name Unique name used to reference this portalConfig
- * @param {object} configOptions.apiKey API key used in authType: apikey
- * @param {object} configOptions.defaultMode Default mode for uploads(draft or publish)
- * @param {object} configOptions.personalAccessKey Personal Access Key used in authType: personalaccesskey
+ * @param {string} configOptions.apiKey API key used in authType: apikey
+ * @param {string} configOptions.defaultMode Default mode for uploads(draft or publish)
+ * @param {string} configOptions.personalAccessKey Personal Access Key used in authType: personalaccesskey
  * @param {object} configOptions.auth Auth object used in oauth2 and personalaccesskey authTypes
- * @param {object} configOptions.auth.clientId Client ID used for oauth2
- * @param {object} configOptions.auth.clientSecret Client Secret used for oauth2
- * @param {object} configOptions.auth.scopes Scopes that are allowed access with auth
+ * @param {string} configOptions.auth.clientId Client ID used for oauth2
+ * @param {string} configOptions.auth.clientSecret Client Secret used for oauth2
+ * @param {array} configOptions.auth.scopes Scopes that are allowed access with auth
  * @param {object} configOptions.auth.tokenInfo Token Info used for oauth2 and personalaccesskey authTypes
- *
+ * @param {string} configOptions.auth.tokenInfo.accessToken Access token used for auth
+ * @param {string} configOptions.auth.tokenInfo.expiresAt Date ISO of accessToken expiration
  */
 const updatePortalConfig = configOptions => {
   const { portalId } = configOptions;
