@@ -69,10 +69,23 @@ const AUTH_METHOD_FLOW = {
       return promptUser(OAUTH_FLOW);
     },
     setup: async configData => {
+      const { clientSecret, clientId, scopes } = configData;
       createEmptyConfigFile();
       handleExit(deleteEmptyConfigFile);
-      await authenticateWithOauth(configData);
-      updateDefaultPortal(configData.portalId);
+      const { portalId } = await authenticateWithOauth({
+        ...configData,
+        auth: {
+          clientSecret,
+          clientId,
+          scopes,
+        },
+      });
+      const promptAnswer = await promptUser([PORTAL_NAME]);
+      updatePortalConfig({
+        portalId,
+        name: promptAnswer.name,
+      });
+      updateDefaultPortal(promptAnswer.name);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
       );

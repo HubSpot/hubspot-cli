@@ -19,18 +19,16 @@ class OAuth2Manager {
   constructor(
     {
       portalId,
-      clientId,
-      clientSecret,
-      scopes,
       env,
+      auth = { clientId: null, clientSecret: null, scopes: [] },
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
     writeTokenInfo
   ) {
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.scopes = scopes;
+    this.clientId = auth.clientId;
+    this.clientSecret = auth.clientSecret;
+    this.scopes = auth.scopes;
     this.tokenInfo = tokenInfo;
     this.portalId = portalId;
     this.env = getEnvForConfig(env);
@@ -195,11 +193,11 @@ class OAuth2Manager {
 
   toObj() {
     return {
-      env: getEnv(this.env),
-      clientSecret: this.clientSecret,
-      clientId: this.clientId,
-      scopes: this.scopes,
+      env: getEnvForConfig(this.env),
       auth: {
+        clientSecret: this.clientSecret,
+        clientId: this.clientId,
+        scopes: this.scopes,
         tokenInfo: this.tokenInfo,
       },
     };
