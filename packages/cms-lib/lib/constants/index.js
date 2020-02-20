@@ -73,11 +73,6 @@ const OAUTH_SCOPES = [
   },
 ];
 
-const ENVIRONMENTS = {
-  PROD: 'prod',
-  QA: 'qa',
-};
-
 module.exports = {
   Mode,
   ALLOWED_EXTENSIONS,
@@ -93,5 +88,4 @@ module.exports = {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  ENVIRONMENTS,
 };
