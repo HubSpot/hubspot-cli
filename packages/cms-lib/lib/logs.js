@@ -20,7 +20,7 @@ const logHandler = {
   SUCCESS: log => {
     return `${formatLogHeader(log)}\n${formatPayload(log)}\n${formatLog(
       log
-    )}\n\n`;
+    )}\n`;
   },
 };
 
