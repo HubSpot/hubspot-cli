@@ -1,8 +1,8 @@
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { addSecret, deleteSecret } = require('@hubspot/cms-lib/api/secrets');
 
-const { validateConfig, validatePortal } = require('../lib/validation');
+const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
 const { version } = require('../package.json');
 

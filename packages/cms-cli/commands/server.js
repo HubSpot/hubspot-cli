@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 const path = require('path');
 const shell = require('shelljs');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getCwd } = require('@hubspot/cms-lib/path');
 
-const { validateConfig } = require('../lib/validation');
 const { version } = require('../package.json');
 const { updateServerContext } = require('../lib/server/updateContext');
 

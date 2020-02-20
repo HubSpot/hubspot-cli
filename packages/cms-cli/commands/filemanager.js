@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
 const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
@@ -23,7 +23,7 @@ const {
   getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validateConfig, validatePortal } = require('../lib/validation');
+const { validatePortal } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
