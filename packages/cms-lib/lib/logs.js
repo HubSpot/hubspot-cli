@@ -8,20 +8,28 @@ const FUNCTION_LOG_PATH = 'function.log';
 
 const logHandler = {
   UNHANDLED_ERROR: log => {
-    return `${formatTimestamp(log)} ${log.status}: ${log.error.type}: ${
+    return `${formatLogHeader(log)}\n${log.error.type}: ${
       log.error.message
-    } ${formatExecutionTime(log)}\n${formatStackTrace(log)}`;
+    }\n${formatStackTrace(log)}\n`;
   },
   HANDLED_ERROR: log => {
-    return `${formatTimestamp(log)} ${log.status}: ${log.error.type}: ${
+    return `${formatLogHeader(log)}\n${log.error.type}: ${
       log.error.message
-    } ${formatExecutionTime(log)}\n${formatStackTrace(log)}`;
+    }\n${formatStackTrace(log)}\n`;
   },
   SUCCESS: log => {
-    return `${formatTimestamp(log)} ${log.status}: ${formatPayload(
+    return `${formatLogHeader(log)}\n${formatPayload(log)}\n${formatLog(
       log
-    )} ${formatExecutionTime(log)}\n`;
+    )}\n\n`;
   },
+};
+
+const formatLogHeader = log => {
+  return `${formatTimestamp(log)} ${log.status} ${formatExecutionTime(log)}`;
+};
+
+const formatLog = log => {
+  return `${log.log}`;
 };
 
 const formatStackTrace = log => {
@@ -39,7 +47,7 @@ const formatTimestamp = log => {
 
 const formatPayload = log => {
   return util.inspect(log.payload, {
-    compact: false,
+    compact: true,
   });
 };
 
