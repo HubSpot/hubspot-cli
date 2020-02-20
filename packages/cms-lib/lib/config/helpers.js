@@ -1,17 +1,4 @@
 const { Mode } = require('../constants');
-const {
-  configFileExists,
-  configFileIsBlank,
-  getAndLoadConfigIfNeeded,
-} = require('./file');
-
-const isTrackingAllowed = () => {
-  if (!configFileExists() || configFileIsBlank()) {
-    return true;
-  }
-  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
-  return allowUsageTracking !== false;
-};
 
 /**
  * Returns mode(draft/publish) or undefined if invalid mode
@@ -23,5 +10,4 @@ const getMode = mode => {
 
 module.exports = {
   getMode,
-  isTrackingAllowed,
 };

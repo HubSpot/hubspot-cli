@@ -1,5 +1,4 @@
 const { API_KEY_AUTH_METHOD } = require('../constants');
-const { updatePortalConfigProps } = require('./portal');
 
 /**
  * Generates a portalConfig object from previous values and desired updates
@@ -17,7 +16,11 @@ const getUpdatedApiKeyPortalConfig = (
   }
 
   const config = {
-    ...updatePortalConfigProps(portalConfig, configUpdates),
+    ...portalConfig,
+    portalId: configUpdates.portalId,
+    name: configUpdates.name || portalConfig.name,
+    env: configUpdates.env || portalConfig.env,
+    defaultMode: configUpdates.defaultMode || portalConfig.defaultMode,
     authType: API_KEY_AUTH_METHOD.value,
     apiKey,
   };

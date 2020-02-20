@@ -57,21 +57,6 @@ const getPortalName = portalId => {
 };
 
 /**
- * Updates non-authType-specific portalConfig properties
- * @param {object} portalConfig
- * @param {object} configUpdates
- */
-const updatePortalConfigProps = (portalConfig = {}, configUpdates = {}) => {
-  return {
-    ...portalConfig,
-    portalId: configUpdates.portalId,
-    name: configUpdates.name || portalConfig.name,
-    env: configUpdates.env || portalConfig.env,
-    defaultMode: configUpdates.defaultMode || portalConfig.defaultMode,
-  };
-};
-
-/**
  * Method to update an existing portal config or create a new one
  * @param {object} configOptions An object containing properties to update in the portalConfig
  * @param {number} configOptions.portalId Portal ID to add/make updates to
@@ -171,6 +156,5 @@ module.exports = {
   getPortalId,
   getPortalName,
   updatePortalConfig,
-  updatePortalConfigProps,
   updateDefaultPortal,
 };

@@ -188,6 +188,14 @@ const deleteEmptyConfigFile = () => {
   );
 };
 
+const isTrackingAllowed = () => {
+  if (!configFileExists() || configFileIsBlank()) {
+    return true;
+  }
+  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
+  return allowUsageTracking !== false;
+};
+
 module.exports = {
   createEmptyConfigFile,
   configFileExists,
@@ -196,6 +204,7 @@ module.exports = {
   getAndLoadConfigIfNeeded,
   getConfig,
   getConfigPath,
+  isTrackingAllowed,
   setConfig,
   setDefaultConfigPathIfUnset,
   loadConfig,
