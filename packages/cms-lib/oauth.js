@@ -16,8 +16,10 @@ const writeOauthTokenInfo = (portalConfig, tokenInfo) => {
     env,
     portalId,
     authType,
-    ...auth,
-    tokenInfo,
+    auth: {
+      ...auth,
+      tokenInfo,
+    },
   });
 };
 

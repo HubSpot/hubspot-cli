@@ -59,9 +59,11 @@ async function refreshAccessToken(personalAccessKey, env = PROD) {
 
   updatePortalConfig({
     portalId,
-    tokenInfo: {
-      accessToken,
-      expiresAt,
+    auth: {
+      tokenInfo: {
+        accessToken,
+        expiresAt,
+      },
     },
   });
 
