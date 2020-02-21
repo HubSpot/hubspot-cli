@@ -31,9 +31,6 @@ const getUpdatedOauthPortalConfig = (portalConfig = {}, configUpdates = {}) => {
     auth,
   };
 
-  delete config.apiKey;
-  delete config.personalAccessKey;
-
   return config;
 };
 

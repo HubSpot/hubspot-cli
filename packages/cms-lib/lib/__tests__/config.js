@@ -261,17 +261,16 @@ describe('lib/config', () => {
           });
         });
 
-        it('sets the required property values correctly', () => {
-          const requiredPropertyValues = ['authType', 'name', 'auth'];
-          requiredPropertyValues.forEach(prop => {
-            expect(resultingConfig[prop]).toEqual(
-              PERSONAL_ACCESS_KEY_CONFIG[prop]
-            );
-          });
+        it('sets the authType', () => {
+          expect(resultingConfig.authType).toEqual(
+            PERSONAL_ACCESS_KEY_CONFIG.authType
+          );
         });
 
-        it('removed unnecessary property values', () => {
-          expect(resultingConfig.auth.tokenInfo.refreshToken).toBeFalsy();
+        it('sets the personalAccessKey', () => {
+          expect(resultingConfig.personalAccessKey).toEqual(
+            PERSONAL_ACCESS_KEY_CONFIG.personalAccessKey
+          );
         });
       });
 
@@ -284,17 +283,16 @@ describe('lib/config', () => {
           });
         });
 
-        it('sets the required property values correctly', () => {
-          const requiredPropertyValues = ['authType', 'name', 'auth'];
-          requiredPropertyValues.forEach(prop => {
-            expect(resultingConfig[prop]).toEqual(
-              PERSONAL_ACCESS_KEY_CONFIG[prop]
-            );
-          });
+        it('sets the authType', () => {
+          expect(resultingConfig.authType).toEqual(
+            PERSONAL_ACCESS_KEY_CONFIG.authType
+          );
         });
 
-        it('removed unnecessary property values', () => {
-          expect(resultingConfig.apiKey).toBeFalsy();
+        it('sets the personalAccessKey', () => {
+          expect(resultingConfig.personalAccessKey).toEqual(
+            PERSONAL_ACCESS_KEY_CONFIG.personalAccessKey
+          );
         });
       });
     });

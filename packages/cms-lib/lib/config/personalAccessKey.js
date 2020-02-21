@@ -45,11 +45,6 @@ const getUpdatedPersonalAccessKeyPortalConfig = (
     auth,
   };
 
-  delete config.apiKey;
-  delete config.auth.clientId;
-  delete config.auth.clientSecret;
-  delete config.auth.tokenInfo.refreshToken;
-
   return config;
 };
 

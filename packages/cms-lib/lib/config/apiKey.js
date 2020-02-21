@@ -25,9 +25,6 @@ const getUpdatedApiKeyPortalConfig = (
     apiKey,
   };
 
-  delete config.auth;
-  delete config.personalAccessKey;
-
   return config;
 };
 
