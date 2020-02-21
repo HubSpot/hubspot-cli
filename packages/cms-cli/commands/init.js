@@ -14,7 +14,6 @@ const {
   AUTH_METHODS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cms-lib/lib/constants');
-const { QA } = require('@hubspot/cms-lib/lib/constants/environment');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
@@ -32,13 +31,8 @@ const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   AUTH_METHOD,
-  PORTAL_NAME,
 } = require('../lib/prompts');
-const {
-  addLoggerOptions,
-  addTestingOptions,
-  setLogLevel,
-} = require('../lib/commonOpts');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
@@ -71,13 +65,7 @@ const AUTH_METHOD_FLOW = {
     setup: async configData => {
       createEmptyConfigFile();
       handleExit(deleteEmptyConfigFile);
-      const { portalId } = await authenticateWithOauth(configData);
-      const promptAnswer = await promptUser([PORTAL_NAME]);
-      updatePortalConfig({
-        portalId,
-        name: promptAnswer.name,
-      });
-      updateDefaultPortal(promptAnswer.name);
+      await authenticateWithOauth(configData);
       logger.log(
         `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${AUTH_METHODS.oauth.name}.`
       );
@@ -85,32 +73,19 @@ const AUTH_METHOD_FLOW = {
     },
   },
   [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: {
-    prompt: async options => {
-      return personalAccessKeyPrompt(options);
-    },
+    prompt: personalAccessKeyPrompt,
     setup: async configData => {
-      const { portalId } = await updateConfigWithPersonalAccessKey(configData, {
-        env: configData.env,
-        firstEntry: true,
-      });
-      const promptAnswer = await promptUser([PORTAL_NAME]);
-      updatePortalConfig({
-        portalId,
-        name: promptAnswer.name,
-      });
-      updateDefaultPortal(promptAnswer.name);
-      process.exit();
+      await updateConfigWithPersonalAccessKey(configData, true);
     },
   },
 };
 
-const completeConfigSetup = async ({ authMethod, configPath, env }) => {
+const completeConfigSetup = async ({ authMethod, configPath }) => {
   const flow = AUTH_METHOD_FLOW[authMethod];
   trackAuthAction(COMMAND_NAME, authMethod, TRACKING_STATUS.STARTED);
 
   try {
-    const promptData = await flow.prompt({ env });
-    await flow.setup({ ...promptData, env });
+    flow.setup(await flow.prompt());
   } catch (err) {
     logFileSystemErrorInstance(err, {
       filepath: configPath,
@@ -150,12 +125,10 @@ function initializeConfigCommand(program) {
       await completeConfigSetup({
         authMethod,
         configPath,
-        env: options.qa ? QA : '',
       });
     });
 
   addLoggerOptions(program);
-  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 
