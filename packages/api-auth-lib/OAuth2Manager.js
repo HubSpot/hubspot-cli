@@ -4,13 +4,13 @@ const moment = require('moment');
 const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
-const { handleExit } = require('@hubspot/cms-lib/lib/process');
+const { handleExit } = require('./lib/process');
 const {
   getEnv,
   getEnvForConfig,
   getHubSpotWebsiteDomain,
   getHubSpotApiDomain,
-} = require('@hubspot/cms-lib/lib/environment');
+} = require('./lib/environment');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
