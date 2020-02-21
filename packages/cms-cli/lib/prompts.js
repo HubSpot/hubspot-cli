@@ -82,7 +82,7 @@ const PORTAL_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    'When you’re ready, we’ll open a secure page in your default browser where you can view and copy your personal CMS access key, which you\'ll need to complete the next step.\n<Press enter when you are ready to continue>',
+    "When you’re ready, we’ll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
 };
 
 const PERSONAL_ACCESS_KEY = {
