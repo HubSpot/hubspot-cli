@@ -89,7 +89,7 @@ async function validatePortal(command) {
   } else if (authType === 'personalaccesskey') {
     if (!personalAccessKey) {
       logger.error(
-        `The portal "${portalId}" is configured to use a personal access key for authentication and is missing a "personalAccessKey" in the configuration file`
+        `The portal "${portalId}" is configured to use a CMS access key for authentication and is missing a "personalAccessKey" in the configuration file`
       );
       return false;
     }
