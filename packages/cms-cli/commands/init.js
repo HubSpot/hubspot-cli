@@ -126,7 +126,7 @@ function initializeConfigCommand(program) {
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .option('--personal-access-key', 'utilize personal access key for auth')
+    .option('--personal-access-key', 'utilize personal CMS access key for auth')
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
