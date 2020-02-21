@@ -219,7 +219,7 @@ const updatePortalConfig = configOptions => {
       tokenInfo,
     };
   }
-  const env = getConfigEnv(environment);
+  const env = getConfigEnv(environment || portalConfig.env);
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
