@@ -28,7 +28,9 @@ const CLIENT_ID = {
   name: 'clientId',
   message: 'Enter your OAuth2 client ID:',
   validate(val) {
-    if (typeof val !== 'string' || val.length !== 36) {
+    if (typeof val !== 'string') {
+      return 'You entered an invalid OAuth2 client ID. Please try again.';
+    } else if (val.length !== 36) {
       return 'The OAuth2 client ID must be 36 characters long. Please try again.';
     }
     return true;
@@ -39,7 +41,9 @@ const CLIENT_SECRET = {
   name: 'clientSecret',
   message: 'Enter your OAuth2 client secret:',
   validate(val) {
-    if (typeof val !== 'string' || val.length !== 36) {
+    if (typeof val !== 'string') {
+      return 'You entered an invalid OAuth2 client secret. Please try again.';
+    } else if (val.length !== 36) {
       return 'The OAuth2 client secret must be 36 characters long. Please try again.';
     } else if (val[0] === '*') {
       return 'Please copy the actual OAuth2 client secret rather than the asterisks that mask it.';
@@ -52,7 +56,9 @@ const PORTAL_NAME = {
   name: 'name',
   message: 'Enter a unique name to reference your account:',
   validate(val) {
-    if (typeof val !== 'string' || !val.length) {
+    if (typeof val !== 'string') {
+      return 'You entered an invalid name. Please try again.';
+    } else if (!val.length) {
       return 'The name may not be blank. Please try again.';
     } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
       return 'The name may not contain spaces. Please try again.';
@@ -76,15 +82,19 @@ const PORTAL_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    'When you’re ready, we’ll open a secure page in your default browser where you can get your personal access key. If you need one, you’ll be able to generate one. Copy your personal access key so you can complete the next step.\n<Press enter when you are ready to continue>',
+    "When you’re ready, we’ll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
 };
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
-  message: 'Enter your personal access key:',
+  message: 'Enter your personal CMS access key:',
   validate(val) {
-    if (typeof val !== 'string' || val.length !== 151) {
-      return 'You did not enter a valid personal access key. Please try again.';
+    if (typeof val !== 'string') {
+      return 'You did not enter a valid access key. Please try again.';
+    } else if (val.length !== 151) {
+      return 'The access key must be 151 characters long. Please try again.';
+    } else if (val[0] === '•') {
+      return 'Please copy the actual access key rather than the bullets that mask it.';
     }
     return true;
   },
