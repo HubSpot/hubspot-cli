@@ -1,20 +1,39 @@
 const yaml = require('js-yaml');
 const fs = require('fs');
 const findup = require('findup-sync');
-const { logger } = require('../logger');
+const { logger } = require('../../logger');
 const {
   logErrorInstance,
   logFileSystemErrorInstance,
-} = require('../errorHandlers');
-const { getCwd } = require('../path');
+} = require('../../errorHandlers');
+const { getCwd } = require('../../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
-  Mode,
-} = require('./constants');
+} = require('../constants');
 
 let _config;
 let _configPath;
+
+const getOrderedPortalConfig = unorderedPortalConfig => {
+  const {
+    name,
+    portalId,
+    env,
+    authType,
+    auth,
+    ...rest
+  } = unorderedPortalConfig;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+    auth,
+  };
+};
 
 const getOrderedConfig = unorderedConfig => {
   const {
@@ -31,7 +50,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals,
+    portals: portals.map(portal => getOrderedPortalConfig(portal)),
     ...rest,
   };
 };
@@ -94,23 +113,15 @@ const loadConfig = (path, options = {}) => {
   if (sourceError) return;
   const { parsed, error: parseError } = parseConfig(source);
   if (parseError) return;
-  _config = parsed;
+  setConfig(Object.freeze(parsed));
 
   if (!_config) {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
-    _config = {
+    setConfig({
       portals: [],
-    };
+    });
   }
-};
-
-const isTrackingAllowed = () => {
-  if (!configFileExists() || configFileIsBlank()) {
-    return true;
-  }
-  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
-  return allowUsageTracking !== false;
 };
 
 const getAndLoadConfigIfNeeded = () => {
@@ -141,130 +152,6 @@ const getConfigPath = path => {
 
 const setConfigPath = path => {
   return (_configPath = path);
-};
-
-const getConfigEnv = environment => {
-  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
-};
-
-const getPortalConfig = portalId => {
-  const config = getAndLoadConfigIfNeeded();
-  return config.portals.find(portal => portal.portalId === portalId);
-};
-
-const getPortalId = nameOrId => {
-  const config = getAndLoadConfigIfNeeded();
-  let name;
-  let portalId;
-  let portal;
-  if (!nameOrId) {
-    if (config && config.defaultPortal) {
-      name = config.defaultPortal;
-    }
-  } else {
-    if (typeof nameOrId === 'number') {
-      portalId = nameOrId;
-    } else if (/^\d+$/.test(nameOrId)) {
-      portalId = parseInt(nameOrId, 10);
-    } else {
-      name = nameOrId;
-    }
-  }
-
-  if (name) {
-    portal = config.portals.find(p => p.name === name);
-  } else if (portalId) {
-    portal = config.portals.find(p => p.portalId === portalId);
-  }
-
-  if (portal) {
-    return portal.portalId;
-  }
-
-  return null;
-};
-
-/**
- * @throws {Error}
- */
-const updatePortalConfig = configOptions => {
-  const {
-    portalId,
-    authType,
-    environment,
-    clientId,
-    clientSecret,
-    scopes,
-    tokenInfo,
-    defaultMode,
-    name,
-    apiKey,
-    personalAccessKey,
-  } = configOptions;
-
-  if (!portalId) {
-    throw new Error('A portalId is required to update the config');
-  }
-
-  const config = getAndLoadConfigIfNeeded();
-  const portalConfig = getPortalConfig(portalId);
-
-  let auth;
-  if (clientId || clientSecret || scopes || tokenInfo) {
-    auth = {
-      ...(portalConfig ? portalConfig.auth : {}),
-      clientId,
-      clientSecret,
-      scopes,
-      tokenInfo,
-    };
-  }
-  const env = getConfigEnv(environment || (portalConfig && portalConfig.env));
-  const mode = defaultMode && defaultMode.toLowerCase();
-  const nextPortalConfig = {
-    ...portalConfig,
-    name,
-    env,
-    portalId,
-    authType,
-    auth,
-    apiKey,
-    defaultMode: Mode[mode] ? mode : undefined,
-    personalAccessKey,
-  };
-
-  if (portalConfig) {
-    logger.debug(`Updating config for ${portalId}`);
-    const index = config.portals.indexOf(portalConfig);
-    config.portals[index] = nextPortalConfig;
-  } else {
-    logger.debug(`Adding config entry for ${portalId}`);
-    if (config.portals) {
-      config.portals.push(nextPortalConfig);
-    } else {
-      config.portals = [nextPortalConfig];
-    }
-  }
-  writeConfig();
-};
-
-/**
- * @throws {Error}
- */
-const updateDefaultPortal = defaultPortal => {
-  if (
-    !defaultPortal ||
-    (typeof defaultPortal !== 'number' && typeof defaultPortal !== 'string')
-  ) {
-    throw new Error(
-      'A defaultPortal with value of number or string is required to update the config'
-    );
-  }
-
-  const config = getAndLoadConfigIfNeeded();
-  config.defaultPortal = defaultPortal;
-  setDefaultConfigPathIfUnset();
-  writeConfig();
 };
 
 const setDefaultConfigPathIfUnset = () => {
@@ -302,16 +189,15 @@ const deleteEmptyConfigFile = () => {
 };
 
 module.exports = {
+  createEmptyConfigFile,
+  configFileExists,
+  configFileIsBlank,
+  deleteEmptyConfigFile,
   getAndLoadConfigIfNeeded,
   getConfig,
   getConfigPath,
   setConfig,
+  setDefaultConfigPathIfUnset,
   loadConfig,
-  getPortalConfig,
-  getPortalId,
-  updatePortalConfig,
-  updateDefaultPortal,
-  createEmptyConfigFile,
-  deleteEmptyConfigFile,
-  isTrackingAllowed,
+  writeConfig,
 };

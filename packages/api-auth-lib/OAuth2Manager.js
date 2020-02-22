@@ -4,7 +4,13 @@ const moment = require('moment');
 const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
-const { handleExit } = require('@hubspot/cms-lib/lib/process');
+const { handleExit } = require('./lib/process');
+const {
+  getEnv,
+  getEnvForConfig,
+  getHubSpotWebsiteDomain,
+  getHubSpotApiDomain,
+} = require('./lib/environment');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -13,10 +19,10 @@ class OAuth2Manager {
   constructor(
     {
       portalId,
+      env,
       clientId,
       clientSecret,
       scopes,
-      environment = 'prod',
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
@@ -27,7 +33,7 @@ class OAuth2Manager {
     this.scopes = scopes;
     this.tokenInfo = tokenInfo;
     this.portalId = portalId;
-    this.env = environment.toLowerCase() === 'prod' ? '' : 'qa';
+    this.env = getEnvForConfig(env);
     this.logger = logger;
     this.writeTokenInfo = writeTokenInfo;
     this.refreshTokenRequest = null;
@@ -35,7 +41,7 @@ class OAuth2Manager {
 
   buildAuthUrl() {
     return (
-      `https://app.hubspot${this.env}.com/oauth/${this.portalId}/authorize` +
+      `${getHubSpotWebsiteDomain(this.env)}/oauth/${this.portalId}/authorize` +
       `?client_id=${encodeURIComponent(this.clientId)}` + // app's client ID
       `&scope=${encodeURIComponent(this.scopes.join(' '))}` + // scopes being requested by the app
       `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
@@ -124,7 +130,7 @@ class OAuth2Manager {
     );
     try {
       this.refreshTokenRequest = request.post(
-        `https://api.hubapi${this.env}.com/oauth/v1/token`,
+        `${getHubSpotApiDomain(this.env)}/oauth/v1/token`,
         {
           form: exchangeProof,
           json: true,
@@ -189,11 +195,13 @@ class OAuth2Manager {
 
   toObj() {
     return {
-      environment: this.env ? 'qa' : 'prod',
-      clientSecret: this.clientSecret,
-      clientId: this.clientId,
-      scopes: this.scopes,
-      tokenInfo: this.tokenInfo,
+      env: getEnvForConfig(this.env),
+      auth: {
+        clientSecret: this.clientSecret,
+        clientId: this.clientId,
+        scopes: this.scopes,
+        tokenInfo: this.tokenInfo,
+      },
     };
   }
 
@@ -203,7 +211,7 @@ class OAuth2Manager {
       return new OAuth2Manager(
         {
           ...rest,
-          environment: env && env.toLowerCase() === 'qa' ? 'qa' : 'prod',
+          env: getEnv(env),
           ...auth,
         },
         logger,
