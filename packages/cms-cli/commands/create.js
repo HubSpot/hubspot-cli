@@ -22,11 +22,16 @@ const TYPES = {
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
+  'global-partial': 'global-partial',
 };
 
 const ASSET_PATHS = {
   [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
   [TYPES.template]: path.resolve(__dirname, '../defaults/template.html'),
+  [TYPES['global-partial']]: path.resolve(
+    __dirname,
+    '../defaults/global-partial.html'
+  ),
 };
 
 const createModule = (name, dest) => {
@@ -39,28 +44,28 @@ const createModule = (name, dest) => {
   }
   logger.log(`Creating ${destPath}`);
   fs.mkdirp(destPath);
-  logger.log(`Copying sample module files to ${destPath}`);
+  logger.log(`Creating module at ${destPath}`);
   fs.copySync(assetPath, destPath);
 };
 
-const createTemplate = (name, dest) => {
-  const assetPath = ASSET_PATHS.template;
+const createTemplate = (name, dest, type = 'template') => {
+  const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
   if (fs.existsSync(filePath)) {
     logger.error(`The ${filePath} path already exists`);
     return;
   }
-  logger.log(`Making ${dest} if needed`);
+  logger.debug(`Making ${dest} if needed`);
   fs.mkdirp(dest);
-  logger.log(`Copying boilerplate template to ${filePath}`);
+  logger.log(`Creating file at ${filePath}`);
   fs.copySync(assetPath, filePath);
 };
 
 function configureCreateCommand(program) {
   program
     .version(version)
-    .description('Create assets from boilerplate.')
+    .description('Create HubSpot CMS assets')
     // For a theme this is `website-theme <dest>`
     // TODO: Yargs allows an array of commands.
     .arguments('<type> <name> [dest]')
@@ -103,7 +108,8 @@ function configureCreateCommand(program) {
           createModule(name, dest);
           break;
         case TYPES.template:
-          createTemplate(name, dest);
+        case TYPES['global-partial']:
+          createTemplate(name, dest, type);
           break;
         case TYPES['website-theme']:
           createTheme(dest, type, program);
