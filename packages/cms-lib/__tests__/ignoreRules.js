@@ -15,6 +15,17 @@ describe('ignoreRules', () => {
       expect(shouldIgnoreFile(NODE_MODULES_FILE, CWD)).toBe(true);
     });
 
+    it('ignores CLI config files', () => {
+      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yml`, CWD)).toBe(true);
+      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yaml`, CWD)).toBe(true);
+      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yml`, CWD)).toBe(
+        true
+      );
+      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yaml`, CWD)).toBe(
+        true
+      );
+    });
+
     it('ignores hidden folders', () => {
       expect(shouldIgnoreFile(`${REPO_FOLDER}/.hiddenFolder`, CWD)).toBe(true);
     });
