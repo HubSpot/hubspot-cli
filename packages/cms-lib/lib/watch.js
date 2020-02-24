@@ -7,6 +7,7 @@ const {
   ApiErrorContext,
   logApiErrorInstance,
   logApiUploadErrorInstance,
+  logErrorInstance,
 } = require('../errorHandlers');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
@@ -107,11 +108,20 @@ function watch(
 
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
-    uploadFolder(portalId, src, dest, { mode, cwd, notify }).then(() => {
-      logger.log(
-        `Completed uploading files in ${src} to ${dest} in ${portalId}`
-      );
-    });
+    uploadFolder(portalId, src, dest, { mode, cwd })
+      .then(() => {
+        logger.log(
+          `Completed uploading files in ${src} to ${dest} in ${portalId}`
+        );
+      })
+      .catch(error => {
+        logger.error(
+          `Initial uploading of folder "${src}" to "${dest} in portal ${portalId} failed`
+        );
+        logErrorInstance(error, {
+          portalId,
+        });
+      });
   }
 
   watcher.on('ready', () => {
