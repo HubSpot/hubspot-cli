@@ -14,6 +14,11 @@ const EventClass = {
   ACTIVATION: 'ACTIVATION',
 };
 
+const getNodeVersionData = () => ({
+  nodeVersion: process.version,
+  nodeMajorVersion: (process.version || '').split('.')[0],
+});
+
 function trackCommandUsage(command, meta = {}, portalId) {
   if (!isTrackingAllowed()) {
     return;
@@ -35,7 +40,7 @@ function trackCommandUsage(command, meta = {}, portalId) {
         {
           action: 'cli-command',
           os: getPlatform(),
-          nodeVersion: process.version,
+          ...getNodeVersionData(),
           version,
           command,
           authType,
@@ -62,7 +67,7 @@ async function trackHelpUsage(command) {
     await trackUsage('cli-interaction', EventClass.INTERACTION, {
       action: 'cli-help',
       os: getPlatform(),
-      nodeVersion: process.version,
+      ...getNodeVersionData(),
       version,
       command,
     });
