@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cms-lib",
-  "version": "1.0.9-beta.3",
+  "version": "1.0.9-beta.4",
   "description": "Library for working with the HubSpot CMS",
   "license": "Apache-2.0",
   "main": "index.js",
