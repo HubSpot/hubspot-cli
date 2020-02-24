@@ -91,7 +91,7 @@ const trackAuthAction = async (command, authType, step) => {
     return await trackUsage('cli-interaction', EventClass.INTERACTION, {
       action: 'cli-auth',
       os: getPlatform(),
-      nodeVersion: process.version,
+      ...getNodeVersionData(),
       version,
       command,
       authType,
