@@ -6,6 +6,7 @@ const {
   getPortalId,
   getPortalConfig,
   updatePortalConfig,
+  validateConfig,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
@@ -22,6 +23,7 @@ module.exports = {
   getPortalId,
   updatePortalConfig,
   uploadFolder,
+  validateConfig,
   watch,
   walk,
 };

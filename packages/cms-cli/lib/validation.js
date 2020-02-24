@@ -1,25 +1,10 @@
 const { logger } = require('@hubspot/cms-lib/logger');
-const { getConfig, getPortalConfig, Mode } = require('@hubspot/cms-lib');
+const { getPortalConfig, Mode } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 const { getPortalId, getMode } = require('./commonOpts');
-
-/**
- * @returns {boolean}
- */
-function validateConfig() {
-  const config = getConfig();
-  if (!config) {
-    return false;
-  }
-  if (!Array.isArray(config.portals)) {
-    logger.error('config.portals[] is not defined');
-    return false;
-  }
-  return true;
-}
 
 /**
  * Validate that a portal was passed to the command and that the portal's configuration is valid
@@ -117,9 +102,6 @@ async function validatePortal(command) {
 }
 
 /**
- * Validate that a portal was passed to the command and that the portal's configuration is valid
- *
- *
  * @param {commander.Command} command
  * @returns {boolean}
  */
@@ -140,7 +122,6 @@ function validateMode(command) {
 }
 
 module.exports = {
-  validateConfig,
   validateMode,
   validatePortal,
 };

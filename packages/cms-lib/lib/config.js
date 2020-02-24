@@ -16,6 +16,47 @@ const {
 let _config;
 let _configPath;
 
+const getConfig = () => _config;
+
+const setConfig = updatedConfig => {
+  _config = updatedConfig;
+  return _config;
+};
+
+/**
+ * @returns {boolean}
+ */
+function validateConfig() {
+  const config = getConfig();
+  if (!config) {
+    logger.error('config is not defined');
+    return false;
+  }
+  if (!Array.isArray(config.portals)) {
+    logger.error('config.portals[] is not defined');
+    return false;
+  }
+  const portalsHash = {};
+  return config.portals.every(cfg => {
+    if (!cfg) {
+      logger.error('config.portals[] has an empty entry');
+      return false;
+    }
+    if (!cfg.portalId) {
+      logger.error('config.portals[] has an entry missing portalId');
+      return false;
+    }
+    if (portalsHash[cfg.portalId]) {
+      logger.error(
+        `config.portals[] has multiple entries with portalId=${cfg.portalId}`
+      );
+      return false;
+    }
+    portalsHash[cfg.portalId] = cfg;
+    return true;
+  });
+}
+
 const getOrderedConfig = unorderedConfig => {
   const {
     defaultPortal,
@@ -119,13 +160,6 @@ const getAndLoadConfigIfNeeded = () => {
       silenceErrors: true,
     });
   }
-  return _config;
-};
-
-const getConfig = () => _config;
-
-const setConfig = updatedConfig => {
-  _config = updatedConfig;
   return _config;
 };
 
@@ -314,4 +348,5 @@ module.exports = {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   isTrackingAllowed,
+  validateConfig,
 };

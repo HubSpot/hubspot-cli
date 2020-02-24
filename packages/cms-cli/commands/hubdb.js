@@ -1,5 +1,5 @@
 const path = require('path');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const {
@@ -7,7 +7,7 @@ const {
   downloadHubDbTable,
 } = require('@hubspot/cms-lib/hubdb');
 
-const { validateConfig, validatePortal } = require('../lib/validation');
+const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
 const { version } = require('../package.json');
 

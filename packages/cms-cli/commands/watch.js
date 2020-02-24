@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { watch, loadConfig } = require('@hubspot/cms-lib');
+const { watch, loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const { logger } = require('@hubspot/cms-lib/logger');
 
@@ -16,11 +16,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  validateConfig,
-  validatePortal,
-  validateMode,
-} = require('../lib/validation');
+const { validatePortal, validateMode } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,

@@ -1,5 +1,5 @@
 const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   logApiErrorInstance,
@@ -15,7 +15,7 @@ const {
   getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validateConfig, validatePortal } = require('../lib/validation');
+const { validatePortal } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,

@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { loadConfig, uploadFolder } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  uploadFolder,
+  validateConfig,
+} = require('@hubspot/cms-lib');
 const {
   getFileMapperApiQueryFromMode,
 } = require('@hubspot/cms-lib/fileMapper');
@@ -31,11 +35,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  validateConfig,
-  validatePortal,
-  validateMode,
-} = require('../lib/validation');
+const { validatePortal, validateMode } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,

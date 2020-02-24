@@ -1,7 +1,7 @@
 const { version } = require('../package.json');
 
 const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileMapper');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 
 const {
@@ -15,11 +15,7 @@ const {
   setLogLevel,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const {
-  validateConfig,
-  validatePortal,
-  validateMode,
-} = require('../lib/validation');
+const { validatePortal, validateMode } = require('../lib/validation');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
   trackCommandUsage,

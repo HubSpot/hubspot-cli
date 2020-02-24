@@ -1,5 +1,5 @@
 const { version } = require('../package.json');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -10,7 +10,6 @@ const {
   personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const { validateConfig } = require('../lib/validation');
 const {
   addConfigOptions,
   addLoggerOptions,

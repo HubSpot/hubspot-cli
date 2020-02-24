@@ -2,7 +2,7 @@ const {
   lint,
   printHublValidationResult,
 } = require('@hubspot/cms-lib/validate');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
@@ -16,7 +16,7 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validateConfig, validatePortal } = require('../lib/validation');
+const { validatePortal } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
