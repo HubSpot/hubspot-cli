@@ -116,6 +116,7 @@ async function uploadFolder(portalId, src, dest, { mode, cwd }) {
         logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
         try {
           await upload(portalId, file, destPath, apiOptions);
+          logger.log('Uploaded file "%s" to "%s"', file, destPath);
         } catch (error) {
           logger.error('Uploading file "%s" to "%s" failed', file, destPath);
           if (isFatalError(error)) {
