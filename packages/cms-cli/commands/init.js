@@ -53,7 +53,6 @@ function initializeConfigCommand(program) {
         const configData = await personalAccessKeyPrompt();
         await updateConfigWithPersonalAccessKey(configData, true);
       } catch (err) {
-        console.log(err);
         logFileSystemErrorInstance(err, {
           filepath: configPath,
         });
