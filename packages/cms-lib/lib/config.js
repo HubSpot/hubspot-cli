@@ -181,6 +181,24 @@ const getConfigEnv = environment => {
   return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
 };
 
+const getEnv = nameOrId => {
+  let env = 'PROD';
+  const config = getAndLoadConfigIfNeeded();
+  const portalId = getPortalId(nameOrId);
+  if (config.env) {
+    env = config.env;
+  }
+  if (portalId) {
+    const portalConfig = getPortalConfig(portalId);
+    if (portalConfig.env) {
+      env = portalConfig.env;
+    }
+  } else if (config.env) {
+    env = config.env;
+  }
+  return env;
+};
+
 const getPortalConfig = portalId => {
   const config = getAndLoadConfigIfNeeded();
   return config.portals.find(portal => portal.portalId === portalId);
@@ -337,6 +355,7 @@ const deleteEmptyConfigFile = () => {
 
 module.exports = {
   getAndLoadConfigIfNeeded,
+  getEnv,
   getConfig,
   getConfigPath,
   setConfig,
