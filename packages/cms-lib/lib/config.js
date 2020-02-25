@@ -1,5 +1,5 @@
 const yaml = require('js-yaml');
-const fs = require('fs');
+const fs = require('fs-extra');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
 const {
@@ -26,7 +26,7 @@ const setConfig = updatedConfig => {
 /**
  * @returns {boolean}
  */
-function validateConfig() {
+const validateConfig = () => {
   const config = getConfig();
   if (!config) {
     logger.error('config is not defined');
@@ -55,7 +55,7 @@ function validateConfig() {
     portalsHash[cfg.portalId] = cfg;
     return true;
   });
-}
+};
 
 const getOrderedConfig = unorderedConfig => {
   const {
@@ -77,14 +77,33 @@ const getOrderedConfig = unorderedConfig => {
   };
 };
 
-const writeConfig = () => {
-  logger.debug(`Writing current config to ${_configPath}`);
-  fs.writeFileSync(
-    _configPath,
-    yaml.safeDump(
-      JSON.parse(JSON.stringify(getOrderedConfig(_config), null, 2))
-    )
-  );
+/**
+ * @param {object}  options
+ * @param {string}  options.path
+ * @param {string}  options.source
+ * @param {boolean} options.gitignore
+ */
+const writeConfig = (options = {}) => {
+  const configPath = options.path || _configPath;
+  let source;
+  try {
+    source =
+      typeof options.source === 'string'
+        ? options.source
+        : yaml.safeDump(
+            JSON.parse(JSON.stringify(getOrderedConfig(getConfig()), null, 2))
+          );
+  } catch (err) {
+    logErrorInstance(err);
+    return;
+  }
+  try {
+    logger.debug(`Writing current config to ${configPath}`);
+    fs.ensureFileSync(configPath);
+    fs.writeFileSync(configPath, source);
+  } catch (err) {
+    logFileSystemErrorInstance(err, { filepath: configPath, write: true });
+  }
 };
 
 const readConfigFile = () => {
@@ -326,7 +345,7 @@ const createEmptyConfigFile = () => {
     return;
   }
 
-  return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
+  writeConfig({ source: EMPTY_CONFIG_FILE_CONTENTS });
 };
 
 const deleteEmptyConfigFile = () => {
