@@ -1,5 +1,7 @@
-const yaml = require('js-yaml');
 const fs = require('fs-extra');
+const path = require('path');
+const { EOL } = require('os');
+const yaml = require('js-yaml');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
 const {
@@ -77,6 +79,45 @@ const getOrderedConfig = unorderedConfig => {
   };
 };
 
+const charToGlob = ch => `[${ch.toUpperCase()}${ch.toLowerCase()}]`;
+const wordToGlobs = word => [].map.call(word, charToGlob).join('');
+
+// .gitignore can be case-sensitive (configurable by user)
+// const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
+const CONFIG_GITIGNORE_PATTERN = `${wordToGlobs('hubspot')}.${wordToGlobs(
+  'config'
+)}.*`;
+const CONFIG_GITIGNORE_PATTERN_REGEX = /hubspot\.config\..*/i;
+
+/**
+ * @param {object}  options
+ * @param {string}  options.path
+ */
+const ensureConfigGitignore = async (options = {}) => {
+  const configPath = options.path || _configPath;
+  try {
+    const dir = path.dirname(configPath);
+    const ignoreFilePath = path.join(dir, '.gitignore');
+    await fs.ensureFile(ignoreFilePath);
+    let source = fs.readFile(ignoreFilePath) || '';
+    if (source) {
+      const lines = source.split(/[\n\r]/);
+      const hasPattern =
+        lines.find(
+          CONFIG_GITIGNORE_PATTERN_REGEX.test,
+          CONFIG_GITIGNORE_PATTERN_REGEX
+        ) != null;
+      if (hasPattern) {
+        return;
+      }
+    }
+    source = `${CONFIG_GITIGNORE_PATTERN}${EOL}${source}`;
+    await fs.writeFile(ignoreFilePath, source);
+  } catch (err) {
+    logFileSystemErrorInstance(err, { filepath: configPath, write: true });
+  }
+};
+
 /**
  * @param {object}  options
  * @param {string}  options.path
@@ -84,7 +125,6 @@ const getOrderedConfig = unorderedConfig => {
  * @param {boolean} options.gitignore
  */
 const writeConfig = (options = {}) => {
-  const configPath = options.path || _configPath;
   let source;
   try {
     source =
@@ -97,10 +137,16 @@ const writeConfig = (options = {}) => {
     logErrorInstance(err);
     return;
   }
+  const configPath = options.path || _configPath;
+  const gitignore =
+    options.gitignore === !!options.gitignore ? options.gitignore : true;
   try {
     logger.debug(`Writing current config to ${configPath}`);
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
+    if (gitignore) {
+      ensureConfigGitignore();
+    }
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
