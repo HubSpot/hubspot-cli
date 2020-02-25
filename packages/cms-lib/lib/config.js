@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const { EOL } = require('os');
+const ignore = require('ignore');
 const yaml = require('js-yaml');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
@@ -79,41 +80,32 @@ const getOrderedConfig = unorderedConfig => {
   };
 };
 
-const charToGlob = ch => `[${ch.toUpperCase()}${ch.toLowerCase()}]`;
-const wordToGlobs = word => [].map.call(word, charToGlob).join('');
-
-// .gitignore can be case-sensitive (configurable by user)
-// const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
-const CONFIG_GITIGNORE_PATTERN = `${wordToGlobs('hubspot')}.${wordToGlobs(
-  'config'
-)}.*`;
-const CONFIG_GITIGNORE_PATTERN_REGEX = /hubspot\.config\..*/i;
+const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
 
 /**
  * @param {object}  options
  * @param {string}  options.path
  */
 const ensureConfigGitignore = async (options = {}) => {
-  const configPath = options.path || _configPath;
+  const configPath = options.path || _configPath || getConfigPath();
+  if (!configPath) return;
   try {
     const dir = path.dirname(configPath);
     const ignoreFilePath = path.join(dir, '.gitignore');
     await fs.ensureFile(ignoreFilePath);
     let source = (await fs.readFile(ignoreFilePath)) || '';
-    if (source) {
-      const lines = source.split(/[\n\r]/);
-      const hasPattern =
-        lines.find(
-          CONFIG_GITIGNORE_PATTERN_REGEX.test,
-          CONFIG_GITIGNORE_PATTERN_REGEX
-        ) != null;
-      if (hasPattern) {
-        return;
-      }
+    const ig = ignore().add(source.toString());
+    if (ig.ignores(CONFIG_GITIGNORE_PATTERN)) {
+      return;
     }
     source = `${CONFIG_GITIGNORE_PATTERN}${EOL}${source}`;
     await fs.writeFile(ignoreFilePath, source);
   } catch (err) {
+    logger.error(
+      `An error occured while writing a gitignore rule for ${path.basename(
+        configPath
+      )}`
+    );
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
 };
@@ -194,6 +186,7 @@ const loadConfig = (path, options = {}) => {
     }
     return;
   }
+  ensureConfigGitignore();
 
   logger.debug(`Reading config from ${_configPath}`);
   const { source, error: sourceError } = readConfigFile(_configPath);
