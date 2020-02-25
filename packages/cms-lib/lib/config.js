@@ -99,7 +99,7 @@ const ensureConfigGitignore = async (options = {}) => {
     const dir = path.dirname(configPath);
     const ignoreFilePath = path.join(dir, '.gitignore');
     await fs.ensureFile(ignoreFilePath);
-    let source = fs.readFile(ignoreFilePath) || '';
+    let source = (await fs.readFile(ignoreFilePath)) || '';
     if (source) {
       const lines = source.split(/[\n\r]/);
       const hasPattern =
