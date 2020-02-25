@@ -1,5 +1,10 @@
 const { version } = require('../package.json');
-const { getConfigPath } = require('@hubspot/cms-lib/lib/config');
+const {
+  getConfigPath,
+  createEmptyConfigFile,
+  deleteEmptyConfigFile,
+} = require('@hubspot/cms-lib/config');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
@@ -49,11 +54,13 @@ function initializeConfigCommand(program) {
         TRACKING_STATUS.STARTED
       );
 
+      createEmptyConfigFile();
+      handleExit(deleteEmptyConfigFile);
+
       try {
         const configData = await personalAccessKeyPrompt();
         await updateConfigWithPersonalAccessKey(configData, true);
       } catch (err) {
-        console.log(err);
         logFileSystemErrorInstance(err, {
           filepath: configPath,
         });

@@ -90,8 +90,6 @@ const PERSONAL_ACCESS_KEY = {
   validate(val) {
     if (typeof val !== 'string') {
       return 'You did not enter a valid access key. Please try again.';
-    } else if (val.length !== 151) {
-      return 'The access key must be 151 characters long. Please try again.';
     } else if (val[0] === '•') {
       return 'Please copy the actual access key rather than the bullets that mask it.';
     }

@@ -8,17 +8,16 @@ const {
 
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const {
+  getEnv,
+  getPortalId,
   getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
-  createEmptyConfigFile,
-  deleteEmptyConfigFile,
 } = require('./lib/config');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('./lib/constants');
-const { handleExit } = require('./lib/process');
 const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
 
@@ -32,13 +31,6 @@ async function getAccessToken(personalAccessKey, env = 'PROD') {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env);
-    return {
-      portalId: response.hubId,
-      accessToken: response.oauthAccessToken,
-      expiresAt: moment(response.expiresAtMillis),
-      scopeGroups: response.scopeGroups,
-      encodedOauthRefreshToken: response.encodedOauthRefreshToken,
-    };
   } catch (e) {
     if (e.response) {
       throw new HubSpotAuthError(
@@ -48,6 +40,13 @@ async function getAccessToken(personalAccessKey, env = 'PROD') {
       throw e;
     }
   }
+  return {
+    portalId: response.hubId,
+    accessToken: response.oauthAccessToken,
+    expiresAt: moment(response.expiresAtMillis),
+    scopeGroups: response.scopeGroups,
+    encodedOauthRefreshToken: response.encodedOauthRefreshToken,
+  };
 }
 
 async function refreshAccessToken(personalAccessKey, env = 'PROD') {
@@ -119,7 +118,19 @@ async function accessTokenForPersonalAccessKey(portalId) {
  */
 const personalAccessKeyPrompt = async () => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
-  open(`https://app.hubspot.com/l/personal-access-key`);
+  const portalId = getPortalId(name);
+  const env = getEnv(name);
+  if (portalId) {
+    open(
+      `https://app.hubspot${
+        env === 'QA' ? 'qa' : ''
+      }.com/personal-access-key/${portalId}`
+    );
+  } else {
+    open(
+      `https://app.hubspot${env === 'QA' ? 'qa' : ''}.com/l/personal-access-key`
+    );
+  }
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
@@ -137,11 +148,11 @@ const personalAccessKeyPrompt = async () => {
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
-  createEmptyConfigFile();
-  handleExit(deleteEmptyConfigFile);
   const { personalAccessKey, name } = configData;
+
   const { portalId, accessToken, expiresAt } = await getAccessToken(
-    personalAccessKey
+    personalAccessKey,
+    getEnv(name)
   );
 
   updatePortalConfig({
