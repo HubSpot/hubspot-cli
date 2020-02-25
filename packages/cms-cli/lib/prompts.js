@@ -1,6 +1,5 @@
 const inquirer = require('inquirer');
 const {
-  AUTH_METHODS,
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cms-lib/lib/constants');
@@ -100,14 +99,6 @@ const PERSONAL_ACCESS_KEY = {
   },
 };
 
-const AUTH_METHOD = {
-  type: 'rawlist',
-  name: 'authMethod',
-  message: 'Choose the authentication method',
-  default: 0,
-  choices: Object.keys(AUTH_METHODS).map(method => AUTH_METHODS[method]),
-};
-
 const SCOPES = {
   type: 'checkbox',
   name: 'scopes',
@@ -126,7 +117,6 @@ const PERSONAL_ACCESS_KEY_FLOW = [
 
 module.exports = {
   promptUser,
-  AUTH_METHOD,
   CLIENT_ID,
   CLIENT_SECRET,
   PORTAL_API_KEY,
