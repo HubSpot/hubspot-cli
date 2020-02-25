@@ -3,7 +3,7 @@ const {
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
-} = require('@hubspot/cms-lib/config');
+} = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
   logFileSystemErrorInstance,
