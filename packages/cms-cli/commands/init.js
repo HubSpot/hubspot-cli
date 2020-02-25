@@ -1,5 +1,10 @@
 const { version } = require('../package.json');
-const { getConfigPath } = require('@hubspot/cms-lib/lib/config');
+const {
+  getConfigPath,
+  createEmptyConfigFile,
+  deleteEmptyConfigFile,
+} = require('@hubspot/cms-lib/lib/config');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
@@ -48,6 +53,9 @@ function initializeConfigCommand(program) {
         PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
         TRACKING_STATUS.STARTED
       );
+
+      createEmptyConfigFile();
+      handleExit(deleteEmptyConfigFile);
 
       try {
         const configData = await personalAccessKeyPrompt();
