@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
-const { EOL } = require('os');
+const os = require('os');
 const ignore = require('ignore');
 const yaml = require('js-yaml');
 const findup = require('findup-sync');
@@ -9,12 +9,13 @@ const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
-const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
 } = require('./constants');
+
+const { EOL } = os;
 
 let _config;
 let _configPath;
@@ -366,7 +367,7 @@ const setDefaultConfigPathIfUnset = () => {
 };
 
 const setDefaultConfigPath = () => {
-  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  setConfigPath(`${os.homedir()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
 };
 
 const configFileExists = () => {
