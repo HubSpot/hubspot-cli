@@ -3,18 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.0.5](https://github.com/HubSpot/hubspot-cms-tools/compare/v1.0.5-beta.4...v1.0.5) (2020-01-24)
-
 **Note:** Version bump only for package hubspot-cms-tools
-
-
-
-
 
 Change Log
 ==========
 
-## 1.0.7
+## 1.0.9
+
+ * Remove project BETA designation
+ * Add default config file names to ignore rules to prevent accidental uploads
+ * Add ability to create global partials to `hs create`
+ * Renamed user tokens to personal access keys
+ * Updated `hs init` to use personal access keys
+ * Added support for `hs auth personalaccesskey`
+ * Added `--notify` support to `hs watch`
+ * Updated `hs watch --remove` to also remove folders
+ * Track major node version
+
+## 1.0.8
+## 1.0.7 (pulled back due to code accidentally being committed)
 
 ### CMS CLI
 
