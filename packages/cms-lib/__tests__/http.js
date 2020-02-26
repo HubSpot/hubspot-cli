@@ -1,6 +1,7 @@
 const request = require('request-promise-native');
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { QA } = require('../lib/constants');
 const http = require('../http');
 const { version } = require('../package.json');
 
@@ -26,7 +27,7 @@ describe('http', () => {
       expect(http.getRequestOptions()).toMatchObject({
         baseUrl: 'https://api.hubapi.com',
       });
-      expect(http.getRequestOptions({ env: 'QA' })).toMatchObject({
+      expect(http.getRequestOptions({ env: QA })).toMatchObject({
         baseUrl: 'https://api.hubapiqa.com',
       });
     });
@@ -39,7 +40,7 @@ describe('http', () => {
       expect(http.getRequestOptions()).toMatchObject({
         baseUrl: 'https://local.hubapi.com',
       });
-      expect(http.getRequestOptions({ env: 'QA' })).toMatchObject({
+      expect(http.getRequestOptions({ env: QA })).toMatchObject({
         baseUrl: 'https://local.hubapiqa.com',
       });
     });
