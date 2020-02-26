@@ -270,10 +270,9 @@ const updatePortalConfig = configOptions => {
     };
   }
 
-  const env = getValidEnv(
-    environment || (portalConfig && portalConfig.env),
-    true
-  );
+  const env = getValidEnv(environment || (portalConfig && portalConfig.env), {
+    maskedValue: undefined,
+  });
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,

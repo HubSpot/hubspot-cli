@@ -3,14 +3,24 @@ const { QA, PROD } = require('./constants');
 /**
  * Returns valid environment string for QA or Production
  * @param {string} env Environment string, can be any case
- * @param {boolean} maskProd Flag for returning empty string instea of 'prod' -- Can be used to hide env value in the config
+ * @param {(boolean|object)} shouldMaskProduction Returning alternate value for 'prod' -- Can be used to hide env value in the config
+ * @param {any} shouldMaskProduction.maskedValue Alternate value to return in place of 'prod'
  */
-const getValidEnv = (env, maskProd = false) => {
-  return typeof env === 'string' && env.toLowerCase() === PROD
-    ? maskProd
-      ? ''
-      : PROD
-    : QA;
+const getValidEnv = (env, shouldMaskProduction) => {
+  const maskValue =
+    typeof shouldMaskProduction === 'object' &&
+    Object.prototype.hasOwnProperty.call(shouldMaskProduction, 'maskedValue')
+      ? shouldMaskProduction.maskValue
+      : '';
+
+  const returnVal =
+    typeof env && typeof env === 'string' && env.toLowerCase() === QA
+      ? QA
+      : shouldMaskProduction
+      ? maskValue
+      : PROD;
+
+  return returnVal;
 };
 
 module.exports = {
