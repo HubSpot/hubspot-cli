@@ -11,6 +11,16 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  OAUTH_SCOPES,
+  HUBSPOT_API_KEY,
+  HUBSPOT_CLIENT_ID,
+  HUBSPOT_CLIENT_SECRET,
+  HUBSPOT_PERSONAL_ACCESS_KEY,
+  HUBSPOT_PORTAL_ID,
+  ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
 } = require('./constants');
 
 let _config;
@@ -119,7 +129,7 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = (path, options = {}) => {
+const loadFileConfig = (path, options = {}) => {
   _configPath = getConfigPath(path);
   if (!_configPath) {
     if (!options.silenceErrors) {
@@ -143,6 +153,15 @@ const loadConfig = (path, options = {}) => {
     _config = {
       portals: [],
     };
+  }
+};
+
+const loadConfig = (path, options = {}) => {
+  const configLoadedFromEnv = loadEnvironmentVariableConfig();
+  if (configLoadedFromEnv) {
+    return;
+  } else {
+    loadFileConfig(path, options);
   }
 };
 
@@ -351,6 +370,111 @@ const deleteEmptyConfigFile = () => {
   return (
     configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
   );
+};
+
+const getConfigVariablesFromEnv = () => {
+  const env = process.env;
+
+  return {
+    apiKey: env[HUBSPOT_API_KEY],
+    clientId: env[HUBSPOT_CLIENT_ID],
+    clientSecret: env[HUBSPOT_CLIENT_SECRET],
+    personalAccessKey: env[HUBSPOT_PERSONAL_ACCESS_KEY],
+    portalId: parseInt(env[HUBSPOT_PORTAL_ID], 10),
+  };
+};
+
+const generatePersonalAccessKeyPortalConfig = (portalId, personalAccessKey) => {
+  console.log('Env config using: personalAccessKey');
+  return {
+    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+    portals: [
+      {
+        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+        authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        portalId,
+        personalAccessKey,
+      },
+    ],
+  };
+};
+
+const generateOauthPortalConfig = (
+  portalId,
+  clientId,
+  clientSecret,
+  scopes
+) => {
+  console.log('Env config using: oauth2');
+  return {
+    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+    portals: [
+      {
+        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+        authType: OAUTH_AUTH_METHOD.value,
+        portalId,
+        auth: {
+          clientId,
+          clientSecret,
+          scopes,
+        },
+      },
+    ],
+  };
+};
+
+const generateApiKeyPortalConfig = (portalId, apiKey) => {
+  console.log('Env config using: apiKey');
+  return {
+    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+    portals: [
+      {
+        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
+        authType: API_KEY_AUTH_METHOD.value,
+        portalId,
+        apiKey,
+      },
+    ],
+  };
+};
+
+const loadConfigFromEnvironment = () => {
+  const {
+    apiKey,
+    clientId,
+    clientSecret,
+    personalAccessKey,
+    portalId,
+  } = getConfigVariablesFromEnv();
+
+  if (!portalId) {
+    return;
+  }
+
+  if (personalAccessKey) {
+    return generatePersonalAccessKeyPortalConfig(portalId, personalAccessKey);
+  } else if (clientId && clientSecret) {
+    return generateOauthPortalConfig(
+      portalId,
+      clientId,
+      clientSecret,
+      OAUTH_SCOPES.map(scope => scope.value)
+    );
+  } else if (apiKey) {
+    return generateApiKeyPortalConfig(portalId, apiKey);
+  } else {
+    return;
+  }
+};
+
+const loadEnvironmentVariableConfig = () => {
+  const envConfig = loadConfigFromEnvironment();
+
+  if (!envConfig) {
+    return;
+  }
+
+  return setConfig(envConfig);
 };
 
 module.exports = {
