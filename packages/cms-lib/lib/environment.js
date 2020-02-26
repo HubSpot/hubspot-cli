@@ -1,7 +1,7 @@
 const { QA, PROD } = require('./constants');
 
 /**
- * Returns valid environment string for QA or Production
+ * Returns environment constant for QA and PROD or optional masked value for PROD
  * @param {string} env Environment string, can be any case
  * @param {(boolean|object)} shouldMaskProduction Returning alternate value for 'prod' -- Can be used to hide env value in the config
  * @param {any} shouldMaskProduction.maskedValue Alternate value to return in place of 'prod'
