@@ -15,6 +15,7 @@ const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
+  HUBSPOT_REFRESH_TOKEN,
   HUBSPOT_API_KEY,
   HUBSPOT_CLIENT_ID,
   HUBSPOT_CLIENT_SECRET,
@@ -381,6 +382,7 @@ const getConfigVariablesFromEnv = () => {
     clientSecret: env[HUBSPOT_CLIENT_SECRET],
     personalAccessKey: env[HUBSPOT_PERSONAL_ACCESS_KEY],
     portalId: parseInt(env[HUBSPOT_PORTAL_ID], 10),
+    refreshToken: env[HUBSPOT_REFRESH_TOKEN],
   };
 };
 
@@ -403,6 +405,7 @@ const generateOauthPortalConfig = (
   portalId,
   clientId,
   clientSecret,
+  refreshToken,
   scopes
 ) => {
   console.log('Env config using: oauth2');
@@ -417,6 +420,9 @@ const generateOauthPortalConfig = (
           clientId,
           clientSecret,
           scopes,
+          tokenInfo: {
+            refreshToken,
+          },
         },
       },
     ],
@@ -445,6 +451,7 @@ const loadConfigFromEnvironment = () => {
     clientSecret,
     personalAccessKey,
     portalId,
+    refreshToken,
   } = getConfigVariablesFromEnv();
 
   if (!portalId) {
@@ -453,11 +460,12 @@ const loadConfigFromEnvironment = () => {
 
   if (personalAccessKey) {
     return generatePersonalAccessKeyPortalConfig(portalId, personalAccessKey);
-  } else if (clientId && clientSecret) {
+  } else if (clientId && clientSecret && refreshToken) {
     return generateOauthPortalConfig(
       portalId,
       clientId,
       clientSecret,
+      refreshToken,
       OAUTH_SCOPES.map(scope => scope.value)
     );
   } else if (apiKey) {
