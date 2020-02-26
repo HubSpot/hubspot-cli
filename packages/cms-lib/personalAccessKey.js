@@ -33,9 +33,15 @@ async function getAccessToken(personalAccessKey, env = 'PROD') {
     response = await fetchAccessToken(personalAccessKey, env);
   } catch (e) {
     if (e.response) {
-      throw new HubSpotAuthError(
-        `Error while retrieving new access token: ${e.response.body.message}`
-      );
+      if (e.response.statusCode === 401) {
+        throw new HubSpotAuthError(
+          `Error while retrieving new access token: ${e.response.body.message}. \nYour personal CMS access key is invalid. Please run "hs auth personalaccesskey" to reauthenticate. See https://designers.hubspot.com/docs/personal-access-keys for more information.`
+        );
+      } else {
+        throw new HubSpotAuthError(
+          `Error while retrieving new access token: ${e.response.body.message}`
+        );
+      }
     } else {
       throw e;
     }
