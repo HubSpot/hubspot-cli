@@ -22,6 +22,7 @@ const {
   addHelpUsageTracking,
   trackAuthAction,
 } = require('../lib/usageTracking');
+const { promptUser, PORTAL_NAME } = require('../lib/prompts');
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
@@ -59,7 +60,18 @@ function initializeConfigCommand(program) {
 
       try {
         const configData = await personalAccessKeyPrompt();
-        await updateConfigWithPersonalAccessKey(configData, true);
+        const { name } = await promptUser([PORTAL_NAME]);
+        await updateConfigWithPersonalAccessKey(
+          {
+            ...configData,
+            name,
+          },
+          true
+        );
+
+        logger.log(
+          `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+        );
       } catch (err) {
         logFileSystemErrorInstance(err, {
           filepath: configPath,

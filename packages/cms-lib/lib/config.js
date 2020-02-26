@@ -271,11 +271,12 @@ const updatePortalConfig = configOptions => {
       tokenInfo,
     };
   }
+
   const env = getConfigEnv(environment || (portalConfig && portalConfig.env));
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
-    name,
+    name: name || (portalConfig && portalConfig.name),
     env,
     portalId,
     authType,
@@ -298,6 +299,7 @@ const updatePortalConfig = configOptions => {
     }
   }
   writeConfig();
+  return nextPortalConfig;
 };
 
 /**
