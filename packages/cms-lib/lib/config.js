@@ -144,22 +144,14 @@ const shouldWarnOfGitInclusion = () => {
 
 const checkAndWarnGitInclusion = () => {
   if (!shouldWarnOfGitInclusion()) return;
-  const groupTitle = 'Security Issue';
-  const remediateGroupTitle = 'To remediate:';
-  logger.group(groupTitle);
+  logger.warn('Security Issue');
   logger.warn('Config file can be tracked by git.');
-  logger.warn('File: "%s"', _configPath);
-  logger.group(remediateGroupTitle);
-  logger.warn('Move config file to your home directory: "%s"', os.homedir());
-  logger.warn(
-    'Add gitignore pattern %s to a .gitignore file in root of your repository.',
-    CONFIG_GITIGNORE_PATTERN
-  );
-  logger.warn(
-    'Ensure that config file has not already been pushed to a remote repository.'
-  );
-  logger.groupEnd(remediateGroupTitle);
-  logger.groupEnd(groupTitle);
+  logger.warn(`File: "${_configPath}"`);
+  logger.warn(`To remediate:
+  - Move config file to your home directory: "${os.homedir()}"
+  - Add gitignore pattern "${CONFIG_GITIGNORE_PATTERN}" to a .gitignore file in root of your repository.
+  - Ensure that config file has not already been pushed to a remote repository.
+`);
 };
 
 /**
