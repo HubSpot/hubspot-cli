@@ -15,8 +15,6 @@ const {
   Mode,
 } = require('./constants');
 
-const { EOL } = os;
-
 let _config;
 let _configPath;
 
@@ -81,41 +79,93 @@ const getOrderedConfig = unorderedConfig => {
   };
 };
 
+const makeComparisonDir = filepath => {
+  if (typeof filepath !== 'string') return null;
+  // Append sep to make comparisons easier e.g. 'foos'.startsWith('foo')
+  return path.dirname(path.resolve(filepath)).toLowerCase() + path.sep;
+};
+
+const getConfigComparisonDir = () => makeComparisonDir(_configPath);
+
+const getGitComparisonDir = () => makeComparisonDir(findup('.git'));
+
+// Get all .gitignore files since they can cascade down directory structures
+const getGitignoreFiles = () => {
+  const gitDir = getGitComparisonDir();
+  const files = [];
+  if (!gitDir) {
+    // Not in git
+    return files;
+  }
+  // Start findup from config dir
+  let cwd = _configPath && path.dirname(_configPath);
+  while (cwd) {
+    const ignorePath = findup('.gitignore', { cwd });
+    if (
+      ignorePath &&
+      // Stop findup after .git dir is reached
+      makeComparisonDir(ignorePath).startsWith(makeComparisonDir(gitDir))
+    ) {
+      const file = path.resolve(ignorePath);
+      files.push(file);
+      cwd = path.dirname(file);
+    } else {
+      cwd = null;
+    }
+  }
+  return files;
+};
+
+const isConfigPathInGitRepo = () => {
+  const gitDir = getGitComparisonDir();
+  if (!gitDir) return false;
+  const configDir = getConfigComparisonDir();
+  if (!configDir) return false;
+  return configDir.startsWith(gitDir);
+};
+
 const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
 
-/**
- * @param {object}  options
- * @param {string}  options.path
- */
-const ensureConfigGitignore = async (options = {}) => {
-  const configPath = options.path || _configPath || getConfigPath();
-  if (!configPath) return;
-  try {
-    const dir = path.dirname(configPath);
-    const ignoreFilePath = path.join(dir, '.gitignore');
-    await fs.ensureFile(ignoreFilePath);
-    let source = (await fs.readFile(ignoreFilePath)) || '';
-    const ig = ignore().add(source.toString());
-    if (ig.ignores(CONFIG_GITIGNORE_PATTERN)) {
-      return;
-    }
-    source = `${CONFIG_GITIGNORE_PATTERN}${EOL}${source}`;
-    await fs.writeFile(ignoreFilePath, source);
-  } catch (err) {
-    logger.error(
-      `An error occured while writing a gitignore rule for ${path.basename(
-        configPath
-      )}`
-    );
-    logFileSystemErrorInstance(err, { filepath: configPath, write: true });
+const shouldWarnOfGitInclusion = () => {
+  if (!isConfigPathInGitRepo()) {
+    // Not in git
+    return false;
   }
+  const ignoreFiles = getGitignoreFiles();
+  for (const gitignore in ignoreFiles) {
+    if (ignore(gitignore).ignores(CONFIG_GITIGNORE_PATTERN)) {
+      // Has a gitignore rule
+      return false;
+    }
+  }
+  // In git w/o a gitignore rule
+  return true;
+};
+
+const checkAndWarnGitInclusion = () => {
+  if (!shouldWarnOfGitInclusion()) return;
+  const groupTitle = 'Security Issue';
+  const remediateGroupTitle = 'To remediate:';
+  logger.group(groupTitle);
+  logger.warn('Config file can be tracked by git.');
+  logger.warn('File: "%s"', _configPath);
+  logger.group(remediateGroupTitle);
+  logger.warn('Move config file to your home directory: "%s"', os.homedir());
+  logger.warn(
+    'Add gitignore pattern %s to a .gitignore file in root of your repository.',
+    CONFIG_GITIGNORE_PATTERN
+  );
+  logger.warn(
+    'Ensure that config file has not already been pushed to a remote repository.'
+  );
+  logger.groupEnd(remediateGroupTitle);
+  logger.groupEnd(groupTitle);
 };
 
 /**
  * @param {object}  options
  * @param {string}  options.path
  * @param {string}  options.source
- * @param {boolean} options.gitignore
  */
 const writeConfig = (options = {}) => {
   let source;
@@ -131,21 +181,17 @@ const writeConfig = (options = {}) => {
     return;
   }
   const configPath = options.path || _configPath;
-  const gitignore =
-    options.gitignore === !!options.gitignore ? options.gitignore : true;
   try {
     logger.debug(`Writing current config to ${configPath}`);
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
-    if (gitignore) {
-      ensureConfigGitignore();
-    }
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
 };
 
 const readConfigFile = () => {
+  isConfigPathInGitRepo();
   let source;
   let error;
   if (!_configPath) {
@@ -187,7 +233,6 @@ const loadConfig = (path, options = {}) => {
     }
     return;
   }
-  ensureConfigGitignore();
 
   logger.debug(`Reading config from ${_configPath}`);
   const { source, error: sourceError } = readConfigFile(_configPath);
@@ -413,6 +458,7 @@ const deleteEmptyConfigFile = () => {
 };
 
 module.exports = {
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getEnv,
   getConfig,
