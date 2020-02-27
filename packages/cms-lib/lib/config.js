@@ -108,7 +108,7 @@ const getGitignoreFiles = () => {
     ) {
       const file = path.resolve(ignorePath);
       files.push(file);
-      cwd = path.dirname(file);
+      cwd = path.resolve(path.dirname(file) + '..');
     } else {
       cwd = null;
     }
