@@ -1,5 +1,9 @@
 const { version } = require('../package.json');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -34,6 +38,7 @@ async function authAction(type, options) {
   logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath);
+  checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
     process.exit(1);

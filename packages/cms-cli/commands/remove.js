@@ -1,5 +1,9 @@
 const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   logApiErrorInstance,
@@ -33,6 +37,7 @@ function configureRemoveCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (!(validateConfig() && (await validatePortal(command)))) {
         process.exit(1);

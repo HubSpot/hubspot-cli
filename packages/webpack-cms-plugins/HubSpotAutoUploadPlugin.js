@@ -1,5 +1,9 @@
 const { upload } = require('@hubspot/cms-lib/api/fileMapper');
-const { loadConfig, getPortalId } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  getPortalId,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -13,6 +17,7 @@ const {
 
 setLogLevel(LOG_LEVEL.LOG);
 loadConfig();
+checkAndWarnGitInclusion();
 
 const pluginName = 'HubSpotAutoUploadPlugin';
 

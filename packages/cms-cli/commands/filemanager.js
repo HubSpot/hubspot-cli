@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
 const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
@@ -53,6 +57,7 @@ function configureFileManagerUploadCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (!validateConfig() || !(await validatePortal(command))) {
         process.exit(1);

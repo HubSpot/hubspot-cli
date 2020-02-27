@@ -10,7 +10,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { loadConfig } = require('@hubspot/cms-lib');
+const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logApiErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { toFile, outputLogs } = require('@hubspot/cms-lib/lib/logs');
@@ -39,6 +39,7 @@ function getLogs(program) {
       setLogLevel(options);
       logDebugInfo(options);
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
       trackCommandUsage(
         COMMAND_NAME,
         {

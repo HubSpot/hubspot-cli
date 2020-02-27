@@ -6,6 +6,7 @@ const {
   loadConfig,
   uploadFolder,
   validateConfig,
+  checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const {
   getFileMapperApiQueryFromMode,
@@ -55,6 +56,7 @@ function configureUploadCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (
         !(
