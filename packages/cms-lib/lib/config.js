@@ -1,12 +1,14 @@
+const fs = require('fs-extra');
+const path = require('path');
+const os = require('os');
+const ignore = require('ignore');
 const yaml = require('js-yaml');
-const fs = require('fs');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
 const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
-const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
@@ -26,7 +28,7 @@ const setConfig = updatedConfig => {
 /**
  * @returns {boolean}
  */
-function validateConfig() {
+const validateConfig = () => {
   const config = getConfig();
   if (!config) {
     logger.error('config is not defined');
@@ -55,7 +57,7 @@ function validateConfig() {
     portalsHash[cfg.portalId] = cfg;
     return true;
   });
-}
+};
 
 const getOrderedConfig = unorderedConfig => {
   const {
@@ -77,17 +79,111 @@ const getOrderedConfig = unorderedConfig => {
   };
 };
 
-const writeConfig = () => {
-  logger.debug(`Writing current config to ${_configPath}`);
-  fs.writeFileSync(
-    _configPath,
-    yaml.safeDump(
-      JSON.parse(JSON.stringify(getOrderedConfig(_config), null, 2))
-    )
-  );
+const makeComparisonDir = filepath => {
+  if (typeof filepath !== 'string') return null;
+  // Append sep to make comparisons easier e.g. 'foos'.startsWith('foo')
+  return path.dirname(path.resolve(filepath)).toLowerCase() + path.sep;
+};
+
+const getConfigComparisonDir = () => makeComparisonDir(_configPath);
+
+const getGitComparisonDir = () => makeComparisonDir(findup('.git'));
+
+// Get all .gitignore files since they can cascade down directory structures
+const getGitignoreFiles = () => {
+  const gitDir = getGitComparisonDir();
+  const files = [];
+  if (!gitDir) {
+    // Not in git
+    return files;
+  }
+  // Start findup from config dir
+  let cwd = _configPath && path.dirname(_configPath);
+  while (cwd) {
+    const ignorePath = findup('.gitignore', { cwd });
+    if (
+      ignorePath &&
+      // Stop findup after .git dir is reached
+      makeComparisonDir(ignorePath).startsWith(makeComparisonDir(gitDir))
+    ) {
+      const file = path.resolve(ignorePath);
+      files.push(file);
+      cwd = path.resolve(path.dirname(file) + '..');
+    } else {
+      cwd = null;
+    }
+  }
+  return files;
+};
+
+const isConfigPathInGitRepo = () => {
+  const gitDir = getGitComparisonDir();
+  if (!gitDir) return false;
+  const configDir = getConfigComparisonDir();
+  if (!configDir) return false;
+  return configDir.startsWith(gitDir);
+};
+
+const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
+
+const shouldWarnOfGitInclusion = () => {
+  if (!isConfigPathInGitRepo()) {
+    // Not in git
+    return false;
+  }
+  const ignoreFiles = getGitignoreFiles();
+  for (const gitignore in ignoreFiles) {
+    if (ignore(gitignore).ignores(CONFIG_GITIGNORE_PATTERN)) {
+      // Has a gitignore rule
+      return false;
+    }
+  }
+  // In git w/o a gitignore rule
+  return true;
+};
+
+const checkAndWarnGitInclusion = () => {
+  if (!shouldWarnOfGitInclusion()) return;
+  logger.warn('Security Issue');
+  logger.warn('Config file can be tracked by git.');
+  logger.warn(`File: "${_configPath}"`);
+  logger.warn(`To remediate:
+  - Move config file to your home directory: "${os.homedir()}"
+  - Add gitignore pattern "${CONFIG_GITIGNORE_PATTERN}" to a .gitignore file in root of your repository.
+  - Ensure that config file has not already been pushed to a remote repository.
+`);
+};
+
+/**
+ * @param {object}  options
+ * @param {string}  options.path
+ * @param {string}  options.source
+ */
+const writeConfig = (options = {}) => {
+  let source;
+  try {
+    source =
+      typeof options.source === 'string'
+        ? options.source
+        : yaml.safeDump(
+            JSON.parse(JSON.stringify(getOrderedConfig(getConfig()), null, 2))
+          );
+  } catch (err) {
+    logErrorInstance(err);
+    return;
+  }
+  const configPath = options.path || _configPath;
+  try {
+    logger.debug(`Writing current config to ${configPath}`);
+    fs.ensureFileSync(configPath);
+    fs.writeFileSync(configPath, source);
+  } catch (err) {
+    logFileSystemErrorInstance(err, { filepath: configPath, write: true });
+  }
 };
 
 const readConfigFile = () => {
+  isConfigPathInGitRepo();
   let source;
   let error;
   if (!_configPath) {
@@ -326,7 +422,7 @@ const setDefaultConfigPathIfUnset = () => {
 };
 
 const setDefaultConfigPath = () => {
-  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  setConfigPath(`${os.homedir()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
 };
 
 const configFileExists = () => {
@@ -344,7 +440,7 @@ const createEmptyConfigFile = () => {
     return;
   }
 
-  return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
+  writeConfig({ source: EMPTY_CONFIG_FILE_CONTENTS });
 };
 
 const deleteEmptyConfigFile = () => {
@@ -354,6 +450,7 @@ const deleteEmptyConfigFile = () => {
 };
 
 module.exports = {
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getEnv,
   getConfig,
