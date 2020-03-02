@@ -391,7 +391,6 @@ const getConfigVariablesFromEnv = () => {
 };
 
 const generatePersonalAccessKeyPortalConfig = (portalId, personalAccessKey) => {
-  console.log('Env config using: personalAccessKey');
   return {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
@@ -413,7 +412,6 @@ const generateOauthPortalConfig = (
   refreshToken,
   scopes
 ) => {
-  console.log('Env config using: oauth2');
   return {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
@@ -436,7 +434,6 @@ const generateOauthPortalConfig = (
 };
 
 const generateApiKeyPortalConfig = (portalId, apiKey) => {
-  console.log('Env config using: apiKey');
   return {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
