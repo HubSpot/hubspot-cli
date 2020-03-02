@@ -167,13 +167,13 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
   const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
 
   if (portalId && getPortalConfig(portalId)) {
-    return http.post({
+    return http.post(portalId, {
       uri: path,
       body: usageEvent,
     });
   }
 
-  const env = getEnv();
+  const env = getEnv(portalId);
   const requestOptions = http.getRequestOptions(
     { env },
     {
