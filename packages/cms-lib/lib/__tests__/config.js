@@ -198,5 +198,72 @@ describe('lib/config', () => {
         ).env
       ).toEqual(newEnv);
     });
+
+    it('does not add the name to the config if not specified or existing', () => {
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.name;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(getConfig().name).toBeFalsy();
+    });
+
+    it('sets the name in the config if specified', () => {
+      const name = 'MYNAME';
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        name,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(name);
+    });
+
+    it('sets the env in the config if it was preexisting', () => {
+      const name = 'PREEXISTING';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, name }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.name;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(name);
+    });
+
+    it('overwrites the existing env in the config if specified', () => {
+      const previousName = 'PREVIOUSNAME';
+      const newName = 'NEWNAME';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousName }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        name: newName,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(newName);
+    });
   });
 });
