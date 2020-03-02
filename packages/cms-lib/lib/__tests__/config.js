@@ -1,42 +1,90 @@
 const {
-  setConfig,
+  deleteEmptyConfigFile,
   getConfig,
   getPortalId,
+  setConfig,
   updateDefaultPortal,
-  deleteEmptyConfigFile,
+  updatePortalConfig,
 } = require('../config');
 jest.mock('fs');
 
+const API_KEY_CONFIG = {
+  name: 'API',
+  portalId: 1111,
+  authType: 'apikey',
+  apiKey: 'secret',
+};
+const OAUTH2_CONFIG = {
+  name: 'OAUTH2',
+  portalId: 2222,
+  authType: 'oauth2',
+  auth: {
+    clientId: 'fakeClientId',
+    clientSecret: 'fakeClientSecret',
+    scopes: ['content'],
+    tokenInfo: {
+      expiresAt: '2020-01-01T00:00:00.000Z',
+      refreshToken: 'fakeOauthRefreshToken',
+      accessToken: 'fakeOauthAccessToken',
+    },
+  },
+};
+const PERSONAL_ACCESS_KEY_CONFIG = {
+  name: 'PERSONALACCESSKEY',
+  portalId: 3333,
+  authType: 'personalaccesskey',
+  auth: {
+    scopes: ['content'],
+    tokenInfo: {
+      expiresAt: '2020-01-01T00:00:00.000Z',
+      accessToken: 'fakePersonalAccessKeyAccessToken',
+    },
+  },
+  personalAccessKey: 'fakePersonalAccessKey',
+};
+const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
+
+const getPortalByAuthType = (config, authType) => {
+  return config.portals.filter(portal => portal.authType === authType)[0];
+};
+
 describe('lib/config', () => {
+  describe('setConfig()', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('sets the config properly', () => {
+      expect(getConfig()).toEqual(CONFIG);
+    });
+  });
+
   describe('getPortalId()', () => {
     beforeEach(() => {
       setConfig({
-        defaultPortal: 'PROD',
-        portals: [
-          {
-            name: 'QA',
-            portalId: 123,
-            apiKey: 'secret',
-          },
-          {
-            name: 'PROD',
-            portalId: 456,
-            apiKey: 'secret',
-          },
-        ],
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: PORTALS,
       });
     });
     it('returns portalId from config when a name is passed', () => {
-      expect(getPortalId('QA')).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.name)).toEqual(OAUTH2_CONFIG.portalId);
     });
     it('returns portalId from config when a string id is passed', () => {
-      expect(getPortalId('123')).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.portalId.toString())).toEqual(
+        OAUTH2_CONFIG.portalId
+      );
     });
     it('returns portalId from config when a numeric id is passed', () => {
-      expect(getPortalId(123)).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.portalId)).toEqual(
+        OAUTH2_CONFIG.portalId
+      );
     });
     it('returns defaultPortal from config', () => {
-      expect(getPortalId()).toEqual(456);
+      expect(getPortalId()).toEqual(PERSONAL_ACCESS_KEY_CONFIG.portalId);
     });
   });
 
@@ -71,6 +119,84 @@ describe('lib/config', () => {
 
       deleteEmptyConfigFile();
       expect(fs.unlinkSync).toHaveBeenCalled();
+    });
+  });
+
+  describe('updatePortalConfig()', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('does not add the env to the config if not specified or existing', () => {
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(getConfig().env).toBeFalsy();
+    });
+
+    it('sets the env in the config if specified', () => {
+      const environment = 'QA';
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        environment,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(environment);
+    });
+
+    it('sets the env in the config if it was preexisting', () => {
+      const env = 'QA';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(env);
+    });
+
+    it('overwrites the existing env in the config if specified', () => {
+      const previousEnv = 'PROD';
+      const newEnv = 'QA';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousEnv }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        environment: newEnv,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(newEnv);
     });
   });
 });
