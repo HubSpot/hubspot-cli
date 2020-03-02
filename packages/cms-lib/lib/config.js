@@ -36,7 +36,8 @@ function validateConfig() {
     logger.error('config.portals[] is not defined');
     return false;
   }
-  const portalsHash = {};
+  const portalIdsHash = {};
+  const portalNamesHash = {};
   return config.portals.every(cfg => {
     if (!cfg) {
       logger.error('config.portals[] has an empty entry');
@@ -46,13 +47,28 @@ function validateConfig() {
       logger.error('config.portals[] has an entry missing portalId');
       return false;
     }
-    if (portalsHash[cfg.portalId]) {
+    if (portalIdsHash[cfg.portalId]) {
       logger.error(
         `config.portals[] has multiple entries with portalId=${cfg.portalId}`
       );
       return false;
     }
-    portalsHash[cfg.portalId] = cfg;
+
+    if (cfg.name) {
+      if (portalNamesHash[cfg.name]) {
+        logger.error(
+          `config.name has multiple entries with portalId=${cfg.portalId}`
+        );
+        return false;
+      }
+      if (cfg.name.indexOf(' ') !== -1) {
+        logger.error(`config.name '${cfg.name}' cannot contain spaces`);
+        return false;
+      }
+      portalNamesHash[cfg.name] = cfg;
+    }
+
+    portalIdsHash[cfg.portalId] = cfg;
     return true;
   });
 }

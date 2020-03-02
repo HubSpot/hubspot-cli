@@ -5,6 +5,7 @@ const {
   setConfig,
   updateDefaultPortal,
   updatePortalConfig,
+  validateConfig,
 } = require('../config');
 jest.mock('fs');
 
@@ -264,6 +265,70 @@ describe('lib/config', () => {
           modifiedPersonalAccessKeyConfig.authType
         ).name
       ).toEqual(newName);
+    });
+  });
+
+  describe('validateConfig()', () => {
+    const DEFAULT_PORTAL = PORTALS[0].name;
+
+    it('allows valid config', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: PORTALS,
+      });
+      expect(validateConfig()).toEqual(true);
+    });
+
+    it('does not allow duplicate portalIds', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [...PORTALS, PORTALS[0]],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('does not allow duplicate names', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          ...PORTALS,
+          {
+            ...PORTALS[0],
+            portalId: 123456789,
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('does not allow names with spaces', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          {
+            ...PORTALS[0],
+            name: 'A NAME WITH SPACES',
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('allows multiple portals with no name', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          {
+            ...PORTALS[0],
+            name: null,
+          },
+          {
+            ...PORTALS[1],
+            name: null,
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(true);
     });
   });
 });
