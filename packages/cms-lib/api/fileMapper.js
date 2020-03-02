@@ -3,7 +3,7 @@ const path = require('path');
 const contentDisposition = require('content-disposition');
 const http = require('../http');
 const { getCwd } = require('../path');
-const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { getEnv, getPortalConfig } = require('../lib/config');
 const { logger } = require('../logger');
 
 const FILE_MAPPER_API_PATH = 'content/filemapper/v1';
@@ -158,29 +158,27 @@ async function deleteFolder(portalId, folderPath, options = {}) {
  * @returns {Promise}
  */
 async function trackUsage(eventName, eventClass, meta = {}, portalId) {
-  let env = 'PROD';
-  if (portalId) {
-    const portalConfig = getPortalConfig(portalId);
-    if (portalConfig && portalConfig.env) {
-      env = portalConfig.env;
-    }
-  } else {
-    const config = getAndLoadConfigIfNeeded();
-    if (config.env) {
-      env = config.env;
-    }
+  const usageEvent = {
+    portalId,
+    eventName,
+    eventClass,
+    meta,
+  };
+  const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
+
+  if (portalId && getPortalConfig(portalId)) {
+    return http.post({
+      uri: path,
+      body: usageEvent,
+    });
   }
 
+  const env = getEnv();
   const requestOptions = http.getRequestOptions(
     { env },
     {
-      uri: `${FILE_MAPPER_API_PATH}/cms-cli-usage`,
-      body: {
-        portalId,
-        eventName,
-        eventClass,
-        meta,
-      },
+      uri: path,
+      body: usageEvent,
     }
   );
   return http.request.post(requestOptions);
