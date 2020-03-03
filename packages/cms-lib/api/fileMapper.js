@@ -168,8 +168,9 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
 
   if (portalId && getPortalConfig(portalId)) {
     return http.post(portalId, {
-      uri: path,
+      uri: `${path}/authenticated`,
       body: usageEvent,
+      resolveWithFullResponse: true,
     });
   }
 
