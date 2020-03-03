@@ -8,9 +8,10 @@ async function getFunctionLogs(portalId, functionId) {
   });
 }
 
-async function getLatestFunctionLog(portalId, functionId) {
+async function getLatestFunctionLog(portalId, functionId, after) {
   return http.get(portalId, {
     uri: `${RESULTS_API_PATH}/${functionId}/latest`,
+    after,
   });
 }
 

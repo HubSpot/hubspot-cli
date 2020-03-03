@@ -21,19 +21,54 @@ const {
 } = require('@hubspot/cms-lib/api/results');
 
 const COMMAND_NAME = 'logs';
+const TAIL_DELAY = 20000;
 
-function getLogs(program) {
+const makeTailCall = (portalId, functionId) => {
+  return async after => {
+    const latestLog = await getLatestFunctionLog(portalId, functionId, after);
+    console.log('Latest Log Id: ', latestLog.id);
+    if (latestLog.id !== after) {
+      outputLogs(latestLog);
+    }
+
+    return latestLog.id;
+  };
+};
+
+const tailLogs = async (functionPath, portalId, functionId) => {
+  const tailCall = makeTailCall(portalId, functionId);
+  let after;
+
+  logger.log(
+    `Tailing logs for '${functionPath}(${functionId})' on portal: ${portalId}.`
+  );
+
+  const latestLog = await getLatestFunctionLog(portalId, functionId);
+
+  console.log('LogId: ', latestLog.id);
+
+  after = latestLog.id;
+
+  return new Promise(() => {
+    setInterval(async () => {
+      // eslint-disable-next-line require-atomic-updates
+      after = await tailCall(after);
+    }, TAIL_DELAY);
+  });
+};
+
+const getLogs = program => {
   program
     .version(version)
     .description(`get logs for a function`)
     .arguments('<function_path>')
     .option('-f, --file', 'output logs to file')
     .option('--latest', 'retrieve most recent log only')
+    .option('--tail', 'tail logs')
     .action(async (functionPath, options) => {
       const { config: configPath } = options;
       const portalId = getPortalId(program);
-      const getLatestLogOnly = options && options.latest;
-      const logToFile = options && options.file;
+      const { latest, file, tail } = options;
       let logsResp;
 
       setLogLevel(options);
@@ -43,15 +78,15 @@ function getLogs(program) {
       trackCommandUsage(
         COMMAND_NAME,
         {
-          latest: getLatestLogOnly,
-          file: logToFile,
+          latest,
+          file,
         },
         portalId
       );
 
       logger.debug(
         `Getting ${
-          getLatestLogOnly ? 'latest ' : ''
+          latest ? 'latest ' : ''
         }logs for function with path: ${functionPath}`
       );
 
@@ -68,13 +103,15 @@ function getLogs(program) {
 
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
-      if (getLatestLogOnly) {
+      if (tail) {
+        logsResp = await tailLogs(functionPath, portalId, functionResp.id);
+      } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
         logsResp = await getFunctionLogs(portalId, functionResp.id);
       }
 
-      if (logToFile) {
+      if (file) {
         return toFile(logsResp);
       }
 
@@ -84,7 +121,7 @@ function getLogs(program) {
   addPortalOptions(program);
   addLoggerOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
-}
+};
 
 module.exports = {
   getLogs,
