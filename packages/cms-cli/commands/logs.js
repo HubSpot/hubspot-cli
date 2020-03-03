@@ -19,19 +19,20 @@ const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
+const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
 
 const COMMAND_NAME = 'logs';
-const TAIL_DELAY = 20000;
+const TAIL_DELAY = 5000;
 
 const makeTailCall = (portalId, functionId) => {
   return async after => {
-    const latestLog = await getLatestFunctionLog(portalId, functionId, after);
-    console.log('Latest Log Id: ', latestLog.id);
-    if (latestLog.id !== after) {
+    const latestLog = await getFunctionLogs(portalId, functionId, { after });
+
+    if (latestLog.results.length) {
       outputLogs(latestLog);
     }
 
-    return latestLog.id;
+    return latestLog.paging.next.after;
   };
 };
 
@@ -44,10 +45,7 @@ const tailLogs = async (functionPath, portalId, functionId) => {
   );
 
   const latestLog = await getLatestFunctionLog(portalId, functionId);
-
-  console.log('LogId: ', latestLog.id);
-
-  after = latestLog.id;
+  after = base64EncodeString(latestLog.id);
 
   return new Promise(() => {
     setInterval(async () => {
