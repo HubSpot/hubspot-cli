@@ -33,21 +33,23 @@ function trackCommandUsage(command, meta = {}, portalId) {
         : API_KEY_AUTH_METHOD.value;
   }
   setImmediate(async () => {
+    const usageTrackingEvent = {
+      action: 'cli-command',
+      os: getPlatform(),
+      ...getNodeVersionData(),
+      version,
+      command,
+      authType,
+      ...meta,
+    };
     try {
       await trackUsage(
         'cli-interaction',
         EventClass.INTERACTION,
-        {
-          action: 'cli-command',
-          os: getPlatform(),
-          ...getNodeVersionData(),
-          version,
-          command,
-          authType,
-          ...meta,
-        },
+        usageTrackingEvent,
         portalId
       );
+      logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
       logger.debug('Usage tracking failed: %s', e.message);
     }

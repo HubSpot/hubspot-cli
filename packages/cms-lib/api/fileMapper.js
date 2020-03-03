@@ -165,20 +165,23 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
     meta,
   };
   const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
+  const portalConfig = portalId && getPortalConfig(portalId);
 
-  if (portalId && getPortalConfig(portalId)) {
-    return http.post({
-      uri: path,
+  if (portalConfig && portalConfig.authType === 'personalaccesskey') {
+    return http.post(portalId, {
+      uri: `${path}/authenticated`,
       body: usageEvent,
+      resolveWithFullResponse: true,
     });
   }
 
-  const env = getEnv();
+  const env = getEnv(portalId);
   const requestOptions = http.getRequestOptions(
     { env },
     {
       uri: path,
       body: usageEvent,
+      resolveWithFullResponse: true,
     }
   );
   return http.request.post(requestOptions);
