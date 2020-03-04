@@ -14,7 +14,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logApiErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { toFile, outputLogs } = require('@hubspot/cms-lib/lib/logs');
+const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
 const {
   getFunctionLogs,
@@ -128,10 +128,6 @@ const getLogs = program => {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
         logsResp = await getFunctionLogs(portalId, functionResp.id);
-      }
-
-      if (file) {
-        return toFile(logsResp);
       }
 
       if (logsResp) {
