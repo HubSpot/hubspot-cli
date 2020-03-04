@@ -55,8 +55,7 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
     after = base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
-    // TODO - Change this from 400 to 404 once the BE is fixed
-    if (e.statusCode !== 400) {
+    if (e.statusCode !== 404) {
       logApiErrorInstance(e, {
         functionPath,
         portalId,
