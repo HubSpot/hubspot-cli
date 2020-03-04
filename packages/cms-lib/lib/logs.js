@@ -64,7 +64,7 @@ const processLog = log => {
 };
 
 const processLogs = logsResp => {
-  if (logsResp.results && !logsResp.results.length) {
+  if (!logsResp || (logsResp.results && !logsResp.results.length)) {
     return 'No logs found.';
   } else if (logsResp.results && logsResp.results.length) {
     return logsResp.results.map(processLog).join('');

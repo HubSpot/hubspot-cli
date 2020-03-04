@@ -1,4 +1,5 @@
 const { version } = require('../package.json');
+const ora = require('ora');
 const {
   addLoggerOptions,
   addPortalOptions,
@@ -24,33 +25,50 @@ const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
 const COMMAND_NAME = 'logs';
 const TAIL_DELAY = 5000;
 
-const makeTailCall = (portalId, functionId) => {
-  return async after => {
-    const latestLog = await getFunctionLogs(portalId, functionId, { after });
+const makeSpinner = (functionPath, portalIdentifier) => {
+  return ora(
+    `Tailing logs for '${functionPath}' on portal '${portalIdentifier}'.`
+  );
+};
 
+const makeTailCall = (portalId, functionId) => {
+  return async (after, spinner) => {
+    const latestLog = await getFunctionLogs(portalId, functionId, { after });
     if (latestLog.results.length) {
+      spinner.stop();
       outputLogs(latestLog);
+      spinner.start();
     }
 
     return latestLog.paging.next.after;
   };
 };
 
-const tailLogs = async (functionPath, portalId, functionId) => {
+const tailLogs = async (portalId, functionId, functionPath, portalName) => {
   const tailCall = makeTailCall(portalId, functionId);
+  const spinner = makeSpinner(functionPath, portalName || portalId);
   let after;
 
-  logger.log(
-    `Tailing logs for '${functionPath}(${functionId})' on portal: ${portalId}.`
-  );
+  spinner.start();
 
-  const latestLog = await getLatestFunctionLog(portalId, functionId);
-  after = base64EncodeString(latestLog.id);
+  try {
+    const latestLog = await getLatestFunctionLog(portalId, functionId);
+    after = base64EncodeString(latestLog.id);
+  } catch (e) {
+    // A 404 means no latest log exists(never executed)
+    // TODO - Change this from 400 to 404 once the BE is fixed
+    if (e.statusCode !== 400) {
+      logApiErrorInstance(e, {
+        functionPath,
+        portalId,
+      });
+    }
+  }
 
   return new Promise(() => {
     setInterval(async () => {
       // eslint-disable-next-line require-atomic-updates
-      after = await tailCall(after);
+      after = await tailCall(after, spinner);
     }, TAIL_DELAY);
   });
 };
@@ -102,7 +120,12 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (tail) {
-        logsResp = await tailLogs(functionPath, portalId, functionResp.id);
+        logsResp = await tailLogs(
+          portalId,
+          functionResp.id,
+          functionPath,
+          options.portal
+        );
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
@@ -113,7 +136,9 @@ const getLogs = program => {
         return toFile(logsResp);
       }
 
-      return outputLogs(logsResp);
+      if (logsResp) {
+        return outputLogs(logsResp);
+      }
     });
 
   addPortalOptions(program);
