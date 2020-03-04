@@ -70,6 +70,7 @@ async function refreshAccessToken(personalAccessKey, env = 'PROD') {
       expiresAt,
     },
   });
+  writeConfig();
 
   return accessToken;
 }

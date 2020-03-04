@@ -58,6 +58,7 @@ const addOauthToPortalConfig = (portalId, oauth) => {
       authType: AUTH_METHODS.oauth.value,
       portalId,
     });
+    writeConfig();
     logger.log('Configuration updated');
   } catch (err) {
     logErrorInstance(err);
@@ -70,7 +71,6 @@ const authenticateWithOauth = async configData => {
   logger.log('Authorizing');
   await oauth.authorize();
   addOauthToPortalConfig(portalId, oauth);
-  writeConfig();
 };
 
 module.exports = {
