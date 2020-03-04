@@ -1,5 +1,9 @@
 const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
-const { updatePortalConfig, getPortalConfig } = require('./lib/config');
+const {
+  updatePortalConfig,
+  writeConfig,
+  getPortalConfig,
+} = require('./lib/config');
 const { logger, logErrorInstance } = require('./logger');
 const { AUTH_METHODS } = require('./lib/constants');
 
@@ -19,6 +23,7 @@ const writeOauthTokenInfo = (portalConfig, tokenInfo) => {
     ...auth,
     tokenInfo,
   });
+  writeConfig();
 };
 
 const getOauthManager = (portalId, portalConfig) => {
@@ -65,6 +70,7 @@ const authenticateWithOauth = async configData => {
   logger.log('Authorizing');
   await oauth.authorize();
   addOauthToPortalConfig(portalId, oauth);
+  writeConfig();
 };
 
 module.exports = {

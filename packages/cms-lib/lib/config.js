@@ -320,10 +320,7 @@ const updatePortalConfig = configOptions => {
     }
   }
 
-  // TODO - Implement a better solution for decoupling this
-  if (!nextPortalConfig.inMemoryOnly) {
-    writeConfig();
-  }
+  return nextPortalConfig;
 };
 
 /**
@@ -397,7 +394,6 @@ const generatePersonalAccessKeyPortalConfig = (portalId, personalAccessKey) => {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        inMemoryOnly: true,
         name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
         portalId,
@@ -418,7 +414,6 @@ const generateOauthPortalConfig = (
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        inMemoryOnly: true,
         name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: OAUTH_AUTH_METHOD.value,
         portalId,
@@ -440,7 +435,6 @@ const generateApiKeyPortalConfig = (portalId, apiKey) => {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        inMemoryOnly: true,
         name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: API_KEY_AUTH_METHOD.value,
         portalId,
@@ -506,4 +500,5 @@ module.exports = {
   deleteEmptyConfigFile,
   isTrackingAllowed,
   validateConfig,
+  writeConfig,
 };

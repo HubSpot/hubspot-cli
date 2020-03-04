@@ -13,6 +13,7 @@ const {
   getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
+  writeConfig,
 } = require('./lib/config');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -167,6 +168,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
+  writeConfig();
 
   if (makeDefault) {
     updateDefaultPortal(name);
