@@ -132,7 +132,7 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadFileConfig = (path, options = {}) => {
+const loadConfigFromFile = (path, options = {}) => {
   _configPath = getConfigPath(path);
   if (!_configPath) {
     if (!options.silenceErrors) {
@@ -164,7 +164,7 @@ const loadConfig = (path, options = {}) => {
   if (configLoadedFromEnv) {
     return;
   } else {
-    loadFileConfig(path, options);
+    loadConfigFromFile(path, options);
   }
 };
 
