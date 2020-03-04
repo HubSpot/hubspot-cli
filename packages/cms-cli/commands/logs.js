@@ -76,9 +76,8 @@ const getLogs = program => {
     .version(version)
     .description(`get logs for a function`)
     .arguments('<function_path>')
-    .option('-f, --file', 'output logs to file')
     .option('--latest', 'retrieve most recent log only')
-    .option('--tail', 'tail logs')
+    .option('-f', '--follow', 'tail logs')
     .action(async (functionPath, options) => {
       const { config: configPath } = options;
       const portalId = getPortalId(program);
