@@ -236,6 +236,10 @@ async function skipExisting(input, filepath) {
  * @param {string} filepath - Local path to write to.
  */
 async function fetchAndWriteFileStream(input, srcPath, filepath) {
+  if (typeof srcPath !== 'string' || !srcPath.trim()) {
+    // This avoids issue where API was returning v1 modules with `path: ""`
+    return null;
+  }
   if (await skipExisting(input, filepath)) {
     return null;
   }

@@ -5,7 +5,6 @@
     "locked": false,
     "name": "text",
     "required": false,
-    "sortable": false,
     "type": "richtext",
     "validation_regex": ""
   }

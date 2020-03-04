@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { watch, loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  watch,
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const { logger } = require('@hubspot/cms-lib/logger');
 
@@ -42,6 +47,7 @@ function configureWatchCommand(program) {
       logDebugInfo(command);
       const { config: configPath, remove, disableInitial, notify } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (
         !(
