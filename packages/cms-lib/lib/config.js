@@ -28,6 +28,7 @@ const {
 
 let _config;
 let _configPath;
+let disableWritesToFile = false;
 
 const getConfig = () => _config;
 
@@ -91,6 +92,9 @@ const getOrderedConfig = unorderedConfig => {
 };
 
 const writeConfig = () => {
+  if (disableWritesToFile) {
+    return;
+  }
   logger.debug(`Writing current config to ${_configPath}`);
   fs.writeFileSync(
     _configPath,
@@ -162,6 +166,7 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (path, options = {}) => {
   const configLoadedFromEnv = loadEnvironmentVariableConfig();
   if (configLoadedFromEnv) {
+    disableWritesToFile = true;
     return;
   } else {
     loadConfigFromFile(path, options);
