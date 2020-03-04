@@ -17,16 +17,7 @@ const base64DecodeString = valueToDecode => {
   return stringBuffer.toString('ascii');
 };
 
-const isBase64Encoded = str => {
-  if (typeof str !== 'string') {
-    return false;
-  }
-
-  return str[str.length - 1] === '=';
-};
-
 module.exports = {
   base64DecodeString,
   base64EncodeString,
-  isBase64Encoded,
 };
