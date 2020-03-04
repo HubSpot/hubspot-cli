@@ -389,7 +389,7 @@ const getConfigVariablesFromEnv = () => {
   };
 };
 
-const generatePersonalAccessKeyPortalConfig = (portalId, personalAccessKey) => {
+const generatePersonalAccessKeyConfig = (portalId, personalAccessKey) => {
   return {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
@@ -403,7 +403,7 @@ const generatePersonalAccessKeyPortalConfig = (portalId, personalAccessKey) => {
   };
 };
 
-const generateOauthPortalConfig = (
+const generateOauthConfig = (
   portalId,
   clientId,
   clientSecret,
@@ -430,7 +430,7 @@ const generateOauthPortalConfig = (
   };
 };
 
-const generateApiKeyPortalConfig = (portalId, apiKey) => {
+const generateApiKeyConfig = (portalId, apiKey) => {
   return {
     defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
@@ -459,9 +459,9 @@ const loadConfigFromEnvironment = () => {
   }
 
   if (personalAccessKey) {
-    return generatePersonalAccessKeyPortalConfig(portalId, personalAccessKey);
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey);
   } else if (clientId && clientSecret && refreshToken) {
-    return generateOauthPortalConfig(
+    return generateOauthConfig(
       portalId,
       clientId,
       clientSecret,
@@ -469,7 +469,7 @@ const loadConfigFromEnvironment = () => {
       OAUTH_SCOPES.map(scope => scope.value)
     );
   } else if (apiKey) {
-    return generateApiKeyPortalConfig(portalId, apiKey);
+    return generateApiKeyConfig(portalId, apiKey);
   } else {
     return;
   }
