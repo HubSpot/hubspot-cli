@@ -81,7 +81,7 @@ const getLogs = program => {
     .action(async (functionPath, options) => {
       const { config: configPath } = options;
       const portalId = getPortalId(program);
-      const { latest, file, tail } = options;
+      const { latest, file, follow } = options;
       let logsResp;
 
       setLogLevel(options);
@@ -116,7 +116,7 @@ const getLogs = program => {
 
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
-      if (tail) {
+      if (follow) {
         logsResp = await tailLogs(
           portalId,
           functionResp.id,
