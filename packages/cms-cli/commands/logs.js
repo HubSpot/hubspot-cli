@@ -35,9 +35,8 @@ const makeTailCall = (portalId, functionId) => {
   return async (after, spinner) => {
     const latestLog = await getFunctionLogs(portalId, functionId, { after });
     if (latestLog.results.length) {
-      spinner.stop();
+      spinner.clear();
       outputLogs(latestLog);
-      spinner.start();
     }
 
     return latestLog.paging.next.after;
