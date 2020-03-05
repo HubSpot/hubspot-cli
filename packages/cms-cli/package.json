@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cms-cli",
-  "version": "1.0.10-beta.1",
+  "version": "1.0.10-beta.2",
   "description": "CLI for interacting with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hubspot/api-auth-lib": "^1.0.9",
-    "@hubspot/cms-lib": "^1.0.10-beta.1",
+    "@hubspot/cms-lib": "^1.0.10-beta.2",
     "commander": "^2.16.0",
     "inquirer": "^6.3.1",
     "shelljs": "0.8.3",
