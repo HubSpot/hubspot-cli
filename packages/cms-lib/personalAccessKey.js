@@ -66,18 +66,15 @@ async function refreshAccessToken(personalAccessKey, env = 'PROD') {
     portalId,
     tokenInfo: {
       accessToken,
-      expiresAt,
+      expiresAt: expiresAt.toISOString(),
     },
   });
 
   return accessToken;
 }
 
-async function getNewAccessToken(personalAccessKey, authTokenInfo, env) {
-  const key = getRefreshKey(
-    personalAccessKey,
-    authTokenInfo && authTokenInfo.expiresAt
-  );
+async function getNewAccessToken(personalAccessKey, expiresAt, env) {
+  const key = getRefreshKey(personalAccessKey, expiresAt);
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
   }
