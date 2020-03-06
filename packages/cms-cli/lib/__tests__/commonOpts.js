@@ -2,6 +2,7 @@ const {
   Mode,
   DEFAULT_MODE,
   getAndLoadConfigIfNeeded,
+  getConfigVariablesFromEnv,
   getPortalId,
   getPortalConfig,
 } = require('@hubspot/cms-lib');
@@ -36,6 +37,7 @@ describe('@hubspot/cms-cli/lib/commonOpts', () => {
       getAndLoadConfigIfNeeded.mockReset();
       getPortalId.mockReset();
       getPortalConfig.mockReset();
+      getConfigVariablesFromEnv.mockReset();
     });
     describe('mode option precedence', () => {
       describe('1. --mode', () => {
@@ -52,6 +54,7 @@ describe('@hubspot/cms-cli/lib/commonOpts', () => {
           getAndLoadConfigIfNeeded.mockReturnValue(configWithDefaultMode);
           getPortalId.mockReturnValue(portals.DEV);
           getPortalConfig.mockReturnValue(devPortalConfig);
+          getConfigVariablesFromEnv.mockReturnValue({});
           expect(getMode({ portal: portals.DEV })).toBe(Mode.draft);
         });
       });
@@ -60,11 +63,13 @@ describe('@hubspot/cms-cli/lib/commonOpts', () => {
           getAndLoadConfigIfNeeded.mockReturnValue(configWithDefaultMode);
           getPortalId.mockReturnValue(portals.PROD);
           getPortalConfig.mockReturnValue(prodPortalConfig);
+          getConfigVariablesFromEnv.mockReturnValue({});
           expect(getMode({ portal: portals.PROD })).toBe(Mode.draft);
         });
       });
       describe('4. DEFAULT_MODE', () => {
         it('should return the defaultMode specified by the config if present.', () => {
+          getConfigVariablesFromEnv.mockReturnValue({});
           expect(getMode({ portal: 'xxxxx' })).toBe(DEFAULT_MODE);
         });
       });
