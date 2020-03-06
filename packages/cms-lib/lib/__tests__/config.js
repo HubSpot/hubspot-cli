@@ -2,6 +2,7 @@ const {
   setConfig,
   getAndLoadConfigIfNeeded,
   getConfig,
+  getPortalConfig,
   getPortalId,
   updateDefaultPortal,
   deleteEmptyConfigFile,
@@ -147,7 +148,7 @@ describe('lib/config', () => {
           HUBSPOT_REFRESH_TOKEN: refreshToken,
         };
         getAndLoadConfigIfNeeded();
-        portalConfig = getConfig().portals[0];
+        portalConfig = getPortalConfig(portalId);
       });
 
       it('does not load a config from file', () => {
@@ -189,7 +190,7 @@ describe('lib/config', () => {
           HUBSPOT_API_KEY: apiKey,
         };
         getAndLoadConfigIfNeeded();
-        portalConfig = getConfig().portals[0];
+        portalConfig = getPortalConfig(portalId);
       });
 
       it('does not load a config from file', () => {
@@ -223,7 +224,7 @@ describe('lib/config', () => {
           HUBSPOT_PERSONAL_ACCESS_KEY: personalAccessKey,
         };
         getAndLoadConfigIfNeeded();
-        portalConfig = getConfig().portals[0];
+        portalConfig = getPortalConfig(portalId);
       });
 
       it('does not load a config from file', () => {
