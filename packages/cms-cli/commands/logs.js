@@ -64,10 +64,14 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
   }
 
   return new Promise(() => {
-    setInterval(async () => {
+    const tail = async after => {
       // eslint-disable-next-line require-atomic-updates
       after = await tailCall(after, spinner);
-    }, TAIL_DELAY);
+      setTimeout(() => {
+        tail(after);
+      }, TAIL_DELAY);
+    };
+    tail(after);
   });
 };
 
@@ -77,7 +81,7 @@ const getLogs = program => {
     .description(`get logs for a function`)
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
-    .option('-f', '--follow', 'tail logs')
+    .option('-f, --follow', 'tail logs')
     .action(async (functionPath, options) => {
       const { config: configPath } = options;
       const portalId = getPortalId(program);
