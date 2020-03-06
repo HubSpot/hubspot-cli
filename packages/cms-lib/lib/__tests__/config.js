@@ -159,10 +159,6 @@ describe('lib/config', () => {
         expect(portalConfig).toBeTruthy();
       });
 
-      it('sets the portal as default', () => {
-        expect(getConfig().defaultPortal).toEqual(portalConfig.name);
-      });
-
       it('properly loads portal id value', () => {
         expect(portalConfig.portalId).toEqual(portalId);
       });
@@ -201,10 +197,6 @@ describe('lib/config', () => {
         expect(portalConfig).toBeTruthy();
       });
 
-      it('sets the portal as default', () => {
-        expect(getConfig().defaultPortal).toEqual(portalConfig.name);
-      });
-
       it('properly loads portal id value', () => {
         expect(portalConfig.portalId).toEqual(portalId);
       });
@@ -233,10 +225,6 @@ describe('lib/config', () => {
 
       it('creates a portal config', () => {
         expect(portalConfig).toBeTruthy();
-      });
-
-      it('sets the portal as default', () => {
-        expect(getConfig().defaultPortal).toEqual(portalConfig.name);
       });
 
       it('properly loads portal id value', () => {

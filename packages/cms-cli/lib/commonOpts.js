@@ -1,5 +1,6 @@
 const Logger = require('@hubspot/cms-lib/logger');
 const {
+  getConfigVariablesFromEnv,
   getPortalId: getPortalIdFromConfig,
   getPortalConfig,
   getAndLoadConfigIfNeeded,
@@ -44,6 +45,12 @@ const setLogLevel = (options = {}) => {
 };
 
 const getPortalId = (options = {}) => {
+  const { portalId } = getConfigVariablesFromEnv();
+
+  if (portalId) {
+    return portalId;
+  }
+
   const { portal } = options;
   return getPortalIdFromConfig(portal);
 };

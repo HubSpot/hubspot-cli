@@ -25,7 +25,6 @@ const {
     HUBSPOT_PERSONAL_ACCESS_KEY,
     HUBSPOT_PORTAL_ID,
   },
-  ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
 } = require('./constants');
 
 let _config;
@@ -492,10 +491,8 @@ const getConfigVariablesFromEnv = () => {
 
 const generatePersonalAccessKeyConfig = (portalId, personalAccessKey) => {
   return {
-    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
         portalId,
         personalAccessKey,
@@ -512,10 +509,8 @@ const generateOauthConfig = (
   scopes
 ) => {
   return {
-    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: OAUTH_AUTH_METHOD.value,
         portalId,
         auth: {
@@ -533,10 +528,8 @@ const generateOauthConfig = (
 
 const generateApiKeyConfig = (portalId, apiKey) => {
   return {
-    defaultPortal: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
     portals: [
       {
-        name: ENVIRONMENT_VARIABLES_DEFAULT_PORTAL_NAME,
         authType: API_KEY_AUTH_METHOD.value,
         portalId,
         apiKey,
@@ -594,6 +587,7 @@ module.exports = {
   getConfigPath,
   setConfig,
   loadConfig,
+  getConfigVariablesFromEnv,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
