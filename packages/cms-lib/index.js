@@ -1,14 +1,14 @@
 const { ALLOWED_EXTENSIONS, Mode, DEFAULT_MODE } = require('./lib/constants');
 const {
-  loadConfig,
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
-  getConfigVariablesFromEnv,
   getPortalId,
   getPortalConfig,
+  loadConfig,
+  loadConfigFromEnvironment,
   updatePortalConfig,
   validateConfig,
-  checkAndWarnGitInclusion,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
@@ -21,8 +21,8 @@ module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
-  getConfigVariablesFromEnv,
   loadConfig,
+  loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,

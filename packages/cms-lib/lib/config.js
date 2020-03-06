@@ -587,7 +587,7 @@ module.exports = {
   getConfigPath,
   setConfig,
   loadConfig,
-  getConfigVariablesFromEnv,
+  loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
