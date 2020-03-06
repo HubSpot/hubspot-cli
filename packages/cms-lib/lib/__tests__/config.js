@@ -7,7 +7,7 @@ const {
   deleteEmptyConfigFile,
 } = require('../config');
 jest.mock('findup-sync', () => {
-  return jest.fn(() => `/Users/mtalley/hubspot.config.yml`);
+  return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
 });
 
 const API_KEY_CONFIG = {
