@@ -1,5 +1,3 @@
-const fs = require('fs');
-const configModule = require('../config');
 const {
   setConfig,
   getAndLoadConfigIfNeeded,
@@ -7,8 +5,10 @@ const {
   getPortalId,
   updateDefaultPortal,
   deleteEmptyConfigFile,
-} = configModule;
-jest.mock('fs');
+} = require('../config');
+jest.mock('findup-sync', () => {
+  return jest.fn(() => `/Users/mtalley/hubspot.config.yml`);
+});
 
 const API_KEY_CONFIG = {
   name: 'API',
@@ -113,17 +113,19 @@ describe('lib/config', () => {
   });
 
   describe('getAndLoadConfigIfNeeded)', () => {
+    const fs = require('fs-extra');
+
     beforeEach(() => {
       setConfig(null);
       process.env = {};
     });
 
     it('loads a config from file if no combination of environment variables is sufficient', () => {
-      const spy = jest.spyOn(configModule, 'getConfigPath');
+      const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
 
       getAndLoadConfigIfNeeded();
-      expect(configModule.getConfigPath).not.toHaveBeenCalled();
-      spy.mockRestore();
+      expect(fs.readFileSync).toHaveBeenCalled();
+      readFileSyncSpy.mockReset();
     });
 
     describe('oauth environment variable config', () => {
