@@ -147,7 +147,9 @@ describe('lib/config', () => {
           HUBSPOT_CLIENT_SECRET: clientSecret,
           HUBSPOT_REFRESH_TOKEN: refreshToken,
         };
-        getAndLoadConfigIfNeeded();
+        getAndLoadConfigIfNeeded({
+          allowEnvironmentVariableConfig: true,
+        });
         portalConfig = getPortalConfig(portalId);
       });
 
@@ -185,7 +187,9 @@ describe('lib/config', () => {
           HUBSPOT_PORTAL_ID: portalId,
           HUBSPOT_API_KEY: apiKey,
         };
-        getAndLoadConfigIfNeeded();
+        getAndLoadConfigIfNeeded({
+          allowEnvironmentVariableConfig: true,
+        });
         portalConfig = getPortalConfig(portalId);
       });
 
@@ -215,7 +219,9 @@ describe('lib/config', () => {
           HUBSPOT_PORTAL_ID: portalId,
           HUBSPOT_PERSONAL_ACCESS_KEY: personalAccessKey,
         };
-        getAndLoadConfigIfNeeded();
+        getAndLoadConfigIfNeeded({
+          allowEnvironmentVariableConfig: true,
+        });
         portalConfig = getPortalConfig(portalId);
       });
 

@@ -283,10 +283,11 @@ const isTrackingAllowed = () => {
   return allowUsageTracking !== false;
 };
 
-const getAndLoadConfigIfNeeded = () => {
+const getAndLoadConfigIfNeeded = (options = {}) => {
   if (!_config) {
     loadConfig(null, {
       silenceErrors: true,
+      ...options,
     });
   }
   return _config;
