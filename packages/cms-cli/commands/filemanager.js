@@ -56,7 +56,9 @@ function configureFileManagerUploadCommand(program) {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
-      loadConfig(configPath);
+      loadConfig(configPath, {
+        allowEnvironmentVariableConfig: true,
+      });
       checkAndWarnGitInclusion();
 
       if (!validateConfig() || !(await validatePortal(command))) {

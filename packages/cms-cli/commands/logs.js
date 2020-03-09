@@ -38,7 +38,9 @@ function getLogs(program) {
 
       setLogLevel(options);
       logDebugInfo(options);
-      loadConfig(configPath);
+      loadConfig(configPath, {
+        allowEnvironmentVariableConfig: true,
+      });
       checkAndWarnGitInclusion();
       trackCommandUsage(
         COMMAND_NAME,

@@ -39,7 +39,9 @@ function configureFetchCommand(program) {
       logDebugInfo(program);
 
       const { config: configPath } = program;
-      loadConfig(configPath);
+      loadConfig(configPath, {
+        allowEnvironmentVariableConfig: true,
+      });
       checkAndWarnGitInclusion();
 
       if (

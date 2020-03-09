@@ -46,7 +46,9 @@ function configureWatchCommand(program) {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath, remove, disableInitial, notify } = command;
-      loadConfig(configPath);
+      loadConfig(configPath, {
+        allowEnvironmentVariableConfig: true,
+      });
       checkAndWarnGitInclusion();
 
       if (

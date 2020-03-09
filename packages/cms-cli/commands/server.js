@@ -32,7 +32,9 @@ function configureServerCommand(program) {
       setLogLevel(options);
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;
-      loadConfig(configPath);
+      loadConfig(configPath, {
+        allowEnvironmentVariableConfig: true,
+      });
       checkAndWarnGitInclusion();
 
       if (!validateConfig()) {

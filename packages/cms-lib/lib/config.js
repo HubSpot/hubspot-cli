@@ -258,9 +258,16 @@ const loadConfigFromFile = (path, options = {}) => {
   }
 };
 
-const loadConfig = (path, options = {}) => {
-  const configLoadedFromEnv = loadEnvironmentVariableConfig();
-  if (configLoadedFromEnv) {
+const loadConfig = (
+  path,
+  options = {
+    allowEnvironmentVariableConfig: false,
+  }
+) => {
+  if (
+    options.allowEnvironmentVariableConfig &&
+    loadEnvironmentVariableConfig()
+  ) {
     environmentVariableConfigLoaded = true;
     return;
   } else {
