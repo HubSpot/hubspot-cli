@@ -11,6 +11,13 @@ const { LOG_LEVEL } = Logger;
 
 const addPortalOptions = program => {
   program.option('--portal <portal>', 'HubSpot portal id or name from config');
+  program.on('option:portal', () => {
+    if (loadConfigFromEnvironment()) {
+      throw new Error(
+        'Cannot specify a portal when environment variables are supplied. Please unset the environment variables or do not use the "--portal" flag.'
+      );
+    }
+  });
 };
 
 const addLoggerOptions = program => {
