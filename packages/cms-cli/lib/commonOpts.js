@@ -51,10 +51,16 @@ const setLogLevel = (options = {}) => {
   }
 };
 
+/**
+ * Obtains portalId using supplied --portal flag or from environment variables
+ */
 const getPortalId = (options = {}) => {
-  const config = loadConfigFromEnvironment() || options;
-  const { portal } = config;
-  return getPortalIdFromConfig(portal);
+  const envConfig = loadConfigFromEnvironment();
+  const { portal: portalName } = options;
+  return (
+    (envConfig && envConfig.portals[0].portalId) ||
+    getPortalIdFromConfig(portalName)
+  );
 };
 
 const getMode = (options = {}) => {
