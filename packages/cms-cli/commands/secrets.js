@@ -47,18 +47,10 @@ function configureSecretsAddCommand(program) {
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
-      console.log(
-        'Before validate',
-        validateConfig(),
-        await validatePortal(command)
-      );
-
       if (!(validateConfig() && (await validatePortal(command)))) {
         process.exit(1);
       }
       const portalId = getPortalId(command);
-
-      console.log('Portal ID: ', portalId);
 
       try {
         await addSecret(portalId, secretName, secretValue);
