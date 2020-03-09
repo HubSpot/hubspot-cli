@@ -18,7 +18,7 @@ async function deleteSecret(portalId, key) {
   });
 }
 
-async function getSecrets(portalId) {
+async function fetchSecrets(portalId) {
   return http.get(portalId, {
     uri: `${SECRETS_API_PATH}`,
   });
@@ -27,5 +27,5 @@ async function getSecrets(portalId) {
 module.exports = {
   addSecret,
   deleteSecret,
-  getSecrets,
+  fetchSecrets,
 };
