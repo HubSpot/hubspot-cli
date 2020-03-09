@@ -4,7 +4,11 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { addSecret, deleteSecret } = require('@hubspot/cms-lib/api/secrets');
+const {
+  addSecret,
+  deleteSecret,
+  getSecrets,
+} = require('@hubspot/cms-lib/api/secrets');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -24,7 +28,8 @@ function configureSecretsCommand(program) {
     .version(version)
     .description('Manage secrets')
     .command('add <secret-name> <secret-value>', 'add a HubSpot secret')
-    .command('delete <secret-name>', 'delete a HubSpot secret');
+    .command('delete <secret-name>', 'delete a HubSpot secret')
+    .command('list', 'list all HubSpot secrets');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
@@ -42,10 +47,18 @@ function configureSecretsAddCommand(program) {
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
+      console.log(
+        'Before validate',
+        validateConfig(),
+        await validatePortal(command)
+      );
+
       if (!(validateConfig() && (await validatePortal(command)))) {
         process.exit(1);
       }
       const portalId = getPortalId(command);
+
+      console.log('Portal ID: ', portalId);
 
       try {
         await addSecret(portalId, secretName, secretValue);
@@ -95,8 +108,39 @@ function configureSecretsDeleteCommand(program) {
   addConfigOptions(program);
 }
 
+function configureSecretsListCommand(program) {
+  program
+    .version(version)
+    .description('List all HubSpot secrets')
+    .action(async (options = {}) => {
+      setLogLevel(options);
+      logDebugInfo(options);
+      const { config: configPath } = options;
+      loadConfig(configPath);
+
+      if (!(validateConfig() && (await validatePortal(options)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(options);
+
+      try {
+        const { results } = await getSecrets(portalId);
+        logger.log(`Secrets for portal: ${portalId}:`);
+        results.forEach(secret => logger.log(secret));
+      } catch (e) {
+        logger.error('Getting secrets failed');
+        logger.error(e.message);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
 module.exports = {
   configureSecretsCommand,
   configureSecretsAddCommand,
   configureSecretsDeleteCommand,
+  configureSecretsListCommand,
 };
