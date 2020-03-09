@@ -46,6 +46,9 @@ function initializeConfigCommand(program) {
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
+        logger.info(
+          'To update an existing config file, use the "hs auth" command.'
+        );
         process.exit(1);
       }
       trackAuthAction(
