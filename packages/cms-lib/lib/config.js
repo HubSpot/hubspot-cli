@@ -29,7 +29,7 @@ const {
 
 let _config;
 let _configPath;
-let disableWritesToFile = false;
+let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
@@ -173,7 +173,7 @@ const checkAndWarnGitInclusion = () => {
  * @param {string}  options.source
  */
 const writeConfig = (options = {}) => {
-  if (disableWritesToFile) {
+  if (environmentVariableConfigLoaded) {
     return;
   }
   let source;
@@ -261,7 +261,7 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (path, options = {}) => {
   const configLoadedFromEnv = loadEnvironmentVariableConfig();
   if (configLoadedFromEnv) {
-    disableWritesToFile = true;
+    environmentVariableConfigLoaded = true;
     return;
   } else {
     loadConfigFromFile(path, options);
