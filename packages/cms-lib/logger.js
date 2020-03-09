@@ -14,6 +14,7 @@ const LOG_LEVEL = {
 const Styles = {
   debug: chalk.reset.blue,
   log: chalk.reset,
+  success: chalk.reset.green,
   info: chalk.reset.white,
   warn: chalk.reset.yellow,
   error: chalk.reset.red,
@@ -37,6 +38,9 @@ class Logger {
   }
   log(...args) {
     console.log(...args);
+  }
+  success(...args) {
+    console.log(...stylize('[SUCCESS]', Styles.success, args));
   }
   info(...args) {
     console.log(...stylize('[INFO]', Styles.info, args));
@@ -98,6 +102,11 @@ const logger = {
   log(...args) {
     if (shouldLog(LOG_LEVEL.LOG)) {
       currentLogger.log(...args);
+    }
+  },
+  success(...args) {
+    if (shouldLog(LOG_LEVEL.LOG)) {
+      currentLogger.success(...args);
     }
   },
   info(...args) {
