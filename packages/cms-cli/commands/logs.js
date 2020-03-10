@@ -39,12 +39,12 @@ const makeTailCall = (portalId, functionId) => {
   };
 };
 
-const allowExitOnKeypress = allowExit => {
+const handleKeypressToExit = exit => {
   readline.emitKeypressEvents(process.stdin);
   process.stdin.setRawMode(true);
   process.stdin.on('keypress', (str, key) => {
     if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
-      allowExit();
+      exit();
     }
   });
 };
@@ -82,7 +82,7 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
     }, TAIL_DELAY);
   };
 
-  allowExitOnKeypress(() => {
+  handleKeypressToExit(() => {
     spinner.stop();
     process.exit();
   });
