@@ -1,4 +1,5 @@
 const { version } = require('../package.json');
+const readline = require('readline');
 const ora = require('ora');
 const {
   addLoggerOptions,
@@ -38,13 +39,12 @@ const makeTailCall = (portalId, functionId) => {
   };
 };
 
-const handleEscapeKeypress = onEscapeKeypress => {
-  const readline = require('readline');
+const allowExitOnKeypress = allowExit => {
   readline.emitKeypressEvents(process.stdin);
   process.stdin.setRawMode(true);
   process.stdin.on('keypress', (str, key) => {
-    if (key.name === 'escape') {
-      onEscapeKeypress();
+    if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
+      allowExit();
     }
   });
 };
@@ -82,8 +82,8 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
     }, TAIL_DELAY);
   };
 
-  handleEscapeKeypress(() => {
-    spinner.clear();
+  allowExitOnKeypress(() => {
+    spinner.stop();
     process.exit();
   });
   tail(initialAfter);
