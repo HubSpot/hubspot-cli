@@ -17,14 +17,7 @@ const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
-  ENVIRONMENT_VARIABLES: {
-    HUBSPOT_REFRESH_TOKEN,
-    HUBSPOT_API_KEY,
-    HUBSPOT_CLIENT_ID,
-    HUBSPOT_CLIENT_SECRET,
-    HUBSPOT_PERSONAL_ACCESS_KEY,
-    HUBSPOT_PORTAL_ID,
-  },
+  ENVIRONMENT_VARIABLES,
 } = require('./constants');
 
 let _config;
@@ -488,12 +481,12 @@ const getConfigVariablesFromEnv = () => {
   const env = process.env;
 
   return {
-    apiKey: env[HUBSPOT_API_KEY],
-    clientId: env[HUBSPOT_CLIENT_ID],
-    clientSecret: env[HUBSPOT_CLIENT_SECRET],
-    personalAccessKey: env[HUBSPOT_PERSONAL_ACCESS_KEY],
-    portalId: parseInt(env[HUBSPOT_PORTAL_ID], 10),
-    refreshToken: env[HUBSPOT_REFRESH_TOKEN],
+    apiKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_API_KEY],
+    clientId: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_ID],
+    clientSecret: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_SECRET],
+    personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
+    portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
+    refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
   };
 };
 
