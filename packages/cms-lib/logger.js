@@ -43,7 +43,7 @@ class Logger {
     console.log(...stylize('[SUCCESS]', Styles.success, args));
   }
   info(...args) {
-    console.log(...stylize('[INFO]', Styles.info, args));
+    console.info(...stylize('[INFO]', Styles.info, args));
   }
   debug(...args) {
     console.debug(...stylize('[DEBUG]', Styles.log, args));
