@@ -15,8 +15,8 @@ const logHandler = {
       log.error.message
     }\n${formatStackTrace(log)}\n`;
   },
-  SUCCESS: (log, { verbose }) => {
-    return `${formatLogHeader(log)}${verbose ? formatLogPayloadData(log) : ''}`;
+  SUCCESS: (log, { compact }) => {
+    return `${formatLogHeader(log)}${compact ? '' : formatLogPayloadData(log)}`;
   },
 };
 

@@ -55,7 +55,7 @@ const tailLogs = async ({
   functionPath,
   portalId,
   portalName,
-  verbose,
+  compact,
 }) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
@@ -83,7 +83,7 @@ const tailLogs = async ({
       if (latestLog.results.length) {
         spinner.clear();
         outputLogs(latestLog, {
-          verbose,
+          compact,
         });
         // eslint-disable-next-line require-atomic-updates
         after = latestLog.paging.next.after;
@@ -107,12 +107,12 @@ const getLogs = program => {
     .description(`get logs for a function`)
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
-    .option('--verbose', 'display detailed logs')
+    .option('--compact', 'output compact logs')
     .option('-f, --follow', 'tail logs')
     .action(async functionPath => {
       const { config: configPath } = program;
       const portalId = getPortalId(program);
-      const { latest, file, follow, verbose } = program;
+      const { latest, file, follow, compact } = program;
       let logsResp;
 
       setLogLevel(program);
@@ -153,7 +153,7 @@ const getLogs = program => {
           functionPath,
           portalId,
           portalName: program.portal,
-          verbose,
+          compact,
         });
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
@@ -163,7 +163,7 @@ const getLogs = program => {
 
       if (logsResp) {
         return outputLogs(logsResp, {
-          verbose,
+          compact,
         });
       }
     });
