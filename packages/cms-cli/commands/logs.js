@@ -32,14 +32,10 @@ const makeSpinner = (functionPath, portalIdentifier) => {
 };
 
 const makeTailCall = (portalId, functionId) => {
-  return async (after, spinner) => {
+  return async after => {
     const latestLog = await getFunctionLogs(portalId, functionId, { after });
-    if (latestLog.results.length) {
-      spinner.clear();
-      outputLogs(latestLog);
-    }
 
-    return latestLog.paging.next.after;
+    return latestLog;
   };
 };
 
@@ -54,7 +50,13 @@ const handleEscapeKeypress = onEscapeKeypress => {
   });
 };
 
-const tailLogs = async (portalId, functionId, functionPath, portalName) => {
+const tailLogs = async ({
+  functionId,
+  functionPath,
+  portalId,
+  portalName,
+  verbose,
+}) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
   let after;
@@ -76,8 +78,16 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
 
   return new Promise(resolve => {
     const tail = async after => {
-      // eslint-disable-next-line require-atomic-updates
-      after = await tailCall(after, spinner);
+      const latestLog = await tailCall(after);
+
+      if (latestLog.results.length) {
+        spinner.clear();
+        outputLogs(latestLog, {
+          verbose,
+        });
+        // eslint-disable-next-line require-atomic-updates
+        after = latestLog.paging.next.after;
+      }
       setTimeout(() => {
         tail(after);
       }, TAIL_DELAY);
@@ -97,15 +107,16 @@ const getLogs = program => {
     .description(`get logs for a function`)
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
+    .option('--verbose', 'display detailed logs')
     .option('-f, --follow', 'tail logs')
-    .action(async (functionPath, options) => {
-      const { config: configPath } = options;
+    .action(async functionPath => {
+      const { config: configPath } = program;
       const portalId = getPortalId(program);
-      const { latest, file, follow } = options;
+      const { latest, file, follow, verbose } = program;
       let logsResp;
 
-      setLogLevel(options);
-      logDebugInfo(options);
+      setLogLevel(program);
+      logDebugInfo(program);
       loadConfig(configPath);
       checkAndWarnGitInclusion();
       trackCommandUsage(
@@ -137,7 +148,13 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        await tailLogs(portalId, functionResp.id, functionPath, options.portal);
+        await tailLogs({
+          functionId: functionResp.id,
+          functionPath,
+          portalId,
+          portalName: program.portal,
+          verbose,
+        });
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
@@ -145,7 +162,9 @@ const getLogs = program => {
       }
 
       if (logsResp) {
-        return outputLogs(logsResp);
+        return outputLogs(logsResp, {
+          verbose,
+        });
       }
     });
 
