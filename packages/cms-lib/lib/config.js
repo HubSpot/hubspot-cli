@@ -61,7 +61,7 @@ function validateConfig() {
         );
         return false;
       }
-      if (cfg.name.indexOf(' ') !== -1) {
+      if (/\s+/.test(cfg.name)) {
         logger.error(`config.name '${cfg.name}' cannot contain spaces`);
         return false;
       }
