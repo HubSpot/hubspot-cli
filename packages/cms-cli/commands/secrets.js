@@ -4,7 +4,12 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { addSecret, deleteSecret } = require('@hubspot/cms-lib/api/secrets');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const {
+  addSecret,
+  deleteSecret,
+  fetchSecrets,
+} = require('@hubspot/cms-lib/api/secrets');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -19,12 +24,15 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
+const COMMAND_NAME = 'secrets';
+
 function configureSecretsCommand(program) {
   program
     .version(version)
     .description('Manage secrets')
-    .command('add <secret-name> <secret-value>', 'add a HubSpot secret')
-    .command('delete <secret-name>', 'delete a HubSpot secret');
+    .command('add <name> <value>', 'add a HubSpot secret')
+    .command('delete <name>', 'delete a HubSpot secret')
+    .command('list', 'list all HubSpot secrets');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
@@ -34,18 +42,18 @@ function configureSecretsAddCommand(program) {
   program
     .version(version)
     .description('Add a HubSpot secret')
-    .arguments('<secret-name> <secret-value>')
-    .action(async (secretName, secretValue, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
+    .arguments('<name> <value>')
+    .action(async (secretName, secretValue) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
+      if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);
       }
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(program);
 
       try {
         await addSecret(portalId, secretName, secretValue);
@@ -53,8 +61,11 @@ function configureSecretsAddCommand(program) {
           `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logger.error(`Adding secret "${secretName}" failed`);
-        logger.error(e.message);
+        logErrorInstance(e, {
+          command: `${COMMAND_NAME} add`,
+          portalId,
+          secretName,
+        });
       }
     });
 
@@ -67,17 +78,17 @@ function configureSecretsDeleteCommand(program) {
   program
     .version(version)
     .description('Delete a HubSpot secret')
-    .arguments('<secret-name>')
-    .action(async (secretName, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
+    .arguments('<name>')
+    .action(async secretName => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
       loadConfig(configPath);
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
+      if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);
       }
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(program);
 
       try {
         await deleteSecret(portalId, secretName);
@@ -85,8 +96,45 @@ function configureSecretsDeleteCommand(program) {
           `The secret "${secretName}" was deleted from the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logger.error(`Deleting secret "${secretName}" failed`);
-        logger.error(e.message);
+        logErrorInstance(e, {
+          command: `${COMMAND_NAME} delete`,
+          portalId,
+          secretName,
+        });
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
+function configureSecretsListCommand(program) {
+  program
+    .version(version)
+    .description('List all HubSpot secrets')
+    .action(async () => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
+      loadConfig(configPath);
+
+      if (!(validateConfig() && (await validatePortal(program)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(program);
+
+      try {
+        const { results } = await fetchSecrets(portalId);
+        const groupLabel = `Secrets for portal ${portalId}:`;
+        logger.group(groupLabel);
+        results.forEach(secret => logger.log(secret));
+        logger.groupEnd(groupLabel);
+      } catch (e) {
+        logErrorInstance(e, {
+          command: `${COMMAND_NAME} list`,
+          portalId,
+        });
       }
     });
 
@@ -99,4 +147,5 @@ module.exports = {
   configureSecretsCommand,
   configureSecretsAddCommand,
   configureSecretsDeleteCommand,
+  configureSecretsListCommand,
 };
