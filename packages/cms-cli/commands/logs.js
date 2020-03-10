@@ -32,14 +32,9 @@ const makeSpinner = (functionPath, portalIdentifier) => {
 };
 
 const makeTailCall = (portalId, functionId) => {
-  return async (after, spinner) => {
+  return async after => {
     const latestLog = await getFunctionLogs(portalId, functionId, { after });
-    if (latestLog.results.length) {
-      spinner.clear();
-      outputLogs(latestLog);
-    }
-
-    return latestLog.paging.next.after;
+    return latestLog;
   };
 };
 
@@ -57,13 +52,13 @@ const handleEscapeKeypress = onEscapeKeypress => {
 const tailLogs = async (portalId, functionId, functionPath, portalName) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
-  let after;
+  let initialAfter;
 
   spinner.start();
 
   try {
     const latestLog = await getLatestFunctionLog(portalId, functionId);
-    after = base64EncodeString(latestLog.id);
+    initialAfter = base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
@@ -74,21 +69,24 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
     }
   }
 
-  return new Promise(resolve => {
-    const tail = async after => {
-      // eslint-disable-next-line require-atomic-updates
-      after = await tailCall(after, spinner);
-      setTimeout(() => {
-        tail(after);
-      }, TAIL_DELAY);
-    };
-    handleEscapeKeypress(() => {
-      resolve();
-      spinner.stop();
-      process.exit();
-    });
-    tail(after);
+  const tail = async after => {
+    const latestLog = await tailCall(after);
+
+    if (latestLog.results.length) {
+      spinner.clear();
+      outputLogs(latestLog);
+    }
+
+    setTimeout(() => {
+      tail(latestLog.paging.next.after);
+    }, TAIL_DELAY);
+  };
+
+  handleEscapeKeypress(() => {
+    spinner.clear();
+    process.exit();
   });
+  tail(initialAfter);
 };
 
 const getLogs = program => {
@@ -137,7 +135,7 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        await tailLogs(portalId, functionResp.id, functionPath, options.portal);
+        tailLogs(portalId, functionResp.id, functionPath, options.portal);
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
