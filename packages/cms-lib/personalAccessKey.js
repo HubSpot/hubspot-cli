@@ -169,8 +169,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     updateDefaultPortal(name);
   }
 
-  logger.log(
-    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+  logger.success(
+    `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
   );
 };
 

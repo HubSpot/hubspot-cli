@@ -163,7 +163,7 @@ async function createTheme(dest, type, options = {}) {
   const success =
     extractDir != null && (await copyThemeBoilerplateToDest(extractDir, dest));
   if (success) {
-    logger.log(`Success: your new ${type} project has been created in ${dest}`);
+    logger.success(`Your new ${type} project has been created in ${dest}`);
   }
   cleanupTemp(tmpDir);
   return success;
