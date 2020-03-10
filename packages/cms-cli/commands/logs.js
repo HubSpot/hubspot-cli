@@ -43,6 +43,17 @@ const makeTailCall = (portalId, functionId) => {
   };
 };
 
+const handleEscapeKeypress = onEscapeKeypress => {
+  const readline = require('readline');
+  readline.emitKeypressEvents(process.stdin);
+  process.stdin.setRawMode(true);
+  process.stdin.on('keypress', (str, key) => {
+    if (key.name === 'escape') {
+      onEscapeKeypress();
+    }
+  });
+};
+
 const tailLogs = async (portalId, functionId, functionPath, portalName) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
@@ -63,7 +74,7 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
     }
   }
 
-  return new Promise(() => {
+  return new Promise(resolve => {
     const tail = async after => {
       // eslint-disable-next-line require-atomic-updates
       after = await tailCall(after, spinner);
@@ -71,6 +82,11 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
         tail(after);
       }, TAIL_DELAY);
     };
+    handleEscapeKeypress(() => {
+      resolve();
+      spinner.stop();
+      process.exit();
+    });
     tail(after);
   });
 };
@@ -121,12 +137,7 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        logsResp = await tailLogs(
-          portalId,
-          functionResp.id,
-          functionPath,
-          options.portal
-        );
+        await tailLogs(portalId, functionResp.id, functionPath, options.portal);
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
