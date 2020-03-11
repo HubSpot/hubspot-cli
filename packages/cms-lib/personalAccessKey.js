@@ -67,7 +67,7 @@ async function refreshAccessToken(personalAccessKey, env = 'PROD') {
     portalId,
     tokenInfo: {
       accessToken,
-      expiresAt,
+      expiresAt: expiresAt.toISOString(),
     },
   });
   writeConfig();
@@ -75,11 +75,8 @@ async function refreshAccessToken(personalAccessKey, env = 'PROD') {
   return accessToken;
 }
 
-async function getNewAccessToken(personalAccessKey, authTokenInfo, env) {
-  const key = getRefreshKey(
-    personalAccessKey,
-    authTokenInfo && authTokenInfo.expiresAt
-  );
+async function getNewAccessToken(personalAccessKey, expiresAt, env) {
+  const key = getRefreshKey(personalAccessKey, expiresAt);
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
   }
@@ -175,8 +172,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     updateDefaultPortal(name);
   }
 
-  logger.log(
-    `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+  logger.success(
+    `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
   );
 };
 
