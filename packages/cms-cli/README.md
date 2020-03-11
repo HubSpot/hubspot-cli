@@ -24,7 +24,6 @@ npm install @hubspot/cms-cli
 
 Once the `@hubspot/cms-cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
 
-
 ```bash
 cd ~
 hs init
@@ -90,6 +89,7 @@ Upload a file or directory to the File Manager
 ```bash
 hs filemanager upload --portal=DEV [src] [dest]
 ```
+
 ## Authentication
 
 There are three ways that the tools can authenticate with HubSpot.
@@ -104,13 +104,12 @@ There are three ways that the tools can authenticate with HubSpot.
 2. Run `hs auth oauth2`
 3. Select `OAuth2` and follow the steps
 
-_**Note:** The Portal ID used should be the CMS Portal ID(not the developer app ID). Client ID and Client Secret are from the developer app._
+_**Note:** The Portal ID used should be the CMS Portal ID (not the developer app ID). Client ID and Client Secret are from the developer app._
 
 ### HubSpot API Key
 
 1. [Set up an API Key for the CMS Portal](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
 2. Edit the `hubspot.config.yml` file to set the `authType` for the portal to `apikey` and add `apiKey` as shown below:
-
 
 ```yaml
 defaultPortal: DEV

@@ -74,5 +74,76 @@ describe('personalAccessKey', () => {
       const accessToken = await accessTokenForPersonalAccessKey(portalId);
       expect(accessToken).toEqual(freshAccessToken);
     });
+    it('refreshes access tokens multiple times', async () => {
+      const portalId = 123;
+      const accessKey = 'let-me-in';
+      const userId = 456;
+      const mockPortal = (expiresAt, accessToken) => ({
+        portalId,
+        authType: 'personalaccesskey',
+        personalAccessKey: accessKey,
+        auth: {
+          tokenInfo: {
+            expiresAt,
+            accessToken,
+          },
+        },
+      });
+      const initialPortalConfig = mockPortal(
+        moment()
+          .subtract(2, 'hours')
+          .toISOString(),
+        'test-token'
+      );
+      getAndLoadConfigIfNeeded.mockReturnValueOnce({
+        portals: [initialPortalConfig],
+      });
+      getPortalConfig.mockReturnValueOnce(initialPortalConfig);
+
+      const firstAccessToken = 'fresh-token';
+      const expiresAtMillis = moment()
+        .subtract(1, 'hours')
+        .valueOf();
+
+      fetchAccessToken.mockReturnValueOnce(
+        Promise.resolve({
+          oauthAccessToken: firstAccessToken,
+          expiresAtMillis,
+          encodedOAuthRefreshToken: accessKey,
+          scopeGroups: ['content'],
+          hubId: portalId,
+          userId,
+        })
+      );
+      const firstRefreshedAccessToken = await accessTokenForPersonalAccessKey(
+        portalId
+      );
+      expect(firstRefreshedAccessToken).toEqual(firstAccessToken);
+      const updatedPortalConfig = mockPortal(
+        moment(expiresAtMillis).toISOString(),
+        firstAccessToken
+      );
+      getAndLoadConfigIfNeeded.mockReturnValueOnce({
+        portals: [updatedPortalConfig],
+      });
+      getPortalConfig.mockReturnValueOnce(updatedPortalConfig);
+
+      const secondAccessToken = 'another-fresh-token';
+      fetchAccessToken.mockReturnValueOnce(
+        Promise.resolve({
+          oauthAccessToken: secondAccessToken,
+          expiresAtMillis,
+          encodedOAuthRefreshToken: accessKey,
+          scopeGroups: ['content'],
+          hubId: portalId,
+          userId,
+        })
+      );
+
+      const secondRefreshedAccessToken = await accessTokenForPersonalAccessKey(
+        portalId
+      );
+      expect(secondRefreshedAccessToken).toEqual(secondAccessToken);
+    });
   });
 });

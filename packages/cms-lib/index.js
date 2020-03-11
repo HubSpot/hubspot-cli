@@ -7,6 +7,7 @@ const {
   getPortalConfig,
   updatePortalConfig,
   validateConfig,
+  checkAndWarnGitInclusion,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
@@ -16,6 +17,7 @@ module.exports = {
   ALLOWED_EXTENSIONS,
   DEFAULT_MODE,
   Mode,
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
   loadConfig,

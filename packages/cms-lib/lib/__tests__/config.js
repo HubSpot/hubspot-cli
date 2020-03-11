@@ -102,7 +102,7 @@ describe('lib/config', () => {
   });
 
   describe('deleteEmptyConfigFile()', () => {
-    const fs = require('fs');
+    const fs = require('fs-extra');
 
     it('does not delete config file if there are contents', () => {
       fs.__setReadFile('defaultPortal: Foo');

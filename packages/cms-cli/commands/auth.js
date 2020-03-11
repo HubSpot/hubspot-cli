@@ -1,5 +1,9 @@
 const { version } = require('../package.json');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -36,6 +40,7 @@ async function authAction(type, options) {
   logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath);
+  checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
     process.exit(1);
@@ -64,8 +69,8 @@ async function authAction(type, options) {
         });
       }
 
-      logger.log(
-        `Success: ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+      logger.success(
+        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
       );
       break;
     default:
