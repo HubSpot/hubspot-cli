@@ -1,7 +1,8 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
 
-async function fetchAccessToken(personalAccessKey, env = 'PROD') {
+async function fetchAccessToken(personalAccessKey, env = 'PROD', portalId) {
+  const query = portalId ? { portalId } : {};
   const requestOptions = getRequestOptions(
     { env },
     {
@@ -9,6 +10,7 @@ async function fetchAccessToken(personalAccessKey, env = 'PROD') {
       body: {
         encodedOAuthRefreshToken: personalAccessKey,
       },
+      qs: query,
     }
   );
 
