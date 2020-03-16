@@ -28,7 +28,7 @@ const TAIL_DELAY = 5000;
 
 const makeSpinner = (functionPath, portalIdentifier) => {
   return ora(
-    `Tailing logs for '${functionPath}' on portal '${portalIdentifier}'.\n`
+    `Waiting for log entries for '${functionPath}' on portal '${portalIdentifier}'.\n`
   );
 };
 
