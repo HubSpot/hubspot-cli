@@ -147,7 +147,16 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   await fs.writeFileSync(dest, tableJson);
 }
 
+async function clearHubDbTable(portalId, tableId) {
+  const rowIds = function(tableId) {
+    const rows = fetchRows(portalId, tableId);
+    return rows.objects.reduce((acc, cur) => [...acc, cur.id], []);
+  };
+  return rowIds(tableId);
+}
+
 module.exports = {
   createHubDbTable,
   downloadHubDbTable,
+  clearHubDbTable,
 };
