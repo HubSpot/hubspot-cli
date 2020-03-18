@@ -8,6 +8,7 @@ const {
   fetchTable,
   fetchRows,
   publishTable,
+  deleteRows,
 } = require('./api/hubdb');
 
 async function createHubDbTable(portalId, src) {
@@ -148,11 +149,10 @@ async function downloadHubDbTable(portalId, tableId, dest) {
 }
 
 async function clearHubDbTable(portalId, tableId) {
-  const rowIds = function(tableId) {
-    const rows = fetchRows(portalId, tableId);
-    return rows.objects.reduce((acc, cur) => [...acc, cur.id], []);
-  };
-  return rowIds(tableId);
+  const rows = await fetchRows(portalId, tableId);
+  const rowIds = rows.objects.reduce((acc, cur) => [...acc, cur.id], []);
+
+  await deleteRows(portalId, tableId, rowIds);
 }
 
 module.exports = {

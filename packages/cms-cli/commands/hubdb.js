@@ -9,6 +9,7 @@ const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
   downloadHubDbTable,
+  clearHubDbTable,
 } = require('@hubspot/cms-lib/hubdb');
 
 const { validatePortal } = require('../lib/validation');
@@ -29,7 +30,8 @@ function configureHubDbCommand(program) {
     .version(version)
     .description('Manage HubDB tables')
     .command('create <src>', 'create a HubDB table')
-    .command('fetch <tableId> <dest>', 'fetch a HubDB table');
+    .command('fetch <tableId> <dest>', 'fetch a HubDB table')
+    .command('clear <tableId>', 'clear all rows in a HubDB table');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
@@ -104,8 +106,38 @@ function configureHubDbFetchCommand(program) {
   addConfigOptions(program);
 }
 
+function configureHubDbClearCommand(program) {
+  program
+    .version(version)
+    .description('Delete all rows in a HubDB table')
+    .arguments('<tableId>')
+    .action(async (tableId, command = {}) => {
+      setLogLevel(command);
+      logDebugInfo(command);
+      const { config: configPath } = command;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(command)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(command);
+      try {
+        await clearHubDbTable(portalId, tableId);
+        logger.log(`Delete rows in HubDB table ${tableId}`);
+      } catch (e) {
+        logger.error(e);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
 module.exports = {
   configureHubDbCommand,
   configureHubDbCreateCommand,
   configureHubDbFetchCommand,
+  configureHubDbClearCommand,
 };
