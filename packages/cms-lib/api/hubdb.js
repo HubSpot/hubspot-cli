@@ -26,6 +26,12 @@ async function publishTable(portalId, tableId) {
   });
 }
 
+async function deleteTable(portalId, tableId) {
+  return http.delete(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
+  });
+}
+
 async function updateRows(portalId, tableId, rows) {
   return http.post(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/update`,
@@ -63,4 +69,5 @@ module.exports = {
   publishTable,
   updateRows,
   deleteRows,
+  deleteTable,
 };

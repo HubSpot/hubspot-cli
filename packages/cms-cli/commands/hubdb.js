@@ -10,6 +10,7 @@ const {
   createHubDbTable,
   downloadHubDbTable,
   clearHubDbTable,
+  deleteHubDbTable,
 } = require('@hubspot/cms-lib/hubdb');
 
 const { validatePortal } = require('../lib/validation');
@@ -31,6 +32,7 @@ function configureHubDbCommand(program) {
     .description('Manage HubDB tables')
     .command('create <src>', 'create a HubDB table')
     .command('fetch <tableId> <dest>', 'fetch a HubDB table')
+    .command('delete <tableId>', 'delete a HubDB table')
     .command('clear <tableId>', 'clear all rows in a HubDB table');
 
   addLoggerOptions(program);
@@ -135,9 +137,39 @@ function configureHubDbClearCommand(program) {
   addConfigOptions(program);
 }
 
+function configureHubDbDeleteCommand(program) {
+  program
+    .version(version)
+    .description('Delete a HubDB table')
+    .arguments('<tableId>')
+    .action(async (tableId, command = {}) => {
+      setLogLevel(command);
+      logDebugInfo(command);
+      const { config: configPath } = command;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(command)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(command);
+      try {
+        await deleteHubDbTable(portalId, tableId);
+        logger.log(`Delete a HubDB table ${tableId}`);
+      } catch (e) {
+        logger.error(e);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
 module.exports = {
   configureHubDbCommand,
   configureHubDbCreateCommand,
   configureHubDbFetchCommand,
   configureHubDbClearCommand,
+  configureHubDbDeleteCommand,
 };
