@@ -115,7 +115,6 @@ function configureHubDbImportCommand(program) {
 }
 
 function configureHubDbFetchCommand(program) {
-  console.log('sdsd');
   program
     .version(version)
     .description('Fetch a HubDB table')
