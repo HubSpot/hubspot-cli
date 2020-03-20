@@ -332,7 +332,10 @@ const getPortalId = nameOrId => {
   let name;
   let portalId;
   let portal;
-  if (!nameOrId) {
+
+  if (process.env.HUBSPOT_PORTAL_ID) {
+    portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  } else if (!nameOrId) {
     if (config && config.defaultPortal) {
       name = config.defaultPortal;
     }
