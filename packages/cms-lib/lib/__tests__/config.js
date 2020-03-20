@@ -49,6 +49,7 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
 describe('lib/config', () => {
   describe('getPortalId()', () => {
     beforeEach(() => {
+      process.env = {};
       setConfig({
         defaultPortal: 'PROD',
         portals: [
@@ -147,9 +148,7 @@ describe('lib/config', () => {
           HUBSPOT_CLIENT_SECRET: clientSecret,
           HUBSPOT_REFRESH_TOKEN: refreshToken,
         };
-        getAndLoadConfigIfNeeded({
-          allowEnvironmentVariableConfig: true,
-        });
+        getAndLoadConfigIfNeeded();
         portalConfig = getPortalConfig(portalId);
       });
 
@@ -187,9 +186,7 @@ describe('lib/config', () => {
           HUBSPOT_PORTAL_ID: portalId,
           HUBSPOT_API_KEY: apiKey,
         };
-        getAndLoadConfigIfNeeded({
-          allowEnvironmentVariableConfig: true,
-        });
+        getAndLoadConfigIfNeeded();
         portalConfig = getPortalConfig(portalId);
       });
 
@@ -219,9 +216,7 @@ describe('lib/config', () => {
           HUBSPOT_PORTAL_ID: portalId,
           HUBSPOT_PERSONAL_ACCESS_KEY: personalAccessKey,
         };
-        getAndLoadConfigIfNeeded({
-          allowEnvironmentVariableConfig: true,
-        });
+        getAndLoadConfigIfNeeded();
         portalConfig = getPortalConfig(portalId);
       });
 
