@@ -37,7 +37,9 @@ async function authAction(type, options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, {
+    ignoreEnvironmentVariableConfig: true,
+  });
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {

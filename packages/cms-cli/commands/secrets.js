@@ -47,9 +47,7 @@ function configureSecretsAddCommand(program) {
       setLogLevel(program);
       logDebugInfo(program);
       const { config: configPath } = program;
-      loadConfig(configPath, {
-        allowEnvironmentVariableConfig: true,
-      });
+      loadConfig(configPath);
       checkAndWarnGitInclusion();
 
       if (!(validateConfig() && (await validatePortal(program)))) {
@@ -85,9 +83,7 @@ function configureSecretsDeleteCommand(program) {
       setLogLevel(program);
       logDebugInfo(program);
       const { config: configPath } = program;
-      loadConfig(configPath, {
-        allowEnvironmentVariableConfig: true,
-      });
+      loadConfig(configPath);
 
       if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);

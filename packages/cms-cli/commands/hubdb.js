@@ -44,9 +44,7 @@ function configureHubDbCreateCommand(program) {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
-      loadConfig(configPath, {
-        allowEnvironmentVariableConfig: true,
-      });
+      loadConfig(configPath);
       checkAndWarnGitInclusion();
 
       if (!(validateConfig() && (await validatePortal(command)))) {

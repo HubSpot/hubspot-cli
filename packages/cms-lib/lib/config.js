@@ -254,11 +254,11 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (
   path,
   options = {
-    allowEnvironmentVariableConfig: false,
+    ignoreEnvironmentVariableConfig: false,
   }
 ) => {
   if (
-    options.allowEnvironmentVariableConfig &&
+    !options.ignoreEnvironmentVariableConfig &&
     loadEnvironmentVariableConfig()
   ) {
     environmentVariableConfigLoaded = true;
