@@ -9,7 +9,6 @@ const {
   fetchRows,
   publishTable,
   deleteRows,
-  deleteTable,
 } = require('./api/hubdb');
 
 async function createHubDbTable(portalId, src) {
@@ -210,14 +209,9 @@ async function clearHubDbTable(portalId, tableId) {
   await deleteRows(portalId, tableId, rowIds);
 }
 
-async function deleteHubDbTable(portalId, tableId) {
-  await deleteTable(portalId, tableId);
-}
-
 module.exports = {
   createHubDbTable,
   downloadHubDbTable,
   clearHubDbTable,
-  deleteHubDbTable,
   importHubDbTableRows,
 };

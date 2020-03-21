@@ -11,8 +11,8 @@ const {
   importHubDbTableRows,
   downloadHubDbTable,
   clearHubDbTable,
-  deleteHubDbTable,
 } = require('@hubspot/cms-lib/hubdb');
+const { deleteTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -193,7 +193,7 @@ function configureHubDbDeleteCommand(program) {
       }
       const portalId = getPortalId(command);
       try {
-        await deleteHubDbTable(portalId, tableId);
+        await deleteTable(portalId, tableId);
         logger.log(`Delete a HubDB table ${tableId}`);
       } catch (e) {
         logger.error(e);
