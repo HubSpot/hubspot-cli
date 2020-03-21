@@ -205,7 +205,7 @@ async function downloadHubDbTable(portalId, tableId, dest) {
 
 async function clearHubDbTable(portalId, tableId) {
   const rows = await fetchRows(portalId, tableId);
-  const rowIds = rows.objects.reduce((acc, cur) => [...acc, cur.id], []);
+  const rowIds = rows.objects.map(row => row.id);
 
   await deleteRows(portalId, tableId, rowIds);
 }
