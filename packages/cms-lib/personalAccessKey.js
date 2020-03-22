@@ -163,7 +163,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     getEnv(name)
   );
 
-  updatePortalConfig({
+  let config = updatePortalConfig({
     portalId,
     personalAccessKey,
     name,
@@ -172,12 +172,13 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   });
 
   if (makeDefault) {
-    updateDefaultPortal(name);
+    config = updateDefaultPortal(name);
   }
 
   logger.success(
     `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
   );
+  return config;
 };
 
 module.exports = {
