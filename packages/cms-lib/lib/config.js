@@ -410,7 +410,6 @@ const updateDefaultPortal = defaultPortal => {
   config.defaultPortal = defaultPortal;
   setDefaultConfigPathIfUnset();
   writeConfig();
-  return config;
 };
 
 const setDefaultConfigPathIfUnset = () => {
