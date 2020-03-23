@@ -283,7 +283,7 @@ const getAndLoadConfigIfNeeded = (options = {}) => {
       ...options,
     });
   }
-  return _config;
+  return _config || {};
 };
 
 const getConfigPath = path => {
@@ -308,15 +308,12 @@ const getEnv = nameOrId => {
   let env = 'PROD';
   const config = getAndLoadConfigIfNeeded();
   const portalId = getPortalId(nameOrId);
-  if (config.env) {
-    env = config.env;
-  }
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig.env) {
       env = portalConfig.env;
     }
-  } else if (config.env) {
+  } else if (config && config.env) {
     env = config.env;
   }
   return env;

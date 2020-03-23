@@ -38,6 +38,25 @@ describe('personalAccessKey', () => {
       const accessToken = await accessTokenForPersonalAccessKey(portalId);
       expect(accessToken).toEqual(freshAccessToken);
     });
+    it('uses portalId when refreshing token', async () => {
+      const portalId = 123;
+      const portal = {
+        portalId,
+        authType: 'personalaccesskey',
+        personalAccessKey: 'let-me-in',
+      };
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        portals: [portal],
+      });
+      getPortalConfig.mockReturnValue(portal);
+
+      await accessTokenForPersonalAccessKey(portalId);
+      expect(fetchAccessToken).toHaveBeenCalledWith(
+        'let-me-in',
+        'PROD',
+        portalId
+      );
+    });
     it('refreshes access token when the existing token is expired', async () => {
       const portalId = 123;
       const portal = {

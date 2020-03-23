@@ -1,6 +1,7 @@
 const { version } = require('../package.json');
 const {
   getConfigPath,
+  getPortalId,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
@@ -28,6 +29,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const COMMAND_NAME = 'init';
 const TRACKING_STATUS = {
   STARTED: 'started',
+  ERROR: 'error',
   COMPLETE: 'complete',
 };
 
@@ -40,7 +42,7 @@ function initializeConfigCommand(program) {
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
-      trackCommandUsage(COMMAND_NAME);
+      trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
 
       const configPath = getConfigPath();
 
@@ -51,6 +53,7 @@ function initializeConfigCommand(program) {
         );
         process.exit(1);
       }
+
       trackAuthAction(
         COMMAND_NAME,
         PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
@@ -63,17 +66,23 @@ function initializeConfigCommand(program) {
       try {
         const configData = await personalAccessKeyPrompt();
         await updateConfigWithPersonalAccessKey(configData, true);
+        const portalId = getPortalId();
+        trackAuthAction(
+          COMMAND_NAME,
+          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          TRACKING_STATUS.COMPLETE,
+          portalId
+        );
       } catch (err) {
         logFileSystemErrorInstance(err, {
           filepath: configPath,
         });
+        trackAuthAction(
+          COMMAND_NAME,
+          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          TRACKING_STATUS.ERROR
+        );
       }
-
-      trackAuthAction(
-        COMMAND_NAME,
-        PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        TRACKING_STATUS.COMPLETE
-      );
     });
 
   addLoggerOptions(program);
