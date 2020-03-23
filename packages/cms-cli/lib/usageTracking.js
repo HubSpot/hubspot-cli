@@ -24,7 +24,7 @@ function trackCommandUsage(command, meta = {}, portalId) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
-  let authType;
+  let authType = 'unknown';
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     authType =
@@ -85,20 +85,30 @@ const addHelpUsageTracking = (program, command) => {
   });
 };
 
-const trackAuthAction = async (command, authType, step) => {
+const trackAuthAction = async (command, authType, step, portalId) => {
   if (!isTrackingAllowed()) {
     return;
   }
+  const usageTrackingEvent = {
+    action: 'cli-auth',
+    os: getPlatform(),
+    ...getNodeVersionData(),
+    version,
+    command,
+    authType,
+    step,
+  };
   try {
-    return await trackUsage('cli-interaction', EventClass.INTERACTION, {
-      action: 'cli-auth',
-      os: getPlatform(),
-      ...getNodeVersionData(),
-      version,
-      command,
-      authType,
-      step,
-    });
+    const response = await trackUsage(
+      'cli-interaction',
+      EventClass.INTERACTION,
+      usageTrackingEvent,
+      portalId
+    );
+
+    logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
+
+    return response;
   } catch (e) {
     logger.debug('Auth action tracking failed: %s', e.message);
   }
