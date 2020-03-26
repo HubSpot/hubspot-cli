@@ -110,7 +110,7 @@ const createGetRequestStream = ({ contentType }) => async (
   const requestOptions = addQueryParams(
     {
       ...rest,
-      // Handle kanji
+      // Handle extended characters(kanji, etc)
       uri: encodeURI(uri),
     },
     query
