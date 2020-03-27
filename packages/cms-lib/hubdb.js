@@ -11,7 +11,7 @@ const {
   deleteRows,
 } = require('./api/hubdb');
 
-async function createHubDbTable(portalId, src) {
+function validateJson(src) {
   try {
     const stats = fs.statSync(src);
     if (!stats.isFile()) {
@@ -24,66 +24,9 @@ async function createHubDbTable(portalId, src) {
   if (path.extname(src) !== '.json') {
     throw new Error('The HubDB table file must be a ".json" file');
   }
-
-  const table = fs.readJsonSync(src);
-  const { rows, ...schema } = table;
-
-  const { columns, id } = await createTable(portalId, schema);
-
-  const rowsToUpdate = rows.map(row => {
-    const values = {};
-
-    columns.forEach(col => {
-      const { name, id } = col;
-      if (typeof row.values[name] !== 'undefined') {
-        values[id] = row.values[name];
-      } else {
-        values[id] = null;
-      }
-    });
-    return {
-      childTableId: 0,
-      isSoftEditable: false,
-      ...row,
-      values,
-    };
-  });
-
-  let response;
-  if (rowsToUpdate.length > 0) {
-    response = await createRows(portalId, id, rowsToUpdate);
-  }
-
-  await publishTable(portalId, id);
-
-  return {
-    tableId: id,
-    rowCount:
-      response && Array.isArray(response) && response.length
-        ? response[0].rows.length
-        : 0,
-  };
 }
 
-async function importHubDbTableRows(portalId, tableId, src) {
-  try {
-    const stats = fs.statSync(src);
-    if (!stats.isFile()) {
-      throw new Error(`The "${src}" path is not a path to a file`);
-    }
-  } catch (e) {
-    throw new Error(`The "${src}" path is not a path to a file`);
-  }
-
-  if (path.extname(src) !== '.json') {
-    throw new Error('The HubDB table file must be a ".json" file');
-  }
-
-  const table = fs.readJsonSync(src);
-  const { rows } = table;
-
-  const { columns } = await fetchTable(portalId, tableId);
-
+async function updateRows(portalId, tableId, rows, columns) {
   const rowsToUpdate = rows.map(row => {
     const values = {};
 
@@ -117,6 +60,26 @@ async function importHubDbTableRows(portalId, tableId, src) {
         ? response[0].rows.length
         : 0,
   };
+}
+
+async function createHubDbTable(portalId, src) {
+  validateJson(src);
+
+  const table = fs.readJsonSync(src);
+  const { rows, ...schema } = table;
+  const { columns, id } = await createTable(portalId, schema);
+
+  return updateRows(portalId, id, rows, columns);
+}
+
+async function importHubDbTableRows(portalId, tableId, src) {
+  validateJson(src);
+
+  const table = fs.readJsonSync(src);
+  const { rows } = table;
+  const { columns } = await fetchTable(portalId, tableId);
+
+  return updateRows(portalId, tableId, rows, columns);
 }
 
 function convertToJSON(table, rows) {
