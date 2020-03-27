@@ -46,17 +46,17 @@ function configureHubDbCreateCommand(program) {
     .version(version)
     .description('Create HubDB tables')
     .arguments('<src>')
-    .action(async (src, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
+    .action(async src => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
+      if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);
       }
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(program);
 
       try {
         const table = await createHubDbTable(
@@ -82,17 +82,17 @@ function configureHubDbImportCommand(program) {
     .version(version)
     .description('Import HubDB table rows')
     .arguments('<tableId> <src>')
-    .action(async (tableId, src, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
+    .action(async (tableId, src) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
+      if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);
       }
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(program);
 
       try {
         const table = await importHubDbTableRows(
