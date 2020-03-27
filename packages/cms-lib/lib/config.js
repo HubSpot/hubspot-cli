@@ -9,6 +9,7 @@ const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
+const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
@@ -419,7 +420,7 @@ const setDefaultConfigPathIfUnset = () => {
 };
 
 const setDefaultConfigPath = () => {
-  setConfigPath(`${os.homedir()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
 };
 
 const configFileExists = () => {
