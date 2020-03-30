@@ -14,7 +14,11 @@ const {
   getExt,
   convertToLocalFileSystemPath,
 } = require('./path');
-const { fetchFileStream, download } = require('./api/fileMapper');
+const {
+  fetchFileStream,
+  download,
+  downloadDefault,
+} = require('./api/fileMapper');
 const {
   Mode,
   MODULE_EXTENSION,
@@ -54,6 +58,16 @@ function isPathToRoot(filepath) {
   if (typeof filepath !== 'string') return false;
   // Root pattern matches empty strings and: / \
   return /^(\/|\\)?$/.test(filepath.trim());
+}
+
+/**
+ * @private
+ * @param {string} filepath
+ * @returns {boolean}
+ */
+function isPathToHubspot(filepath) {
+  if (typeof filepath !== 'string') return false;
+  return /^(\/|\\)?@hubspot/i.test(filepath.trim());
 }
 
 /**
@@ -137,11 +151,13 @@ function validateFileMapperNode(node) {
  */
 function getTypeDataFromPath(src) {
   const isModule = isPathToModule(src);
+  const isHubspot = isPathToHubspot(src);
   const isFile = !isModule && isPathToFile(src);
   const isRoot = !isModule && !isFile && isPathToRoot(src);
   const isFolder = !isFile;
   return {
     isModule,
+    isHubspot,
     isFile,
     isRoot,
     isFolder,
@@ -380,15 +396,16 @@ async function downloadFile(input) {
  */
 async function fetchFolderFromApi(input) {
   const { portalId, src, mode } = input;
-  const { isRoot, isFolder } = getTypeDataFromPath(src);
+  const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
   }
   try {
     const srcPath = isRoot ? '@root' : src;
-    const node = await download(portalId, srcPath, {
-      qs: getFileMapperApiQueryFromMode(mode),
-    });
+    const qs = getFileMapperApiQueryFromMode(mode);
+    const node = isHubspot
+      ? await downloadDefault(portalId, srcPath, { qs })
+      : await download(portalId, srcPath, { qs });
     logger.log('Fetched "%s" from portal %d successfully', src, portalId);
     return node;
   } catch (err) {
@@ -461,6 +478,7 @@ module.exports = {
   isPathToFile,
   isPathToModule,
   isPathToRoot,
+  isPathToHubspot,
   downloadFileOrFolder,
   recurseFolder,
   getFileMapperApiQueryFromMode,
