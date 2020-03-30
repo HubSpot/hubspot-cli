@@ -4,6 +4,7 @@ const prettier = require('prettier');
 
 const {
   createTable,
+  updateTable,
   createRows,
   fetchTable,
   fetchRows,
@@ -11,7 +12,7 @@ const {
   deleteRows,
 } = require('./api/hubdb');
 
-function validateJson(src) {
+function validateJsonFile(src) {
   try {
     const stats = fs.statSync(src);
     if (!stats.isFile()) {
@@ -63,7 +64,7 @@ async function updateRows(portalId, tableId, rows, columns) {
 }
 
 async function createHubDbTable(portalId, src) {
-  validateJson(src);
+  validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
   const { rows, ...schema } = table;
@@ -72,12 +73,12 @@ async function createHubDbTable(portalId, src) {
   return updateRows(portalId, id, rows, columns);
 }
 
-async function importHubDbTableRows(portalId, tableId, src) {
-  validateJson(src);
+async function updateHubDbTable(portalId, tableId, src) {
+  validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
-  const { rows } = table;
-  const { columns } = await fetchTable(portalId, tableId);
+  const { rows, ...schema } = table;
+  const { columns } = await updateTable(portalId, tableId, schema);
 
   return updateRows(portalId, tableId, rows, columns);
 }
@@ -176,5 +177,5 @@ module.exports = {
   createHubDbTable,
   downloadHubDbTable,
   clearHubDbTable,
-  importHubDbTableRows,
+  updateHubDbTable,
 };

@@ -20,6 +20,13 @@ async function createTable(portalId, schema) {
   });
 }
 
+async function updateTable(portalId, tableId, schema) {
+  return http.put(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
+    body: schema,
+  });
+}
+
 async function publishTable(portalId, tableId) {
   return http.put(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/publish`,
@@ -63,6 +70,7 @@ async function deleteRows(portalId, tableId, rowIds) {
 module.exports = {
   createRows,
   createTable,
+  updateTable,
   fetchRows,
   fetchTable,
   fetchTables,
