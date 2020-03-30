@@ -5,6 +5,7 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
@@ -68,7 +69,7 @@ function configureHubDbCreateCommand(program) {
         );
       } catch (e) {
         logger.error(`Creating the table at "${src}" failed`);
-        logger.error(e.message);
+        logErrorInstance(e);
       }
     });
 
@@ -105,7 +106,7 @@ function configureHubDbImportCommand(program) {
         );
       } catch (e) {
         logger.error(`Updating the table at "${src}" failed`);
-        logger.error(e.message);
+        logErrorInstance(e);
       }
     });
 
@@ -167,7 +168,7 @@ function configureHubDbClearCommand(program) {
         await clearHubDbTable(portalId, tableId);
         logger.log(`Delete rows in HubDB table ${tableId}`);
       } catch (e) {
-        logger.error(e);
+        logErrorInstance(e, { portalId, tableId });
       }
     });
 
