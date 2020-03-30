@@ -125,19 +125,36 @@ const isConfigPathInGitRepo = () => {
   return configDir.startsWith(gitDir);
 };
 
-const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
+const configFilenameIsIgnoredByGitignore = () => {
+  const ignoreFiles = getGitignoreFiles();
+  const configPathSegments = _configPath.split('/');
+  const configFilename = configPathSegments[configPathSegments.length - 1];
+
+  return ignoreFiles.some(gitignore => {
+    const gitignoreContents = fs
+      .readFileSync(gitignore, 'utf8')
+      .split('\n')
+      .filter(i => i);
+    if (
+      ignore()
+        .add(gitignoreContents)
+        .ignores(configFilename)
+    ) {
+      // Has a gitignore rule
+      return true;
+    }
+    return false;
+  });
+};
 
 const shouldWarnOfGitInclusion = () => {
   if (!isConfigPathInGitRepo()) {
     // Not in git
     return false;
   }
-  const ignoreFiles = getGitignoreFiles();
-  for (const gitignore in ignoreFiles) {
-    if (ignore(gitignore).ignores(CONFIG_GITIGNORE_PATTERN)) {
-      // Has a gitignore rule
-      return false;
-    }
+  if (configFilenameIsIgnoredByGitignore()) {
+    // Found ignore statement in .gitignore that matches config filename
+    return false;
   }
   // In git w/o a gitignore rule
   return true;
@@ -150,7 +167,7 @@ const checkAndWarnGitInclusion = () => {
   logger.warn(`File: "${_configPath}"`);
   logger.warn(`To remediate:
   - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${CONFIG_GITIGNORE_PATTERN}" to a .gitignore file in root of your repository.
+  - Add gitignore pattern "hubspot.config.*" to a .gitignore file in root of your repository.
   - Ensure that config file has not already been pushed to a remote repository.
 `);
 };
