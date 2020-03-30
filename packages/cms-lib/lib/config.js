@@ -125,6 +125,8 @@ const isConfigPathInGitRepo = () => {
   return configDir.startsWith(gitDir);
 };
 
+const CONFIG_FILE_WILDCARD_MATCHER = 'hubspot.config.*';
+
 const configFilenameIsIgnoredByGitignore = () => {
   const ignoreFiles = getGitignoreFiles();
   const configPathSegments = _configPath.split('/');
@@ -135,10 +137,10 @@ const configFilenameIsIgnoredByGitignore = () => {
       .readFileSync(gitignore, 'utf8')
       .split('\n')
       .filter(i => i);
+    const gitignoreConfig = ignore().add(gitignoreContents);
     if (
-      ignore()
-        .add(gitignoreContents)
-        .ignores(configFilename)
+      gitignoreConfig.ignores(configFilename) ||
+      gitignoreConfig.ignores(CONFIG_FILE_WILDCARD_MATCHER)
     ) {
       // Has a gitignore rule
       return true;
@@ -167,7 +169,7 @@ const checkAndWarnGitInclusion = () => {
   logger.warn(`File: "${_configPath}"`);
   logger.warn(`To remediate:
   - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "hubspot.config.*" to a .gitignore file in root of your repository.
+  - Add gitignore pattern "${CONFIG_FILE_WILDCARD_MATCHER}" to a .gitignore file in root of your repository.
   - Ensure that config file has not already been pushed to a remote repository.
 `);
 };
