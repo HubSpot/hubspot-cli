@@ -350,6 +350,10 @@ async function writeFileMapperNode(input, node, filepath) {
   }
 }
 
+function isTimeout(err) {
+  return !!err && (err.statusCode === 408 || err.code === 'ESOCKETTIMEDOUT');
+}
+
 // @hubspot assets have a periodic delay due to caching
 function logHubspotAssetTimeout() {
   logger.error(
@@ -391,7 +395,7 @@ async function downloadFile(input) {
     await queue.onIdle();
     logger.log('Completed fetch of file "%s" to "%s"', input.src, localFsPath);
   } catch (err) {
-    if (isHubspot && err.statusCode === 408) {
+    if (isHubspot && isTimeout(err)) {
       logHubspotAssetTimeout();
     } else {
       logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
@@ -420,7 +424,7 @@ async function fetchFolderFromApi(input) {
     logger.log('Fetched "%s" from portal %d successfully', src, portalId);
     return node;
   } catch (err) {
-    if (isHubspot && err.statusCode === 408) {
+    if (isHubspot && isTimeout(err)) {
       logHubspotAssetTimeout();
     } else {
       logApiErrorInstance(
