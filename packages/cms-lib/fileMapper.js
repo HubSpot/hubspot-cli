@@ -350,6 +350,13 @@ async function writeFileMapperNode(input, node, filepath) {
   }
 }
 
+// @hubspot assets have a periodic delay due to caching
+function logHubspotAssetTimeout() {
+  logger.error(
+    '@hubspot assets are unavailable at the moment. Please wait a few minutes and try again'
+  );
+}
+
 /**
  * @private
  * @async
@@ -357,9 +364,9 @@ async function writeFileMapperNode(input, node, filepath) {
  * @returns {Promise}
  */
 async function downloadFile(input) {
+  const { src } = input;
+  const { isFile, isHubspot } = getTypeDataFromPath(src);
   try {
-    const { src } = input;
-    const { isFile } = getTypeDataFromPath(src);
     if (!isFile) {
       throw new Error(`Invalid request for file: "${src}"`);
     }
@@ -384,7 +391,11 @@ async function downloadFile(input) {
     await queue.onIdle();
     logger.log('Completed fetch of file "%s" to "%s"', input.src, localFsPath);
   } catch (err) {
-    logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
+    if (isHubspot && err.statusCode === 408) {
+      logHubspotAssetTimeout();
+    } else {
+      logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
+    }
   }
 }
 
@@ -409,13 +420,17 @@ async function fetchFolderFromApi(input) {
     logger.log('Fetched "%s" from portal %d successfully', src, portalId);
     return node;
   } catch (err) {
-    logApiErrorInstance(
-      err,
-      new ApiErrorContext({
-        portalId,
-        request: src,
-      })
-    );
+    if (isHubspot && err.statusCode === 408) {
+      logHubspotAssetTimeout();
+    } else {
+      logApiErrorInstance(
+        err,
+        new ApiErrorContext({
+          portalId,
+          request: src,
+        })
+      );
+    }
   }
   return null;
 }
