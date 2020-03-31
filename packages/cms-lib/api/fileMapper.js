@@ -91,7 +91,7 @@ async function fetchFileStream(portalId, filePath, destination, options = {}) {
   const response = await http.getOctetStream(
     portalId,
     {
-      uri: `${FILE_MAPPER_API_PATH}/stream/${filePath}`,
+      uri: `${FILE_MAPPER_API_PATH}/stream/${encodeURIComponent(filePath)}`,
       ...options,
     },
     destination
