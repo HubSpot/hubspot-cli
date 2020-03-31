@@ -1,5 +1,9 @@
 const { logger } = require('@hubspot/cms-lib/logger');
-const { getPortalConfig, Mode } = require('@hubspot/cms-lib');
+const {
+  getPortalConfig,
+  loadConfigFromEnvironment,
+  Mode,
+} = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
@@ -15,9 +19,8 @@ const { getPortalId, getMode } = require('./commonOpts');
  */
 async function validatePortal(command) {
   const portalId = getPortalId(command);
+  const { portalId: portalIdOption, portal: portalOption } = command;
   if (!portalId) {
-    const { portalId: portalIdOption, portal: portalOption } = command;
-
     if (portalOption) {
       logger.error(
         `The portal "${portalOption}" could not be found in the config`
@@ -30,6 +33,12 @@ async function validatePortal(command) {
       );
     }
     return false;
+  }
+
+  if (portalOption && loadConfigFromEnvironment()) {
+    throw new Error(
+      'Cannot specify a portal when environment variables are supplied. Please unset the environment variables or do not use the "--portal" flag.'
+    );
   }
 
   const portalConfig = getPortalConfig(portalId);

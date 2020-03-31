@@ -14,10 +14,16 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  OAUTH_SCOPES,
+  ENVIRONMENT_VARIABLES,
 } = require('./constants');
 
 let _config;
 let _configPath;
+let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
@@ -180,6 +186,9 @@ const checkAndWarnGitInclusion = () => {
  * @param {string}  options.source
  */
 const writeConfig = (options = {}) => {
+  if (environmentVariableConfigLoaded) {
+    return;
+  }
   let source;
   try {
     source =
@@ -235,7 +244,7 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = (path, options = {}) => {
+const loadConfigFromFile = (path, options = {}) => {
   _configPath = getConfigPath(path);
   if (!_configPath) {
     if (!options.silenceErrors) {
@@ -262,6 +271,23 @@ const loadConfig = (path, options = {}) => {
   }
 };
 
+const loadConfig = (
+  path,
+  options = {
+    ignoreEnvironmentVariableConfig: false,
+  }
+) => {
+  if (
+    !options.ignoreEnvironmentVariableConfig &&
+    loadEnvironmentVariableConfig()
+  ) {
+    environmentVariableConfigLoaded = true;
+    return;
+  } else {
+    loadConfigFromFile(path, options);
+  }
+};
+
 const isTrackingAllowed = () => {
   if (!configFileExists() || configFileIsBlank()) {
     return true;
@@ -270,10 +296,11 @@ const isTrackingAllowed = () => {
   return allowUsageTracking !== false;
 };
 
-const getAndLoadConfigIfNeeded = () => {
+const getAndLoadConfigIfNeeded = (options = {}) => {
   if (!_config) {
     loadConfig(null, {
       silenceErrors: true,
+      ...options,
     });
   }
   return _config || {};
@@ -322,7 +349,10 @@ const getPortalId = nameOrId => {
   let name;
   let portalId;
   let portal;
-  if (!nameOrId) {
+
+  if (process.env.HUBSPOT_PORTAL_ID) {
+    portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  } else if (!nameOrId) {
     if (config && config.defaultPortal) {
       name = config.defaultPortal;
     }
@@ -410,7 +440,8 @@ const updatePortalConfig = configOptions => {
       config.portals = [nextPortalConfig];
     }
   }
-  writeConfig();
+
+  return nextPortalConfig;
 };
 
 /**
@@ -466,6 +497,109 @@ const deleteEmptyConfigFile = () => {
   );
 };
 
+const getConfigVariablesFromEnv = () => {
+  const env = process.env;
+
+  return {
+    apiKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_API_KEY],
+    clientId: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_ID],
+    clientSecret: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_SECRET],
+    personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
+    portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
+    refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
+  };
+};
+
+const generatePersonalAccessKeyConfig = (portalId, personalAccessKey) => {
+  return {
+    portals: [
+      {
+        authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        portalId,
+        personalAccessKey,
+      },
+    ],
+  };
+};
+
+const generateOauthConfig = (
+  portalId,
+  clientId,
+  clientSecret,
+  refreshToken,
+  scopes
+) => {
+  return {
+    portals: [
+      {
+        authType: OAUTH_AUTH_METHOD.value,
+        portalId,
+        auth: {
+          clientId,
+          clientSecret,
+          scopes,
+          tokenInfo: {
+            refreshToken,
+          },
+        },
+      },
+    ],
+  };
+};
+
+const generateApiKeyConfig = (portalId, apiKey) => {
+  return {
+    portals: [
+      {
+        authType: API_KEY_AUTH_METHOD.value,
+        portalId,
+        apiKey,
+      },
+    ],
+  };
+};
+
+const loadConfigFromEnvironment = () => {
+  const {
+    apiKey,
+    clientId,
+    clientSecret,
+    personalAccessKey,
+    portalId,
+    refreshToken,
+  } = getConfigVariablesFromEnv();
+
+  if (!portalId) {
+    return;
+  }
+
+  if (personalAccessKey) {
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey);
+  } else if (clientId && clientSecret && refreshToken) {
+    return generateOauthConfig(
+      portalId,
+      clientId,
+      clientSecret,
+      refreshToken,
+      OAUTH_SCOPES.map(scope => scope.value)
+    );
+  } else if (apiKey) {
+    return generateApiKeyConfig(portalId, apiKey);
+  } else {
+    return;
+  }
+};
+
+const loadEnvironmentVariableConfig = () => {
+  const envConfig = loadConfigFromEnvironment();
+
+  if (!envConfig) {
+    return;
+  }
+
+  return setConfig(envConfig);
+};
+
 module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
@@ -474,6 +608,7 @@ module.exports = {
   getConfigPath,
   setConfig,
   loadConfig,
+  loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
@@ -482,4 +617,5 @@ module.exports = {
   deleteEmptyConfigFile,
   isTrackingAllowed,
   validateConfig,
+  writeConfig,
 };

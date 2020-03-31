@@ -43,9 +43,17 @@ const setLogLevel = (options = {}) => {
   }
 };
 
+/**
+ * Obtains portalId using supplied --portal flag or from environment variables
+ */
 const getPortalId = (options = {}) => {
-  const { portal } = options;
-  return getPortalIdFromConfig(portal);
+  const { portal: portalNameOrId } = options;
+
+  if (process.env.HUBSPOT_PORTAL_ID) {
+    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  }
+
+  return getPortalIdFromConfig(portalNameOrId);
 };
 
 const getMode = (options = {}) => {
