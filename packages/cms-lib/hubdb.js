@@ -70,7 +70,7 @@ async function createHubDbTable(portalId, src) {
   const { rows, ...schema } = table;
   const { columns, id } = await createTable(portalId, schema);
 
-  return updateRows(portalId, id, rows, columns);
+  await updateRows(portalId, id, rows, columns);
 }
 
 async function updateHubDbTable(portalId, tableId, src) {
@@ -80,7 +80,7 @@ async function updateHubDbTable(portalId, tableId, src) {
   const { rows, ...schema } = table;
   const { columns } = await updateTable(portalId, tableId, schema);
 
-  return updateRows(portalId, tableId, rows, columns);
+  await updateRows(portalId, tableId, rows, columns);
 }
 
 function convertToJSON(table, rows) {
@@ -166,16 +166,28 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   await fs.writeFileSync(dest, tableJson);
 }
 
-async function clearHubDbTable(portalId, tableId) {
-  const rows = await fetchRows(portalId, tableId);
-  const rowIds = rows.objects.map(row => row.id);
+async function clearHubDbTableRows(portalId, tableId) {
+  let totalRows = null;
+  let rows = [];
+  let count = 0;
+  let offset = 0;
+  while (totalRows === null || count < totalRows) {
+    const response = await fetchRows(portalId, tableId, { offset });
+    if (totalRows === null) {
+      totalRows = response.total;
+    }
 
-  await deleteRows(portalId, tableId, rowIds);
+    count += response.objects.length;
+    offset += response.objects.length;
+    const rowIds = response.objects.map(row => row.id);
+    rows = rows.concat(rowIds);
+  }
+  await deleteRows(portalId, tableId, rows);
 }
 
 module.exports = {
   createHubDbTable,
   downloadHubDbTable,
-  clearHubDbTable,
+  clearHubDbTableRows,
   updateHubDbTable,
 };
