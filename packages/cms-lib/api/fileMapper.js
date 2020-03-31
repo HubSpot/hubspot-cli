@@ -116,6 +116,22 @@ async function download(portalId, filepath, options = {}) {
 }
 
 /**
+ * Fetch a folder or file node by path.
+ *
+ * @async
+ * @param {number} portalId
+ * @param {string} filepath
+ * @param {object} options
+ * @returns {Promise<FileMapperNode>}
+ */
+async function downloadDefault(portalId, filepath, options = {}) {
+  return http.get(portalId, {
+    uri: `${FILE_MAPPER_API_PATH}/download-default/${filepath}`,
+    ...options,
+  });
+}
+
+/**
  * Delete a file or folder by path
  *
  * @async
@@ -191,6 +207,7 @@ module.exports = {
   deleteFile,
   deleteFolder,
   download,
+  downloadDefault,
   fetchFileStream,
   fetchModule,
   trackUsage,
