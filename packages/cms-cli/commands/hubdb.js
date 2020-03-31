@@ -9,11 +9,8 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
-  importHubDbTableRows,
   downloadHubDbTable,
-  clearHubDbTable,
 } = require('@hubspot/cms-lib/hubdb');
-const { deleteTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -78,43 +75,6 @@ function configureHubDbCreateCommand(program) {
   addConfigOptions(program);
 }
 
-function configureHubDbImportCommand(program) {
-  program
-    .version(version)
-    .description('Import HubDB table rows')
-    .arguments('<tableId> <src>')
-    .action(async (tableId, src) => {
-      setLogLevel(program);
-      logDebugInfo(program);
-      const { config: configPath } = program;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!(validateConfig() && (await validatePortal(program)))) {
-        process.exit(1);
-      }
-      const portalId = getPortalId(program);
-
-      try {
-        const table = await importHubDbTableRows(
-          portalId,
-          tableId,
-          path.resolve(getCwd(), src)
-        );
-        logger.log(
-          `The table ${table.tableId} was updated in ${portalId} with ${table.rowCount} rows`
-        );
-      } catch (e) {
-        logger.error(`Updating the table at "${src}" failed`);
-        logErrorInstance(e);
-      }
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
 function configureHubDbFetchCommand(program) {
   program
     .version(version)
@@ -148,69 +108,8 @@ function configureHubDbFetchCommand(program) {
   addConfigOptions(program);
 }
 
-function configureHubDbClearCommand(program) {
-  program
-    .version(version)
-    .description('Delete all rows in a HubDB table')
-    .arguments('<tableId>')
-    .action(async (tableId, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!(validateConfig() && (await validatePortal(command)))) {
-        process.exit(1);
-      }
-      const portalId = getPortalId(command);
-      try {
-        await clearHubDbTable(portalId, tableId);
-        logger.log(`Delete rows in HubDB table ${tableId}`);
-      } catch (e) {
-        logErrorInstance(e, { portalId, tableId });
-      }
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-function configureHubDbDeleteCommand(program) {
-  program
-    .version(version)
-    .description('Delete a HubDB table')
-    .arguments('<tableId>')
-    .action(async (tableId, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!(validateConfig() && (await validatePortal(command)))) {
-        process.exit(1);
-      }
-      const portalId = getPortalId(command);
-      try {
-        await deleteTable(portalId, tableId);
-        logger.log(`Delete a HubDB table ${tableId}`);
-      } catch (e) {
-        logger.error(e);
-      }
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
 module.exports = {
   configureHubDbCommand,
   configureHubDbCreateCommand,
   configureHubDbFetchCommand,
-  configureHubDbClearCommand,
-  configureHubDbDeleteCommand,
-  configureHubDbImportCommand,
 };
