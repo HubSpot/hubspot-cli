@@ -357,7 +357,7 @@ function isTimeout(err) {
 // @hubspot assets have a periodic delay due to caching
 function logHubspotAssetTimeout() {
   logger.error(
-    '@hubspot assets are unavailable at the moment. Please wait a few minutes and try again'
+    'HubSpot assets are unavailable at the moment. Please wait a few minutes and try again.'
   );
 }
 
