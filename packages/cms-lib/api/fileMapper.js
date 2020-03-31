@@ -110,7 +110,7 @@ async function fetchFileStream(portalId, filePath, destination, options = {}) {
  */
 async function download(portalId, filepath, options = {}) {
   return http.get(portalId, {
-    uri: `${FILE_MAPPER_API_PATH}/download/${filepath}`,
+    uri: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
     ...options,
   });
 }
