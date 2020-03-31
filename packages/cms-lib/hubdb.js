@@ -55,7 +55,7 @@ async function updateRows(portalId, tableId, rows, columns) {
   await publishTable(portalId, tableId);
 
   return {
-    tableId: tableId,
+    tableId,
     rowCount:
       response && Array.isArray(response) && response.length
         ? response[0].rows.length
