@@ -106,15 +106,8 @@ const createGetRequestStream = ({ contentType }) => async (
   options,
   destination
 ) => {
-  const { query, uri, ...rest } = options;
-  const requestOptions = addQueryParams(
-    {
-      ...rest,
-      // Handle extended characters(kanji, etc)
-      uri: encodeURI(uri),
-    },
-    query
-  );
+  const { query, ...rest } = options;
+  const requestOptions = addQueryParams(rest, query);
   // Using `request` instead of `request-promise` per the docs so
   // the response can be piped.
   // https://github.com/request/request-promise#api-in-detail
