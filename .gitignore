@@ -2,8 +2,7 @@ node_modules
 tmp
 context
 coverage
-hubspot.config.yml
-hubspot.config.yaml
+hubspot.config.*
 lerna-debug.log
 npm-debug.log
 npm-debug.log.*
