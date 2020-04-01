@@ -30,10 +30,7 @@ function configureHubDbCommand(program) {
     .version(version)
     .description('Manage HubDB tables')
     .command('create <src>', 'create a HubDB table')
-    .command('import <tableId> <src>', 'import a HubDB table')
-    .command('fetch <tableId> <dest>', 'fetch a HubDB table')
-    .command('delete <tableId>', 'delete a HubDB table')
-    .command('clear <tableId>', 'clear all rows in a HubDB table');
+    .command('fetch <tableId> <dest>', 'fetch a HubDB table');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
