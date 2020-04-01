@@ -27,7 +27,7 @@ function validateJsonFile(src) {
   }
 }
 
-async function updateRows(portalId, tableId, rows, columns) {
+async function addRows(portalId, tableId, rows, columns) {
   const rowsToUpdate = rows.map(row => {
     const values = {};
 
@@ -70,7 +70,7 @@ async function createHubDbTable(portalId, src) {
   const { rows, ...schema } = table;
   const { columns, id } = await createTable(portalId, schema);
 
-  await updateRows(portalId, id, rows, columns);
+  await addRows(portalId, id, rows, columns);
 }
 
 async function updateHubDbTable(portalId, tableId, src) {
@@ -80,7 +80,7 @@ async function updateHubDbTable(portalId, tableId, src) {
   const { rows, ...schema } = table;
   const { columns } = await updateTable(portalId, tableId, schema);
 
-  await updateRows(portalId, tableId, rows, columns);
+  await addRows(portalId, tableId, rows, columns);
 }
 
 function convertToJSON(table, rows) {
