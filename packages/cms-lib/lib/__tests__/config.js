@@ -6,6 +6,9 @@ const {
   getPortalId,
   updateDefaultPortal,
   deleteEmptyConfigFile,
+  setConfigPath,
+  getConfigPath,
+  configFilenameIsIgnoredByGitignore,
 } = require('../config');
 jest.mock('findup-sync', () => {
   return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
@@ -47,7 +50,7 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
 };
 
 describe('lib/config', () => {
-  describe('getPortalId()', () => {
+  describe('getPortalId method', () => {
     beforeEach(() => {
       process.env = {};
       setConfig({
@@ -80,7 +83,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('updateDefaultPortal()', () => {
+  describe('updateDefaultPortal method', () => {
     const myPortalName = 'Foo';
 
     beforeEach(() => {
@@ -92,7 +95,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('deleteEmptyConfigFile()', () => {
+  describe('deleteEmptyConfigFile method', () => {
     const fs = require('fs-extra');
 
     it('does not delete config file if there are contents', () => {
@@ -114,7 +117,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('getAndLoadConfigIfNeeded)', () => {
+  describe('getAndLoadConfigIfNeeded method', () => {
     const fs = require('fs-extra');
 
     beforeEach(() => {
@@ -235,6 +238,58 @@ describe('lib/config', () => {
       it('properly loads personal access key value', () => {
         expect(portalConfig.personalAccessKey).toEqual(personalAccessKey);
       });
+    });
+  });
+
+  describe('configFilenameIsIgnoredByGitignore method', () => {
+    const fs = require('fs-extra');
+
+    it('returns false if the config file is not ignored', () => {
+      const gitignoreContent = '';
+      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
+        return gitignoreContent;
+      });
+
+      const configPath = `/Users/fakeuser/hubspot.config.yml`;
+      setConfigPath(configPath);
+      expect(getConfigPath()).toBe(configPath);
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          'Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(false);
+    });
+
+    it('identifies if a config file is ignored with a specific ignore statement', () => {
+      const gitignoreContent = 'hubspot.config.yml\n';
+      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
+        return gitignoreContent;
+      });
+
+      const configPath = `/Users/fakeuser/hubspot.config.yml`;
+      setConfigPath(configPath);
+      expect(getConfigPath()).toBe(configPath);
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          'Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
+    });
+
+    it('identifies if a config file is ignored with a wildcard statement', () => {
+      const gitignoreContent = 'hubspot.config.*\n';
+      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
+        return gitignoreContent;
+      });
+
+      const configPath = `/Users/fakeuser/hubspot.config.yml`;
+      setConfigPath(configPath);
+      expect(getConfigPath()).toBe(configPath);
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          'Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
     });
   });
 });
