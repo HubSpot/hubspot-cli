@@ -142,7 +142,7 @@ const isConfigPathInGitRepo = () => {
 
 const configFilenameIsIgnoredByGitignore = ignoreFiles => {
   return ignoreFiles.some(gitignore => {
-    const gitignoreContents = fs.readFileSync(gitignore);
+    const gitignoreContents = fs.readFileSync(gitignore).toString();
     const gitignoreConfig = ignore().add(gitignoreContents);
 
     if (gitignoreConfig.ignores(getRelativeConfigFilename())) {
