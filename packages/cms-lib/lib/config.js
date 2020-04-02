@@ -32,7 +32,7 @@ const getConfigFilename = relativeTo => {
   const configFilename = configPathSegments[configPathSegments.length - 1];
 
   return relativeTo
-    ? path.relative(process.cwd(), configFilename)
+    ? path.relative(relativeTo, configFilename)
     : configFilename;
 };
 
