@@ -28,12 +28,8 @@ function configureMainCommand(program) {
     )
     .command('remove <path>', 'delete a file or folder from HubSpot')
     .alias('rm')
-    .command('secrets', 'manage HubSpot secrets', {
-      noHelp: true,
-    })
-    .command('logs', 'get logs for a function', {
-      noHelp: true,
-    });
+    .command('secrets', 'manage HubSpot secrets')
+    .command('logs', 'get logs for a function');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
