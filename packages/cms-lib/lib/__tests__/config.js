@@ -9,6 +9,9 @@ const {
   configFilenameIsIgnoredByGitignore,
   setConfigPath,
 } = require('../config');
+jest.mock('findup-sync', () => {
+  return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
+});
 
 const API_KEY_CONFIG = {
   name: 'API',
@@ -125,7 +128,7 @@ describe('lib/config', () => {
       const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
 
       getAndLoadConfigIfNeeded();
-      expect(readFileSyncSpy).toHaveBeenCalled();
+      expect(fs.readFileSync).toHaveBeenCalled();
       readFileSyncSpy.mockReset();
     });
 
