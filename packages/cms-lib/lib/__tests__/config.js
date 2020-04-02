@@ -257,57 +257,69 @@ describe('lib/config', () => {
     it('identifies if a config file is ignored with a specific ignore statement', () => {
       const gitignoreContent = 'hubspot.config.yml';
       setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return Buffer.from(gitignoreContent);
-      });
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
       expect(
         configFilenameIsIgnoredByGitignore([
           'Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
 
     it('identifies if a config file is ignored with a wildcard statement', () => {
       const gitignoreContent = 'hubspot.config.*';
       setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return Buffer.from(gitignoreContent);
-      });
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
       expect(
         configFilenameIsIgnoredByGitignore([
           'Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
 
     it('identifies if a non-standard named config file is not ignored', () => {
       const gitignoreContent = 'hubspot.config.yml';
       setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return Buffer.from(gitignoreContent);
-      });
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
       expect(
         configFilenameIsIgnoredByGitignore([
           'Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(false);
+      readFileSyncSpy.mockReset();
     });
 
     it('identifies if a non-standard named config file is ignored', () => {
       const gitignoreContent = 'my.custom.name.yml';
       setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return Buffer.from(gitignoreContent);
-      });
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
       expect(
         configFilenameIsIgnoredByGitignore([
           'Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
   });
 });
