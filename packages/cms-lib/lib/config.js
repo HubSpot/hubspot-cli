@@ -28,7 +28,7 @@ let environmentVariableConfigLoaded = false;
 const getConfig = () => _config;
 
 const getConfigFilename = relativeTo => {
-  const configPathSegments = _configPath.split('/');
+  const configPathSegments = _configPath.split(path.sep);
   const configFilename = configPathSegments[configPathSegments.length - 1];
 
   return relativeTo
