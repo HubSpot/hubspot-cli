@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.13](https://github.com/HubSpot/hubspot-cms-tools/compare/v1.0.13-beta.1...v1.0.13) (2020-04-02)
+
+**Note:** Version bump only for package hubspot-cms-tools
+
+
+
+
+
 ## [1.0.12](https://github.com/HubSpot/hubspot-cms-tools/compare/v1.0.12-beta.3...v1.0.12) (2020-04-01)
 
 **Note:** Version bump only for package hubspot-cms-tools
