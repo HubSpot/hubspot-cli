@@ -165,15 +165,22 @@ const shouldWarnOfGitInclusion = () => {
 };
 
 const checkAndWarnGitInclusion = () => {
-  if (!shouldWarnOfGitInclusion()) return;
-  logger.warn('Security Issue');
-  logger.warn('Config file can be tracked by git.');
-  logger.warn(`File: "${_configPath}"`);
-  logger.warn(`To remediate:
-  - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${getConfigFilename()}" to a .gitignore file in root of your repository.
-  - Ensure that config file has not already been pushed to a remote repository.
-`);
+  try {
+    if (!shouldWarnOfGitInclusion()) return;
+    logger.warn('Security Issue');
+    logger.warn('Config file can be tracked by git.');
+    logger.warn(`File: "${_configPath}"`);
+    logger.warn(`To remediate:
+      - Move config file to your home directory: "${os.homedir()}"
+      - Add gitignore pattern "${getConfigFilename()}" to a .gitignore file in root of your repository.
+      - Ensure that config file has not already been pushed to a remote repository.
+    `);
+  } catch (e) {
+    // fail silently
+    logger.debug(
+      'Unable to determine if config file is properly ignored by git.'
+    );
+  }
 };
 
 /**
