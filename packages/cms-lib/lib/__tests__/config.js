@@ -125,7 +125,7 @@ describe('lib/config', () => {
       const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
 
       getAndLoadConfigIfNeeded();
-      expect(fs.readFileSync).toHaveBeenCalled();
+      expect(readFileSyncSpy).toHaveBeenCalled();
       readFileSyncSpy.mockReset();
     });
 
