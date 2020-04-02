@@ -252,7 +252,7 @@ describe('lib/config', () => {
 
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(false);
     });
@@ -268,7 +268,7 @@ describe('lib/config', () => {
 
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
       readFileSyncSpy.mockReset();
@@ -285,7 +285,7 @@ describe('lib/config', () => {
 
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
       readFileSyncSpy.mockReset();
@@ -302,7 +302,7 @@ describe('lib/config', () => {
 
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(false);
       readFileSyncSpy.mockReset();
@@ -319,7 +319,7 @@ describe('lib/config', () => {
 
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
       readFileSyncSpy.mockReset();

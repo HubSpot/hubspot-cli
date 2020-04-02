@@ -136,7 +136,11 @@ const configFilenameIsIgnoredByGitignore = ignoreFiles => {
     const gitignoreContents = fs.readFileSync(gitignore).toString();
     const gitignoreConfig = ignore().add(gitignoreContents);
 
-    if (gitignoreConfig.ignores(path.basename(_configPath))) {
+    if (
+      gitignoreConfig.ignores(
+        path.relative(path.dirname(gitignore), _configPath)
+      )
+    ) {
       return true;
     }
     return false;
