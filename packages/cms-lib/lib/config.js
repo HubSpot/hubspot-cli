@@ -27,10 +27,13 @@ let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
-const getConfigFilename = () => {
+const getRelativeConfigFilename = () => {
   const configPathSegments = _configPath.split('/');
 
-  return configPathSegments[configPathSegments.length - 1];
+  return path.relative(
+    process.cwd(),
+    configPathSegments[configPathSegments.length - 1]
+  );
 };
 
 const setConfig = updatedConfig => {
@@ -139,10 +142,10 @@ const isConfigPathInGitRepo = () => {
 
 const configFilenameIsIgnoredByGitignore = ignoreFiles => {
   return ignoreFiles.some(gitignore => {
-    const gitignoreContents = fs.readFileSync(gitignore).toString();
+    const gitignoreContents = fs.readFileSync(gitignore);
     const gitignoreConfig = ignore().add(gitignoreContents);
 
-    if (gitignoreConfig.ignores(getConfigFilename())) {
+    if (gitignoreConfig.ignores(getRelativeConfigFilename())) {
       return true;
     }
     return false;
@@ -169,7 +172,7 @@ const checkAndWarnGitInclusion = () => {
   logger.warn(`File: "${_configPath}"`);
   logger.warn(`To remediate:
   - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${getConfigFilename()}" to a .gitignore file in root of your repository.
+  - Add gitignore pattern "${getRelativeConfigFilename()}" to a .gitignore file in root of your repository.
   - Ensure that config file has not already been pushed to a remote repository.
 `);
 };
