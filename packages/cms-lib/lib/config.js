@@ -27,6 +27,12 @@ let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
+const getConfigFilename = () => {
+  const configPathSegments = _configPath.split('/');
+
+  return configPathSegments[configPathSegments.length - 1];
+};
+
 const setConfig = updatedConfig => {
   _config = updatedConfig;
   return _config;
@@ -131,24 +137,12 @@ const isConfigPathInGitRepo = () => {
   return configDir.startsWith(gitDir);
 };
 
-const CONFIG_FILE_WILDCARD_MATCHER = 'hubspot.config.*';
-
-const configFilenameIsIgnoredByGitignore = () => {
-  const ignoreFiles = getGitignoreFiles();
-  const configPathSegments = _configPath.split('/');
-  const configFilename = configPathSegments[configPathSegments.length - 1];
-
+const configFilenameIsIgnoredByGitignore = ignoreFiles => {
   return ignoreFiles.some(gitignore => {
-    const gitignoreContents = fs
-      .readFileSync(gitignore, 'utf8')
-      .split('\n')
-      .filter(i => i);
+    const gitignoreContents = fs.readFileSync(gitignore).toString();
     const gitignoreConfig = ignore().add(gitignoreContents);
-    if (
-      gitignoreConfig.ignores(configFilename) ||
-      gitignoreConfig.ignores(CONFIG_FILE_WILDCARD_MATCHER)
-    ) {
-      // Has a gitignore rule
+
+    if (gitignoreConfig.ignores(getConfigFilename())) {
       return true;
     }
     return false;
@@ -160,7 +154,7 @@ const shouldWarnOfGitInclusion = () => {
     // Not in git
     return false;
   }
-  if (configFilenameIsIgnoredByGitignore()) {
+  if (configFilenameIsIgnoredByGitignore(getGitignoreFiles())) {
     // Found ignore statement in .gitignore that matches config filename
     return false;
   }
@@ -175,7 +169,7 @@ const checkAndWarnGitInclusion = () => {
   logger.warn(`File: "${_configPath}"`);
   logger.warn(`To remediate:
   - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${CONFIG_FILE_WILDCARD_MATCHER}" to a .gitignore file in root of your repository.
+  - Add gitignore pattern "${getConfigFilename()}" to a .gitignore file in root of your repository.
   - Ensure that config file has not already been pushed to a remote repository.
 `);
 };
@@ -245,7 +239,7 @@ const parseConfig = configSource => {
 };
 
 const loadConfigFromFile = (path, options = {}) => {
-  _configPath = getConfigPath(path);
+  setConfigPath(getConfigPath(path));
   if (!_configPath) {
     if (!options.silenceErrors) {
       logger.error(
@@ -607,6 +601,7 @@ module.exports = {
   getConfig,
   getConfigPath,
   setConfig,
+  setConfigPath,
   loadConfig,
   loadConfigFromEnvironment,
   getPortalConfig,
@@ -618,4 +613,5 @@ module.exports = {
   isTrackingAllowed,
   validateConfig,
   writeConfig,
+  configFilenameIsIgnoredByGitignore,
 };
