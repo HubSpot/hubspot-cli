@@ -9,8 +9,7 @@ const {
   configFilenameIsIgnoredByGitignore,
 } = require('../config');
 jest.mock('findup-sync', () => {
-  const configPath = `/Users/fakeuser/someproject/hubspot.config.yml`;
-  return jest.fn(() => configPath);
+  return jest.fn(() => `/Users/fakeuser/someproject/hubspot.config.yml`);
 });
 
 const API_KEY_CONFIG = {
