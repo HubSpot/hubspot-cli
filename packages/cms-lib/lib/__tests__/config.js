@@ -6,9 +6,8 @@ const {
   getPortalId,
   updateDefaultPortal,
   deleteEmptyConfigFile,
-  setConfigPath,
-  getConfigPath,
   configFilenameIsIgnoredByGitignore,
+  setConfigPath,
 } = require('../config');
 jest.mock('findup-sync', () => {
   return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
@@ -246,50 +245,84 @@ describe('lib/config', () => {
 
     it('returns false if the config file is not ignored', () => {
       const gitignoreContent = '';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
       jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return gitignoreContent;
+        return Buffer.from(gitignoreContent);
       });
 
-      const configPath = `/Users/fakeuser/hubspot.config.yml`;
-      setConfigPath(configPath);
-      expect(getConfigPath()).toBe(configPath);
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(false);
     });
 
     it('identifies if a config file is ignored with a specific ignore statement', () => {
-      const gitignoreContent = 'hubspot.config.yml\n';
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return gitignoreContent;
-      });
+      const gitignoreContent = 'hubspot.config.yml';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
-      const configPath = `/Users/fakeuser/hubspot.config.yml`;
-      setConfigPath(configPath);
-      expect(getConfigPath()).toBe(configPath);
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
 
     it('identifies if a config file is ignored with a wildcard statement', () => {
-      const gitignoreContent = 'hubspot.config.*\n';
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
-        return gitignoreContent;
-      });
+      const gitignoreContent = 'hubspot.config.*';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
 
-      const configPath = `/Users/fakeuser/hubspot.config.yml`;
-      setConfigPath(configPath);
-      expect(getConfigPath()).toBe(configPath);
       expect(
         configFilenameIsIgnoredByGitignore([
-          'Users/fakeuser/someproject/.gitignore',
+          '/Users/fakeuser/someproject/.gitignore',
         ])
       ).toBe(true);
+      readFileSyncSpy.mockReset();
+    });
+
+    it('identifies if a non-standard named config file is not ignored', () => {
+      const gitignoreContent = 'hubspot.config.yml';
+      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(false);
+      readFileSyncSpy.mockReset();
+    });
+
+    it('identifies if a non-standard named config file is ignored', () => {
+      const gitignoreContent = 'my.custom.name.yml';
+      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
   });
 });

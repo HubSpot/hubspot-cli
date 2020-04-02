@@ -27,12 +27,6 @@ let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
-const getConfigFilename = () => {
-  const configPathSegments = _configPath.split('/');
-
-  return configPathSegments[configPathSegments.length - 1];
-};
-
 const setConfig = updatedConfig => {
   _config = updatedConfig;
   return _config;
@@ -142,7 +136,11 @@ const configFilenameIsIgnoredByGitignore = ignoreFiles => {
     const gitignoreContents = fs.readFileSync(gitignore).toString();
     const gitignoreConfig = ignore().add(gitignoreContents);
 
-    if (gitignoreConfig.ignores(getConfigFilename())) {
+    if (
+      gitignoreConfig.ignores(
+        path.relative(path.dirname(gitignore), _configPath)
+      )
+    ) {
       return true;
     }
     return false;
@@ -163,15 +161,24 @@ const shouldWarnOfGitInclusion = () => {
 };
 
 const checkAndWarnGitInclusion = () => {
-  if (!shouldWarnOfGitInclusion()) return;
-  logger.warn('Security Issue');
-  logger.warn('Config file can be tracked by git.');
-  logger.warn(`File: "${_configPath}"`);
-  logger.warn(`To remediate:
-  - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${getConfigFilename()}" to a .gitignore file in root of your repository.
-  - Ensure that config file has not already been pushed to a remote repository.
-`);
+  try {
+    if (!shouldWarnOfGitInclusion()) return;
+    logger.warn('Security Issue');
+    logger.warn('Config file can be tracked by git.');
+    logger.warn(`File: "${_configPath}"`);
+    logger.warn(`To remediate:
+      - Move config file to your home directory: "${os.homedir()}"
+      - Add gitignore pattern "${path.basename(
+        _configPath
+      )}" to a .gitignore file in root of your repository.
+      - Ensure that config file has not already been pushed to a remote repository.
+    `);
+  } catch (e) {
+    // fail silently
+    logger.debug(
+      'Unable to determine if config file is properly ignored by git.'
+    );
+  }
 };
 
 /**
