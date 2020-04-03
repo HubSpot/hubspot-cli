@@ -70,7 +70,16 @@ function updateExistingConfig(
         [endpointPath]: createEndpoint(endpointMethod, filename),
       };
     }
-    writeConfig(configFilePath, config);
+    try {
+      writeConfig(configFilePath, config);
+    } catch (err) {
+      logger.error(`The file "${configFilePath}" could not be updated`);
+      logFileSystemErrorInstance(err, {
+        filepath: configFilePath,
+        write: true,
+      });
+      return false;
+    }
     return true;
   }
   logger.error(`The existing "${configFilePath}" is not an object`);
@@ -85,7 +94,7 @@ function createFunction(
 
   if (ancestorFunctionsDir) {
     logger.error(
-      `Cannot create a functions directory inside ${ancestorFunctionsDir}`
+      `Cannot create a functions directory inside "${ancestorFunctionsDir}"`
     );
     return;
   }
@@ -97,20 +106,30 @@ function createFunction(
 
   const destPath = path.join(dest, folderName);
   if (fs.existsSync(destPath)) {
-    logger.log(`The ${destPath} path already exists`);
+    logger.log(`The "${destPath}" path already exists`);
   } else {
     fs.mkdirp(destPath);
-    logger.log(`Created ${destPath}`);
+    logger.log(`Created "${destPath}"`);
   }
   const functionFilePath = path.join(destPath, functionFile);
   const configFilePath = path.join(destPath, 'serverless.json');
 
   if (fs.existsSync(functionFilePath)) {
-    logger.error(`The JavaScript file at ${functionFilePath} already exists`);
+    logger.error(`The JavaScript file at "${functionFilePath}" already exists`);
     return;
   }
 
-  fs.writeFileSync(functionFilePath, functionBody);
+  try {
+    fs.writeFileSync(functionFilePath, functionBody);
+  } catch (err) {
+    logger.error(`The file "${functionFilePath}" could not be created`);
+    logFileSystemErrorInstance(err, {
+      filepath: functionFilePath,
+      write: true,
+    });
+    return;
+  }
+
   logger.log(`Created ${functionFilePath}`);
 
   if (fs.existsSync(configFilePath)) {
@@ -120,18 +139,27 @@ function createFunction(
       filename,
     });
     if (updated) {
-      logger.log(
-        `A function for the endpoint /_hcms/api/${endpointPath} has been created`
+      logger.success(
+        `A function for the endpoint "/_hcms/api/${endpointPath}" has been created. Upload "${folderName}" to try it out`
       );
     } else {
       logger.error('The function could not be created');
     }
   } else {
     const config = createConfig({ endpointPath, endpointMethod, functionFile });
-    writeConfig(configFilePath, config);
-    logger.log(`Created ${configFilePath}`);
-    logger.log(
-      `A function for the endpoint /_hcms/api/${endpointPath} has been created`
+    try {
+      writeConfig(configFilePath, config);
+    } catch (err) {
+      logger.error(`The file "${configFilePath}" could not be created`);
+      logFileSystemErrorInstance(err, {
+        filepath: configFilePath,
+        write: true,
+      });
+      return;
+    }
+    logger.log(`Created "${configFilePath}"`);
+    logger.success(
+      `A function for the endpoint "/_hcms/api/${endpointPath}" has been created. Upload "${folderName}" to try it out`
     );
   }
 }
