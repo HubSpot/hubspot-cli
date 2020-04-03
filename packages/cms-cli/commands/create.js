@@ -69,7 +69,7 @@ function configureCreateCommand(program) {
   program
     .version(version)
     .description(
-      `Create HubSpot CMS assets. Supported authentication protocols are ${Object.values(
+      `Create HubSpot CMS assets. Supported assets are ${Object.values(
         TYPES
       ).join(', ')}.`
     )
