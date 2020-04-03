@@ -16,7 +16,7 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { createFunctionPrompt } = require('../lib/createFunction');
+const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 
 const COMMAND_NAME = 'create';
 
