@@ -50,7 +50,13 @@ function updateExistingConfig(
     logger.error(`The file "${configFilePath}" could not be read`);
     logFileSystemErrorInstance(err, { filepath: configFilePath, read: true });
   }
-  config = JSON.parse(config);
+
+  try {
+    config = JSON.parse(config);
+  } catch (err) {
+    logger.error(`The file "${configFilePath}" is not valid JSON`);
+    return false;
+  }
 
   if (isObject(config)) {
     if (config.endpoints) {
