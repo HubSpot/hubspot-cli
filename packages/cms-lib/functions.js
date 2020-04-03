@@ -22,14 +22,14 @@ function createEndpoint(endpointMethod, filename) {
   };
 }
 
-function createConfig({ endpointPath, endpointMethod, filename }) {
+function createConfig({ endpointPath, endpointMethod, functionFile }) {
   return {
     runtime: 'nodejs12.x',
     version: '1.0',
     environment: {},
     secrets: [],
     endpoints: {
-      [endpointPath]: createEndpoint(endpointMethod, filename),
+      [endpointPath]: createEndpoint(endpointMethod, functionFile),
     },
   };
 }
@@ -41,7 +41,7 @@ function writeConfig(configFilePath, config) {
 
 function updateExistingConfig(
   configFilePath,
-  { endpointPath, endpointMethod, filename }
+  { endpointPath, endpointMethod, functionFile }
 ) {
   let config;
   try {
@@ -68,12 +68,12 @@ function updateExistingConfig(
       } else {
         config.endpoints[endpointPath] = createEndpoint(
           endpointMethod,
-          filename
+          functionFile
         );
       }
     } else {
       config.endpoints = {
-        [endpointPath]: createEndpoint(endpointMethod, filename),
+        [endpointPath]: createEndpoint(endpointMethod, functionFile),
       };
     }
     try {
@@ -136,13 +136,13 @@ function createFunction(
     return;
   }
 
-  logger.log(`Created ${functionFilePath}`);
+  logger.log(`Created "${functionFilePath}"`);
 
   if (fs.existsSync(configFilePath)) {
     const updated = updateExistingConfig(configFilePath, {
       endpointPath,
       endpointMethod,
-      filename,
+      functionFile,
     });
     if (updated) {
       logger.success(
