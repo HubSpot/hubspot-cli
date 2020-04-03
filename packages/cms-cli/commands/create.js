@@ -7,6 +7,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createTheme } = require('@hubspot/cms-lib/themes');
+const { createFunction } = require('@hubspot/cms-lib/functions');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -15,14 +16,16 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
+const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 
 const COMMAND_NAME = 'create';
 
 const TYPES = {
+  function: 'function',
+  'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
-  'global-partial': 'global-partial',
 };
 
 const ASSET_PATHS = {
@@ -70,9 +73,9 @@ function configureCreateCommand(program) {
         TYPES
       ).join(', ')}.`
     )
-    // For a theme this is `website-theme <dest>`
+    // For a theme or function this is `<type> <dest>`
     // TODO: Yargs allows an array of commands.
-    .arguments('<type> <name> [dest]')
+    .arguments('<type> [name] [dest]')
     .option(
       '--theme-version <theme-version>',
       'Theme boilerplate version to use',
@@ -92,7 +95,7 @@ function configureCreateCommand(program) {
       }
 
       // TODO: In yargs use `.implies()`
-      if (type === TYPES['website-theme']) {
+      if ([TYPES['website-theme'], TYPES.function].includes(type)) {
         dest = name;
       }
 
@@ -122,6 +125,11 @@ function configureCreateCommand(program) {
         case TYPES['website-theme']:
           createTheme(dest, type, program);
           break;
+        case TYPES.function: {
+          const functionDefinition = await createFunctionPrompt();
+          createFunction(functionDefinition, dest);
+          break;
+        }
         default:
           break;
       }
