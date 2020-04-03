@@ -65,7 +65,11 @@ const createTemplate = (name, dest, type = 'template') => {
 function configureCreateCommand(program) {
   program
     .version(version)
-    .description('Create HubSpot CMS assets')
+    .description(
+      `Create HubSpot CMS assets. Supported authentication protocols are ${Object.values(
+        TYPES
+      ).join(', ')}.`
+    )
     // For a theme this is `website-theme <dest>`
     // TODO: Yargs allows an array of commands.
     .arguments('<type> <name> [dest]')
@@ -79,7 +83,11 @@ function configureCreateCommand(program) {
       logDebugInfo(program);
       type = typeof type === 'string' && type.toLowerCase();
       if (!type || !TYPES[type]) {
-        logger.error(`The asset type ${type} is not supported`);
+        logger.error(
+          `The asset type ${type} is not supported. Supported authentication protocols are ${Object.values(
+            TYPES
+          ).join(', ')}.`
+        );
         return;
       }
 

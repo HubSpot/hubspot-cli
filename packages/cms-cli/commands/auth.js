@@ -74,7 +74,7 @@ function configureAuthCommand(program) {
     .description(
       `Configure authentication for a HubSpot account. Supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
         ', '
-      )}`
+      )}.`
     )
     .arguments('<type>')
     .action(authAction);
