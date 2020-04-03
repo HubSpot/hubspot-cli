@@ -31,7 +31,7 @@ const ENDPOINT_PATH_PROMPT = {
   },
 };
 const ENDPOINT_METHOD_PROMPT = {
-  type: 'rawlist',
+  type: 'list',
   name: 'endpointMethod',
   message: 'Select the HTTP method for the endpoint',
   default: 'GET',
