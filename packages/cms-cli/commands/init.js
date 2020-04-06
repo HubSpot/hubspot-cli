@@ -6,9 +6,7 @@ const {
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
-const {
-  logFileSystemErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -74,9 +72,7 @@ function initializeConfigCommand(program) {
           portalId
         );
       } catch (err) {
-        logFileSystemErrorInstance(err, {
-          filepath: configPath,
-        });
+        logErrorInstance(err);
         trackAuthAction(
           COMMAND_NAME,
           PERSONAL_ACCESS_KEY_AUTH_METHOD.value,

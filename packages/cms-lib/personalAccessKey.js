@@ -21,6 +21,7 @@ const {
 } = require('./lib/constants');
 const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
+const { logErrorInstance } = require('./errorHandlers');
 
 const refreshRequests = new Map();
 
@@ -160,10 +161,14 @@ const personalAccessKeyPrompt = async () => {
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   const { personalAccessKey, name } = configData;
 
-  const { portalId, accessToken, expiresAt } = await getAccessToken(
-    personalAccessKey,
-    getEnv(name)
-  );
+  let token;
+  try {
+    token = await getAccessToken(personalAccessKey, getEnv(name));
+  } catch (err) {
+    logErrorInstance(err);
+    return;
+  }
+  const { portalId, accessToken, expiresAt } = token;
 
   updatePortalConfig({
     portalId,
