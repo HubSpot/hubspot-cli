@@ -1,5 +1,4 @@
 const { version } = require('../package.json');
-const { addLoggerOptions } = require('../lib/commonOpts');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
 
 function configureMainCommand(program) {
@@ -31,7 +30,6 @@ function configureMainCommand(program) {
     .command('secrets', 'manage HubSpot secrets')
     .command('logs', 'get logs for a function');
 
-  addLoggerOptions(program);
   addHelpUsageTracking(program);
 }
 
