@@ -77,10 +77,9 @@ async function updateHubDbTable(portalId, tableId, src) {
   validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
-  const { rows, ...schema } = table;
-  const { columns } = await updateTable(portalId, tableId, schema);
+  const { ...schema } = table;
 
-  await addRows(portalId, tableId, rows, columns);
+  await updateTable(portalId, tableId, schema);
 }
 
 function convertToJSON(table, rows) {
