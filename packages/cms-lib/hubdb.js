@@ -27,7 +27,7 @@ function validateJsonFile(src) {
   }
 }
 
-async function addRows(portalId, tableId, rows, columns) {
+async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
   const rowsToUpdate = rows.map(row => {
     const values = {};
 
@@ -39,6 +39,7 @@ async function addRows(portalId, tableId, rows, columns) {
         values[id] = null;
       }
     });
+
     return {
       childTableId: 0,
       isSoftEditable: false,
@@ -70,7 +71,7 @@ async function createHubDbTable(portalId, src) {
   const { rows, ...schema } = table;
   const { columns, id } = await createTable(portalId, schema);
 
-  await addRows(portalId, id, rows, columns);
+  return addRowsToHubDbTable(portalId, id, rows, columns);
 }
 
 async function updateHubDbTable(portalId, tableId, src) {
@@ -79,7 +80,7 @@ async function updateHubDbTable(portalId, tableId, src) {
   const table = fs.readJsonSync(src);
   const { ...schema } = table;
 
-  await updateTable(portalId, tableId, schema);
+  return updateTable(portalId, tableId, schema);
 }
 
 function convertToJSON(table, rows) {
@@ -189,4 +190,5 @@ module.exports = {
   downloadHubDbTable,
   clearHubDbTableRows,
   updateHubDbTable,
+  addRowsToHubDbTable,
 };
