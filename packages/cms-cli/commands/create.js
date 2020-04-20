@@ -5,6 +5,7 @@ const { version } = require('../package.json');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
+const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createTheme } = require('@hubspot/cms-lib/themes');
 const { createFunction } = require('@hubspot/cms-lib/functions');
@@ -112,7 +113,7 @@ function configureCreateCommand(program) {
         return;
       }
 
-      trackCommandUsage(COMMAND_NAME, { assetType: type });
+      trackCommandUsage(COMMAND_NAME, { assetType: type }, getPortalId());
 
       switch (type) {
         case TYPES.module:
