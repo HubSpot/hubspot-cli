@@ -184,6 +184,7 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
   const portalConfig = portalId && getPortalConfig(portalId);
 
   if (portalConfig && portalConfig.authType === 'personalaccesskey') {
+    logger.debug('Sending usage event to authenticated endpoint');
     return http.post(portalId, {
       uri: `${path}/authenticated`,
       body: usageEvent,
@@ -200,6 +201,7 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
       resolveWithFullResponse: true,
     }
   );
+  logger.debug('Sending usage event to unauthenticated endpoint');
   return http.request.post(requestOptions);
 }
 
