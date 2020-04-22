@@ -145,7 +145,7 @@ function configureUploadCommand(program) {
           });
       } else {
         logger.success(
-          `Uploading files from "${src}" to "${dest}" to the Design Manager of portal ${portalId}`
+          `Uploading files from "${src}" to "${dest}" in the Design Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
           mode,
@@ -153,7 +153,7 @@ function configureUploadCommand(program) {
         })
           .then(() => {
             logger.log(
-              `Uploading files to "${dest}" to the Design Manager is complete`
+              `Uploading files to "${dest}" in the Design Manager is complete`
             );
           })
           .catch(error => {

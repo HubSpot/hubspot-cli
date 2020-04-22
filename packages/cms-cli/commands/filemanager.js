@@ -109,7 +109,7 @@ function configureFileManagerUploadCommand(program) {
         uploadFile(portalId, absoluteSrcPath, normalizedDest)
           .then(() => {
             logger.success(
-              'Uploaded file from "%s" to "%s" to the File Manager of portal %s',
+              'Uploaded file from "%s" to "%s" in the File Manager of portal %s',
               src,
               normalizedDest,
               portalId
@@ -132,7 +132,7 @@ function configureFileManagerUploadCommand(program) {
           });
       } else {
         logger.log(
-          `Uploading files from "${src}" to "${dest}" to the File Manager of portal ${portalId}`
+          `Uploading files from "${src}" to "${dest}" in the File Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
           cwd: getCwd(),
