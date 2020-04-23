@@ -12,7 +12,7 @@ async function uploadFile(portalId, src, dest) {
     file_names: filename,
   };
 
-  if (directory && directory !== '.') {
+  if (directory && directory !== '.' && directory !== '/') {
     formData.folder_paths = directory;
   }
 
