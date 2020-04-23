@@ -17,7 +17,7 @@
   "scripts": {
     "lint": "eslint . && prettier --list-different 'packages/**/*.{js,json}'",
     "prettier:write": "prettier --write 'packages/**/*.{js,json}'",
-    "publish-release": "yarn lerna publish --conventional-commits --conventional-graduate",
+    "publish-release": "yarn lerna publish --conventional-graduate",
     "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
     "test": "jest"
   },
