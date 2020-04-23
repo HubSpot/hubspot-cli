@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+## 1.1.2
+
+ * Fix uploading a folder of files to the file manager root
+
 ## 1.1.1
 
  * Add utility functions to manage HubDB tables in other scripts
