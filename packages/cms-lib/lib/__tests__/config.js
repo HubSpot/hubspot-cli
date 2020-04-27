@@ -57,7 +57,7 @@ const getPortalByAuthType = (config, authType) => {
 };
 
 describe('lib/config', () => {
-  describe('setConfig()', () => {
+  describe('setConfig method', () => {
     const CONFIG = {
       defaultPortal: PORTALS[0].name,
       portals: PORTALS,
@@ -131,7 +131,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('updatePortalConfig()', () => {
+  describe('updatePortalConfig method', () => {
     const CONFIG = {
       defaultPortal: PORTALS[0].name,
       portals: PORTALS,
@@ -276,7 +276,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('validateConfig()', () => {
+  describe('validateConfig method', () => {
     const DEFAULT_PORTAL = PORTALS[0].name;
 
     it('allows valid config', () => {
