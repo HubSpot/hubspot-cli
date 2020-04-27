@@ -82,6 +82,16 @@ const validateConfig = () => {
   });
 };
 
+const portalNameExistsInConfig = name => {
+  const config = getConfig();
+
+  if (!config || !Array.isArray(config.portals)) {
+    return false;
+  }
+
+  return config.portals.some(cfg => cfg.name && cfg.name === name);
+};
+
 const getOrderedConfig = unorderedConfig => {
   const {
     defaultPortal,
@@ -637,4 +647,5 @@ module.exports = {
   validateConfig,
   writeConfig,
   configFilenameIsIgnoredByGitignore,
+  portalNameExistsInConfig,
 };

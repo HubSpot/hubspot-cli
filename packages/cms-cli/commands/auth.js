@@ -15,7 +15,11 @@ const {
   personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const { updatePortalConfig } = require('@hubspot/cms-lib/lib/config');
+const {
+  updatePortalConfig,
+  portalNameExistsInConfig,
+  writeConfig,
+} = require('@hubspot/cms-lib/lib/config');
 const {
   addConfigOptions,
   addLoggerOptions,
@@ -62,13 +66,26 @@ async function authAction(type, options) {
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig.name) {
-        promptAnswer = await promptUser([PORTAL_NAME]);
+        let validName = null;
+        while (!validName) {
+          promptAnswer = await promptUser([PORTAL_NAME]);
+
+          if (!portalNameExistsInConfig(promptAnswer.name)) {
+            validName = promptAnswer.name;
+          } else {
+            logger.log(
+              `Account name "${promptAnswer.name}" already exists, please enter a different name.`
+            );
+          }
+        }
+
         updatePortalConfig({
           ...updatedConfig,
           environment: updatedConfig.env,
           tokenInfo: updatedConfig.auth.tokenInfo,
-          name: promptAnswer.name,
+          name: validName,
         });
+        writeConfig();
       }
 
       logger.success(
