@@ -1,13 +1,19 @@
 const {
-  deleteEmptyConfigFile,
-  getConfig,
-  getPortalId,
   setConfig,
+  getAndLoadConfigIfNeeded,
+  getConfig,
+  getPortalConfig,
+  getPortalId,
   updateDefaultPortal,
   updatePortalConfig,
   validateConfig,
+  deleteEmptyConfigFile,
+  configFilenameIsIgnoredByGitignore,
+  setConfigPath,
 } = require('../config');
-jest.mock('fs');
+jest.mock('findup-sync', () => {
+  return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
+});
 
 const API_KEY_CONFIG = {
   name: 'API',
@@ -43,6 +49,7 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
   },
   personalAccessKey: 'fakePersonalAccessKey',
 };
+
 const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
 const getPortalByAuthType = (config, authType) => {
@@ -64,8 +71,9 @@ describe('lib/config', () => {
     });
   });
 
-  describe('getPortalId()', () => {
+  describe('getPortalId method', () => {
     beforeEach(() => {
+      process.env = {};
       setConfig({
         defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
         portals: PORTALS,
@@ -89,7 +97,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('updateDefaultPortal()', () => {
+  describe('updateDefaultPortal method', () => {
     const myPortalName = 'Foo';
 
     beforeEach(() => {
@@ -101,7 +109,7 @@ describe('lib/config', () => {
     });
   });
 
-  describe('deleteEmptyConfigFile()', () => {
+  describe('deleteEmptyConfigFile method', () => {
     const fs = require('fs-extra');
 
     it('does not delete config file if there are contents', () => {
@@ -329,6 +337,216 @@ describe('lib/config', () => {
         ],
       });
       expect(validateConfig()).toEqual(true);
+    });
+  });
+
+  describe('getAndLoadConfigIfNeeded method', () => {
+    const fs = require('fs-extra');
+
+    beforeEach(() => {
+      setConfig(null);
+      process.env = {};
+    });
+
+    it('loads a config from file if no combination of environment variables is sufficient', () => {
+      const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
+
+      getAndLoadConfigIfNeeded();
+      expect(fs.readFileSync).toHaveBeenCalled();
+      readFileSyncSpy.mockReset();
+    });
+
+    describe('oauth environment variable config', () => {
+      const {
+        portalId,
+        auth: {
+          clientId,
+          clientSecret,
+          tokenInfo: { refreshToken },
+        },
+      } = OAUTH2_CONFIG;
+      let portalConfig;
+
+      beforeEach(() => {
+        process.env = {
+          HUBSPOT_PORTAL_ID: portalId,
+          HUBSPOT_CLIENT_ID: clientId,
+          HUBSPOT_CLIENT_SECRET: clientSecret,
+          HUBSPOT_REFRESH_TOKEN: refreshToken,
+        };
+        getAndLoadConfigIfNeeded();
+        portalConfig = getPortalConfig(portalId);
+      });
+
+      it('does not load a config from file', () => {
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+      });
+
+      it('creates a portal config', () => {
+        expect(portalConfig).toBeTruthy();
+      });
+
+      it('properly loads portal id value', () => {
+        expect(portalConfig.portalId).toEqual(portalId);
+      });
+
+      it('properly loads client id value', () => {
+        expect(portalConfig.auth.clientId).toEqual(clientId);
+      });
+
+      it('properly loads client secret value', () => {
+        expect(portalConfig.auth.clientSecret).toEqual(clientSecret);
+      });
+
+      it('properly loads refresh token value', () => {
+        expect(portalConfig.auth.tokenInfo.refreshToken).toEqual(refreshToken);
+      });
+    });
+
+    describe('apikey environment variable config', () => {
+      const { portalId, apiKey } = API_KEY_CONFIG;
+      let portalConfig;
+
+      beforeEach(() => {
+        process.env = {
+          HUBSPOT_PORTAL_ID: portalId,
+          HUBSPOT_API_KEY: apiKey,
+        };
+        getAndLoadConfigIfNeeded();
+        portalConfig = getPortalConfig(portalId);
+      });
+
+      it('does not load a config from file', () => {
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+      });
+
+      it('creates a portal config', () => {
+        expect(portalConfig).toBeTruthy();
+      });
+
+      it('properly loads portal id value', () => {
+        expect(portalConfig.portalId).toEqual(portalId);
+      });
+
+      it('properly loads api key value', () => {
+        expect(portalConfig.apiKey).toEqual(apiKey);
+      });
+    });
+
+    describe('personalaccesskey environment variable config', () => {
+      const { portalId, personalAccessKey } = PERSONAL_ACCESS_KEY_CONFIG;
+      let portalConfig;
+
+      beforeEach(() => {
+        process.env = {
+          HUBSPOT_PORTAL_ID: portalId,
+          HUBSPOT_PERSONAL_ACCESS_KEY: personalAccessKey,
+        };
+        getAndLoadConfigIfNeeded();
+        portalConfig = getPortalConfig(portalId);
+      });
+
+      it('does not load a config from file', () => {
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+      });
+
+      it('creates a portal config', () => {
+        expect(portalConfig).toBeTruthy();
+      });
+
+      it('properly loads portal id value', () => {
+        expect(portalConfig.portalId).toEqual(portalId);
+      });
+
+      it('properly loads personal access key value', () => {
+        expect(portalConfig.personalAccessKey).toEqual(personalAccessKey);
+      });
+    });
+  });
+
+  describe('configFilenameIsIgnoredByGitignore method', () => {
+    const fs = require('fs-extra');
+
+    it('returns false if the config file is not ignored', () => {
+      const gitignoreContent = '';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
+      jest.spyOn(fs, 'readFileSync').mockImplementation(() => {
+        return Buffer.from(gitignoreContent);
+      });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(false);
+    });
+
+    it('identifies if a config file is ignored with a specific ignore statement', () => {
+      const gitignoreContent = 'hubspot.config.yml';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
+      readFileSyncSpy.mockReset();
+    });
+
+    it('identifies if a config file is ignored with a wildcard statement', () => {
+      const gitignoreContent = 'hubspot.config.*';
+      setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
+      readFileSyncSpy.mockReset();
+    });
+
+    it('identifies if a non-standard named config file is not ignored', () => {
+      const gitignoreContent = 'hubspot.config.yml';
+      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(false);
+      readFileSyncSpy.mockReset();
+    });
+
+    it('identifies if a non-standard named config file is ignored', () => {
+      const gitignoreContent = 'my.custom.name.yml';
+      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      const readFileSyncSpy = jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation(() => {
+          return Buffer.from(gitignoreContent);
+        });
+
+      expect(
+        configFilenameIsIgnoredByGitignore([
+          '/Users/fakeuser/someproject/.gitignore',
+        ])
+      ).toBe(true);
+      readFileSyncSpy.mockReset();
     });
   });
 });

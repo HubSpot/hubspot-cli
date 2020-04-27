@@ -1,28 +1,56 @@
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
-
-## [1.0.10](https://github.com/HubSpot/hubspot-cms-tools/compare/v1.0.10-beta.2...v1.0.10) (2020-03-10)
-
-**Note:** Version bump only for package hubspot-cms-tools
-
-
-
-
-
-## [1.0.9](https://github.com/HubSpot/hubspot-cms-tools/compare/v1.0.9-beta.7...v1.0.9) (2020-02-25)
-
-**Note:** Version bump only for package hubspot-cms-tools
-
-
-
-
-
-**Note:** Version bump only for package hubspot-cms-tools
-
 Change Log
 ==========
+
+## 1.1.2
+
+ * Fix uploading a folder of files to the file manager root
+
+## 1.1.1
+
+ * Add utility functions to manage HubDB tables in other scripts
+ * Improve `hs fetch` help and parsing of arguments
+ * Improve tracking of `hs create`
+ * Fix uploading a file to file manager root
+ * Adjust messaging to make it clear where files are uploaded
+
+## 1.1.0
+
+ * Address `minimist` security advisory
+ * Add `hs create function`
+ * Improve help for `hs create`
+ * Improve error handling in `hs init` flow
+ * Fix `--debug` flag
+
+## 1.0.13
+
+ * Fix issues with the config file in git security warning
+ * Document `hs secrets` and `hs logs`
+ * Improve `hs auth` help
+
+## 1.0.12
+
+ * Improve feedback when subcommand arguments are missing
+ * Improve usage tracking when authenticating the CLI with a portal
+ * Switch back to using `$CWD` as the default location for config file
+ * Improve when security warning about risk of commit a config file to git
+ * Add support for using environment variables for configuration
+ * Fix fetching of files in `@hubspot`
+
+## 1.0.11
+
+ * Add `hs secrets list` command
+ * Add `logger.info` and `logger.success`
+ * Add ability to tail logs
+ * Add `portalId` to refresh
+
+## 1.0.10
+
+ * Improve error messaging when a personal access key is invalid
+ * Warn when there is a risk of committing the config file to a git repos
+ * Guard against empty paths when fetching v1 modules
+ * Improve usage tracking
+ * Remove sortable property from fields in the skeleton module
+ * Fix refreshing of access tokens when using personal access key
 
 ## 1.0.9
 

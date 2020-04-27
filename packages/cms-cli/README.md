@@ -1,10 +1,10 @@
 # @hubspot/cms-cli
 
-Provides an `hs` command for interacting with the HubSpot CMS. [Learn more about building on the HubSpot CMS](https://designers.hubspot.com/discoverykit).
+Provides an `hs` command for interacting with the HubSpot CMS. [Learn more about building on the HubSpot CMS](https://designers.hubspot.com/docs/key-concepts).
 
 ## Getting started
 
-For more information on using these tools, see [Local Development Tooling: Getting Started](https://designers.hubspot.com/docs/tools/local-development)
+For more information on using these tools, see [Local Development Tooling: Getting Started](https://designers.hubspot.com/tutorials/getting-started-with-local-development)
 
 ### Installation
 
@@ -30,6 +30,7 @@ hs init
 ````
 
 ## Commands
+A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cms-cli).
 
 **Note:** When `@hubspot/cms-cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
 

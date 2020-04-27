@@ -13,9 +13,11 @@ const {
   getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
+  writeConfig,
 } = require('./lib/config');
 const { PERSONAL_ACCESS_KEY_AUTH_METHOD } = require('./lib/constants');
 const { fetchAccessToken } = require('./api/localDevAuth');
+const { logErrorInstance } = require('./errorHandlers');
 
 const refreshRequests = new Map();
 
@@ -23,10 +25,10 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = 'PROD') {
+async function getAccessToken(personalAccessKey, env = 'PROD', portalId) {
   let response;
   try {
-    response = await fetchAccessToken(personalAccessKey, env);
+    response = await fetchAccessToken(personalAccessKey, env, portalId);
   } catch (e) {
     if (e.response) {
       const errorOutput = `Error while retrieving new access token: ${e.response.body.message}.`;
@@ -50,10 +52,11 @@ async function getAccessToken(personalAccessKey, env = 'PROD') {
   };
 }
 
-async function refreshAccessToken(personalAccessKey, env = 'PROD') {
-  const { accessToken, expiresAt, portalId } = await getAccessToken(
+async function refreshAccessToken(portalId, personalAccessKey, env = 'PROD') {
+  const { accessToken, expiresAt } = await getAccessToken(
     personalAccessKey,
-    env
+    env,
+    portalId
   );
   const config = getPortalConfig(portalId);
 
@@ -65,18 +68,23 @@ async function refreshAccessToken(personalAccessKey, env = 'PROD') {
       expiresAt: expiresAt.toISOString(),
     },
   });
+  writeConfig();
 
   return accessToken;
 }
 
-async function getNewAccessToken(personalAccessKey, expiresAt, env) {
+async function getNewAccessToken(portalId, personalAccessKey, expiresAt, env) {
   const key = getRefreshKey(personalAccessKey, expiresAt);
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
   }
   let accessToken;
   try {
-    const refreshAccessPromise = refreshAccessToken(personalAccessKey, env);
+    const refreshAccessPromise = refreshAccessToken(
+      portalId,
+      personalAccessKey,
+      env
+    );
     if (key) {
       refreshRequests.set(key, refreshAccessPromise);
     }
@@ -102,6 +110,7 @@ async function accessTokenForPersonalAccessKey(portalId) {
       .isAfter(moment(authTokenInfo.expiresAt))
   ) {
     return getNewAccessToken(
+      portalId,
       personalAccessKey,
       authTokenInfo && authTokenInfo.expiresAt,
       env
@@ -148,10 +157,14 @@ const personalAccessKeyPrompt = async () => {
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   const { personalAccessKey, name } = configData;
 
-  const { portalId, accessToken, expiresAt } = await getAccessToken(
-    personalAccessKey,
-    getEnv(name)
-  );
+  let token;
+  try {
+    token = await getAccessToken(personalAccessKey, getEnv(name));
+  } catch (err) {
+    logErrorInstance(err);
+    return;
+  }
+  const { portalId, accessToken, expiresAt } = token;
 
   const updatedConfig = updatePortalConfig({
     portalId,
@@ -160,6 +173,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
+  writeConfig();
 
   if (makeDefault) {
     updateDefaultPortal(name);

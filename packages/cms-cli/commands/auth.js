@@ -39,7 +39,9 @@ async function authAction(type, options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, {
+    ignoreEnvironmentVariableConfig: true,
+  });
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
@@ -87,7 +89,11 @@ async function authAction(type, options) {
 function configureAuthCommand(program) {
   program
     .version(version)
-    .description('Configure authentication for a HubSpot account')
+    .description(
+      `Configure authentication for a HubSpot account. Supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
+        ', '
+      )}.`
+    )
     .arguments('<type>')
     .action(authAction);
 

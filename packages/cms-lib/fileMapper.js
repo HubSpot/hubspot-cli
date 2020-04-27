@@ -14,7 +14,11 @@ const {
   getExt,
   convertToLocalFileSystemPath,
 } = require('./path');
-const { fetchFileStream, download } = require('./api/fileMapper');
+const {
+  fetchFileStream,
+  download,
+  downloadDefault,
+} = require('./api/fileMapper');
 const {
   Mode,
   MODULE_EXTENSION,
@@ -54,6 +58,16 @@ function isPathToRoot(filepath) {
   if (typeof filepath !== 'string') return false;
   // Root pattern matches empty strings and: / \
   return /^(\/|\\)?$/.test(filepath.trim());
+}
+
+/**
+ * @private
+ * @param {string} filepath
+ * @returns {boolean}
+ */
+function isPathToHubspot(filepath) {
+  if (typeof filepath !== 'string') return false;
+  return /^(\/|\\)?@hubspot/i.test(filepath.trim());
 }
 
 /**
@@ -137,11 +151,13 @@ function validateFileMapperNode(node) {
  */
 function getTypeDataFromPath(src) {
   const isModule = isPathToModule(src);
+  const isHubspot = isPathToHubspot(src);
   const isFile = !isModule && isPathToFile(src);
   const isRoot = !isModule && !isFile && isPathToRoot(src);
   const isFolder = !isFile;
   return {
     isModule,
+    isHubspot,
     isFile,
     isRoot,
     isFolder,
@@ -334,6 +350,17 @@ async function writeFileMapperNode(input, node, filepath) {
   }
 }
 
+function isTimeout(err) {
+  return !!err && (err.statusCode === 408 || err.code === 'ESOCKETTIMEDOUT');
+}
+
+// @hubspot assets have a periodic delay due to caching
+function logHubspotAssetTimeout() {
+  logger.error(
+    'HubSpot assets are unavailable at the moment. Please wait a few minutes and try again.'
+  );
+}
+
 /**
  * @private
  * @async
@@ -341,9 +368,9 @@ async function writeFileMapperNode(input, node, filepath) {
  * @returns {Promise}
  */
 async function downloadFile(input) {
+  const { src } = input;
+  const { isFile, isHubspot } = getTypeDataFromPath(src);
   try {
-    const { src } = input;
-    const { isFile } = getTypeDataFromPath(src);
     if (!isFile) {
       throw new Error(`Invalid request for file: "${src}"`);
     }
@@ -368,7 +395,11 @@ async function downloadFile(input) {
     await queue.onIdle();
     logger.log('Completed fetch of file "%s" to "%s"', input.src, localFsPath);
   } catch (err) {
-    logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
+    if (isHubspot && isTimeout(err)) {
+      logHubspotAssetTimeout();
+    } else {
+      logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
+    }
   }
 }
 
@@ -380,25 +411,30 @@ async function downloadFile(input) {
  */
 async function fetchFolderFromApi(input) {
   const { portalId, src, mode } = input;
-  const { isRoot, isFolder } = getTypeDataFromPath(src);
+  const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
   }
   try {
     const srcPath = isRoot ? '@root' : src;
-    const node = await download(portalId, srcPath, {
-      qs: getFileMapperApiQueryFromMode(mode),
-    });
+    const qs = getFileMapperApiQueryFromMode(mode);
+    const node = isHubspot
+      ? await downloadDefault(portalId, srcPath, { qs })
+      : await download(portalId, srcPath, { qs });
     logger.log('Fetched "%s" from portal %d successfully', src, portalId);
     return node;
   } catch (err) {
-    logApiErrorInstance(
-      err,
-      new ApiErrorContext({
-        portalId,
-        request: src,
-      })
-    );
+    if (isHubspot && isTimeout(err)) {
+      logHubspotAssetTimeout();
+    } else {
+      logApiErrorInstance(
+        err,
+        new ApiErrorContext({
+          portalId,
+          request: src,
+        })
+      );
+    }
   }
   return null;
 }
@@ -461,6 +497,7 @@ module.exports = {
   isPathToFile,
   isPathToModule,
   isPathToRoot,
+  isPathToHubspot,
   downloadFileOrFolder,
   recurseFolder,
   getFileMapperApiQueryFromMode,
