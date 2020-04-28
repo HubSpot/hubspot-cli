@@ -144,13 +144,13 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        tailLogs(
-          portalId,
-          functionResp.id,
+        await tailLogs({
+          functionId: functionResp.id,
           functionPath,
-          program.portal,
-          compact
-        );
+          portalId,
+          portalName: program.portal,
+          compact,
+        });
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
