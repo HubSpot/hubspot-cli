@@ -1,10 +1,12 @@
 const { ALLOWED_EXTENSIONS, Mode, DEFAULT_MODE } = require('./lib/constants');
 const {
-  loadConfig,
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
   getPortalId,
   getPortalConfig,
+  loadConfig,
+  loadConfigFromEnvironment,
   updatePortalConfig,
   validateConfig,
 } = require('./lib/config');
@@ -16,9 +18,11 @@ module.exports = {
   ALLOWED_EXTENSIONS,
   DEFAULT_MODE,
   Mode,
+  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
   loadConfig,
+  loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,

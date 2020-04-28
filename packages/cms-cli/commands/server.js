@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 const path = require('path');
 const shell = require('shelljs');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getCwd } = require('@hubspot/cms-lib/path');
 
@@ -29,6 +33,7 @@ function configureServerCommand(program) {
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (!validateConfig()) {
         process.exit(1);

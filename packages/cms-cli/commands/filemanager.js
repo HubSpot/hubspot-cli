@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
 const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
@@ -53,6 +57,7 @@ function configureFileManagerUploadCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (!validateConfig() || !(await validatePortal(command))) {
         process.exit(1);
@@ -103,7 +108,12 @@ function configureFileManagerUploadCommand(program) {
 
         uploadFile(portalId, absoluteSrcPath, normalizedDest)
           .then(() => {
-            logger.log('Uploaded file "%s" to "%s"', src, normalizedDest);
+            logger.success(
+              'Uploaded file from "%s" to "%s" in the File Manager of portal %s',
+              src,
+              normalizedDest,
+              portalId
+            );
           })
           .catch(error => {
             logger.error(
@@ -122,13 +132,15 @@ function configureFileManagerUploadCommand(program) {
           });
       } else {
         logger.log(
-          `Uploading files from ${src} to ${dest} in portal ${portalId}`
+          `Uploading files from "${src}" to "${dest}" in the File Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
           cwd: getCwd(),
         })
           .then(() => {
-            logger.log(`Uploading files to ${dest} is complete`);
+            logger.success(
+              `Uploading files to "${dest}" in the File Manager is complete`
+            );
           })
           .catch(error => {
             logger.error('Uploading failed');

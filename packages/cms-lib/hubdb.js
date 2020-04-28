@@ -4,13 +4,15 @@ const prettier = require('prettier');
 
 const {
   createTable,
+  updateTable,
   createRows,
   fetchTable,
   fetchRows,
   publishTable,
+  deleteRows,
 } = require('./api/hubdb');
 
-async function createHubDbTable(portalId, src) {
+function validateJsonFile(src) {
   try {
     const stats = fs.statSync(src);
     if (!stats.isFile()) {
@@ -23,12 +25,9 @@ async function createHubDbTable(portalId, src) {
   if (path.extname(src) !== '.json') {
     throw new Error('The HubDB table file must be a ".json" file');
   }
+}
 
-  const table = fs.readJsonSync(src);
-  const { rows, ...schema } = table;
-
-  const { columns, id } = await createTable(portalId, schema);
-
+async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
   const rowsToUpdate = rows.map(row => {
     const values = {};
 
@@ -40,6 +39,7 @@ async function createHubDbTable(portalId, src) {
         values[id] = null;
       }
     });
+
     return {
       childTableId: 0,
       isSoftEditable: false,
@@ -50,18 +50,37 @@ async function createHubDbTable(portalId, src) {
 
   let response;
   if (rowsToUpdate.length > 0) {
-    response = await createRows(portalId, id, rowsToUpdate);
+    response = await createRows(portalId, tableId, rowsToUpdate);
   }
 
-  await publishTable(portalId, id);
+  await publishTable(portalId, tableId);
 
   return {
-    tableId: id,
+    tableId,
     rowCount:
       response && Array.isArray(response) && response.length
         ? response[0].rows.length
         : 0,
   };
+}
+
+async function createHubDbTable(portalId, src) {
+  validateJsonFile(src);
+
+  const table = fs.readJsonSync(src);
+  const { rows, ...schema } = table;
+  const { columns, id } = await createTable(portalId, schema);
+
+  return addRowsToHubDbTable(portalId, id, rows, columns);
+}
+
+async function updateHubDbTable(portalId, tableId, src) {
+  validateJsonFile(src);
+
+  const table = fs.readJsonSync(src);
+  const { ...schema } = table;
+
+  return updateTable(portalId, tableId, schema);
 }
 
 function convertToJSON(table, rows) {
@@ -147,7 +166,29 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   await fs.writeFileSync(dest, tableJson);
 }
 
+async function clearHubDbTableRows(portalId, tableId) {
+  let totalRows = null;
+  let rows = [];
+  let count = 0;
+  let offset = 0;
+  while (totalRows === null || count < totalRows) {
+    const response = await fetchRows(portalId, tableId, { offset });
+    if (totalRows === null) {
+      totalRows = response.total;
+    }
+
+    count += response.objects.length;
+    offset += response.objects.length;
+    const rowIds = response.objects.map(row => row.id);
+    rows = rows.concat(rowIds);
+  }
+  await deleteRows(portalId, tableId, rows);
+}
+
 module.exports = {
   createHubDbTable,
   downloadHubDbTable,
+  clearHubDbTableRows,
+  updateHubDbTable,
+  addRowsToHubDbTable,
 };

@@ -6,6 +6,7 @@ const {
   loadConfig,
   uploadFolder,
   validateConfig,
+  checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const {
   getFileMapperApiQueryFromMode,
@@ -55,6 +56,7 @@ function configureUploadCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (
         !(
@@ -119,7 +121,12 @@ function configureUploadCommand(program) {
           qs: getFileMapperApiQueryFromMode(mode),
         })
           .then(() => {
-            logger.log('Uploaded file "%s" to "%s"', src, normalizedDest);
+            logger.success(
+              'Uploaded file from "%s" to "%s" in the Design Manager of portal %s',
+              src,
+              normalizedDest,
+              portalId
+            );
           })
           .catch(error => {
             logger.error(
@@ -137,15 +144,17 @@ function configureUploadCommand(program) {
             );
           });
       } else {
-        logger.log(
-          `Uploading files from ${src} to ${dest} in portal ${portalId}`
+        logger.success(
+          `Uploading files from "${src}" to "${dest}" in the Design Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
           mode,
           cwd: getCwd(),
         })
           .then(() => {
-            logger.log(`Uploading files to ${dest} is complete`);
+            logger.log(
+              `Uploading files to "${dest}" in the Design Manager is complete`
+            );
           })
           .catch(error => {
             logger.error('Uploading failed');

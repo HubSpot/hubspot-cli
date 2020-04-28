@@ -1,6 +1,11 @@
 const path = require('path');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
@@ -36,16 +41,17 @@ function configureHubDbCreateCommand(program) {
     .version(version)
     .description('Create HubDB tables')
     .arguments('<src>')
-    .action(async (src, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
+    .action(async src => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
+      if (!(validateConfig() && (await validatePortal(program)))) {
         process.exit(1);
       }
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(program);
 
       try {
         const table = await createHubDbTable(
@@ -57,7 +63,7 @@ function configureHubDbCreateCommand(program) {
         );
       } catch (e) {
         logger.error(`Creating the table at "${src}" failed`);
-        logger.error(e.message);
+        logErrorInstance(e);
       }
     });
 
@@ -76,6 +82,7 @@ function configureHubDbFetchCommand(program) {
       logDebugInfo(command);
       const { config: configPath } = command;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (!(validateConfig() && (await validatePortal(command)))) {
         process.exit(1);

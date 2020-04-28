@@ -1,5 +1,9 @@
 const { version } = require('../package.json');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -21,19 +25,26 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
+const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
   PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
 ];
+const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
+  ALLOWED_AUTH_METHODS
+);
 
 async function authAction(type, options) {
   const authType = type.toLowerCase();
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, {
+    ignoreEnvironmentVariableConfig: true,
+  });
+  checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
     process.exit(1);
@@ -52,9 +63,7 @@ async function authAction(type, options) {
       break;
     default:
       logger.error(
-        `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
-          ', '
-        )}.`
+        `Unsupported auth type: ${type}. The only supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
       );
       break;
   }
@@ -64,7 +73,9 @@ async function authAction(type, options) {
 function configureAuthCommand(program) {
   program
     .version(version)
-    .description('Configure authentication for a HubSpot account')
+    .description(
+      `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
+    )
     .arguments('<type>')
     .action(authAction);
 

@@ -1,7 +1,11 @@
 const { version } = require('../package.json');
 
 const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileMapper');
-const { loadConfig, validateConfig } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 
 const {
@@ -30,12 +34,14 @@ function configureFetchCommand(program) {
     .description(
       'Fetch a file, directory or module from HubSpot and write to a path on your computer'
     )
+    .arguments('<src> [dest]')
     .action(async (src, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
 
       const { config: configPath } = program;
       loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
       if (
         !(
