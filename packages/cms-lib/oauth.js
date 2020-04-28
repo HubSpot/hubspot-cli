@@ -44,7 +44,7 @@ const setupOauth = (portalId, portalConfig) => {
   return new OAuth2Manager(
     {
       ...portalConfig,
-      environment: config.env || ENVIRONMENTS.PROD,
+      environment: portalConfig.env || config.env || ENVIRONMENTS.PROD,
     },
     logger
   );

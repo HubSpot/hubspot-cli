@@ -8,6 +8,7 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
@@ -18,6 +19,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   setLogLevel,
+  addTestingOptions,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
@@ -41,6 +43,7 @@ async function authAction(type, options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
+  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath, {
     ignoreEnvironmentVariableConfig: true,
   });
@@ -55,10 +58,13 @@ async function authAction(type, options) {
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
-      await authenticateWithOauth(configData);
+      await authenticateWithOauth({
+        ...configData,
+        env,
+      });
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt();
+      configData = await personalAccessKeyPrompt({ env });
       await updateConfigWithPersonalAccessKey(configData);
       break;
     default:
@@ -81,6 +87,7 @@ function configureAuthCommand(program) {
 
   addLoggerOptions(program);
   addConfigOptions(program);
+  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

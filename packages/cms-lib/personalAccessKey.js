@@ -138,7 +138,7 @@ async function accessTokenForPersonalAccessKey(portalId) {
 /**
  * Prompts user for portal name, then opens their browser to the shortlink to personal-access-key
  */
-const personalAccessKeyPrompt = async ({ env }) => {
+const personalAccessKeyPrompt = async ({ env } = {}) => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
   const portalId = getPortalId(name);
   const websiteOrigin = getHubSpotWebsiteOrigin(env || getEnv(name));
