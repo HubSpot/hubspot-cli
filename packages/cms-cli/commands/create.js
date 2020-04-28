@@ -18,6 +18,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
 
@@ -37,6 +38,8 @@ const ASSET_PATHS = {
     '../defaults/global-partial.html'
   ),
 };
+
+const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
 const createModule = (name, dest) => {
   const assetPath = ASSET_PATHS.module;
@@ -70,9 +73,7 @@ function configureCreateCommand(program) {
   program
     .version(version)
     .description(
-      `Create HubSpot CMS assets. Supported assets are ${Object.values(
-        TYPES
-      ).join(', ')}.`
+      `Create HubSpot CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`
     )
     // For a theme or function this is `<type> <dest>`
     // TODO: Yargs allows an array of commands.
@@ -88,9 +89,7 @@ function configureCreateCommand(program) {
       type = typeof type === 'string' && type.toLowerCase();
       if (!type || !TYPES[type]) {
         logger.error(
-          `The asset type ${type} is not supported. Supported authentication protocols are ${Object.values(
-            TYPES
-          ).join(', ')}.`
+          `The asset type ${type} is not supported. Supported authentication protocols are ${SUPPORTED_ASSET_TYPES}.`
         );
         return;
       }
