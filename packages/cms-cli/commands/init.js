@@ -1,13 +1,12 @@
 const { version } = require('../package.json');
 const {
   getConfigPath,
+  getPortalId,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
-const {
-  logFileSystemErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -28,6 +27,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const COMMAND_NAME = 'init';
 const TRACKING_STATUS = {
   STARTED: 'started',
+  ERROR: 'error',
   COMPLETE: 'complete',
 };
 
@@ -40,14 +40,18 @@ function initializeConfigCommand(program) {
     .action(async options => {
       setLogLevel(options);
       logDebugInfo(options);
-      trackCommandUsage(COMMAND_NAME);
+      trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
 
       const configPath = getConfigPath();
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
+        logger.info(
+          'To update an existing config file, use the "hs auth" command.'
+        );
         process.exit(1);
       }
+
       trackAuthAction(
         COMMAND_NAME,
         PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
@@ -60,17 +64,21 @@ function initializeConfigCommand(program) {
       try {
         const configData = await personalAccessKeyPrompt();
         await updateConfigWithPersonalAccessKey(configData, true);
+        const portalId = getPortalId();
+        trackAuthAction(
+          COMMAND_NAME,
+          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          TRACKING_STATUS.COMPLETE,
+          portalId
+        );
       } catch (err) {
-        logFileSystemErrorInstance(err, {
-          filepath: configPath,
-        });
+        logErrorInstance(err);
+        trackAuthAction(
+          COMMAND_NAME,
+          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          TRACKING_STATUS.ERROR
+        );
       }
-
-      trackAuthAction(
-        COMMAND_NAME,
-        PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        TRACKING_STATUS.COMPLETE
-      );
     });
 
   addLoggerOptions(program);

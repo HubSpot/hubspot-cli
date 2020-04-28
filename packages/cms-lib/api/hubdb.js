@@ -20,9 +20,22 @@ async function createTable(portalId, schema) {
   });
 }
 
+async function updateTable(portalId, tableId, schema) {
+  return http.put(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
+    body: schema,
+  });
+}
+
 async function publishTable(portalId, tableId) {
   return http.put(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/publish`,
+  });
+}
+
+async function deleteTable(portalId, tableId) {
+  return http.delete(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
   });
 }
 
@@ -47,12 +60,22 @@ async function fetchRows(portalId, tableId, query = {}) {
   });
 }
 
+async function deleteRows(portalId, tableId, rowIds) {
+  return http.post(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/delete`,
+    body: rowIds,
+  });
+}
+
 module.exports = {
   createRows,
   createTable,
+  updateTable,
   fetchRows,
   fetchTable,
   fetchTables,
   publishTable,
   updateRows,
+  deleteRows,
+  deleteTable,
 };

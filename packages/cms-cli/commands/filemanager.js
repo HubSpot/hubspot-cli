@@ -108,7 +108,12 @@ function configureFileManagerUploadCommand(program) {
 
         uploadFile(portalId, absoluteSrcPath, normalizedDest)
           .then(() => {
-            logger.log('Uploaded file "%s" to "%s"', src, normalizedDest);
+            logger.success(
+              'Uploaded file from "%s" to "%s" in the File Manager of portal %s',
+              src,
+              normalizedDest,
+              portalId
+            );
           })
           .catch(error => {
             logger.error(
@@ -127,13 +132,15 @@ function configureFileManagerUploadCommand(program) {
           });
       } else {
         logger.log(
-          `Uploading files from ${src} to ${dest} in portal ${portalId}`
+          `Uploading files from "${src}" to "${dest}" in the File Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
           cwd: getCwd(),
         })
           .then(() => {
-            logger.log(`Uploading files to ${dest} is complete`);
+            logger.success(
+              `Uploading files to "${dest}" in the File Manager is complete`
+            );
           })
           .catch(error => {
             logger.error('Uploading failed');

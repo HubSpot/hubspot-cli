@@ -9,14 +9,21 @@ const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
+const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  OAUTH_SCOPES,
+  ENVIRONMENT_VARIABLES,
 } = require('./constants');
 
 let _config;
 let _configPath;
+let environmentVariableConfigLoaded = false;
 
 const getConfig = () => _config;
 
@@ -124,34 +131,54 @@ const isConfigPathInGitRepo = () => {
   return configDir.startsWith(gitDir);
 };
 
-const CONFIG_GITIGNORE_PATTERN = 'hubspot.config.*';
+const configFilenameIsIgnoredByGitignore = ignoreFiles => {
+  return ignoreFiles.some(gitignore => {
+    const gitignoreContents = fs.readFileSync(gitignore).toString();
+    const gitignoreConfig = ignore().add(gitignoreContents);
+
+    if (
+      gitignoreConfig.ignores(
+        path.relative(path.dirname(gitignore), _configPath)
+      )
+    ) {
+      return true;
+    }
+    return false;
+  });
+};
 
 const shouldWarnOfGitInclusion = () => {
   if (!isConfigPathInGitRepo()) {
     // Not in git
     return false;
   }
-  const ignoreFiles = getGitignoreFiles();
-  for (const gitignore in ignoreFiles) {
-    if (ignore(gitignore).ignores(CONFIG_GITIGNORE_PATTERN)) {
-      // Has a gitignore rule
-      return false;
-    }
+  if (configFilenameIsIgnoredByGitignore(getGitignoreFiles())) {
+    // Found ignore statement in .gitignore that matches config filename
+    return false;
   }
   // In git w/o a gitignore rule
   return true;
 };
 
 const checkAndWarnGitInclusion = () => {
-  if (!shouldWarnOfGitInclusion()) return;
-  logger.warn('Security Issue');
-  logger.warn('Config file can be tracked by git.');
-  logger.warn(`File: "${_configPath}"`);
-  logger.warn(`To remediate:
-  - Move config file to your home directory: "${os.homedir()}"
-  - Add gitignore pattern "${CONFIG_GITIGNORE_PATTERN}" to a .gitignore file in root of your repository.
-  - Ensure that config file has not already been pushed to a remote repository.
-`);
+  try {
+    if (!shouldWarnOfGitInclusion()) return;
+    logger.warn('Security Issue');
+    logger.warn('Config file can be tracked by git.');
+    logger.warn(`File: "${_configPath}"`);
+    logger.warn(`To remediate:
+      - Move config file to your home directory: "${os.homedir()}"
+      - Add gitignore pattern "${path.basename(
+        _configPath
+      )}" to a .gitignore file in root of your repository.
+      - Ensure that config file has not already been pushed to a remote repository.
+    `);
+  } catch (e) {
+    // fail silently
+    logger.debug(
+      'Unable to determine if config file is properly ignored by git.'
+    );
+  }
 };
 
 /**
@@ -160,6 +187,9 @@ const checkAndWarnGitInclusion = () => {
  * @param {string}  options.source
  */
 const writeConfig = (options = {}) => {
+  if (environmentVariableConfigLoaded) {
+    return;
+  }
   let source;
   try {
     source =
@@ -215,8 +245,8 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = (path, options = {}) => {
-  _configPath = getConfigPath(path);
+const loadConfigFromFile = (path, options = {}) => {
+  setConfigPath(getConfigPath(path));
   if (!_configPath) {
     if (!options.silenceErrors) {
       logger.error(
@@ -242,6 +272,23 @@ const loadConfig = (path, options = {}) => {
   }
 };
 
+const loadConfig = (
+  path,
+  options = {
+    ignoreEnvironmentVariableConfig: false,
+  }
+) => {
+  if (
+    !options.ignoreEnvironmentVariableConfig &&
+    loadEnvironmentVariableConfig()
+  ) {
+    environmentVariableConfigLoaded = true;
+    return;
+  } else {
+    loadConfigFromFile(path, options);
+  }
+};
+
 const isTrackingAllowed = () => {
   if (!configFileExists() || configFileIsBlank()) {
     return true;
@@ -250,13 +297,14 @@ const isTrackingAllowed = () => {
   return allowUsageTracking !== false;
 };
 
-const getAndLoadConfigIfNeeded = () => {
+const getAndLoadConfigIfNeeded = (options = {}) => {
   if (!_config) {
     loadConfig(null, {
       silenceErrors: true,
+      ...options,
     });
   }
-  return _config;
+  return _config || {};
 };
 
 const getConfigPath = path => {
@@ -281,15 +329,12 @@ const getEnv = nameOrId => {
   let env = 'PROD';
   const config = getAndLoadConfigIfNeeded();
   const portalId = getPortalId(nameOrId);
-  if (config.env) {
-    env = config.env;
-  }
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig.env) {
       env = portalConfig.env;
     }
-  } else if (config.env) {
+  } else if (config && config.env) {
     env = config.env;
   }
   return env;
@@ -305,7 +350,10 @@ const getPortalId = nameOrId => {
   let name;
   let portalId;
   let portal;
-  if (!nameOrId) {
+
+  if (process.env.HUBSPOT_PORTAL_ID) {
+    portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  } else if (!nameOrId) {
     if (config && config.defaultPortal) {
       name = config.defaultPortal;
     }
@@ -393,7 +441,8 @@ const updatePortalConfig = configOptions => {
       config.portals = [nextPortalConfig];
     }
   }
-  writeConfig();
+
+  return nextPortalConfig;
 };
 
 /**
@@ -422,7 +471,7 @@ const setDefaultConfigPathIfUnset = () => {
 };
 
 const setDefaultConfigPath = () => {
-  setConfigPath(`${os.homedir()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
 };
 
 const configFileExists = () => {
@@ -449,6 +498,109 @@ const deleteEmptyConfigFile = () => {
   );
 };
 
+const getConfigVariablesFromEnv = () => {
+  const env = process.env;
+
+  return {
+    apiKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_API_KEY],
+    clientId: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_ID],
+    clientSecret: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_SECRET],
+    personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
+    portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
+    refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
+  };
+};
+
+const generatePersonalAccessKeyConfig = (portalId, personalAccessKey) => {
+  return {
+    portals: [
+      {
+        authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        portalId,
+        personalAccessKey,
+      },
+    ],
+  };
+};
+
+const generateOauthConfig = (
+  portalId,
+  clientId,
+  clientSecret,
+  refreshToken,
+  scopes
+) => {
+  return {
+    portals: [
+      {
+        authType: OAUTH_AUTH_METHOD.value,
+        portalId,
+        auth: {
+          clientId,
+          clientSecret,
+          scopes,
+          tokenInfo: {
+            refreshToken,
+          },
+        },
+      },
+    ],
+  };
+};
+
+const generateApiKeyConfig = (portalId, apiKey) => {
+  return {
+    portals: [
+      {
+        authType: API_KEY_AUTH_METHOD.value,
+        portalId,
+        apiKey,
+      },
+    ],
+  };
+};
+
+const loadConfigFromEnvironment = () => {
+  const {
+    apiKey,
+    clientId,
+    clientSecret,
+    personalAccessKey,
+    portalId,
+    refreshToken,
+  } = getConfigVariablesFromEnv();
+
+  if (!portalId) {
+    return;
+  }
+
+  if (personalAccessKey) {
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey);
+  } else if (clientId && clientSecret && refreshToken) {
+    return generateOauthConfig(
+      portalId,
+      clientId,
+      clientSecret,
+      refreshToken,
+      OAUTH_SCOPES.map(scope => scope.value)
+    );
+  } else if (apiKey) {
+    return generateApiKeyConfig(portalId, apiKey);
+  } else {
+    return;
+  }
+};
+
+const loadEnvironmentVariableConfig = () => {
+  const envConfig = loadConfigFromEnvironment();
+
+  if (!envConfig) {
+    return;
+  }
+
+  return setConfig(envConfig);
+};
+
 module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
@@ -456,7 +608,9 @@ module.exports = {
   getConfig,
   getConfigPath,
   setConfig,
+  setConfigPath,
   loadConfig,
+  loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
@@ -465,4 +619,6 @@ module.exports = {
   deleteEmptyConfigFile,
   isTrackingAllowed,
   validateConfig,
+  writeConfig,
+  configFilenameIsIgnoredByGitignore,
 };

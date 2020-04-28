@@ -34,6 +34,7 @@ function configureFetchCommand(program) {
     .description(
       'Fetch a file, directory or module from HubSpot and write to a path on your computer'
     )
+    .arguments('<src> [dest]')
     .action(async (src, dest) => {
       setLogLevel(program);
       logDebugInfo(program);

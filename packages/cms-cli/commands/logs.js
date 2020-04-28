@@ -1,4 +1,5 @@
 const { version } = require('../package.json');
+const readline = require('readline');
 const ora = require('ora');
 const {
   addLoggerOptions,
@@ -27,25 +28,23 @@ const TAIL_DELAY = 5000;
 
 const makeSpinner = (functionPath, portalIdentifier) => {
   return ora(
-    `Tailing logs for '${functionPath}' on portal '${portalIdentifier}'.\n`
+    `Waiting for log entries for '${functionPath}' on portal '${portalIdentifier}'.\n`
   );
 };
 
 const makeTailCall = (portalId, functionId) => {
   return async after => {
     const latestLog = await getFunctionLogs(portalId, functionId, { after });
-
     return latestLog;
   };
 };
 
-const handleEscapeKeypress = onEscapeKeypress => {
-  const readline = require('readline');
+const handleKeypressToExit = exit => {
   readline.emitKeypressEvents(process.stdin);
   process.stdin.setRawMode(true);
   process.stdin.on('keypress', (str, key) => {
-    if (key.name === 'escape') {
-      onEscapeKeypress();
+    if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
+      exit();
     }
   });
 };
@@ -59,13 +58,13 @@ const tailLogs = async ({
 }) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
-  let after;
+  let initialAfter;
 
   spinner.start();
 
   try {
     const latestLog = await getLatestFunctionLog(portalId, functionId);
-    after = base64EncodeString(latestLog.id);
+    initialAfter = base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
@@ -76,29 +75,26 @@ const tailLogs = async ({
     }
   }
 
-  return new Promise(resolve => {
-    const tail = async after => {
-      const latestLog = await tailCall(after);
+  const tail = async after => {
+    const latestLog = await tailCall(after);
 
-      if (latestLog.results.length) {
-        spinner.clear();
-        outputLogs(latestLog, {
-          compact,
-        });
-        // eslint-disable-next-line require-atomic-updates
-        after = latestLog.paging.next.after;
-      }
-      setTimeout(() => {
-        tail(after);
-      }, TAIL_DELAY);
-    };
-    handleEscapeKeypress(() => {
-      resolve();
-      spinner.stop();
-      process.exit();
-    });
-    tail(after);
+    if (latestLog.results.length) {
+      spinner.clear();
+      outputLogs(latestLog, {
+        compact,
+      });
+    }
+
+    setTimeout(() => {
+      tail(latestLog.paging.next.after);
+    }, TAIL_DELAY);
+  };
+
+  handleKeypressToExit(() => {
+    spinner.stop();
+    process.exit();
   });
+  tail(initialAfter);
 };
 
 const getLogs = program => {
@@ -148,13 +144,13 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        await tailLogs({
-          functionId: functionResp.id,
-          functionPath,
+        tailLogs(
           portalId,
-          portalName: program.portal,
-          compact,
-        });
+          functionResp.id,
+          functionPath,
+          program.portal,
+          compact
+        );
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {

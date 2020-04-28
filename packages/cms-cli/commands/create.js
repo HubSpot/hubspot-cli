@@ -5,8 +5,10 @@ const { version } = require('../package.json');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
+const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createTheme } = require('@hubspot/cms-lib/themes');
+const { createFunction } = require('@hubspot/cms-lib/functions');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -15,14 +17,17 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
+const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
 
 const TYPES = {
+  function: 'function',
+  'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
-  'global-partial': 'global-partial',
 };
 
 const ASSET_PATHS = {
@@ -33,6 +38,8 @@ const ASSET_PATHS = {
     '../defaults/global-partial.html'
   ),
 };
+
+const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
 const createModule = (name, dest) => {
   const assetPath = ASSET_PATHS.module;
@@ -65,10 +72,12 @@ const createTemplate = (name, dest, type = 'template') => {
 function configureCreateCommand(program) {
   program
     .version(version)
-    .description('Create HubSpot CMS assets')
-    // For a theme this is `website-theme <dest>`
+    .description(
+      `Create HubSpot CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`
+    )
+    // For a theme or function this is `<type> <dest>`
     // TODO: Yargs allows an array of commands.
-    .arguments('<type> <name> [dest]')
+    .arguments('<type> [name] [dest]')
     .option(
       '--theme-version <theme-version>',
       'Theme boilerplate version to use',
@@ -79,12 +88,14 @@ function configureCreateCommand(program) {
       logDebugInfo(program);
       type = typeof type === 'string' && type.toLowerCase();
       if (!type || !TYPES[type]) {
-        logger.error(`The asset type ${type} is not supported`);
+        logger.error(
+          `The asset type ${type} is not supported. Supported authentication protocols are ${SUPPORTED_ASSET_TYPES}.`
+        );
         return;
       }
 
       // TODO: In yargs use `.implies()`
-      if (type === TYPES['website-theme']) {
+      if ([TYPES['website-theme'], TYPES.function].includes(type)) {
         dest = name;
       }
 
@@ -101,7 +112,7 @@ function configureCreateCommand(program) {
         return;
       }
 
-      trackCommandUsage(COMMAND_NAME, { assetType: type });
+      trackCommandUsage(COMMAND_NAME, { assetType: type }, getPortalId());
 
       switch (type) {
         case TYPES.module:
@@ -114,6 +125,11 @@ function configureCreateCommand(program) {
         case TYPES['website-theme']:
           createTheme(dest, type, program);
           break;
+        case TYPES.function: {
+          const functionDefinition = await createFunctionPrompt();
+          createFunction(functionDefinition, dest);
+          break;
+        }
         default:
           break;
       }

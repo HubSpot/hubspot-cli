@@ -91,7 +91,7 @@ async function fetchFileStream(portalId, filePath, destination, options = {}) {
   const response = await http.getOctetStream(
     portalId,
     {
-      uri: `${FILE_MAPPER_API_PATH}/stream/${filePath}`,
+      uri: `${FILE_MAPPER_API_PATH}/stream/${encodeURIComponent(filePath)}`,
       ...options,
     },
     destination
@@ -110,7 +110,23 @@ async function fetchFileStream(portalId, filePath, destination, options = {}) {
  */
 async function download(portalId, filepath, options = {}) {
   return http.get(portalId, {
-    uri: `${FILE_MAPPER_API_PATH}/download/${filepath}`,
+    uri: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
+    ...options,
+  });
+}
+
+/**
+ * Fetch a folder or file node by path.
+ *
+ * @async
+ * @param {number} portalId
+ * @param {string} filepath
+ * @param {object} options
+ * @returns {Promise<FileMapperNode>}
+ */
+async function downloadDefault(portalId, filepath, options = {}) {
+  return http.get(portalId, {
+    uri: `${FILE_MAPPER_API_PATH}/download-default/${filepath}`,
     ...options,
   });
 }
@@ -168,6 +184,7 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
   const portalConfig = portalId && getPortalConfig(portalId);
 
   if (portalConfig && portalConfig.authType === 'personalaccesskey') {
+    logger.debug('Sending usage event to authenticated endpoint');
     return http.post(portalId, {
       uri: `${path}/authenticated`,
       body: usageEvent,
@@ -184,6 +201,7 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
       resolveWithFullResponse: true,
     }
   );
+  logger.debug('Sending usage event to unauthenticated endpoint');
   return http.request.post(requestOptions);
 }
 
@@ -191,6 +209,7 @@ module.exports = {
   deleteFile,
   deleteFolder,
   download,
+  downloadDefault,
   fetchFileStream,
   fetchModule,
   trackUsage,
