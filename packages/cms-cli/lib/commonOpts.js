@@ -34,6 +34,10 @@ const addModeOptions = (program, { read, write }) => {
   program.option('--mode <mode>', help);
 };
 
+const addTestingOptions = program => {
+  program.option('--qa', 'run command in qa mode', false);
+};
+
 const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
@@ -82,6 +86,7 @@ module.exports = {
   addConfigOptions,
   addOverwriteOptions,
   addModeOptions,
+  addTestingOptions,
   setLogLevel,
   getPortalId,
   getMode,
