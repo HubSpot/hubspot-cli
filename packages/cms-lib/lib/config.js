@@ -11,7 +11,7 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
-  PROD,
+  ENVIRONMENTS,
 } = require('./constants');
 const { getValidEnv } = require('./environment');
 
@@ -180,7 +180,7 @@ const setConfigPath = path => {
 };
 
 const getEnv = nameOrId => {
-  let env = PROD;
+  let env = ENVIRONMENTS.PROD;
   const config = getAndLoadConfigIfNeeded();
   const portalId = getPortalId(nameOrId);
   if (config.env) {
@@ -271,7 +271,7 @@ const updatePortalConfig = configOptions => {
   }
 
   const env = getValidEnv(environment || (portalConfig && portalConfig.env), {
-    maskedValue: undefined,
+    maskedProductionValue: undefined,
   });
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {

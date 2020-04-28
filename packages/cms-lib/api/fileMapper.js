@@ -4,7 +4,7 @@ const contentDisposition = require('content-disposition');
 const http = require('../http');
 const { getCwd } = require('../path');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
-const { PROD } = require('../lib/constants');
+const { ENVIRONMENTS } = require('../lib/constants');
 const { logger } = require('../logger');
 
 const FILE_MAPPER_API_PATH = 'content/filemapper/v1';
@@ -159,7 +159,7 @@ async function deleteFolder(portalId, folderPath, options = {}) {
  * @returns {Promise}
  */
 async function trackUsage(eventName, eventClass, meta = {}, portalId) {
-  let env = PROD;
+  let env = ENVIRONMENTS.PROD;
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig && portalConfig.env) {

@@ -18,7 +18,7 @@ const { getHubSpotWebsiteOrigin } = require('./lib/urls');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  PROD,
+  ENVIRONMENTS,
 } = require('./lib/constants');
 const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
@@ -29,7 +29,7 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = PROD) {
+async function getAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env);
@@ -56,7 +56,7 @@ async function getAccessToken(personalAccessKey, env = PROD) {
   };
 }
 
-async function refreshAccessToken(personalAccessKey, env = PROD) {
+async function refreshAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   const { accessToken, expiresAt, portalId } = await getAccessToken(
     personalAccessKey,
     env

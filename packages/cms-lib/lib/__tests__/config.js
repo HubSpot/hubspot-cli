@@ -5,22 +5,22 @@ const {
   updateDefaultPortal,
   deleteEmptyConfigFile,
 } = require('../config');
-const { PROD, QA } = require('../constants');
+const { ENVIRONMENTS } = require('../constants');
 jest.mock('fs');
 
 describe('lib/config', () => {
   describe('getPortalId()', () => {
     beforeEach(() => {
       setConfig({
-        defaultPortal: PROD,
+        defaultPortal: ENVIRONMENTS.PROD,
         portals: [
           {
-            name: QA,
+            name: ENVIRONMENTS.QA,
             portalId: 123,
             apiKey: 'secret',
           },
           {
-            name: PROD,
+            name: ENVIRONMENTS.PROD,
             portalId: 456,
             apiKey: 'secret',
           },
@@ -28,7 +28,7 @@ describe('lib/config', () => {
       });
     });
     it('returns portalId from config when a name is passed', () => {
-      expect(getPortalId(QA)).toEqual(123);
+      expect(getPortalId(ENVIRONMENTS.QA)).toEqual(123);
     });
     it('returns portalId from config when a string id is passed', () => {
       expect(getPortalId('123')).toEqual(123);

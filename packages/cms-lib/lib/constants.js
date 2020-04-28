@@ -1,5 +1,7 @@
-const PROD = 'prod';
-const QA = 'qa';
+const ENVIRONMENTS = {
+  PROD: 'prod',
+  QA: 'qa',
+};
 
 const ALLOWED_EXTENSIONS = new Set([
   'css',
@@ -78,8 +80,7 @@ const OAUTH_SCOPES = [
 
 module.exports = {
   Mode,
-  QA,
-  PROD,
+  ENVIRONMENTS,
   ALLOWED_EXTENSIONS,
   HUBL_EXTENSIONS,
   MODULE_EXTENSION,

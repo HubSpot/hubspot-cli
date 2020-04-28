@@ -1,8 +1,8 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
-const { PROD } = require('../lib/constants');
+const { ENVIRONMENTS } = require('../lib/constants');
 
-async function fetchAccessToken(personalAccessKey, env = PROD) {
+async function fetchAccessToken(personalAccessKey, env = ENVIRONMENTS.PROD) {
   const requestOptions = getRequestOptions(
     { env },
     {

@@ -4,7 +4,7 @@ const moment = require('moment');
 const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
-const { PROD, QA } = require('@hubspot/cms-lib/lib/constants');
+const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const {
   getHubSpotWebsiteOrigin,
@@ -22,7 +22,7 @@ class OAuth2Manager {
       clientId,
       clientSecret,
       scopes,
-      environment = PROD,
+      environment = ENVIRONMENTS.PROD,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
     },
     logger = console,
@@ -195,7 +195,7 @@ class OAuth2Manager {
 
   toObj() {
     return {
-      environment: this.env ? QA : PROD,
+      environment: this.env ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD,
       clientSecret: this.clientSecret,
       clientId: this.clientId,
       scopes: this.scopes,

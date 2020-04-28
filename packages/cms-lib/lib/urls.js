@@ -1,7 +1,7 @@
-const { QA } = require('./constants');
+const { ENVIRONMENTS } = require('./constants');
 
 const getEnvUrlString = env => {
-  return env === QA ? QA : '';
+  return env === ENVIRONMENTS.QA ? ENVIRONMENTS.QA : '';
 };
 
 const getHubSpotWebsiteOrigin = env => {
