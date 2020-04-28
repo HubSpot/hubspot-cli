@@ -13,7 +13,7 @@ const promptUser = async promptConfig => {
 const PORTAL_ID = {
   name: 'portalId',
   message:
-    'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta):',
+    'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):',
   type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
