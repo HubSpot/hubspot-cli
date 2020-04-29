@@ -17,11 +17,9 @@ const {
 } = require('./lib/config');
 const { getHubSpotWebsiteOrigin } = require('./lib/urls');
 const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('./lib/constants');
-const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
 const { logErrorInstance } = require('./errorHandlers');
 
@@ -175,7 +173,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   }
   const { portalId, accessToken, expiresAt } = token;
 
-  updatePortalConfig({
+  const updatedConfig = updatePortalConfig({
     portalId,
     personalAccessKey,
     name,
@@ -188,9 +186,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     updateDefaultPortal(name);
   }
 
-  logger.success(
-    `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
-  );
+  return updatedConfig;
 };
 
 module.exports = {

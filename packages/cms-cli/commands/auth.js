@@ -8,12 +8,18 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
+const {
+  updatePortalConfig,
+  portalNameExistsInConfig,
+  writeConfig,
+} = require('@hubspot/cms-lib/lib/config');
 const {
   addConfigOptions,
   addLoggerOptions,
@@ -24,7 +30,7 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { promptUser, OAUTH_FLOW } = require('../lib/prompts');
+const { promptUser, OAUTH_FLOW, PORTAL_NAME } = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'auth';
@@ -52,6 +58,8 @@ async function authAction(type, options) {
 
   trackCommandUsage(COMMAND_NAME);
   let configData;
+  let updatedConfig;
+  let promptAnswer;
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
@@ -59,7 +67,34 @@ async function authAction(type, options) {
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt();
-      await updateConfigWithPersonalAccessKey(configData);
+      updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+      if (!updatedConfig.name) {
+        let validName = null;
+        while (!validName) {
+          promptAnswer = await promptUser([PORTAL_NAME]);
+
+          if (!portalNameExistsInConfig(promptAnswer.name)) {
+            validName = promptAnswer.name;
+          } else {
+            logger.log(
+              `Account name "${promptAnswer.name}" already exists, please enter a different name.`
+            );
+          }
+        }
+
+        updatePortalConfig({
+          ...updatedConfig,
+          environment: updatedConfig.env,
+          tokenInfo: updatedConfig.auth.tokenInfo,
+          name: validName,
+        });
+        writeConfig();
+      }
+
+      logger.success(
+        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+      );
       break;
     default:
       logger.error(
