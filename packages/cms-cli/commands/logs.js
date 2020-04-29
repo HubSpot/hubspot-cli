@@ -49,7 +49,13 @@ const handleKeypressToExit = exit => {
   });
 };
 
-const tailLogs = async (portalId, functionId, functionPath, portalName) => {
+const tailLogs = async ({
+  functionId,
+  functionPath,
+  portalId,
+  portalName,
+  compact,
+}) => {
   const tailCall = makeTailCall(portalId, functionId);
   const spinner = makeSpinner(functionPath, portalName || portalId);
   let initialAfter;
@@ -74,7 +80,9 @@ const tailLogs = async (portalId, functionId, functionPath, portalName) => {
 
     if (latestLog.results.length) {
       spinner.clear();
-      outputLogs(latestLog);
+      outputLogs(latestLog, {
+        compact,
+      });
     }
 
     setTimeout(() => {
@@ -95,15 +103,16 @@ const getLogs = program => {
     .description(`get logs for a function`)
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
+    .option('--compact', 'output compact logs')
     .option('-f, --follow', 'tail logs')
-    .action(async (functionPath, options) => {
-      const { config: configPath } = options;
+    .action(async functionPath => {
+      const { config: configPath } = program;
       const portalId = getPortalId(program);
-      const { latest, file, follow } = options;
+      const { latest, file, follow, compact } = program;
       let logsResp;
 
-      setLogLevel(options);
-      logDebugInfo(options);
+      setLogLevel(program);
+      logDebugInfo(program);
       loadConfig(configPath);
       checkAndWarnGitInclusion();
       trackCommandUsage(
@@ -135,7 +144,13 @@ const getLogs = program => {
       logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
       if (follow) {
-        tailLogs(portalId, functionResp.id, functionPath, options.portal);
+        await tailLogs({
+          functionId: functionResp.id,
+          functionPath,
+          portalId,
+          portalName: program.portal,
+          compact,
+        });
       } else if (latest) {
         logsResp = await getLatestFunctionLog(portalId, functionResp.id);
       } else {
@@ -143,7 +158,9 @@ const getLogs = program => {
       }
 
       if (logsResp) {
-        return outputLogs(logsResp);
+        return outputLogs(logsResp, {
+          compact,
+        });
       }
     });
 
