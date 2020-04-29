@@ -10,7 +10,6 @@ const {
   setConfigPath,
 } = require('../config');
 const { ENVIRONMENTS } = require('../constants');
-jest.mock('fs');
 jest.mock('findup-sync', () => {
   return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
 });
