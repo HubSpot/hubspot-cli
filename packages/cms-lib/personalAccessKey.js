@@ -16,6 +16,7 @@ const {
   writeConfig,
 } = require('./lib/config');
 const { getHubSpotWebsiteOrigin } = require('./lib/urls');
+const { getValidEnv } = require('./lib/environment');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENTS,
@@ -135,11 +136,10 @@ async function accessTokenForPersonalAccessKey(portalId) {
 /**
  * Prompts user for portal name, then opens their browser to the shortlink to personal-access-key
  */
-const personalAccessKeyPrompt = async () => {
+const personalAccessKeyPrompt = async ({ env } = {}) => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
   const portalId = getPortalId(name);
-  const env = getEnv(name);
-  const websiteOrigin = getHubSpotWebsiteOrigin(env);
+  const websiteOrigin = getHubSpotWebsiteOrigin(env || getEnv(name));
   if (portalId) {
     open(`${websiteOrigin}/personal-access-key/${portalId}`);
   } else {
@@ -150,6 +150,7 @@ const personalAccessKeyPrompt = async () => {
   return {
     personalAccessKey,
     name,
+    env,
   };
 };
 
@@ -162,11 +163,12 @@ const personalAccessKeyPrompt = async () => {
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
-  const { personalAccessKey, name } = configData;
+  const { personalAccessKey, name, env } = configData;
+  const accessKeyEnv = env || getEnv(name);
 
   let token;
   try {
-    token = await getAccessToken(personalAccessKey, getEnv(name));
+    token = await getAccessToken(personalAccessKey, accessKeyEnv);
   } catch (err) {
     logErrorInstance(err);
     return;
@@ -177,6 +179,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     portalId,
     personalAccessKey,
     name,
+    environment: getValidEnv(accessKeyEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });

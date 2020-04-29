@@ -94,6 +94,18 @@ const portalNameExistsInConfig = name => {
   return config.portals.some(cfg => cfg.name && cfg.name === name);
 };
 
+const getOrderedPortal = unorderedPortal => {
+  const { name, portalId, env, authType, ...rest } = unorderedPortal;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+  };
+};
+
 const getOrderedConfig = unorderedConfig => {
   const {
     defaultPortal,
@@ -109,7 +121,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals,
+    portals: portals.map(getOrderedPortal),
     ...rest,
   };
 };

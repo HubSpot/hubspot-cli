@@ -10,6 +10,7 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
@@ -21,8 +22,12 @@ const {
   addHelpUsageTracking,
   trackAuthAction,
 } = require('../lib/usageTracking');
+const {
+  addLoggerOptions,
+  setLogLevel,
+  addTestingOptions,
+} = require('../lib/commonOpts');
 const { promptUser, PORTAL_NAME } = require('../lib/prompts');
-const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
@@ -44,6 +49,7 @@ function initializeConfigCommand(program) {
       trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
 
       const configPath = getConfigPath();
+      const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
       if (configPath) {
         logger.error(`The config file '${configPath}' already exists.`);
@@ -63,7 +69,7 @@ function initializeConfigCommand(program) {
       handleExit(deleteEmptyConfigFile);
 
       try {
-        const configData = await personalAccessKeyPrompt();
+        const configData = await personalAccessKeyPrompt({ env });
         const { name } = await promptUser([PORTAL_NAME]);
 
         await updateConfigWithPersonalAccessKey(
@@ -96,6 +102,7 @@ function initializeConfigCommand(program) {
     });
 
   addLoggerOptions(program);
+  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 
