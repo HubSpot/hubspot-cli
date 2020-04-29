@@ -234,7 +234,7 @@ describe('lib/config', () => {
       ).toEqual(name);
     });
 
-    it('sets the env in the config if it was preexisting', () => {
+    it('sets the name in the config if it was preexisting', () => {
       const name = 'PREEXISTING';
       setConfig({
         defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
@@ -254,7 +254,7 @@ describe('lib/config', () => {
       ).toEqual(name);
     });
 
-    it('overwrites the existing env in the config if specified', () => {
+    it('overwrites the existing name in the config if specified', () => {
       const previousName = 'PREVIOUSNAME';
       const newName = 'NEWNAME';
       setConfig({
