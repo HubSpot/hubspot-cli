@@ -31,12 +31,16 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { promptUser, OAUTH_FLOW, PORTAL_NAME } = require('../lib/prompts');
+const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
   PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
 ];
+const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
+  ALLOWED_AUTH_METHODS
+);
 
 async function authAction(type, options) {
   const authType = type.toLowerCase();
@@ -94,9 +98,7 @@ async function authAction(type, options) {
       break;
     default:
       logger.error(
-        `Unsupported auth type: ${type}. The only supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
-          ', '
-        )}.`
+        `Unsupported auth type: ${type}. The only supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
       );
       break;
   }
@@ -107,9 +109,7 @@ function configureAuthCommand(program) {
   program
     .version(version)
     .description(
-      `Configure authentication for a HubSpot account. Supported authentication protocols are ${ALLOWED_AUTH_METHODS.join(
-        ', '
-      )}.`
+      `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
     )
     .arguments('<type>')
     .action(authAction);
