@@ -15,11 +15,12 @@ const {
   updateDefaultPortal,
   writeConfig,
 } = require('./lib/config');
+const { getHubSpotWebsiteOrigin } = require('./lib/urls');
+const { getValidEnv } = require('./lib/environment');
 const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 } = require('./lib/constants');
-const { logger } = require('./logger');
 const { fetchAccessToken } = require('./api/localDevAuth');
 const { logErrorInstance } = require('./errorHandlers');
 
@@ -29,7 +30,11 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = 'PROD', portalId) {
+async function getAccessToken(
+  personalAccessKey,
+  env = ENVIRONMENTS.PROD,
+  portalId
+) {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env, portalId);
@@ -56,7 +61,11 @@ async function getAccessToken(personalAccessKey, env = 'PROD', portalId) {
   };
 }
 
-async function refreshAccessToken(portalId, personalAccessKey, env = 'PROD') {
+async function refreshAccessToken(
+  portalId,
+  personalAccessKey,
+  env = ENVIRONMENTS.PROD
+) {
   const { accessToken, expiresAt } = await getAccessToken(
     personalAccessKey,
     env,
@@ -127,26 +136,21 @@ async function accessTokenForPersonalAccessKey(portalId) {
 /**
  * Prompts user for portal name, then opens their browser to the shortlink to personal-access-key
  */
-const personalAccessKeyPrompt = async () => {
+const personalAccessKeyPrompt = async ({ env } = {}) => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
   const portalId = getPortalId(name);
-  const env = getEnv(name);
+  const websiteOrigin = getHubSpotWebsiteOrigin(env || getEnv(name));
   if (portalId) {
-    open(
-      `https://app.hubspot${
-        env === 'QA' ? 'qa' : ''
-      }.com/personal-access-key/${portalId}`
-    );
+    open(`${websiteOrigin}/personal-access-key/${portalId}`);
   } else {
-    open(
-      `https://app.hubspot${env === 'QA' ? 'qa' : ''}.com/l/personal-access-key`
-    );
+    open(`${websiteOrigin}/l/personal-access-key`);
   }
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
     personalAccessKey,
     name,
+    env,
   };
 };
 
@@ -159,21 +163,23 @@ const personalAccessKeyPrompt = async () => {
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
  */
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
-  const { personalAccessKey, name } = configData;
+  const { personalAccessKey, name, env } = configData;
+  const accessKeyEnv = env || getEnv(name);
 
   let token;
   try {
-    token = await getAccessToken(personalAccessKey, getEnv(name));
+    token = await getAccessToken(personalAccessKey, accessKeyEnv);
   } catch (err) {
     logErrorInstance(err);
     return;
   }
   const { portalId, accessToken, expiresAt } = token;
 
-  updatePortalConfig({
+  const updatedConfig = updatePortalConfig({
     portalId,
     personalAccessKey,
     name,
+    environment: getValidEnv(accessKeyEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
@@ -183,9 +189,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     updateDefaultPortal(name);
   }
 
-  logger.success(
-    `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
-  );
+  return updatedConfig;
 };
 
 module.exports = {

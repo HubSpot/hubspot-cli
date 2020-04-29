@@ -1,3 +1,8 @@
+const ENVIRONMENTS = {
+  PROD: 'prod',
+  QA: 'qa',
+};
+
 const ALLOWED_EXTENSIONS = new Set([
   'css',
   'js',
@@ -84,6 +89,7 @@ const ENVIRONMENT_VARIABLES = {
 
 module.exports = {
   Mode,
+  ENVIRONMENTS,
   ALLOWED_EXTENSIONS,
   HUBL_EXTENSIONS,
   MODULE_EXTENSION,

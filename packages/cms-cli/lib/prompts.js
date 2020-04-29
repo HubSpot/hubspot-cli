@@ -13,7 +13,7 @@ const promptUser = async promptConfig => {
 const PORTAL_ID = {
   name: 'portalId',
   message:
-    'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta):',
+    'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):',
   type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
@@ -81,7 +81,7 @@ const PORTAL_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    "When you’re ready, we’ll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
+    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
 };
 
 const PERSONAL_ACCESS_KEY = {
@@ -108,10 +108,7 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const PERSONAL_ACCESS_KEY_FLOW = [
-  PORTAL_NAME,
-  PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
-];
+const PERSONAL_ACCESS_KEY_FLOW = [PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP];
 
 module.exports = {
   promptUser,

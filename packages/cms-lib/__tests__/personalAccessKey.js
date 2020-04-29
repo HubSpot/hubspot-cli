@@ -1,6 +1,7 @@
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
 const { fetchAccessToken } = require('../api/localDevAuth');
+const { ENVIRONMENTS } = require('../lib/constants');
 
 const { accessTokenForPersonalAccessKey } = require('../personalAccessKey');
 
@@ -53,7 +54,7 @@ describe('personalAccessKey', () => {
       await accessTokenForPersonalAccessKey(portalId);
       expect(fetchAccessToken).toHaveBeenCalledWith(
         'let-me-in',
-        'PROD',
+        ENVIRONMENTS.PROD,
         portalId
       );
     });

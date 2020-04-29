@@ -14,12 +14,14 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  ENVIRONMENTS,
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
   ENVIRONMENT_VARIABLES,
 } = require('./constants');
+const { getValidEnv } = require('./environment');
 
 let _config;
 let _configPath;
@@ -45,7 +47,8 @@ const validateConfig = () => {
     logger.error('config.portals[] is not defined');
     return false;
   }
-  const portalsHash = {};
+  const portalIdsHash = {};
+  const portalNamesHash = {};
   return config.portals.every(cfg => {
     if (!cfg) {
       logger.error('config.portals[] has an empty entry');
@@ -55,15 +58,52 @@ const validateConfig = () => {
       logger.error('config.portals[] has an entry missing portalId');
       return false;
     }
-    if (portalsHash[cfg.portalId]) {
+    if (portalIdsHash[cfg.portalId]) {
       logger.error(
         `config.portals[] has multiple entries with portalId=${cfg.portalId}`
       );
       return false;
     }
-    portalsHash[cfg.portalId] = cfg;
+
+    if (cfg.name) {
+      if (portalNamesHash[cfg.name]) {
+        logger.error(
+          `config.name has multiple entries with portalId=${cfg.portalId}`
+        );
+        return false;
+      }
+      if (/\s+/.test(cfg.name)) {
+        logger.error(`config.name '${cfg.name}' cannot contain spaces`);
+        return false;
+      }
+      portalNamesHash[cfg.name] = cfg;
+    }
+
+    portalIdsHash[cfg.portalId] = cfg;
     return true;
   });
+};
+
+const portalNameExistsInConfig = name => {
+  const config = getConfig();
+
+  if (!config || !Array.isArray(config.portals)) {
+    return false;
+  }
+
+  return config.portals.some(cfg => cfg.name && cfg.name === name);
+};
+
+const getOrderedPortal = unorderedPortal => {
+  const { name, portalId, env, authType, ...rest } = unorderedPortal;
+
+  return {
+    name,
+    portalId,
+    env,
+    authType,
+    ...rest,
+  };
 };
 
 const getOrderedConfig = unorderedConfig => {
@@ -81,7 +121,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals,
+    portals: portals.map(getOrderedPortal),
     ...rest,
   };
 };
@@ -321,12 +361,8 @@ const setConfigPath = path => {
   return (_configPath = path);
 };
 
-const getConfigEnv = environment => {
-  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
-};
-
 const getEnv = nameOrId => {
-  let env = 'PROD';
+  let env = ENVIRONMENTS.PROD;
   const config = getAndLoadConfigIfNeeded();
   const portalId = getPortalId(nameOrId);
   if (portalId) {
@@ -415,11 +451,14 @@ const updatePortalConfig = configOptions => {
       tokenInfo,
     };
   }
-  const env = getConfigEnv(environment || (portalConfig && portalConfig.env));
+
+  const env = getValidEnv(environment || (portalConfig && portalConfig.env), {
+    maskedProductionValue: undefined,
+  });
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
-    name,
+    name: name || (portalConfig && portalConfig.name),
     env,
     portalId,
     authType,
@@ -441,7 +480,6 @@ const updatePortalConfig = configOptions => {
       config.portals = [nextPortalConfig];
     }
   }
-
   return nextPortalConfig;
 };
 
@@ -621,4 +659,5 @@ module.exports = {
   validateConfig,
   writeConfig,
   configFilenameIsIgnoredByGitignore,
+  portalNameExistsInConfig,
 };

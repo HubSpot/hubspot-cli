@@ -5,10 +5,13 @@ const {
   getPortalConfig,
   getPortalId,
   updateDefaultPortal,
+  updatePortalConfig,
+  validateConfig,
   deleteEmptyConfigFile,
   configFilenameIsIgnoredByGitignore,
   setConfigPath,
 } = require('../config');
+const { ENVIRONMENTS } = require('../constants');
 jest.mock('findup-sync', () => {
   return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
 });
@@ -48,37 +51,50 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
   personalAccessKey: 'fakePersonalAccessKey',
 };
 
+const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
+
+const getPortalByAuthType = (config, authType) => {
+  return config.portals.filter(portal => portal.authType === authType)[0];
+};
+
 describe('lib/config', () => {
+  describe('setConfig method', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('sets the config properly', () => {
+      expect(getConfig()).toEqual(CONFIG);
+    });
+  });
+
   describe('getPortalId method', () => {
     beforeEach(() => {
       process.env = {};
       setConfig({
-        defaultPortal: 'PROD',
-        portals: [
-          {
-            name: 'QA',
-            portalId: 123,
-            apiKey: 'secret',
-          },
-          {
-            name: 'PROD',
-            portalId: 456,
-            apiKey: 'secret',
-          },
-        ],
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: PORTALS,
       });
     });
     it('returns portalId from config when a name is passed', () => {
-      expect(getPortalId('QA')).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.name)).toEqual(OAUTH2_CONFIG.portalId);
     });
     it('returns portalId from config when a string id is passed', () => {
-      expect(getPortalId('123')).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.portalId.toString())).toEqual(
+        OAUTH2_CONFIG.portalId
+      );
     });
     it('returns portalId from config when a numeric id is passed', () => {
-      expect(getPortalId(123)).toEqual(123);
+      expect(getPortalId(OAUTH2_CONFIG.portalId)).toEqual(
+        OAUTH2_CONFIG.portalId
+      );
     });
     it('returns defaultPortal from config', () => {
-      expect(getPortalId()).toEqual(456);
+      expect(getPortalId()).toEqual(PERSONAL_ACCESS_KEY_CONFIG.portalId);
     });
   });
 
@@ -113,6 +129,215 @@ describe('lib/config', () => {
 
       deleteEmptyConfigFile();
       expect(fs.unlinkSync).toHaveBeenCalled();
+    });
+  });
+
+  describe('updatePortalConfig method', () => {
+    const CONFIG = {
+      defaultPortal: PORTALS[0].name,
+      portals: PORTALS,
+    };
+
+    beforeEach(() => {
+      setConfig(CONFIG);
+    });
+
+    it('does not add the env to the config if not specified or existing', () => {
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(getConfig().env).toBeFalsy();
+    });
+
+    it('sets the env in the config if specified', () => {
+      const environment = ENVIRONMENTS.QA;
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        environment,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(environment);
+    });
+
+    it('sets the env in the config if it was preexisting', () => {
+      const env = ENVIRONMENTS.QA;
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.env;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(env);
+    });
+
+    it('overwrites the existing env in the config if specified', () => {
+      const previousEnv = ENVIRONMENTS.PROD;
+      const newEnv = ENVIRONMENTS.QA;
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousEnv }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        environment: newEnv,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).env
+      ).toEqual(newEnv);
+    });
+
+    it('does not add the name to the config if not specified or existing', () => {
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.name;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(getConfig().name).toBeFalsy();
+    });
+
+    it('sets the name in the config if specified', () => {
+      const name = 'MYNAME';
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        name,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(name);
+    });
+
+    it('sets the name in the config if it was preexisting', () => {
+      const name = 'PREEXISTING';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, name }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+      };
+      delete modifiedPersonalAccessKeyConfig.name;
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(name);
+    });
+
+    it('overwrites the existing name in the config if specified', () => {
+      const previousName = 'PREVIOUSNAME';
+      const newName = 'NEWNAME';
+      setConfig({
+        defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
+        portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousName }],
+      });
+      const modifiedPersonalAccessKeyConfig = {
+        ...PERSONAL_ACCESS_KEY_CONFIG,
+        name: newName,
+      };
+      updatePortalConfig(modifiedPersonalAccessKeyConfig);
+
+      expect(
+        getPortalByAuthType(
+          getConfig(),
+          modifiedPersonalAccessKeyConfig.authType
+        ).name
+      ).toEqual(newName);
+    });
+  });
+
+  describe('validateConfig method', () => {
+    const DEFAULT_PORTAL = PORTALS[0].name;
+
+    it('allows valid config', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: PORTALS,
+      });
+      expect(validateConfig()).toEqual(true);
+    });
+
+    it('does not allow duplicate portalIds', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [...PORTALS, PORTALS[0]],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('does not allow duplicate names', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          ...PORTALS,
+          {
+            ...PORTALS[0],
+            portalId: 123456789,
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('does not allow names with spaces', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          {
+            ...PORTALS[0],
+            name: 'A NAME WITH SPACES',
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(false);
+    });
+
+    it('allows multiple portals with no name', () => {
+      setConfig({
+        defaultPortal: DEFAULT_PORTAL,
+        portals: [
+          {
+            ...PORTALS[0],
+            name: null,
+          },
+          {
+            ...PORTALS[1],
+            name: null,
+          },
+        ],
+      });
+      expect(validateConfig()).toEqual(true);
     });
   });
 

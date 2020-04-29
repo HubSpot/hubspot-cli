@@ -5,7 +5,7 @@ const {
   getPortalConfig,
 } = require('./lib/config');
 const { logger, logErrorInstance } = require('./logger');
-const { AUTH_METHODS } = require('./lib/constants');
+const { AUTH_METHODS, ENVIRONMENTS } = require('./lib/constants');
 
 const oauthManagers = new Map();
 
@@ -44,7 +44,7 @@ const setupOauth = (portalId, portalConfig) => {
   return new OAuth2Manager(
     {
       ...portalConfig,
-      environment: config.env || 'prod',
+      environment: portalConfig.env || config.env || ENVIRONMENTS.PROD,
     },
     logger
   );
