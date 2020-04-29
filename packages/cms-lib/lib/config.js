@@ -14,12 +14,14 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
+  ENVIRONMENTS,
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
   ENVIRONMENT_VARIABLES,
 } = require('./constants');
+const { getValidEnv } = require('./environment');
 
 let _config;
 let _configPath;
@@ -347,12 +349,8 @@ const setConfigPath = path => {
   return (_configPath = path);
 };
 
-const getConfigEnv = environment => {
-  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
-};
-
 const getEnv = nameOrId => {
-  let env = 'PROD';
+  let env = ENVIRONMENTS.PROD;
   const config = getAndLoadConfigIfNeeded();
   const portalId = getPortalId(nameOrId);
   if (portalId) {
@@ -442,7 +440,9 @@ const updatePortalConfig = configOptions => {
     };
   }
 
-  const env = getConfigEnv(environment || (portalConfig && portalConfig.env));
+  const env = getValidEnv(environment || (portalConfig && portalConfig.env), {
+    maskedProductionValue: undefined,
+  });
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,

@@ -11,6 +11,7 @@ const {
   configFilenameIsIgnoredByGitignore,
   setConfigPath,
 } = require('../config');
+const { ENVIRONMENTS } = require('../constants');
 jest.mock('findup-sync', () => {
   return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
 });
@@ -152,7 +153,7 @@ describe('lib/config', () => {
     });
 
     it('sets the env in the config if specified', () => {
-      const environment = 'QA';
+      const environment = ENVIRONMENTS.QA;
       const modifiedPersonalAccessKeyConfig = {
         ...PERSONAL_ACCESS_KEY_CONFIG,
         environment,
@@ -168,7 +169,7 @@ describe('lib/config', () => {
     });
 
     it('sets the env in the config if it was preexisting', () => {
-      const env = 'QA';
+      const env = ENVIRONMENTS.QA;
       setConfig({
         defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
         portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env }],
@@ -188,8 +189,8 @@ describe('lib/config', () => {
     });
 
     it('overwrites the existing env in the config if specified', () => {
-      const previousEnv = 'PROD';
-      const newEnv = 'QA';
+      const previousEnv = ENVIRONMENTS.PROD;
+      const newEnv = ENVIRONMENTS.QA;
       setConfig({
         defaultPortal: PERSONAL_ACCESS_KEY_CONFIG.name,
         portals: [{ ...PERSONAL_ACCESS_KEY_CONFIG, env: previousEnv }],

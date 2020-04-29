@@ -15,7 +15,11 @@ const {
   updateDefaultPortal,
   writeConfig,
 } = require('./lib/config');
-const { PERSONAL_ACCESS_KEY_AUTH_METHOD } = require('./lib/constants');
+const { getHubSpotWebsiteOrigin } = require('./lib/urls');
+const {
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
+} = require('./lib/constants');
 const { fetchAccessToken } = require('./api/localDevAuth');
 const { logErrorInstance } = require('./errorHandlers');
 
@@ -25,7 +29,11 @@ function getRefreshKey(personalAccessKey, expiration) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
-async function getAccessToken(personalAccessKey, env = 'PROD', portalId) {
+async function getAccessToken(
+  personalAccessKey,
+  env = ENVIRONMENTS.PROD,
+  portalId
+) {
   let response;
   try {
     response = await fetchAccessToken(personalAccessKey, env, portalId);
@@ -52,7 +60,11 @@ async function getAccessToken(personalAccessKey, env = 'PROD', portalId) {
   };
 }
 
-async function refreshAccessToken(portalId, personalAccessKey, env = 'PROD') {
+async function refreshAccessToken(
+  portalId,
+  personalAccessKey,
+  env = ENVIRONMENTS.PROD
+) {
   const { accessToken, expiresAt } = await getAccessToken(
     personalAccessKey,
     env,
@@ -127,16 +139,11 @@ const personalAccessKeyPrompt = async () => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
   const portalId = getPortalId(name);
   const env = getEnv(name);
+  const websiteOrigin = getHubSpotWebsiteOrigin(env);
   if (portalId) {
-    open(
-      `https://app.hubspot${
-        env === 'QA' ? 'qa' : ''
-      }.com/personal-access-key/${portalId}`
-    );
+    open(`${websiteOrigin}/personal-access-key/${portalId}`);
   } else {
-    open(
-      `https://app.hubspot${env === 'QA' ? 'qa' : ''}.com/l/personal-access-key`
-    );
+    open(`${websiteOrigin}/l/personal-access-key`);
   }
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 

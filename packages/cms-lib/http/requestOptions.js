@@ -1,13 +1,12 @@
 const { version } = require('../package.json');
 const { getAndLoadConfigIfNeeded } = require('../lib/config');
+const { getHubSpotApiOrigin } = require('../lib/urls');
 
 const getRequestOptions = (options = {}, requestOptions = {}) => {
   const { env } = options;
   const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
   return {
-    baseUrl: `https://${httpUseLocalhost ? 'local' : 'api'}.hubapi${
-      env === 'QA' ? 'qa' : ''
-    }.com`,
+    baseUrl: getHubSpotApiOrigin(env, httpUseLocalhost),
     headers: {
       'User-Agent': `HubSpot CMS Tools/${version}`,
     },
