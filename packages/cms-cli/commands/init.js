@@ -27,6 +27,7 @@ const {
   setLogLevel,
   addTestingOptions,
 } = require('../lib/commonOpts');
+const { promptUser, PORTAL_NAME } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';
@@ -69,7 +70,20 @@ function initializeConfigCommand(program) {
 
       try {
         const configData = await personalAccessKeyPrompt({ env });
-        await updateConfigWithPersonalAccessKey(configData, true);
+        const { name } = await promptUser([PORTAL_NAME]);
+
+        await updateConfigWithPersonalAccessKey(
+          {
+            ...configData,
+            name,
+          },
+          true
+        );
+
+        logger.success(
+          `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+        );
+
         const portalId = getPortalId();
         trackAuthAction(
           COMMAND_NAME,

@@ -47,7 +47,8 @@ const validateConfig = () => {
     logger.error('config.portals[] is not defined');
     return false;
   }
-  const portalsHash = {};
+  const portalIdsHash = {};
+  const portalNamesHash = {};
   return config.portals.every(cfg => {
     if (!cfg) {
       logger.error('config.portals[] has an empty entry');
@@ -57,15 +58,40 @@ const validateConfig = () => {
       logger.error('config.portals[] has an entry missing portalId');
       return false;
     }
-    if (portalsHash[cfg.portalId]) {
+    if (portalIdsHash[cfg.portalId]) {
       logger.error(
         `config.portals[] has multiple entries with portalId=${cfg.portalId}`
       );
       return false;
     }
-    portalsHash[cfg.portalId] = cfg;
+
+    if (cfg.name) {
+      if (portalNamesHash[cfg.name]) {
+        logger.error(
+          `config.name has multiple entries with portalId=${cfg.portalId}`
+        );
+        return false;
+      }
+      if (/\s+/.test(cfg.name)) {
+        logger.error(`config.name '${cfg.name}' cannot contain spaces`);
+        return false;
+      }
+      portalNamesHash[cfg.name] = cfg;
+    }
+
+    portalIdsHash[cfg.portalId] = cfg;
     return true;
   });
+};
+
+const portalNameExistsInConfig = name => {
+  const config = getConfig();
+
+  if (!config || !Array.isArray(config.portals)) {
+    return false;
+  }
+
+  return config.portals.some(cfg => cfg.name && cfg.name === name);
 };
 
 const getOrderedPortal = unorderedPortal => {
@@ -432,7 +458,7 @@ const updatePortalConfig = configOptions => {
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
-    name,
+    name: name || (portalConfig && portalConfig.name),
     env,
     portalId,
     authType,
@@ -454,7 +480,6 @@ const updatePortalConfig = configOptions => {
       config.portals = [nextPortalConfig];
     }
   }
-
   return nextPortalConfig;
 };
 
@@ -634,4 +659,5 @@ module.exports = {
   validateConfig,
   writeConfig,
   configFilenameIsIgnoredByGitignore,
+  portalNameExistsInConfig,
 };
