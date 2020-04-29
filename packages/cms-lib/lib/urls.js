@@ -1,7 +1,11 @@
 const { ENVIRONMENTS } = require('./constants');
 
 const getEnvUrlString = env => {
-  return env === ENVIRONMENTS.QA ? ENVIRONMENTS.QA : '';
+  if (typeof env !== 'string') {
+    return '';
+  }
+
+  return env.toLowerCase() === ENVIRONMENTS.QA ? ENVIRONMENTS.QA : '';
 };
 
 const getHubSpotWebsiteOrigin = env => {
