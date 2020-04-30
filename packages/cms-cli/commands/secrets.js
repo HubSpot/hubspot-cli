@@ -4,7 +4,10 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cms-lib/errorHandlers');
 const {
   addSecret,
   deleteSecret,
@@ -23,8 +26,6 @@ const {
   getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-
-const COMMAND_NAME = 'secrets';
 
 function configureSecretsCommand(program) {
   program
@@ -61,11 +62,14 @@ function configureSecretsAddCommand(program) {
           `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logErrorInstance(e, {
-          command: `${COMMAND_NAME} add`,
-          portalId,
-          secretName,
-        });
+        logger.error(`The secret "${secretName}" was not added`);
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            request: 'add secret',
+            portalId,
+          })
+        );
       }
     });
 
@@ -96,11 +100,14 @@ function configureSecretsDeleteCommand(program) {
           `The secret "${secretName}" was deleted from the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logErrorInstance(e, {
-          command: `${COMMAND_NAME} delete`,
-          portalId,
-          secretName,
-        });
+        logger.error(`The secret "${secretName}" was not deleted`);
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            request: `delete a secret`,
+            portalId,
+          })
+        );
       }
     });
 
@@ -131,10 +138,14 @@ function configureSecretsListCommand(program) {
         results.forEach(secret => logger.log(secret));
         logger.groupEnd(groupLabel);
       } catch (e) {
-        logErrorInstance(e, {
-          command: `${COMMAND_NAME} list`,
-          portalId,
-        });
+        logger.error('The secrets could not be listed');
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            request: 'get secrets',
+            portalId,
+          })
+        );
       }
     });
 
