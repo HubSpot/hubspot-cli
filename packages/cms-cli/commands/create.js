@@ -28,6 +28,7 @@ const TYPES = {
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
+  'react-app': 'react-app',
 };
 
 const ASSET_PATHS = {
@@ -130,6 +131,10 @@ function configureCreateCommand(program) {
           createFunction(functionDefinition, dest);
           break;
         }
+        case TYPES['react-app']:
+          // TODO: create react app
+          console.log('Create react app');
+          break;
         default:
           break;
       }
