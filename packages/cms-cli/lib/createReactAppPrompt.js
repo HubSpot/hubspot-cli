@@ -2,7 +2,7 @@ const inquirer = require('inquirer');
 
 const APP_TYPE_PROMPT = {
   type: 'list',
-  name: 'endpointMethod',
+  name: 'appType',
   message: 'Select output type',
   default: 'Template',
   choices: ['Template', 'Module'],
