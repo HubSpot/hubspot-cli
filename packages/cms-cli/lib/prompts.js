@@ -1,13 +1,31 @@
 const inquirer = require('inquirer');
+const open = require('open');
 const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cms-lib/lib/constants');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
   return prompt(promptConfig);
+};
+
+/**
+ * Displays notification to user that we are about to open the browser,
+ * then opens their browser to the personal-access-key shortlink
+ */
+const personalAccessKeyPrompt = async ({ env } = {}) => {
+  await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
+  const websiteOrigin = getHubSpotWebsiteOrigin(env);
+  open(`${websiteOrigin}/l/personal-access-key`);
+  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
+
+  return {
+    personalAccessKey,
+    env,
+  };
 };
 
 const PORTAL_ID = {
@@ -108,10 +126,10 @@ const SCOPES = {
 
 const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
-const PERSONAL_ACCESS_KEY_FLOW = [PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP];
 
 module.exports = {
   promptUser,
+  personalAccessKeyPrompt,
   CLIENT_ID,
   CLIENT_SECRET,
   PORTAL_API_KEY,
@@ -123,5 +141,4 @@ module.exports = {
   // Flows
   API_KEY_FLOW,
   OAUTH_FLOW,
-  PERSONAL_ACCESS_KEY_FLOW,
 };

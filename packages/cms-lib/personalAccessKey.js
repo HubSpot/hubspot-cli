@@ -1,21 +1,13 @@
-const open = require('open');
 const moment = require('moment');
-const {
-  promptUser,
-  PERSONAL_ACCESS_KEY_FLOW,
-  PERSONAL_ACCESS_KEY,
-} = require('@hubspot/cms-cli/lib/prompts');
 
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const {
   getEnv,
-  getPortalId,
   getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
   writeConfig,
 } = require('./lib/config');
-const { getHubSpotWebsiteOrigin } = require('./lib/urls');
 const { getValidEnv } = require('./lib/environment');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -134,27 +126,6 @@ async function accessTokenForPersonalAccessKey(portalId) {
 }
 
 /**
- * Prompts user for portal name, then opens their browser to the shortlink to personal-access-key
- */
-const personalAccessKeyPrompt = async ({ env } = {}) => {
-  const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
-  const portalId = getPortalId(name);
-  const websiteOrigin = getHubSpotWebsiteOrigin(env || getEnv(name));
-  if (portalId) {
-    open(`${websiteOrigin}/personal-access-key/${portalId}`);
-  } else {
-    open(`${websiteOrigin}/l/personal-access-key`);
-  }
-  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
-
-  return {
-    personalAccessKey,
-    name,
-    env,
-  };
-};
-
-/**
  * Adds a portal to the config using authType: personalAccessKey
  *
  * @param {object} configData Data containing personalAccessKey and name properties
@@ -194,6 +165,5 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 
 module.exports = {
   accessTokenForPersonalAccessKey,
-  personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 };
