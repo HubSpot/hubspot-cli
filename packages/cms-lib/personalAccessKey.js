@@ -164,11 +164,11 @@ const personalAccessKeyPrompt = async ({ env } = {}) => {
  */
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   const { personalAccessKey, name, env } = configData;
-  const accessKeyEnv = env || getEnv(name);
+  const portalEnv = env || getEnv(name);
 
   let token;
   try {
-    token = await getAccessToken(personalAccessKey, accessKeyEnv);
+    token = await getAccessToken(personalAccessKey, portalEnv);
   } catch (err) {
     logErrorInstance(err);
     return;
@@ -179,7 +179,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     portalId,
     personalAccessKey,
     name,
-    environment: getValidEnv(accessKeyEnv, true),
+    environment: getValidEnv(portalEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
