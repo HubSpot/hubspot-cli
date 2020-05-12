@@ -18,6 +18,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { createReactAppPrompt } = require('../lib/createReactAppPrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
@@ -131,10 +132,11 @@ function configureCreateCommand(program) {
           createFunction(functionDefinition, dest);
           break;
         }
-        case TYPES['react-app']:
-          // TODO: create react app
-          console.log('Create react app');
+        case TYPES['react-app']: {
+          const reactAppDefinition = await createReactAppPrompt();
+          console.log(reactAppDefinition);
           break;
+        }
         default:
           break;
       }
