@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+## 1.1.4
+
+ * Option `--qa` is hidden from help text
+
+## 1.1.3
+
+ * Prompt for name only if not set when running hs auth and hs init
+ * Constants to replace PROD and QA environment strings and helper methods for getting environment specific data
+ * Addition of `--qa` flag for creating a portal for use with QA environment when running `hs init` or `hs auth`
+ * Improved logging for serverless functions, adding `--compact` flag for less output
+
 ## 1.1.2
 
  * Fix uploading a folder of files to the file manager root
