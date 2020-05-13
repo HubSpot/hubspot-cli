@@ -1,6 +1,6 @@
 # This workflow will check for circular dependencies within the hubspot-cms-cli packages
 
-name: Madge Circular Dependency Check
+name: Circular Dependency Check
 
 on:
   push:
