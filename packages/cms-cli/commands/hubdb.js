@@ -12,7 +12,7 @@ const {
   downloadHubDbTable,
   clearHubDbTableRows,
 } = require('@hubspot/cms-lib/hubdb');
-const { publishTable } = require('@hubspot/cms-lib/api/hubdb');
+const { publishTable, deleteTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -147,9 +147,41 @@ function configureHubDbClearCommand(program) {
   addConfigOptions(program);
 }
 
+function configureHubDbDeleteCommand(program) {
+  program
+    .version(version)
+    .description('Delete HubDB tables')
+    .arguments('<tableId>')
+    .action(async tableId => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(program)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(program);
+
+      try {
+        await deleteTable(portalId, tableId);
+        logger.log(`The table ${tableId} was deleted from ${portalId}`);
+      } catch (e) {
+        logger.error(`Deleting the table ${tableId} failed`);
+        logErrorInstance(e);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
 module.exports = {
   configureHubDbCommand,
   configureHubDbCreateCommand,
   configureHubDbFetchCommand,
   configureHubDbClearCommand,
+  configureHubDbDeleteCommand,
 };
