@@ -7,7 +7,6 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { createTheme } = require('@hubspot/cms-lib/themes');
 const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
@@ -43,6 +42,7 @@ const ASSET_PATHS = {
 
 const PROJECT_REPOSITORIES = {
   [TYPES['react-app']]: 'cms-react-boilerplate',
+  [TYPES['website-theme']]: 'cms-theme-boilerplate',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -138,10 +138,10 @@ function configureCreateCommand(program) {
           createTemplate(name, dest, type);
           break;
         case TYPES['website-theme']:
-          createTheme(dest, type, program);
+          createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', program);
           break;
         case TYPES['react-app']: {
-          createProject(dest, type, PROJECT_REPOSITORIES[type], program);
+          createProject(dest, type, PROJECT_REPOSITORIES[type], '', program);
           break;
         }
         case TYPES.function: {

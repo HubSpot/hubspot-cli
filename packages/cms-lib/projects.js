@@ -118,12 +118,12 @@ async function extractProjectZip(repoName, zip) {
  * @param {String} dest - Dir to copy boilerplate src files to.
  * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
-async function copyProjectToDest(src, dest) {
+async function copyProjectToDest(src, sourceDir, dest) {
   try {
     logger.log('Copying project source...');
     const files = await fs.readdir(src);
     const rootDir = files[0];
-    const projectSrcDir = path.join(src, rootDir, 'src');
+    const projectSrcDir = path.join(src, rootDir, sourceDir);
     await fs.copy(projectSrcDir, dest);
     logger.log('Completed copying project source.');
     return true;
@@ -155,17 +155,19 @@ function cleanupTemp(tmpDir) {
  * @param {String} dest - Dir to write project src to.
  * @param {String} type - Type of project to create.
  * @param {String} repoName - Name of GitHub repository to clone.
+ * @param {String} sourceDir - Directory in project that should get copied.
  * @param {Object} options
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function createProject(dest, type, repoName, options = {}) {
+async function createProject(dest, type, repoName, sourceDir, options = {}) {
   console.log(repoName);
   const { projectVersion: tag } = options;
   const zip = await downloadProject(repoName, tag);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
   const success =
-    extractDir != null && (await copyProjectToDest(extractDir, dest));
+    extractDir != null &&
+    (await copyProjectToDest(extractDir, sourceDir, dest));
   if (success) {
     logger.success(`Your new ${type} project has been created in ${dest}`);
   }
