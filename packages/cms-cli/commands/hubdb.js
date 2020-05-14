@@ -30,7 +30,7 @@ function configureHubDbCommand(program) {
     .version(version)
     .description('Manage HubDB tables')
     .command('create <src>', 'create a HubDB table')
-    .command('fetch <tableId> <dest>', 'fetch a HubDB table');
+    .command('fetch <table> <dest>', 'fetch a HubDB table');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
@@ -76,7 +76,7 @@ function configureHubDbFetchCommand(program) {
   program
     .version(version)
     .description('Fetch a HubDB table')
-    .arguments('<tableId> <dest>')
+    .arguments('<table> <dest>')
     .action(async (tableId, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
