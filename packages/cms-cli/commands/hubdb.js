@@ -12,6 +12,7 @@ const {
   downloadHubDbTable,
   clearHubDbTableRows,
 } = require('@hubspot/cms-lib/hubdb');
+const { publishTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -125,8 +126,17 @@ function configureHubDbClearCommand(program) {
       }
       const portalId = getPortalId(command);
       try {
-        const clearedRows = await clearHubDbTableRows(portalId, tableId);
-        logger.log(`Clears ${clearedRows} from HubDB table ${tableId}`);
+        const draftTable = await clearHubDbTableRows(portalId, tableId);
+        const deletedRowCount = draftTable[0].rowIds.length;
+        if (deletedRowCount > 0) {
+          logger.log(
+            `Removed ${deletedRowCount} rows from HubDB table ${tableId}`
+          );
+          const { rowCount } = await publishTable(portalId, tableId);
+          logger.log(`HubDB table ${tableId} now contains ${rowCount} rows`);
+        } else {
+          logger.log(`HubDB table ${tableId} is already empty`);
+        }
       } catch (e) {
         logger.error(e);
       }
