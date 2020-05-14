@@ -128,4 +128,5 @@ function configureAuthCommand(program) {
 
 module.exports = {
   configureAuthCommand,
+  authAction,
 };

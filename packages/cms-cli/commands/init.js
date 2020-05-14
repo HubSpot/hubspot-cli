@@ -37,69 +37,71 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
+async function initAction(options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
+
+  const configPath = getConfigPath();
+  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+
+  if (configPath) {
+    logger.error(`The config file '${configPath}' already exists.`);
+    logger.info(
+      'To update an existing config file, use the "hs auth" command.'
+    );
+    process.exit(1);
+  }
+
+  trackAuthAction(
+    COMMAND_NAME,
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    TRACKING_STATUS.STARTED
+  );
+
+  createEmptyConfigFile();
+  handleExit(deleteEmptyConfigFile);
+
+  try {
+    const configData = await personalAccessKeyPrompt({ env });
+    const { name } = await promptUser([PORTAL_NAME]);
+
+    await updateConfigWithPersonalAccessKey(
+      {
+        ...configData,
+        name,
+      },
+      true
+    );
+
+    logger.success(
+      `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+    );
+
+    const portalId = getPortalId();
+    trackAuthAction(
+      COMMAND_NAME,
+      PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      TRACKING_STATUS.COMPLETE,
+      portalId
+    );
+  } catch (err) {
+    logErrorInstance(err);
+    trackAuthAction(
+      COMMAND_NAME,
+      PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      TRACKING_STATUS.ERROR
+    );
+  }
+}
+
 function initializeConfigCommand(program) {
   program
     .version(version)
     .description(
       `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`
     )
-    .action(async options => {
-      setLogLevel(options);
-      logDebugInfo(options);
-      trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
-
-      const configPath = getConfigPath();
-      const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-
-      if (configPath) {
-        logger.error(`The config file '${configPath}' already exists.`);
-        logger.info(
-          'To update an existing config file, use the "hs auth" command.'
-        );
-        process.exit(1);
-      }
-
-      trackAuthAction(
-        COMMAND_NAME,
-        PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        TRACKING_STATUS.STARTED
-      );
-
-      createEmptyConfigFile();
-      handleExit(deleteEmptyConfigFile);
-
-      try {
-        const configData = await personalAccessKeyPrompt({ env });
-        const { name } = await promptUser([PORTAL_NAME]);
-
-        await updateConfigWithPersonalAccessKey(
-          {
-            ...configData,
-            name,
-          },
-          true
-        );
-
-        logger.success(
-          `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
-        );
-
-        const portalId = getPortalId();
-        trackAuthAction(
-          COMMAND_NAME,
-          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          TRACKING_STATUS.COMPLETE,
-          portalId
-        );
-      } catch (err) {
-        logErrorInstance(err);
-        trackAuthAction(
-          COMMAND_NAME,
-          PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-          TRACKING_STATUS.ERROR
-        );
-      }
-    });
+    .action(initAction);
 
   addLoggerOptions(program);
   addTestingOptions(program);
@@ -108,4 +110,5 @@ function initializeConfigCommand(program) {
 
 module.exports = {
   initializeConfigCommand,
+  initAction,
 };

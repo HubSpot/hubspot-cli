@@ -1,3 +1,5 @@
+const { commaSeparatedValues } = require('@hubspot/cms-cli/lib/text');
+
 const ENVIRONMENTS = {
   PROD: 'prod',
   QA: 'qa',
@@ -60,6 +62,11 @@ const AUTH_METHODS = {
   oauth: OAUTH_AUTH_METHOD,
 };
 
+const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues([
+  OAUTH_AUTH_METHOD.value,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+]);
+
 const DEFAULT_OAUTH_SCOPES = ['content'];
 
 const OAUTH_SCOPES = [
@@ -104,4 +111,6 @@ module.exports = {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENT_VARIABLES,
+  // Text only
+  SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 };
