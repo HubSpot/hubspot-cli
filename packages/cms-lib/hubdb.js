@@ -6,6 +6,8 @@ const {
   createTable,
   updateTable,
   createRows,
+  fetchTableCount,
+  fetchTables,
   fetchTable,
   fetchRows,
   publishTable,
@@ -27,6 +29,34 @@ function validateJsonFile(src) {
   }
 }
 
+async function getTableIdByName(portalId, tableName) {
+  let totalTables = await fetchTableCount(portalId);
+
+  let count = 0;
+  let offset = 0;
+
+  while (totalTables === null || count < totalTables) {
+    const response = await fetchTables(portalId, { offset });
+
+    count += response.objects.length;
+    offset += response.objects.length;
+
+    const findTable = response.objects.find(table => table.name === tableName);
+    if (findTable) {
+      return findTable.id;
+    }
+  }
+}
+
+async function getTableId(portalId, nameOrId) {
+  if (typeof nameOrId === 'number') {
+    return nameOrId;
+  } else if (/^\d+$/.test(nameOrId)) {
+    return parseInt(nameOrId, 10);
+  } else {
+    return getTableIdByName(portalId, nameOrId);
+  }
+}
 async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
   const rowsToUpdate = rows.map(row => {
     const values = {};
@@ -191,4 +221,5 @@ module.exports = {
   clearHubDbTableRows,
   updateHubDbTable,
   addRowsToHubDbTable,
+  getTableId,
 };

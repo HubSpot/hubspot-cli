@@ -1,7 +1,7 @@
 const http = require('../http');
 const HUBDB_API_PATH = 'hubdb/api/v2';
 
-async function fetchTablecCount(portalId) {
+async function fetchTableCount(portalId) {
   return http.get(portalId, {
     uri: `${HUBDB_API_PATH}/tables/count`,
   });
@@ -74,7 +74,7 @@ async function deleteRows(portalId, tableId, rowIds) {
 }
 
 module.exports = {
-  fetchTablecCount,
+  fetchTableCount,
   createRows,
   createTable,
   updateTable,
