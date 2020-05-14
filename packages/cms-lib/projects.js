@@ -151,8 +151,10 @@ function cleanupTemp(tmpDir) {
 }
 
 /**
- * Writes a copy of the boilerplate theme to dest.
- * @param {String} dest - Dir top write theme src to.
+ * Writes a copy of the boilerplate project to dest.
+ * @param {String} dest - Dir to write project src to.
+ * @param {String} type - Type of project to create.
+ * @param {String} repoName - Name of GitHub repository to clone.
  * @param {Object} options
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
