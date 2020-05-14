@@ -34,6 +34,7 @@ async function getTableIdByName(portalId, tableName) {
 
   let count = 0;
   let offset = 0;
+  let foundTable;
 
   while (totalTables === null || count < totalTables) {
     const response = await fetchTables(portalId, { offset });
@@ -41,10 +42,11 @@ async function getTableIdByName(portalId, tableName) {
     count += response.objects.length;
     offset += response.objects.length;
 
-    const findTable = response.objects.find(table => table.name === tableName);
-    if (findTable) {
-      return findTable.id;
-    }
+    foundTable = response.objects.find(table => table.name === tableName);
+  }
+
+  if (foundTable) {
+    return foundTable.id;
   }
 }
 
@@ -57,7 +59,9 @@ async function getTableId(portalId, nameOrId) {
     return getTableIdByName(portalId, nameOrId);
   }
 }
-async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
+
+async function addRowsToHubDbTable(portalId, tableIdOrName, rows, columns) {
+  const tableId = await getTableId(portalId, tableIdOrName);
   const rowsToUpdate = rows.map(row => {
     const values = {};
 
@@ -104,7 +108,8 @@ async function createHubDbTable(portalId, src) {
   return addRowsToHubDbTable(portalId, id, rows, columns);
 }
 
-async function updateHubDbTable(portalId, tableId, src) {
+async function updateHubDbTable(portalId, tableIdOrName, src) {
+  const tableId = await getTableId(portalId, tableIdOrName);
   validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
@@ -170,7 +175,8 @@ function convertToJSON(table, rows) {
   };
 }
 
-async function downloadHubDbTable(portalId, tableId, dest) {
+async function downloadHubDbTable(portalId, tableIdOrName, dest) {
+  const tableId = await getTableId(portalId, tableIdOrName);
   const table = await fetchTable(portalId, tableId);
 
   let totalRows = null;
@@ -196,7 +202,9 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   await fs.writeFileSync(dest, tableJson);
 }
 
-async function clearHubDbTableRows(portalId, tableId) {
+async function clearHubDbTableRows(portalId, tableIdOrName) {
+  const tableId = await getTableId(portalId, tableIdOrName);
+
   let totalRows = null;
   let rows = [];
   let count = 0;
@@ -221,5 +229,4 @@ module.exports = {
   clearHubDbTableRows,
   updateHubDbTable,
   addRowsToHubDbTable,
-  getTableId,
 };

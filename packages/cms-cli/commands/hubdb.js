@@ -10,7 +10,6 @@ const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
   downloadHubDbTable,
-  getTableId,
 } = require('@hubspot/cms-lib/hubdb');
 
 const { validatePortal } = require('../lib/validation');
@@ -78,7 +77,7 @@ function configureHubDbFetchCommand(program) {
     .version(version)
     .description('Fetch a HubDB table')
     .arguments('<tableId> <dest>')
-    .action(async (tableIdOrName, dest, command = {}) => {
+    .action(async (tableId, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
@@ -90,8 +89,6 @@ function configureHubDbFetchCommand(program) {
       }
       const portalId = getPortalId(command);
       try {
-        const tableId = await getTableId(portalId, tableIdOrName);
-
         await downloadHubDbTable(
           portalId,
           tableId,
