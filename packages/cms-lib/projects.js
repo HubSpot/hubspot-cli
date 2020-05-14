@@ -161,7 +161,8 @@ function cleanupTemp(tmpDir) {
  */
 async function createProject(dest, type, repoName, sourceDir, options = {}) {
   console.log(repoName);
-  const { projectVersion: tag } = options;
+  const { themeVersion, projectVersion } = options;
+  const tag = projectVersion || themeVersion;
   const zip = await downloadProject(repoName, tag);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
