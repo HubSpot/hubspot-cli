@@ -25,7 +25,6 @@ const {
   addConfigOptions,
   addLoggerOptions,
   setLogLevel,
-  addTestingOptions,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
@@ -122,7 +121,6 @@ function configureAuthCommand(program) {
 
   addLoggerOptions(program);
   addConfigOptions(program);
-  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 

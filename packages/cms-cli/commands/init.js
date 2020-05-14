@@ -22,11 +22,7 @@ const {
   addHelpUsageTracking,
   trackAuthAction,
 } = require('../lib/usageTracking');
-const {
-  addLoggerOptions,
-  setLogLevel,
-  addTestingOptions,
-} = require('../lib/commonOpts');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { promptUser, PORTAL_NAME } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
@@ -104,7 +100,6 @@ function initializeConfigCommand(program) {
     .action(initAction);
 
   addLoggerOptions(program);
-  addTestingOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 
