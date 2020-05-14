@@ -8,6 +8,7 @@ const {
 const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createTheme } = require('@hubspot/cms-lib/themes');
+const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
@@ -18,7 +19,6 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
-const { createReactAppPrompt } = require('../lib/createReactAppPrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
@@ -39,6 +39,10 @@ const ASSET_PATHS = {
     __dirname,
     '../defaults/global-partial.html'
   ),
+};
+
+const PROJECT_REPOSITORIES = {
+  [TYPES['react-app']]: 'cms-react-boilerplate',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -85,6 +89,11 @@ function configureCreateCommand(program) {
       'Theme boilerplate version to use',
       ''
     )
+    .option(
+      '--project-version <project-version>',
+      'Boilerplate version to use',
+      ''
+    )
     .action(async (type, name, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
@@ -97,7 +106,11 @@ function configureCreateCommand(program) {
       }
 
       // TODO: In yargs use `.implies()`
-      if ([TYPES['website-theme'], TYPES.function].includes(type)) {
+      if (
+        [TYPES['website-theme'], TYPES.function, TYPES['react-app']].includes(
+          type
+        )
+      ) {
         dest = name;
       }
 
@@ -127,14 +140,13 @@ function configureCreateCommand(program) {
         case TYPES['website-theme']:
           createTheme(dest, type, program);
           break;
+        case TYPES['react-app']: {
+          createProject(dest, type, PROJECT_REPOSITORIES[type], program);
+          break;
+        }
         case TYPES.function: {
           const functionDefinition = await createFunctionPrompt();
           createFunction(functionDefinition, dest);
-          break;
-        }
-        case TYPES['react-app']: {
-          const reactAppDefinition = await createReactAppPrompt();
-          console.log(reactAppDefinition);
           break;
         }
         default:
