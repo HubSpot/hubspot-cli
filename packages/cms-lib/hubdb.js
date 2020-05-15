@@ -182,7 +182,7 @@ async function clearHubDbTableRows(portalId, tableId) {
     const rowIds = response.objects.map(row => row.id);
     rows = rows.concat(rowIds);
   }
-  await deleteRows(portalId, tableId, rows);
+  return deleteRows(portalId, tableId, rows);
 }
 
 module.exports = {
