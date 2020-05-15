@@ -4,7 +4,7 @@ const {
   promptUser,
   PERSONAL_ACCESS_KEY_FLOW,
   PERSONAL_ACCESS_KEY,
-} = require('@hubspot/cms-cli/lib/prompts');
+} = require('./lib/prompts');
 
 const { HubSpotAuthError } = require('./lib/Errors');
 const {

@@ -17,6 +17,7 @@ const {
   personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
+const { promptUser, PORTAL_NAME } = require('@hubspot/cms-lib/lib/prompts');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -27,7 +28,6 @@ const {
   setLogLevel,
   addTestingOptions,
 } = require('../lib/commonOpts');
-const { promptUser, PORTAL_NAME } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
 const COMMAND_NAME = 'init';

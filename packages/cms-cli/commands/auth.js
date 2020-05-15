@@ -22,6 +22,11 @@ const {
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const {
+  promptUser,
+  OAUTH_FLOW,
+  PORTAL_NAME,
+} = require('@hubspot/cms-lib/lib/prompts');
+const {
   addConfigOptions,
   addLoggerOptions,
   setLogLevel,
@@ -32,7 +37,6 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { promptUser, OAUTH_FLOW, PORTAL_NAME } = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'auth';
