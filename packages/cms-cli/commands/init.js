@@ -14,10 +14,13 @@ const {
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const { promptUser, PORTAL_NAME } = require('@hubspot/cms-lib/lib/prompts');
+const {
+  promptUser,
+  personalAccessKeyPrompt,
+  PORTAL_NAME,
+} = require('@hubspot/cms-lib/lib/prompts');
 const {
   trackCommandUsage,
   addHelpUsageTracking,

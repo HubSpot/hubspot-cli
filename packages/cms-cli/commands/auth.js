@@ -13,7 +13,6 @@ const {
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
-  personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 const {
@@ -23,6 +22,7 @@ const {
 } = require('@hubspot/cms-lib/lib/config');
 const {
   promptUser,
+  personalAccessKeyPrompt,
   OAUTH_FLOW,
   PORTAL_NAME,
 } = require('@hubspot/cms-lib/lib/prompts');
