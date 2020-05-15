@@ -6,7 +6,7 @@ const {
   PERSONAL_ACCESS_KEY,
 } = require('@hubspot/cms-cli/lib/prompts');
 
-const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
+const { HubSpotAuthError } = require('./lib/Errors');
 const {
   getEnv,
   getPortalId,

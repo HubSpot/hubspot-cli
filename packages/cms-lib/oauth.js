@@ -1,4 +1,4 @@
-const OAuth2Manager = require('@hubspot/api-auth-lib/OAuth2Manager');
+const OAuth2Manager = require('./OAuth2Manager');
 const {
   updatePortalConfig,
   writeConfig,

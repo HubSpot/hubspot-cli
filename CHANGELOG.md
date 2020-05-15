@@ -4,7 +4,6 @@ Change Log
 ## 1.1.4
 
  * Option `--qa` is hidden from help text
- * Fixed issue with missing `@hubspot/cms-lib` dependency for `@hubspot/api-auth-lib`
 
 ## 1.1.3
 
