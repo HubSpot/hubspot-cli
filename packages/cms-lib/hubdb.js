@@ -141,6 +141,10 @@ function convertToJSON(table, rows) {
 }
 
 async function downloadHubDbTable(portalId, tableId, dest) {
+  if (fs.pathExistsSync(dest)) {
+    validateJsonFile(dest);
+  }
+
   const table = await fetchTable(portalId, tableId);
 
   let totalRows = null;
