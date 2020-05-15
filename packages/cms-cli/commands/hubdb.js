@@ -100,7 +100,7 @@ function configureHubDbFetchCommand(program) {
         );
         logger.log(`Downloaded HubDB table ${tableId} to ${dest}`);
       } catch (e) {
-        logger.error(e);
+        logErrorInstance(e);
       }
     });
 
@@ -138,7 +138,7 @@ function configureHubDbClearCommand(program) {
           logger.log(`HubDB table ${tableId} is already empty`);
         }
       } catch (e) {
-        logger.error(e);
+        logErrorInstance(e);
       }
     });
 
