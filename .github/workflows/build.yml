@@ -13,6 +13,7 @@ jobs:
     - name: Install deps
       run: |
           yarn install
+          yarn global add madge
     - name: Lint
       run: |
           yarn lint
