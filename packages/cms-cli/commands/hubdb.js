@@ -10,7 +10,9 @@ const { getCwd } = require('@hubspot/cms-lib/path');
 const {
   createHubDbTable,
   downloadHubDbTable,
+  clearHubDbTableRows,
 } = require('@hubspot/cms-lib/hubdb');
+const { publishTable, deleteTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
@@ -30,7 +32,9 @@ function configureHubDbCommand(program) {
     .version(version)
     .description('Manage HubDB tables')
     .command('create <src>', 'create a HubDB table')
-    .command('fetch <tableId> <dest>', 'fetch a HubDB table');
+    .command('fetch <tableId> <dest>', 'fetch a HubDB table')
+    .command('clear <tableId>', 'clear all rows in a HubDB table')
+    .command('delete <tableId>', 'delete a HubDB table');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
@@ -96,7 +100,76 @@ function configureHubDbFetchCommand(program) {
         );
         logger.log(`Downloaded HubDB table ${tableId} to ${dest}`);
       } catch (e) {
-        logger.error(e);
+        logErrorInstance(e);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
+function configureHubDbClearCommand(program) {
+  program
+    .version(version)
+    .description('Clear all rows in a HubDB table')
+    .arguments('<tableId>')
+    .action(async (tableId, command = {}) => {
+      setLogLevel(command);
+      logDebugInfo(command);
+      const { config: configPath } = command;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(command)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(command);
+      try {
+        const draftTable = await clearHubDbTableRows(portalId, tableId);
+        const deletedRowCount = draftTable[0].rowIds.length;
+        if (deletedRowCount > 0) {
+          logger.log(
+            `Removed ${deletedRowCount} rows from HubDB table ${tableId}`
+          );
+          const { rowCount } = await publishTable(portalId, tableId);
+          logger.log(`HubDB table ${tableId} now contains ${rowCount} rows`);
+        } else {
+          logger.log(`HubDB table ${tableId} is already empty`);
+        }
+      } catch (e) {
+        logErrorInstance(e);
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
+function configureHubDbDeleteCommand(program) {
+  program
+    .version(version)
+    .description('Delete HubDB tables')
+    .arguments('<tableId>')
+    .action(async tableId => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(program)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(program);
+
+      try {
+        await deleteTable(portalId, tableId);
+        logger.log(`The table ${tableId} was deleted from ${portalId}`);
+      } catch (e) {
+        logger.error(`Deleting the table ${tableId} failed`);
+        logErrorInstance(e);
       }
     });
 
@@ -109,4 +182,6 @@ module.exports = {
   configureHubDbCommand,
   configureHubDbCreateCommand,
   configureHubDbFetchCommand,
+  configureHubDbClearCommand,
+  configureHubDbDeleteCommand,
 };
