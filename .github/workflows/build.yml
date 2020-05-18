@@ -13,7 +13,6 @@ jobs:
     - name: Install deps
       run: |
           yarn install
-          yarn global add madge
     - name: Lint
       run: |
           yarn lint
@@ -22,4 +21,4 @@ jobs:
           yarn test
     - name: Circular dependency check
       run: |
-          madge --circular packages
+          yarn run madge --circular packages
