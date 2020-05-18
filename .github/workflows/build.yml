@@ -19,3 +19,6 @@ jobs:
     - name: Test
       run: |
           yarn test
+    - name: Circular dependency check
+      run: |
+          madge --circular packages
