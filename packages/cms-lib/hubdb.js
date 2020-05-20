@@ -153,9 +153,9 @@ async function downloadHubDbTable(portalId, tableId, dest) {
       totalRows = response.total;
     }
 
-    count += response.objects.length;
-    offset += response.objects.length;
-    rows = rows.concat(response.objects);
+    count += response.results.length;
+    offset += response.results.length;
+    rows = rows.concat(response.results);
   }
 
   const tableToWrite = JSON.stringify(convertToJSON(table, rows));
@@ -177,9 +177,9 @@ async function clearHubDbTableRows(portalId, tableId) {
       totalRows = response.total;
     }
 
-    count += response.objects.length;
-    offset += response.objects.length;
-    const rowIds = response.objects.map(row => row.id);
+    count += response.results.length;
+    offset += response.results.length;
+    const rowIds = response.results.map(row => row.id);
     rows = rows.concat(rowIds);
   }
   return deleteRows(portalId, tableId, rows);
