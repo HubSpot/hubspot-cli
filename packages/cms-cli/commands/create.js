@@ -114,7 +114,12 @@ function configureCreateCommand(program) {
         dest = name;
       }
 
-      dest = resolveLocalPath(dest);
+      if (dest) {
+        dest = resolveLocalPath(dest);
+      } else {
+        logger.error(`Required argument 'dest' is missing.`);
+        return false;
+      }
 
       try {
         await fs.ensureDir(dest);
