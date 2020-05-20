@@ -62,7 +62,7 @@ async function fetchRows(portalId, tableId, query = {}) {
 
 async function deleteRows(portalId, tableId, rowIds) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/batch/purge`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/purge`,
     body: rowIds,
   });
 }
