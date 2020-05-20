@@ -111,7 +111,7 @@ function configureCreateCommand(program) {
           type
         )
       ) {
-        dest = name;
+        dest = name || type;
       }
 
       dest = resolveLocalPath(dest);
