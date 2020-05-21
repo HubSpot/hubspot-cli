@@ -106,12 +106,16 @@ function configureCreateCommand(program) {
       }
 
       // TODO: In yargs use `.implies()`
-      if (
-        [TYPES['website-theme'], TYPES.function, TYPES['react-app']].includes(
-          type
-        )
-      ) {
-        dest = name || type;
+      switch (type) {
+        case TYPES.function:
+          dest = name;
+          break;
+        case TYPES['website-theme']:
+        case TYPES['react-app']:
+          dest = name || type;
+          break;
+        default:
+          break;
       }
 
       dest = resolveLocalPath(dest);
