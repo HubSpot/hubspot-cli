@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+## 1.1.7
+ * Fix for `hs auth personalaccesskey`
+
 ## 1.1.6
 
  * Add `hs create react-app`
