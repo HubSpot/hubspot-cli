@@ -9,7 +9,6 @@ const {
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const {
   getEnv,
-  getPortalId,
   getPortalConfig,
   updatePortalConfig,
   updateDefaultPortal,
@@ -138,13 +137,8 @@ async function accessTokenForPersonalAccessKey(portalId) {
  */
 const personalAccessKeyPrompt = async ({ env } = {}) => {
   const { name } = await promptUser(PERSONAL_ACCESS_KEY_FLOW);
-  const portalId = getPortalId(name);
   const websiteOrigin = getHubSpotWebsiteOrigin(env || getEnv(name));
-  if (portalId) {
-    open(`${websiteOrigin}/personal-access-key/${portalId}`);
-  } else {
-    open(`${websiteOrigin}/l/personal-access-key`);
-  }
+  open(`${websiteOrigin}/l/personal-access-key`);
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
