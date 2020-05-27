@@ -25,9 +25,11 @@ const {
   addLoggerOptions,
   setLogLevel,
   getPortalId,
+  getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
+const { resolveLocalPath } = require('../lib/filesystem');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -39,10 +41,53 @@ function configureFileManagerCommand(program) {
   program
     .version(version)
     .description('Commands for working with the File Manager')
+    .command('fetch <src> <dest>', 'download files from the file manager')
     .command('upload <src> <dest>', 'upload files to the file manager');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
+}
+
+function configureFileManagerFetchCommand(program) {
+  program
+    .version(version)
+    .description(
+      'Download a folder or file from the HubSpot File Manager to your computer'
+    )
+    .arguments('<src> [dest]')
+    .action(async (src, dest) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+
+      const { config: configPath } = program;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!validateConfig() || !(await validatePortal(program))) {
+        process.exit(1);
+      }
+
+      if (typeof src !== 'string') {
+        logger.error('A source to fetch is required');
+        process.exit(1);
+      }
+
+      dest = resolveLocalPath(dest);
+
+      const portalId = getPortalId(program);
+      const mode = getMode(program);
+
+      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+
+      // Fetch and write file/folder.
+      console.log(dest);
+      // downloadFileOrFolder({ portalId, src, dest, mode, options: program });
+    });
+
+  addConfigOptions(program);
+  addPortalOptions(program);
+  addLoggerOptions(program);
+  addHelpUsageTracking(program, COMMAND_NAME);
 }
 
 function configureFileManagerUploadCommand(program) {
@@ -158,6 +203,7 @@ function configureFileManagerUploadCommand(program) {
 }
 
 module.exports = {
+  configureFileManagerFetchCommand,
   configureFileManagerUploadCommand,
   configureFileManagerCommand,
 };
