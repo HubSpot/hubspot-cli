@@ -12,6 +12,12 @@ const {
   deleteRows,
 } = require('./api/hubdb');
 
+function validateJsonPath(src) {
+  if (path.extname(src) !== '.json') {
+    throw new Error('The HubDB table file must be a ".json" file');
+  }
+}
+
 function validateJsonFile(src) {
   try {
     const stats = fs.statSync(src);
@@ -22,9 +28,7 @@ function validateJsonFile(src) {
     throw new Error(`The "${src}" path is not a path to a file`);
   }
 
-  if (path.extname(src) !== '.json') {
-    throw new Error('The HubDB table file must be a ".json" file');
-  }
+  validateJsonPath(src);
 }
 
 async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
@@ -141,11 +145,15 @@ function convertToJSON(table, rows) {
 }
 
 async function downloadHubDbTable(portalId, tableId, dest) {
-  if (fs.pathExistsSync(dest)) {
-    validateJsonFile(dest);
-  }
-
   const table = await fetchTable(portalId, tableId);
+
+  if (dest && fs.pathExistsSync(dest)) {
+    validateJsonFile(dest);
+  } else if (dest) {
+    validateJsonPath(dest);
+  } else {
+    dest = table.name;
+  }
 
   let totalRows = null;
   let rows = [];
