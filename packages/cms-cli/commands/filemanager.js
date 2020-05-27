@@ -7,7 +7,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
-const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
+const {
+  uploadFolder,
+  downloadFileOrFolder,
+} = require('@hubspot/cms-lib/fileManager');
 const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -25,11 +28,9 @@ const {
   addLoggerOptions,
   setLogLevel,
   getPortalId,
-  getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
-const { resolveLocalPath } = require('../lib/filesystem');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
@@ -72,16 +73,14 @@ function configureFileManagerFetchCommand(program) {
         process.exit(1);
       }
 
-      dest = resolveLocalPath(dest);
+      // dest = resolveLocalPath(dest);
 
       const portalId = getPortalId(program);
-      const mode = getMode(program);
 
-      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+      trackCommandUsage(COMMAND_NAME, null, portalId);
 
       // Fetch and write file/folder.
-      console.log(dest);
-      // downloadFileOrFolder({ portalId, src, dest, mode, options: program });
+      downloadFileOrFolder(portalId, src, dest, program);
     });
 
   addConfigOptions(program);
