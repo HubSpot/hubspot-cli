@@ -58,6 +58,13 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
   }
 }
 
+/**
+ *
+ * @param {number} portalId
+ * @param {object} file
+ * @param {string} dest
+ * @param {string} folderPath
+ */
 async function fetchFile(portalId, file, dest, folderPath) {
   const relativePath = `${folderPath}/${file.name}.${file.extension}`;
   dest = dest || getCwd();
@@ -84,6 +91,12 @@ async function fetchFile(portalId, file, dest, folderPath) {
   );
 }
 
+/**
+ *
+ * @param {number} portalId
+ * @param {string} dest
+ * @param {string} folderPath
+ */
 async function getFolderContents(portalId, dest, folderPath) {
   const files = await getFilesByPath(portalId, folderPath);
   files.objects.forEach(async file => {
