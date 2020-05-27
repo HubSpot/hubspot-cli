@@ -12,7 +12,7 @@ const { logger } = require('./logger');
 const { createIgnoreFilter } = require('./ignoreRules');
 const http = require('./http');
 const escapeRegExp = require('./lib/escapeRegExp');
-const { getCwd, convertToUnixPath } = require('./path');
+const { convertToUnixPath } = require('./path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -67,7 +67,6 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
  */
 async function fetchFile(portalId, file, dest, folderPath) {
   const relativePath = `${folderPath}/${file.name}.${file.extension}`;
-  dest = dest || getCwd();
   const destPath = convertToUnixPath(path.join(dest, relativePath));
 
   let writeStream;

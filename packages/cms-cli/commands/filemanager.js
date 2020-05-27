@@ -21,6 +21,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { validateSrcAndDestPaths } = require('@hubspot/cms-lib/modules');
 const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
+const { resolveLocalPath } = require('../lib/filesystem');
 
 const {
   addConfigOptions,
@@ -73,7 +74,7 @@ function configureFileManagerFetchCommand(program) {
         process.exit(1);
       }
 
-      // dest = resolveLocalPath(dest);
+      dest = resolveLocalPath(dest);
 
       const portalId = getPortalId(program);
 
