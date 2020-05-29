@@ -97,15 +97,15 @@ async function fetchFile(portalId, file, dest, folderPath) {
  * @param {string} folderPath
  */
 async function getFolderContents(portalId, dest, folderPath) {
-  const files = await getFilesByPath(portalId, folderPath);
-  files.objects.forEach(async file => {
-    fetchFile(portalId, file, dest, folderPath);
-  });
+  const { objects: files } = await getFilesByPath(portalId, folderPath);
+  for (const file of files) {
+    await fetchFile(portalId, file, dest, folderPath);
+  }
 
-  const folders = await getFoldersByPath(portalId, folderPath);
-  folders.objects.forEach(file => {
-    getFolderContents(file.full_path);
-  });
+  const { objects: folders } = await getFoldersByPath(portalId, folderPath);
+  for (const folder of folders) {
+    await getFolderContents(portalId, dest, folder.full_path);
+  }
 }
 
 /**
