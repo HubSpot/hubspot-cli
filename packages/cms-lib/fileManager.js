@@ -66,7 +66,7 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
  * @param {string} folderPath
  */
 async function fetchFile(portalId, file, dest, folderPath) {
-  const relativePath = `${folderPath}/${file.name}.${file.extension}`;
+  const relativePath = path.join(folderPath, `${file.name}.${file.extension}`);
   const destPath = convertToUnixPath(path.join(dest, relativePath));
 
   let writeStream;
