@@ -37,7 +37,8 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 
-const COMMAND_NAME = 'filemanager-upload';
+const UPLOAD_COMMAND_NAME = 'filemanager-upload';
+const FETCH_COMMAND_NAME = 'filemanager-fetch';
 
 function configureFileManagerCommand(program) {
   program
@@ -78,7 +79,7 @@ function configureFileManagerFetchCommand(program) {
 
       const portalId = getPortalId(program);
 
-      trackCommandUsage(COMMAND_NAME, null, portalId);
+      trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
 
       // Fetch and write file/folder.
       downloadFileOrFolder(portalId, src, dest, program);
@@ -87,7 +88,7 @@ function configureFileManagerFetchCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
+  addHelpUsageTracking(program, FETCH_COMMAND_NAME);
 }
 
 function configureFileManagerUploadCommand(program) {
@@ -129,7 +130,7 @@ function configureFileManagerUploadCommand(program) {
       }
       const normalizedDest = convertToUnixPath(dest);
       trackCommandUsage(
-        COMMAND_NAME,
+        UPLOAD_COMMAND_NAME,
         { type: stats.isFile() ? 'file' : 'folder' },
         portalId
       );
@@ -199,7 +200,7 @@ function configureFileManagerUploadCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
+  addHelpUsageTracking(program, UPLOAD_COMMAND_NAME);
 }
 
 module.exports = {
