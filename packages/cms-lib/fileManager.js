@@ -12,7 +12,7 @@ const { logger } = require('./logger');
 const { createIgnoreFilter } = require('./ignoreRules');
 const http = require('./http');
 const escapeRegExp = require('./lib/escapeRegExp');
-const { convertToUnixPath } = require('./path');
+const { convertToUnixPath, convertToLocalFileSystemPath } = require('./path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -36,7 +36,9 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
   for (let index = 0; index < len; index++) {
     const file = filesToUpload[index];
     const relativePath = file.replace(regex, '');
-    const destPath = convertToUnixPath(path.join(dest, relativePath));
+    const destPath = convertToLocalFileSystemPath(
+      path.join(dest, relativePath)
+    );
     logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
     try {
       await uploadFile(portalId, file, destPath);
