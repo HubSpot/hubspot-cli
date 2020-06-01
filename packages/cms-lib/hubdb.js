@@ -148,10 +148,8 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   const table = await fetchTable(portalId, tableId);
 
   if (dest && fs.pathExistsSync(dest)) {
-    console.log('file');
     validateJsonFile(dest);
   } else if (dest) {
-    console.log('path', dest);
     validateJsonPath(dest);
   } else {
     dest = table.name;
