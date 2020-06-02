@@ -17,6 +17,8 @@ const {
   ApiErrorContext,
   logApiUploadErrorInstance,
   isFatalError,
+  FileSystemErrorContext,
+  logFileSystemErrorInstance,
 } = require('./errorHandlers');
 
 /**
@@ -68,15 +70,23 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
 async function fetchFile(portalId, file, dest, folderPath) {
   const relativePath = path.join(folderPath, `${file.name}.${file.extension}`);
   const destPath = convertToLocalFileSystemPath(path.join(dest, relativePath));
-
+  const logFsError = err => {
+    logFileSystemErrorInstance(
+      err,
+      new FileSystemErrorContext({
+        destPath,
+        portalId,
+        write: true,
+      })
+    );
+  };
   let writeStream;
 
   try {
     await fs.ensureFile(destPath);
     writeStream = fs.createWriteStream(destPath, { encoding: 'binary' });
   } catch (err) {
-    console.log(err);
-    // logFsError(err);
+    logFsError(err);
     throw err;
   }
 
