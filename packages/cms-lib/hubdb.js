@@ -147,12 +147,12 @@ function convertToJSON(table, rows) {
 async function downloadHubDbTable(portalId, tableId, dest) {
   const table = await fetchTable(portalId, tableId);
 
+  dest = path.resolve(dest || `${table.name}.hubdb.json`);
+
   if (dest && fs.pathExistsSync(dest)) {
     validateJsonFile(dest);
-  } else if (dest) {
-    validateJsonPath(dest);
   } else {
-    dest = `${table.name}.hubdb.json`;
+    validateJsonPath(dest);
   }
 
   let totalRows = null;
@@ -176,6 +176,8 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   });
 
   await fs.outputFile(dest, tableJson);
+
+  return { filePath: dest };
 }
 
 async function clearHubDbTableRows(portalId, tableId) {

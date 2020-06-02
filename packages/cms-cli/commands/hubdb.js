@@ -76,7 +76,7 @@ function configureHubDbFetchCommand(program) {
   program
     .version(version)
     .description('Fetch a HubDB table')
-    .arguments('<tableId> <dest>')
+    .arguments('<tableId> [dest]')
     .action(async (tableId, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
@@ -89,12 +89,9 @@ function configureHubDbFetchCommand(program) {
       }
       const portalId = getPortalId(command);
       try {
-        await downloadHubDbTable(
-          portalId,
-          tableId,
-          path.resolve(getCwd(), dest)
-        );
-        logger.log(`Downloaded HubDB table ${tableId} to ${dest}`);
+        const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
+
+        logger.log(`Downloaded HubDB table ${tableId} to ${filePath}`);
       } catch (e) {
         logger.error(e);
       }
