@@ -149,7 +149,7 @@ async function downloadHubDbTable(portalId, tableId, dest) {
 
   dest = path.resolve(dest || `${table.name}.hubdb.json`);
 
-  if (dest && fs.pathExistsSync(dest)) {
+  if (fs.pathExistsSync(dest)) {
     validateJsonFile(dest);
   } else {
     validateJsonPath(dest);
