@@ -152,7 +152,7 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   } else if (dest) {
     validateJsonPath(dest);
   } else {
-    dest = table.name;
+    dest = `${table.name}.hubdb.json`;
   }
 
   let totalRows = null;
