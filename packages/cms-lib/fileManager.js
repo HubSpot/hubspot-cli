@@ -93,11 +93,36 @@ async function fetchFile(portalId, file, dest, folderPath) {
 /**
  *
  * @param {number} portalId
+ * @param {string} folderPath
+ */
+async function getAllPagedFiles(portalId, folderPath) {
+  let totalFiles = null;
+  let files = [];
+  let count = 0;
+  let offset = 0;
+  while (totalFiles === null || count < totalFiles) {
+    const response = await getFilesByPath(portalId, folderPath, { offset });
+
+    if (totalFiles === null) {
+      totalFiles = response.total;
+    }
+
+    count += response.objects.length;
+    offset += response.objects.length;
+    files = files.concat(response.objects);
+  }
+  return files;
+}
+
+/**
+ *
+ * @param {number} portalId
  * @param {string} dest
  * @param {string} folderPath
  */
 async function getFolderContents(portalId, dest, folderPath) {
-  const { objects: files } = await getFilesByPath(portalId, folderPath);
+  const files = await getAllPagedFiles(portalId, folderPath);
+
   for (const file of files) {
     await fetchFile(portalId, file, dest, folderPath);
   }
