@@ -156,10 +156,19 @@ async function downloadFileOrFolder(portalId, remotePath, localDest) {
 
   if (file) {
     const folderPath = path.dirname(remotePath);
-
-    fetchFile(portalId, file, localDest, folderPath);
+    try {
+      await fetchFile(portalId, file, localDest, folderPath);
+      logger.log(`File ${remotePath} was downloaded to ${localDest}`);
+    } catch (err) {
+      console.log(err);
+    }
   } else if (folder) {
-    getFolderContents(portalId, localDest, folder.full_path);
+    try {
+      await getFolderContents(portalId, localDest, folder.full_path);
+      logger.log(`Folder ${remotePath} was downloaded to ${localDest}`);
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
