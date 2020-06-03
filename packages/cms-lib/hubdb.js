@@ -11,6 +11,7 @@ const {
   publishTable,
   deleteRows,
 } = require('./api/hubdb');
+const { getCwd } = require('@hubspot/cms-lib/path');
 
 function validateJsonPath(src) {
   if (path.extname(src) !== '.json') {
@@ -147,7 +148,7 @@ function convertToJSON(table, rows) {
 async function downloadHubDbTable(portalId, tableId, dest) {
   const table = await fetchTable(portalId, tableId);
 
-  dest = path.resolve(dest || `${table.name}.hubdb.json`);
+  dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
 
   if (fs.pathExistsSync(dest)) {
     validateJsonFile(dest);
