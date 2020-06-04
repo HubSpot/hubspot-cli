@@ -7,7 +7,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
-const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
+const {
+  uploadFolder,
+  downloadFileOrFolder,
+} = require('@hubspot/cms-lib/fileManager');
 const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -18,6 +21,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { validateSrcAndDestPaths } = require('@hubspot/cms-lib/modules');
 const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
+const { resolveLocalPath } = require('../lib/filesystem');
 
 const {
   addConfigOptions,
@@ -33,16 +37,58 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 
-const COMMAND_NAME = 'filemanager-upload';
+const UPLOAD_COMMAND_NAME = 'filemanager-upload';
+const FETCH_COMMAND_NAME = 'filemanager-fetch';
 
 function configureFileManagerCommand(program) {
   program
     .version(version)
     .description('Commands for working with the File Manager')
+    .command('fetch <src> <dest>', 'download files from the file manager')
     .command('upload <src> <dest>', 'upload files to the file manager');
 
   addLoggerOptions(program);
   addHelpUsageTracking(program);
+}
+
+function configureFileManagerFetchCommand(program) {
+  program
+    .version(version)
+    .description(
+      'Download a folder or file from the HubSpot File Manager to your computer'
+    )
+    .arguments('<src> [dest]')
+    .action(async (src, dest) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+
+      const { config: configPath } = program;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!validateConfig() || !(await validatePortal(program))) {
+        process.exit(1);
+      }
+
+      if (typeof src !== 'string') {
+        logger.error('A source to fetch is required');
+        process.exit(1);
+      }
+
+      dest = resolveLocalPath(dest);
+
+      const portalId = getPortalId(program);
+
+      trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
+
+      // Fetch and write file/folder.
+      downloadFileOrFolder(portalId, src, dest, program);
+    });
+
+  addConfigOptions(program);
+  addPortalOptions(program);
+  addLoggerOptions(program);
+  addHelpUsageTracking(program, FETCH_COMMAND_NAME);
 }
 
 function configureFileManagerUploadCommand(program) {
@@ -84,7 +130,7 @@ function configureFileManagerUploadCommand(program) {
       }
       const normalizedDest = convertToUnixPath(dest);
       trackCommandUsage(
-        COMMAND_NAME,
+        UPLOAD_COMMAND_NAME,
         { type: stats.isFile() ? 'file' : 'folder' },
         portalId
       );
@@ -154,10 +200,11 @@ function configureFileManagerUploadCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
+  addHelpUsageTracking(program, UPLOAD_COMMAND_NAME);
 }
 
 module.exports = {
+  configureFileManagerFetchCommand,
   configureFileManagerUploadCommand,
   configureFileManagerCommand,
 };

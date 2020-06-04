@@ -1,15 +1,25 @@
+const fs = require('fs-extra');
 const path = require('path');
 
-const { uploadFile } = require('./api/fileManager');
+const {
+  uploadFile,
+  getStat,
+  getFilesByPath,
+  getFoldersByPath,
+} = require('./api/fileManager');
 const { walk } = require('./lib/walk');
 const { logger } = require('./logger');
 const { createIgnoreFilter } = require('./ignoreRules');
+const http = require('./http');
 const escapeRegExp = require('./lib/escapeRegExp');
-const { convertToUnixPath } = require('./path');
+const { convertToUnixPath, convertToLocalFileSystemPath } = require('./path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
   isFatalError,
+  FileSystemErrorContext,
+  logFileSystemErrorInstance,
+  logErrorInstance,
 } = require('./errorHandlers');
 
 /**
@@ -51,6 +61,123 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
   }
 }
 
+/**
+ *
+ * @param {number} portalId
+ * @param {object} file
+ * @param {string} dest
+ * @param {string} folderPath
+ */
+async function downloadFile(portalId, file, dest, folderPath) {
+  const relativePath = path.join(folderPath, `${file.name}.${file.extension}`);
+  const destPath = convertToLocalFileSystemPath(path.join(dest, relativePath));
+  const logFsError = err => {
+    logFileSystemErrorInstance(
+      err,
+      new FileSystemErrorContext({
+        destPath,
+        portalId,
+        write: true,
+      })
+    );
+  };
+  let writeStream;
+
+  try {
+    await fs.ensureFile(destPath);
+    writeStream = fs.createWriteStream(destPath, { encoding: 'binary' });
+  } catch (err) {
+    logFsError(err);
+    throw err;
+  }
+
+  try {
+    await http.getOctetStream(
+      portalId,
+      {
+        baseUrl: file.url,
+        uri: '',
+      },
+      writeStream
+    );
+  } catch (err) {
+    logErrorInstance(err);
+  }
+}
+
+/**
+ *
+ * @param {number} portalId
+ * @param {string} folderPath
+ */
+async function getAllPagedFiles(portalId, folderPath) {
+  let totalFiles = null;
+  let files = [];
+  let count = 0;
+  let offset = 0;
+  while (totalFiles === null || count < totalFiles) {
+    const response = await getFilesByPath(portalId, folderPath, { offset });
+
+    if (totalFiles === null) {
+      totalFiles = response.total;
+    }
+
+    count += response.objects.length;
+    offset += response.objects.length;
+    files = files.concat(response.objects);
+  }
+  return files;
+}
+
+/**
+ *
+ * @param {number} portalId
+ * @param {string} dest
+ * @param {string} folderPath
+ */
+async function fetchFolderContents(portalId, dest, folderPath) {
+  const files = await getAllPagedFiles(portalId, folderPath);
+
+  for (const file of files) {
+    await downloadFile(portalId, file, dest, folderPath);
+  }
+
+  const { objects: folders } = await getFoldersByPath(portalId, folderPath);
+  for (const folder of folders) {
+    await fetchFolderContents(portalId, dest, folder.full_path);
+  }
+}
+
+/**
+ * Fetch a file/folder and write to local file system.
+ *
+ * @param {number} portalId
+ * @param {string} src
+ * @param {string} dest
+ * @param {object} options
+ */
+async function downloadFileOrFolder(portalId, remotePath, localDest) {
+  const { file, folder } = await getStat(portalId, remotePath);
+
+  if (file) {
+    const folderPath = path.dirname(remotePath);
+    try {
+      await downloadFile(portalId, file, localDest, folderPath);
+      logger.log(`File ${remotePath} was downloaded to ${localDest}`);
+    } catch (err) {
+      logErrorInstance(err);
+    }
+  } else if (folder) {
+    try {
+      await fetchFolderContents(portalId, localDest, folder.full_path);
+      logger.log(`Folder ${remotePath} was downloaded to ${localDest}`);
+    } catch (err) {
+      logErrorInstance(err);
+    }
+  }
+}
+
 module.exports = {
   uploadFolder,
+  downloadFileOrFolder,
 };
