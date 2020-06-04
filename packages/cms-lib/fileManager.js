@@ -68,7 +68,7 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
  * @param {string} dest
  * @param {string} folderPath
  */
-async function fetchFile(portalId, file, dest, folderPath) {
+async function downloadFile(portalId, file, dest, folderPath) {
   const relativePath = path.join(folderPath, `${file.name}.${file.extension}`);
   const destPath = convertToLocalFileSystemPath(path.join(dest, relativePath));
   const logFsError = err => {
@@ -131,16 +131,16 @@ async function getAllPagedFiles(portalId, folderPath) {
  * @param {string} dest
  * @param {string} folderPath
  */
-async function getFolderContents(portalId, dest, folderPath) {
+async function fetchFolderContents(portalId, dest, folderPath) {
   const files = await getAllPagedFiles(portalId, folderPath);
 
   for (const file of files) {
-    await fetchFile(portalId, file, dest, folderPath);
+    await downloadFile(portalId, file, dest, folderPath);
   }
 
   const { objects: folders } = await getFoldersByPath(portalId, folderPath);
   for (const folder of folders) {
-    await getFolderContents(portalId, dest, folder.full_path);
+    await fetchFolderContents(portalId, dest, folder.full_path);
   }
 }
 
@@ -158,14 +158,14 @@ async function downloadFileOrFolder(portalId, remotePath, localDest) {
   if (file) {
     const folderPath = path.dirname(remotePath);
     try {
-      await fetchFile(portalId, file, localDest, folderPath);
+      await downloadFile(portalId, file, localDest, folderPath);
       logger.log(`File ${remotePath} was downloaded to ${localDest}`);
     } catch (err) {
       logErrorInstance(err);
     }
   } else if (folder) {
     try {
-      await getFolderContents(portalId, localDest, folder.full_path);
+      await fetchFolderContents(portalId, localDest, folder.full_path);
       logger.log(`Folder ${remotePath} was downloaded to ${localDest}`);
     } catch (err) {
       logErrorInstance(err);
