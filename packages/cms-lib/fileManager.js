@@ -91,14 +91,18 @@ async function downloadFile(portalId, file, dest, folderPath) {
     throw err;
   }
 
-  await http.getOctetStream(
-    portalId,
-    {
-      baseUrl: file.url,
-      uri: '',
-    },
-    writeStream
-  );
+  try {
+    await http.getOctetStream(
+      portalId,
+      {
+        baseUrl: file.url,
+        uri: '',
+      },
+      writeStream
+    );
+  } catch (err) {
+    logErrorInstance(err);
+  }
 }
 
 /**
