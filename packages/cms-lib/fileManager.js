@@ -19,6 +19,7 @@ const {
   isFatalError,
   FileSystemErrorContext,
   logFileSystemErrorInstance,
+  logErrorInstance,
 } = require('./errorHandlers');
 
 /**
@@ -160,14 +161,14 @@ async function downloadFileOrFolder(portalId, remotePath, localDest) {
       await fetchFile(portalId, file, localDest, folderPath);
       logger.log(`File ${remotePath} was downloaded to ${localDest}`);
     } catch (err) {
-      console.log(err);
+      logErrorInstance(err);
     }
   } else if (folder) {
     try {
       await getFolderContents(portalId, localDest, folder.full_path);
       logger.log(`Folder ${remotePath} was downloaded to ${localDest}`);
     } catch (err) {
-      console.log(err);
+      logErrorInstance(err);
     }
   }
 }
