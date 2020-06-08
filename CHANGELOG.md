@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+## 1.1.7
+ * Fix for `hs auth personalaccesskey`
+
+## 1.1.6
+
+ * Add `hs create react-app`
+ * Add `hs hubdb clear` and `hs hubdb delete`
+ * Add `madge` to check for circular dependencies
+
+## 1.1.5
+
+ * Fix issues with `hs init` and `hs auth` caused by hiding `--qa` option
+
 ## 1.1.4
 
  * Option `--qa` is hidden from help text

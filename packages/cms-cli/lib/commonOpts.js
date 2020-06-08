@@ -35,20 +35,7 @@ const addModeOptions = (program, { read, write }) => {
 };
 
 const addTestingOptions = program => {
-  const qaFlagOption = '--qa';
-  program.option(qaFlagOption, 'run command in qa mode', false);
-
-  // This allows us to hide the output of this option in the help text
-  // because commander does not support hiding it
-  // see https://github.com/tj/commander.js/issues/811
-  program.help(output => {
-    return output
-      .split('\n')
-      .filter(
-        helpTextLineContent => helpTextLineContent.indexOf(qaFlagOption) === -1
-      )
-      .join('\n');
-  });
+  program.option('--qa', 'run command in qa mode', false);
 };
 
 const setLogLevel = (options = {}) => {

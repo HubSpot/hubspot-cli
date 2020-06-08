@@ -7,7 +7,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { createTheme } = require('@hubspot/cms-lib/themes');
+const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
@@ -28,6 +28,7 @@ const TYPES = {
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
+  'react-app': 'react-app',
 };
 
 const ASSET_PATHS = {
@@ -37,6 +38,11 @@ const ASSET_PATHS = {
     __dirname,
     '../defaults/global-partial.html'
   ),
+};
+
+const PROJECT_REPOSITORIES = {
+  [TYPES['react-app']]: 'cms-react-boilerplate',
+  [TYPES['website-theme']]: 'cms-theme-boilerplate',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -83,6 +89,11 @@ function configureCreateCommand(program) {
       'Theme boilerplate version to use',
       ''
     )
+    .option(
+      '--project-version <project-version>',
+      'Boilerplate version to use',
+      ''
+    )
     .action(async (type, name, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
@@ -95,8 +106,16 @@ function configureCreateCommand(program) {
       }
 
       // TODO: In yargs use `.implies()`
-      if ([TYPES['website-theme'], TYPES.function].includes(type)) {
-        dest = name;
+      switch (type) {
+        case TYPES.function:
+          dest = name;
+          break;
+        case TYPES['website-theme']:
+        case TYPES['react-app']:
+          dest = name || type;
+          break;
+        default:
+          break;
       }
 
       dest = resolveLocalPath(dest);
@@ -123,8 +142,12 @@ function configureCreateCommand(program) {
           createTemplate(name, dest, type);
           break;
         case TYPES['website-theme']:
-          createTheme(dest, type, program);
+          createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', program);
           break;
+        case TYPES['react-app']: {
+          createProject(dest, type, PROJECT_REPOSITORIES[type], '', program);
+          break;
+        }
         case TYPES.function: {
           const functionDefinition = await createFunctionPrompt();
           createFunction(functionDefinition, dest);

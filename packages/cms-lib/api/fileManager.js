@@ -25,6 +25,27 @@ async function uploadFile(portalId, src, dest) {
   });
 }
 
+async function getStat(portalId, src) {
+  return http.get(portalId, {
+    uri: `${FILE_MANAGER_API_PATH}/files/stat/${src}`,
+  });
+}
+
+async function getFilesByPath(portalId, src) {
+  return http.get(portalId, {
+    uri: `${FILE_MANAGER_API_PATH}/files/path/${src}`,
+  });
+}
+
+async function getFoldersByPath(portalId, src) {
+  return http.get(portalId, {
+    uri: `${FILE_MANAGER_API_PATH}/folders/path/${src}`,
+  });
+}
+
 module.exports = {
   uploadFile,
+  getStat,
+  getFilesByPath,
+  getFoldersByPath,
 };

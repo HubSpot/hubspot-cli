@@ -11,6 +11,13 @@ const {
   publishTable,
   deleteRows,
 } = require('./api/hubdb');
+const { getCwd } = require('@hubspot/cms-lib/path');
+
+function validateJsonPath(src) {
+  if (path.extname(src) !== '.json') {
+    throw new Error('The HubDB table file must be a ".json" file');
+  }
+}
 
 function validateJsonFile(src) {
   try {
@@ -22,9 +29,7 @@ function validateJsonFile(src) {
     throw new Error(`The "${src}" path is not a path to a file`);
   }
 
-  if (path.extname(src) !== '.json') {
-    throw new Error('The HubDB table file must be a ".json" file');
-  }
+  validateJsonPath(src);
 }
 
 async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
@@ -143,6 +148,14 @@ function convertToJSON(table, rows) {
 async function downloadHubDbTable(portalId, tableId, dest) {
   const table = await fetchTable(portalId, tableId);
 
+  dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
+
+  if (fs.pathExistsSync(dest)) {
+    validateJsonFile(dest);
+  } else {
+    validateJsonPath(dest);
+  }
+
   let totalRows = null;
   let rows = [];
   let count = 0;
@@ -163,7 +176,9 @@ async function downloadHubDbTable(portalId, tableId, dest) {
     parser: 'json',
   });
 
-  await fs.writeFileSync(dest, tableJson);
+  await fs.outputFile(dest, tableJson);
+
+  return { filePath: dest };
 }
 
 async function clearHubDbTableRows(portalId, tableId) {
@@ -182,7 +197,7 @@ async function clearHubDbTableRows(portalId, tableId) {
     const rowIds = response.objects.map(row => row.id);
     rows = rows.concat(rowIds);
   }
-  await deleteRows(portalId, tableId, rows);
+  return deleteRows(portalId, tableId, rows);
 }
 
 module.exports = {
