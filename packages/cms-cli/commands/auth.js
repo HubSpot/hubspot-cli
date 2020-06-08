@@ -13,7 +13,6 @@ const {
 } = require('@hubspot/cms-lib/lib/constants');
 const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
-  personalAccessKeyPrompt,
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 const {
@@ -32,7 +31,12 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const { promptUser, OAUTH_FLOW, PORTAL_NAME } = require('../lib/prompts');
+const {
+  promptUser,
+  personalAccessKeyPrompt,
+  OAUTH_FLOW,
+  PORTAL_NAME,
+} = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'auth';
