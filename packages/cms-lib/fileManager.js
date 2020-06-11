@@ -100,6 +100,7 @@ async function downloadFile(portalId, file, dest, folderPath) {
       },
       writeStream
     );
+    logger.log(`Wrote file "${destPath}"`);
   } catch (err) {
     logErrorInstance(err);
   }
@@ -160,9 +161,8 @@ async function downloadFileOrFolder(portalId, remotePath, localDest) {
   const { file, folder } = await getStat(portalId, remotePath);
 
   if (file) {
-    const folderPath = path.dirname(remotePath);
     try {
-      await downloadFile(portalId, file, localDest, folderPath);
+      await downloadFile(portalId, file, localDest, '');
       logger.log(`File ${remotePath} was downloaded to ${localDest}`);
     } catch (err) {
       logErrorInstance(err);
