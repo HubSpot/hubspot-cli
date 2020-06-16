@@ -205,7 +205,7 @@ async function downloadFileOrFolder(portalId, src, dest, options) {
     try {
       await downloadFile(portalId, file, dest, options);
       logger.success(
-        'Fetch of file "%s" to "%s" in the File Manager is complete',
+        'Completed fetch of file "%s" to "%s" from the File Manager',
         src,
         dest
       );
@@ -226,7 +226,7 @@ async function downloadFileOrFolder(portalId, src, dest, options) {
           : dest;
       await fetchFolderContents(portalId, folder, rootPath, options);
       logger.success(
-        'Fetch of folder "%s" to "%s" in the File Manager is complete',
+        'Completed fetch of folder "%s" to "%s" from the File Manager',
         src,
         dest
       );
