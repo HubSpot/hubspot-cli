@@ -12,7 +12,11 @@ const { logger } = require('./logger');
 const { createIgnoreFilter } = require('./ignoreRules');
 const http = require('./http');
 const escapeRegExp = require('./lib/escapeRegExp');
-const { convertToUnixPath, convertToLocalFileSystemPath } = require('./path');
+const {
+  getCwd,
+  convertToUnixPath,
+  convertToLocalFileSystemPath,
+} = require('./path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -40,7 +44,12 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
     const file = filesToUpload[index];
     const relativePath = file.replace(regex, '');
     const destPath = convertToUnixPath(path.join(dest, relativePath));
-    logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
+    logger.debug(
+      'Uploading files from "%s" to "%s" in the File Manager of portal %s',
+      file,
+      destPath,
+      portalId
+    );
     try {
       await uploadFile(portalId, file, destPath);
       logger.log('Uploaded file "%s" to "%s"', file, destPath);
@@ -62,15 +71,38 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
 }
 
 /**
+ * @private
+ * @async
+ * @param {boolean} input
+ * @param {string} filepath
+ * @returns {Promise<boolean}
+ */
+async function skipExisting(overwrite, filepath) {
+  if (overwrite) {
+    return false;
+  }
+  if (await fs.pathExists(filepath)) {
+    logger.log('Skipped existing "%s"', filepath);
+    return true;
+  }
+  return false;
+}
+
+/**
  *
  * @param {number} portalId
  * @param {object} file
  * @param {string} dest
- * @param {string} folderPath
+ * @param {object} options
  */
-async function downloadFile(portalId, file, dest, folderPath) {
-  const relativePath = path.join(folderPath, `${file.name}.${file.extension}`);
-  const destPath = convertToLocalFileSystemPath(path.join(dest, relativePath));
+async function downloadFile(portalId, file, dest, options) {
+  const fileName = `${file.name}.${file.extension}`;
+  const destPath = convertToLocalFileSystemPath(path.join(dest, fileName));
+
+  if (await skipExisting(options.overwrite, destPath)) {
+    return;
+  }
+
   const logFsError = err => {
     logFileSystemErrorInstance(
       err,
@@ -100,6 +132,7 @@ async function downloadFile(portalId, file, dest, folderPath) {
       },
       writeStream
     );
+    logger.log(`Wrote file "${destPath}"`);
   } catch (err) {
     logErrorInstance(err);
   }
@@ -132,19 +165,23 @@ async function getAllPagedFiles(portalId, folderPath) {
 /**
  *
  * @param {number} portalId
+ * @param {object} folder
  * @param {string} dest
- * @param {string} folderPath
+ * @param {object} options
  */
-async function fetchFolderContents(portalId, dest, folderPath) {
-  const files = await getAllPagedFiles(portalId, folderPath);
-
+async function fetchFolderContents(portalId, folder, dest, options) {
+  const files = await getAllPagedFiles(portalId, folder.full_path);
   for (const file of files) {
-    await downloadFile(portalId, file, dest, folderPath);
+    await downloadFile(portalId, file, dest, options);
   }
 
-  const { objects: folders } = await getFoldersByPath(portalId, folderPath);
+  const { objects: folders } = await getFoldersByPath(
+    portalId,
+    folder.full_path
+  );
   for (const folder of folders) {
-    await fetchFolderContents(portalId, dest, folder.full_path);
+    const nestedFolder = path.join(dest, folder.name);
+    await fetchFolderContents(portalId, folder, nestedFolder, options);
   }
 }
 
@@ -156,23 +193,45 @@ async function fetchFolderContents(portalId, dest, folderPath) {
  * @param {string} dest
  * @param {object} options
  */
-async function downloadFileOrFolder(portalId, remotePath, localDest) {
-  const { file, folder } = await getStat(portalId, remotePath);
-
+async function downloadFileOrFolder(portalId, src, dest, options) {
+  const { file, folder } = await getStat(portalId, src);
   if (file) {
-    const folderPath = path.dirname(remotePath);
+    logger.log(
+      'Fetching file from "%s" to "%s" in the File Manager of portal %s',
+      src,
+      dest,
+      portalId
+    );
     try {
-      await downloadFile(portalId, file, localDest, folderPath);
-      logger.log(`File ${remotePath} was downloaded to ${localDest}`);
+      await downloadFile(portalId, file, dest, options);
+      logger.success(
+        'Completed fetch of file "%s" to "%s" from the File Manager',
+        src,
+        dest
+      );
     } catch (err) {
       logErrorInstance(err);
     }
   } else if (folder) {
+    logger.log(
+      'Fetching files from "%s" to "%s" in the File Manager of portal %s',
+      src,
+      dest,
+      portalId
+    );
     try {
-      await fetchFolderContents(portalId, localDest, folder.full_path);
-      logger.log(`Folder ${remotePath} was downloaded to ${localDest}`);
+      const rootPath =
+        dest === getCwd()
+          ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
+          : dest;
+      await fetchFolderContents(portalId, folder, rootPath, options);
+      logger.success(
+        'Completed fetch of folder "%s" to "%s" from the File Manager',
+        src,
+        dest
+      );
     } catch (err) {
-      logErrorInstance(err);
+      logger.error('Failed fetch of folder "%s" to "%s"', src, dest);
     }
   }
 }

@@ -27,6 +27,7 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
+  addOverwriteOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -85,6 +86,7 @@ function configureFileManagerFetchCommand(program) {
       downloadFileOrFolder(portalId, src, dest, program);
     });
 
+  addOverwriteOptions(program);
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
