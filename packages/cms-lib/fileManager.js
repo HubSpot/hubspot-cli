@@ -180,8 +180,8 @@ async function fetchFolderContents(portalId, folder, dest, options) {
     folder.full_path
   );
   for (const folder of folders) {
-    const subFolder = path.join(dest, folder.name);
-    await fetchFolderContents(portalId, folder, subFolder, options);
+    const nestedFolder = path.join(dest, folder.name);
+    await fetchFolderContents(portalId, folder, nestedFolder, options);
   }
 }
 
