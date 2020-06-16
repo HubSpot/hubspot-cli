@@ -45,23 +45,16 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
     const relativePath = file.replace(regex, '');
     const destPath = convertToUnixPath(path.join(dest, relativePath));
     logger.debug(
-      'Attempting to upload file "%s" to file manager path "%s"',
+      'Uploading files from "%s" to "%s" in the File Manager of portal %s',
       file,
-      destPath
+      destPath,
+      portalId
     );
     try {
       await uploadFile(portalId, file, destPath);
-      logger.log(
-        'Uploaded file "%s" to file manager path "%s"',
-        file,
-        destPath
-      );
+      logger.log('Uploaded file "%s" to "%s"', file, destPath);
     } catch (error) {
-      logger.error(
-        'Uploading file "%s" to file manager path "%s" failed',
-        file,
-        destPath
-      );
+      logger.error('Uploading file "%s" to "%s" failed', file, destPath);
       if (isFatalError(error)) {
         throw error;
       }
@@ -203,10 +196,16 @@ async function fetchFolderContents(portalId, folder, dest, options) {
 async function downloadFileOrFolder(portalId, src, dest, options) {
   const { file, folder } = await getStat(portalId, src);
   if (file) {
+    logger.log(
+      'Fetching file from "%s" to "%s" in the File Manager of portal %s',
+      src,
+      dest,
+      portalId
+    );
     try {
       await downloadFile(portalId, file, dest, options);
-      logger.log(
-        'Completed fetch of file manager file "%s" to "%s"',
+      logger.success(
+        'Fetch of file "%s" to "%s" in the File Manager is complete',
         src,
         dest
       );
@@ -214,23 +213,25 @@ async function downloadFileOrFolder(portalId, src, dest, options) {
       logErrorInstance(err);
     }
   } else if (folder) {
+    logger.log(
+      'Fetching files from "%s" to "%s" in the File Manager of portal %s',
+      src,
+      dest,
+      portalId
+    );
     try {
       const rootPath =
         dest === getCwd()
           ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
           : dest;
       await fetchFolderContents(portalId, folder, rootPath, options);
-      logger.log(
-        'Completed fetch of file manager folder "%s" to "%s"',
+      logger.success(
+        'Fetch of folder "%s" to "%s" in the File Manager is complete',
         src,
         dest
       );
     } catch (err) {
-      logger.error(
-        'Failed fetch of file manager folder "%s" to "%s"',
-        src,
-        dest
-      );
+      logger.error('Failed fetch of folder "%s" to "%s"', src, dest);
     }
   }
 }
