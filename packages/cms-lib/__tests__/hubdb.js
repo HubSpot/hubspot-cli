@@ -1,10 +1,11 @@
+const fs = require('fs-extra');
 const { downloadHubDbTable } = require('../hubdb');
 const { getCwd } = require('../path');
 
 jest.mock('../path');
 jest.mock('../api/hubdb');
 
-describe('cms-lib/api/hubdb', () => {
+describe('cms-lib/hubdb', () => {
   it('downloads hubdb table', async () => {
     const portalId = 123;
     const tableId = 456;
@@ -15,6 +16,22 @@ describe('cms-lib/api/hubdb', () => {
 
     const { filePath } = await downloadHubDbTable(portalId, tableId, destPath);
 
-    expect(filePath).toEqual(`${projectCwd}/${destPath}`);
+    describe('transforms column names to ids', () => {
+      expect(fs.outputFile).toHaveBeenCalledWith(
+        `${projectCwd}/${destPath}`,
+        expect.stringContaining('"name": "My Event",')
+      );
+    });
+
+    describe('provides data with correct name', () => {
+      expect(fs.outputFile).toHaveBeenCalledWith(
+        `${projectCwd}/${destPath}`,
+        expect.stringContaining('events-test')
+      );
+    });
+
+    describe('returns destination file path', () => {
+      expect(filePath).toEqual(`${projectCwd}/${destPath}`);
+    });
   });
 });

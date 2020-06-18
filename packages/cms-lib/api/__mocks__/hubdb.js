@@ -2,12 +2,12 @@ const hubdb = jest.genMockFromModule('../hubdb');
 
 const hubdDbTableRequestData = {
   id: 456,
-  name: 'events-test-1222dd2_clone_clonefsdfsfds',
+  name: 'events-test',
   portalId: 123,
   createdAt: 1589455214898,
   publishedAt: 1591712281423,
   updatedAt: 1589455214933,
-  label: 'Events (clone) (clone)',
+  label: 'Events',
   columns: [
     {
       name: 'name',
