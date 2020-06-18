@@ -91,6 +91,15 @@ Upload a file or directory to the File Manager
 hs filemanager upload --portal=DEV [src] [dest]
 ```
 
+Fetch a file or directory from the File Manager
+
+```bash
+hs filemanager fetch --portal=DEV [src] [dest]
+
+# Overwrite existing files
+hs filemanager fetch --portal=DEV --overwrite [path] [dest]
+```
+
 ## Authentication
 
 There are three ways that the tools can authenticate with HubSpot.
