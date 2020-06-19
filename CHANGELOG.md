@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+## 1.1.8
+ * Add `hs filemanager fetch`
+
 ## 1.1.7
  * Fix for `hs auth personalaccesskey`
 
