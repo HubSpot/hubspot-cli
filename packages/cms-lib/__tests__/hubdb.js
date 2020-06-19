@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const { downloadHubDbTable, createHubDbTable } = require('../hubdb');
 const { getCwd } = require('../path');
+const hubdbJson = require('./fixtures/hubdb/hubdbTableData');
 
 jest.mock('../path');
 jest.mock('../api/hubdb');
@@ -40,10 +41,11 @@ describe('cms-lib/hubdb', () => {
     const srcPath = 'tmp.json';
     const projectCwd = '/home/tom/projects';
 
-    await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
+    fs.statSync.mockReturnValue({ isFile: () => true });
+    fs.readJsonSync.mockReturnValue(hubdbJson);
 
-    // describe('returns destination file path', () => {
-    //   expect(filePath).toEqual(`${projectCwd}/${destPath}`);
-    // });
+    const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
+
+    expect(table).toEqual(0);
   });
 });

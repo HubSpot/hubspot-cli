@@ -244,4 +244,12 @@ hubdb.fetchRows = jest.fn(async (portalId, tableId) => {
   });
 });
 
+hubdb.createTable = jest.fn(() => {
+  return { columns: [], id: 999 };
+});
+
+hubdb.createRows = jest.fn((...data) => {
+  console.log(...data);
+});
+
 module.exports = hubdb;
