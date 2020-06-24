@@ -13,6 +13,12 @@ function createApiError(statusCode, method) {
     options: Object.freeze({
       method,
     }),
+    response: {
+      request: {
+        href: 'http://example.com/',
+        method: 'GET',
+      },
+    },
     message: `TEST ${method} ${statusCode}`,
   });
 }
