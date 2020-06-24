@@ -194,45 +194,51 @@ async function fetchFolderContents(portalId, folder, dest, options) {
  * @param {object} options
  */
 async function downloadFileOrFolder(portalId, src, dest, options) {
-  const { file, folder } = await getStat(portalId, src);
-  if (file) {
-    logger.log(
-      'Fetching file from "%s" to "%s" in the File Manager of portal %s',
-      src,
-      dest,
-      portalId
-    );
-    try {
+  let file, folder;
+
+  if (src === '/') {
+    folder = {
+      full_path: '',
+      name: '',
+    };
+  } else {
+    ({ file, folder } = await getStat(portalId, src));
+  }
+
+  try {
+    if (file) {
+      logger.log(
+        'Fetching file from "%s" to "%s" in the File Manager of portal %s',
+        src,
+        dest,
+        portalId
+      );
       await downloadFile(portalId, file, dest, options);
       logger.success(
         'Completed fetch of file "%s" to "%s" from the File Manager',
         src,
         dest
       );
-    } catch (err) {
-      logErrorInstance(err);
-    }
-  } else if (folder) {
-    logger.log(
-      'Fetching files from "%s" to "%s" in the File Manager of portal %s',
-      src,
-      dest,
-      portalId
-    );
-    try {
+    } else if (folder) {
       const rootPath =
         dest === getCwd()
           ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
           : dest;
+      logger.log(
+        'Fetching folder from "%s" to "%s" in the File Manager of portal %s',
+        src,
+        rootPath,
+        portalId
+      );
       await fetchFolderContents(portalId, folder, rootPath, options);
       logger.success(
         'Completed fetch of folder "%s" to "%s" from the File Manager',
         src,
         dest
       );
-    } catch (err) {
-      logger.error('Failed fetch of folder "%s" to "%s"', src, dest);
     }
+  } catch (err) {
+    logErrorInstance(err);
   }
 }
 
