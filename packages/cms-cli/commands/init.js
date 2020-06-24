@@ -83,11 +83,13 @@ function initializeConfigCommand(program) {
           true
         );
 
+        const path = getConfigPath();
+        const portalId = getPortalId();
+
         logger.success(
-          `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+          `The config file "${path}" was created using your personal access key for portal ${portalId}.`
         );
 
-        const portalId = getPortalId();
         trackAuthAction(
           COMMAND_NAME,
           PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
