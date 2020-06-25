@@ -393,12 +393,20 @@ async function downloadFile(input) {
     const localFsPath = convertToLocalFileSystemPath(filepath);
     await fetchAndWriteFileStream(input, input.src, localFsPath);
     await queue.onIdle();
-    logger.log('Completed fetch of file "%s" to "%s"', input.src, localFsPath);
+    logger.success(
+      'Completed fetch of file "%s" to "%s" from the Design Manager',
+      input.src,
+      localFsPath
+    );
   } catch (err) {
     if (isHubspot && isTimeout(err)) {
       logHubspotAssetTimeout();
     } else {
-      logger.error('Failed fetch of file "%s" to "%s"', input.src, input.dest);
+      logger.error(
+        'Failed fetch of file "%s" to "%s" from the Design Manager',
+        input.src,
+        input.dest
+      );
     }
   }
 }
@@ -421,7 +429,11 @@ async function fetchFolderFromApi(input) {
     const node = isHubspot
       ? await downloadDefault(portalId, srcPath, { qs })
       : await download(portalId, srcPath, { qs });
-    logger.log('Fetched "%s" from portal %d successfully', src, portalId);
+    logger.log(
+      'Fetched "%s" from portal %d from the Desing Manager successfully',
+      src,
+      portalId
+    );
     return node;
   } catch (err) {
     if (isHubspot && isTimeout(err)) {
@@ -464,9 +476,17 @@ async function downloadFolder(input) {
       rootPath
     );
     await queue.onIdle();
-    logger.log('Completed fetch of folder "%s" to "%s"', input.src, input.dest);
+    logger.success(
+      'Completed fetch of folder "%s" to "%s" from the Design Manager',
+      input.src,
+      input.dest
+    );
   } catch (err) {
-    logger.error('Failed fetch of folder "%s" to "%s"', input.src, input.dest);
+    logger.error(
+      'Failed fetch of folder "%s" to "%s" from the Design Manager',
+      input.src,
+      input.dest
+    );
   }
 }
 
