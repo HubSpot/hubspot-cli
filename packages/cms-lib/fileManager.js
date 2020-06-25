@@ -90,6 +90,14 @@ async function skipExisting(overwrite, filepath) {
 }
 
 /**
+ * @private
+ * @param {object} file
+ */
+function isHidden(node) {
+  return node.hidden || node.deleted;
+}
+
+/**
  *
  * @param {number} portalId
  * @param {object} file
@@ -97,6 +105,10 @@ async function skipExisting(overwrite, filepath) {
  * @param {object} options
  */
 async function downloadFile(portalId, file, dest, options) {
+  if (isHidden(file)) {
+    return;
+  }
+
   const fileName = `${file.name}.${file.extension}`;
   const destPath = convertToLocalFileSystemPath(path.join(dest, fileName));
 
@@ -171,6 +183,9 @@ async function getAllPagedFiles(portalId, folderPath) {
  * @param {object} options
  */
 async function fetchFolderContents(portalId, folder, dest, options) {
+  if (isHidden(folder)) {
+    return;
+  }
   const files = await getAllPagedFiles(portalId, folder.full_path);
   for (const file of files) {
     await downloadFile(portalId, file, dest, options);
@@ -196,6 +211,10 @@ async function fetchFolderContents(portalId, folder, dest, options) {
  * @param {object} options
  */
 async function downloadFolder(portalId, src, dest, folder, options) {
+  if (isHidden(folder)) {
+    logger.error('Folder "%s" could not be found in portal %s', src, portalId);
+    return;
+  }
   try {
     const rootPath =
       dest === getCwd()
@@ -228,6 +247,10 @@ async function downloadFolder(portalId, src, dest, folder, options) {
  * @param {object} options
  */
 async function downloadSingleFile(portalId, src, dest, file, options) {
+  if (isHidden(file)) {
+    logger.error('File "%s" could not be found in portal %s', src, portalId);
+    return;
+  }
   try {
     logger.log(
       'Fetching file from "%s" to "%s" in the File Manager of portal %s',
