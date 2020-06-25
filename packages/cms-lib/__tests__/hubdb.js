@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const { downloadHubDbTable, createHubDbTable } = require('../hubdb');
+const { publishTable } = require('../api/hubdb');
 const { getCwd } = require('../path');
 const hubdbJson = require('./fixtures/hubdb/hubdbTableData');
 
@@ -46,6 +47,9 @@ describe('cms-lib/hubdb', () => {
 
     const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
 
-    expect(table).toEqual(0);
+    expect(publishTable).toBeCalled();
+    // expect(table.portalId).toEqual(portalId);
+    expect(table.rowCount).toEqual(3);
+    expect(table.tableId).toEqual(2639452);
   });
 });

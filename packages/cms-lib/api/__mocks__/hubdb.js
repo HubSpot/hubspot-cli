@@ -218,38 +218,321 @@ const hubDbRowRequest = {
   totalCount: 3,
 };
 
-hubdb.fetchTable = jest.fn(async (portalId, tableId) => {
-  return new Promise((resolve, reject) => {
-    const table = hubdDbTableRequestData;
-    process.nextTick(() =>
-      table.id === tableId
-        ? resolve(table)
-        : reject({
-            error: 'Table with ' + tableId + ' not found.',
-          })
-    );
-  });
+const hubDbCreateRequest = {
+  id: 2639452,
+  name: 'events',
+  portalId: 123,
+  createdAt: 1593116580506,
+  publishedAt: 0,
+  updatedAt: 0,
+  label: 'Events',
+  columns: [
+    {
+      name: 'name',
+      label: 'Name',
+      id: 1,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'TEXT',
+    },
+    {
+      name: 'start',
+      label: 'Start',
+      id: 2,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'DATETIME',
+    },
+    {
+      name: 'end',
+      label: 'End',
+      id: 3,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'DATETIME',
+    },
+    {
+      name: 'location',
+      label: 'Location',
+      id: 4,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'LOCATION',
+    },
+    {
+      name: 'location_address',
+      label: 'Location Address',
+      id: 5,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'TEXT',
+    },
+    {
+      name: 'link',
+      label: 'Link',
+      id: 6,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'URL',
+    },
+    {
+      name: 'event_description',
+      label: 'Event Description',
+      id: 7,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'RICHTEXT',
+    },
+    {
+      name: 'feature_image',
+      label: 'Feature Image',
+      id: 8,
+      deleted: false,
+      width: 206,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'IMAGE',
+    },
+    {
+      name: 'limited_event_capacity',
+      label: 'Limited Event Capacity',
+      id: 9,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'BOOLEAN',
+    },
+    {
+      name: 'event_capacity',
+      label: 'Event Capacity',
+      id: 10,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'NUMBER',
+    },
+    {
+      name: 'registered_attendee_count',
+      label: 'Registered Attendee Count',
+      id: 11,
+      deleted: false,
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'NUMBER',
+    },
+    {
+      name: 'attendance_type',
+      label: 'Attendance Type',
+      id: 12,
+      deleted: false,
+      options: [
+        {
+          id: 1,
+          name: 'virtual',
+          type: 'option',
+          order: null,
+        },
+        {
+          id: 2,
+          name: 'in-person',
+          type: 'option',
+          order: null,
+        },
+      ],
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'MULTISELECT',
+      optionCount: 2,
+    },
+    {
+      name: 'type',
+      label: 'Type',
+      id: 13,
+      deleted: false,
+      options: [
+        {
+          id: 1,
+          name: 'class',
+          type: 'option',
+          order: null,
+        },
+        {
+          id: 2,
+          name: 'conference',
+          type: 'option',
+          order: null,
+        },
+        {
+          id: 3,
+          name: 'webinar',
+          type: 'option',
+          order: null,
+        },
+        {
+          id: 4,
+          name: 'workshop',
+          type: 'option',
+          order: null,
+        },
+      ],
+      foreignIdsByName: {},
+      foreignIdsById: {},
+      type: 'MULTISELECT',
+      optionCount: 4,
+    },
+  ],
+  cosObjectType: 'HUBDB_TABLE',
+  deleted: false,
+  updated: 0,
+  cdnPurgeEmbargoTime: null,
+  rowCount: 0,
+  createdBy: {
+    id: 123,
+    email: 'dev@hubspot.com',
+    firstName: 'Dev',
+    lastName: 'Hubspot',
+  },
+  useForPages: true,
+  allowChildTables: false,
+  enableChildTablePages: false,
+  crmObjectTypeId: 0,
+  dynamicMetaTags: {},
+  columnCount: 13,
+  allowPublicApiAccess: true,
+};
+
+const hubdDbCreateRows = [
+  {
+    rows: [
+      {
+        id: 31291781948,
+        createdAt: 1593118107193,
+        path: 'my-event',
+        name: 'Event Page Title',
+        values: {
+          '1': 'My Event',
+          '2': 1609538400000,
+          '3': 1609549200000,
+          '4': {
+            lat: 42.369724,
+            long: -71.07791,
+            type: 'location',
+          },
+          '5': '25 First Street, Cambridge MA',
+          '6': 'http://google.com',
+          '7':
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum  faucibus elit nec velit tempor, sit amet consequat magna efficitur.  Donec aliquam urna a tortor pretium, ut tincidunt metus fringilla. Sed  maximus molestie tristique.</p>',
+          '8': {
+            url:
+              'https://designers.hubspot.com/hubfs/event-registration/grayscale-mountain.png',
+            width: 1000,
+            height: 745,
+            type: 'image',
+          },
+          '9': 0,
+          '10': 0,
+          '11': 0,
+          '12': ',1,',
+          '13': ',1,',
+        },
+        isSoftEditable: false,
+        childTableId: 0,
+      },
+      {
+        id: 31291781949,
+        createdAt: 1593118107200,
+        path: 'my-event-2',
+        name: 'Event Page Title',
+        values: {
+          '1': 'My Event',
+          '2': 1612216800000,
+          '3': 1612227600000,
+          '4': {
+            lat: 42.369724,
+            long: -71.07791,
+            type: 'location',
+          },
+          '5': '25 First Street, Cambridge MA',
+          '6': 'http://google.com',
+          '7':
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum  faucibus elit nec velit tempor, sit amet consequat magna efficitur.  Donec aliquam urna a tortor pretium, ut tincidunt metus fringilla. Sed  maximus molestie tristique.</p>',
+          '8': {
+            url:
+              'https://designers.hubspot.com/hubfs/event-registration/grayscale-mountain.png',
+            width: 1000,
+            height: 745,
+            type: 'image',
+          },
+          '9': 1,
+          '10': 40,
+          '11': 0,
+          '12': ',2,',
+          '13': ',2,',
+        },
+        isSoftEditable: false,
+        childTableId: 0,
+      },
+      {
+        id: 31291781950,
+        createdAt: 1593118107207,
+        path: 'my-event-3',
+        name: 'Event Page Title',
+        values: {
+          '1': 'My Event',
+          '2': 1617310800000,
+          '3': 1617319800000,
+          '4': {
+            lat: 42.369724,
+            long: -71.07791,
+            type: 'location',
+          },
+          '5': '25 First Street, Cambridge MA',
+          '6': 'http://google.com',
+          '7':
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum  faucibus elit nec velit tempor, sit amet consequat magna efficitur.  Donec aliquam urna a tortor pretium, ut tincidunt metus fringilla. Sed  maximus molestie tristique.</p>',
+          '8': {
+            url:
+              'https://designers.hubspot.com/hubfs/event-registration/grayscale-mountain.png',
+            width: 1000,
+            height: 745,
+            type: 'image',
+          },
+          '9': 1,
+          '10': 40,
+          '11': 0,
+          '12': ',1,2,',
+          '13': ',3,4,',
+        },
+        isSoftEditable: false,
+        childTableId: 0,
+      },
+    ],
+  },
+];
+
+hubdb.fetchTable = jest.fn(async () => {
+  return hubdDbTableRequestData;
 });
 
-hubdb.fetchRows = jest.fn(async (portalId, tableId) => {
-  return new Promise((resolve, reject) => {
-    const rows = hubDbRowRequest;
-    process.nextTick(() =>
-      rows.total
-        ? resolve(rows)
-        : reject({
-            error: 'Error fetching rows for ' + tableId,
-          })
-    );
-  });
+hubdb.fetchRows = jest.fn(async () => {
+  return hubDbRowRequest;
 });
 
-hubdb.createTable = jest.fn(() => {
-  return { columns: [], id: 999 };
+hubdb.createTable = jest.fn(async () => {
+  return hubDbCreateRequest;
 });
 
-hubdb.createRows = jest.fn((...data) => {
-  console.log(...data);
+hubdb.createRows = jest.fn(async () => {
+  return hubdDbCreateRows;
 });
+
+hubdb.publishTable = jest.fn();
 
 module.exports = hubdb;
