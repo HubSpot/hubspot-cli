@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const { downloadHubDbTable, createHubDbTable } = require('../hubdb');
-const { publishTable } = require('../api/hubdb');
+const hubdb = require('../api/hubdb');
 const { getCwd } = require('../path');
 const hubdbJson = require('./fixtures/hubdb/hubdbTableData');
 
@@ -15,6 +15,20 @@ describe('cms-lib/hubdb', () => {
     const projectCwd = '/home/tom/projects';
 
     getCwd.mockReturnValue(projectCwd);
+    hubdb.fetchRows.mockReturnValue({
+      total: 3,
+      objects: [
+        { name: 'My Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
+        { name: 'My Better Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
+        { name: 'My Best Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
+      ],
+    });
+    hubdb.fetchTable.mockReturnValue({
+      name: 'events-test',
+      allowChildTables: false,
+      allowPublicApiAccess: false,
+      columns: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    });
 
     const { filePath } = await downloadHubDbTable(portalId, tableId, destPath);
 
@@ -45,11 +59,21 @@ describe('cms-lib/hubdb', () => {
     fs.statSync.mockReturnValue({ isFile: () => true });
     fs.readJsonSync.mockReturnValue(hubdbJson);
 
+    hubdb.createTable.mockReturnValue({
+      columns: [1, 2, 3],
+      id: 2639452,
+    });
+
+    hubdb.createRows.mockReturnValue([
+      {
+        rows: [4, 5, 6],
+      },
+    ]);
+
     const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
 
-    expect(publishTable).toBeCalled();
-    // expect(table.portalId).toEqual(portalId);
     expect(table.rowCount).toEqual(3);
     expect(table.tableId).toEqual(2639452);
+    expect(hubdb.publishTable).toBeCalled();
   });
 });
