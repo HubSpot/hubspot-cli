@@ -46,7 +46,8 @@ function loadIgnoreConfig() {
 function shouldIgnoreFile(file, cwd) {
   loadIgnoreConfig();
   const relativeTo = configPath || cwd;
-  return ignoreRules.ignores(path.relative(relativeTo, file));
+  const relativePath = path.relative(relativeTo, file);
+  return !!relativePath && ignoreRules.ignores(relativePath);
 }
 
 function createIgnoreFilter(cwd) {

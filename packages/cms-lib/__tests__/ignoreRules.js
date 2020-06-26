@@ -42,5 +42,9 @@ describe('ignoreRules', () => {
     it('does not ignore allowed files', () => {
       expect(shouldIgnoreFile(`${REPO_FOLDER}/hiddenFile.js`, CWD)).toBe(false);
     });
+
+    it('does not ignore the current folder', () => {
+      expect(shouldIgnoreFile('', '')).toBe(false);
+    });
   });
 });
