@@ -15,35 +15,45 @@ describe('cms-lib/hubdb', () => {
     const projectCwd = '/home/tom/projects';
 
     getCwd.mockReturnValue(projectCwd);
+
     hubdb.fetchRows.mockReturnValue({
       total: 3,
       objects: [
-        { name: 'My Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
-        { name: 'My Better Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
-        { name: 'My Best Event', values: { 1: 'a', 2: 'b', 3: 'c' } },
+        { name: 'My Event', values: { 1: 'a', 2: 'b' } },
+        { name: 'My Better Event', values: { 1: 'c', 2: 'd' } },
+        { name: 'My Best Event', values: { 1: 'e', 2: 'f' } },
       ],
     });
     hubdb.fetchTable.mockReturnValue({
-      name: 'events-test',
+      name: 'cool-table-name',
       allowChildTables: false,
       allowPublicApiAccess: false,
-      columns: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      columns: [
+        {
+          name: 'First Col',
+          id: 1,
+        },
+        {
+          name: 'Second Col',
+          id: 2,
+        },
+      ],
     });
 
     const { filePath } = await downloadHubDbTable(portalId, tableId, destPath);
+    const fileOutput = JSON.parse(fs.outputFile.mock.results[0].value);
 
-    describe('transforms column names to ids', () => {
-      expect(fs.outputFile).toHaveBeenCalledWith(
-        `${projectCwd}/${destPath}`,
-        expect.stringContaining('"name": "My Event",')
-      );
+    describe('outputs correct rows', () => {
+      expect(fileOutput.rows.length).toBe(3);
+      expect(fileOutput.rows[1].name).toBe('My Better Event');
+    });
+
+    describe('tranforms column ids to names', () => {
+      expect(fileOutput.rows[0].values['Second Col']).toBe('b');
     });
 
     describe('provides data with correct name', () => {
-      expect(fs.outputFile).toHaveBeenCalledWith(
-        `${projectCwd}/${destPath}`,
-        expect.stringContaining('events-test')
-      );
+      expect(fileOutput.name).toBe('cool-table-name');
     });
 
     describe('returns destination file path', () => {
