@@ -29,6 +29,7 @@ const TYPES = {
   template: 'template',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
+  'webpack-serverless': 'webpack-serverless',
 };
 
 const ASSET_PATHS = {
@@ -43,6 +44,7 @@ const ASSET_PATHS = {
 const PROJECT_REPOSITORIES = {
   [TYPES['react-app']]: 'cms-react-boilerplate',
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
+  [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -112,6 +114,7 @@ function configureCreateCommand(program) {
           break;
         case TYPES['website-theme']:
         case TYPES['react-app']:
+        case TYPES['webpack-serverless']:
           dest = name || type;
           break;
         default:
@@ -144,7 +147,8 @@ function configureCreateCommand(program) {
         case TYPES['website-theme']:
           createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', program);
           break;
-        case TYPES['react-app']: {
+        case TYPES['react-app']:
+        case TYPES['webpack-serverless']: {
           createProject(dest, type, PROJECT_REPOSITORIES[type], '', program);
           break;
         }
