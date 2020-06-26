@@ -1,5 +1,6 @@
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const { logger } = require('./logger');
+const { getErrorMessage } = require('./lib/errorHandlers/customErrors');
 
 const isApiStatusCodeError = err =>
   err.name === 'StatusCodeError' ||
@@ -226,7 +227,7 @@ function logApiStatusCodeError(error, context) {
       break;
   }
   if (error.error && error.error.message) {
-    errorMessage.push(error.error.message);
+    errorMessage.push(getErrorMessage(error.error));
   }
   logger.error(errorMessage.join(' '));
   debugErrorAndContext(error, context);
