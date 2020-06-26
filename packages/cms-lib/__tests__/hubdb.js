@@ -47,15 +47,12 @@ describe('cms-lib/hubdb', () => {
       expect(fileOutput.rows.length).toBe(3);
       expect(fileOutput.rows[1].name).toBe('My Better Event');
     });
-
     describe('tranforms column ids to names', () => {
       expect(fileOutput.rows[0].values['Second Col']).toBe('b');
     });
-
     describe('provides data with correct name', () => {
       expect(fileOutput.name).toBe('cool-table-name');
     });
-
     describe('returns destination file path', () => {
       expect(filePath).toEqual(`${projectCwd}/${destPath}`);
     });
@@ -82,8 +79,14 @@ describe('cms-lib/hubdb', () => {
 
     const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
 
-    expect(table.rowCount).toEqual(3);
-    expect(table.tableId).toEqual(2639452);
-    expect(hubdb.publishTable).toBeCalled();
+    describe('has the correct number of rows', () => {
+      expect(table.rowCount).toEqual(3);
+    });
+    describe('returns the correct table ID', () => {
+      expect(table.tableId).toEqual(2639452);
+    });
+    describe('publishes the table', () => {
+      expect(hubdb.publishTable).toBeCalled();
+    });
   });
 });
