@@ -1,5 +1,5 @@
 const http = require('../http');
-const HUBDB_API_PATH = 'hubdb/api/v2';
+const HUBDB_API_PATH = 'cms/v3/hubdb';
 
 async function fetchTables(portalId) {
   return http.get(portalId, {
@@ -41,14 +41,14 @@ async function deleteTable(portalId, tableId) {
 
 async function updateRows(portalId, tableId, rows) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/update`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/update`,
     body: rows,
   });
 }
 
 async function createRows(portalId, tableId, rows) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/create`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/create`,
     body: rows,
   });
 }
@@ -62,7 +62,7 @@ async function fetchRows(portalId, tableId, query = {}) {
 
 async function deleteRows(portalId, tableId, rowIds) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/delete`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/purge`,
     body: rowIds,
   });
 }
