@@ -3,6 +3,10 @@ const { downloadHubDbTable, createHubDbTable } = require('../hubdb');
 const hubdb = require('../api/hubdb');
 const { getCwd } = require('../path');
 const hubdbJson = require('./fixtures/hubdb/hubdbTableData');
+const hubdbFetchRowResponse = require('./fixtures/hubdb/hubdbFetchRowsResponse.json');
+const hubdbFetchTableResponse = require('./fixtures/hubdb/hubdbFetchTableResponse.json');
+const hubdbCreateTableResponse = require('./fixtures/hubdb/hubdbCreateTableResponse.json');
+const hubdbCreateRowsResponse = require('./fixtures/hubdb/hubdbCreateRowsResponse.json');
 
 jest.mock('../path');
 jest.mock('../api/hubdb');
@@ -16,29 +20,8 @@ describe('cms-lib/hubdb', () => {
 
     getCwd.mockReturnValue(projectCwd);
 
-    hubdb.fetchRows.mockReturnValue({
-      total: 3,
-      objects: [
-        { name: 'My Event', values: { 1: 'a', 2: 'b' } },
-        { name: 'My Better Event', values: { 1: 'c', 2: 'd' } },
-        { name: 'My Best Event', values: { 1: 'e', 2: 'f' } },
-      ],
-    });
-    hubdb.fetchTable.mockReturnValue({
-      name: 'cool-table-name',
-      allowChildTables: false,
-      allowPublicApiAccess: false,
-      columns: [
-        {
-          name: 'First Col',
-          id: 1,
-        },
-        {
-          name: 'Second Col',
-          id: 2,
-        },
-      ],
-    });
+    hubdb.fetchRows.mockReturnValue(hubdbFetchRowResponse);
+    hubdb.fetchTable.mockReturnValue(hubdbFetchTableResponse);
 
     const { filePath } = await downloadHubDbTable(portalId, tableId, destPath);
     const fileOutput = JSON.parse(fs.outputFile.mock.results[0].value);
@@ -66,16 +49,9 @@ describe('cms-lib/hubdb', () => {
     fs.statSync.mockReturnValue({ isFile: () => true });
     fs.readJsonSync.mockReturnValue(hubdbJson);
 
-    hubdb.createTable.mockReturnValue({
-      columns: [1, 2, 3],
-      id: 2639452,
-    });
+    hubdb.createTable.mockReturnValue(hubdbCreateTableResponse);
 
-    hubdb.createRows.mockReturnValue([
-      {
-        rows: [4, 5, 6],
-      },
-    ]);
+    hubdb.createRows.mockReturnValue(hubdbCreateRowsResponse);
 
     const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
 
