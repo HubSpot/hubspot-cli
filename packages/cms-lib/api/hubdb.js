@@ -28,8 +28,8 @@ async function updateTable(portalId, tableId, schema) {
 }
 
 async function publishTable(portalId, tableId) {
-  return http.put(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/publish`,
+  return http.post(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/push-live`,
   });
 }
 
@@ -49,7 +49,7 @@ async function updateRows(portalId, tableId, rows) {
 async function createRows(portalId, tableId, rows) {
   return http.post(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/create`,
-    body: rows,
+    body: { inputs: rows },
   });
 }
 

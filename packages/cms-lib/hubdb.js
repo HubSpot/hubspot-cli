@@ -32,18 +32,9 @@ function validateJsonFile(src) {
   validateJsonPath(src);
 }
 
-async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
+async function addRowsToHubDbTable(portalId, tableId, rows) {
   const rowsToUpdate = rows.map(row => {
-    const values = {};
-
-    columns.forEach(col => {
-      const { name, id } = col;
-      if (typeof row.values[name] !== 'undefined') {
-        values[id] = row.values[name];
-      } else {
-        values[id] = null;
-      }
-    });
+    const values = row.values;
 
     return {
       childTableId: 0,
@@ -53,19 +44,15 @@ async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
     };
   });
 
-  let response;
   if (rowsToUpdate.length > 0) {
-    response = await createRows(portalId, tableId, rowsToUpdate);
+    await createRows(portalId, tableId, rowsToUpdate);
   }
 
-  await publishTable(portalId, tableId);
+  const { rowCount } = await publishTable(portalId, tableId);
 
   return {
     tableId,
-    rowCount:
-      response && Array.isArray(response) && response.length
-        ? response[0].rows.length
-        : 0,
+    rowCount,
   };
 }
 
