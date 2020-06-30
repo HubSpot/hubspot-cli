@@ -55,7 +55,7 @@ async function createRows(portalId, tableId, rows) {
 
 async function fetchRows(portalId, tableId, query = {}) {
   return http.get(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft`,
     query,
   });
 }
@@ -63,7 +63,7 @@ async function fetchRows(portalId, tableId, query = {}) {
 async function deleteRows(portalId, tableId, rowIds) {
   return http.post(portalId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/purge`,
-    body: rowIds,
+    body: { inputs: rowIds },
   });
 }
 

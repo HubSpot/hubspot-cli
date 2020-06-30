@@ -179,9 +179,9 @@ async function clearHubDbTableRows(portalId, tableId) {
       totalRows = response.total;
     }
 
-    count += response.objects.length;
-    offset += response.objects.length;
-    const rowIds = response.objects.map(row => row.id);
+    count += response.results.length;
+    offset += response.results.length;
+    const rowIds = response.results.map(row => row.id);
     rows = rows.concat(rowIds);
   }
   return deleteRows(portalId, tableId, rows);
