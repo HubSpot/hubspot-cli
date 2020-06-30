@@ -44,7 +44,7 @@ describe('ignoreRules', () => {
     });
 
     it('does not ignore the current folder', () => {
-      expect(shouldIgnoreFile(CWD, CWD)).toBe(false);
+      expect(shouldIgnoreFile('.', process.cwd())).toBe(false);
     });
   });
 });
