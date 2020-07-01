@@ -237,6 +237,10 @@ async function downloadSingleFile(portalId, src, dest, file, options) {
     );
     return;
   }
+  if (file.hidden) {
+    logger.error('"%s" in the File Manager is a hidden file.', src);
+    return;
+  }
 
   try {
     logger.log(
