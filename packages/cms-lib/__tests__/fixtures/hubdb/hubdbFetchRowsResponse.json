@@ -1,8 +1,8 @@
 {
   "total": 3,
-  "objects": [
-    { "name": "My Event", "values": { "1": "a", "2": "b" } },
-    { "name": "My Better Event", "values": { "1": "c", "2": "d" } },
-    { "name": "My Best Event", "values": { "1": "e", "2": "f" } }
+  "results": [
+    { "name": "My Event", "values": { "first_col": "a", "second_col": "b" } },
+    { "name": "My Better Event", "values": { "first_col": "c", "second_col": "d" } },
+    { "name": "My Best Event", "values": { "first_col": "e", "second_col": "f" } }
   ]
 }
