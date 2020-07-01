@@ -2,7 +2,13 @@
   "total": 3,
   "results": [
     { "name": "My Event", "values": { "first_col": "a", "second_col": "b" } },
-    { "name": "My Better Event", "values": { "first_col": "c", "second_col": "d" } },
-    { "name": "My Best Event", "values": { "first_col": "e", "second_col": "f" } }
+    {
+      "name": "My Better Event",
+      "values": { "first_col": "c", "second_col": "d" }
+    },
+    {
+      "name": "My Best Event",
+      "values": { "first_col": "e", "second_col": "f" }
+    }
   ]
 }
