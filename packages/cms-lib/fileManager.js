@@ -144,13 +144,18 @@ async function downloadFile(portalId, file, dest, options) {
  * @param {number} portalId
  * @param {string} folderPath
  */
-async function getAllPagedFiles(portalId, folderId) {
+async function getAllPagedFiles(portalId, folderId, { includeArchived }) {
   let totalFiles = null;
   let files = [];
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
-    const response = await getFiles(portalId, folderId, { offset });
+    const response = await getFiles(
+      portalId,
+      folderId,
+      { offset },
+      includeArchived
+    );
 
     if (totalFiles === null) {
       totalFiles = response.total;
@@ -171,7 +176,7 @@ async function getAllPagedFiles(portalId, folderId) {
  * @param {object} options
  */
 async function fetchFolderContents(portalId, folder, dest, options) {
-  const files = await getAllPagedFiles(portalId, folder.id);
+  const files = await getAllPagedFiles(portalId, folder.id, options);
   for (const file of files) {
     await downloadFile(portalId, file, dest, options);
   }
@@ -225,8 +230,11 @@ async function downloadFolder(portalId, src, dest, folder, options) {
  * @param {object} options
  */
 async function downloadSingleFile(portalId, src, dest, file, options) {
-  if (!file.archived) {
-    logger.error('File "%s" in the File Manager is archived', src);
+  if (file.archived) {
+    logger.error(
+      '"%s" in the File Manager is an archived file. Try fetching again with the "--inclulde-archived" flag.',
+      src
+    );
     return;
   }
 
