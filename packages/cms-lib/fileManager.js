@@ -4,8 +4,8 @@ const path = require('path');
 const {
   uploadFile,
   getStat,
-  getFilesByPath,
-  getFoldersByPath,
+  getFiles,
+  getFolders,
 } = require('./api/fileManager');
 const { walk } = require('./lib/walk');
 const { logger } = require('./logger');
@@ -144,13 +144,13 @@ async function downloadFile(portalId, file, dest, options) {
  * @param {number} portalId
  * @param {string} folderPath
  */
-async function getAllPagedFiles(portalId, folderPath) {
+async function getAllPagedFiles(portalId, folderId) {
   let totalFiles = null;
   let files = [];
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
-    const response = await getFilesByPath(portalId, folderPath, { offset });
+    const response = await getFiles(portalId, folderId, { offset });
 
     if (totalFiles === null) {
       totalFiles = response.total;
@@ -171,15 +171,12 @@ async function getAllPagedFiles(portalId, folderPath) {
  * @param {object} options
  */
 async function fetchFolderContents(portalId, folder, dest, options) {
-  const files = await getAllPagedFiles(portalId, folder.full_path);
+  const files = await getAllPagedFiles(portalId, folder.id);
   for (const file of files) {
     await downloadFile(portalId, file, dest, options);
   }
 
-  const { objects: folders } = await getFoldersByPath(
-    portalId,
-    folder.full_path
-  );
+  const { objects: folders } = await getFolders(portalId, folder.id);
   for (const folder of folders) {
     const nestedFolder = path.join(dest, folder.name);
     await fetchFolderContents(portalId, folder, nestedFolder, options);
@@ -228,6 +225,11 @@ async function downloadFolder(portalId, src, dest, folder, options) {
  * @param {object} options
  */
 async function downloadSingleFile(portalId, src, dest, file, options) {
+  if (!file.archived) {
+    logger.error('File "%s" in the File Manager is archived', src);
+    return;
+  }
+
   try {
     logger.log(
       'Fetching file from "%s" to "%s" in the File Manager of portal %s',
@@ -256,12 +258,7 @@ async function downloadSingleFile(portalId, src, dest, file, options) {
  */
 async function downloadFileOrFolder(portalId, src, dest, options) {
   if (src === '/') {
-    const rootFolder = {
-      full_path: '',
-      name: '',
-    };
-
-    await downloadFolder(portalId, src, dest, rootFolder, options);
+    await downloadFolder(portalId, src, dest, '', options);
   } else {
     try {
       const { file, folder } = await getStat(portalId, src);

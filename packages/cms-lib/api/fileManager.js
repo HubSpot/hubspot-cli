@@ -31,21 +31,31 @@ async function getStat(portalId, src) {
   });
 }
 
-async function getFilesByPath(portalId, src) {
+async function getFiles(portalId, folderId) {
   return http.get(portalId, {
-    uri: `${FILE_MANAGER_API_PATH}/files/path/${src}`,
+    uri: `${FILE_MANAGER_API_PATH}/files/`,
+    qs: {
+      hidden: 0,
+      archived: 0,
+      folder_id: folderId || 'None',
+    },
   });
 }
 
-async function getFoldersByPath(portalId, src) {
+async function getFolders(portalId, folderId) {
   return http.get(portalId, {
-    uri: `${FILE_MANAGER_API_PATH}/folders/path/${src}`,
+    uri: `${FILE_MANAGER_API_PATH}/folders/`,
+    qs: {
+      hidden: 0,
+      archived: 0,
+      parent_folder_id: folderId || 'None',
+    },
   });
 }
 
 module.exports = {
   uploadFile,
   getStat,
-  getFilesByPath,
-  getFoldersByPath,
+  getFiles,
+  getFolders,
 };
