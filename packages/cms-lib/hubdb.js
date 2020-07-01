@@ -88,7 +88,7 @@ function convertToJSON(table, rows) {
   } = table;
 
   const cleanedColumns = columns
-    .filter(column => !column.deleted)
+    .filter(column => !column.deleted || !column.archived)
     .map(column => {
       const cleanedColumn = {
         ...column,
@@ -96,6 +96,7 @@ function convertToJSON(table, rows) {
 
       delete cleanedColumn.id;
       delete cleanedColumn.deleted;
+      delete cleanedColumn.archived;
       delete cleanedColumn.foreignIdsByName;
       delete cleanedColumn.foreignIdsById;
 
@@ -103,19 +104,10 @@ function convertToJSON(table, rows) {
     });
 
   const cleanedRows = rows.map(row => {
-    const values = {};
-
-    columns.forEach(col => {
-      const { name, id } = col;
-      if (row.values[id] !== null) {
-        values[name] = row.values[id];
-      }
-    });
     return {
       path: row.path,
       name: row.name,
-      isSoftEditable: row.isSoftEditable,
-      values,
+      values: row.values,
     };
   });
 
