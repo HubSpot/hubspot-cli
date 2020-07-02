@@ -3,7 +3,7 @@
   "allowChildTables": false,
   "allowPublicApiAccess": false,
   "columns": [
-    { "name": "First Col", "id": 1 },
-    { "name": "Second Col", "id": 2 }
+    { "name": "first_col", "id": 1 },
+    { "name": "second_col", "id": 2 }
   ]
 }

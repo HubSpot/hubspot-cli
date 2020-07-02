@@ -123,8 +123,10 @@ function configureHubDbClearCommand(program) {
       }
       const portalId = getPortalId(command);
       try {
-        const draftTable = await clearHubDbTableRows(portalId, tableId);
-        const deletedRowCount = draftTable[0].rowIds.length;
+        const { deletedRowCount } = await clearHubDbTableRows(
+          portalId,
+          tableId
+        );
         if (deletedRowCount > 0) {
           logger.log(
             `Removed ${deletedRowCount} rows from HubDB table ${tableId}`

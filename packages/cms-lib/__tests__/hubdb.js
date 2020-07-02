@@ -7,6 +7,7 @@ const hubdbFetchRowResponse = require('./fixtures/hubdb/hubdbFetchRowsResponse.j
 const hubdbFetchTableResponse = require('./fixtures/hubdb/hubdbFetchTableResponse.json');
 const hubdbCreateTableResponse = require('./fixtures/hubdb/hubdbCreateTableResponse.json');
 const hubdbCreateRowsResponse = require('./fixtures/hubdb/hubdbCreateRowsResponse.json');
+const hubdbPublishTableResponse = require('./fixtures/hubdb/hubdbPublishTableResponse.json');
 
 jest.mock('../path');
 jest.mock('../api/hubdb');
@@ -30,8 +31,9 @@ describe('cms-lib/hubdb', () => {
       expect(fileOutput.rows.length).toBe(3);
       expect(fileOutput.rows[1].name).toBe('My Better Event');
     });
+
     describe('tranforms column ids to names', () => {
-      expect(fileOutput.rows[0].values['Second Col']).toBe('b');
+      expect(fileOutput.rows[0].values['second_col']).toBe('b');
     });
     describe('provides data with correct name', () => {
       expect(fileOutput.name).toBe('cool-table-name');
@@ -50,8 +52,8 @@ describe('cms-lib/hubdb', () => {
     fs.readJsonSync.mockReturnValue(hubdbJson);
 
     hubdb.createTable.mockReturnValue(hubdbCreateTableResponse);
-
     hubdb.createRows.mockReturnValue(hubdbCreateRowsResponse);
+    hubdb.publishTable.mockReturnValue(hubdbPublishTableResponse);
 
     const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
 
