@@ -150,12 +150,10 @@ async function getAllPagedFiles(portalId, folderId, { includeArchived }) {
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
-    const response = await getFiles(
-      portalId,
-      folderId,
-      { offset },
-      includeArchived
-    );
+    const response = await getFiles(portalId, folderId, {
+      offset,
+      archived: includeArchived ? 1 : 0,
+    });
 
     if (totalFiles === null) {
       totalFiles = response.total;

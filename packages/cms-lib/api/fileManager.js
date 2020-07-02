@@ -31,14 +31,14 @@ async function getStat(portalId, src) {
   });
 }
 
-async function getFiles(portalId, folderId, { offset }, showArchived) {
+async function getFiles(portalId, folderId, { offset, archived }) {
   return http.get(portalId, {
     uri: `${FILE_MANAGER_API_PATH}/files/`,
     qs: {
       hidden: 0,
       offset: offset,
       folder_id: folderId || 'None',
-      ...(!showArchived && { archived: 0 }),
+      ...(archived === 0 && { archived }),
     },
   });
 }
