@@ -30,11 +30,6 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
-const CREATE_COMMAND_NAME = 'hubdb create';
-const FETCH_COMMAND_NAME = 'hubdb fetch';
-const CLEAR_COMMAND_NAME = 'hubdb clear';
-const DELETE_COMMAND_NAME = 'hubdb delete';
-
 function configureHubDbCommand(program) {
   program
     .version(version)
@@ -65,7 +60,7 @@ function configureHubDbCreateCommand(program) {
       }
       const portalId = getPortalId(program);
 
-      trackCommandUsage(CREATE_COMMAND_NAME, null, portalId);
+      trackCommandUsage('hubdb-create', null, portalId);
 
       try {
         const table = await createHubDbTable(
@@ -103,7 +98,7 @@ function configureHubDbFetchCommand(program) {
       }
       const portalId = getPortalId(command);
 
-      trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
+      trackCommandUsage('hubdb-fetch', null, portalId);
 
       try {
         const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
@@ -136,7 +131,7 @@ function configureHubDbClearCommand(program) {
       }
       const portalId = getPortalId(command);
 
-      trackCommandUsage(CLEAR_COMMAND_NAME, null, portalId);
+      trackCommandUsage('hubdb-clear', null, portalId);
 
       try {
         const draftTable = await clearHubDbTableRows(portalId, tableId);
@@ -177,7 +172,7 @@ function configureHubDbDeleteCommand(program) {
       }
       const portalId = getPortalId(program);
 
-      trackCommandUsage(DELETE_COMMAND_NAME, null, portalId);
+      trackCommandUsage('hubdb-delete', null, portalId);
 
       try {
         await deleteTable(portalId, tableId);
