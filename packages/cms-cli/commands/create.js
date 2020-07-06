@@ -52,7 +52,34 @@ const PROJECT_REPOSITORIES = {
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
-const createModule = (name, dest) => {
+const createModule = (moduleDefinition, name, dest) => {
+  const writeModuleMeta = ({ contentTypes, label }, dest) => {
+    const metaData = {
+      label: label,
+      css_assets: [],
+      external_js: [],
+      global: false,
+      help_text: '',
+      host_template_types: contentTypes,
+      js_assets: [],
+      other_assets: [],
+      smart_type: 'NOT_SMART',
+      tags: [],
+      is_available_for_new_content: false,
+    };
+
+    fs.writeJSONSync(dest, metaData);
+  };
+
+  const moduleFileFilter = (src, dest) => {
+    if (path.basename(src) === 'meta.json') {
+      writeModuleMeta(moduleDefinition, dest);
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const assetPath = ASSET_PATHS.module;
   const folderName = name.endsWith('.module') ? name : `${name}.module`;
   const destPath = path.join(dest, folderName);
@@ -63,7 +90,7 @@ const createModule = (name, dest) => {
   logger.log(`Creating ${destPath}`);
   fs.mkdirp(destPath);
   logger.log(`Creating module at ${destPath}`);
-  fs.copySync(assetPath, destPath);
+  fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
 };
 
 const createTemplate = (name, dest, type = 'template') => {
