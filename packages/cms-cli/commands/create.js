@@ -18,6 +18,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { createModulePrompt } = require('../lib/createModulePrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
@@ -139,9 +140,11 @@ function configureCreateCommand(program) {
       trackCommandUsage(COMMAND_NAME, { assetType: type }, getPortalId());
 
       switch (type) {
-        case TYPES.module:
-          createModule(name, dest);
+        case TYPES.module: {
+          const moduleDefinition = await createModulePrompt();
+          createModule(moduleDefinition, name, dest);
           break;
+        }
         case TYPES.template:
         case TYPES.email:
         case TYPES['global-partial']:
