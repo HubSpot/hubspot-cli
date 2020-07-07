@@ -15,7 +15,10 @@ const {
 const { publishTable, deleteTable } = require('@hubspot/cms-lib/api/hubdb');
 
 const { validatePortal } = require('../lib/validation');
-const { addHelpUsageTracking } = require('../lib/usageTracking');
+const {
+  trackCommandUsage,
+  addHelpUsageTracking,
+} = require('../lib/usageTracking');
 const { version } = require('../package.json');
 
 const {
@@ -57,6 +60,8 @@ function configureHubDbCreateCommand(program) {
       }
       const portalId = getPortalId(program);
 
+      trackCommandUsage('hubdb-create', null, portalId);
+
       try {
         const table = await createHubDbTable(
           portalId,
@@ -92,6 +97,9 @@ function configureHubDbFetchCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(command);
+
+      trackCommandUsage('hubdb-fetch', null, portalId);
+
       try {
         const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
 
@@ -122,6 +130,9 @@ function configureHubDbClearCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(command);
+
+      trackCommandUsage('hubdb-clear', null, portalId);
+
       try {
         const { deletedRowCount } = await clearHubDbTableRows(
           portalId,
@@ -162,6 +173,8 @@ function configureHubDbDeleteCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(program);
+
+      trackCommandUsage('hubdb-delete', null, portalId);
 
       try {
         await deleteTable(portalId, tableId);
