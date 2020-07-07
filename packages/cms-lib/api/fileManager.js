@@ -38,7 +38,7 @@ async function fetchFiles(portalId, folderId, { offset, archived }) {
       hidden: 0,
       offset: offset,
       folder_id: folderId || 'None',
-      ...(archived === 0 && { archived }),
+      ...(!archived && { archived: 0 }),
     },
   });
 }

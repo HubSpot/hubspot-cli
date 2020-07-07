@@ -152,7 +152,7 @@ async function fetchAllPagedFiles(portalId, folderId, { includeArchived }) {
   while (totalFiles === null || count < totalFiles) {
     const response = await fetchFiles(portalId, folderId, {
       offset,
-      archived: includeArchived ? 1 : 0,
+      archived: includeArchived,
     });
 
     if (totalFiles === null) {
