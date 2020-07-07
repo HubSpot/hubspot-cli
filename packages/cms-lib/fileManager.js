@@ -3,9 +3,9 @@ const path = require('path');
 
 const {
   uploadFile,
-  getStat,
-  getFiles,
-  getFolders,
+  fetchStat,
+  fetchFiles,
+  fetchFolders,
 } = require('./api/fileManager');
 const { walk } = require('./lib/walk');
 const { logger } = require('./logger');
@@ -144,13 +144,13 @@ async function downloadFile(portalId, file, dest, options) {
  * @param {number} portalId
  * @param {string} folderPath
  */
-async function getAllPagedFiles(portalId, folderId, { includeArchived }) {
+async function fetchAllPagedFiles(portalId, folderId, { includeArchived }) {
   let totalFiles = null;
   let files = [];
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
-    const response = await getFiles(portalId, folderId, {
+    const response = await fetchFiles(portalId, folderId, {
       offset,
       archived: includeArchived ? 1 : 0,
     });
@@ -174,12 +174,12 @@ async function getAllPagedFiles(portalId, folderId, { includeArchived }) {
  * @param {object} options
  */
 async function fetchFolderContents(portalId, folder, dest, options) {
-  const files = await getAllPagedFiles(portalId, folder.id, options);
+  const files = await fetchAllPagedFiles(portalId, folder.id, options);
   for (const file of files) {
     await downloadFile(portalId, file, dest, options);
   }
 
-  const { objects: folders } = await getFolders(portalId, folder.id);
+  const { objects: folders } = await fetchFolders(portalId, folder.id);
   for (const folder of folders) {
     const nestedFolder = path.join(dest, folder.name);
     await fetchFolderContents(portalId, folder, nestedFolder, options);
@@ -271,7 +271,7 @@ async function downloadFileOrFolder(portalId, src, dest, options) {
     await downloadFolder(portalId, src, dest, '', options);
   } else {
     try {
-      const { file, folder } = await getStat(portalId, src);
+      const { file, folder } = await fetchStat(portalId, src);
 
       if (file) {
         downloadSingleFile(portalId, src, dest, file, options);

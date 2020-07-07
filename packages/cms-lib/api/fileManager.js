@@ -25,13 +25,13 @@ async function uploadFile(portalId, src, dest) {
   });
 }
 
-async function getStat(portalId, src) {
+async function fetchStat(portalId, src) {
   return http.get(portalId, {
     uri: `${FILE_MANAGER_API_PATH}/files/stat/${src}`,
   });
 }
 
-async function getFiles(portalId, folderId, { offset, archived }) {
+async function fetchFiles(portalId, folderId, { offset, archived }) {
   return http.get(portalId, {
     uri: `${FILE_MANAGER_API_PATH}/files/`,
     qs: {
@@ -43,7 +43,7 @@ async function getFiles(portalId, folderId, { offset, archived }) {
   });
 }
 
-async function getFolders(portalId, folderId) {
+async function fetchFolders(portalId, folderId) {
   return http.get(portalId, {
     uri: `${FILE_MANAGER_API_PATH}/folders/`,
     qs: {
@@ -55,7 +55,7 @@ async function getFolders(portalId, folderId) {
 
 module.exports = {
   uploadFile,
-  getStat,
-  getFiles,
-  getFolders,
+  fetchStat,
+  fetchFiles,
+  fetchFolders,
 };
