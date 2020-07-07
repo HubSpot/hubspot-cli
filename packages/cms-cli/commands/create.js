@@ -18,6 +18,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
@@ -27,20 +28,30 @@ const TYPES = {
   'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
-  email: 'email',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
   'webpack-serverless': 'webpack-serverless',
 };
 
+const TEMPLATE_TYPES = {
+  'page-template': 'page-template',
+  'email-template': 'email-template',
+};
+
 const ASSET_PATHS = {
   [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
-  [TYPES.template]: path.resolve(__dirname, '../defaults/template.html'),
+  [TEMPLATE_TYPES['page-template']]: path.resolve(
+    __dirname,
+    '../defaults/page-template.html'
+  ),
   [TYPES['global-partial']]: path.resolve(
     __dirname,
     '../defaults/global-partial.html'
   ),
-  [TYPES.email]: path.resolve(__dirname, '../defaults/email.html'),
+  [TEMPLATE_TYPES['email-template']]: path.resolve(
+    __dirname,
+    '../defaults/email-template.html'
+  ),
 };
 
 const PROJECT_REPOSITORIES = {
@@ -65,7 +76,7 @@ const createModule = (name, dest) => {
   fs.copySync(assetPath, destPath);
 };
 
-const createTemplate = (name, dest, type = 'template') => {
+const createTemplate = (name, dest, type = 'page-template') => {
   const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
@@ -142,8 +153,11 @@ function configureCreateCommand(program) {
         case TYPES.module:
           createModule(name, dest);
           break;
-        case TYPES.template:
-        case TYPES.email:
+        case TYPES.template: {
+          const { templateType } = await createTemplatePrompt();
+          createTemplate(name, dest, templateType);
+          break;
+        }
         case TYPES['global-partial']:
           createTemplate(name, dest, type);
           break;
