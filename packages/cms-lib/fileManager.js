@@ -230,7 +230,7 @@ async function downloadFolder(portalId, src, dest, folder, options) {
 async function downloadSingleFile(portalId, src, dest, file, options) {
   if (!options.includeArchived && file.archived) {
     logger.error(
-      '"%s" in the File Manager is an archived file. Try fetching again with the "--inclulde-archived" flag.',
+      '"%s" in the File Manager is an archived file. Try fetching again with the "--include-archived" flag.',
       src
     );
     return;
