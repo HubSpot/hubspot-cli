@@ -68,7 +68,7 @@ const createModule = (moduleDefinition, name, dest) => {
       is_available_for_new_content: false,
     };
 
-    fs.writeJSONSync(dest, metaData);
+    fs.writeJSONSync(dest, metaData, { spaces: 2 });
   };
 
   const moduleFileFilter = (src, dest) => {
