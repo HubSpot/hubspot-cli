@@ -92,6 +92,10 @@ const createModule = (moduleDefinition, name, dest) => {
 };
 
 const createTemplate = (name, dest, type = 'template') => {
+  if (!name) {
+    logger.error(`The 'name' argument is required.`);
+    return;
+  }
   const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
