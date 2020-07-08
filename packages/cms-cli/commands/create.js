@@ -28,7 +28,6 @@ const TYPES = {
   'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
-  email: 'email',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
   'webpack-serverless': 'webpack-serverless',
@@ -41,7 +40,6 @@ const ASSET_PATHS = {
     __dirname,
     '../defaults/global-partial.html'
   ),
-  [TYPES.email]: path.resolve(__dirname, '../defaults/email.html'),
 };
 
 const PROJECT_REPOSITORIES = {
