@@ -109,7 +109,7 @@ function configureCreateCommand(program) {
       type = typeof type === 'string' && type.toLowerCase();
       if (!type || !TYPES[type]) {
         logger.error(
-          `The asset type ${type} is not supported. Supported authentication protocols are ${SUPPORTED_ASSET_TYPES}.`
+          `The asset type ${type} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
         );
         return;
       }
