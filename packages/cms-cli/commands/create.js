@@ -173,7 +173,6 @@ function configureCreateCommand(program) {
           break;
         }
         case TYPES.template:
-        case TYPES.email:
         case TYPES['global-partial']:
           createTemplate(name, dest, type);
           break;

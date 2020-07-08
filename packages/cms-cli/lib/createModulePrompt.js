@@ -2,7 +2,7 @@ const inquirer = require('inquirer');
 
 const MODULE_LABEL_PROMPT = {
   name: 'moduleLabel',
-  message: 'What do you want to call this module in the editors?',
+  message: 'What should the module label be?',
   validate(val) {
     if (typeof val !== 'string') {
       return 'You entered an invalid name. Please try again.';
