@@ -8,6 +8,7 @@ const TEMPLATE_TYPE_PROMPT = {
   choices: [
     { name: 'PAGE', value: 'page-template' },
     { name: 'EMAIL', value: 'email-template' },
+    { name: 'GLOBAL PARTIAL', value: 'global-partial' },
   ],
 };
 

@@ -33,25 +33,19 @@ const TYPES = {
   'webpack-serverless': 'webpack-serverless',
 };
 
-const TEMPLATE_TYPES = {
-  'page-template': 'page-template',
-  'email-template': 'email-template',
-};
-
 const ASSET_PATHS = {
   [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
-  [TEMPLATE_TYPES['page-template']]: path.resolve(
-    __dirname,
-    '../defaults/page-template.html'
-  ),
-  [TYPES['global-partial']]: path.resolve(
-    __dirname,
-    '../defaults/global-partial.html'
-  ),
-  [TEMPLATE_TYPES['email-template']]: path.resolve(
-    __dirname,
-    '../defaults/email-template.html'
-  ),
+  [TYPES.template]: {
+    'page-template': path.resolve(__dirname, '../defaults/page-template.html'),
+    'global-partial': path.resolve(
+      __dirname,
+      '../defaults/global-partial.html'
+    ),
+    'email-template': path.resolve(
+      __dirname,
+      '../defaults/email-template.html'
+    ),
+  },
 };
 
 const PROJECT_REPOSITORIES = {
@@ -77,7 +71,7 @@ const createModule = (name, dest) => {
 };
 
 const createTemplate = (name, dest, type = 'page-template') => {
-  const assetPath = ASSET_PATHS[type];
+  const assetPath = ASSET_PATHS[TYPES.template][type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
   if (fs.existsSync(filePath)) {
@@ -158,9 +152,6 @@ function configureCreateCommand(program) {
           createTemplate(name, dest, templateType);
           break;
         }
-        case TYPES['global-partial']:
-          createTemplate(name, dest, type);
-          break;
         case TYPES['website-theme']:
           createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', program);
           break;
