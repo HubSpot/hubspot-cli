@@ -100,10 +100,10 @@ function configureSecretsUpdateCommand(program) {
       try {
         await updateSecret(portalId, secretName, secretValue);
         logger.log(
-          `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
+          `The secret "${secretName}" was updated in the HubSpot portal: ${portalId}`
         );
       } catch (e) {
-        logger.error(`The secret "${secretName}" was not added`);
+        logger.error(`The secret "${secretName}" was not updated`);
         logApiErrorInstance(
           e,
           new ApiErrorContext({
