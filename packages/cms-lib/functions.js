@@ -99,14 +99,16 @@ function createFunction(
   { functionsFolder, filename, endpointPath, endpointMethod },
   dest
 ) {
-  const ancestorFunctionsDir = findup('serverless.json', {
+  const ancestorFunctionsConfig = findup('serverless.json', {
     cwd: getCwd(),
     nocase: true,
   });
 
-  if (ancestorFunctionsDir) {
+  if (ancestorFunctionsConfig) {
     logger.error(
-      `Cannot create a functions directory inside "${ancestorFunctionsDir}"`
+      `Cannot create a functions directory inside "${path.dirname(
+        ancestorFunctionsConfig
+      )}"`
     );
     return;
   }
