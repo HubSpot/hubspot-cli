@@ -141,7 +141,7 @@ function configureCreateCommand(program) {
         return;
       }
 
-      trackCommandUsage(COMMAND_NAME, { assetType: type }, getPortalId());
+      let commandTrackingContext = { assetType: type };
 
       switch (type) {
         case TYPES.module:
@@ -149,6 +149,8 @@ function configureCreateCommand(program) {
           break;
         case TYPES.template: {
           const { templateType } = await createTemplatePrompt();
+
+          commandTrackingContext.templateType = templateType;
           createTemplate(name, dest, templateType);
           break;
         }
@@ -168,6 +170,8 @@ function configureCreateCommand(program) {
         default:
           break;
       }
+
+      trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId());
     });
 
   addLoggerOptions(program);
