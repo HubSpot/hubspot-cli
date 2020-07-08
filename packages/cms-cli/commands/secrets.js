@@ -10,6 +10,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
   addSecret,
+  updateSecret,
   deleteSecret,
   fetchSecrets,
 } = require('@hubspot/cms-lib/api/secrets');
@@ -32,6 +33,7 @@ function configureSecretsCommand(program) {
     .version(version)
     .description('Manage secrets')
     .command('add <name> <value>', 'add a HubSpot secret')
+    .command('update <name> <value>', 'update an existing HubSpot secret')
     .command('delete <name>', 'delete a HubSpot secret')
     .command('list', 'list all HubSpot secrets');
 
@@ -67,6 +69,45 @@ function configureSecretsAddCommand(program) {
           e,
           new ApiErrorContext({
             request: 'add secret',
+            portalId,
+          })
+        );
+      }
+    });
+
+  addLoggerOptions(program);
+  addPortalOptions(program);
+  addConfigOptions(program);
+}
+
+function configureSecretsUpdateCommand(program) {
+  program
+    .version(version)
+    .description('Update an existing HubSpot secret')
+    .arguments('<name> <value>')
+    .action(async (secretName, secretValue) => {
+      setLogLevel(program);
+      logDebugInfo(program);
+      const { config: configPath } = program;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
+
+      if (!(validateConfig() && (await validatePortal(program)))) {
+        process.exit(1);
+      }
+      const portalId = getPortalId(program);
+
+      try {
+        await updateSecret(portalId, secretName, secretValue);
+        logger.log(
+          `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
+        );
+      } catch (e) {
+        logger.error(`The secret "${secretName}" was not added`);
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            request: 'update secret',
             portalId,
           })
         );
@@ -157,6 +198,7 @@ function configureSecretsListCommand(program) {
 module.exports = {
   configureSecretsCommand,
   configureSecretsAddCommand,
+  configureSecretsUpdateCommand,
   configureSecretsDeleteCommand,
   configureSecretsListCommand,
 };
