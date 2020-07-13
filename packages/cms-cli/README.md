@@ -100,6 +100,31 @@ hs filemanager fetch --portal=DEV [src] [dest]
 hs filemanager fetch --portal=DEV --overwrite [path] [dest]
 ```
 
+Create a new HubDB table
+
+```bash
+hs hubdb create <src>
+```
+
+Fetch a HubDB table
+
+```bash
+hs hubdb fetch <id or name> <src>
+```
+
+Clear all rows in a HubDB table
+
+```bash
+hs hubdb clear <id or name>
+```
+
+Delete a HubDB table
+
+```bash
+hs hubdb delete <id or name>
+```
+
+
 ## Authentication
 
 There are three ways that the tools can authenticate with HubSpot.
