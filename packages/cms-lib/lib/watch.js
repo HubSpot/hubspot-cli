@@ -110,7 +110,7 @@ function watch(
     // Use uploadFolder so that failures of initial upload are retried
     uploadFolder(portalId, src, dest, { mode, cwd })
       .then(() => {
-        logger.log(
+        logger.success(
           `Completed uploading files in ${src} to ${dest} in ${portalId}`
         );
       })

@@ -1,5 +1,5 @@
 const http = require('../http');
-const HUBDB_API_PATH = 'hubdb/api/v2';
+const HUBDB_API_PATH = 'cms/v3/hubdb';
 
 async function fetchTables(portalId) {
   return http.get(portalId, {
@@ -28,8 +28,8 @@ async function updateTable(portalId, tableId, schema) {
 }
 
 async function publishTable(portalId, tableId) {
-  return http.put(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/publish`,
+  return http.post(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/push-live`,
   });
 }
 
@@ -41,29 +41,29 @@ async function deleteTable(portalId, tableId) {
 
 async function updateRows(portalId, tableId, rows) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/update`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/update`,
     body: rows,
   });
 }
 
 async function createRows(portalId, tableId, rows) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/create`,
-    body: rows,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/create`,
+    body: { inputs: rows },
   });
 }
 
 async function fetchRows(portalId, tableId, query = {}) {
   return http.get(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft`,
     query,
   });
 }
 
 async function deleteRows(portalId, tableId, rowIds) {
   return http.post(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/batch/delete`,
-    body: rowIds,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/purge`,
+    body: { inputs: rowIds },
   });
 }
 

@@ -144,7 +144,7 @@ function configureUploadCommand(program) {
             );
           });
       } else {
-        logger.success(
+        logger.log(
           `Uploading files from "${src}" to "${dest}" in the Design Manager of portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
@@ -152,7 +152,7 @@ function configureUploadCommand(program) {
           cwd: getCwd(),
         })
           .then(() => {
-            logger.log(
+            logger.success(
               `Uploading files to "${dest}" in the Design Manager is complete`
             );
           })
