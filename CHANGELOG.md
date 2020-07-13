@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## 1.1.9
+ * Fix to allow `hs filemanager fetch` to fetch all files
+ * `hs hubdb` now supports referencing tables by name or ID
+ * Add `hs create webpack-serverless`
+ * Fix running `hs watch` in CWD
+
 ## 1.1.8
  * Add `hs filemanager fetch`
 
