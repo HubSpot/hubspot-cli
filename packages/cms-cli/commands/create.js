@@ -70,11 +70,20 @@ const createModule = (moduleDefinition, name, dest) => {
   };
 
   const moduleFileFilter = (src, dest) => {
-    if (path.basename(src) === 'meta.json') {
-      writeModuleMeta(moduleDefinition, dest);
-      return false;
-    } else {
-      return true;
+    const emailEnabled = moduleDefinition.contentTypes.includes('EMAIL');
+
+    switch (path.basename(src)) {
+      case 'meta.json':
+        writeModuleMeta(moduleDefinition, dest);
+        return false;
+      case 'module.js':
+      case 'module.css':
+        if (emailEnabled) {
+          return false;
+        }
+        return true;
+      default:
+        return true;
     }
   };
 
