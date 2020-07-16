@@ -25,9 +25,16 @@ const CONTENT_TYPES_PROMPT = {
   ],
 };
 
+const GLOBAL_PROMPT = {
+  type: 'confirm',
+  name: 'global',
+  message: 'Is this a global module?',
+  default: false,
+};
+
 function createModulePrompt() {
   const prompt = inquirer.createPromptModule();
-  return prompt([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT]);
+  return prompt([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
 }
 module.exports = {
   createModulePrompt,
