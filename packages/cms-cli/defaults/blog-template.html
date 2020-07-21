@@ -1,0 +1,27 @@
+
+<!--
+    templateType: blog
+    isAvailableForNewContent: true
+-->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{ content.html_title }}</title>
+    <meta name="description" content="{{ content.meta_description }}">
+    {{ standard_header_includes }}
+  </head>
+  <body>
+    {% module "blog_template_logo" path="@hubspot/logo" label="Logo" %}
+    <div class="main-content">
+      {% module "blog_template_main_content" path="@hubspot/blog_content" label="Blog Content" %}
+      {% module "blog_template_comments" path="@hubspot/blog_comments" label="Blog Comments" %}
+    </div>
+    <div class="sidebar">
+      {% module "blog_template_email_subscription" path="@hubspot/blog_subscribe" label="Blog Email Subscription" %}
+      {% module "blog_template_post_listing" path="@hubspot/post_listing" label="Post Listing" %}
+      {% module "blog_template_post_filter" path="@hubspot/post_filter" label="Post Filter" %}
+    </div>
+    {{ standard_footer_includes }}
+  </body>
+</html>

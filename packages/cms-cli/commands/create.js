@@ -37,6 +37,7 @@ const ASSET_PATHS = {
   [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
   [TYPES.template]: {
     'page-template': path.resolve(__dirname, '../defaults/page-template.html'),
+    partial: path.resolve(__dirname, '../defaults/partial.html'),
     'global-partial': path.resolve(
       __dirname,
       '../defaults/global-partial.html'
@@ -44,6 +45,11 @@ const ASSET_PATHS = {
     'email-template': path.resolve(
       __dirname,
       '../defaults/email-template.html'
+    ),
+    'blog-template': path.resolve(__dirname, '../defaults/blog-template.html'),
+    'search-template': path.resolve(
+      __dirname,
+      '../defaults/search-template.html'
     ),
   },
 };

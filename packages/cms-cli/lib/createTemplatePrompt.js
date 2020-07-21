@@ -6,9 +6,12 @@ const TEMPLATE_TYPE_PROMPT = {
   message: 'Select the type of template to create',
   default: 'PAGE',
   choices: [
-    { name: 'PAGE', value: 'page-template' },
-    { name: 'EMAIL', value: 'email-template' },
-    { name: 'GLOBAL PARTIAL', value: 'global-partial' },
+    { name: 'page', value: 'page-template' },
+    { name: 'email', value: 'email-template' },
+    { name: 'partial', value: 'partial' },
+    { name: 'global partial', value: 'global-partial' },
+    { name: 'blog', value: 'blog-template' },
+    { name: 'search results', value: 'search-template' },
   ],
 };
 
