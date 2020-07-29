@@ -26,7 +26,6 @@ const COMMAND_NAME = 'create';
 
 const TYPES = {
   function: 'function',
-  'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
@@ -193,6 +192,11 @@ function configureCreateCommand(program) {
           break;
         }
         case TYPES.template: {
+          if (!name) {
+            logger.error(`The 'name' argument is required.`);
+            return;
+          }
+
           const { templateType } = await createTemplatePrompt();
 
           commandTrackingContext.templateType = templateType;
