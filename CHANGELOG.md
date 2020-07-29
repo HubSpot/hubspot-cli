@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## 1.1.9
+ * Fix to allow `hs filemanager fetch` to fetch all files
+ * Release `hs hubdb` commands into BETA and [add them to CLI documentation](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli#hubdb-commands)
+ * `hs hubdb` now supports referencing tables by name or ID
+ * Add `hs create webpack-serverless`
+ * Improve how CWD is determined when running `hs watch`
+
 ## 1.1.8
  * Add `hs filemanager fetch`
 

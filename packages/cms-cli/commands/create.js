@@ -19,6 +19,7 @@ const {
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
+const { createModulePrompt } = require('../lib/createModulePrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const COMMAND_NAME = 'create';
@@ -62,7 +63,43 @@ const PROJECT_REPOSITORIES = {
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
-const createModule = (name, dest) => {
+const createModule = (moduleDefinition, name, dest) => {
+  const writeModuleMeta = ({ contentTypes, label, global }, dest) => {
+    const metaData = {
+      label: label,
+      css_assets: [],
+      external_js: [],
+      global: global,
+      help_text: '',
+      host_template_types: contentTypes,
+      js_assets: [],
+      other_assets: [],
+      smart_type: 'NOT_SMART',
+      tags: [],
+      is_available_for_new_content: false,
+    };
+
+    fs.writeJSONSync(dest, metaData, { spaces: 2 });
+  };
+
+  const moduleFileFilter = (src, dest) => {
+    const emailEnabled = moduleDefinition.contentTypes.includes('EMAIL');
+
+    switch (path.basename(src)) {
+      case 'meta.json':
+        writeModuleMeta(moduleDefinition, dest);
+        return false;
+      case 'module.js':
+      case 'module.css':
+        if (emailEnabled) {
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
   const assetPath = ASSET_PATHS.module;
   const folderName = name.endsWith('.module') ? name : `${name}.module`;
   const destPath = path.join(dest, folderName);
@@ -73,7 +110,7 @@ const createModule = (name, dest) => {
   logger.log(`Creating ${destPath}`);
   fs.mkdirp(destPath);
   logger.log(`Creating module at ${destPath}`);
-  fs.copySync(assetPath, destPath);
+  fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
 };
 
 const createTemplate = (name, dest, type = 'page-template') => {
@@ -150,9 +187,11 @@ function configureCreateCommand(program) {
       let commandTrackingContext = { assetType: type };
 
       switch (type) {
-        case TYPES.module:
-          createModule(name, dest);
+        case TYPES.module: {
+          const moduleDefinition = await createModulePrompt();
+          createModule(moduleDefinition, name, dest);
           break;
+        }
         case TYPES.template: {
           const { templateType } = await createTemplatePrompt();
 

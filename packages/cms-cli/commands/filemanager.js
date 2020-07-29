@@ -59,6 +59,10 @@ function configureFileManagerFetchCommand(program) {
       'Download a folder or file from the HubSpot File Manager to your computer'
     )
     .arguments('<src> [dest]')
+    .option(
+      '--include-archived',
+      'Include files that have been marked as "archived"'
+    )
     .action(async (src, dest) => {
       setLogLevel(program);
       logDebugInfo(program);
