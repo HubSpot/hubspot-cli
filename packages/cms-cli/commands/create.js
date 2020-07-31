@@ -149,6 +149,14 @@ function configureCreateCommand(program) {
       setLogLevel(program);
       logDebugInfo(program);
       type = typeof type === 'string' && type.toLowerCase();
+
+      if (type === 'global-partial') {
+        logger.error(
+          `The asset type ${type} has been deprecated. Please choose the "template" asset and select "global partial".`
+        );
+        return;
+      }
+
       if (!type || !TYPES[type]) {
         logger.error(
           `The asset type ${type} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
