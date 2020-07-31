@@ -18,6 +18,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
+const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
 const { createModulePrompt } = require('../lib/createModulePrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
@@ -25,7 +26,6 @@ const COMMAND_NAME = 'create';
 
 const TYPES = {
   function: 'function',
-  'global-partial': 'global-partial',
   module: 'module',
   template: 'template',
   'website-theme': 'website-theme',
@@ -36,11 +36,23 @@ const TYPES = {
 
 const ASSET_PATHS = {
   [TYPES.module]: path.resolve(__dirname, '../defaults/Sample.module'),
-  [TYPES.template]: path.resolve(__dirname, '../defaults/template.html'),
-  [TYPES['global-partial']]: path.resolve(
-    __dirname,
-    '../defaults/global-partial.html'
-  ),
+  [TYPES.template]: {
+    'page-template': path.resolve(__dirname, '../defaults/page-template.html'),
+    partial: path.resolve(__dirname, '../defaults/partial.html'),
+    'global-partial': path.resolve(
+      __dirname,
+      '../defaults/global-partial.html'
+    ),
+    'email-template': path.resolve(
+      __dirname,
+      '../defaults/email-template.html'
+    ),
+    'blog-template': path.resolve(__dirname, '../defaults/blog-template.html'),
+    'search-template': path.resolve(
+      __dirname,
+      '../defaults/search-template.html'
+    ),
+  },
 };
 
 const PROJECT_REPOSITORIES = {
@@ -102,12 +114,8 @@ const createModule = (moduleDefinition, name, dest) => {
   fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
 };
 
-const createTemplate = (name, dest, type = 'template') => {
-  if (!name) {
-    logger.error(`The 'name' argument is required.`);
-    return;
-  }
-  const assetPath = ASSET_PATHS[type];
+const createTemplate = (name, dest, type = 'page-template') => {
+  const assetPath = ASSET_PATHS[TYPES.template][type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
   if (fs.existsSync(filePath)) {
@@ -143,9 +151,17 @@ function configureCreateCommand(program) {
       setLogLevel(program);
       logDebugInfo(program);
       type = typeof type === 'string' && type.toLowerCase();
+
+      if (type === 'global-partial') {
+        logger.error(
+          `The asset type ${type} has been deprecated. Please choose the "template" asset and select "global partial".`
+        );
+        return;
+      }
+
       if (!type || !TYPES[type]) {
         logger.error(
-          `The asset type ${type} is not supported. Supported authentication protocols are ${SUPPORTED_ASSET_TYPES}.`
+          `The asset type ${type} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
         );
         return;
       }
@@ -178,7 +194,7 @@ function configureCreateCommand(program) {
         return;
       }
 
-      trackCommandUsage(COMMAND_NAME, { assetType: type }, getPortalId());
+      let commandTrackingContext = { assetType: type };
 
       switch (type) {
         case TYPES.module: {
@@ -186,10 +202,18 @@ function configureCreateCommand(program) {
           createModule(moduleDefinition, name, dest);
           break;
         }
-        case TYPES.template:
-        case TYPES['global-partial']:
-          createTemplate(name, dest, type);
+        case TYPES.template: {
+          if (!name) {
+            logger.error(`The 'name' argument is required.`);
+            return;
+          }
+
+          const { templateType } = await createTemplatePrompt();
+
+          commandTrackingContext.templateType = templateType;
+          createTemplate(name, dest, templateType);
           break;
+        }
         case TYPES['website-theme']:
           createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', program);
           break;
@@ -207,6 +231,8 @@ function configureCreateCommand(program) {
         default:
           break;
       }
+
+      trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId());
     });
 
   addLoggerOptions(program);
