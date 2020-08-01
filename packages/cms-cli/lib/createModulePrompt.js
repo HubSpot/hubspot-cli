@@ -16,13 +16,21 @@ const CONTENT_TYPES_PROMPT = {
   type: 'checkbox',
   name: 'contentTypes',
   message: 'What types of content will this module be used in?',
-  default: 'PAGE',
+  default: ['PAGE'],
   choices: [
     { name: 'Page', value: 'PAGE' },
     { name: 'Blog post', value: 'BLOG_POST' },
     { name: 'Blog listing', value: 'BLOG_LISTING' },
     { name: 'Email', value: 'EMAIL' },
   ],
+  validate: input => {
+    return new Promise(function(resolve, reject) {
+      if (input.length > 0) {
+        resolve(true);
+      }
+      reject('Please select at least one content type for this module.');
+    });
+  },
 };
 
 const GLOBAL_PROMPT = {
