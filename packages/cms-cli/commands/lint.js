@@ -62,47 +62,48 @@ const action = async (args, options) => {
   logger.log('%d issues found', count);
 };
 
-const configureLintCommand = program => {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<path>')
-    .action(async (localPath, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!(validateConfig() && (await validatePortal(command)))) {
-        process.exit(1);
-      }
-
-      await action({ localPath }, command);
+const configureYargs = {
+  command: `${COMMAND_NAME} <path>`,
+  describe: DESCRIPTION,
+  builder: yargs => {
+    addConfigOptions(yargs, true);
+    addPortalOptions(yargs, true);
+    yargs.positional('path', {
+      describe: 'Local folder to lint',
+      type: 'string',
     });
-
-  addConfigOptions(program);
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
+    return yargs;
+  },
+  handler: async function(argv) {
+    await action({ localPath: argv.path }, argv);
+  },
 };
 
-exports.command = `${COMMAND_NAME} <path>`;
+const configureCommander = {
+  configureLintCommand: program => {
+    program
+      .version(version)
+      .description(DESCRIPTION)
+      .arguments('<path>')
+      .action(async (localPath, command = {}) => {
+        setLogLevel(command);
+        logDebugInfo(command);
+        const { config: configPath } = command;
+        loadConfig(configPath);
+        checkAndWarnGitInclusion();
 
-exports.describe = DESCRIPTION;
+        if (!(validateConfig() && (await validatePortal(command)))) {
+          process.exit(1);
+        }
 
-exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
-  yargs.positional('path', {
-    describe: 'Local folder to lint',
-    type: 'string',
-  });
-  return yargs;
+        await action({ localPath }, command);
+      });
+
+    addConfigOptions(program);
+    addPortalOptions(program);
+    addLoggerOptions(program);
+    addHelpUsageTracking(program, COMMAND_NAME);
+  },
 };
 
-exports.handler = async function(argv) {
-  await action({ localPath: argv.path }, argv);
-};
-
-exports.configureLintCommand = configureLintCommand;
+module.exports = { ...configureYargs, ...configureCommander };

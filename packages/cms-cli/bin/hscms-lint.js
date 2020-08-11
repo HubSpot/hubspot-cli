@@ -2,8 +2,8 @@
 
 const { Command } = require('commander');
 
-const { configureCommand } = require('../commands/lint');
+const { configureLintCommand } = require('../commands/lint');
 
 const program = new Command('hscms lint');
-configureCommand(program);
+configureLintCommand(program);
 program.parse(process.argv);
