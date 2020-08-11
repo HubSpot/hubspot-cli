@@ -16,7 +16,10 @@ const {
 } = require('@hubspot/cms-lib/api/secrets');
 
 const { validatePortal } = require('../lib/validation');
-const { addHelpUsageTracking } = require('../lib/usageTracking');
+const {
+  trackCommandUsage,
+  addHelpUsageTracking,
+} = require('../lib/usageTracking');
 const { version } = require('../package.json');
 
 const {
@@ -57,6 +60,7 @@ function configureSecretsAddCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(program);
+      trackCommandUsage('secrets-add', {}, portalId);
 
       try {
         await addSecret(portalId, secretName, secretValue);
@@ -96,6 +100,7 @@ function configureSecretsUpdateCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(program);
+      trackCommandUsage('secrets-update', {}, portalId);
 
       try {
         await updateSecret(portalId, secretName, secretValue);
@@ -134,6 +139,7 @@ function configureSecretsDeleteCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(program);
+      trackCommandUsage('secrets-delete', {}, portalId);
 
       try {
         await deleteSecret(portalId, secretName);
@@ -171,6 +177,7 @@ function configureSecretsListCommand(program) {
         process.exit(1);
       }
       const portalId = getPortalId(program);
+      trackCommandUsage('secrets-list', {}, portalId);
 
       try {
         const { results } = await fetchSecrets(portalId);
