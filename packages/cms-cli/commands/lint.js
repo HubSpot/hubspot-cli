@@ -27,13 +27,47 @@ const {
 } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'lint';
+const DESCRIPTION = 'Lint a file or folder for HubL syntax';
 
-function configureCommand(command) {
-  command
+const action = async (args, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
+
+  if (!(validateConfig() && (await validatePortal(options)))) {
+    process.exit(1);
+  }
+
+  const portalId = getPortalId(options);
+
+  trackCommandUsage(COMMAND_NAME, {}, portalId);
+
+  const localPath = resolveLocalPath(args.localPath);
+  const groupName = `Linting "${localPath}"`;
+
+  logger.group(groupName);
+  let count = 0;
+  try {
+    await lint(portalId, localPath, result => {
+      count += printHublValidationResult(result);
+    });
+  } catch (err) {
+    logger.groupEnd(groupName);
+    logErrorInstance(err, { portalId });
+    process.exit(1);
+  }
+  logger.groupEnd(groupName);
+  logger.log('%d issues found', count);
+};
+
+const configureLintCommand = program => {
+  program
     .version(version)
-    .description('lint a file or folder for HubL syntax')
+    .description(DESCRIPTION)
     .arguments('<path>')
-    .action(async filepath => {
+    .action(async (localPath, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
       const { config: configPath } = command;
@@ -44,34 +78,31 @@ function configureCommand(command) {
         process.exit(1);
       }
 
-      const portalId = getPortalId(command);
-
-      trackCommandUsage(COMMAND_NAME, {}, portalId);
-
-      filepath = resolveLocalPath(filepath);
-
-      const groupName = `Linting "${filepath}"`;
-      logger.group(groupName);
-      let count = 0;
-      try {
-        await lint(portalId, filepath, result => {
-          count += printHublValidationResult(result);
-        });
-      } catch (err) {
-        logger.groupEnd(groupName);
-        logErrorInstance(err, { portalId });
-        process.exit(1);
-      }
-      logger.groupEnd(groupName);
-      logger.log('%d issues found', count);
+      await action({ localPath }, command);
     });
 
-  addConfigOptions(command);
-  addPortalOptions(command);
-  addLoggerOptions(command);
-  addHelpUsageTracking(command, COMMAND_NAME);
-}
-
-module.exports = {
-  configureCommand,
+  addConfigOptions(program);
+  addPortalOptions(program);
+  addLoggerOptions(program);
+  addHelpUsageTracking(program, COMMAND_NAME);
 };
+
+exports.command = `${COMMAND_NAME} <path>`;
+
+exports.describe = DESCRIPTION;
+
+exports.builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  yargs.positional('path', {
+    describe: 'Local folder to lint',
+    type: 'string',
+  });
+  return yargs;
+};
+
+exports.handler = async function(argv) {
+  await action({ localPath: argv.path }, argv);
+};
+
+exports.configureLintCommand = configureLintCommand;
