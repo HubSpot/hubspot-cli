@@ -4,6 +4,7 @@ const ora = require('ora');
 const {
   addLoggerOptions,
   addPortalOptions,
+  addConfigOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -12,10 +13,15 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cms-lib');
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logApiErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
+const { validatePortal } = require('../lib/validation');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
 const {
   getFunctionLogs,
@@ -24,6 +30,7 @@ const {
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
 
 const COMMAND_NAME = 'logs';
+const DESCRIPTION = 'get logs for a function';
 const TAIL_DELAY = 5000;
 
 const makeSpinner = (functionPath, portalIdentifier) => {
@@ -47,6 +54,18 @@ const handleKeypressToExit = exit => {
       exit();
     }
   });
+};
+
+const loadAndValidateOptions = async options => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
+
+  if (!(validateConfig() && (await validatePortal(options)))) {
+    process.exit(1);
+  }
 };
 
 const tailLogs = async ({
@@ -97,78 +116,96 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-const getLogs = program => {
-  program
+const action = async (args, options) => {
+  loadAndValidateOptions(options);
+
+  const { functionPath } = args;
+  const { latest, file, follow, compact } = options;
+  let logsResp;
+  const portalId = getPortalId(options);
+
+  trackCommandUsage(COMMAND_NAME, { latest, file }, portalId);
+
+  logger.debug(
+    `Getting ${
+      latest ? 'latest ' : ''
+    }logs for function with path: ${functionPath}`
+  );
+
+  const functionResp = await getFunctionByPath(portalId, functionPath).catch(
+    e => {
+      logApiErrorInstance(e, {
+        functionPath,
+        portalId,
+      });
+      process.exit(1);
+    }
+  );
+
+  logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
+
+  if (follow) {
+    await tailLogs({
+      functionId: functionResp.id,
+      functionPath,
+      portalId,
+
+      Name: options.portal,
+      compact,
+    });
+  } else if (latest) {
+    logsResp = await getLatestFunctionLog(portalId, functionResp.id);
+  } else {
+    logsResp = await getFunctionLogs(portalId, functionResp.id);
+  }
+
+  if (logsResp) {
+    return outputLogs(logsResp, {
+      compact,
+    });
+  }
+};
+
+// Yargs Configuration
+const command = `${COMMAND_NAME} <function_path>`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addLoggerOptions(yargs, true);
+  yargs.positional('path', {
+    describe: 'Path to serverless function',
+    type: 'string',
+  });
+  return yargs;
+};
+const handler = async argv => action({ functionPath: argv.path }, argv);
+
+// Commander Configuration
+const configureCommanderLogsCommand = commander => {
+  commander
     .version(version)
-    .description(`get logs for a function`)
+    .description(DESCRIPTION)
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
     .option('--compact', 'output compact logs')
     .option('-f, --follow', 'tail logs')
-    .action(async functionPath => {
-      const { config: configPath } = program;
-      const portalId = getPortalId(program);
-      const { latest, file, follow, compact } = program;
-      let logsResp;
+    .action(async (functionPath, command = {}) =>
+      action({ functionPath }, command)
+    );
 
-      setLogLevel(program);
-      logDebugInfo(program);
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-      trackCommandUsage(
-        COMMAND_NAME,
-        {
-          latest,
-          file,
-        },
-        portalId
-      );
-
-      logger.debug(
-        `Getting ${
-          latest ? 'latest ' : ''
-        }logs for function with path: ${functionPath}`
-      );
-
-      const functionResp = await getFunctionByPath(
-        portalId,
-        functionPath
-      ).catch(e => {
-        logApiErrorInstance(e, {
-          functionPath,
-          portalId,
-        });
-        process.exit(1);
-      });
-
-      logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
-
-      if (follow) {
-        await tailLogs({
-          functionId: functionResp.id,
-          functionPath,
-          portalId,
-          portalName: program.portal,
-          compact,
-        });
-      } else if (latest) {
-        logsResp = await getLatestFunctionLog(portalId, functionResp.id);
-      } else {
-        logsResp = await getFunctionLogs(portalId, functionResp.id);
-      }
-
-      if (logsResp) {
-        return outputLogs(logsResp, {
-          compact,
-        });
-      }
-    });
-
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
+  addConfigOptions(commander);
+  addPortalOptions(commander);
+  addLoggerOptions(commander);
+  addHelpUsageTracking(commander, COMMAND_NAME);
 };
 
 module.exports = {
-  getLogs,
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureCommanderLogsCommand,
 };

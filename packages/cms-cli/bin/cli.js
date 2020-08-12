@@ -11,6 +11,7 @@ const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
 
 const removeCommand = require('../commands/remove');
+const logsCommand = require('../commands/logs');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -29,6 +30,7 @@ const argv = yargs
     if (err) logErrorInstance(err);
   })
   .command(removeCommand)
+  .command(logsCommand)
   .help()
   .demandCommand(
     1,
