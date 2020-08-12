@@ -42,12 +42,13 @@ const loadAndValidateOptions = async options => {
 };
 
 const action = async (args, options) => {
+  await loadAndValidateOptions(options);
+
   const portalId = getPortalId(options);
   const localPath = resolveLocalPath(args.localPath);
   const groupName = `Linting "${localPath}"`;
 
   trackCommandUsage(COMMAND_NAME, {}, portalId);
-  await loadAndValidateOptions(options);
 
   logger.group(groupName);
   let count = 0;
