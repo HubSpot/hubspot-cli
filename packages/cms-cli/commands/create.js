@@ -187,7 +187,7 @@ function configureCreateCommand(program) {
       dest = resolveLocalPath(dest);
 
       try {
-        await fs.ensureDir(dest);
+        await fs.exists(dest);
       } catch (e) {
         logger.error(`The "${dest}" is not a usable path to a directory`);
         logFileSystemErrorInstance(e, {

@@ -131,6 +131,8 @@ function createFunction(
   if (fs.existsSync(functionFilePath)) {
     logger.error(`The JavaScript file at "${functionFilePath}" already exists`);
     return;
+  } else {
+    fs.ensureFileSync(functionFilePath);
   }
 
   try {
