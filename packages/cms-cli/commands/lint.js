@@ -81,7 +81,7 @@ const builder = yargs => {
 const handler = async argv => action({ localPath: argv.path }, argv);
 
 // Commander Configuration
-const configureLintCommand = commander => {
+const configureCommanderLintCommand = commander => {
   commander
     .version(version)
     .description(DESCRIPTION)
@@ -101,5 +101,5 @@ module.exports = {
   builder,
   handler,
   // Commander
-  configureLintCommand,
+  configureCommanderLintCommand,
 };
