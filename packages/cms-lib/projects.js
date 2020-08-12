@@ -189,7 +189,7 @@ async function createVueProject(dest, type, repoName) {
   const projectDestinationFolder = dest.match(/([^/]*)\/*$/)[1];
 
   return new Promise(resolve => {
-    const spwan = spawn(
+    const vueInit = spawn(
       'vue',
       ['init', `HubSpot/${repoName}`, projectDestinationFolder],
       {
@@ -198,7 +198,7 @@ async function createVueProject(dest, type, repoName) {
       }
     );
 
-    spwan.on('exit', () => {
+    vueInit.on('exit', () => {
       resolve();
     });
   });
