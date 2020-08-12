@@ -29,7 +29,7 @@ const {
 const COMMAND_NAME = 'lint';
 const DESCRIPTION = 'Lint a file or folder for HubL syntax';
 
-const parseOptions = async options => {
+const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -47,7 +47,7 @@ const action = async (args, options) => {
   const groupName = `Linting "${localPath}"`;
 
   trackCommandUsage(COMMAND_NAME, {}, portalId);
-  await parseOptions(options);
+  await loadAndValidateOptions(options);
 
   logger.group(groupName);
   let count = 0;
