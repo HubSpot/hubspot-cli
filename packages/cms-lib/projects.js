@@ -186,12 +186,12 @@ async function createProject(dest, type, repoName, sourceDir, options = {}) {
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createVueProject(dest, type, repoName) {
-  const projectDestinationFolder = dest.match(/([^/]*)\/*$/)[1];
+  const relativePath = path.relative(process.cwd(), dest);
 
   return new Promise(resolve => {
     const vueInit = spawn(
       'vue',
-      ['init', `HubSpot/${repoName}`, projectDestinationFolder],
+      ['init', `HubSpot/${repoName}`, relativePath],
       {
         stdio: 'inherit',
         shell: false,
