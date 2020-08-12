@@ -65,38 +65,41 @@ const action = async (args, options) => {
   logger.log(`${count} issues found`);
 };
 
-module.exports = {
-  /**
-   * Yargs
-   */
-  command: `${COMMAND_NAME} <path>`,
-  describe: DESCRIPTION,
-  builder: yargs => {
-    addConfigOptions(yargs, true);
-    addPortalOptions(yargs, true);
-    addLoggerOptions(yargs, true);
-    yargs.positional('path', {
-      describe: 'Local folder to lint',
-      type: 'string',
-    });
-    return yargs;
-  },
-  handler: async argv => action({ localPath: argv.path }, argv),
-  /**
-   * Commander
-   */
-  configureLintCommand: commander => {
-    commander
-      .version(version)
-      .description(DESCRIPTION)
-      .arguments('<path>')
-      .action(async (localPath, command = {}) =>
-        action({ localPath }, command)
-      );
+// Yargs Configuration
+const command = `${COMMAND_NAME} <path>`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addLoggerOptions(yargs, true);
+  yargs.positional('path', {
+    describe: 'Local folder to lint',
+    type: 'string',
+  });
+  return yargs;
+};
+const handler = async argv => action({ localPath: argv.path }, argv);
 
-    addConfigOptions(commander);
-    addPortalOptions(commander);
-    addLoggerOptions(commander);
-    addHelpUsageTracking(commander, COMMAND_NAME);
-  },
+// Commander Configuration
+const configureLintCommand = commander => {
+  commander
+    .version(version)
+    .description(DESCRIPTION)
+    .arguments('<path>')
+    .action(async (localPath, command = {}) => action({ localPath }, command));
+
+  addConfigOptions(commander);
+  addPortalOptions(commander);
+  addLoggerOptions(commander);
+  addHelpUsageTracking(commander, COMMAND_NAME);
+};
+
+module.exports = {
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureLintCommand,
 };
