@@ -80,6 +80,7 @@ async function trackHelpUsage(command) {
 
 const addHelpUsageTracking = (program, command) => {
   program.on('--help', () => {
+    console.log('commander');
     setLogLevel(program);
     trackHelpUsage(command);
   });
