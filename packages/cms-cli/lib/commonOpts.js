@@ -55,7 +55,14 @@ const addModeOptions = (program, { read, write }) => {
   program.option('--mode <mode>', help);
 };
 
-const addTestingOptions = program => {
+const addTestingOptions = (program, useYargs = false) => {
+  if (useYargs) {
+    return program.option('qa', {
+      describe: 'run command in qa mode',
+      type: 'boolean',
+      default: false,
+    });
+  }
   program.option('--qa', 'run command in qa mode', false);
 };
 
