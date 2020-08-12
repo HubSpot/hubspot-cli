@@ -46,8 +46,8 @@ const action = async (args, options) => {
   const localPath = resolveLocalPath(args.localPath);
   const groupName = `Linting "${localPath}"`;
 
-  await parseOptions(options);
   trackCommandUsage(COMMAND_NAME, {}, portalId);
+  await parseOptions(options);
 
   logger.group(groupName);
   let count = 0;
