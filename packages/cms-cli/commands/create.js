@@ -7,7 +7,10 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { createProject } = require('@hubspot/cms-lib/projects');
+const {
+  createProject,
+  createVueProject,
+} = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
 const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
@@ -30,6 +33,7 @@ const TYPES = {
   template: 'template',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
+  'vue-app': 'vue-app',
   'webpack-serverless': 'webpack-serverless',
 };
 
@@ -56,6 +60,7 @@ const ASSET_PATHS = {
 
 const PROJECT_REPOSITORIES = {
   [TYPES['react-app']]: 'cms-react-boilerplate',
+  [TYPES['vue-app']]: 'cms-vue-module-template',
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
   [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
 };
@@ -171,6 +176,7 @@ function configureCreateCommand(program) {
           break;
         case TYPES['website-theme']:
         case TYPES['react-app']:
+        case TYPES['vue-app']:
         case TYPES['webpack-serverless']:
           dest = name || type;
           break;
@@ -217,6 +223,10 @@ function configureCreateCommand(program) {
         case TYPES['react-app']:
         case TYPES['webpack-serverless']: {
           createProject(dest, type, PROJECT_REPOSITORIES[type], '', program);
+          break;
+        }
+        case TYPES['vue-app']: {
+          await createVueProject(dest, type, PROJECT_REPOSITORIES[type]);
           break;
         }
         case TYPES.function: {

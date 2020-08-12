@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
+const { spawn } = require('child_process');
 const { promisify } = require('util');
 
 const request = require('request-promise-native');
@@ -175,8 +176,37 @@ async function createProject(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
+/**
+ * Writes a copy of the boilerplate project to dest.
+ * @param {String} dest - Dir to write project src to.
+ * @param {String} type - Type of project to create.
+ * @param {String} repoName - Name of GitHub repository to clone.
+ * @param {String} sourceDir - Directory in project that should get copied.
+ * @param {Object} options
+ * @returns {Boolean} `true` if successful, `false` otherwise.
+ */
+async function createVueProject(dest, type, repoName) {
+  const projectDestinationFolder = dest.match(/([^/]*)\/*$/)[1];
+
+  return new Promise(resolve => {
+    const spwan = spawn(
+      'vue',
+      ['init', `HubSpot/${repoName}`, projectDestinationFolder],
+      {
+        stdio: 'inherit',
+        shell: false,
+      }
+    );
+
+    spwan.on('exit', () => {
+      resolve();
+    });
+  });
+}
+
 module.exports = {
   createProject,
+  createVueProject,
   downloadProject,
   extractProjectZip,
   fetchReleaseData,
