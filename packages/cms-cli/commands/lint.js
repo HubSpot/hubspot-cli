@@ -74,36 +74,35 @@ const configureYargs = {
     });
     return yargs;
   },
-  handler: async function(argv) {
+  handler: async argv => {
     await action({ localPath: argv.path }, argv);
   },
 };
 
-const configureCommander = {
-  configureLintCommand: program => {
-    program
-      .version(version)
-      .description(DESCRIPTION)
-      .arguments('<path>')
-      .action(async (localPath, command = {}) => {
-        setLogLevel(command);
-        logDebugInfo(command);
-        const { config: configPath } = command;
-        loadConfig(configPath);
-        checkAndWarnGitInclusion();
+// Commander.js
+const configureLintCommand = program => {
+  program
+    .version(version)
+    .description(DESCRIPTION)
+    .arguments('<path>')
+    .action(async (localPath, command = {}) => {
+      setLogLevel(command);
+      logDebugInfo(command);
+      const { config: configPath } = command;
+      loadConfig(configPath);
+      checkAndWarnGitInclusion();
 
-        if (!(validateConfig() && (await validatePortal(command)))) {
-          process.exit(1);
-        }
+      if (!(validateConfig() && (await validatePortal(command)))) {
+        process.exit(1);
+      }
 
-        await action({ localPath }, command);
-      });
+      await action({ localPath }, command);
+    });
 
-    addConfigOptions(program);
-    addPortalOptions(program);
-    addLoggerOptions(program);
-    addHelpUsageTracking(program, COMMAND_NAME);
-  },
+  addConfigOptions(program);
+  addPortalOptions(program);
+  addLoggerOptions(program);
+  addHelpUsageTracking(program, COMMAND_NAME);
 };
 
-module.exports = { ...configureYargs, ...configureCommander };
+module.exports = { ...configureYargs, configureLintCommand };
