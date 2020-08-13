@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureHubDbCreateCommand } = require('../commands/hubdb');
+const {
+  configureCommanderHubDbCreateCommand,
+} = require('../commands/hubdb/create');
 
 const program = new Command('hs hubdb create');
-configureHubDbCreateCommand(program);
+configureCommanderHubDbCreateCommand(program);
 program.parse(process.argv);

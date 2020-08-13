@@ -1,0 +1,96 @@
+const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
+const { logger } = require('@hubspot/cms-lib/logger');
+const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const { downloadHubDbTable } = require('@hubspot/cms-lib/hubdb');
+
+const { validatePortal } = require('../../lib/validation');
+const { trackCommandUsage } = require('../../lib/usageTracking');
+const { version } = require('../../package.json');
+
+const {
+  addConfigOptions,
+  addLoggerOptions,
+  addPortalOptions,
+  setLogLevel,
+  getPortalId,
+} = require('../../lib/commonOpts');
+const { logDebugInfo } = require('../../lib/debugInfo');
+
+const FETCH_DESCRIPTION = 'fetch a HubDB table';
+
+const action = async (args, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
+
+  if (!(validateConfig() && (await validatePortal(options)))) {
+    process.exit(1);
+  }
+  const portalId = getPortalId(options);
+
+  trackCommandUsage('hubdb-fetch', null, portalId);
+
+  try {
+    const { filePath } = await downloadHubDbTable(
+      portalId,
+      args.tableId,
+      args.dest
+    );
+
+    logger.log(`Downloaded HubDB table ${args.tableId} to ${filePath}`);
+  } catch (e) {
+    logErrorInstance(e);
+  }
+};
+
+const configureFetch = yargs => {
+  yargs.command({
+    command: 'fetch <tableId> <dest>',
+    describe: FETCH_DESCRIPTION,
+    handler: async argv =>
+      action({ tableId: argv.tableId, dest: argv.dest }, argv),
+    builder: () => {
+      yargs.positional('tableId', {
+        describe: 'HubDB Table ID',
+        type: 'string',
+      });
+
+      yargs.positional('dest', {
+        describe: 'Local destination folder to fetch table to',
+        type: 'string',
+      });
+    },
+  });
+
+  addLoggerOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addConfigOptions(yargs, true);
+};
+
+function configureCommanderHubDbFetchCommand(commander) {
+  commander
+    .version(version)
+    .description(FETCH_DESCRIPTION)
+    .arguments('<tableId> [dest]')
+    .action(async (tableId, dest, command = {}) =>
+      action({ tableId, dest }, command)
+    );
+
+  addLoggerOptions(commander);
+  addPortalOptions(commander);
+  addConfigOptions(commander);
+}
+
+module.exports = {
+  FETCH_DESCRIPTION,
+  // Yargs
+  configureFetch,
+  // Commander
+  configureCommanderHubDbFetchCommand,
+};

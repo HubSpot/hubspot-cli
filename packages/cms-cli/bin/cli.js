@@ -12,6 +12,7 @@ const pkg = require('../package.json');
 
 const removeCommand = require('../commands/remove');
 const lintCommand = require('../commands/lint');
+const hubdbCommand = require('../commands/hubdb');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -31,6 +32,7 @@ const argv = yargs
   })
   .command(removeCommand)
   .command(lintCommand)
+  .command(hubdbCommand)
   .help()
   .demandCommand(
     1,
