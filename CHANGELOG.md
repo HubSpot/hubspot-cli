@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+
+## 1.1.10
+
+ * Expand `hs create template` to support more options (#253)
+ * Allow create of functions in the current directory (#256)
+ * Add `hs secrets update` (#258)
+ * Add usage tracking for `hs secrets` subcommands (#276)
+ * Begin process of migrating from `commander.js` to `yargs`
+ * Fix default `host_template_types` in `hs create module` (#274)
+
 ## 1.1.9
  * Fix to allow `hs filemanager fetch` to fetch all files
  * Release `hs hubdb` commands into BETA and [add them to CLI documentation](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli#hubdb-commands)
