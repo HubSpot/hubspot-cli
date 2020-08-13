@@ -167,12 +167,9 @@ const action = async (args, options) => {
 };
 
 // Yargs Configuration
-const command = `${COMMAND_NAME} <function_path>`;
+const command = `${COMMAND_NAME} <path>`;
 const describe = DESCRIPTION;
 const builder = yargs => {
-  addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Path to serverless function',
     type: 'string',
@@ -192,6 +189,11 @@ const builder = yargs => {
     describe: 'tail logs',
     type: 'boolean',
   });
+
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addLoggerOptions(yargs, true);
+
   return yargs;
 };
 const handler = async argv => action({ functionPath: argv.path }, argv);
