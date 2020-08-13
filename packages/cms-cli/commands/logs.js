@@ -177,6 +177,21 @@ const builder = yargs => {
     describe: 'Path to serverless function',
     type: 'string',
   });
+  yargs.option('latest', {
+    alias: 'l',
+    describe: 'retrieve most recent log only',
+    type: 'boolean',
+  });
+  yargs.option('compact', {
+    alias: 'c',
+    describe: 'output compact logs',
+    type: 'boolean',
+  });
+  yargs.option('tail', {
+    alias: ['t', 'follow', 'f'],
+    describe: 'tail logs',
+    type: 'boolean',
+  });
   return yargs;
 };
 const handler = async argv => action({ functionPath: argv.path }, argv);
