@@ -40,7 +40,6 @@ function configureSecretsCommand(program) {
     .command('delete <name>', 'delete a HubSpot secret')
     .command('list', 'list all HubSpot secrets');
 
-  addLoggerOptions(program);
   addHelpUsageTracking(program);
 }
 

@@ -39,7 +39,6 @@ function configureHubDbCommand(program) {
     .command('clear <tableId>', 'clear all rows in a HubDB table')
     .command('delete <tableId>', 'delete a HubDB table');
 
-  addLoggerOptions(program);
   addHelpUsageTracking(program);
 }
 
