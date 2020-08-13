@@ -10,6 +10,7 @@ Change Log
  * Add usage tracking for `hs secrets` subcommands ([#276](https://github.com/HubSpot/hubspot-cms-tools/pull/276))
  * Begin process of migrating from `commander.js` to `yargs`
  * Fix default `host_template_types` in `hs create module` ([#274](https://github.com/HubSpot/hubspot-cms-tools/pull/274))
+ * Fix handling of `--debug` option when running commands with subcommands ([#284](https://github.com/HubSpot/hubspot-cms-tools/pull/284))
 
 ## 1.1.9
  * Fix to allow `hs filemanager fetch` to fetch all files
