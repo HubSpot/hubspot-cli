@@ -33,7 +33,6 @@ const argv = yargs
   .command(removeCommand)
   .command(authCommand)
   .command(initCommand)
-  .command(removeCommand)
   .help()
   .demandCommand(
     1,
