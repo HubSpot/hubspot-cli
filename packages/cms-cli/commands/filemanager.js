@@ -48,7 +48,6 @@ function configureFileManagerCommand(program) {
     .command('fetch <src> <dest>', 'download files from the file manager')
     .command('upload <src> <dest>', 'upload files to the file manager');
 
-  addLoggerOptions(program);
   addHelpUsageTracking(program);
 }
 

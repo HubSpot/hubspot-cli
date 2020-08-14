@@ -37,7 +37,11 @@ function configureWatchCommand(program) {
     )
     .arguments('<src> <dest>')
     .option('--remove', 'remove remote files when removed locally')
-    .option('--disable-initial', 'disable initial upload of watched directory')
+    .option('--initial-upload', 'upload directory before watching for updates')
+    .option(
+      '--disable-initial',
+      'disable initial upload of watched directory (default)'
+    )
     .option(
       '--notify <path/to/file>',
       'log to specified file when a watch task is triggered and after workers have gone idle'
@@ -45,9 +49,28 @@ function configureWatchCommand(program) {
     .action(async (src, dest, command = {}) => {
       setLogLevel(command);
       logDebugInfo(command);
-      const { config: configPath, remove, disableInitial, notify } = command;
+      const {
+        config: configPath,
+        remove,
+        initialUpload,
+        disableInitial,
+        notify,
+      } = command;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
+
+      if (disableInitial) {
+        logger.info(
+          'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
+        );
+      } else {
+        logger.warn(
+          `The "watch" command no longer uploads the watched directory by default. The directory "${src}" was not uploaded.`
+        );
+        logger.warn(
+          'To upload the directory run "hs upload" or add the "--initial-upload" option when running "hs watch".'
+        );
+      }
 
       if (
         !(
@@ -84,7 +107,7 @@ function configureWatchCommand(program) {
         mode,
         cwd: getCwd(),
         remove,
-        disableInitial,
+        disableInitial: initialUpload ? false : true,
         notify,
       });
     });
