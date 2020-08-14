@@ -11,7 +11,8 @@ const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
 
 const removeCommand = require('../commands/remove');
-const lintCommand = require('../commands/lint');
+const initCommand = require('../commands/init');
+const authCommand = require('../commands/auth');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -30,7 +31,9 @@ const argv = yargs
     if (err) logErrorInstance(err);
   })
   .command(removeCommand)
-  .command(lintCommand)
+  .command(authCommand)
+  .command(initCommand)
+  .command(removeCommand)
   .help()
   .demandCommand(
     1,
