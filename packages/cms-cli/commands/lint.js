@@ -27,51 +27,79 @@ const {
 } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'lint';
+const DESCRIPTION = 'Lint a file or folder for HubL syntax';
 
-function configureCommand(command) {
-  command
-    .version(version)
-    .description('lint a file or folder for HubL syntax')
-    .arguments('<path>')
-    .action(async filepath => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
+const loadAndValidateOptions = async options => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
 
-      if (!(validateConfig() && (await validatePortal(command)))) {
-        process.exit(1);
-      }
+  if (!(validateConfig() && (await validatePortal(options)))) {
+    process.exit(1);
+  }
+};
 
-      const portalId = getPortalId(command);
+const action = async (args, options) => {
+  await loadAndValidateOptions(options);
 
-      trackCommandUsage(COMMAND_NAME, {}, portalId);
+  const portalId = getPortalId(options);
+  const localPath = resolveLocalPath(args.localPath);
+  const groupName = `Linting "${localPath}"`;
 
-      filepath = resolveLocalPath(filepath);
+  trackCommandUsage(COMMAND_NAME, {}, portalId);
 
-      const groupName = `Linting "${filepath}"`;
-      logger.group(groupName);
-      let count = 0;
-      try {
-        await lint(portalId, filepath, result => {
-          count += printHublValidationResult(result);
-        });
-      } catch (err) {
-        logger.groupEnd(groupName);
-        logErrorInstance(err, { portalId });
-        process.exit(1);
-      }
-      logger.groupEnd(groupName);
-      logger.log('%d issues found', count);
+  logger.group(groupName);
+  let count = 0;
+  try {
+    await lint(portalId, localPath, result => {
+      count += printHublValidationResult(result);
     });
+  } catch (err) {
+    logger.groupEnd(groupName);
+    logErrorInstance(err, { portalId });
+    process.exit(1);
+  }
+  logger.groupEnd(groupName);
+  logger.log(`${count} issues found`);
+};
 
-  addConfigOptions(command);
-  addPortalOptions(command);
-  addLoggerOptions(command);
-  addHelpUsageTracking(command, COMMAND_NAME);
-}
+// Yargs Configuration
+const command = `${COMMAND_NAME} <path>`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addLoggerOptions(yargs, true);
+  yargs.positional('path', {
+    describe: 'Local folder to lint',
+    type: 'string',
+  });
+  return yargs;
+};
+const handler = async argv => action({ localPath: argv.path }, argv);
+
+// Commander Configuration
+const configureCommanderLintCommand = commander => {
+  commander
+    .version(version)
+    .description(DESCRIPTION)
+    .arguments('<path>')
+    .action(async (localPath, command = {}) => action({ localPath }, command));
+
+  addConfigOptions(commander);
+  addPortalOptions(commander);
+  addLoggerOptions(commander);
+  addHelpUsageTracking(commander, COMMAND_NAME);
+};
 
 module.exports = {
-  configureCommand,
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureCommanderLintCommand,
 };
