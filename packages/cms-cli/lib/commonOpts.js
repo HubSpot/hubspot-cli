@@ -61,6 +61,7 @@ const addTestingOptions = (program, useYargs = false) => {
       describe: 'run command in qa mode',
       type: 'boolean',
       default: false,
+      hidden: true,
     });
   }
   program.option('--qa', 'run command in qa mode', false);
