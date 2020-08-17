@@ -4,6 +4,7 @@ const findup = require('findup-sync');
 const { logger } = require('./logger');
 const { logFileSystemErrorInstance } = require('./errorHandlers');
 const isObject = require('./lib/isObject');
+const { getCwd } = require('./path');
 
 const functionBody = `
 exports.main = ({ accountId, body, params }, sendResponse) => {
@@ -98,11 +99,16 @@ function createFunction(
   { functionsFolder, filename, endpointPath, endpointMethod },
   dest
 ) {
-  const ancestorFunctionsDir = findup('*.functions');
+  const ancestorFunctionsConfig = findup('serverless.json', {
+    cwd: getCwd(),
+    nocase: true,
+  });
 
-  if (ancestorFunctionsDir) {
+  if (ancestorFunctionsConfig) {
     logger.error(
-      `Cannot create a functions directory inside "${ancestorFunctionsDir}"`
+      `Cannot create a functions directory inside "${path.dirname(
+        ancestorFunctionsConfig
+      )}"`
     );
     return;
   }

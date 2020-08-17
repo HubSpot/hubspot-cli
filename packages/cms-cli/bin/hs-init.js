@@ -2,8 +2,8 @@
 
 const { Command } = require('commander');
 
-const { initializeConfigCommand } = require('../commands/init');
+const { configureCommanderInitCommand } = require('../commands/init');
 
 const program = new Command('hs init');
-initializeConfigCommand(program);
+configureCommanderInitCommand(program);
 program.parse(process.argv);

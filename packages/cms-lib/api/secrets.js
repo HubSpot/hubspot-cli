@@ -12,6 +12,16 @@ async function addSecret(portalId, key, value) {
   });
 }
 
+async function updateSecret(portalId, key, value) {
+  return http.put(portalId, {
+    uri: SECRETS_API_PATH,
+    body: {
+      key,
+      secret: value,
+    },
+  });
+}
+
 async function deleteSecret(portalId, key) {
   return http.delete(portalId, {
     uri: `${SECRETS_API_PATH}/${key}`,
@@ -26,6 +36,7 @@ async function fetchSecrets(portalId) {
 
 module.exports = {
   addSecret,
+  updateSecret,
   deleteSecret,
   fetchSecrets,
 };

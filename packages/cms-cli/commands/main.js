@@ -18,9 +18,7 @@ function configureMainCommand(program) {
     .command('lint <path>', 'lint a file or folder for HubL syntax', {
       noHelp: true,
     })
-    .command('hubdb <subcommand> <src>', 'manage hubdb tables', {
-      noHelp: true,
-    })
+    .command('hubdb <subcommand> <src> <dest> <tableId>', 'manage hubdb tables')
     .command(
       'filemanager <subcommand>',
       'commands for working with the File Manager'

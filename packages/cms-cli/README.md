@@ -27,7 +27,7 @@ Once the `@hubspot/cms-cli` has been added to a project, a config file named `hu
 ```bash
 cd ~
 hs init
-````
+```
 
 ## Commands
 A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cms-cli).
@@ -85,11 +85,49 @@ Authenticate against a portal using either `personalaccesskey` or `oauth2`
 hs auth personalaccesskey
 ```
 
+### File Manager Commands
+
 Upload a file or directory to the File Manager
 
 ```bash
 hs filemanager upload --portal=DEV [src] [dest]
 ```
+
+Fetch a file or directory from the File Manager
+
+```bash
+hs filemanager fetch --portal=DEV [src] [dest]
+
+# Overwrite existing files
+hs filemanager fetch --portal=DEV --overwrite [path] [dest]
+```
+
+### HubDB Commands
+
+Create a new HubDB table
+
+```bash
+hs hubdb create <src>
+```
+
+Fetch a HubDB table
+
+```bash
+hs hubdb fetch <id or name> <src>
+```
+
+Clear all rows in a HubDB table
+
+```bash
+hs hubdb clear <id or name>
+```
+
+Delete a HubDB table
+
+```bash
+hs hubdb delete <id or name>
+```
+
 
 ## Authentication
 

@@ -14,20 +14,19 @@ const {
 
 // https://developer.github.com/v3/#user-agent-required
 const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
-const TMP_BOILERPLATE_FOLDER_PREFIX = 'hubspot-cms-theme-boilerplate-';
 
 /**
  * https://developer.github.com/v3/repos/releases/#get-the-latest-release
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  */
-async function fetchReleaseData(tag = '') {
+async function fetchReleaseData(repoName, tag = '') {
   tag = tag.trim().toLowerCase();
   if (tag.length && tag[0] !== 'v') {
     tag = `v${tag}`;
   }
   const URI = tag
-    ? `https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/tags/${tag}`
-    : 'https://api.github.com/repos/HubSpot/cms-theme-boilerplate/releases/latest';
+    ? `https://api.github.com/repos/HubSpot/${repoName}/releases/tags/${tag}`
+    : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
     return await request.get(URI, {
       headers: { ...USER_AGENT_HEADERS },
@@ -35,10 +34,10 @@ async function fetchReleaseData(tag = '') {
     });
   } catch (err) {
     logger.error(
-      `Failed fetching release data for ${tag || 'latest'} theme boilerplate.`
+      `Failed fetching release data for ${tag || 'latest'} project.`
     );
     if (tag && err.statusCode === 404) {
-      logger.error(`Theme boilerplate ${tag} not found.`);
+      logger.error(`project ${tag} not found.`);
     }
   }
   return null;
@@ -48,9 +47,9 @@ async function fetchReleaseData(tag = '') {
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadCmsThemeBoilerplate(tag = '') {
+async function downloadProject(repoName, tag = '') {
   try {
-    const releaseData = await fetchReleaseData(tag);
+    const releaseData = await fetchReleaseData(repoName, tag);
     if (!releaseData) return;
     const { zipball_url: zipUrl, name } = releaseData;
     logger.log(`Fetching ${name}...`);
@@ -58,10 +57,10 @@ async function downloadCmsThemeBoilerplate(tag = '') {
       encoding: null,
       headers: { ...USER_AGENT_HEADERS },
     });
-    logger.log('Completed theme fetch.');
+    logger.log('Completed project fetch.');
     return zip;
   } catch (err) {
-    logger.error('An error occured fetching the theme source.');
+    logger.error('An error occured fetching the project source.');
     logErrorInstance(err);
   }
   return null;
@@ -71,8 +70,10 @@ async function downloadCmsThemeBoilerplate(tag = '') {
  * @param {Buffer} zip
  * @returns {String|Null} Temp dir where zip has been extracted.
  */
-async function extractThemeZip(zip) {
-  logger.log('Extracting theme source...');
+async function extractProjectZip(repoName, zip) {
+  const TMP_BOILERPLATE_FOLDER_PREFIX = `hubspot-${repoName}-`;
+
+  logger.log('Extracting project source...');
   // Write zip to disk
   let tmpDir;
   let tmpZipPath;
@@ -86,7 +87,7 @@ async function extractThemeZip(zip) {
       mode: 0o777,
     });
   } catch (err) {
-    logger.error('An error occured writing temp theme source.');
+    logger.error('An error occured writing temp project source.');
     if (tmpZipPath || tmpDir) {
       logFileSystemErrorInstance(err, {
         filepath: tmpZipPath || tmpDir,
@@ -104,11 +105,11 @@ async function extractThemeZip(zip) {
     await extract(tmpZipPath, { dir: tmpExtractPath });
     extractDir = tmpExtractPath;
   } catch (err) {
-    logger.error('An error occured extracting theme source.');
+    logger.error('An error occured extracting project source.');
     logErrorInstance(err);
     return null;
   }
-  logger.log('Completed theme source extraction.');
+  logger.log('Completed project source extraction.');
   return { extractDir, tmpDir };
 }
 
@@ -117,17 +118,17 @@ async function extractThemeZip(zip) {
  * @param {String} dest - Dir to copy boilerplate src files to.
  * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
-async function copyThemeBoilerplateToDest(src, dest) {
+async function copyProjectToDest(src, sourceDir, dest) {
   try {
-    logger.log('Copying theme source...');
+    logger.log('Copying project source...');
     const files = await fs.readdir(src);
     const rootDir = files[0];
-    const themeSrcDir = path.join(src, rootDir, 'src');
-    await fs.copy(themeSrcDir, dest);
-    logger.log('Completed copying theme source.');
+    const projectSrcDir = path.join(src, rootDir, sourceDir);
+    await fs.copy(projectSrcDir, dest);
+    logger.log('Completed copying project source.');
     return true;
   } catch (err) {
-    logger.error(`An error occured copying theme source to ${dest}.`);
+    logger.error(`An error occured copying project source to ${dest}.`);
     logFileSystemErrorInstance(err, {
       filepath: dest,
       write: true,
@@ -150,18 +151,23 @@ function cleanupTemp(tmpDir) {
 }
 
 /**
- * Writes a copy of the boilerplate theme to dest.
- * @param {String} dest - Dir top write theme src to.
+ * Writes a copy of the boilerplate project to dest.
+ * @param {String} dest - Dir to write project src to.
+ * @param {String} type - Type of project to create.
+ * @param {String} repoName - Name of GitHub repository to clone.
+ * @param {String} sourceDir - Directory in project that should get copied.
  * @param {Object} options
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function createTheme(dest, type, options = {}) {
-  const { themeVersion: tag } = options;
-  const zip = await downloadCmsThemeBoilerplate(tag);
+async function createProject(dest, type, repoName, sourceDir, options = {}) {
+  const { themeVersion, projectVersion } = options;
+  const tag = projectVersion || themeVersion;
+  const zip = await downloadProject(repoName, tag);
   if (!zip) return false;
-  const { extractDir, tmpDir } = (await extractThemeZip(zip)) || {};
+  const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
   const success =
-    extractDir != null && (await copyThemeBoilerplateToDest(extractDir, dest));
+    extractDir != null &&
+    (await copyProjectToDest(extractDir, sourceDir, dest));
   if (success) {
     logger.success(`Your new ${type} project has been created in ${dest}`);
   }
@@ -170,8 +176,8 @@ async function createTheme(dest, type, options = {}) {
 }
 
 module.exports = {
-  createTheme,
-  downloadCmsThemeBoilerplate,
-  extractThemeZip,
+  createProject,
+  downloadProject,
+  extractProjectZip,
   fetchReleaseData,
 };

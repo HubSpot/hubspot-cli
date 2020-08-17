@@ -1,6 +1,40 @@
 Change Log
 ==========
 
+
+## 1.1.10
+
+ * Expand `hs create template` to support more options ([#253](https://github.com/HubSpot/hubspot-cms-tools/pull/274))
+ * Allow create of functions in the current directory ([#256](https://github.com/HubSpot/hubspot-cms-tools/pull/256))
+ * Add `hs secrets update` ([#258](https://github.com/HubSpot/hubspot-cms-tools/pull/258))
+ * Add usage tracking for `hs secrets` subcommands ([#276](https://github.com/HubSpot/hubspot-cms-tools/pull/276))
+ * Begin process of migrating from `commander.js` to `yargs`
+ * Fix default `host_template_types` in `hs create module` ([#274](https://github.com/HubSpot/hubspot-cms-tools/pull/274))
+ * Fix handling of `--debug` option when running commands with subcommands ([#284](https://github.com/HubSpot/hubspot-cms-tools/pull/284))
+
+## 1.1.9
+ * Fix to allow `hs filemanager fetch` to fetch all files
+ * Release `hs hubdb` commands into BETA and [add them to CLI documentation](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli#hubdb-commands)
+ * `hs hubdb` now supports referencing tables by name or ID
+ * Add `hs create webpack-serverless`
+ * Improve how CWD is determined when running `hs watch`
+
+## 1.1.8
+ * Add `hs filemanager fetch`
+
+## 1.1.7
+ * Fix for `hs auth personalaccesskey`
+
+## 1.1.6
+
+ * Add `hs create react-app`
+ * Add `hs hubdb clear` and `hs hubdb delete`
+ * Add `madge` to check for circular dependencies
+
+## 1.1.5
+
+ * Fix issues with `hs init` and `hs auth` caused by hiding `--qa` option
+
 ## 1.1.4
 
  * Option `--qa` is hidden from help text

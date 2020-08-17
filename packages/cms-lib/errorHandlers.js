@@ -77,7 +77,19 @@ class FileSystemErrorContext extends ErrorContext {
  * @param {ErrorContext} context
  */
 function debugErrorAndContext(error, context) {
-  logger.debug('Error: %o', error);
+  if (error.name === 'StatusCodeError') {
+    const { statusCode, message, response } = error;
+    logger.debug('Error: %o', {
+      statusCode,
+      message,
+      url: response.request.href,
+      method: response.request.method,
+      response: response.body,
+      headers: response.headers,
+    });
+  } else {
+    logger.debug('Error: %o', error);
+  }
   logger.debug('Context: %o', context);
 }
 

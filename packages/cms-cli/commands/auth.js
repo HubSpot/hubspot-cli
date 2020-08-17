@@ -49,7 +49,8 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
 );
 
 async function authAction(type, options) {
-  const authType = type.toLowerCase();
+  const authType =
+    (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -121,7 +122,7 @@ function configureAuthCommand(program) {
     .description(
       `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
     )
-    .arguments('<type>')
+    .arguments('[type]')
     .action(authAction);
 
   addLoggerOptions(program);

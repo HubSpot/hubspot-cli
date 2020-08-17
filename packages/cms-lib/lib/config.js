@@ -292,6 +292,10 @@ const loadConfigFromFile = (path, options = {}) => {
       logger.error(
         `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
       );
+    } else {
+      logger.debug(
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+      );
     }
     return;
   }
@@ -350,10 +354,13 @@ const getAndLoadConfigIfNeeded = (options = {}) => {
 const getConfigPath = path => {
   return (
     path ||
-    findup([
-      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
-    ])
+    findup(
+      [
+        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
+      ],
+      { cwd: getCwd() }
+    )
   );
 };
 
@@ -635,6 +642,11 @@ const loadEnvironmentVariableConfig = () => {
   if (!envConfig) {
     return;
   }
+  const { portalId } = getConfigVariablesFromEnv();
+
+  logger.debug(
+    `Loaded config from enviroment variables for portal ${portalId}`
+  );
 
   return setConfig(envConfig);
 };

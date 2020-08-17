@@ -11,6 +11,13 @@ const {
   publishTable,
   deleteRows,
 } = require('./api/hubdb');
+const { getCwd } = require('@hubspot/cms-lib/path');
+
+function validateJsonPath(src) {
+  if (path.extname(src) !== '.json') {
+    throw new Error('The HubDB table file must be a ".json" file');
+  }
+}
 
 function validateJsonFile(src) {
   try {
@@ -22,23 +29,12 @@ function validateJsonFile(src) {
     throw new Error(`The "${src}" path is not a path to a file`);
   }
 
-  if (path.extname(src) !== '.json') {
-    throw new Error('The HubDB table file must be a ".json" file');
-  }
+  validateJsonPath(src);
 }
 
-async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
+async function addRowsToHubDbTable(portalId, tableId, rows) {
   const rowsToUpdate = rows.map(row => {
-    const values = {};
-
-    columns.forEach(col => {
-      const { name, id } = col;
-      if (typeof row.values[name] !== 'undefined') {
-        values[id] = row.values[name];
-      } else {
-        values[id] = null;
-      }
-    });
+    const values = row.values;
 
     return {
       childTableId: 0,
@@ -48,19 +44,15 @@ async function addRowsToHubDbTable(portalId, tableId, rows, columns) {
     };
   });
 
-  let response;
   if (rowsToUpdate.length > 0) {
-    response = await createRows(portalId, tableId, rowsToUpdate);
+    await createRows(portalId, tableId, rowsToUpdate);
   }
 
-  await publishTable(portalId, tableId);
+  const { rowCount } = await publishTable(portalId, tableId);
 
   return {
     tableId,
-    rowCount:
-      response && Array.isArray(response) && response.length
-        ? response[0].rows.length
-        : 0,
+    rowCount,
   };
 }
 
@@ -96,7 +88,7 @@ function convertToJSON(table, rows) {
   } = table;
 
   const cleanedColumns = columns
-    .filter(column => !column.deleted)
+    .filter(column => !column.deleted || !column.archived)
     .map(column => {
       const cleanedColumn = {
         ...column,
@@ -104,6 +96,7 @@ function convertToJSON(table, rows) {
 
       delete cleanedColumn.id;
       delete cleanedColumn.deleted;
+      delete cleanedColumn.archived;
       delete cleanedColumn.foreignIdsByName;
       delete cleanedColumn.foreignIdsById;
 
@@ -111,19 +104,10 @@ function convertToJSON(table, rows) {
     });
 
   const cleanedRows = rows.map(row => {
-    const values = {};
-
-    columns.forEach(col => {
-      const { name, id } = col;
-      if (row.values[id] !== null) {
-        values[name] = row.values[id];
-      }
-    });
     return {
       path: row.path,
       name: row.name,
-      isSoftEditable: row.isSoftEditable,
-      values,
+      values: row.values,
     };
   });
 
@@ -143,6 +127,14 @@ function convertToJSON(table, rows) {
 async function downloadHubDbTable(portalId, tableId, dest) {
   const table = await fetchTable(portalId, tableId);
 
+  dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
+
+  if (fs.pathExistsSync(dest)) {
+    validateJsonFile(dest);
+  } else {
+    validateJsonPath(dest);
+  }
+
   let totalRows = null;
   let rows = [];
   let count = 0;
@@ -153,9 +145,9 @@ async function downloadHubDbTable(portalId, tableId, dest) {
       totalRows = response.total;
     }
 
-    count += response.objects.length;
-    offset += response.objects.length;
-    rows = rows.concat(response.objects);
+    count += response.results.length;
+    offset += response.results.length;
+    rows = rows.concat(response.results);
   }
 
   const tableToWrite = JSON.stringify(convertToJSON(table, rows));
@@ -163,7 +155,9 @@ async function downloadHubDbTable(portalId, tableId, dest) {
     parser: 'json',
   });
 
-  await fs.writeFileSync(dest, tableJson);
+  await fs.outputFile(dest, tableJson);
+
+  return { filePath: dest };
 }
 
 async function clearHubDbTableRows(portalId, tableId) {
@@ -177,12 +171,16 @@ async function clearHubDbTableRows(portalId, tableId) {
       totalRows = response.total;
     }
 
-    count += response.objects.length;
-    offset += response.objects.length;
-    const rowIds = response.objects.map(row => row.id);
+    count += response.results.length;
+    offset += response.results.length;
+    const rowIds = response.results.map(row => row.id);
     rows = rows.concat(rowIds);
   }
   await deleteRows(portalId, tableId, rows);
+
+  return {
+    deletedRowCount: rows.length,
+  };
 }
 
 module.exports = {

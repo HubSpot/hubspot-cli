@@ -30,5 +30,8 @@ fs.readFileSync = () => mockedReadFile;
 fs.existsSync = () => mockedExistsValue;
 fs.writeFileSync = () => true;
 fs.unlinkSync = () => true;
+fs.outputFile = jest.fn((dest, data) => {
+  return data;
+});
 
 module.exports = fs;
