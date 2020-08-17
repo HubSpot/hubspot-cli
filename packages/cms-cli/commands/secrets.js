@@ -14,6 +14,7 @@ const {
   deleteSecret,
   fetchSecrets,
 } = require('@hubspot/cms-lib/api/secrets');
+const { fetchAuth } = require('@hubspot/cms-lib/api/auth');
 
 const { validatePortal } = require('../lib/validation');
 const {
@@ -60,6 +61,14 @@ function configureSecretsAddCommand(program) {
       }
       const portalId = getPortalId(program);
       trackCommandUsage('secrets-add', {}, portalId);
+
+      try {
+        const authResp = await fetchAuth(portalId);
+
+        console.log('authResp: ', authResp);
+      } catch (e) {
+        console.log(e);
+      }
 
       try {
         await addSecret(portalId, secretName, secretValue);
