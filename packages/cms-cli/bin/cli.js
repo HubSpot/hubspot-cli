@@ -12,6 +12,7 @@ const pkg = require('../package.json');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
+const logsCommand = require('../commands/logs');
 const lintCommand = require('../commands/lint');
 
 const SCRIPT_NAME = 'banjo';
@@ -32,6 +33,7 @@ const argv = yargs
   })
   .command(removeCommand)
   .command(initCommand)
+  .command(logsCommand)
   .command(lintCommand)
   .help()
   .demandCommand(
