@@ -80,7 +80,6 @@ const action = async ({ src, dest }, options = {}) => {
     !(
       validateConfig() &&
       (await validatePortal(options)) &&
-      // TODO TEST
       validateMode(options)
     )
   ) {
