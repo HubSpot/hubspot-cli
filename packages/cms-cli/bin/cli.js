@@ -11,6 +11,8 @@ const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
 
 const removeCommand = require('../commands/remove');
+const initCommand = require('../commands/init');
+const logsCommand = require('../commands/logs');
 const lintCommand = require('../commands/lint');
 const hubdbCommand = require('../commands/hubdb');
 
@@ -31,6 +33,8 @@ const argv = yargs
     if (err) logErrorInstance(err);
   })
   .command(removeCommand)
+  .command(initCommand)
+  .command(logsCommand)
   .command(lintCommand)
   .command(hubdbCommand)
   .help()
