@@ -1,4 +1,4 @@
-const OAuth2Manager = require('./lib/OAuth2Manager');
+const OAuth2Manager = require('./lib/models/OAuth2Manager');
 const {
   updatePortalConfig,
   writeConfig,

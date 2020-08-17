@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { HubSpotAuthError } = require('./lib/Errors');
+const { HubSpotAuthError } = require('./lib/models/Errors');
 const {
   getEnv,
   getPortalConfig,

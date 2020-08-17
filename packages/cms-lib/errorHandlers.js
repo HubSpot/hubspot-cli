@@ -1,4 +1,4 @@
-const { HubSpotAuthError } = require('./lib/Errors');
+const { HubSpotAuthError } = require('./lib/models/Errors');
 const { logger } = require('./logger');
 
 const isApiStatusCodeError = err =>
