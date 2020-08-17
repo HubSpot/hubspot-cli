@@ -45,13 +45,22 @@ const addOverwriteOptions = program => {
   program.option('--overwrite', 'overwrite existing files', false);
 };
 
-const addModeOptions = (program, { read, write }) => {
+const addModeOptions = (program, { read, write }, useYargs = false) => {
   const modes = `<${Object.values(Mode).join(' | ')}>`;
   const help = read
     ? `read from ${modes}`
     : write
     ? `write to ${modes}`
     : `${modes}`;
+
+  if (useYargs) {
+    return program.option('mode', {
+      alias: 'm',
+      describe: help,
+      type: 'string',
+    });
+  }
+
   program.option('--mode <mode>', help);
 };
 
