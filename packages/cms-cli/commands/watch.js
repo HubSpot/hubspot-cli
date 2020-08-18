@@ -107,29 +107,31 @@ const builder = yargs => {
   addModeOptions(yargs, { write: true }, true);
 
   yargs.positional('src', {
-    describe: 'Local folder to watch',
+    describe:
+      'Path to the local directory your files are in, relative to your current working directory',
     type: 'string',
     demand: true,
   });
   yargs.positional('dest', {
-    describe: 'Remote folder to upload to',
+    describe: 'Path in HubSpot Design Tools, can be a net new path',
     type: 'string',
     demand: true,
   });
   yargs.option('remove', {
     alias: 'r',
-    describe: 'remove remote files when removed locally',
+    describe:
+      'Will cause watch to delete files in your HubSpot account that are not found locally.',
     type: 'boolean',
   });
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: 'upload directory before watching for updates',
+    describe: 'Upload directory before watching for updates',
     type: 'boolean',
   });
   yargs.option('disable-initial', {
     alias: 'd',
     describe: 'retrieve most recent log only',
-    type: 'disable initial upload of watched directory (default)',
+    type: 'Disable the initial upload when watching a directory (default)',
   });
   yargs.option('notify', {
     alias: 'n',
@@ -148,11 +150,14 @@ const configureCommanderWatchCommand = program => {
     .version(version)
     .description(DESCRIPTION)
     .arguments('<src> <dest>')
-    .option('--remove', 'remove remote files when removed locally')
-    .option('--initial-upload', 'upload directory before watching for updates')
+    .option(
+      '--remove',
+      'Will cause watch to delete files in your HubSpot account that are not found locally.'
+    )
+    .option('--initial-upload', 'Upload directory before watching for updates')
     .option(
       '--disable-initial',
-      'disable initial upload of watched directory (default)'
+      'Disable the initial upload when watching a directory (default)'
     )
     .option(
       '--notify <path/to/file>',
