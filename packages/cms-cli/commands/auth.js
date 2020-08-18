@@ -116,12 +116,36 @@ async function authAction(type, options) {
   process.exit();
 }
 
-function configureAuthCommand(program) {
+const DESCRIPTION = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
+
+// Yargs Configuration
+const command = `${COMMAND_NAME} [type]`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  yargs.positional('[type]', {
+    describe: 'Authentication mechanism',
+    type: 'string',
+    choices: [
+      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+      `${OAUTH_AUTH_METHOD.value}`,
+    ],
+    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn API Key tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
+  });
+
+  addLoggerOptions(yargs, true);
+  addConfigOptions(yargs, true);
+  addTestingOptions(yargs, true);
+
+  return yargs;
+};
+const handler = async argv => authAction(argv.type, argv);
+
+// Commander Configuration
+function configureCommanderAuthCommand(program) {
   program
     .version(version)
-    .description(
-      `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
-    )
+    .description(DESCRIPTION)
     .arguments('[type]')
     .action(authAction);
 
@@ -132,5 +156,11 @@ function configureAuthCommand(program) {
 }
 
 module.exports = {
-  configureAuthCommand,
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureCommanderAuthCommand,
 };

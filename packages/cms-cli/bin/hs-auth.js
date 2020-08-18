@@ -2,8 +2,8 @@
 
 const { Command } = require('commander');
 
-const { configureAuthCommand } = require('../commands/auth');
+const { configureCommanderAuthCommand } = require('../commands/auth');
 
 const program = new Command('hs auth');
-configureAuthCommand(program);
+configureCommanderAuthCommand(program);
 program.parse(process.argv);
