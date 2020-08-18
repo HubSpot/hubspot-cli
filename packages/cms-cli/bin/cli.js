@@ -15,6 +15,7 @@ const initCommand = require('../commands/init');
 const logsCommand = require('../commands/logs');
 const lintCommand = require('../commands/lint');
 const uploadCommand = require('../commands/upload');
+const createCommand = require('../commands/create');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -37,6 +38,7 @@ const argv = yargs
   .command(logsCommand)
   .command(lintCommand)
   .command(uploadCommand)
+  .command(createCommand)
   .help()
   .demandCommand(
     1,
