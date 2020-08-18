@@ -56,12 +56,13 @@ const builder = yargs => {
   addModeOptions(yargs, { write: true }, true);
 
   yargs.positional('src', {
-    describe: 'Local location to upload',
+    describe:
+      'Path to the local file, relative to your current working directory.',
     type: 'string',
     demand: true,
   });
   yargs.positional('dest', {
-    describe: 'Remote location to upload to',
+    describe: 'Path in HubSpot Design Tools, can be a net new path.',
     type: 'string',
     demand: true,
   });
