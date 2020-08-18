@@ -134,7 +134,7 @@ const builder = yargs => {
   yargs.option('notify', {
     alias: 'n',
     describe:
-      'notify <path/to/file> - log to specified file when a watch task is triggered and after workers have gone idle',
+      'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
     type: 'string',
     requiresArg: true,
   });
