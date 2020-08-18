@@ -113,7 +113,7 @@ const builder = yargs => {
     demand: true,
   });
   yargs.positional('dest', {
-    describe: 'Path in HubSpot Design Tools, can be a net new path',
+    describe: 'Path in HubSpot Design Tools. Can be a net new path',
     type: 'string',
     demand: true,
   });
@@ -130,8 +130,9 @@ const builder = yargs => {
   });
   yargs.option('disable-initial', {
     alias: 'd',
-    describe: 'retrieve most recent log only',
-    type: 'Disable the initial upload when watching a directory (default)',
+    describe: 'Disable the initial upload when watching a directory (default)',
+    type: 'boolean',
+    hidden: true,
   });
   yargs.option('notify', {
     alias: 'n',
