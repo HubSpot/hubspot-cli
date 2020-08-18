@@ -91,7 +91,7 @@ const builder = yargs => {
 const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 
 // Commander Configuration
-function configureCommanderFetchCommand(commander) {
+const configureCommanderFetchCommand = commander => {
   commander
     .version(version)
     .description(DESCRIPTION)
@@ -104,7 +104,7 @@ function configureCommanderFetchCommand(commander) {
   addOverwriteOptions(commander);
   addModeOptions(commander, { read: true });
   addHelpUsageTracking(commander, COMMAND_NAME);
-}
+};
 
 module.exports = {
   // Yargs
