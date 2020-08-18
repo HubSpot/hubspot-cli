@@ -41,7 +41,16 @@ const addConfigOptions = (program, useYargs = false) => {
   program.option('--config <config>', 'path to a config file');
 };
 
-const addOverwriteOptions = program => {
+const addOverwriteOptions = (program, useYargs = false) => {
+  if (useYargs) {
+    return program.option('overwrite', {
+      alias: 'o',
+      describe: 'overwrite existing files',
+      type: 'boolean',
+      default: false,
+    });
+  }
+
   program.option('--overwrite', 'overwrite existing files', false);
 };
 
