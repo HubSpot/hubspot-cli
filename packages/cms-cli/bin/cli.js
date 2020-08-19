@@ -18,6 +18,7 @@ const watchCommand = require('../commands/watch');
 const authCommand = require('../commands/auth');
 const uploadCommand = require('../commands/upload');
 const fetchCommand = require('../commands/fetch');
+const filemanagerCommand = require('../commands/filemanager');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -43,6 +44,7 @@ const argv = yargs
   .command(removeCommand)
   .command(uploadCommand)
   .command(fetchCommand)
+  .command(filemanagerCommand)
   .help()
   .demandCommand(
     1,

@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureFileManagerFetchCommand } = require('../commands/filemanager');
+const {
+  configureCommanderFileManagerFetchCommand,
+} = require('../commands/filemanager/fetch');
 
 const program = new Command('hs filemanager fetch');
-configureFileManagerFetchCommand(program);
+configureCommanderFileManagerFetchCommand(program);
 program.parse(process.argv);
