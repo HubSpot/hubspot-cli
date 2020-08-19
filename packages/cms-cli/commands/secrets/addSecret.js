@@ -70,7 +70,7 @@ function configureSecretsAddCommand(program) {
   addConfigOptions(program);
 }
 
-exports.command = `add <name> <value>`;
+exports.command = 'add <name> <value>';
 
 exports.describe = DESCRIPTION;
 

@@ -48,7 +48,7 @@ async function action({ secretName }, options) {
     logApiErrorInstance(
       e,
       new ApiErrorContext({
-        request: `delete a secret`,
+        request: 'delete a secret',
         portalId,
       })
     );
@@ -69,7 +69,7 @@ function configureSecretsDeleteCommand(program) {
   addConfigOptions(program);
 }
 
-exports.command = `delete <name>`;
+exports.command = 'delete <name>';
 
 exports.describe = DESCRIPTION;
 

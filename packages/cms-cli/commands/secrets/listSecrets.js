@@ -67,7 +67,7 @@ function configureSecretsListCommand(program) {
   addConfigOptions(program);
 }
 
-exports.command = `list`;
+exports.command = 'list';
 
 exports.describe = DESCRIPTION;
 
