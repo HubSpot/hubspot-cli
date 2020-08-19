@@ -17,6 +17,7 @@ const lintCommand = require('../commands/lint');
 const watchCommand = require('../commands/watch');
 const authCommand = require('../commands/auth');
 const uploadCommand = require('../commands/upload');
+const secretsCommand = require('../commands/secrets');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -41,6 +42,7 @@ const argv = yargs
   .command(watchCommand)
   .command(removeCommand)
   .command(uploadCommand)
+  .command(secretsCommand)
   .help()
   .demandCommand(
     1,
