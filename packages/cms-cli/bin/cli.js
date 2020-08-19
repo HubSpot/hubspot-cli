@@ -35,6 +35,12 @@ const argv = yargs
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
   })
+  .option('debug', {
+    alias: 'd',
+    default: false,
+    describe: 'set log level to debug',
+    type: 'boolean',
+  })
   .command(authCommand)
   .command(initCommand)
   .command(logsCommand)

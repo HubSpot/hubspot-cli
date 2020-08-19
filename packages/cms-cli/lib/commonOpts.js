@@ -13,20 +13,13 @@ const addPortalOptions = (program, useYargs = false) => {
     return program.option('portal', {
       alias: 'p',
       describe: 'HubSpot portal id or name from config',
+      type: 'string',
     });
   }
   program.option('--portal <portal>', 'HubSpot portal id or name from config');
 };
 
-const addLoggerOptions = (program, useYargs = false) => {
-  if (useYargs) {
-    return program.option('debug', {
-      alias: 'd',
-      default: false,
-      describe: 'set log level to debug',
-      type: 'boolean',
-    });
-  }
+const addLoggerOptions = program => {
   program.option('--debug', 'set log level to debug', () => true, false);
 };
 

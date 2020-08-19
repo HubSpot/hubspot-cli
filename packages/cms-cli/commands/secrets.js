@@ -1,5 +1,6 @@
 const { version } = require('../package.json');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
+const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
 
 const addSecretCommand = require('./secrets/addSecret');
 const listSecretsCommand = require('./secrets/listSecrets');
@@ -25,6 +26,8 @@ exports.command = 'secrets';
 exports.describe = DESCRIPTION;
 
 exports.builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
   yargs
     .command(listSecretsCommand)
     .command(addSecretCommand)
