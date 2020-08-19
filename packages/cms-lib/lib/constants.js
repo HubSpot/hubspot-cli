@@ -87,6 +87,18 @@ const ENVIRONMENT_VARIABLES = {
   HUBSPOT_REFRESH_TOKEN: 'HUBSPOT_REFRESH_TOKEN',
 };
 
+const SCOPE_GROUPS = {
+  functions: 'cms.functions.read_write',
+};
+
+const SCOPES = {
+  functions: {
+    access: 'SERVERLESS_FUNCTIONS',
+    read: 'SERVERLESS_FUNCTIONS_READ',
+    write: 'SERVERLESS_FUNCTIONS_WRITE',
+  },
+};
+
 module.exports = {
   Mode,
   ENVIRONMENTS,
@@ -104,4 +116,6 @@ module.exports = {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENT_VARIABLES,
+  SCOPE_GROUPS,
+  SCOPES,
 };

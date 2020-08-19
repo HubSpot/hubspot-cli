@@ -14,7 +14,8 @@ const {
   deleteSecret,
   fetchSecrets,
 } = require('@hubspot/cms-lib/api/secrets');
-const { fetchAuth } = require('@hubspot/cms-lib/api/auth');
+const { verifyFunctionScopesExist } = require('@hubspot/cms-lib/lib/scopes');
+const { SCOPE_GROUPS, SCOPES } = require('@hubspot/cms-lib/lib/constants');
 
 const { validatePortal } = require('../lib/validation');
 const {
@@ -63,11 +64,27 @@ function configureSecretsAddCommand(program) {
       trackCommandUsage('secrets-add', {}, portalId);
 
       try {
-        const authResp = await fetchAuth(portalId);
+        const scopesExist = await verifyFunctionScopesExist(
+          portalId,
+          SCOPE_GROUPS.functions,
+          Object.values(SCOPES.functions)
+        );
 
-        console.log('authResp: ', authResp);
+        if (!scopesExist) {
+          logger.error(`Your user does not have access to this feature.`);
+          // return;
+        }
       } catch (e) {
-        console.log(e);
+        logger.error(`Unable to verify function scopes exist.`);
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            request: 'verify-function-scopes-exist',
+            portalId,
+          })
+        );
+        console.log(e.message);
+        // return;
       }
 
       try {
@@ -76,6 +93,7 @@ function configureSecretsAddCommand(program) {
           `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
         );
       } catch (e) {
+        //console.log(e);
         logger.error(`The secret "${secretName}" was not added`);
         logApiErrorInstance(
           e,

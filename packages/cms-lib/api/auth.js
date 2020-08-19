@@ -1,12 +1,21 @@
-const http = require('../http');
-const LOCALDEVAUTH_API_PATH = 'localdevauth/v1';
+const request = require('request-promise-native');
+const { getRequestOptions } = require('../http/requestOptions');
+const { ENVIRONMENTS } = require('../lib/constants');
 
-async function fetchAuth(portalId) {
-  return http.get(portalId, {
-    uri: `${LOCALDEVAUTH_API_PATH}/auth`,
-    // Asked Wensheng about proper way to obtain function scope info
-    // uri: `${LOCALDEVAUTH_API_PATH}/auth/scopes/{scopeGroup}`,
-  });
+async function fetchAuth(portalId, personalAccessKey, env = ENVIRONMENTS.PROD) {
+  const query = portalId ? { portalId } : {};
+  const requestOptions = getRequestOptions(
+    { env },
+    {
+      uri: `localdevauth/v1/auth`,
+      body: {
+        encodedOAuthRefreshToken: personalAccessKey,
+      },
+      qs: query,
+    }
+  );
+
+  return request.get(requestOptions);
 }
 
 module.exports = {
