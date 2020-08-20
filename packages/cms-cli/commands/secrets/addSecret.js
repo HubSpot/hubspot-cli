@@ -82,7 +82,7 @@ exports.builder = yargs => {
     type: 'string',
   });
   yargs.positional('value', {
-    describe: 'The secret to be stored',
+    describe: 'The secret to be stored such as an API key',
     type: 'string',
   });
   return yargs;
