@@ -51,7 +51,7 @@ const action = async (args, options) => {
 
 const configureFetch = yargs => {
   yargs.command({
-    command: 'fetch <tableId> <dest>',
+    command: 'fetch <tableId> [dest]',
     describe: FETCH_DESCRIPTION,
     handler: async argv =>
       action({ tableId: argv.tableId, dest: argv.dest }, argv),
@@ -59,6 +59,7 @@ const configureFetch = yargs => {
       yargs.positional('tableId', {
         describe: 'HubDB Table ID',
         type: 'string',
+        demand: true,
       });
 
       yargs.positional('dest', {
