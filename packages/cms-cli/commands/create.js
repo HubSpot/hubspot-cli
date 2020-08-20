@@ -175,7 +175,6 @@ const action = async ({ type, name, dest }, options) => {
     return;
   }
 
-  // TODO: In yargs use `.implies()`
   switch (type) {
     case TYPES.function:
       dest = name;
