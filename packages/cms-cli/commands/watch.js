@@ -103,7 +103,6 @@ const describe = DESCRIPTION;
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
 
   yargs.positional('src', {
