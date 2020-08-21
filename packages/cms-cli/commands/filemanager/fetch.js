@@ -55,34 +55,29 @@ const action = async ({ src, dest }, options) => {
   downloadFileOrFolder(portalId, src, dest, options);
 };
 
-const configureFetch = yargs => {
-  yargs.command({
-    command: 'fetch <src> [dest]',
-    describe: FETCH_DESCRIPTION,
-    handler: async argv => action({ src: argv.src, dest: argv.dest }, argv),
-    builder: () => {
-      yargs.positional('src', {
-        describe: 'Path in HubSpot Design Tools',
-        type: 'string',
-        demand: true,
-      });
-      yargs.positional('dest', {
-        describe:
-          'Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory',
-        type: 'string',
-      });
-      yargs.option('include-archived', {
-        alias: ['i'],
-        describe: 'Include files that have been marked as "archived"',
-        type: 'boolean',
-      });
-    },
-  });
-
+const command = 'fetch <src> [dest]';
+const describe = FETCH_DESCRIPTION;
+const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
+const builder = yargs => {
   addOverwriteOptions(yargs, true);
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
+
+  yargs.positional('src', {
+    describe: 'Path in HubSpot Design Tools',
+    type: 'string',
+    demand: true,
+  });
+  yargs.positional('dest', {
+    describe:
+      'Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory',
+    type: 'string',
+  });
+  yargs.option('include-archived', {
+    alias: ['i'],
+    describe: 'Include files that have been marked as "archived"',
+    type: 'boolean',
+  });
 };
 
 const configureCommanderFileManagerFetchCommand = commander => {
@@ -106,7 +101,10 @@ const configureCommanderFileManagerFetchCommand = commander => {
 module.exports = {
   FETCH_DESCRIPTION,
   // Yargs
-  configureFetch,
+  command,
+  describe,
+  handler,
+  builder,
   // Commander
   configureCommanderFileManagerFetchCommand,
 };

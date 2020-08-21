@@ -130,29 +130,24 @@ const action = async ({ src, dest }, command = {}) => {
   }
 };
 
-const configureUpload = yargs => {
-  yargs.command({
-    command: 'upload <src> <dest>',
-    describe: UPLOAD_DESCRIPTION,
-    handler: async argv => action({ src: argv.src, dest: argv.dest }, argv),
-    builder: () => {
-      yargs.positional('src', {
-        describe:
-          'Path to the local file, relative to your current working directory',
-        type: 'string',
-        demand: true,
-      });
-      yargs.positional('dest', {
-        describe: 'Path in HubSpot Design Tools, can be a net new path',
-        type: 'string',
-        demand: true,
-      });
-    },
-  });
-
+const command = 'upload <src> <dest>';
+const describe = UPLOAD_DESCRIPTION;
+const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
+const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
+
+  yargs.positional('src', {
+    describe:
+      'Path to the local file, relative to your current working directory',
+    type: 'string',
+    demand: true,
+  });
+  yargs.positional('dest', {
+    describe: 'Path in HubSpot Design Tools, can be a net new path',
+    type: 'string',
+    demand: true,
+  });
 };
 
 const configureCommanderFileManagerUploadCommand = commander => {
@@ -171,7 +166,10 @@ const configureCommanderFileManagerUploadCommand = commander => {
 module.exports = {
   UPLOAD_DESCRIPTION,
   // Yargs
-  configureUpload,
+  command,
+  describe,
+  handler,
+  builder,
   // Commander
   configureCommanderFileManagerUploadCommand,
 };

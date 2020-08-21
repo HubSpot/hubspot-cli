@@ -1,6 +1,10 @@
-const { addLoggerOptions } = require('../lib/commonOpts');
-const { configureUpload, UPLOAD_DESCRIPTION } = require('./filemanager/upload');
-const { configureFetch, FETCH_DESCRIPTION } = require('./filemanager/fetch');
+const {
+  addConfigOptions,
+  addPortalOptions,
+  addOverwriteOptions,
+} = require('../lib/commonOpts');
+const upload = require('./filemanager/upload');
+const fetch = require('./filemanager/fetch');
 const { version } = require('../package.json');
 const { addHelpUsageTracking } = require('../lib/usageTracking');
 
@@ -11,10 +15,11 @@ const DESCRIPTION = 'Commands for working with the File Manager';
 const command = `${COMMAND_NAME}`;
 const describe = DESCRIPTION;
 const builder = yargs => {
-  addLoggerOptions(yargs, true);
+  addOverwriteOptions(yargs, true);
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
 
-  configureFetch(yargs);
-  configureUpload(yargs);
+  yargs.command(upload).command(fetch);
 
   return yargs;
 };
@@ -23,8 +28,8 @@ const configureFileManagerCommanderCommand = commander => {
   commander
     .version(version)
     .description(DESCRIPTION)
-    .command('fetch <src> [dest]', FETCH_DESCRIPTION)
-    .command('upload <src> <dest>', UPLOAD_DESCRIPTION);
+    .command('fetch <src> [dest]', fetch.FETCH_DESCRIPTION)
+    .command('upload <src> <dest>', upload.UPLOAD_DESCRIPTION);
 
   addHelpUsageTracking(commander);
 };
