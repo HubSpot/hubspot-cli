@@ -70,7 +70,6 @@ const describe = DESCRIPTION;
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
   addOverwriteOptions(yargs, true);
   addModeOptions(yargs, { read: true }, true);
 
@@ -82,7 +81,7 @@ const builder = yargs => {
 
   yargs.positional('dest', {
     describe:
-      'Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory',
+      'Local directory you would like the files to be placed in, relative to your current working directory',
     type: 'string',
   });
 

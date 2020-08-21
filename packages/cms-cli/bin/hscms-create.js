@@ -2,10 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureCreateCommand } = require('../commands/create');
+const { configureCommanderCreateCommand } = require('../commands/create');
 
 const program = new Command('hscms create');
-configureCreateCommand(program);
+configureCommanderCreateCommand(program);
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {

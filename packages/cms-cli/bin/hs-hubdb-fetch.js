@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureHubDbFetchCommand } = require('../commands/hubdb');
+const {
+  configureCommanderHubDbFetchCommand,
+} = require('../commands/hubdb/fetch');
 
 const program = new Command('hs hubdb fetch');
-configureHubDbFetchCommand(program);
+configureCommanderHubDbFetchCommand(program);
 program.parse(process.argv);
