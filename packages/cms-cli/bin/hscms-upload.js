@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 const { Command } = require('commander');
-const { configureUploadCommand } = require('../commands/upload');
+const { configureCommanderUploadCommand } = require('../commands/upload');
 
 const program = new Command('hscms upload');
-configureUploadCommand(program);
+configureCommanderUploadCommand(program);
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
