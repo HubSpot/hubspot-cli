@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureHubDbDeleteCommand } = require('../commands/hubdb');
+const {
+  configureCommanderHubDbDeleteCommand,
+} = require('../commands/hubdb/delete');
 
 const program = new Command('hscms hubdb delete');
-configureHubDbDeleteCommand(program);
+configureCommanderHubDbDeleteCommand(program);
 program.parse(process.argv);

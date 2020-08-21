@@ -133,8 +133,6 @@ const createTemplate = (name, dest, type = 'page-template') => {
 const command = `${COMMAND_NAME} <type> <name> [dest]`;
 const describe = DESCRIPTION;
 const builder = yargs => {
-  addLoggerOptions(yargs, true);
-
   yargs.positional('type', {
     describe: 'Type of asset',
     type: 'string',
