@@ -17,6 +17,7 @@ const lintCommand = require('../commands/lint');
 const watchCommand = require('../commands/watch');
 const authCommand = require('../commands/auth');
 const uploadCommand = require('../commands/upload');
+const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const secretsCommand = require('../commands/secrets');
 
@@ -49,6 +50,7 @@ const argv = yargs
   .command(watchCommand)
   .command(removeCommand)
   .command(uploadCommand)
+  .command(createCommand)
   .command(fetchCommand)
   .command(secretsCommand)
   .help()
