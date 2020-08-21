@@ -23,24 +23,21 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const CLEAR_DESCRIPTION = 'clear all rows in a HubDB table';
 
-const configureClear = yargs => {
-  yargs.command({
-    command: 'clear <tableId>',
-    describe: CLEAR_DESCRIPTION,
-    handler: async argv => action({ tableId: argv.tableId }, argv),
-    builder: () => {
-      yargs.positional('tableId', {
-        describe: 'HubDB Table ID',
-        type: 'string',
-      });
-    },
-  });
-
-  addLoggerOptions(yargs, true);
+// Yargs
+const command = 'clear <tableId>';
+const describe = CLEAR_DESCRIPTION;
+const handler = async argv => action({ tableId: argv.tableId }, argv);
+const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+
+  yargs.positional('tableId', {
+    describe: 'HubDB Table ID',
+    type: 'string',
+  });
 };
 
+// Commander
 function configureCommanderHubDbClearCommand(commander) {
   commander
     .version(version)
@@ -89,7 +86,10 @@ const action = async (args, options) => {
 module.exports = {
   CLEAR_DESCRIPTION,
   // Yargs
-  configureClear,
+  command,
+  describe,
+  builder,
+  handler,
   // Commander
   configureCommanderHubDbClearCommand,
 };

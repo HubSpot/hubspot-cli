@@ -44,22 +44,17 @@ const action = async (args, options) => {
   }
 };
 
-const configureDelete = yargs => {
-  yargs.command({
-    command: 'delete <tableId>',
-    describe: DELETE_DESCRIPTION,
-    handler: async argv => action({ tableId: argv.tableId }, argv),
-    builder: () => {
-      yargs.positional('tableId', {
-        describe: 'HubDB Table ID',
-        type: 'string',
-      });
-    },
-  });
-
-  addLoggerOptions(yargs, true);
+const command = 'delete <tableId>';
+const describe = DELETE_DESCRIPTION;
+const handler = async argv => action({ tableId: argv.tableId }, argv);
+const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+
+  yargs.positional('tableId', {
+    describe: 'HubDB Table ID',
+    type: 'string',
+  });
 };
 
 function configureCommanderHubDbDeleteCommand(commander) {
@@ -77,7 +72,10 @@ function configureCommanderHubDbDeleteCommand(commander) {
 module.exports = {
   DELETE_DESCRIPTION,
   // Yargs
-  configureDelete,
+  command,
+  describe,
+  handler,
+  builder,
   // Commander
   configureCommanderHubDbDeleteCommand,
 };

@@ -51,22 +51,17 @@ const action = async (args, options) => {
   }
 };
 
-const configureCreate = yargs => {
-  yargs.command({
-    command: 'create <src>',
-    describe: CREATE_DESCRIPTION,
-    handler: async argv => action({ src: argv.src }, argv),
-    builder: () => {
-      yargs.positional('src', {
-        describe: 'local path to file used for import',
-        type: 'string',
-      });
-    },
-  });
-
-  addLoggerOptions(yargs, true);
+const command = 'create <src>';
+const describe = CREATE_DESCRIPTION;
+const handler = async argv => action({ src: argv.src }, argv);
+const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+
+  yargs.positional('src', {
+    describe: 'local path to file used for import',
+    type: 'string',
+  });
 };
 
 const configureCommanderHubDbCreateCommand = commander => {
@@ -84,7 +79,10 @@ const configureCommanderHubDbCreateCommand = commander => {
 module.exports = {
   CREATE_DESCRIPTION,
   // Yargs
-  configureCreate,
+  command,
+  describe,
+  handler,
+  builder,
   // Commander
   configureCommanderHubDbCreateCommand,
 };

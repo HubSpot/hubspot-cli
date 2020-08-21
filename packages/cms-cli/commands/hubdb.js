@@ -1,9 +1,10 @@
 const { addHelpUsageTracking } = require('../lib/usageTracking');
 const { addLoggerOptions } = require('../lib/commonOpts');
-const { configureCreate, CREATE_DESCRIPTION } = require('./hubdb/create');
-const { configureFetch, FETCH_DESCRIPTION } = require('./hubdb/fetch');
-const { configureClear, CLEAR_DESCRIPTION } = require('./hubdb/clear');
-const { configureDelete, DELETE_DESCRIPTION } = require('./hubdb/delete');
+const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
+const createCommand = require('./hubdb/create');
+const fetchCommand = require('./hubdb/fetch');
+const deleteCommand = require('./hubdb/delete');
+const clearCommand = require('./hubdb/clear');
 
 const { version } = require('../package.json');
 
@@ -14,12 +15,14 @@ const DESCRIPTION = 'Manage HubDB tables';
 const command = `${COMMAND_NAME}`;
 const describe = DESCRIPTION;
 const builder = yargs => {
-  addLoggerOptions(yargs, true);
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
 
-  configureCreate(yargs);
-  configureFetch(yargs);
-  configureClear(yargs);
-  configureDelete(yargs);
+  yargs
+    .command(clearCommand)
+    .command(createCommand)
+    .command(fetchCommand)
+    .command(deleteCommand);
 
   return yargs;
 };
@@ -29,10 +32,10 @@ const configureCommanderHubDbCommand = commander => {
   commander
     .version(version)
     .description(DESCRIPTION)
-    .command('create <src>', CREATE_DESCRIPTION)
-    .command('fetch <tableId> <dest>', FETCH_DESCRIPTION)
-    .command('clear <tableId>', CLEAR_DESCRIPTION)
-    .command('delete <tableId>', DELETE_DESCRIPTION);
+    .command('create <src>', createCommand.CREATE_DESCRIPTION)
+    .command('fetch <tableId> <dest>', fetchCommand.FETCH_DESCRIPTION)
+    .command('clear <tableId>', clearCommand.CLEAR_DESCRIPTION)
+    .command('delete <tableId>', deleteCommand.DELETE_DESCRIPTION);
 
   addLoggerOptions(commander);
   addHelpUsageTracking(commander);

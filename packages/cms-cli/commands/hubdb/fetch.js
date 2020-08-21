@@ -49,29 +49,24 @@ const action = async (args, options) => {
   }
 };
 
-const configureFetch = yargs => {
-  yargs.command({
-    command: 'fetch <tableId> [dest]',
-    describe: FETCH_DESCRIPTION,
-    handler: async argv =>
-      action({ tableId: argv.tableId, dest: argv.dest }, argv),
-    builder: () => {
-      yargs.positional('tableId', {
-        describe: 'HubDB Table ID',
-        type: 'string',
-        demand: true,
-      });
-
-      yargs.positional('dest', {
-        describe: 'Local destination folder to fetch table to',
-        type: 'string',
-      });
-    },
-  });
-
-  addLoggerOptions(yargs, true);
+const command = 'fetch <tableId> [dest]';
+const describe = FETCH_DESCRIPTION;
+const handler = async argv =>
+  action({ tableId: argv.tableId, dest: argv.dest }, argv);
+const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+
+  yargs.positional('tableId', {
+    describe: 'HubDB Table ID',
+    type: 'string',
+    demand: true,
+  });
+
+  yargs.positional('dest', {
+    describe: 'Local destination folder to fetch table to',
+    type: 'string',
+  });
 };
 
 function configureCommanderHubDbFetchCommand(commander) {
@@ -91,7 +86,10 @@ function configureCommanderHubDbFetchCommand(commander) {
 module.exports = {
   FETCH_DESCRIPTION,
   // Yargs
-  configureFetch,
+  command,
+  describe,
+  handler,
+  builder,
   // Commander
   configureCommanderHubDbFetchCommand,
 };
