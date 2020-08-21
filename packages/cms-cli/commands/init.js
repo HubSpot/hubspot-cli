@@ -104,7 +104,6 @@ const action = async options => {
 const command = `${COMMAND_NAME}`;
 const describe = DESCRIPTION;
 const builder = yargs => {
-  addLoggerOptions(yargs, true);
   addTestingOptions(yargs, true);
 
   return yargs;

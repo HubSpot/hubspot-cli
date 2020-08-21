@@ -192,7 +192,6 @@ const builder = yargs => {
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
 
   return yargs;
 };

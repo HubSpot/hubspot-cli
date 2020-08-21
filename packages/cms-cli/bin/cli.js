@@ -14,8 +14,12 @@ const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
 const logsCommand = require('../commands/logs');
 const lintCommand = require('../commands/lint');
+const watchCommand = require('../commands/watch');
+const authCommand = require('../commands/auth');
 const uploadCommand = require('../commands/upload');
 const createCommand = require('../commands/create');
+const fetchCommand = require('../commands/fetch');
+const secretsCommand = require('../commands/secrets');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -33,12 +37,22 @@ const argv = yargs
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
   })
-  .command(removeCommand)
+  .option('debug', {
+    alias: 'd',
+    default: false,
+    describe: 'set log level to debug',
+    type: 'boolean',
+  })
+  .command(authCommand)
   .command(initCommand)
   .command(logsCommand)
   .command(lintCommand)
+  .command(watchCommand)
+  .command(removeCommand)
   .command(uploadCommand)
   .command(createCommand)
+  .command(fetchCommand)
+  .command(secretsCommand)
   .help()
   .demandCommand(
     1,
