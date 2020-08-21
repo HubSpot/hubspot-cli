@@ -71,7 +71,6 @@ const describe = DESCRIPTION;
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Local folder to lint',
     type: 'string',
