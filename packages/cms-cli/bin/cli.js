@@ -20,6 +20,7 @@ const authCommand = require('../commands/auth');
 const uploadCommand = require('../commands/upload');
 const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
+const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 
 const SCRIPT_NAME = 'banjo';
@@ -54,6 +55,7 @@ const argv = yargs
   .command(uploadCommand)
   .command(createCommand)
   .command(fetchCommand)
+  .command(filemanagerCommand)
   .command(secretsCommand)
   .help()
   .demandCommand(

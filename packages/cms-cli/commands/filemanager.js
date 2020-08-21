@@ -1,215 +1,44 @@
-const fs = require('fs');
-const path = require('path');
-const { version } = require('../package.json');
-
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const {
-  uploadFolder,
-  downloadFileOrFolder,
-} = require('@hubspot/cms-lib/fileManager');
-const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
-const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
-const { logger } = require('@hubspot/cms-lib/logger');
-const {
-  logErrorInstance,
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { validateSrcAndDestPaths } = require('@hubspot/cms-lib/modules');
-const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
-const { resolveLocalPath } = require('../lib/filesystem');
-
 const {
   addConfigOptions,
   addPortalOptions,
-  addLoggerOptions,
   addOverwriteOptions,
-  setLogLevel,
-  getPortalId,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal } = require('../lib/validation');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
+const upload = require('./filemanager/upload');
+const fetch = require('./filemanager/fetch');
+const { version } = require('../package.json');
+const { addHelpUsageTracking } = require('../lib/usageTracking');
 
-const UPLOAD_COMMAND_NAME = 'filemanager-upload';
-const FETCH_COMMAND_NAME = 'filemanager-fetch';
+const COMMAND_NAME = 'filemanager';
+const DESCRIPTION = 'Commands for working with the File Manager';
 
-function configureFileManagerCommand(program) {
-  program
+// Yargs Configuration
+const command = `${COMMAND_NAME}`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addOverwriteOptions(yargs, true);
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+
+  yargs.command(upload).command(fetch);
+
+  return yargs;
+};
+
+const configureFileManagerCommanderCommand = commander => {
+  commander
     .version(version)
-    .description('Commands for working with the File Manager')
-    .command('fetch <src> <dest>', 'download files from the file manager')
-    .command('upload <src> <dest>', 'upload files to the file manager');
+    .description(DESCRIPTION)
+    .command('fetch <src> [dest]', fetch.FETCH_DESCRIPTION)
+    .command('upload <src> <dest>', upload.UPLOAD_DESCRIPTION);
 
-  addHelpUsageTracking(program);
-}
-
-function configureFileManagerFetchCommand(program) {
-  program
-    .version(version)
-    .description(
-      'Download a folder or file from the HubSpot File Manager to your computer'
-    )
-    .arguments('<src> [dest]')
-    .option(
-      '--include-archived',
-      'Include files that have been marked as "archived"'
-    )
-    .action(async (src, dest) => {
-      setLogLevel(program);
-      logDebugInfo(program);
-
-      const { config: configPath } = program;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!validateConfig() || !(await validatePortal(program))) {
-        process.exit(1);
-      }
-
-      if (typeof src !== 'string') {
-        logger.error('A source to fetch is required');
-        process.exit(1);
-      }
-
-      dest = resolveLocalPath(dest);
-
-      const portalId = getPortalId(program);
-
-      trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
-
-      // Fetch and write file/folder.
-      downloadFileOrFolder(portalId, src, dest, program);
-    });
-
-  addOverwriteOptions(program);
-  addConfigOptions(program);
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addHelpUsageTracking(program, FETCH_COMMAND_NAME);
-}
-
-function configureFileManagerUploadCommand(program) {
-  program
-    .version(version)
-    .description(
-      'Upload a folder or file from your computer to the HubSpot File Manager'
-    )
-    .arguments('<src> <dest>')
-    .action(async (src, dest, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (!validateConfig() || !(await validatePortal(command))) {
-        process.exit(1);
-      }
-
-      const portalId = getPortalId(command);
-      const absoluteSrcPath = path.resolve(getCwd(), src);
-
-      let stats;
-      try {
-        stats = fs.statSync(absoluteSrcPath);
-        if (!stats.isFile() && !stats.isDirectory()) {
-          logger.error(`The path "${src}" is not a path to a file or folder`);
-          return;
-        }
-      } catch (e) {
-        logger.error(`The path "${src}" is not a path to a file or folder`);
-        return;
-      }
-
-      if (!dest) {
-        logger.error('A destination path needs to be passed');
-        return;
-      }
-      const normalizedDest = convertToUnixPath(dest);
-      trackCommandUsage(
-        UPLOAD_COMMAND_NAME,
-        { type: stats.isFile() ? 'file' : 'folder' },
-        portalId
-      );
-
-      const srcDestIssues = await validateSrcAndDestPaths(
-        { isLocal: true, path: src },
-        { isHubSpot: true, path: dest }
-      );
-      if (srcDestIssues.length) {
-        srcDestIssues.forEach(({ message }) => logger.error(message));
-        process.exit(1);
-      }
-
-      if (stats.isFile()) {
-        if (shouldIgnoreFile(absoluteSrcPath, getCwd())) {
-          logger.error(
-            `The file "${src}" is being ignored via an .hsignore rule`
-          );
-          return;
-        }
-
-        uploadFile(portalId, absoluteSrcPath, normalizedDest)
-          .then(() => {
-            logger.success(
-              'Uploaded file from "%s" to "%s" in the File Manager of portal %s',
-              src,
-              normalizedDest,
-              portalId
-            );
-          })
-          .catch(error => {
-            logger.error(
-              'Uploading file "%s" to "%s" failed',
-              src,
-              normalizedDest
-            );
-            logApiUploadErrorInstance(
-              error,
-              new ApiErrorContext({
-                portalId,
-                request: normalizedDest,
-                payload: src,
-              })
-            );
-          });
-      } else {
-        logger.log(
-          `Uploading files from "${src}" to "${dest}" in the File Manager of portal ${portalId}`
-        );
-        uploadFolder(portalId, absoluteSrcPath, dest, {
-          cwd: getCwd(),
-        })
-          .then(() => {
-            logger.success(
-              `Uploading files to "${dest}" in the File Manager is complete`
-            );
-          })
-          .catch(error => {
-            logger.error('Uploading failed');
-            logErrorInstance(error, {
-              portalId,
-            });
-          });
-      }
-    });
-
-  addConfigOptions(program);
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addHelpUsageTracking(program, UPLOAD_COMMAND_NAME);
-}
+  addHelpUsageTracking(commander);
+};
 
 module.exports = {
-  configureFileManagerFetchCommand,
-  configureFileManagerUploadCommand,
-  configureFileManagerCommand,
+  // Yargs
+  command,
+  describe,
+  builder,
+  // Commander
+  configureFileManagerCommanderCommand,
 };

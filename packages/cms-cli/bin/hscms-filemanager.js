@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureFileManagerCommand } = require('../commands/filemanager');
+const {
+  configureFileManagerCommanderCommand,
+} = require('../commands/filemanager');
 
 const program = new Command('hs filemanager');
-configureFileManagerCommand(program);
+configureFileManagerCommanderCommand(program);
 program.parse(process.argv);
