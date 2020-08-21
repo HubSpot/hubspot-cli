@@ -70,7 +70,6 @@ const describe = DESCRIPTION;
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
-  addLoggerOptions(yargs, true);
   addOverwriteOptions(yargs, true);
   addModeOptions(yargs, { read: true }, true);
 
