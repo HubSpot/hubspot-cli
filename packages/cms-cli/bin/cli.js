@@ -5,7 +5,6 @@ const updateNotifier = require('update-notifier');
 
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');
@@ -35,9 +34,16 @@ const argv = yargs
   .usage('Tools for working with the HubSpot CMS')
   .middleware([setLogLevel])
   .exitProcess(false)
-  .fail((msg, err /*, _yargs*/) => {
+  .fail((msg, err, _yargs) => {
+    // Preserve stack trace.
+    if (err) throw err;
+
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
+
+    // Give command-specifc help
+    console.log(_yargs.help());
+    process.exit(0);
   })
   .option('debug', {
     alias: 'd',
