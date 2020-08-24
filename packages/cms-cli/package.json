@@ -19,6 +19,7 @@
     "update-notifier": "3.0.1",
     "yargs": "15.4.1"
   },
+  "devDependencies": {},
   "engines": {
     "node": ">=8.9.1"
   },
@@ -26,6 +27,10 @@
     "banjo": "./bin/cli.js",
     "hs": "./bin/hs.js",
     "hscms": "./bin/hscms.js"
+  },
+  "scripts": {
+    "test": "jest -i ./",
+    "jest": "jest -i ./ --watch"
   },
   "publishConfig": {
     "access": "public"

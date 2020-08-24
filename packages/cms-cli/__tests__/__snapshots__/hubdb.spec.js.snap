@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HubDB command works with help option 1`] = `
+"banjo hubdb
+
+Manage HubDB tables
+
+Commands:
+  banjo hubdb clear <tableId>         clear all rows in a HubDB table
+  banjo hubdb create <src>            Create a HubDB table
+  banjo hubdb fetch <tableId> [dest]  fetch a HubDB table
+  banjo hubdb delete <tableId>        delete a HubDB table
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+"
+`;
+
+exports[`HubDB command works with help positional 1`] = `
+"banjo hubdb
+
+Manage HubDB tables
+
+Commands:
+  banjo hubdb clear <tableId>         clear all rows in a HubDB table
+  banjo hubdb create <src>            Create a HubDB table
+  banjo hubdb fetch <tableId> [dest]  fetch a HubDB table
+  banjo hubdb delete <tableId>        delete a HubDB table
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+"
+`;

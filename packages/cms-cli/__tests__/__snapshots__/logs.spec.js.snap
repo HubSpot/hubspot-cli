@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Logs command works with help option 1`] = `
+"banjo logs <path>
+
+get logs for a function
+
+Positionals:
+  path  Path to serverless function                          [string] [required]
+
+Options:
+  --version                 Show version number                        [boolean]
+  --debug, -d               set log level to debug    [boolean] [default: false]
+  --help                    Show help                                  [boolean]
+  --latest, -l              retrieve most recent log only              [boolean]
+  --compact, -c             output compact logs                         [string]
+  --tail, -t, --follow, -f  tail logs                                  [boolean]
+  --config, -c              path to a config file                       [string]
+  --portal, -p              HubSpot portal id or name from config       [string]
+"
+`;
+
+exports[`Logs command works with help positional 1`] = `
+"banjo logs <path>
+
+get logs for a function
+
+Positionals:
+  path  Path to serverless function                          [string] [required]
+
+Options:
+  --version                 Show version number                        [boolean]
+  --debug, -d               set log level to debug    [boolean] [default: false]
+  --help                    Show help                                  [boolean]
+  --latest, -l              retrieve most recent log only              [boolean]
+  --compact, -c             output compact logs                         [string]
+  --tail, -t, --follow, -f  tail logs                                  [boolean]
+  --config, -c              path to a config file                       [string]
+  --portal, -p              HubSpot portal id or name from config       [string]
+"
+`;

@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Filemanager command works with help option 1`] = `
+"banjo filemanager
+
+Commands for working with the File Manager
+
+Commands:
+  banjo filemanager upload <src> <dest>  Upload a folder or file from your
+                                         computer to the HubSpot File Manager
+  banjo filemanager fetch <src> [dest]   Download a folder or file from the
+                                         HubSpot File Manager to your computer
+
+Options:
+  --version        Show version number                                 [boolean]
+  --debug, -d      set log level to debug             [boolean] [default: false]
+  --help           Show help                                           [boolean]
+  --overwrite, -o  overwrite existing files           [boolean] [default: false]
+  --config, -c     path to a config file                                [string]
+  --portal, -p     HubSpot portal id or name from config                [string]
+"
+`;
+
+exports[`Filemanager command works with help positional 1`] = `
+"banjo filemanager
+
+Commands for working with the File Manager
+
+Commands:
+  banjo filemanager upload <src> <dest>  Upload a folder or file from your
+                                         computer to the HubSpot File Manager
+  banjo filemanager fetch <src> [dest]   Download a folder or file from the
+                                         HubSpot File Manager to your computer
+
+Options:
+  --version        Show version number                                 [boolean]
+  --debug, -d      set log level to debug             [boolean] [default: false]
+  --help           Show help                                           [boolean]
+  --overwrite, -o  overwrite existing files           [boolean] [default: false]
+  --config, -c     path to a config file                                [string]
+  --portal, -p     HubSpot portal id or name from config                [string]
+"
+`;

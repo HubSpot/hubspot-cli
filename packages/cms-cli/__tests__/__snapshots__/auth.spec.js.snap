@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Auth command oauth2 works with oauth2 1`] = `
+"? Enter the portal ID for your account (the number under the DOMAIN column at ht
+tps://app.hubspot.com/myaccounts-beta ): [1A[41D[121C[1B"
+`;
+
+exports[`Auth command personalaccesskey defaults to personalaccesskey 1`] = `
+"? When you're ready, we'll open a secure page in your default browser where you 
+can view and copy your personal CMS access key, which you'll need to complete th
+e next step.
+<Press enter when you are ready to continue> [45D[45C"
+`;
+
+exports[`Auth command personalaccesskey respects the param 1`] = `
+"? When you're ready, we'll open a secure page in your default browser where you 
+can view and copy your personal CMS access key, which you'll need to complete th
+e next step.
+<Press enter when you are ready to continue> [45D[45C"
+`;
+
+exports[`Auth command works with help option 1`] = `
+"banjo auth [type]
+
+Configure authentication for a HubSpot account. Supported authentication
+protocols are oauth2 and personalaccesskey.
+
+Positionals:
+  [type]  Authentication mechanism
+                     [string] [choices: \\"personalaccesskey\\", \\"oauth2\\"] [default:
+                                                            \\"personalaccesskey\\":
+      An API Key tied to a specific user account. This is the recommended way of
+                                   authenticating with local development tools.]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+"
+`;
+
+exports[`Auth command works with help positional 1`] = `
+"banjo auth [type]
+
+Configure authentication for a HubSpot account. Supported authentication
+protocols are oauth2 and personalaccesskey.
+
+Positionals:
+  [type]  Authentication mechanism
+                     [string] [choices: \\"personalaccesskey\\", \\"oauth2\\"] [default:
+                                                            \\"personalaccesskey\\":
+      An API Key tied to a specific user account. This is the recommended way of
+                                   authenticating with local development tools.]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+"
+`;

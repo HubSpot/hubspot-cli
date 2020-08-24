@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Init Command works with help option 1`] = `
+"banjo init
+
+initialize hubspot.config.yml for a HubSpot portal
+
+Options:
+  --version    Show version number                                     [boolean]
+  --debug, -d  set log level to debug                 [boolean] [default: false]
+  --help       Show help                                               [boolean]
+"
+`;
+
+exports[`Init Command works with help positional 1`] = `
+"banjo init
+
+initialize hubspot.config.yml for a HubSpot portal
+
+Options:
+  --version    Show version number                                     [boolean]
+  --debug, -d  set log level to debug                 [boolean] [default: false]
+  --help       Show help                                               [boolean]
+"
+`;

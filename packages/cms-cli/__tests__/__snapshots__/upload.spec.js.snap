@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Upload command works with help option 1`] = `
+"banjo upload <src> <dest>
+
+Upload a folder or file from your computer to the HubSpot CMS
+
+Positionals:
+  src   Path to the local file, relative to your current working directory.
+                                                             [string] [required]
+  dest  Path in HubSpot Design Tools, can be a net new path. [string] [required]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+  --mode, -m    write to <draft | publish>                              [string]
+"
+`;
+
+exports[`Upload command works with help positional 1`] = `
+"banjo upload <src> <dest>
+
+Upload a folder or file from your computer to the HubSpot CMS
+
+Positionals:
+  src   Path to the local file, relative to your current working directory.
+                                                             [string] [required]
+  dest  Path in HubSpot Design Tools, can be a net new path. [string] [required]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+  --mode, -m    write to <draft | publish>                              [string]
+"
+`;

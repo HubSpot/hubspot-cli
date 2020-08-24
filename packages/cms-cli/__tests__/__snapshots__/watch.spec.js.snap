@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Watch command works with help option 1`] = `
+"banjo watch <src> <dest>
+
+Watch a directory on your computer for changes and upload the changed files to
+the HubSpot CMS
+
+Positionals:
+  src   Path to the local directory your files are in, relative to your current
+        working directory                                    [string] [required]
+  dest  Path in HubSpot Design Tools. Can be a net new path  [string] [required]
+
+Options:
+  --version             Show version number                            [boolean]
+  --debug, -d           set log level to debug        [boolean] [default: false]
+  --help                Show help                                      [boolean]
+  --config, -c          path to a config file                           [string]
+  --portal, -p          HubSpot portal id or name from config           [string]
+  --mode, -m            write to <draft | publish>                      [string]
+  --remove, -r          Will cause watch to delete files in your HubSpot account
+                        that are not found locally.                    [boolean]
+  --initial-upload, -i  Upload directory before watching for updates   [boolean]
+  --notify, -n          Log to specified file when a watch task is triggered and
+                        after workers have gone idle. Ex. --notify path/to/file
+                                                                        [string]
+"
+`;
+
+exports[`Watch command works with help positional 1`] = `
+"banjo watch <src> <dest>
+
+Watch a directory on your computer for changes and upload the changed files to
+the HubSpot CMS
+
+Positionals:
+  src   Path to the local directory your files are in, relative to your current
+        working directory                                    [string] [required]
+  dest  Path in HubSpot Design Tools. Can be a net new path  [string] [required]
+
+Options:
+  --version             Show version number                            [boolean]
+  --debug, -d           set log level to debug        [boolean] [default: false]
+  --help                Show help                                      [boolean]
+  --config, -c          path to a config file                           [string]
+  --portal, -p          HubSpot portal id or name from config           [string]
+  --mode, -m            write to <draft | publish>                      [string]
+  --remove, -r          Will cause watch to delete files in your HubSpot account
+                        that are not found locally.                    [boolean]
+  --initial-upload, -i  Upload directory before watching for updates   [boolean]
+  --notify, -n          Log to specified file when a watch task is triggered and
+                        after workers have gone idle. Ex. --notify path/to/file
+                                                                        [string]
+"
+`;

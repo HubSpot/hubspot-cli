@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fetch command works with help option 1`] = `
+"banjo fetch <src> [dest]
+
+Fetch a file, directory or module from HubSpot and write to a path on your
+computer
+
+Positionals:
+  src   Path in HubSpot Design Tools                         [string] [required]
+  dest  Local directory you would like the files to be placed in, relative to
+        your current working directory                                  [string]
+
+Options:
+  --version        Show version number                                 [boolean]
+  --debug, -d      set log level to debug             [boolean] [default: false]
+  --help           Show help                                           [boolean]
+  --config, -c     path to a config file                                [string]
+  --portal, -p     HubSpot portal id or name from config                [string]
+  --overwrite, -o  overwrite existing files           [boolean] [default: false]
+  --mode, -m       read from <draft | publish>                          [string]
+"
+`;
+
+exports[`Fetch command works with help positional 1`] = `
+"banjo fetch <src> [dest]
+
+Fetch a file, directory or module from HubSpot and write to a path on your
+computer
+
+Positionals:
+  src   Path in HubSpot Design Tools                         [string] [required]
+  dest  Local directory you would like the files to be placed in, relative to
+        your current working directory                                  [string]
+
+Options:
+  --version        Show version number                                 [boolean]
+  --debug, -d      set log level to debug             [boolean] [default: false]
+  --help           Show help                                           [boolean]
+  --config, -c     path to a config file                                [string]
+  --portal, -p     HubSpot portal id or name from config                [string]
+  --overwrite, -o  overwrite existing files           [boolean] [default: false]
+  --mode, -m       read from <draft | publish>                          [string]
+"
+`;

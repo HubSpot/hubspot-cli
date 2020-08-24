@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Create command works with help option 1`] = `
+"banjo create <type> <name> [dest]
+
+Create HubSpot CMS assets. Supported assets are function, module, template,
+website-theme, react-app, vue-app, and webpack-serverless.
+
+Positionals:
+  type  Type of asset
+                 [string] [required] [choices: \\"function\\", \\"module\\", \\"template\\",
+                  \\"website-theme\\", \\"react-app\\", \\"vue-app\\", \\"webpack-serverless\\"]
+  name  Name of new asset                                    [string] [required]
+  dest  Destination folder for the new asset, relative to your current working
+        directory. If omitted, this argument will default to your current
+        working directory.                                              [string]
+
+Options:
+  --version    Show version number                                     [boolean]
+  --debug, -d  set log level to debug                 [boolean] [default: false]
+  --help       Show help                                               [boolean]
+"
+`;
+
+exports[`Create command works with help positional 1`] = `
+"banjo create <type> <name> [dest]
+
+Create HubSpot CMS assets. Supported assets are function, module, template,
+website-theme, react-app, vue-app, and webpack-serverless.
+
+Positionals:
+  type  Type of asset
+                 [string] [required] [choices: \\"function\\", \\"module\\", \\"template\\",
+                  \\"website-theme\\", \\"react-app\\", \\"vue-app\\", \\"webpack-serverless\\"]
+  name  Name of new asset                                    [string] [required]
+  dest  Destination folder for the new asset, relative to your current working
+        directory. If omitted, this argument will default to your current
+        working directory.                                              [string]
+
+Options:
+  --version    Show version number                                     [boolean]
+  --debug, -d  set log level to debug                 [boolean] [default: false]
+  --help       Show help                                               [boolean]
+"
+`;

@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Remove command works with help option 1`] = `
+"banjo remove <path>
+
+Delete a file or folder from HubSpot
+
+Positionals:
+  path  Remote hubspot path                                  [string] [required]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+"
+`;
+
+exports[`Remove command works with help positional 1`] = `
+"banjo remove <path>
+
+Delete a file or folder from HubSpot
+
+Positionals:
+  path  Remote hubspot path                                  [string] [required]
+
+Options:
+  --version     Show version number                                    [boolean]
+  --debug, -d   set log level to debug                [boolean] [default: false]
+  --help        Show help                                              [boolean]
+  --config, -c  path to a config file                                   [string]
+  --portal, -p  HubSpot portal id or name from config                   [string]
+"
+`;
