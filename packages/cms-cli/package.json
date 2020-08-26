@@ -29,8 +29,8 @@
     "hscms": "./bin/hscms.js"
   },
   "scripts": {
-    "test": "jest -i ./",
-    "jest": "jest -i ./ --watch"
+    "test": "jest ./",
+    "jest": "jest ./ --watch"
   },
   "publishConfig": {
     "access": "public"

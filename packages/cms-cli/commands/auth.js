@@ -51,13 +51,18 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
 async function authAction(type, options) {
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
   setLogLevel(options);
+
   logDebugInfo(options);
+
   const { config: configPath } = options;
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+
   loadConfig(configPath, {
     ignoreEnvironmentVariableConfig: true,
   });
+
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
@@ -135,10 +140,11 @@ const builder = yargs => {
 
   addConfigOptions(yargs, true);
   addTestingOptions(yargs, true);
-
   return yargs;
 };
-const handler = async argv => authAction(argv.type, argv);
+const handler = async argv => {
+  authAction(argv.type, argv);
+};
 
 // Commander Configuration
 function configureCommanderAuthCommand(program) {

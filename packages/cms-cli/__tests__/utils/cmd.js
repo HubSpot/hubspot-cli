@@ -1,5 +1,3 @@
-const path = require('path');
-
 /**
  * Integration test helper
  * Author: Andrés Zorro <zorrodg@gmail.com>
@@ -152,11 +150,3 @@ module.exports = {
   ENTER: '\x0D',
   SPACE: '\x20',
 };
-
-/**
- * Runs a yargs command.
- * @param {Array} args Arguments to the command
- * @param {Array} inputs (Optional) Array of inputs (user responses)
- * @param {Object} opts (optional) Environment variables
- */
-global.banjo = create(path.join(__dirname, '../../bin/cli.js'), '.');
