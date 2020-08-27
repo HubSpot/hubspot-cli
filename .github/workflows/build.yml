@@ -15,7 +15,7 @@ jobs:
           yarn install
     - name: Force local package symlinks
       run: |
-          lerna link --force-local
+          yarn lerna link --force-local
     - name: Lint
       run: |
           yarn lint
