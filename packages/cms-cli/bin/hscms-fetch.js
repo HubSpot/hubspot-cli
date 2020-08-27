@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { Command } = require('commander');
-const { configureFetchCommand } = require('../commands/fetch');
+const { configureCommanderFetchCommand } = require('../commands/fetch');
 const program = new Command('hscms fetch');
-configureFetchCommand(program);
+configureCommanderFetchCommand(program);
 program.parse(process.argv);

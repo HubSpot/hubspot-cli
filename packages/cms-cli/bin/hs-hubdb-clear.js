@@ -2,8 +2,10 @@
 
 const { Command } = require('commander');
 
-const { configureHubDbClearCommand } = require('../commands/hubdb');
+const {
+  configureCommanderHubDbClearCommand,
+} = require('../commands/hubdb/clear');
 
 const program = new Command('hs hubdb clear');
-configureHubDbClearCommand(program);
+configureCommanderHubDbClearCommand(program);
 program.parse(process.argv);

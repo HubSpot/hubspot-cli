@@ -2,7 +2,9 @@
 
 const { Command } = require('commander');
 
-const { configureSecretsUpdateCommand } = require('../commands/secrets');
+const {
+  configureSecretsUpdateCommand,
+} = require('../commands/secrets/updateSecret');
 
 const program = new Command('hs secrets update');
 configureSecretsUpdateCommand(program);

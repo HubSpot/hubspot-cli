@@ -28,97 +28,156 @@ const {
 } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'watch';
+const DESCRIPTION =
+  'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
 
-function configureWatchCommand(program) {
+const action = async ({ src, dest }, command = {}) => {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const {
+    config: configPath,
+    remove,
+    initialUpload,
+    disableInitial,
+    notify,
+  } = command;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
+
+  if (disableInitial) {
+    logger.info(
+      'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
+    );
+  } else {
+    logger.warn(
+      `The "watch" command no longer uploads the watched directory by default. The directory "${src}" was not uploaded.`
+    );
+    logger.warn(
+      'To upload the directory run "hs upload" or add the "--initial-upload" option when running "hs watch".'
+    );
+  }
+
+  if (
+    !(
+      validateConfig() &&
+      (await validatePortal(command)) &&
+      validateMode(command)
+    )
+  ) {
+    process.exit(1);
+  }
+
+  const portalId = getPortalId(command);
+  const mode = getMode(command);
+
+  const absoluteSrcPath = path.resolve(getCwd(), src);
+  try {
+    const stats = fs.statSync(absoluteSrcPath);
+    if (!stats.isDirectory()) {
+      logger.log(`The "${src}" is not a path to a directory`);
+      return;
+    }
+  } catch (e) {
+    logger.log(`The "${src}" is not a path to a directory`);
+    return;
+  }
+
+  if (!dest) {
+    logger.log('A destination directory needs to be passed');
+    return;
+  }
+
+  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+  watch(portalId, absoluteSrcPath, dest, {
+    mode,
+    cwd: getCwd(),
+    remove,
+    disableInitial: initialUpload ? false : true,
+    notify,
+  });
+};
+
+// Yargs Configuration
+const command = `${COMMAND_NAME} <src> <dest>`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addModeOptions(yargs, { write: true }, true);
+
+  yargs.positional('src', {
+    describe:
+      'Path to the local directory your files are in, relative to your current working directory',
+    type: 'string',
+    demand: true,
+  });
+  yargs.positional('dest', {
+    describe: 'Path in HubSpot Design Tools. Can be a net new path',
+    type: 'string',
+    demand: true,
+  });
+  yargs.option('remove', {
+    alias: 'r',
+    describe:
+      'Will cause watch to delete files in your HubSpot account that are not found locally.',
+    type: 'boolean',
+  });
+  yargs.option('initial-upload', {
+    alias: 'i',
+    describe: 'Upload directory before watching for updates',
+    type: 'boolean',
+  });
+  yargs.option('disable-initial', {
+    alias: 'd',
+    describe: 'Disable the initial upload when watching a directory (default)',
+    type: 'boolean',
+    hidden: true,
+  });
+  yargs.option('notify', {
+    alias: 'n',
+    describe:
+      'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+    type: 'string',
+    requiresArg: true,
+  });
+
+  return yargs;
+};
+const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
+
+const configureCommanderWatchCommand = program => {
   program
     .version(version)
-    .description(
-      'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS'
-    )
+    .description(DESCRIPTION)
     .arguments('<src> <dest>')
-    .option('--remove', 'remove remote files when removed locally')
-    .option('--initial-upload', 'upload directory before watching for updates')
+    .option(
+      '--remove',
+      'Will cause watch to delete files in your HubSpot account that are not found locally.'
+    )
+    .option('--initial-upload', 'Upload directory before watching for updates')
     .option(
       '--disable-initial',
-      'disable initial upload of watched directory (default)'
+      'Disable the initial upload when watching a directory (default)'
     )
     .option(
       '--notify <path/to/file>',
       'log to specified file when a watch task is triggered and after workers have gone idle'
     )
-    .action(async (src, dest, command = {}) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const {
-        config: configPath,
-        remove,
-        initialUpload,
-        disableInitial,
-        notify,
-      } = command;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (disableInitial) {
-        logger.info(
-          'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
-        );
-      } else {
-        logger.warn(
-          `The "watch" command no longer uploads the watched directory by default. The directory "${src}" was not uploaded.`
-        );
-        logger.warn(
-          'To upload the directory run "hs upload" or add the "--initial-upload" option when running "hs watch".'
-        );
-      }
-
-      if (
-        !(
-          validateConfig() &&
-          (await validatePortal(command)) &&
-          validateMode(program)
-        )
-      ) {
-        process.exit(1);
-      }
-
-      const portalId = getPortalId(command);
-      const mode = getMode(command);
-
-      const absoluteSrcPath = path.resolve(getCwd(), src);
-      try {
-        const stats = fs.statSync(absoluteSrcPath);
-        if (!stats.isDirectory()) {
-          logger.log(`The "${src}" is not a path to a directory`);
-          return;
-        }
-      } catch (e) {
-        logger.log(`The "${src}" is not a path to a directory`);
-        return;
-      }
-
-      if (!dest) {
-        logger.log('A destination directory needs to be passed');
-        return;
-      }
-
-      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
-      watch(portalId, absoluteSrcPath, dest, {
-        mode,
-        cwd: getCwd(),
-        remove,
-        disableInitial: initialUpload ? false : true,
-        notify,
-      });
-    });
+    .action((src, dest) => action({ src, dest }, program));
 
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
   addModeOptions(program, { write: true });
   addHelpUsageTracking(program, COMMAND_NAME);
-}
+};
 
 module.exports = {
-  configureWatchCommand,
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureCommanderWatchCommand,
 };
