@@ -9,14 +9,11 @@ const {
 /**
  *
  * @param {number} portalId
- * @param {string} scopeGroup
- * @param {array} scopes
+ * @param {array} requiredScopes
  */
 async function verifyFunctionScopesExist(
   portalId,
-  options = {
-    requiredScopes: Object.values(SCOPES.functions),
-  }
+  requiredScopes = Object.values(SCOPES.functions)
 ) {
   let scopesResp;
 
@@ -33,11 +30,15 @@ async function verifyFunctionScopesExist(
     );
   }
 
+  if (!scopesResp) {
+    return false;
+  }
+
   const { portalScopesInGroup, userScopesInGroup } = scopesResp;
-  const portalHasRequiredScopes = options.requiredScopes.every(s =>
+  const portalHasRequiredScopes = requiredScopes.every(s =>
     portalScopesInGroup.includes(s)
   );
-  const userHasRequiredScopes = options.requiredScopes.every(s =>
+  const userHasRequiredScopes = requiredScopes.every(s =>
     userScopesInGroup.includes(s)
   );
   console.log('scopesResp: ', scopesResp);
