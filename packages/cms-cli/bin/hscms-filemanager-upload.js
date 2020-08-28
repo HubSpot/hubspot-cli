@@ -3,9 +3,9 @@
 const { Command } = require('commander');
 
 const {
-  configureFileManagerUploadCommand,
-} = require('../commands/filemanager');
+  configureCommanderFileManagerUploadCommand,
+} = require('../commands/filemanager/upload');
 
 const program = new Command('hscms filemanager upload');
-configureFileManagerUploadCommand(program);
+configureCommanderFileManagerUploadCommand(program);
 program.parse(process.argv);

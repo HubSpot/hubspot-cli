@@ -13,20 +13,13 @@ const addPortalOptions = (program, useYargs = false) => {
     return program.option('portal', {
       alias: 'p',
       describe: 'HubSpot portal id or name from config',
+      type: 'string',
     });
   }
   program.option('--portal <portal>', 'HubSpot portal id or name from config');
 };
 
-const addLoggerOptions = (program, useYargs = false) => {
-  if (useYargs) {
-    return program.option('debug', {
-      alias: 'd',
-      default: false,
-      describe: 'set log level to debug',
-      type: 'boolean',
-    });
-  }
+const addLoggerOptions = program => {
   program.option('--debug', 'set log level to debug', () => true, false);
 };
 
@@ -41,21 +34,47 @@ const addConfigOptions = (program, useYargs = false) => {
   program.option('--config <config>', 'path to a config file');
 };
 
-const addOverwriteOptions = program => {
+const addOverwriteOptions = (program, useYargs = false) => {
+  if (useYargs) {
+    return program.option('overwrite', {
+      alias: 'o',
+      describe: 'overwrite existing files',
+      type: 'boolean',
+      default: false,
+    });
+  }
+
   program.option('--overwrite', 'overwrite existing files', false);
 };
 
-const addModeOptions = (program, { read, write }) => {
+const addModeOptions = (program, { read, write }, useYargs = false) => {
   const modes = `<${Object.values(Mode).join(' | ')}>`;
   const help = read
     ? `read from ${modes}`
     : write
     ? `write to ${modes}`
     : `${modes}`;
+
+  if (useYargs) {
+    return program.option('mode', {
+      alias: 'm',
+      describe: help,
+      type: 'string',
+    });
+  }
+
   program.option('--mode <mode>', help);
 };
 
-const addTestingOptions = program => {
+const addTestingOptions = (program, useYargs = false) => {
+  if (useYargs) {
+    return program.option('qa', {
+      describe: 'run command in qa mode',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    });
+  }
   program.option('--qa', 'run command in qa mode', false);
 };
 

@@ -27,56 +27,90 @@ const {
 } = require('../lib/usageTracking');
 
 const COMMAND_NAME = 'fetch';
+const DESCRIPTION =
+  'Fetch a file, directory or module from HubSpot and write to a path on your computer';
 
-function configureFetchCommand(program) {
-  program
-    .version(version)
-    .description(
-      'Fetch a file, directory or module from HubSpot and write to a path on your computer'
+const action = async ({ src, dest }, options = {}) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+
+  const { config: configPath } = options;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion();
+
+  if (
+    !(
+      validateConfig() &&
+      (await validatePortal(options)) &&
+      validateMode(options)
     )
+  ) {
+    process.exit(1);
+  }
+
+  if (typeof src !== 'string') {
+    logger.error('A source to fetch is required');
+    process.exit(1);
+  }
+
+  dest = resolveLocalPath(dest);
+
+  const portalId = getPortalId(options);
+  const mode = getMode(options);
+
+  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+
+  // Fetch and write file/folder.
+  downloadFileOrFolder({ portalId, src, dest, mode, options });
+};
+
+// Yargs Configuration
+const command = `${COMMAND_NAME} <src> [dest]`;
+const describe = DESCRIPTION;
+const builder = yargs => {
+  addConfigOptions(yargs, true);
+  addPortalOptions(yargs, true);
+  addOverwriteOptions(yargs, true);
+  addModeOptions(yargs, { read: true }, true);
+
+  yargs.positional('src', {
+    describe: 'Path in HubSpot Design Tools',
+    type: 'string',
+    demand: true,
+  });
+
+  yargs.positional('dest', {
+    describe:
+      'Local directory you would like the files to be placed in, relative to your current working directory',
+    type: 'string',
+  });
+
+  return yargs;
+};
+const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
+
+// Commander Configuration
+const configureCommanderFetchCommand = commander => {
+  commander
+    .version(version)
+    .description(DESCRIPTION)
     .arguments('<src> [dest]')
-    .action(async (src, dest) => {
-      setLogLevel(program);
-      logDebugInfo(program);
+    .action((src, dest) => action({ src, dest }, commander));
 
-      const { config: configPath } = program;
-      loadConfig(configPath);
-      checkAndWarnGitInclusion();
-
-      if (
-        !(
-          validateConfig() &&
-          (await validatePortal(program)) &&
-          validateMode(program)
-        )
-      ) {
-        process.exit(1);
-      }
-
-      if (typeof src !== 'string') {
-        logger.error('A source to fetch is required');
-        process.exit(1);
-      }
-
-      dest = resolveLocalPath(dest);
-
-      const portalId = getPortalId(program);
-      const mode = getMode(program);
-
-      trackCommandUsage(COMMAND_NAME, { mode }, portalId);
-
-      // Fetch and write file/folder.
-      downloadFileOrFolder({ portalId, src, dest, mode, options: program });
-    });
-
-  addConfigOptions(program);
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addOverwriteOptions(program);
-  addModeOptions(program, { read: true });
-  addHelpUsageTracking(program, COMMAND_NAME);
-}
+  addConfigOptions(commander);
+  addPortalOptions(commander);
+  addLoggerOptions(commander);
+  addOverwriteOptions(commander);
+  addModeOptions(commander, { read: true });
+  addHelpUsageTracking(commander, COMMAND_NAME);
+};
 
 module.exports = {
-  configureFetchCommand,
+  // Yargs
+  command,
+  describe,
+  builder,
+  handler,
+  // Commander
+  configureCommanderFetchCommand,
 };

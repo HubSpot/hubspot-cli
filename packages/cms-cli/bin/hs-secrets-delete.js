@@ -2,7 +2,9 @@
 
 const { Command } = require('commander');
 
-const { configureSecretsDeleteCommand } = require('../commands/secrets');
+const {
+  configureSecretsDeleteCommand,
+} = require('../commands/secrets/deleteSecret');
 
 const program = new Command('hs secrets delete');
 configureSecretsDeleteCommand(program);
