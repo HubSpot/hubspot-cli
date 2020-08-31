@@ -35,9 +35,6 @@ const argv = yargs
   .middleware([setLogLevel])
   .exitProcess(false)
   .fail((msg, err, _yargs) => {
-    // Preserve stack trace.
-    if (err) throw err;
-
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
 
