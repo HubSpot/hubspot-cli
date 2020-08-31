@@ -40,7 +40,7 @@ const argv = yargs
 
     // Give command-specifc help
     console.log(_yargs.help());
-    process.exit(0);
+    process.exit(1);
   })
   .option('debug', {
     alias: 'd',
