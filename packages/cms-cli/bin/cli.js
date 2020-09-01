@@ -34,12 +34,10 @@ const argv = yargs
   .usage('Tools for working with the HubSpot CMS')
   .middleware([setLogLevel])
   .exitProcess(false)
-  .fail((msg, err, _yargs) => {
+  .fail((msg, err) => {
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
 
-    // Give command-specifc help
-    console.log(_yargs.help());
     process.exit(1);
   })
   .option('debug', {
