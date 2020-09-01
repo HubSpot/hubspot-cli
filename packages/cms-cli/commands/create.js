@@ -130,7 +130,7 @@ const createTemplate = (name, dest, type = 'page-template') => {
 };
 
 // Yargs Configuration
-const command = `${COMMAND_NAME} <type> <name> [dest]`;
+const command = `${COMMAND_NAME} <type> [name] [dest]`;
 const describe = DESCRIPTION;
 const builder = yargs => {
   yargs.positional('type', {
@@ -202,6 +202,11 @@ const action = async ({ type, name, dest }, options) => {
 
   let commandTrackingContext = { assetType: type };
 
+  if (!name && [TYPES.module, TYPES.template].includes(type)) {
+    logger.error(`The 'name' argument is required when creating a ${type}.`);
+    return;
+  }
+
   switch (type) {
     case TYPES.module: {
       const moduleDefinition = await createModulePrompt();
@@ -209,11 +214,6 @@ const action = async ({ type, name, dest }, options) => {
       break;
     }
     case TYPES.template: {
-      if (!name) {
-        logger.error(`The 'name' argument is required.`);
-        return;
-      }
-
       const { templateType } = await createTemplatePrompt();
 
       commandTrackingContext.templateType = templateType;
