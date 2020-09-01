@@ -36,7 +36,7 @@ exports.main = ({ accountId }, sendResponse) => {
       sendResponse({ body: { error: error.message }, statusCode: 500 });
     });
 };
-`;
+`.trim();
 
 function createEndpoint(endpointMethod, filename) {
   return {
