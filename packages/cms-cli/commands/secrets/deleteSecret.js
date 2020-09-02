@@ -5,12 +5,10 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
-const { verifyFunctionScopesExist } = require('@hubspot/cms-lib/lib/scopes');
-const { SCOPES } = require('@hubspot/cms-lib/lib/constants');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -40,14 +38,6 @@ async function action({ secretName }, options) {
   const portalId = getPortalId(options);
   trackCommandUsage('secrets-delete', {}, portalId);
 
-  if (
-    !(await verifyFunctionScopesExist(portalId, {
-      requiredScopes: Object.values(SCOPES.functions),
-    }))
-  ) {
-    return;
-  }
-
   try {
     await deleteSecret(portalId, secretName);
     logger.log(
@@ -55,7 +45,7 @@ async function action({ secretName }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
-    logApiErrorInstance(
+    logServerlessFunctionApiErrorInstance(
       e,
       new ApiErrorContext({
         request: 'delete a secret',

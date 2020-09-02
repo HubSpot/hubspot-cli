@@ -1,6 +1,6 @@
 const { logger } = require('../logger');
-const { SCOPES, SCOPE_GROUPS } = require('./constants.js');
-const { fetchScopeData } = require('../api/scopes');
+const { SCOPE_GROUPS } = require('./constants.js');
+const { fetchScopeData, fetchScopesForScopeGroup } = require('../api/scopes');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -9,13 +9,10 @@ const {
 /**
  *
  * @param {number} portalId
- * @param {array} requiredScopes
  */
-async function verifyFunctionScopesExist(
-  portalId,
-  requiredScopes = Object.values(SCOPES.functions)
-) {
+async function getMissingScopeErrorMessage(portalId) {
   let scopesResp;
+  let requiredScopes;
 
   try {
     scopesResp = await fetchScopeData(portalId, SCOPE_GROUPS.functions);
@@ -30,10 +27,26 @@ async function verifyFunctionScopesExist(
     );
   }
 
+  try {
+    requiredScopes = await fetchScopesForScopeGroup(
+      portalId,
+      SCOPE_GROUPS.functions
+    );
+  } catch (e) {
+    logger.error('Error fetching scopes');
+    logApiErrorInstance(
+      e,
+      new ApiErrorContext({
+        request: 'fetch required scopes',
+        portalId,
+      })
+    );
+  }
+
   if (!scopesResp) {
     return false;
   }
-
+  console.log('requiredScopes: ', requiredScopes);
   const { portalScopesInGroup, userScopesInGroup } = scopesResp;
   const portalHasRequiredScopes = requiredScopes.every(s =>
     portalScopesInGroup.includes(s)
@@ -60,5 +73,5 @@ async function verifyFunctionScopesExist(
 }
 
 module.exports = {
-  verifyFunctionScopesExist,
+  getMissingScopeErrorMessage,
 };
