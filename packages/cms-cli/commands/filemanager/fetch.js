@@ -13,7 +13,6 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
-  addOverwriteOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -59,7 +58,6 @@ const command = 'fetch <src> [dest]';
 const describe = FETCH_DESCRIPTION;
 const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 const builder = yargs => {
-  addOverwriteOptions(yargs, true);
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
@@ -91,7 +89,6 @@ const configureCommanderFileManagerFetchCommand = commander => {
     )
     .action((src, dest) => action({ src, dest }, commander));
 
-  addOverwriteOptions(commander);
   addConfigOptions(commander);
   addPortalOptions(commander);
   addLoggerOptions(commander);
