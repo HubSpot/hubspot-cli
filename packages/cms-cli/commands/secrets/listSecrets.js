@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { fetchSecrets } = require('@hubspot/cms-lib/api/secrets');
@@ -57,7 +57,7 @@ async function action(options) {
     logger.groupEnd(groupLabel);
   } catch (e) {
     logger.error('The secrets could not be listed');
-    logServerlessFunctionApiErrorInstance(
+    logApiErrorInstance(
       e,
       new ApiErrorContext({
         request: 'get secrets',

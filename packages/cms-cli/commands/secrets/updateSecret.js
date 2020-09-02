@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { updateSecret } = require('@hubspot/cms-lib/api/secrets');
@@ -57,7 +57,7 @@ async function action(args, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not updated`);
-    logServerlessFunctionApiErrorInstance(
+    logApiErrorInstance(
       e,
       new ApiErrorContext({
         request: 'update secret',

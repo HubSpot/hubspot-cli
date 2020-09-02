@@ -19,9 +19,7 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const {
-  logServerlessFunctionApiErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
+const { logApiErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
 const { validatePortal } = require('../lib/validation');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
@@ -89,7 +87,7 @@ const tailLogs = async ({
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
-      logServerlessFunctionApiErrorInstance(e, {
+      logApiErrorInstance(e, {
         functionPath,
         portalId,
       });
@@ -136,7 +134,7 @@ const action = async (args, options) => {
 
   const functionResp = await getFunctionByPath(portalId, functionPath).catch(
     e => {
-      logServerlessFunctionApiErrorInstance(e, {
+      logApiErrorInstance(e, {
         functionPath,
         portalId,
       });

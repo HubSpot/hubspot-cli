@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
@@ -45,7 +45,7 @@ async function action({ secretName }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
-    logServerlessFunctionApiErrorInstance(
+    logApiErrorInstance(
       e,
       new ApiErrorContext({
         request: 'delete a secret',
