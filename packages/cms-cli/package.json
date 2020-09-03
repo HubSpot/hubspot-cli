@@ -23,7 +23,7 @@
     "node": ">=8.9.1"
   },
   "bin": {
-    "hs": "./bin/cli.js",
+    "hs": "./bin/hs",
     "hscms": "./bin/hscms.js"
   },
   "publishConfig": {
