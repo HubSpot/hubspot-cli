@@ -1,6 +1,6 @@
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
-const { fetchAccessToken } = require('../api/localDevAuth');
+const { fetchAccessToken } = require('../api/localDevAuth/unauthenticated');
 const { ENVIRONMENTS } = require('../lib/constants');
 
 const { accessTokenForPersonalAccessKey } = require('../personalAccessKey');

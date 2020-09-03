@@ -1,6 +1,6 @@
 const { logger } = require('../logger');
 const { SCOPE_GROUPS } = require('./constants.js');
-const { fetchScopeData } = require('../api/scopes');
+const { fetchScopeData } = require('../api/localDevAuth/authenticated');
 const {
   logApiErrorInstance,
   ApiErrorContext,
