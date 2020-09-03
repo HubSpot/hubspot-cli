@@ -5,12 +5,11 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { updateSecret } = require('@hubspot/cms-lib/api/secrets');
-const { verifyFunctionScopesExist } = require('@hubspot/cms-lib/lib/scopes');
-const { SCOPES } = require('@hubspot/cms-lib/lib/constants');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -41,15 +40,6 @@ async function action(args, options) {
   const portalId = getPortalId(options);
   trackCommandUsage('secrets-update', {}, portalId);
 
-  if (
-    !(await verifyFunctionScopesExist(
-      portalId,
-      Object.values(SCOPES.functions)
-    ))
-  ) {
-    return;
-  }
-
   try {
     await updateSecret(portalId, secretName, secretValue);
     logger.log(
@@ -57,11 +47,12 @@ async function action(args, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not updated`);
-    logApiErrorInstance(
+    logServerlessFunctionApiErrorInstance(
       e,
+      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        request: 'update secret',
         portalId,
+        request: 'update secret',
       })
     );
   }

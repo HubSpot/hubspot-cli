@@ -5,10 +5,11 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -45,11 +46,12 @@ async function action({ secretName }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
-    logApiErrorInstance(
+    logServerlessFunctionApiErrorInstance(
       e,
+      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        request: 'delete a secret',
         portalId,
+        request: 'delete a secret',
       })
     );
   }

@@ -19,7 +19,10 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { logApiErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const {
+  logServerlessFunctionApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
 const { validatePortal } = require('../lib/validation');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
@@ -28,6 +31,7 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const COMMAND_NAME = 'logs';
 const DESCRIPTION = 'get logs for a function';
@@ -68,6 +72,14 @@ const loadAndValidateOptions = async options => {
   }
 };
 
+const logError = async (error, portalId, functionPath) => {
+  return logServerlessFunctionApiErrorInstance(
+    error,
+    await getScopeDataForFunctions(portalId),
+    new ApiErrorContext({ portalId, functionPath })
+  );
+};
+
 const tailLogs = async ({
   functionId,
   functionPath,
@@ -87,10 +99,7 @@ const tailLogs = async ({
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
-      logApiErrorInstance(e, {
-        functionPath,
-        portalId,
-      });
+      await logError(e, portalId, functionPath);
     }
   }
 
@@ -133,12 +142,9 @@ const action = async (args, options) => {
   );
 
   const functionResp = await getFunctionByPath(portalId, functionPath).catch(
-    e => {
-      logApiErrorInstance(e, {
-        functionPath,
-        portalId,
-      });
-      process.exit(1);
+    async e => {
+      await logError(e, portalId, functionPath);
+      process.exit();
     }
   );
 
