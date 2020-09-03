@@ -24,7 +24,7 @@
   },
   "bin": {
     "banjo": "./bin/cli.js",
-    "hs": "./bin/hs.js",
+    "hs": "./bin/cli.js",
     "hscms": "./bin/hscms.js"
   },
   "publishConfig": {
