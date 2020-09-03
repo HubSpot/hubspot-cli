@@ -23,7 +23,6 @@
     "node": ">=8.9.1"
   },
   "bin": {
-    "banjo": "./bin/cli.js",
     "hs": "./bin/cli.js",
     "hscms": "./bin/hscms.js"
   },

@@ -22,7 +22,7 @@ const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 
-const SCRIPT_NAME = 'hs';
+const SCRIPT_NAME = process.env.npm_lifecycle_event || 'hs';
 const notifier = updateNotifier({ pkg });
 
 notifier.notify({
