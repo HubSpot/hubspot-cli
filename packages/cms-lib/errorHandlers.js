@@ -317,19 +317,19 @@ function logServerlessFunctionApiErrorInstance(error, scopesData, context) {
 
     if (!portalScopesInGroup.length) {
       logger.error(
-        'Your personal CMS access key is missing required permissions for this action. Your portal does not have these permissions. If you believe this is in error, please contact your administrator.'
+        'Your account does not have access to this action. Talk to an account admin to request it.'
       );
       return;
     }
 
     if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
       logger.error(
-        'Your personal CMS access key is missing required permissions for this action. Your user account does not have the required permissions. If you believe this is in error, please contact your administrator.'
+        "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
       );
       return;
     } else {
       logger.error(
-        'Your personal CMS access key is missing required permissions for this action. Your user access token does not have the required permissions. Please generate a new access key to add them by running "hs auth personalaccesskey". If you believe this is in error, please contact your administrator.'
+        'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
       );
       return;
     }
