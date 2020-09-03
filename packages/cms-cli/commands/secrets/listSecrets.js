@@ -51,8 +51,8 @@ async function action(options) {
       e,
       await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        portalId,
         request: 'add secret',
+        portalId,
       })
     );
   }

@@ -50,8 +50,8 @@ async function action({ secretName }, options) {
       e,
       await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        portalId,
         request: 'delete a secret',
+        portalId,
       })
     );
   }
