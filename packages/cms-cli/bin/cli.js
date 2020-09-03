@@ -21,6 +21,7 @@ const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
+const schemaCommand = require('../commands/schema');
 
 const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
@@ -41,7 +42,7 @@ const argv = yargs
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
 
-    // Give command-specifc help
+    // Give command-specific help
     console.log(_yargs.help());
     process.exit(0);
   })
@@ -63,10 +64,11 @@ const argv = yargs
   .command(fetchCommand)
   .command(filemanagerCommand)
   .command(secretsCommand)
+  .command(schemaCommand)
   .help()
   .demandCommand(
     1,
-    `Please specifiy a command or run \`${SCRIPT_NAME} --help\` for a list of available commands`
+    `Please specify a command or run \`${SCRIPT_NAME} --help\` for a list of available commands`
   )
   .recommendCommands()
   .strict().argv;
