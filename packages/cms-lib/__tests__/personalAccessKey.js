@@ -7,7 +7,7 @@ const { accessTokenForPersonalAccessKey } = require('../personalAccessKey');
 
 jest.mock('../lib/config');
 jest.mock('../logger');
-jest.mock('../api/localDevAuth');
+jest.mock('../api/localDevAuth/unauthorized');
 
 describe('personalAccessKey', () => {
   describe('accessTokenForPersonalAccessKey()', () => {
