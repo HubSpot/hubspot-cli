@@ -5,11 +5,11 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { addSecret } = require('@hubspot/cms-lib/api/secrets');
-const { getMissingScopeErrorMessage } = require('@hubspot/cms-lib/lib/scopes');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -47,17 +47,12 @@ async function action(args, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not added`);
-    const errorMessage = await getMissingScopeErrorMessage(portalId, e);
-
-    if (errorMessage) {
-      logger.error(errorMessage);
-      return;
-    }
-    logApiErrorInstance(
+    logServerlessFunctionApiErrorInstance(
       e,
+      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        request: 'add secret',
         portalId,
+        request: 'add secret',
       })
     );
   }

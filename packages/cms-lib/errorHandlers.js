@@ -1,7 +1,5 @@
 const { HubSpotAuthError } = require('@hubspot/api-auth-lib/Errors');
 const { logger } = require('./logger');
-// const { getMissingScopeErrorMessage } = require('./lib/scopes');
-// const { fetchScopeData } = require('./api/scopes');
 
 const isApiStatusCodeError = err =>
   err.name === 'StatusCodeError' ||
@@ -16,10 +14,10 @@ const isApiUploadValidationError = err =>
 const isSystemError = err =>
   err.errno != null && err.code != null && err.syscall != null;
 const isFatalError = err => err instanceof HubSpotAuthError;
-// const isMissingScopeError = err =>
-//   err.name === 'StatusCodeError' &&
-//   err.statusCode === 403 &&
-//   err.error.category === 'MISSING_SCOPES';
+const isMissingScopeError = err =>
+  err.name === 'StatusCodeError' &&
+  err.statusCode === 403 &&
+  err.error.category === 'MISSING_SCOPES';
 const contactSupportString =
   'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
@@ -306,35 +304,44 @@ function logFileSystemErrorInstance(error, context) {
   debugErrorAndContext(error, context);
 }
 
-// /**
-//  * Logs a message for an error instance resulting from API interaction
-//  * related to serverless function.
-//  *
-//  * @param {Error|SystemError|Object} error
-//  * @param {ApiErrorContext}          context
-//  */
-// function logServerlessFunctionApiErrorInstance(error, context) {
-//   if (isMissingScopeError(error)) {
-//     // Figure out solution to circular dependency caused when importing this
-//     const { portalId } = context;
-//     // const scopeErrorMessage = getMissingScopeErrorMessage(portalId);
-//     let scopeErrorMessage = 'Missing scope';
+/**
+ * Logs a message for an error instance resulting from API interaction
+ * related to serverless function.
+ *
+ * @param {Error|SystemError|Object} error
+ * @param {ApiErrorContext}          context
+ */
+function logServerlessFunctionApiErrorInstance(error, scopesData, context) {
+  if (isMissingScopeError(error)) {
+    const { portalScopesInGroup, userScopesInGroup } = scopesData;
 
-//     fetchScopeData(portalId, 'cms.functions.read_write');
+    if (!portalScopesInGroup.length) {
+      logger.error(
+        'Your personal CMS access key is missing required permissions for this action. Your portal does not have these permissions. If you believe this is in error, please contact your administrator.'
+      );
+      return;
+    }
 
-//     logger.error(scopeErrorMessage);
-//     return;
-//   }
+    if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
+      logger.error(
+        'Your personal CMS access key is missing required permissions for this action. Your user account does not have the required permissions. If you believe this is in error, please contact your administrator.'
+      );
+      return;
+    } else {
+      logger.error(
+        'Your personal CMS access key is missing required permissions for this action. Your user access token does not have the required permissions. Please generate a new access key to add them by running "hs auth personalaccesskey". If you believe this is in error, please contact your administrator.'
+      );
+      return;
+    }
+  }
 
-//   // console.log(error);
-
-//   // StatusCodeError
-//   if (isApiStatusCodeError(error)) {
-//     logApiStatusCodeError(error, context);
-//     return;
-//   }
-//   logErrorInstance(error, context);
-// }
+  // StatusCodeError
+  if (isApiStatusCodeError(error)) {
+    logApiStatusCodeError(error, context);
+    return;
+  }
+  logErrorInstance(error, context);
+}
 
 module.exports = {
   ErrorContext,
@@ -346,5 +353,5 @@ module.exports = {
   logApiErrorInstance,
   logApiUploadErrorInstance,
   logFileSystemErrorInstance,
-  // logServerlessFunctionApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
 };
