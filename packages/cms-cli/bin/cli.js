@@ -57,13 +57,11 @@ const argv = yargs
   .command(filemanagerCommand)
   .command(secretsCommand)
   .help()
-  .demandCommand(
-    1,
-    `Please specify a command or run \`${yargs.$0} --help\` for a list of available commands`
-  )
   .recommendCommands()
   .strict().argv;
 
 if (argv.help) {
   trackHelpUsage(getCommandName(argv));
+} else if (argv['_'].length == 0) {
+  yargs.showHelp();
 }
