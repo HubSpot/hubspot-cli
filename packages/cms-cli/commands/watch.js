@@ -44,19 +44,6 @@ const action = async ({ src, dest }, command = {}) => {
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (disableInitial) {
-    logger.info(
-      'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
-    );
-  } else {
-    logger.warn(
-      `The "watch" command no longer uploads the watched directory by default. The directory "${src}" was not uploaded.`
-    );
-    logger.warn(
-      'To upload the directory run "hs upload" or add the "--initial-upload" option when running "hs watch".'
-    );
-  }
-
   if (
     !(
       validateConfig() &&
@@ -85,6 +72,19 @@ const action = async ({ src, dest }, command = {}) => {
   if (!dest) {
     logger.log('A destination directory needs to be passed');
     return;
+  }
+
+  if (disableInitial) {
+    logger.info(
+      'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
+    );
+  } else {
+    logger.info(
+      `The "watch" command no longer uploads the watched directory when started. The directory "${src}" was not uploaded.`
+    );
+    logger.info(
+      'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
+    );
   }
 
   trackCommandUsage(COMMAND_NAME, { mode }, portalId);

@@ -22,7 +22,6 @@ const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 
-const SCRIPT_NAME = 'banjo';
 const notifier = updateNotifier({ pkg });
 
 notifier.notify({
@@ -30,7 +29,6 @@ notifier.notify({
 });
 
 const argv = yargs
-  .scriptName(SCRIPT_NAME)
   .usage('Tools for working with the HubSpot CMS')
   .middleware([setLogLevel])
   .exitProcess(false)
@@ -61,7 +59,7 @@ const argv = yargs
   .help()
   .demandCommand(
     1,
-    `Please specifiy a command or run \`${SCRIPT_NAME} --help\` for a list of available commands`
+    `Please specify a command or run \`${yargs.$0} --help\` for a list of available commands`
   )
   .recommendCommands()
   .strict().argv;
