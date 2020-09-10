@@ -13,7 +13,6 @@
     "chokidar": "^3.0.1",
     "content-disposition": "^0.5.3",
     "debounce": "^1.2.0",
-    "express": "4.16.3",
     "extract-zip": "^1.6.7",
     "findup-sync": "^3.0.0",
     "fs-extra": "^8.1.0",
