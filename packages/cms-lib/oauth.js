@@ -1,11 +1,7 @@
 const OAuth2Manager = require('./lib/models/OAuth2Manager');
-const {
-  updatePortalConfig,
-  writeConfig,
-  getPortalConfig,
-} = require('./lib/config');
+const { updatePortalConfig, writeConfig } = require('./lib/config');
 const { logger, logErrorInstance } = require('./logger');
-const { AUTH_METHODS, ENVIRONMENTS } = require('./lib/constants');
+const { AUTH_METHODS } = require('./lib/constants');
 
 const oauthManagers = new Map();
 
@@ -39,17 +35,6 @@ const getOauthManager = (portalId, portalConfig) => {
   return oauthManagers.get(portalId);
 };
 
-const setupOauth = (portalId, portalConfig) => {
-  const config = getPortalConfig(portalId) || {};
-  return new OAuth2Manager(
-    {
-      ...portalConfig,
-      environment: portalConfig.env || config.env || ENVIRONMENTS.PROD,
-    },
-    logger
-  );
-};
-
 const addOauthToPortalConfig = (portalId, oauth) => {
   logger.log('Updating configuration');
   try {
@@ -65,15 +50,7 @@ const addOauthToPortalConfig = (portalId, oauth) => {
   }
 };
 
-const authenticateWithOauth = async configData => {
-  const portalId = parseInt(configData.portalId, 10);
-  const oauth = setupOauth(portalId, configData);
-  logger.log('Authorizing');
-  await oauth.authorize();
-  addOauthToPortalConfig(portalId, oauth);
-};
-
 module.exports = {
   getOauthManager,
-  authenticateWithOauth,
+  addOauthToPortalConfig,
 };

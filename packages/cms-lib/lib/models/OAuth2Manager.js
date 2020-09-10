@@ -1,16 +1,10 @@
-const express = require('express');
 const request = require('request-promise-native');
 const moment = require('moment');
-const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
 const { ENVIRONMENTS } = require('../constants');
-const { handleExit } = require('../process');
-const { getHubSpotWebsiteOrigin, getHubSpotApiOrigin } = require('../urls');
+const { getHubSpotApiOrigin } = require('../urls');
 const { getValidEnv } = require('../environment');
-
-const PORT = 3000;
-const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
 class OAuth2Manager {
   constructor(
@@ -36,15 +30,6 @@ class OAuth2Manager {
     this.refreshTokenRequest = null;
   }
 
-  buildAuthUrl() {
-    return (
-      `${getHubSpotWebsiteOrigin(this.env)}/oauth/${this.portalId}/authorize` +
-      `?client_id=${encodeURIComponent(this.clientId)}` + // app's client ID
-      `&scope=${encodeURIComponent(this.scopes.join(' '))}` + // scopes being requested by the app
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
-    );
-  }
-
   async accessToken() {
     if (!this.tokenInfo.refreshToken) {
       throw new Error(
@@ -60,65 +45,6 @@ class OAuth2Manager {
       await this.refreshAccessToken();
     }
     return this.tokenInfo.accessToken;
-  }
-
-  async authorize() {
-    open(this.buildAuthUrl());
-
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
-      let server;
-      const app = express();
-
-      app.get('/oauth-callback', async (req, res) => {
-        if (req.query.code) {
-          const authCodeProof = {
-            grant_type: 'authorization_code',
-            client_id: this.clientId,
-            client_secret: this.clientSecret,
-            redirect_uri: redirectUri,
-            code: req.query.code,
-          };
-          try {
-            await this.exchangeForTokens(authCodeProof);
-            res.send(`
-            <body>
-              <h2>Authorization succeeded (you can close this page)</h2>
-            </body>
-            `);
-          } catch (e) {
-            res.send(`
-            <body>
-              <h2>Authorization failed (you can close this page)</h2>
-            </body>
-            `);
-          }
-        }
-        if (server) {
-          server.close();
-          server = null;
-        }
-        if (req.query.code) {
-          resolve();
-        } else {
-          reject();
-        }
-      });
-
-      server = app.listen(PORT, () =>
-        this.logger.log(`Waiting for authorization...`)
-      );
-
-      this.handleServerOnProcessEnd(server);
-    });
-  }
-
-  handleServerOnProcessEnd(server) {
-    const shutdownServerIfRunning = () => {
-      server && server.close();
-    };
-
-    handleExit(shutdownServerIfRunning);
   }
 
   async fetchAccessToken(exchangeProof) {

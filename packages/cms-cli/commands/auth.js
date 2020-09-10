@@ -11,7 +11,6 @@ const {
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cms-lib/lib/constants');
-const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
@@ -38,6 +37,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { commaSeparatedValues } = require('../lib/text');
+const { authenticateWithOauth } = require('../lib/oauth');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
