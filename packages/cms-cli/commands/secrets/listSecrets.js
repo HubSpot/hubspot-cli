@@ -5,10 +5,11 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logApiErrorInstance,
+  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { fetchSecrets } = require('@hubspot/cms-lib/api/secrets');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -46,10 +47,11 @@ async function action(options) {
     logger.groupEnd(groupLabel);
   } catch (e) {
     logger.error('The secrets could not be listed');
-    logApiErrorInstance(
+    logServerlessFunctionApiErrorInstance(
       e,
+      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
-        request: 'get secrets',
+        request: 'add secret',
         portalId,
       })
     );

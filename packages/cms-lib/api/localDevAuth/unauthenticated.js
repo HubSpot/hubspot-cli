@@ -1,6 +1,8 @@
 const request = require('request-promise-native');
-const { getRequestOptions } = require('../http/requestOptions');
-const { ENVIRONMENTS } = require('../lib/constants');
+const { getRequestOptions } = require('../../http/requestOptions');
+const { ENVIRONMENTS } = require('../../lib/constants');
+
+const LOCALDEVAUTH_API_AUTH_PATH = 'localdevauth/v1/auth';
 
 async function fetchAccessToken(
   personalAccessKey,
@@ -11,7 +13,7 @@ async function fetchAccessToken(
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `localdevauth/v1/auth/refresh`,
+      uri: `${LOCALDEVAUTH_API_AUTH_PATH}/refresh`,
       body: {
         encodedOAuthRefreshToken: personalAccessKey,
       },
