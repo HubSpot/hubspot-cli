@@ -14,6 +14,10 @@ const isApiUploadValidationError = err =>
 const isSystemError = err =>
   err.errno != null && err.code != null && err.syscall != null;
 const isFatalError = err => err instanceof HubSpotAuthError;
+const isMissingScopeError = err =>
+  err.name === 'StatusCodeError' &&
+  err.statusCode === 403 &&
+  err.error.category === 'MISSING_SCOPES';
 const contactSupportString =
   'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
@@ -300,6 +304,49 @@ function logFileSystemErrorInstance(error, context) {
   debugErrorAndContext(error, context);
 }
 
+/**
+ * Logs a message for an error instance resulting from API interaction
+ * related to serverless function.
+ *
+ * @param {Error|SystemError|Object} error
+ * @param {ApiErrorContext}          context
+ */
+function logServerlessFunctionApiErrorInstance(error, scopesData, context) {
+  if (!scopesData) {
+    return;
+  }
+
+  if (isMissingScopeError(error)) {
+    const { portalScopesInGroup, userScopesInGroup } = scopesData;
+
+    if (!portalScopesInGroup.length) {
+      logger.error(
+        'Your account does not have access to this action. Talk to an account admin to request it.'
+      );
+      return;
+    }
+
+    if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
+      logger.error(
+        "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+      );
+      return;
+    } else {
+      logger.error(
+        'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
+      );
+      return;
+    }
+  }
+
+  // StatusCodeError
+  if (isApiStatusCodeError(error)) {
+    logApiStatusCodeError(error, context);
+    return;
+  }
+  logErrorInstance(error, context);
+}
+
 module.exports = {
   ErrorContext,
   ApiErrorContext,
@@ -310,4 +357,5 @@ module.exports = {
   logApiErrorInstance,
   logApiUploadErrorInstance,
   logFileSystemErrorInstance,
+  logServerlessFunctionApiErrorInstance,
 };

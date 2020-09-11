@@ -21,7 +21,7 @@
     "publish-release": "yarn lerna publish --conventional-graduate",
     "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
     "test": "jest",
-    "circular-deps": "madge --circular packages"
+    "circular-deps": "yarn madge --circular packages"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
