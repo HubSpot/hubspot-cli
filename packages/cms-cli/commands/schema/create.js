@@ -6,7 +6,6 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
-const { getCwd } = require('@hubspot/cms-lib/path');
 
 const {
   validatePortal,
@@ -22,7 +21,6 @@ const {
   getPortalId,
 } = require('../../lib/commonOpts');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
-const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cms-lib/api/schema');
 
@@ -44,13 +42,6 @@ const action = async (args, options) => {
   const filePath = getAbsoluteFilePath(definition);
   if (!filePath || !isFileValidJSON(filePath)) {
     process.exit(1);
-  }
-
-  if (shouldIgnoreFile(filePath, getCwd())) {
-    logger.error(
-      `The file "${definition}" is being ignored via an .hsignore rule`
-    );
-    return;
   }
 
   try {
