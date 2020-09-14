@@ -64,4 +64,5 @@ if (argv.help) {
   trackHelpUsage(getCommandName(argv));
 } else if (argv['_'].length == 0) {
   yargs.showHelp();
+  logger.error('Please specify a command to run');
 }
