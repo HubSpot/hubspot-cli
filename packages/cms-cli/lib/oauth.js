@@ -31,7 +31,7 @@ const handleServerOnProcessEnd = server => {
 };
 
 const authorize = async oauthManager => {
-  open(buildAuthUrl(oauthManager));
+  open(buildAuthUrl(oauthManager), { url: true });
 
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
