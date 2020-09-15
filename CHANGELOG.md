@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+## 2.0.0
+ * `hs watch` no longer does an initial upload when the command first runs.  You can opt into the old behavior by passing the `--enable-initial=true` flag. ([#273](https://github.com/HubSpot/hubspot-cms-tools/pull/273))
+ * Changed underlying option parser from commander.js to yargs ([#308](https://github.com/HubSpot/hubspot-cms-tools/pull/308))
+ * Added `hs create vue-app` for creating boilerplate vue app via CLI ([#286](https://github.com/HubSpot/hubspot-cms-tools/pull/286))
 
 ## 1.1.10
 
