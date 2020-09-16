@@ -5,12 +5,15 @@ const { version } = require('../package.json');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
-const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
-const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
+const {
+  addLoggerOptions,
+  setLogLevel,
+  getPortalId,
+} = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const {
@@ -238,7 +241,7 @@ const action = async ({ type, name, dest }, options) => {
       break;
   }
 
-  trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId());
+  trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId(options));
 };
 
 // Commander Configuration
