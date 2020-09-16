@@ -24,8 +24,11 @@ const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cms-lib/api/schema');
 
-const action = async (args, options) => {
-  const { definition } = args;
+exports.command = 'create <definition>';
+exports.describe = 'Create a Custom Object Schema';
+
+exports.handler = async options => {
+  const { definition } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -57,9 +60,6 @@ const action = async (args, options) => {
   }
 };
 
-exports.command = 'create <definition>';
-exports.describe = 'Create a Custom Object Schema';
-exports.handler = async argv => action({ definition: argv.definition }, argv);
 exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);

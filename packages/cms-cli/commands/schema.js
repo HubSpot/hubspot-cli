@@ -1,5 +1,7 @@
 const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
 const createCommand = require('./schema/create');
+const fetchCommand = require('./schema/fetch');
+const fetchAllCommand = require('./schema/fetch-all');
 
 exports.command = 'schema';
 // This hides the command from --help until we are ready to release it
@@ -8,7 +10,10 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
-  yargs.command(createCommand);
+  yargs
+    .command(createCommand)
+    .command(fetchCommand)
+    .command(fetchAllCommand);
 
   return yargs;
 };
