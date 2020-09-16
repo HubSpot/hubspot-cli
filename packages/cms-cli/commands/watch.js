@@ -4,6 +4,7 @@ const { version } = require('../package.json');
 
 const {
   watch,
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -17,7 +18,6 @@ const {
   addLoggerOptions,
   addModeOptions,
   setLogLevel,
-  getPortalId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');

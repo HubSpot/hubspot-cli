@@ -3,6 +3,7 @@ const {
   printHublValidationResult,
 } = require('@hubspot/cms-lib/validate');
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -16,7 +17,6 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
-  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');

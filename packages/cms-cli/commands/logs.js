@@ -6,7 +6,6 @@ const {
   addPortalOptions,
   addConfigOptions,
   setLogLevel,
-  getPortalId,
 } = require('../lib/commonOpts');
 const {
   trackCommandUsage,
@@ -14,6 +13,7 @@ const {
 } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,

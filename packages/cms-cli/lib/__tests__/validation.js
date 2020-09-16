@@ -1,10 +1,9 @@
-const { getPortalConfig } = require('@hubspot/cms-lib');
+const { getPortalConfig, getPortalId } = require('@hubspot/cms-lib');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 
-const { getPortalId } = require('../commonOpts');
 const { validatePortal } = require('../validation');
 
 jest.mock('@hubspot/cms-lib');

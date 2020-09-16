@@ -78,7 +78,7 @@ const action = async command => {
     );
 
     const path = getConfigPath();
-    const portalId = getPortalId();
+    const portalId = getPortalId(command);
 
     logger.success(
       `The config file "${path}" was created using your personal access key for portal ${portalId}.`

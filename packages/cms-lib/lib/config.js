@@ -368,10 +368,11 @@ const setConfigPath = path => {
   return (_configPath = path);
 };
 
-const getEnv = nameOrId => {
+const getEnv = (command = {}) => {
   let env = ENVIRONMENTS.PROD;
   const config = getAndLoadConfigIfNeeded();
-  const portalId = getPortalId(nameOrId);
+  const portalId = getPortalId(command);
+
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig.env) {
@@ -388,8 +389,12 @@ const getPortalConfig = portalId => {
   return config.portals.find(portal => portal.portalId === portalId);
 };
 
-const getPortalId = nameOrId => {
+/*
+ * Returns a portalId from the config if it exists, else returns null
+ */
+const getPortalId = (command = {}) => {
   const config = getAndLoadConfigIfNeeded();
+  const { portal: nameOrId } = command;
   let name;
   let portalId;
   let portal;

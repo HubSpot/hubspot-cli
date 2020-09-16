@@ -1,5 +1,6 @@
 const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -16,7 +17,6 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
-  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');

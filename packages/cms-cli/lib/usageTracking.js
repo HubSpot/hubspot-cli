@@ -1,11 +1,14 @@
 const { trackUsage } = require('@hubspot/cms-lib/api/fileMapper');
 const { getPortalConfig } = require('@hubspot/cms-lib');
-const { isTrackingAllowed } = require('@hubspot/cms-lib/lib/config');
+const {
+  isTrackingAllowed,
+  getPortalId,
+} = require('@hubspot/cms-lib/lib/config');
 const { API_KEY_AUTH_METHOD } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { version } = require('../package.json');
 const { getPlatform } = require('./environment');
-const { setLogLevel, getPortalId } = require('./commonOpts');
+const { setLogLevel } = require('./commonOpts');
 
 const EventClass = {
   USAGE: 'USAGE',

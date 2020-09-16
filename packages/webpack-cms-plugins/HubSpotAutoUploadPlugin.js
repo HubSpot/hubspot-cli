@@ -22,12 +22,12 @@ checkAndWarnGitInclusion();
 const pluginName = 'HubSpotAutoUploadPlugin';
 
 class HubSpotAutoUploadPlugin {
-  constructor(options = {}) {
-    const { src, dest, portal, autoupload } = options;
+  constructor(command = {}) {
+    const { src, dest, autoupload } = command;
     this.src = src;
     this.dest = dest;
     this.autoupload = autoupload;
-    this.portalId = getPortalId(portal);
+    this.portalId = getPortalId(command);
   }
 
   apply(compiler) {

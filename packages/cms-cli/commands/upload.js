@@ -3,6 +3,7 @@ const path = require('path');
 const { version } = require('../package.json');
 
 const {
+  getPortalId,
   loadConfig,
   uploadFolder,
   validateConfig,
@@ -32,7 +33,6 @@ const {
   addLoggerOptions,
   addModeOptions,
   setLogLevel,
-  getPortalId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');

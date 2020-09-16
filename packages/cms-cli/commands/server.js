@@ -2,6 +2,7 @@
 const path = require('path');
 const shell = require('shelljs');
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -17,7 +18,6 @@ const {
   addLoggerOptions,
   addPortalOptions,
   setLogLevel,
-  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 

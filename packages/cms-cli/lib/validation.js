@@ -1,5 +1,6 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
+  getPortalId,
   getPortalConfig,
   loadConfigFromEnvironment,
   Mode,
@@ -8,7 +9,7 @@ const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const { getPortalId, getMode } = require('./commonOpts');
+const { getMode } = require('./commonOpts');
 
 /**
  * Validate that a portal was passed to the command and that the portal's configuration is valid

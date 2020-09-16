@@ -81,15 +81,17 @@ describe('lib/config', () => {
       });
     });
     it('returns portalId from config when a name is passed', () => {
-      expect(getPortalId(OAUTH2_CONFIG.name)).toEqual(OAUTH2_CONFIG.portalId);
-    });
-    it('returns portalId from config when a string id is passed', () => {
-      expect(getPortalId(OAUTH2_CONFIG.portalId.toString())).toEqual(
+      expect(getPortalId({ portal: OAUTH2_CONFIG.name })).toEqual(
         OAUTH2_CONFIG.portalId
       );
     });
+    it('returns portalId from config when a string id is passed', () => {
+      expect(
+        getPortalId({ portal: OAUTH2_CONFIG.portalId.toString() })
+      ).toEqual(OAUTH2_CONFIG.portalId);
+    });
     it('returns portalId from config when a numeric id is passed', () => {
-      expect(getPortalId(OAUTH2_CONFIG.portalId)).toEqual(
+      expect(getPortalId({ portal: OAUTH2_CONFIG.portalId })).toEqual(
         OAUTH2_CONFIG.portalId
       );
     });

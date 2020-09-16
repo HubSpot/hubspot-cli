@@ -3,6 +3,7 @@ const path = require('path');
 const { version } = require('../../package.json');
 
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -24,7 +25,6 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
-  getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validatePortal } = require('../../lib/validation');

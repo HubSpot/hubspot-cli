@@ -2,6 +2,7 @@ const { version } = require('../package.json');
 
 const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileMapper');
 const {
+  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -14,7 +15,6 @@ const {
   addLoggerOptions,
   addOverwriteOptions,
   addModeOptions,
-  getPortalId,
   getMode,
   setLogLevel,
 } = require('../lib/commonOpts');
