@@ -5,7 +5,7 @@ const { API_KEY_AUTH_METHOD } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { version } = require('../package.json');
 const { getPlatform } = require('./environment');
-const { setLogLevel } = require('./commonOpts');
+const { setLogLevel, getPortalId } = require('./commonOpts');
 
 const EventClass = {
   USAGE: 'USAGE',
@@ -19,11 +19,12 @@ const getNodeVersionData = () => ({
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
 
-function trackCommandUsage(command, meta = {}, portalId) {
+function trackCommandUsage(command, meta = {}, commandObject = {}) {
   if (!isTrackingAllowed()) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
+  const portalId = getPortalId(commandObject);
   let authType = 'unknown';
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
@@ -47,7 +48,8 @@ function trackCommandUsage(command, meta = {}, portalId) {
         'cli-interaction',
         EventClass.INTERACTION,
         usageTrackingEvent,
-        portalId
+        portalId,
+        commandObject
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
