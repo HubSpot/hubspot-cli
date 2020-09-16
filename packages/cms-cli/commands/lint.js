@@ -29,31 +29,31 @@ const {
 const COMMAND_NAME = 'lint';
 const DESCRIPTION = 'Lint a file or folder for HubL syntax';
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+const loadAndValidateOptions = async command => {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
 };
 
-const action = async (args, options) => {
-  await loadAndValidateOptions(options);
+const action = async ({ localPath }, command) => {
+  await loadAndValidateOptions(command);
 
-  const portalId = getPortalId(options);
-  const localPath = resolveLocalPath(args.localPath);
-  const groupName = `Linting "${localPath}"`;
+  const portalId = getPortalId(command);
+  const resolvedLocalPath = resolveLocalPath(localPath);
+  const groupName = `Linting "${resolvedLocalPath}"`;
 
-  trackCommandUsage(COMMAND_NAME, {}, portalId);
+  trackCommandUsage(COMMAND_NAME, {}, command);
 
   logger.group(groupName);
   let count = 0;
   try {
-    await lint(portalId, localPath, result => {
+    await lint(portalId, resolvedLocalPath, result => {
       count += printHublValidationResult(result);
     });
   } catch (err) {

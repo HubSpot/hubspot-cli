@@ -26,19 +26,18 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DESCRIPTION = 'Update an existing HubSpot secret';
 
-async function action(args, options) {
-  const { secretName, secretValue } = args;
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+async function action({ secretName, secretValue }, command) {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
-  trackCommandUsage('secrets-update', {}, portalId);
+  const portalId = getPortalId(command);
+  trackCommandUsage('secrets-update', {}, command);
 
   try {
     await updateSecret(portalId, secretName, secretValue);

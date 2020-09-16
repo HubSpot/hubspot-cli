@@ -26,18 +26,18 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DESCRIPTION = 'List all HubSpot secrets';
 
-async function action(options) {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+async function action(command) {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
-  trackCommandUsage('secrets-list', {}, portalId);
+  const portalId = getPortalId(command);
+  trackCommandUsage('secrets-list', {}, command);
 
   try {
     const { results } = await fetchSecrets(portalId);

@@ -41,12 +41,12 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
-const action = async options => {
+const action = async command => {
   const configPath = getConfigPath();
-  setLogLevel(options);
-  logDebugInfo(options);
-  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  setLogLevel(command);
+  logDebugInfo(command);
+  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' }, command);
+  const env = command.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configPath) {
     logger.error(`The config file '${configPath}' already exists.`);

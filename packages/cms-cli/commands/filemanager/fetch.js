@@ -27,15 +27,15 @@ const FETCH_COMMAND_NAME = 'filemanager-fetch';
 const FETCH_DESCRIPTION =
   'Download a folder or file from the HubSpot File Manager to your computer';
 
-const action = async ({ src, dest }, options) => {
-  setLogLevel(options);
-  logDebugInfo(options);
+const action = async ({ src, dest }, command) => {
+  setLogLevel(command);
+  logDebugInfo(command);
 
-  const { config: configPath } = options;
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!validateConfig() || !(await validatePortal(options))) {
+  if (!validateConfig() || !(await validatePortal(command))) {
     process.exit(1);
   }
 
@@ -46,12 +46,12 @@ const action = async ({ src, dest }, options) => {
 
   dest = resolveLocalPath(dest);
 
-  const portalId = getPortalId(options);
+  const portalId = getPortalId(command);
 
   trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder(portalId, src, dest, options);
+  downloadFileOrFolder(portalId, src, dest, command);
 };
 
 const command = 'fetch <src> [dest]';

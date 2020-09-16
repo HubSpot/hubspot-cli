@@ -26,18 +26,18 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DESCRIPTION = 'Delete a HubSpot secret';
 
-async function action({ secretName }, options) {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+async function action({ secretName }, command) {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
-  trackCommandUsage('secrets-delete', {}, portalId);
+  const portalId = getPortalId(command);
+  trackCommandUsage('secrets-delete', {}, command);
 
   try {
     await deleteSecret(portalId, secretName);

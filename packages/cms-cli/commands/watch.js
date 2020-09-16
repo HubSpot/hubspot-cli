@@ -31,7 +31,7 @@ const COMMAND_NAME = 'watch';
 const DESCRIPTION =
   'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
 
-const action = async ({ src, dest }, command = {}) => {
+const action = async ({ src, dest }, command) => {
   setLogLevel(command);
   logDebugInfo(command);
   const {
@@ -87,7 +87,7 @@ const action = async ({ src, dest }, command = {}) => {
     );
   }
 
-  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+  trackCommandUsage(COMMAND_NAME, { mode }, command);
   watch(portalId, absoluteSrcPath, dest, {
     mode,
     cwd: getCwd(),

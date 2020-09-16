@@ -37,7 +37,7 @@ const UPLOAD_COMMAND_NAME = 'filemanager-upload';
 const UPLOAD_DESCRIPTION =
   'Upload a folder or file from your computer to the HubSpot File Manager';
 
-const action = async ({ src, dest }, command = {}) => {
+const action = async ({ src, dest }, command) => {
   setLogLevel(command);
   logDebugInfo(command);
   const { config: configPath } = command;
@@ -71,7 +71,7 @@ const action = async ({ src, dest }, command = {}) => {
   trackCommandUsage(
     UPLOAD_COMMAND_NAME,
     { type: stats.isFile() ? 'file' : 'folder' },
-    portalId
+    command
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(

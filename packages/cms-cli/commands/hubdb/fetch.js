@@ -22,28 +22,24 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const FETCH_DESCRIPTION = 'fetch a HubDB table';
 
-const action = async (args, options) => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+const action = async ({ tableId, dest }, command) => {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const portalId = getPortalId(command);
 
-  trackCommandUsage('hubdb-fetch', null, portalId);
+  trackCommandUsage('hubdb-fetch', {}, command);
 
   try {
-    const { filePath } = await downloadHubDbTable(
-      portalId,
-      args.tableId,
-      args.dest
-    );
+    const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
 
-    logger.log(`Downloaded HubDB table ${args.tableId} to ${filePath}`);
+    logger.log(`Downloaded HubDB table ${tableId} to ${filePath}`);
   } catch (e) {
     logErrorInstance(e);
   }

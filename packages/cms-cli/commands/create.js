@@ -9,11 +9,7 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
-const {
-  addLoggerOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../lib/commonOpts');
+const { addLoggerOptions, setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const {
@@ -157,9 +153,9 @@ const builder = yargs => {
 const handler = async argv =>
   action({ type: argv.type, name: argv.name, dest: argv.dest }, argv);
 
-const action = async ({ type, name, dest }, options) => {
-  setLogLevel(options);
-  logDebugInfo(options);
+const action = async ({ type, name, dest }, command) => {
+  setLogLevel(command);
+  logDebugInfo(command);
   type = typeof type === 'string' && type.toLowerCase();
 
   if (type === 'global-partial') {
@@ -224,12 +220,12 @@ const action = async ({ type, name, dest }, options) => {
       break;
     }
     case TYPES['website-theme']:
-      createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', options);
+      createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', command);
       break;
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']: {
-      createProject(dest, type, PROJECT_REPOSITORIES[type], '', options);
+      createProject(dest, type, PROJECT_REPOSITORIES[type], '', command);
       break;
     }
     case TYPES.function: {
@@ -241,7 +237,7 @@ const action = async ({ type, name, dest }, options) => {
       break;
   }
 
-  trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId(options));
+  trackCommandUsage(COMMAND_NAME, commandTrackingContext, command);
 };
 
 // Commander Configuration

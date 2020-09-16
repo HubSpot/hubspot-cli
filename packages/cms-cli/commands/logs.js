@@ -60,14 +60,14 @@ const handleKeypressToExit = exit => {
   });
 };
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+const loadAndValidateOptions = async command => {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validatePortal(command)))) {
     process.exit(1);
   }
 };
@@ -125,15 +125,14 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-const action = async (args, options) => {
-  loadAndValidateOptions(options);
+const action = async ({ functionPath }, command) => {
+  loadAndValidateOptions(command);
 
-  const { functionPath } = args;
-  const { latest, file, follow, compact } = options;
+  const { latest, file, follow, compact } = command;
   let logsResp;
-  const portalId = getPortalId(options);
+  const portalId = getPortalId(command);
 
-  trackCommandUsage(COMMAND_NAME, { latest, file }, portalId);
+  trackCommandUsage(COMMAND_NAME, { latest, file }, command);
 
   logger.debug(
     `Getting ${
@@ -155,8 +154,7 @@ const action = async (args, options) => {
       functionId: functionResp.id,
       functionPath,
       portalId,
-
-      Name: options.portal,
+      Name: command.portal,
       compact,
     });
   } else if (latest) {

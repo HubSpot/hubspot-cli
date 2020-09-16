@@ -69,25 +69,25 @@ const builder = yargs => {
 };
 const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 
-const action = async ({ src, dest }, options = {}) => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
+const action = async ({ src, dest }, command) => {
+  setLogLevel(command);
+  logDebugInfo(command);
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (
     !(
       validateConfig() &&
-      (await validatePortal(options)) &&
-      validateMode(options)
+      (await validatePortal(command)) &&
+      validateMode(command)
     )
   ) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
-  const mode = getMode(options);
+  const portalId = getPortalId(command);
+  const mode = getMode(command);
   const absoluteSrcPath = path.resolve(getCwd(), src);
   let stats;
   try {
@@ -109,7 +109,7 @@ const action = async ({ src, dest }, options = {}) => {
   trackCommandUsage(
     COMMAND_NAME,
     { mode, type: stats.isFile() ? 'file' : 'folder' },
-    portalId
+    command
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },

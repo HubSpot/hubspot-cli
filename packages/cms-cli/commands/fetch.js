@@ -30,19 +30,19 @@ const COMMAND_NAME = 'fetch';
 const DESCRIPTION =
   'Fetch a file, directory or module from HubSpot and write to a path on your computer';
 
-const action = async ({ src, dest }, options = {}) => {
-  setLogLevel(options);
-  logDebugInfo(options);
+const action = async ({ src, dest }, command) => {
+  setLogLevel(command);
+  logDebugInfo(command);
 
-  const { config: configPath } = options;
+  const { config: configPath } = command;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (
     !(
       validateConfig() &&
-      (await validatePortal(options)) &&
-      validateMode(options)
+      (await validatePortal(command)) &&
+      validateMode(command)
     )
   ) {
     process.exit(1);
@@ -55,13 +55,13 @@ const action = async ({ src, dest }, options = {}) => {
 
   dest = resolveLocalPath(dest);
 
-  const portalId = getPortalId(options);
-  const mode = getMode(options);
+  const portalId = getPortalId(command);
+  const mode = getMode(command);
 
-  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+  trackCommandUsage(COMMAND_NAME, { mode }, command);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder({ portalId, src, dest, mode, options });
+  downloadFileOrFolder({ portalId, src, dest, mode, options: command });
 };
 
 // Yargs Configuration
