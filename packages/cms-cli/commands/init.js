@@ -74,7 +74,8 @@ const action = async command => {
         ...configData,
         name,
       },
-      true
+      true,
+      command
     );
 
     const path = getConfigPath();

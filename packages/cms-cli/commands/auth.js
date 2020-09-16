@@ -78,7 +78,11 @@ async function authAction(type, command) {
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env });
-      updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+      updatedConfig = await updateConfigWithPersonalAccessKey(
+        configData,
+        false,
+        command
+      );
 
       if (!updatedConfig.name) {
         let validName = null;
