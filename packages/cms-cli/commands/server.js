@@ -28,10 +28,10 @@ function configureServerCommand(program) {
     .option('--serverConfig <serverConfig>')
     .option('--contextDir [contextDir]')
     .arguments('<src>')
-    .action(async (src, options = {}) => {
-      setLogLevel(options);
-      logDebugInfo(options);
-      const { config: configPath, serverConfig, contextDir } = options;
+    .action(async (src, command) => {
+      setLogLevel(command);
+      logDebugInfo(command);
+      const { config: configPath, serverConfig, contextDir } = command;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
@@ -39,7 +39,7 @@ function configureServerCommand(program) {
         process.exit(1);
       }
 
-      const portalId = getPortalId(options);
+      const portalId = getPortalId(command);
 
       // TODO: add flag to bypass
       logger.log(`Fetching portal data for ${portalId} to update context`);
