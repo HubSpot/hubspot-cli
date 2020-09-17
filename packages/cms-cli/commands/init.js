@@ -1,6 +1,7 @@
 const { version } = require('../package.json');
 const {
   getConfigPath,
+  getPortalId,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
@@ -24,7 +25,6 @@ const {
   addLoggerOptions,
   setLogLevel,
   addTestingOptions,
-  getPortalId,
 } = require('../lib/commonOpts');
 const {
   promptUser,
@@ -79,7 +79,7 @@ const action = async options => {
     );
 
     const path = getConfigPath();
-    const portalId = getPortalId(options);
+    const portalId = getPortalId();
 
     logger.success(
       `The config file "${path}" was created using your personal access key for portal ${portalId}.`
