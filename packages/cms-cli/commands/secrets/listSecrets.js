@@ -13,20 +13,19 @@ const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'List all HubSpot secrets';
+exports.command = 'list';
+exports.describe = 'List all HubSpot secrets';
 
-async function action(options) {
+exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -56,29 +55,10 @@ async function action(options) {
       })
     );
   }
-}
-
-function configureSecretsListCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .action(action);
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-exports.command = 'list';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   return yargs;
 };
-
-exports.handler = action;
-
-exports.configureSecretsListCommand = configureSecretsListCommand;

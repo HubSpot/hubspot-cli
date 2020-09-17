@@ -1,4 +1,3 @@
-const { version } = require('../package.json');
 const {
   loadConfig,
   validateConfig,
@@ -22,15 +21,11 @@ const {
 } = require('@hubspot/cms-lib/lib/config');
 const {
   addConfigOptions,
-  addLoggerOptions,
   setLogLevel,
   addTestingOptions,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
+const { trackCommandUsage } = require('../lib/usageTracking');
 const {
   promptUser,
   personalAccessKeyPrompt,
@@ -39,7 +34,7 @@ const {
 } = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
 
-const COMMAND_NAME = 'auth';
+const COMMAND_NAME = 'auth <type>';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
   PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
@@ -48,13 +43,18 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
-async function authAction(type, options) {
+exports.command = 'auth';
+exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
+
+exports.handler = async options => {
+  const { type, config: configPath, qa } = options;
+
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath, {
     ignoreEnvironmentVariableConfig: true,
   });
@@ -114,15 +114,10 @@ async function authAction(type, options) {
       break;
   }
   process.exit();
-}
+};
 
-const DESCRIPTION = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
-
-// Yargs Configuration
-const command = `${COMMAND_NAME} [type]`;
-const describe = DESCRIPTION;
-const builder = yargs => {
-  yargs.positional('[type]', {
+exports.builder = yargs => {
+  yargs.positional('type', {
     describe: 'Authentication mechanism',
     type: 'string',
     choices: [
@@ -137,29 +132,4 @@ const builder = yargs => {
   addTestingOptions(yargs, true);
 
   return yargs;
-};
-const handler = async argv => authAction(argv.type, argv);
-
-// Commander Configuration
-function configureCommanderAuthCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('[type]')
-    .action(authAction);
-
-  addLoggerOptions(program);
-  addConfigOptions(program);
-  addTestingOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
-}
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderAuthCommand,
 };

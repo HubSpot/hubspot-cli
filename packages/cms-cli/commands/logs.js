@@ -1,17 +1,12 @@
-const { version } = require('../package.json');
 const readline = require('readline');
 const ora = require('ora');
 const {
-  addLoggerOptions,
   addPortalOptions,
   addConfigOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
+const { trackCommandUsage } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
 const {
   loadConfig,
@@ -33,8 +28,6 @@ const {
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
 const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
-const COMMAND_NAME = 'logs';
-const DESCRIPTION = 'get logs for a function';
 const TAIL_DELAY = 5000;
 
 const makeSpinner = (functionPath, portalIdentifier) => {
@@ -125,15 +118,17 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-const action = async (args, options) => {
+exports.command = 'logs <path>';
+exports.describe = 'get logs for a function';
+
+exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { functionPath } = args;
-  const { latest, file, follow, compact } = options;
+  const { latest, tail, compact, path: functionPath } = options;
   let logsResp;
   const portalId = getPortalId(options);
 
-  trackCommandUsage(COMMAND_NAME, { latest, file }, portalId);
+  trackCommandUsage('logs', { latest }, portalId);
 
   logger.debug(
     `Getting ${
@@ -150,7 +145,7 @@ const action = async (args, options) => {
 
   logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
-  if (follow) {
+  if (tail) {
     await tailLogs({
       functionId: functionResp.id,
       functionPath,
@@ -172,10 +167,7 @@ const action = async (args, options) => {
   }
 };
 
-// Yargs Configuration
-const command = `${COMMAND_NAME} <path>`;
-const describe = DESCRIPTION;
-const builder = yargs => {
+exports.builder = yargs => {
   yargs.positional('path', {
     describe: 'Path to serverless function',
     type: 'string',
@@ -200,34 +192,4 @@ const builder = yargs => {
   addPortalOptions(yargs, true);
 
   return yargs;
-};
-const handler = async argv => action({ functionPath: argv.path }, argv);
-
-// Commander Configuration
-const configureCommanderLogsCommand = commander => {
-  commander
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<function_path>')
-    .option('--latest', 'retrieve most recent log only')
-    .option('--compact', 'output compact logs')
-    .option('-f, --follow', 'tail logs')
-    .action(async (functionPath, command = {}) =>
-      action({ functionPath }, command)
-    );
-
-  addConfigOptions(commander);
-  addPortalOptions(commander);
-  addLoggerOptions(commander);
-  addHelpUsageTracking(commander, COMMAND_NAME);
-};
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderLogsCommand,
 };

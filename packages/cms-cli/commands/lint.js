@@ -10,24 +10,16 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
-const { version } = require('../package.json');
 const {
   addConfigOptions,
   addPortalOptions,
-  addLoggerOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { validatePortal } = require('../lib/validation');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
-
-const COMMAND_NAME = 'lint';
-const DESCRIPTION = 'Lint a file or folder for HubL syntax';
+const { trackCommandUsage } = require('../lib/usageTracking');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -41,14 +33,19 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const action = async (args, options) => {
+exports.command = 'lint <path>';
+exports.describe = 'Lint a file or folder for HubL syntax';
+
+exports.handler = async options => {
+  const { path: lintPath } = options;
+
   await loadAndValidateOptions(options);
 
   const portalId = getPortalId(options);
-  const localPath = resolveLocalPath(args.localPath);
+  const localPath = resolveLocalPath(lintPath);
   const groupName = `Linting "${localPath}"`;
 
-  trackCommandUsage(COMMAND_NAME, {}, portalId);
+  trackCommandUsage('lint', {}, portalId);
 
   logger.group(groupName);
   let count = 0;
@@ -65,10 +62,7 @@ const action = async (args, options) => {
   logger.log(`${count} issues found`);
 };
 
-// Yargs Configuration
-const command = `${COMMAND_NAME} <path>`;
-const describe = DESCRIPTION;
-const builder = yargs => {
+exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   yargs.positional('path', {
@@ -76,29 +70,4 @@ const builder = yargs => {
     type: 'string',
   });
   return yargs;
-};
-const handler = async argv => action({ localPath: argv.path }, argv);
-
-// Commander Configuration
-const configureCommanderLintCommand = commander => {
-  commander
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<path>')
-    .action(async (localPath, command = {}) => action({ localPath }, command));
-
-  addConfigOptions(commander);
-  addPortalOptions(commander);
-  addLoggerOptions(commander);
-  addHelpUsageTracking(commander, COMMAND_NAME);
-};
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderLintCommand,
 };

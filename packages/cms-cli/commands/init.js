@@ -1,4 +1,3 @@
-const { version } = require('../package.json');
 const {
   getConfigPath,
   getPortalId,
@@ -16,16 +15,8 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-  trackAuthAction,
-} = require('../lib/usageTracking');
-const {
-  addLoggerOptions,
-  setLogLevel,
-  addTestingOptions,
-} = require('../lib/commonOpts');
+const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
+const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {
   promptUser,
   personalAccessKeyPrompt,
@@ -33,19 +24,20 @@ const {
 } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
-const COMMAND_NAME = 'init';
-const DESCRIPTION = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`;
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
   COMPLETE: 'complete',
 };
 
-const action = async options => {
+exports.command = 'init';
+exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`;
+
+exports.handler = async options => {
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
-  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
+  trackCommandUsage('init', { authType: 'personalaccesskey' });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configPath) {
@@ -57,7 +49,7 @@ const action = async options => {
   }
 
   trackAuthAction(
-    COMMAND_NAME,
+    'init',
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     TRACKING_STATUS.STARTED
   );
@@ -85,7 +77,7 @@ const action = async options => {
     );
 
     trackAuthAction(
-      COMMAND_NAME,
+      'init',
       PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
       TRACKING_STATUS.COMPLETE,
       portalId
@@ -93,41 +85,15 @@ const action = async options => {
   } catch (err) {
     logErrorInstance(err);
     trackAuthAction(
-      COMMAND_NAME,
+      'init',
       PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
       TRACKING_STATUS.ERROR
     );
   }
 };
 
-// Yargs Configuration
-const command = `${COMMAND_NAME}`;
-const describe = DESCRIPTION;
-const builder = yargs => {
+exports.builder = yargs => {
   addTestingOptions(yargs, true);
 
   return yargs;
-};
-const handler = async argv => action(argv);
-
-// Commander Configuration
-const configureCommanderInitCommand = program => {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .action(async (command = {}) => action(command));
-
-  addLoggerOptions(program);
-  addTestingOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
-};
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderInitCommand,
 };

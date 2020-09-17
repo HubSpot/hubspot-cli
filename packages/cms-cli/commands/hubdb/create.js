@@ -11,22 +11,22 @@ const { createHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const CREATE_DESCRIPTION = 'Create a HubDB table';
+exports.command = 'create <src>';
+exports.describe = 'Create a HubDB table';
 
-const action = async (args, options) => {
+exports.handler = async options => {
+  const { config: configPath, src } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
@@ -38,23 +38,17 @@ const action = async (args, options) => {
   trackCommandUsage('hubdb-create', null, portalId);
 
   try {
-    const table = await createHubDbTable(
-      portalId,
-      path.resolve(getCwd(), args.src)
-    );
+    const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));
     logger.log(
       `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
     );
   } catch (e) {
-    logger.error(`Creating the table at "${args.src}" failed`);
+    logger.error(`Creating the table at "${src}" failed`);
     logErrorInstance(e);
   }
 };
 
-const command = 'create <src>';
-const describe = CREATE_DESCRIPTION;
-const handler = async argv => action({ src: argv.src }, argv);
-const builder = yargs => {
+exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
 
@@ -62,27 +56,4 @@ const builder = yargs => {
     describe: 'local path to file used for import',
     type: 'string',
   });
-};
-
-const configureCommanderHubDbCreateCommand = commander => {
-  commander
-    .version(version)
-    .description(CREATE_DESCRIPTION)
-    .arguments('<src>')
-    .action(async (src, command = {}) => action({ src }, command));
-
-  addLoggerOptions(commander);
-  addPortalOptions(commander);
-  addConfigOptions(commander);
-};
-
-module.exports = {
-  CREATE_DESCRIPTION,
-  // Yargs
-  command,
-  describe,
-  handler,
-  builder,
-  // Commander
-  configureCommanderHubDbCreateCommand,
 };

@@ -13,23 +13,23 @@ const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'Delete a HubSpot secret';
+exports.command = 'delete <name>';
+exports.describe = 'Delete a HubSpot secret';
 
-async function action({ secretName }, options) {
+exports.handler = async options => {
+  const { config: configPath, name: secretName } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
@@ -55,25 +55,7 @@ async function action({ secretName }, options) {
       })
     );
   }
-}
-
-function configureSecretsDeleteCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<name>')
-    .action(async secretName => {
-      action({ secretName }, program);
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-exports.command = 'delete <name>';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
@@ -84,9 +66,3 @@ exports.builder = yargs => {
   });
   return yargs;
 };
-
-exports.handler = async argv => {
-  await action({ secretName: argv.name }, argv);
-};
-
-exports.configureSecretsDeleteCommand = configureSecretsDeleteCommand;

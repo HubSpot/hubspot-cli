@@ -32,6 +32,7 @@ function trackCommandUsage(command, meta = {}, portalId) {
         ? portalConfig.authType
         : API_KEY_AUTH_METHOD.value;
   }
+
   setImmediate(async () => {
     const usageTrackingEvent = {
       action: 'cli-command',
