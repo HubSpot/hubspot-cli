@@ -2,7 +2,6 @@ const { version } = require('../package.json');
 
 const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileMapper');
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -15,6 +14,7 @@ const {
   addLoggerOptions,
   addOverwriteOptions,
   addModeOptions,
+  getPortalId,
   getMode,
   setLogLevel,
 } = require('../lib/commonOpts');
@@ -30,19 +30,19 @@ const COMMAND_NAME = 'fetch';
 const DESCRIPTION =
   'Fetch a file, directory or module from HubSpot and write to a path on your computer';
 
-const action = async ({ src, dest }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
+const action = async ({ src, dest }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
 
-  const { config: configPath } = command;
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (
     !(
       validateConfig() &&
-      (await validatePortal(command)) &&
-      validateMode(command)
+      (await validatePortal(options)) &&
+      validateMode(options)
     )
   ) {
     process.exit(1);
@@ -55,13 +55,13 @@ const action = async ({ src, dest }, command) => {
 
   dest = resolveLocalPath(dest);
 
-  const portalId = getPortalId(command);
-  const mode = getMode(command);
+  const portalId = getPortalId(options);
+  const mode = getMode(options);
 
-  trackCommandUsage(COMMAND_NAME, { mode }, command);
+  trackCommandUsage(COMMAND_NAME, { mode }, options);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder({ portalId, src, dest, mode, options: command });
+  downloadFileOrFolder({ portalId, src, dest, mode, options });
 };
 
 // Yargs Configuration

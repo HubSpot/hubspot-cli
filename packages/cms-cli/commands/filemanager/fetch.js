@@ -1,7 +1,6 @@
 const { version } = require('../../package.json');
 
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -15,6 +14,7 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
+  getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validatePortal } = require('../../lib/validation');
@@ -27,15 +27,15 @@ const FETCH_COMMAND_NAME = 'filemanager-fetch';
 const FETCH_DESCRIPTION =
   'Download a folder or file from the HubSpot File Manager to your computer';
 
-const action = async ({ src, dest }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
+const action = async ({ src, dest }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
 
-  const { config: configPath } = command;
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!validateConfig() || !(await validatePortal(command))) {
+  if (!validateConfig() || !(await validatePortal(options))) {
     process.exit(1);
   }
 
@@ -46,12 +46,12 @@ const action = async ({ src, dest }, command) => {
 
   dest = resolveLocalPath(dest);
 
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
 
   trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder(portalId, src, dest, command);
+  downloadFileOrFolder(portalId, src, dest, options);
 };
 
 const command = 'fetch <src> [dest]';

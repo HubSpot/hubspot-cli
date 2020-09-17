@@ -153,9 +153,9 @@ const builder = yargs => {
 const handler = async argv =>
   action({ type: argv.type, name: argv.name, dest: argv.dest }, argv);
 
-const action = async ({ type, name, dest }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
+const action = async ({ type, name, dest }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
   type = typeof type === 'string' && type.toLowerCase();
 
   if (type === 'global-partial') {
@@ -220,12 +220,12 @@ const action = async ({ type, name, dest }, command) => {
       break;
     }
     case TYPES['website-theme']:
-      createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', command);
+      createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', options);
       break;
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']: {
-      createProject(dest, type, PROJECT_REPOSITORIES[type], '', command);
+      createProject(dest, type, PROJECT_REPOSITORIES[type], '', options);
       break;
     }
     case TYPES.function: {
@@ -237,7 +237,7 @@ const action = async ({ type, name, dest }, command) => {
       break;
   }
 
-  trackCommandUsage(COMMAND_NAME, commandTrackingContext, command);
+  trackCommandUsage(COMMAND_NAME, commandTrackingContext, options);
 };
 
 // Commander Configuration

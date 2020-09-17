@@ -1,6 +1,6 @@
 const Logger = require('@hubspot/cms-lib/logger');
 const {
-  getPortalId,
+  getPortalId: getPortalIdFromConfig,
   getPortalConfig,
   getAndLoadConfigIfNeeded,
   DEFAULT_MODE,
@@ -93,6 +93,19 @@ const setLogLevel = (options = {}) => {
  */
 const getCommandName = argv => (argv && argv._ && argv._[0]) || '';
 
+/**
+ * Obtains portalId using supplied --portal flag or from environment variables
+ */
+const getPortalId = (options = {}) => {
+  const { portal: portalNameOrId } = options;
+
+  if (process.env.HUBSPOT_PORTAL_ID) {
+    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  }
+
+  return getPortalIdFromConfig(portalNameOrId);
+};
+
 const getMode = (command = {}) => {
   // 1. --mode
   const { mode } = command;
@@ -122,5 +135,6 @@ module.exports = {
   addTestingOptions,
   getCommandName,
   getMode,
+  getPortalId,
   setLogLevel,
 };

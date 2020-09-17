@@ -2,7 +2,6 @@
 const path = require('path');
 const shell = require('shelljs');
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -18,6 +17,7 @@ const {
   addLoggerOptions,
   addPortalOptions,
   setLogLevel,
+  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
@@ -28,10 +28,10 @@ function configureServerCommand(program) {
     .option('--serverConfig <serverConfig>')
     .option('--contextDir [contextDir]')
     .arguments('<src>')
-    .action(async (src, command) => {
-      setLogLevel(command);
-      logDebugInfo(command);
-      const { config: configPath, serverConfig, contextDir } = command;
+    .action(async (src, options) => {
+      setLogLevel(options);
+      logDebugInfo(options);
+      const { config: configPath, serverConfig, contextDir } = options;
       loadConfig(configPath);
       checkAndWarnGitInclusion();
 
@@ -39,7 +39,7 @@ function configureServerCommand(program) {
         process.exit(1);
       }
 
-      const portalId = getPortalId(command);
+      const portalId = getPortalId(options);
 
       // TODO: add flag to bypass
       logger.log(`Fetching portal data for ${portalId} to update context`);

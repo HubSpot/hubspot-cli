@@ -3,7 +3,6 @@ const path = require('path');
 const { version } = require('../package.json');
 
 const {
-  getPortalId,
   loadConfig,
   uploadFolder,
   validateConfig,
@@ -33,6 +32,7 @@ const {
   addLoggerOptions,
   addModeOptions,
   setLogLevel,
+  getPortalId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -69,25 +69,25 @@ const builder = yargs => {
 };
 const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 
-const action = async ({ src, dest }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+const action = async ({ src, dest }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (
     !(
       validateConfig() &&
-      (await validatePortal(command)) &&
-      validateMode(command)
+      (await validatePortal(options)) &&
+      validateMode(options)
     )
   ) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(command);
-  const mode = getMode(command);
+  const portalId = getPortalId(options);
+  const mode = getMode(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
   let stats;
   try {
@@ -109,7 +109,7 @@ const action = async ({ src, dest }, command) => {
   trackCommandUsage(
     COMMAND_NAME,
     { mode, type: stats.isFile() ? 'file' : 'folder' },
-    command
+    options
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },

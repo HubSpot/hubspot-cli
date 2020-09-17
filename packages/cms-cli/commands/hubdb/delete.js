@@ -1,5 +1,4 @@
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -16,24 +15,25 @@ const {
   addLoggerOptions,
   addPortalOptions,
   setLogLevel,
+  getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DELETE_DESCRIPTION = 'delete a HubDB table';
 
-const action = async ({ tableId }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+const action = async ({ tableId }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-delete', {}, command);
+  trackCommandUsage('hubdb-delete', {}, options);
 
   try {
     await deleteTable(portalId, tableId);

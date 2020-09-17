@@ -3,7 +3,6 @@ const {
   printHublValidationResult,
 } = require('@hubspot/cms-lib/validate');
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -17,6 +16,7 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
+  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
@@ -29,26 +29,26 @@ const {
 const COMMAND_NAME = 'lint';
 const DESCRIPTION = 'Lint a file or folder for HubL syntax';
 
-const loadAndValidateOptions = async command => {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+const loadAndValidateOptions = async options => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
 };
 
-const action = async ({ localPath }, command) => {
-  await loadAndValidateOptions(command);
+const action = async ({ localPath }, options) => {
+  await loadAndValidateOptions(options);
 
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
   const resolvedLocalPath = resolveLocalPath(localPath);
   const groupName = `Linting "${resolvedLocalPath}"`;
 
-  trackCommandUsage(COMMAND_NAME, {}, command);
+  trackCommandUsage(COMMAND_NAME, {}, options);
 
   logger.group(groupName);
   let count = 0;

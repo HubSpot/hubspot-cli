@@ -1,7 +1,6 @@
 const { version } = require('../package.json');
 const {
   getConfigPath,
-  getPortalId,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
 } = require('@hubspot/cms-lib/lib/config');
@@ -25,6 +24,7 @@ const {
   addLoggerOptions,
   setLogLevel,
   addTestingOptions,
+  getPortalId,
 } = require('../lib/commonOpts');
 const {
   promptUser,
@@ -41,12 +41,12 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
-const action = async command => {
+const action = async options => {
   const configPath = getConfigPath();
-  setLogLevel(command);
-  logDebugInfo(command);
-  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' }, command);
-  const env = command.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  setLogLevel(options);
+  logDebugInfo(options);
+  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' }, options);
+  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configPath) {
     logger.error(`The config file '${configPath}' already exists.`);
@@ -75,11 +75,11 @@ const action = async command => {
         name,
       },
       true,
-      command
+      options
     );
 
     const path = getConfigPath();
-    const portalId = getPortalId(command);
+    const portalId = getPortalId(options);
 
     logger.success(
       `The config file "${path}" was created using your personal access key for portal ${portalId}.`

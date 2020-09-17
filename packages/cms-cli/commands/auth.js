@@ -48,13 +48,13 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
-async function authAction(type, command) {
+async function authAction(type, options) {
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
-  const env = command.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath, {
     ignoreEnvironmentVariableConfig: true,
   });
@@ -64,7 +64,7 @@ async function authAction(type, command) {
     process.exit(1);
   }
 
-  trackCommandUsage(COMMAND_NAME, {}, command);
+  trackCommandUsage(COMMAND_NAME, {}, options);
   let configData;
   let updatedConfig;
   let promptAnswer;
@@ -81,7 +81,7 @@ async function authAction(type, command) {
       updatedConfig = await updateConfigWithPersonalAccessKey(
         configData,
         false,
-        command
+        options
       );
 
       if (!updatedConfig.name) {

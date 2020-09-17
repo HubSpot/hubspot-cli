@@ -1,6 +1,5 @@
 const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -17,6 +16,7 @@ const {
   addPortalOptions,
   addLoggerOptions,
   setLogLevel,
+  getPortalId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
@@ -28,20 +28,20 @@ const {
 const COMMAND_NAME = 'remove';
 const DESCRIPTION = 'Delete a file or folder from HubSpot';
 
-async function action({ hsPath }, command) {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+async function action({ hsPath }, options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
 
-  trackCommandUsage(COMMAND_NAME, {}, command);
+  trackCommandUsage(COMMAND_NAME, {}, options);
 
   try {
     await deleteFile(portalId, hsPath);

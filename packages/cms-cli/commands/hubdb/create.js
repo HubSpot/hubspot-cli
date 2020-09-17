@@ -1,6 +1,5 @@
 const path = require('path');
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -18,24 +17,25 @@ const {
   addLoggerOptions,
   addPortalOptions,
   setLogLevel,
+  getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
 const CREATE_DESCRIPTION = 'Create a HubDB table';
 
-const action = async ({ src }, command) => {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+const action = async ({ src }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-create', {}, command);
+  trackCommandUsage('hubdb-create', {}, options);
 
   try {
     const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));

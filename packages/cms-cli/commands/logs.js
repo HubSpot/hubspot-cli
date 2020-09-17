@@ -2,18 +2,6 @@ const { version } = require('../package.json');
 const readline = require('readline');
 const ora = require('ora');
 const {
-  addLoggerOptions,
-  addPortalOptions,
-  addConfigOptions,
-  setLogLevel,
-} = require('../lib/commonOpts');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
-const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -24,7 +12,6 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
-const { validatePortal } = require('../lib/validation');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
 const {
   getFunctionLogs,
@@ -32,6 +19,19 @@ const {
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
 const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
+const {
+  addLoggerOptions,
+  addPortalOptions,
+  addConfigOptions,
+  setLogLevel,
+  getPortalId,
+} = require('../lib/commonOpts');
+const {
+  trackCommandUsage,
+  addHelpUsageTracking,
+} = require('../lib/usageTracking');
+const { logDebugInfo } = require('../lib/debugInfo');
+const { validatePortal } = require('../lib/validation');
 
 const COMMAND_NAME = 'logs';
 const DESCRIPTION = 'get logs for a function';
@@ -60,14 +60,14 @@ const handleKeypressToExit = exit => {
   });
 };
 
-const loadAndValidateOptions = async command => {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+const loadAndValidateOptions = async options => {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
 };
@@ -125,14 +125,14 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-const action = async ({ functionPath }, command) => {
-  loadAndValidateOptions(command);
+const action = async ({ functionPath }, options) => {
+  loadAndValidateOptions(options);
 
-  const { latest, file, follow, compact } = command;
+  const { latest, file, follow, compact } = options;
   let logsResp;
-  const portalId = getPortalId(command);
+  const portalId = getPortalId(options);
 
-  trackCommandUsage(COMMAND_NAME, { latest, file }, command);
+  trackCommandUsage(COMMAND_NAME, { latest, file }, options);
 
   logger.debug(
     `Getting ${
@@ -154,7 +154,7 @@ const action = async ({ functionPath }, command) => {
       functionId: functionResp.id,
       functionPath,
       portalId,
-      Name: command.portal,
+      Name: options.portal,
       compact,
     });
   } else if (latest) {

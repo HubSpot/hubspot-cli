@@ -1,5 +1,4 @@
 const {
-  getPortalId,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -21,23 +20,24 @@ const {
   addLoggerOptions,
   addPortalOptions,
   setLogLevel,
+  getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DESCRIPTION = 'Update an existing HubSpot secret';
 
-async function action({ secretName, secretValue }, command) {
-  setLogLevel(command);
-  logDebugInfo(command);
-  const { config: configPath } = command;
+async function action({ secretName, secretValue }, options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(command)))) {
+  if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(command);
-  trackCommandUsage('secrets-update', {}, command);
+  const portalId = getPortalId(options);
+  trackCommandUsage('secrets-update', {}, options);
 
   try {
     await updateSecret(portalId, secretName, secretValue);
