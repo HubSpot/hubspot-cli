@@ -15,10 +15,10 @@ const {
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { listSchema } = require('@hubspot/cms-lib/api/schema');
+const { listSchemas } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'list';
-exports.describe = 'List schema available on your portal';
+exports.describe = 'List schemas available on your portal';
 
 exports.handler = async options => {
   setLogLevel(options);
@@ -34,10 +34,10 @@ exports.handler = async options => {
   trackCommandUsage('schema-list', null, portalId);
 
   try {
-    await listSchema(portalId);
+    await listSchemas(portalId);
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to list schema`);
+    logger.error(`Unable to list schemas`);
   }
 };
 

@@ -15,7 +15,7 @@ const {
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { downloadMultipleSchema } = require('@hubspot/cms-lib/api/schema');
+const { downloadSchemas } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'fetch-all [dest]';
 exports.describe = 'Fetch all Custom Object Schema for a portal';
@@ -34,10 +34,10 @@ exports.handler = async options => {
   trackCommandUsage('schema-fetch-all', null, portalId);
 
   try {
-    await downloadMultipleSchema(portalId, options.dest);
+    await downloadSchemas(portalId, options.dest);
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to fetch schema`);
+    logger.error('Unable to fetch schemas');
   }
 };
 
@@ -48,17 +48,17 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 schema fetch',
-      'Fetch all schema for a portal and put them in the current working directory',
+      'Fetch all schemas for a portal and put them in the current working directory',
     ],
     [
       '$0 schema fetch my/folder',
-      'Fetch all schema for a portal and put them in a directory named my/folder',
+      'Fetch all schemas for a portal and put them in a directory named my/folder',
     ],
   ]);
 
   yargs.positional('dest', {
     describe:
-      'Local destination folder to write schema to.  If omitted, current working directory will be used',
+      'Local destination folder to write schemas to.  If omitted, current working directory will be used',
     type: 'string',
   });
 };

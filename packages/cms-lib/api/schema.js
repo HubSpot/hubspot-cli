@@ -19,8 +19,8 @@ const writeSchemaToDisk = (schema, dest) => {
   );
 };
 
-const logMultipleSchema = schema => {
-  const data = schema
+const logSchemas = schemas => {
+  const data = schemas
     .map(r => [r.labels.singular, r.name, r.objectTypeId])
     .sort((a, b) => (a[1] > b[1] ? 1 : -1));
   data.unshift([
@@ -34,9 +34,7 @@ const logMultipleSchema = schema => {
     border: getBorderCharacters('honeywell'),
   };
 
-  logger.log(
-    data.length ? table(data, tableConfig) : 'No Schema data was found'
-  );
+  logger.log(data.length ? table(data, tableConfig) : 'No Schemas were found');
 };
 
 exports.createSchema = (portalId, filePath) =>
@@ -65,7 +63,12 @@ exports.updateSchema = async (portalId, schemaObjectType, filePath) => {
 
 exports.fetchSchema = async (portalId, schemaObjectType) =>
   http.get(portalId, {
-    uri: `${SCHEMA_API_PATH}${schemaObjectType ? `/${schemaObjectType}` : ''}`,
+    uri: `${SCHEMA_API_PATH}/${schemaObjectType}`,
+  });
+
+exports.fetchSchemas = async portalId =>
+  http.get(portalId, {
+    uri: SCHEMA_API_PATH,
   });
 
 exports.deleteSchema = async (portalId, schemaObjectType) =>
@@ -73,13 +76,13 @@ exports.deleteSchema = async (portalId, schemaObjectType) =>
     uri: `${SCHEMA_API_PATH}/${schemaObjectType}`,
   });
 
-exports.downloadMultipleSchema = async (portalId, dest) => {
-  const response = await this.fetchSchema(portalId);
-  logMultipleSchema(response.results);
+exports.downloadSchemas = async (portalId, dest) => {
+  const response = await this.fetchSchemas(portalId);
+  logSchemas(response.results);
 
   if (response.results.length) {
     response.results.forEach(r => writeSchemaToDisk(r, dest));
-    logger.log(`Wrote schema to ${path.resolve(getCwd(), dest)}`);
+    logger.log(`Wrote schemas to ${path.resolve(getCwd(), dest)}`);
   }
 };
 
@@ -88,7 +91,7 @@ exports.downloadSchema = async (portalId, schemaObjectType, dest) => {
   writeSchemaToDisk(response, dest);
 };
 
-exports.listSchema = async portalId => {
-  const response = await this.fetchSchema(portalId);
-  logMultipleSchema(response.results);
+exports.listSchemas = async portalId => {
+  const response = await this.fetchSchemas(portalId);
+  logSchemas(response.results);
 };
