@@ -21,7 +21,7 @@ const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
-const schemaCommand = require('../commands/schema');
+const customObjectCommand = require('../commands/customObject');
 
 const notifier = updateNotifier({ pkg });
 
@@ -57,7 +57,7 @@ const argv = yargs
   .command(fetchCommand)
   .command(filemanagerCommand)
   .command(secretsCommand)
-  .command(schemaCommand)
+  .command(customObjectCommand)
   .help()
   .recommendCommands()
   .strict().argv;

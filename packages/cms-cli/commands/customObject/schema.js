@@ -1,4 +1,4 @@
-const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addPortalOptions } = require('../../lib/commonOpts');
 const createCommand = require('./schema/create');
 const fetchCommand = require('./schema/fetch');
 const fetchAllCommand = require('./schema/fetch-all');
@@ -7,8 +7,7 @@ const listCommand = require('./schema/list');
 const updateSchema = require('./schema/update');
 
 exports.command = 'schema';
-// This hides the command from --help until we are ready to release it
-exports.describe = false; //'Manage Custom Schema';
+exports.describe = 'Manage Custom Object Schema';
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);

@@ -11,24 +11,24 @@ const {
   validatePortal,
   getAbsoluteFilePath,
   isFileValidJSON,
-} = require('../../lib/validation');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+} = require('../../../lib/validation');
+const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   addConfigOptions,
   addPortalOptions,
   addTestingOptions,
   setLogLevel,
   getPortalId,
-} = require('../../lib/commonOpts');
+} = require('../../../lib/commonOpts');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { createSchema } = require('@hubspot/cms-lib/api/schema');
+const { logDebugInfo } = require('../../../lib/debugInfo');
+const { updateSchema } = require('@hubspot/cms-lib/api/schema');
 
-exports.command = 'create <definition>';
-exports.describe = 'Create a Custom Object Schema';
+exports.command = 'update <schemaObjectType> <definition>';
+exports.describe = 'Update an existing Custom Object Schema';
 
 exports.handler = async options => {
-  const { definition } = options;
+  const { definition, schemaObjectType } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -40,7 +40,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-create', null, portalId);
+  trackCommandUsage('schema-update', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!filePath || !isFileValidJSON(filePath)) {
@@ -48,7 +48,7 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createSchema(portalId, filePath);
+    const res = await updateSchema(portalId, schemaObjectType, filePath);
     logger.success(
       `Schema can be viewed at ${getHubSpotWebsiteOrigin(
         options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
@@ -56,7 +56,7 @@ exports.handler = async options => {
     );
   } catch (e) {
     logErrorInstance(e, { portalId });
-    logger.error(`Schema creation from ${definition} failed`);
+    logger.error(`Schema update from ${definition} failed`);
   }
 };
 
@@ -64,6 +64,12 @@ exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
   addTestingOptions(yargs, true);
+
+  yargs.positional('schemaObjectType', {
+    describe: 'Fully qualified name or object type ID of the target schema.',
+    type: 'string',
+    demand: true,
+  });
 
   yargs.positional('definition', {
     describe: 'local path to JSON file containing schema definition',

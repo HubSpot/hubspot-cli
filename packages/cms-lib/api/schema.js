@@ -51,6 +51,7 @@ exports.updateSchema = async (portalId, schemaObjectType, filePath) => {
 
   // Hoping it is temporary.  We do it to get objectTypeId to build a link, hoping
   // eventually the patch call will just return this information on its own.
+  // TODO: REMOVE ME, sounds like this will be added by EOD 9/17/2020
   try {
     const updatedSchema = await this.fetchSchema(portalId, schemaObjectType);
     res.objectTypeId = updatedSchema.objectTypeId;
@@ -82,7 +83,7 @@ exports.downloadSchemas = async (portalId, dest) => {
 
   if (response.results.length) {
     response.results.forEach(r => writeSchemaToDisk(r, dest));
-    logger.log(`Wrote schemas to ${path.resolve(getCwd(), dest)}`);
+    logger.log(`Wrote schemas to ${path.resolve(getCwd(), dest || '')}`);
   }
 };
 

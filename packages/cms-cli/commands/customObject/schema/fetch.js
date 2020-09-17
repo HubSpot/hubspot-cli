@@ -6,15 +6,15 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
-const { validatePortal } = require('../../lib/validation');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const { validatePortal } = require('../../../lib/validation');
+const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   addConfigOptions,
   addPortalOptions,
   setLogLevel,
   getPortalId,
-} = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
+} = require('../../../lib/commonOpts');
+const { logDebugInfo } = require('../../../lib/debugInfo');
 const { downloadSchema } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'fetch <schemaObjectType> [dest]';
