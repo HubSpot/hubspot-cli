@@ -1,6 +1,5 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  getPortalId,
   getPortalConfig,
   loadConfigFromEnvironment,
   Mode,
@@ -9,18 +8,18 @@ const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
-const { getMode } = require('./commonOpts');
+const { getPortalId, getMode } = require('./commonOpts');
 
 /**
  * Validate that a portal was passed to the command and that the portal's configuration is valid
  *
  *
- * @param {commander.Command} command
+ * @param {object} command options
  * @returns {boolean}
  */
-async function validatePortal(command) {
-  const portalId = getPortalId(command);
-  const { portalId: portalIdOption, portal: portalOption } = command;
+async function validatePortal(options) {
+  const portalId = getPortalId(options);
+  const { portalId: portalIdOption, portal: portalOption } = options;
   if (!portalId) {
     if (portalOption) {
       logger.error(
@@ -112,11 +111,11 @@ async function validatePortal(command) {
 }
 
 /**
- * @param {commander.Command} command
+ * @param {object} command options
  * @returns {boolean}
  */
-function validateMode(command) {
-  const mode = getMode(command);
+function validateMode(options) {
+  const mode = getMode(options);
   if (Mode[mode]) {
     return true;
   }

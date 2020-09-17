@@ -74,8 +74,7 @@ const action = async options => {
         ...configData,
         name,
       },
-      true,
-      options
+      true
     );
 
     const path = getConfigPath();

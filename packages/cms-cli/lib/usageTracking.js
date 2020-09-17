@@ -22,12 +22,12 @@ const getNodeVersionData = () => ({
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
 
-function trackCommandUsage(command, meta = {}, commandObject = {}) {
+function trackCommandUsage(command, meta = {}, options = {}) {
   if (!isTrackingAllowed()) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
-  const portalId = getPortalId(commandObject);
+  const portalId = getPortalId(options);
   let authType = 'unknown';
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
@@ -51,8 +51,7 @@ function trackCommandUsage(command, meta = {}, commandObject = {}) {
         'cli-interaction',
         EventClass.INTERACTION,
         usageTrackingEvent,
-        portalId,
-        commandObject
+        portalId
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {

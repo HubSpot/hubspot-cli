@@ -173,13 +173,7 @@ async function deleteFolder(portalId, folderPath, options = {}) {
  * @async
  * @returns {Promise}
  */
-async function trackUsage(
-  eventName,
-  eventClass,
-  meta = {},
-  portalId,
-  commandObject = {}
-) {
+async function trackUsage(eventName, eventClass, meta = {}, portalId) {
   const usageEvent = {
     portalId,
     eventName,
@@ -198,7 +192,7 @@ async function trackUsage(
     });
   }
 
-  const env = getEnv(commandObject);
+  const env = getEnv(portalId);
   const requestOptions = http.getRequestOptions(
     { env },
     {

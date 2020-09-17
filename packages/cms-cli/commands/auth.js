@@ -80,8 +80,7 @@ async function authAction(type, options) {
       configData = await personalAccessKeyPrompt({ env });
       updatedConfig = await updateConfigWithPersonalAccessKey(
         configData,
-        false,
-        options
+        false
       );
 
       if (!updatedConfig.name) {

@@ -132,15 +132,10 @@ async function accessTokenForPersonalAccessKey(portalId) {
  * @param {string} configData.personalAccessKey Personal access key string to place in config
  * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the portal being added to the config the default portal
- * @param {object} command forwarded command object
  */
-const updateConfigWithPersonalAccessKey = async (
-  configData,
-  makeDefault,
-  command
-) => {
+const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   const { personalAccessKey, name, env } = configData;
-  const portalEnv = env || getEnv(command);
+  const portalEnv = env || getEnv(name);
 
   let token;
   try {
