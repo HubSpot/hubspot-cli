@@ -68,12 +68,10 @@ exports.builder = yargs => {
   yargs.positional('schemaObjectType', {
     describe: 'Fully qualified name or object type ID of the target schema.',
     type: 'string',
-    demand: true,
   });
 
   yargs.positional('definition', {
     describe: 'local path to JSON file containing schema definition',
     type: 'string',
-    demand: true,
   });
 };

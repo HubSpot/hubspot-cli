@@ -5,6 +5,7 @@ const fetchAllCommand = require('./schema/fetch-all');
 const deleteCommand = require('./schema/delete');
 const listCommand = require('./schema/list');
 const updateSchema = require('./schema/update');
+const associationsCommand = require('./schema/associations');
 
 exports.command = 'schema';
 exports.describe = 'Manage Custom Object Schema';
@@ -18,7 +19,8 @@ exports.builder = yargs => {
     .command(fetchAllCommand)
     .command(createCommand)
     .command(updateSchema)
-    .command(deleteCommand);
+    .command(deleteCommand)
+    .command(associationsCommand);
 
   return yargs;
 };

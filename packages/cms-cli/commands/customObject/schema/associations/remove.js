@@ -15,14 +15,12 @@ const {
   getPortalId,
 } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { deleteSchema } = require('@hubspot/cms-lib/api/schema');
 
-exports.command = 'delete <schemaObjectType>';
-exports.describe =
-  'Delete a Custom Object Schema given a schemaObjectType. Delete operation is asynchronous and may take time to complete even after the command succeeds';
+exports.command = 'remove <schemaObjectType> <associationId>';
+exports.describe = 'Remove an association from a Custom Object Schema.';
 
 exports.handler = async options => {
-  let { schemaObjectType } = options;
+  let { schemaObjectType, associationId } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -34,13 +32,13 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-delete', null, portalId);
+  trackCommandUsage('schema-association-remove', null, portalId);
 
   try {
-    await deleteSchema(portalId, schemaObjectType);
+    // await removeSchema(portalId, schemaObjectType);
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to delete ${schemaObjectType}`);
+    logger.error(`Unable to remove ${associationId} from ${schemaObjectType}`);
   }
 };
 
@@ -48,10 +46,20 @@ exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
 
-  yargs.example([['$0 schema delete schemaId', 'Delete `schemaId` schema']]);
+  yargs.example([
+    [
+      '$0 association schemaObjectType associationId',
+      'Remove `associationId` from `schemaObjectType`',
+    ],
+  ]);
 
   yargs.positional('schemaObjectType', {
     describe: 'Fully qualified name or object type ID of the target schema.',
+    type: 'string',
+  });
+
+  yargs.positional('associationId', {
+    describe: 'ID of the association to remove',
     type: 'string',
   });
 };

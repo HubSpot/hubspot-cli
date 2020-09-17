@@ -5,7 +5,6 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 
 const {
   validatePortal,
@@ -20,15 +19,13 @@ const {
   setLogLevel,
   getPortalId,
 } = require('../../../lib/commonOpts');
-const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { createSchema } = require('@hubspot/cms-lib/api/schema');
 
-exports.command = 'create <definition>';
-exports.describe = 'Create a Custom Object Schema';
+exports.command = 'create <schemaObjectType> <definition>';
+exports.describe = 'Create a Custom Object Schema Association';
 
 exports.handler = async options => {
-  const { definition } = options;
+  const { definition, schemaObjectType } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -40,7 +37,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-create', null, portalId);
+  trackCommandUsage('schema-association-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!filePath || !isFileValidJSON(filePath)) {
@@ -48,15 +45,17 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createSchema(portalId, filePath);
-    logger.success(
-      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-        options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      )}/contacts/${portalId}/objects/${res.objectTypeId}`
-    );
+    // const res = await createSchema(portalId, filePath);
+    // logger.success(
+    //   `Schema can be viewed at ${getHubSpotWebsiteOrigin(
+    //     options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    //   )}/contacts/${portalId}/objects/${res.objectTypeId}`
+    // );
   } catch (e) {
     logErrorInstance(e, { portalId });
-    logger.error(`Schema creation from ${definition} failed`);
+    logger.error(
+      `Association to ${schemaObjectType} creation from ${definition} failed`
+    );
   }
 };
 
@@ -65,8 +64,14 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addTestingOptions(yargs, true);
 
+  yargs.positional('schemaObjectType', {
+    describe: 'Fully qualified name or object type ID of the target schema.',
+    type: 'string',
+  });
+
   yargs.positional('definition', {
-    describe: 'local path to JSON file containing schema definition',
+    describe:
+      'local path to JSON file containing association definitions.  Can be a single association or an array of associations',
     type: 'string',
   });
 };
