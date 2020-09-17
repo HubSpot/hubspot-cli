@@ -78,6 +78,20 @@ const addTestingOptions = (program, useYargs = false) => {
   program.option('--qa', 'run command in qa mode', false);
 };
 
+const addUseEnvironmentOptions = (program, useYargs = false) => {
+  const option = 'use-env';
+  const description = 'use environment variable config';
+
+  if (useYargs) {
+    return program.option(option, {
+      describe: description,
+      type: 'boolean',
+      default: false,
+    });
+  }
+  program.option(`--${option}`, description, false);
+};
+
 const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
@@ -133,6 +147,7 @@ module.exports = {
   addOverwriteOptions,
   addModeOptions,
   addTestingOptions,
+  addUseEnvironmentOptions,
   getCommandName,
   getMode,
   getPortalId,
