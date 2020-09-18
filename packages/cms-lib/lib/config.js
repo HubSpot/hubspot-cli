@@ -319,13 +319,10 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (
   path,
   options = {
-    ignoreEnvironmentVariableConfig: true,
+    useEnv: false,
   }
 ) => {
-  if (
-    !options.ignoreEnvironmentVariableConfig &&
-    loadEnvironmentVariableConfig()
-  ) {
+  if (options.useEnv && loadEnvironmentVariableConfig()) {
     logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
     return;
