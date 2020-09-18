@@ -28,7 +28,7 @@ const action = async ({ src }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {

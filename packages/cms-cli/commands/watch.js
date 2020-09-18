@@ -42,7 +42,7 @@ const action = async ({ src, dest }, options) => {
     disableInitial,
     notify,
   } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
