@@ -6,24 +6,20 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
-const { validatePortal } = require('../../../lib/validation');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
-const { logDebugInfo } = require('../../../lib/debugInfo');
+const { validatePortal } = require('../../../../lib/validation');
+const { trackCommandUsage } = require('../../../../lib/usageTracking');
+const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
+const { logDebugInfo } = require('../../../../lib/debugInfo');
 // const { listSchemas } = require('@hubspot/cms-lib/api/schema');
 
-exports.command = 'list';
+exports.command = 'list <schemaObjectType>';
 exports.describe = 'List schemas available on your portal';
 
 exports.handler = async options => {
+  const { schemaObjectType, config } = options;
   setLogLevel(options);
   logDebugInfo(options);
-  loadConfig(options.config);
+  loadConfig(config);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -42,6 +38,15 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
+  yargs.example([
+    [
+      '$0 custom-object schema associations list schemaObjectType',
+      'List associations for `schemaObjectType`',
+    ],
+  ]);
+
+  yargs.positional('schemaObjectType', {
+    describe: 'Fully qualified name or object type ID of the target schema.',
+    type: 'string',
+  });
 };

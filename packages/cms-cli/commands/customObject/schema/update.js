@@ -14,8 +14,6 @@ const {
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
-  addConfigOptions,
-  addPortalOptions,
   addTestingOptions,
   setLogLevel,
   getPortalId,
@@ -61,8 +59,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
   addTestingOptions(yargs, true);
 
   yargs.positional('schemaObjectType', {

@@ -10,16 +10,10 @@ const {
   validatePortal,
   getAbsoluteFilePath,
   isFileValidJSON,
-} = require('../../../lib/validation');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  addTestingOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
-const { logDebugInfo } = require('../../../lib/debugInfo');
+} = require('../../../../lib/validation');
+const { trackCommandUsage } = require('../../../../lib/usageTracking');
+const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
+const { logDebugInfo } = require('../../../../lib/debugInfo');
 
 exports.command = 'create <schemaObjectType> <definition>';
 exports.describe = 'Create a Custom Object Schema Association';
@@ -60,9 +54,12 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  yargs.example([
+    [
+      '$0 custom-object schema associations create schemaObjectType definition',
+      'Create an association to `schemaObjectType` from a file located at `definition`',
+    ],
+  ]);
 
   yargs.positional('schemaObjectType', {
     describe: 'Fully qualified name or object type ID of the target schema.',

@@ -8,12 +8,7 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
 const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
+const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { downloadSchema } = require('@hubspot/cms-lib/api/schema');
 
@@ -44,16 +39,13 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
-
   yargs.example([
     [
-      '$0 schema fetch schemaId',
+      '$0 custom-object schema fetch schemaId',
       'Fetch `schemaId` schema and put it in the current working directory',
     ],
     [
-      '$0 schema fetch schemaId my/folder',
+      '$0 custom-object schema fetch schemaId my/folder',
       'Fetch `schemaId` schema and put it in a directory named my/folder',
     ],
   ]);

@@ -8,12 +8,7 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
 const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
+const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { listSchemas } = require('@hubspot/cms-lib/api/schema');
 
@@ -39,9 +34,4 @@ exports.handler = async options => {
     logErrorInstance(e);
     logger.error(`Unable to list schemas`);
   }
-};
-
-exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
 };

@@ -1,4 +1,3 @@
-const { addConfigOptions, addPortalOptions } = require('../../lib/commonOpts');
 const createCommand = require('./schema/create');
 const fetchCommand = require('./schema/fetch');
 const fetchAllCommand = require('./schema/fetch-all');
@@ -10,9 +9,6 @@ const associationsCommand = require('./schema/associations');
 exports.command = 'schema';
 exports.describe = 'Manage Custom Object Schema';
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
-
   yargs
     .command(listCommand)
     .command(fetchCommand)

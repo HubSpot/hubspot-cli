@@ -6,15 +6,10 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
-const { validatePortal } = require('../../../lib/validation');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
-const { logDebugInfo } = require('../../../lib/debugInfo');
+const { validatePortal } = require('../../../../lib/validation');
+const { trackCommandUsage } = require('../../../../lib/usageTracking');
+const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
+const { logDebugInfo } = require('../../../../lib/debugInfo');
 
 exports.command = 'remove <schemaObjectType> <associationId>';
 exports.describe = 'Remove an association from a Custom Object Schema.';
@@ -43,12 +38,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
-
   yargs.example([
     [
-      '$0 association schemaObjectType associationId',
+      '$0 custom-object schema associations remove schemaObjectType associationId',
       'Remove `associationId` from `schemaObjectType`',
     ],
   ]);

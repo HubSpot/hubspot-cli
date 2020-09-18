@@ -8,12 +8,7 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
 const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addPortalOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
+const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { deleteSchema } = require('@hubspot/cms-lib/api/schema');
 
@@ -45,9 +40,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
-  addConfigOptions(yargs, true);
-
   yargs.example([['$0 schema delete schemaId', 'Delete `schemaId` schema']]);
 
   yargs.positional('schemaObjectType', {

@@ -43,24 +43,11 @@ exports.createSchema = (portalId, filePath) =>
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });
 
-exports.updateSchema = async (portalId, schemaObjectType, filePath) => {
-  const res = await http.patch(portalId, {
+exports.updateSchema = async (portalId, schemaObjectType, filePath) =>
+  http.patch(portalId, {
     uri: `${SCHEMA_API_PATH}/${schemaObjectType}`,
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });
-
-  // Hoping it is temporary.  We do it to get objectTypeId to build a link, hoping
-  // eventually the patch call will just return this information on its own.
-  // TODO: REMOVE ME, sounds like this will be added by EOD 9/17/2020
-  try {
-    const updatedSchema = await this.fetchSchema(portalId, schemaObjectType);
-    res.objectTypeId = updatedSchema.objectTypeId;
-  } catch (e) {
-    // Fail silently since it is non-critical
-  }
-
-  return res;
-};
 
 exports.fetchSchema = async (portalId, schemaObjectType) =>
   http.get(portalId, {
