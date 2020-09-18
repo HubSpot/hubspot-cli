@@ -13,6 +13,7 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -60,6 +61,7 @@ const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'Path in HubSpot Design Tools',
@@ -92,6 +94,7 @@ const configureCommanderFileManagerFetchCommand = commander => {
   addConfigOptions(commander);
   addPortalOptions(commander);
   addLoggerOptions(commander);
+  addUseEnvironmentOptions(commander);
   addHelpUsageTracking(commander, FETCH_COMMAND_NAME);
 };
 

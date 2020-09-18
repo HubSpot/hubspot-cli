@@ -16,6 +16,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -62,6 +63,7 @@ function configureServerCommand(program) {
   addLoggerOptions(program);
   addPortalOptions(program);
   addConfigOptions(program);
+  addUseEnvironmentOptions(program);
 }
 
 module.exports = {

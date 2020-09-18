@@ -23,6 +23,7 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -136,6 +137,7 @@ const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:
@@ -160,6 +162,7 @@ const configureCommanderFileManagerUploadCommand = commander => {
   addConfigOptions(commander);
   addPortalOptions(commander);
   addLoggerOptions(commander);
+  addUseEnvironmentOptions(commander);
   addHelpUsageTracking(commander, UPLOAD_COMMAND_NAME);
 };
 

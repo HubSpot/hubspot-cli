@@ -16,6 +16,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -30,6 +31,7 @@ const handler = async argv => action({ tableId: argv.tableId }, argv);
 const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
     describe: 'HubDB Table ID',
@@ -48,6 +50,7 @@ function configureCommanderHubDbClearCommand(commander) {
   addLoggerOptions(commander);
   addPortalOptions(commander);
   addConfigOptions(commander);
+  addUseEnvironmentOptions(commander);
 }
 
 const action = async ({ tableId }, options) => {

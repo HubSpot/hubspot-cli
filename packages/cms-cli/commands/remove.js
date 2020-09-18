@@ -15,6 +15,7 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -79,6 +80,7 @@ function configureRemoveCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
+  addUseEnvironmentOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 exports.command = `${COMMAND_NAME} <path>`;
@@ -88,6 +90,7 @@ exports.describe = DESCRIPTION;
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Remote hubspot path',
     type: 'string',

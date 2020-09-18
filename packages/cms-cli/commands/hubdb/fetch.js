@@ -15,6 +15,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -52,6 +53,7 @@ const handler = async argv =>
 const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
     describe: 'HubDB Table ID',
@@ -77,6 +79,7 @@ function configureCommanderHubDbFetchCommand(commander) {
   addLoggerOptions(commander);
   addPortalOptions(commander);
   addConfigOptions(commander);
+  addUseEnvironmentOptions(commander);
 }
 
 module.exports = {

@@ -19,6 +19,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -67,6 +68,7 @@ function configureSecretsListCommand(program) {
   addLoggerOptions(program);
   addPortalOptions(program);
   addConfigOptions(program);
+  addUseEnvironmentOptions(program);
 }
 
 exports.command = 'list';
@@ -76,6 +78,7 @@ exports.describe = DESCRIPTION;
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   return yargs;
 };
 

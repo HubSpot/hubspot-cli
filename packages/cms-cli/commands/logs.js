@@ -23,6 +23,7 @@ const {
   addLoggerOptions,
   addPortalOptions,
   addConfigOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -196,6 +197,7 @@ const builder = yargs => {
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   return yargs;
 };
@@ -217,6 +219,7 @@ const configureCommanderLogsCommand = commander => {
   addConfigOptions(commander);
   addPortalOptions(commander);
   addLoggerOptions(commander);
+  addUseEnvironmentOptions(commander);
   addHelpUsageTracking(commander, COMMAND_NAME);
 };
 

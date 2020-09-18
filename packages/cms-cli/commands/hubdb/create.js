@@ -16,6 +16,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -54,6 +55,7 @@ const handler = async argv => action({ src: argv.src }, argv);
 const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'local path to file used for import',
@@ -71,6 +73,7 @@ const configureCommanderHubDbCreateCommand = commander => {
   addLoggerOptions(commander);
   addPortalOptions(commander);
   addConfigOptions(commander);
+  addUseEnvironmentOptions(commander);
 };
 
 module.exports = {

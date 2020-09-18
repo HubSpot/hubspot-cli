@@ -19,6 +19,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -69,6 +70,7 @@ function configureSecretsUpdateCommand(program) {
   addLoggerOptions(program);
   addPortalOptions(program);
   addConfigOptions(program);
+  addUseEnvironmentOptions(program);
 }
 
 exports.command = 'update <name> <value>';
@@ -78,6 +80,7 @@ exports.describe = DESCRIPTION;
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
     describe: 'Name of the secret to be updated',
     type: 'string',
