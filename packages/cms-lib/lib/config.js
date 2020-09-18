@@ -319,16 +319,18 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (
   path,
   options = {
-    ignoreEnvironmentVariableConfig: false,
+    ignoreEnvironmentVariableConfig: true,
   }
 ) => {
   if (
     !options.ignoreEnvironmentVariableConfig &&
     loadEnvironmentVariableConfig()
   ) {
+    logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
     return;
   } else {
+    logger.debug(`Loaded config from ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
     loadConfigFromFile(path, options);
   }
 };
@@ -398,9 +400,7 @@ const getPortalId = nameOrId => {
   let portalId;
   let portal;
 
-  if (process.env.HUBSPOT_PORTAL_ID) {
-    portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-  } else if (!nameOrId) {
+  if (!nameOrId) {
     if (config && config.defaultPortal) {
       name = config.defaultPortal;
     }

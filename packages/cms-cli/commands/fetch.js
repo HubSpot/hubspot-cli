@@ -36,7 +36,9 @@ const action = async ({ src, dest }, options) => {
   logDebugInfo(options);
 
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, {
+    ignoreEnvironmentVariableConfig: !options.useEnv,
+  });
   checkAndWarnGitInclusion();
 
   if (
