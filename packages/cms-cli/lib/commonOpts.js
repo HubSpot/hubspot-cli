@@ -113,7 +113,7 @@ const getCommandName = argv => (argv && argv._ && argv._[0]) || '';
 const getPortalId = (options = {}) => {
   const { portal: portalNameOrId } = options;
 
-  if (process.env.HUBSPOT_PORTAL_ID) {
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
