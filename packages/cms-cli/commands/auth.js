@@ -64,7 +64,7 @@ async function authAction(type, options) {
     process.exit(1);
   }
 
-  trackCommandUsage(COMMAND_NAME, {}, options);
+  trackCommandUsage(COMMAND_NAME);
   let configData;
   let updatedConfig;
   let promptAnswer;

@@ -132,7 +132,7 @@ const action = async ({ functionPath }, options) => {
   let logsResp;
   const portalId = getPortalId(options);
 
-  trackCommandUsage(COMMAND_NAME, { latest, file }, options);
+  trackCommandUsage(COMMAND_NAME, { latest, file }, portalId);
 
   logger.debug(
     `Getting ${

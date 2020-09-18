@@ -35,7 +35,7 @@ const action = async ({ src }, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-create', {}, options);
+  trackCommandUsage('hubdb-create', {}, portalId);
 
   try {
     const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));

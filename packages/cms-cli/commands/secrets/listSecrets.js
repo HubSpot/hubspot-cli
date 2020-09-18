@@ -37,7 +37,7 @@ async function action(options) {
     process.exit(1);
   }
   const portalId = getPortalId(options);
-  trackCommandUsage('secrets-list', {}, options);
+  trackCommandUsage('secrets-list', {}, portalId);
 
   try {
     const { results } = await fetchSecrets(portalId);

@@ -37,7 +37,7 @@ async function action({ secretName, secretValue }, options) {
     process.exit(1);
   }
   const portalId = getPortalId(options);
-  trackCommandUsage('secrets-add', {}, options);
+  trackCommandUsage('secrets-add', {}, portalId);
 
   try {
     await addSecret(portalId, secretName, secretValue);

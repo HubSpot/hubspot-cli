@@ -34,7 +34,7 @@ const action = async ({ tableId, dest }, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-fetch', {}, options);
+  trackCommandUsage('hubdb-fetch', {}, portalId);
 
   try {
     const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
