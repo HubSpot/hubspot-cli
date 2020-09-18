@@ -37,7 +37,7 @@ async function action({ secretName, secretValue }, options) {
     process.exit(1);
   }
   const portalId = getPortalId(options);
-  trackCommandUsage('secrets-update', {}, options);
+  trackCommandUsage('secrets-update', {}, portalId);
 
   try {
     await updateSecret(portalId, secretName, secretValue);

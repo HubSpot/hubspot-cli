@@ -33,7 +33,7 @@ const action = async ({ tableId }, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-delete', {}, options);
+  trackCommandUsage('hubdb-delete', {}, portalId);
 
   try {
     await deleteTable(portalId, tableId);

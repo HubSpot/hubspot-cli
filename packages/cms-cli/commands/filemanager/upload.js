@@ -71,7 +71,7 @@ const action = async ({ src, dest }, options) => {
   trackCommandUsage(
     UPLOAD_COMMAND_NAME,
     { type: stats.isFile() ? 'file' : 'folder' },
-    options
+    portalId
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(

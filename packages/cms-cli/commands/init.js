@@ -45,7 +45,7 @@ const action = async options => {
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
-  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' }, options);
+  trackCommandUsage(COMMAND_NAME, { authType: 'personalaccesskey' });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configPath) {

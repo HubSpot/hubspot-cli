@@ -87,7 +87,7 @@ const action = async ({ src, dest }, options) => {
     );
   }
 
-  trackCommandUsage(COMMAND_NAME, { mode }, options);
+  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
   watch(portalId, absoluteSrcPath, dest, {
     mode,
     cwd: getCwd(),

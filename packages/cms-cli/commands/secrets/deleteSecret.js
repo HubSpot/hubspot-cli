@@ -37,7 +37,7 @@ async function action({ secretName }, options) {
     process.exit(1);
   }
   const portalId = getPortalId(options);
-  trackCommandUsage('secrets-delete', {}, options);
+  trackCommandUsage('secrets-delete', {}, portalId);
 
   try {
     await deleteSecret(portalId, secretName);

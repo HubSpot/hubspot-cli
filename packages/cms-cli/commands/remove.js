@@ -41,7 +41,7 @@ async function action({ hsPath }, options) {
 
   const portalId = getPortalId(options);
 
-  trackCommandUsage(COMMAND_NAME, {}, options);
+  trackCommandUsage(COMMAND_NAME, {}, portalId);
 
   try {
     await deleteFile(portalId, hsPath);

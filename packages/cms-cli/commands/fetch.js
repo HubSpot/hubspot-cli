@@ -58,7 +58,7 @@ const action = async ({ src, dest }, options) => {
   const portalId = getPortalId(options);
   const mode = getMode(options);
 
-  trackCommandUsage(COMMAND_NAME, { mode }, options);
+  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
 
   // Fetch and write file/folder.
   downloadFileOrFolder({ portalId, src, dest, mode, options });

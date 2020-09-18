@@ -109,7 +109,7 @@ const action = async ({ src, dest }, options) => {
   trackCommandUsage(
     COMMAND_NAME,
     { mode, type: stats.isFile() ? 'file' : 'folder' },
-    options
+    portalId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },

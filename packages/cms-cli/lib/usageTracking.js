@@ -1,9 +1,6 @@
 const { trackUsage } = require('@hubspot/cms-lib/api/fileMapper');
 const { getPortalConfig } = require('@hubspot/cms-lib');
-const {
-  isTrackingAllowed,
-  getPortalId,
-} = require('@hubspot/cms-lib/lib/config');
+const { isTrackingAllowed } = require('@hubspot/cms-lib/lib/config');
 const { API_KEY_AUTH_METHOD } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { version } = require('../package.json');
@@ -22,12 +19,11 @@ const getNodeVersionData = () => ({
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
 
-function trackCommandUsage(command, meta = {}, options = {}) {
+function trackCommandUsage(command, meta = {}, portalId) {
   if (!isTrackingAllowed()) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
-  const portalId = getPortalId(options);
   let authType = 'unknown';
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
