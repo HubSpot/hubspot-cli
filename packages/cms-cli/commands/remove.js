@@ -28,7 +28,7 @@ const {
 const COMMAND_NAME = 'remove';
 const DESCRIPTION = 'Delete a file or folder from HubSpot';
 
-async function action(args, options) {
+async function action({ hsPath }, options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -42,8 +42,6 @@ async function action(args, options) {
   const portalId = getPortalId(options);
 
   trackCommandUsage(COMMAND_NAME, {}, portalId);
-
-  const { hsPath } = args;
 
   try {
     await deleteFile(portalId, hsPath);

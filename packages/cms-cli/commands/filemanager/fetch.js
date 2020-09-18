@@ -48,7 +48,7 @@ const action = async ({ src, dest }, options) => {
 
   const portalId = getPortalId(options);
 
-  trackCommandUsage(FETCH_COMMAND_NAME, null, portalId);
+  trackCommandUsage(FETCH_COMMAND_NAME, {}, portalId);
 
   // Fetch and write file/folder.
   downloadFileOrFolder(portalId, src, dest, options);

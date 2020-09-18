@@ -23,7 +23,7 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const CREATE_DESCRIPTION = 'Create a HubDB table';
 
-const action = async (args, options) => {
+const action = async ({ src }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -35,18 +35,15 @@ const action = async (args, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-create', null, portalId);
+  trackCommandUsage('hubdb-create', {}, portalId);
 
   try {
-    const table = await createHubDbTable(
-      portalId,
-      path.resolve(getCwd(), args.src)
-    );
+    const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));
     logger.log(
       `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
     );
   } catch (e) {
-    logger.error(`Creating the table at "${args.src}" failed`);
+    logger.error(`Creating the table at "${src}" failed`);
     logErrorInstance(e);
   }
 };

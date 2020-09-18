@@ -2,6 +2,24 @@ const { version } = require('../package.json');
 const readline = require('readline');
 const ora = require('ora');
 const {
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
+} = require('@hubspot/cms-lib');
+const { logger } = require('@hubspot/cms-lib/logger');
+const {
+  logServerlessFunctionApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cms-lib/errorHandlers');
+const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
+const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
+const {
+  getFunctionLogs,
+  getLatestFunctionLog,
+} = require('@hubspot/cms-lib/api/results');
+const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
+const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
+const {
   addLoggerOptions,
   addPortalOptions,
   addConfigOptions,
@@ -13,25 +31,7 @@ const {
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const {
-  logServerlessFunctionApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
 const { validatePortal } = require('../lib/validation');
-const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
-const {
-  getFunctionLogs,
-  getLatestFunctionLog,
-} = require('@hubspot/cms-lib/api/results');
-const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const COMMAND_NAME = 'logs';
 const DESCRIPTION = 'get logs for a function';
@@ -125,10 +125,9 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-const action = async (args, options) => {
+const action = async ({ functionPath }, options) => {
   loadAndValidateOptions(options);
 
-  const { functionPath } = args;
   const { latest, file, follow, compact } = options;
   let logsResp;
   const portalId = getPortalId(options);
@@ -155,7 +154,6 @@ const action = async (args, options) => {
       functionId: functionResp.id,
       functionPath,
       portalId,
-
       Name: options.portal,
       compact,
     });

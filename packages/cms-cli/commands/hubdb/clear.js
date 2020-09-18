@@ -50,7 +50,7 @@ function configureCommanderHubDbClearCommand(commander) {
   addConfigOptions(commander);
 }
 
-const action = async (args, options) => {
+const action = async ({ tableId }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -62,21 +62,16 @@ const action = async (args, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-clear', null, portalId);
+  trackCommandUsage('hubdb-clear', {}, portalId);
 
   try {
-    const { deletedRowCount } = await clearHubDbTableRows(
-      portalId,
-      args.tableId
-    );
+    const { deletedRowCount } = await clearHubDbTableRows(portalId, tableId);
     if (deletedRowCount > 0) {
-      logger.log(
-        `Removed ${deletedRowCount} rows from HubDB table ${args.tableId}`
-      );
-      const { rowCount } = await publishTable(portalId, args.tableId);
-      logger.log(`HubDB table ${args.tableId} now contains ${rowCount} rows`);
+      logger.log(`Removed ${deletedRowCount} rows from HubDB table ${tableId}`);
+      const { rowCount } = await publishTable(portalId, tableId);
+      logger.log(`HubDB table ${tableId} now contains ${rowCount} rows`);
     } else {
-      logger.log(`HubDB table ${args.tableId} is already empty`);
+      logger.log(`HubDB table ${tableId} is already empty`);
     }
   } catch (e) {
     logErrorInstance(e);

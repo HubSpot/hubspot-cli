@@ -41,19 +41,19 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const action = async (args, options) => {
+const action = async ({ localPath }, options) => {
   await loadAndValidateOptions(options);
 
   const portalId = getPortalId(options);
-  const localPath = resolveLocalPath(args.localPath);
-  const groupName = `Linting "${localPath}"`;
+  const resolvedLocalPath = resolveLocalPath(localPath);
+  const groupName = `Linting "${resolvedLocalPath}"`;
 
   trackCommandUsage(COMMAND_NAME, {}, portalId);
 
   logger.group(groupName);
   let count = 0;
   try {
-    await lint(portalId, localPath, result => {
+    await lint(portalId, resolvedLocalPath, result => {
       count += printHublValidationResult(result);
     });
   } catch (err) {

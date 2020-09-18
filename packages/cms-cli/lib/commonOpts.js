@@ -106,14 +106,14 @@ const getPortalId = (options = {}) => {
   return getPortalIdFromConfig(portalNameOrId);
 };
 
-const getMode = (options = {}) => {
+const getMode = (command = {}) => {
   // 1. --mode
-  const { mode } = options;
+  const { mode } = command;
   if (mode && typeof mode === 'string') {
     return mode.toLowerCase();
   }
   // 2. config[portal].defaultMode
-  const portalId = getPortalId(options);
+  const portalId = getPortalId(command);
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig && portalConfig.defaultMode) {
