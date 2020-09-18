@@ -1,6 +1,6 @@
 const inquirer = require('inquirer');
 
-const { STRING_WITH_NO_SPACES_REGEX } = require('./regex');
+const { STRING_WITH_NO_SPACES_REGEX } = require('@hubspot/cms-lib/lib/regex');
 
 const FUNCTIONS_FOLDER_PROMPT = {
   name: 'functionsFolder',
