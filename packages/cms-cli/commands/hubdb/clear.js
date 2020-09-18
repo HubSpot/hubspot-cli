@@ -62,7 +62,7 @@ const action = async ({ tableId }, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-clear', null, portalId);
+  trackCommandUsage('hubdb-clear', {}, portalId);
 
   try {
     const { deletedRowCount } = await clearHubDbTableRows(portalId, tableId);
