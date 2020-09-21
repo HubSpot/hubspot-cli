@@ -4,16 +4,18 @@ const { logger } = require('../logger');
 
 const SEPARATOR = ' - ';
 
+const formatError = log => {
+  return `/n${log.error.type}: ${log.error.message}\n${formatStackTrace(
+    log
+  )}\n`;
+};
+
 const logHandler = {
-  UNHANDLED_ERROR: log => {
-    return `${formatLogHeader(log)}\n${log.error.type}: ${
-      log.error.message
-    }\n${formatStackTrace(log)}\n`;
+  UNHANDLED_ERROR: (log, { compact }) => {
+    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
   },
-  HANDLED_ERROR: log => {
-    return `${formatLogHeader(log)}\n${log.error.type}: ${
-      log.error.message
-    }\n${formatStackTrace(log)}\n`;
+  HANDLED_ERROR: (log, { compact }) => {
+    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
   },
   SUCCESS: (log, { compact }) => {
     return `${formatLogHeader(log)}${compact ? '' : formatLogPayloadData(log)}`;

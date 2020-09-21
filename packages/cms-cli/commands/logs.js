@@ -164,9 +164,7 @@ const action = async ({ functionPath }, options) => {
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, {
-      compact,
-    });
+    return outputLogs(logsResp, options);
   }
 };
 
@@ -186,10 +184,6 @@ const builder = yargs => {
     },
     compact: {
       describe: 'output compact logs',
-      type: 'boolean',
-    },
-    oneline: {
-      describe: 'output only log headers',
       type: 'boolean',
     },
     tail: {
@@ -233,7 +227,6 @@ const configureCommanderLogsCommand = commander => {
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
     .option('--compact', 'output compact logs')
-    .option('--oneline', 'output only log headers')
     .option('-f, --follow', 'tail logs')
     .option('--limit, -n, --max-count', 'limit the number of logs to output')
     .option(
