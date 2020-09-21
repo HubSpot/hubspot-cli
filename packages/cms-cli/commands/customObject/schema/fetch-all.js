@@ -13,7 +13,7 @@ const { logDebugInfo } = require('../../../lib/debugInfo');
 const { downloadSchemas } = require('@hubspot/cms-lib/schema');
 
 exports.command = 'fetch-all [dest]';
-exports.describe = 'Fetch all Custom Object Schema for a portal';
+exports.describe = 'Fetch all custom object schema for a portal';
 
 exports.handler = async options => {
   setLogLevel(options);
@@ -26,7 +26,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-fetch-all', null, portalId);
+  trackCommandUsage('custom-object-schema-fetch-all', null, portalId);
 
   try {
     await downloadSchemas(portalId, options.dest);
@@ -50,7 +50,7 @@ exports.builder = yargs => {
 
   yargs.positional('dest', {
     describe:
-      'Local destination folder to write schemas to.  If omitted, current working directory will be used',
+      'Local folder where schemas will be written.  If omitted, current working directory will be used',
     type: 'string',
   });
 };

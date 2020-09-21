@@ -14,7 +14,7 @@ const { deleteSchema } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'delete <schemaObjectType>';
 exports.describe =
-  'Delete a Custom Object Schema given a schemaObjectType. Delete operation is asynchronous and may take time to complete even after the command succeeds';
+  'Delete a custom object schema given a schemaObjectType. Delete operation is asynchronous and may take time to complete even after the command succeeds';
 
 exports.handler = async options => {
   let { schemaObjectType } = options;
@@ -29,7 +29,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-delete', null, portalId);
+  trackCommandUsage('custom-object-schema-delete', null, portalId);
 
   try {
     await deleteSchema(portalId, schemaObjectType);

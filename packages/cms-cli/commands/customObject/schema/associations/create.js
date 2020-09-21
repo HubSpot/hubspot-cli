@@ -17,7 +17,7 @@ const { logDebugInfo } = require('../../../../lib/debugInfo');
 // const { getEnv } = require('@hubspot/cms-lib/lib/config');
 
 exports.command = 'create <schemaObjectType> <definition>';
-exports.describe = 'Create a Custom Object Schema Association';
+exports.describe = 'Create a custom object schema association';
 
 exports.handler = async options => {
   const { definition, schemaObjectType } = options;
@@ -32,7 +32,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-association-create', null, portalId);
+  trackCommandUsage('custom-object-schema-association-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {

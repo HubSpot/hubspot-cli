@@ -19,7 +19,7 @@ const { logDebugInfo } = require('../../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'create <definition>';
-exports.describe = 'Create a Custom Object Schema';
+exports.describe = 'Create a custom object schema';
 
 exports.handler = async options => {
   const { definition } = options;
@@ -34,7 +34,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-create', null, portalId);
+  trackCommandUsage('custom-object-schema-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -58,7 +58,7 @@ exports.builder = yargs => {
   addTestingOptions(yargs, true);
 
   yargs.positional('definition', {
-    describe: 'local path to JSON file containing schema definition',
+    describe: 'Local path to the JSON file containing the schema definition',
     type: 'string',
   });
 };

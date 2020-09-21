@@ -19,7 +19,7 @@ const { logDebugInfo } = require('../../../lib/debugInfo');
 const { updateSchema } = require('@hubspot/cms-lib/api/schema');
 
 exports.command = 'update <schemaObjectType> <definition>';
-exports.describe = 'Update an existing Custom Object Schema';
+exports.describe = 'Update an existing custom object schema';
 
 exports.handler = async options => {
   const { definition, schemaObjectType } = options;
@@ -34,7 +34,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-update', null, portalId);
+  trackCommandUsage('custom-object-schema-update', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -63,7 +63,7 @@ exports.builder = yargs => {
   });
 
   yargs.positional('definition', {
-    describe: 'local path to JSON file containing schema definition',
+    describe: 'Local path to the JSON file containing the schema definition',
     type: 'string',
   });
 };

@@ -28,7 +28,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-association-list', null, portalId);
+  trackCommandUsage('custom-object-schema-association-list', null, portalId);
 
   try {
     // await listSchemas(portalId);

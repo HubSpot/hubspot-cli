@@ -12,7 +12,7 @@ const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../../lib/debugInfo');
 
 exports.command = 'remove <schemaObjectType> <associationId>';
-exports.describe = 'Remove an association from a Custom Object Schema.';
+exports.describe = 'Remove an association from a custom object schema.';
 
 exports.handler = async options => {
   let { schemaObjectType, associationId } = options;
@@ -27,7 +27,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('schema-association-remove', null, portalId);
+  trackCommandUsage('custom-object-schema-association-remove', null, portalId);
 
   try {
     // await removeSchema(portalId, schemaObjectType);
