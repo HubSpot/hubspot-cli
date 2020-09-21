@@ -47,40 +47,32 @@ const cleanSchema = schema => {
   return parsedSchema;
 };
 
-const writeSchemaToDisk = (schema, dest, clean) => {
-  const fullPath = path.resolve(getCwd(), dest || '', `${schema.name}.json`);
-
-  let parsedSchema = schema;
-  if (clean) {
-    parsedSchema = cleanSchema(schema);
-  }
-
+const writeSchemaToDisk = (schema, dest) =>
   fs.outputFileSync(
-    fullPath,
-    prettier.format(JSON.stringify(parsedSchema), {
+    path.resolve(getCwd(), dest || '', `${schema.name}.json`),
+    prettier.format(JSON.stringify(cleanSchema(schema)), {
       parser: 'json',
     })
   );
-};
 
 const listSchemas = async portalId => {
   const response = await fetchSchemas(portalId);
   logSchemas(response.results);
 };
 
-const downloadSchemas = async (portalId, dest, clean) => {
+const downloadSchemas = async (portalId, dest) => {
   const response = await fetchSchemas(portalId);
   logSchemas(response.results);
 
   if (response.results.length) {
-    response.results.forEach(r => writeSchemaToDisk(r, dest, clean));
+    response.results.forEach(r => writeSchemaToDisk(r, dest));
     logger.log(`Wrote schemas to ${path.resolve(getCwd(), dest || '')}`);
   }
 };
 
-const downloadSchema = async (portalId, schemaObjectType, dest, clean) => {
+const downloadSchema = async (portalId, schemaObjectType, dest) => {
   const response = await fetchSchema(portalId, schemaObjectType);
-  writeSchemaToDisk(response, dest, clean);
+  writeSchemaToDisk(response, dest);
 };
 
 module.exports = {

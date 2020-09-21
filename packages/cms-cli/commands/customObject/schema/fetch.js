@@ -16,7 +16,7 @@ exports.command = 'fetch <schemaObjectType> [dest]';
 exports.describe = 'Fetch a custom object schema given a schemaObjectType';
 
 exports.handler = async options => {
-  let { schemaObjectType, dest, clean } = options;
+  let { schemaObjectType, dest } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -31,7 +31,7 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-fetch', null, portalId);
 
   try {
-    await downloadSchema(portalId, schemaObjectType, dest, clean);
+    await downloadSchema(portalId, schemaObjectType, dest);
   } catch (e) {
     logErrorInstance(e);
     logger.error(`Unable to fetch ${schemaObjectType}`);
@@ -59,11 +59,5 @@ exports.builder = yargs => {
     describe:
       'Local folder where schema will be written.  If omitted, current working directory will be used',
     type: 'string',
-  });
-
-  yargs.option('clean', {
-    describe:
-      'When fetching the schema, strip off any portal-specific properties',
-    type: 'boolean',
   });
 };
