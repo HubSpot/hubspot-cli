@@ -31,31 +31,31 @@ const COMMAND_NAME = 'watch';
 const DESCRIPTION =
   'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
 
-const action = async ({ src, dest }, command = {}) => {
-  setLogLevel(command);
-  logDebugInfo(command);
+const action = async ({ src, dest }, options) => {
+  setLogLevel(options);
+  logDebugInfo(options);
   const {
     config: configPath,
     remove,
     initialUpload,
     disableInitial,
     notify,
-  } = command;
+  } = options;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (
     !(
       validateConfig() &&
-      (await validatePortal(command)) &&
-      validateMode(command)
+      (await validatePortal(options)) &&
+      validateMode(options)
     )
   ) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(command);
-  const mode = getMode(command);
+  const portalId = getPortalId(options);
+  const mode = getMode(options);
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   try {

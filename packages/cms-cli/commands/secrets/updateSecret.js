@@ -26,8 +26,7 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DESCRIPTION = 'Update an existing HubSpot secret';
 
-async function action(args, options) {
-  const { secretName, secretValue } = args;
+async function action({ secretName, secretValue }, options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;

@@ -21,7 +21,7 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const DELETE_DESCRIPTION = 'delete a HubDB table';
 
-const action = async (args, options) => {
+const action = async ({ tableId }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -33,13 +33,13 @@ const action = async (args, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-delete', null, portalId);
+  trackCommandUsage('hubdb-delete', {}, portalId);
 
   try {
-    await deleteTable(portalId, args.tableId);
-    logger.log(`The table ${args.tableId} was deleted from ${portalId}`);
+    await deleteTable(portalId, tableId);
+    logger.log(`The table ${tableId} was deleted from ${portalId}`);
   } catch (e) {
-    logger.error(`Deleting the table ${args.tableId} failed`);
+    logger.error(`Deleting the table ${tableId} failed`);
     logErrorInstance(e);
   }
 };

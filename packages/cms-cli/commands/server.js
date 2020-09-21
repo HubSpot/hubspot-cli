@@ -28,7 +28,7 @@ function configureServerCommand(program) {
     .option('--serverConfig <serverConfig>')
     .option('--contextDir [contextDir]')
     .arguments('<src>')
-    .action(async (src, options = {}) => {
+    .action(async (src, options) => {
       setLogLevel(options);
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;

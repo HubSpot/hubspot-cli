@@ -30,7 +30,7 @@ const COMMAND_NAME = 'fetch';
 const DESCRIPTION =
   'Fetch a file, directory or module from HubSpot and write to a path on your computer';
 
-const action = async ({ src, dest }, options = {}) => {
+const action = async ({ src, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
 

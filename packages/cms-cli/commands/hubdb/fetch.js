@@ -22,7 +22,7 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 
 const FETCH_DESCRIPTION = 'fetch a HubDB table';
 
-const action = async (args, options) => {
+const action = async ({ tableId, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -34,16 +34,12 @@ const action = async (args, options) => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-fetch', null, portalId);
+  trackCommandUsage('hubdb-fetch', {}, portalId);
 
   try {
-    const { filePath } = await downloadHubDbTable(
-      portalId,
-      args.tableId,
-      args.dest
-    );
+    const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
 
-    logger.log(`Downloaded HubDB table ${args.tableId} to ${filePath}`);
+    logger.log(`Downloaded HubDB table ${tableId} to ${filePath}`);
   } catch (e) {
     logErrorInstance(e);
   }

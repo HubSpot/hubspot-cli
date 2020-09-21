@@ -69,7 +69,7 @@ const builder = yargs => {
 };
 const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
 
-const action = async ({ src, dest }, options = {}) => {
+const action = async ({ src, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
