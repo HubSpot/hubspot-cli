@@ -160,7 +160,7 @@ const action = async ({ functionPath }, options) => {
   } else if (latest) {
     logsResp = await getLatestFunctionLog(portalId, functionResp.id);
   } else {
-    logsResp = await getFunctionLogs(portalId, functionResp.id);
+    logsResp = await getFunctionLogs(portalId, functionResp.id, options);
   }
 
   if (logsResp) {
@@ -178,20 +178,42 @@ const builder = yargs => {
     describe: 'Path to serverless function',
     type: 'string',
   });
-  yargs.option('latest', {
-    alias: 'l',
-    describe: 'retrieve most recent log only',
-    type: 'boolean',
-  });
-  yargs.option('compact', {
-    alias: 'c',
-    describe: 'output compact logs',
-    type: 'boolean',
-  });
-  yargs.option('tail', {
-    alias: ['t', 'follow', 'f'],
-    describe: 'tail logs',
-    type: 'boolean',
+  yargs.options({
+    latest: {
+      alias: 'l',
+      describe: 'retrieve most recent log only',
+      type: 'boolean',
+    },
+    compact: {
+      alias: 'c',
+      describe: 'output compact logs',
+      type: 'boolean',
+    },
+    tail: {
+      alias: ['t', 'follow', 'f'],
+      describe: 'tail logs',
+      type: 'boolean',
+    },
+    limit: {
+      alias: ['limit', 'n', 'max-count'],
+      describe: 'limit the number of logs to output',
+      type: 'number',
+    },
+    after: {
+      alias: ['--after', '--since'],
+      describe: 'show logs more recent than a specific date (format?)',
+      type: 'string',
+    },
+    before: {
+      alias: ['--before', '--until'],
+      describe: 'show logs older than a specific date (format?)',
+      type: 'string',
+    },
+    sort: {
+      alias: '--sort',
+      describe: 'specify a sort direction (default: ?)',
+      type: 'string',
+    },
   });
 
   addConfigOptions(yargs, true);
@@ -210,6 +232,16 @@ const configureCommanderLogsCommand = commander => {
     .option('--latest', 'retrieve most recent log only')
     .option('--compact', 'output compact logs')
     .option('-f, --follow', 'tail logs')
+    .option('--limit, -n, --max-count', 'limit the number of logs to output')
+    .option(
+      '--after, --since',
+      'show logs more recent than a specific date (format?)'
+    )
+    .option(
+      '--before, --until',
+      'show logs older than a specific date (format?)'
+    )
+    .option('--sort', 'specify a sort direction (default: ?)')
     .action(async (functionPath, command = {}) =>
       action({ functionPath }, command)
     );
