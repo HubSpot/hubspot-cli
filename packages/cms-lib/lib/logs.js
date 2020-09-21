@@ -52,6 +52,7 @@ const formatTimestamp = log => {
 const formatPayload = log => {
   return util.inspect(log.payload, {
     compact: true,
+    depth: 'Infinity',
   });
 };
 
