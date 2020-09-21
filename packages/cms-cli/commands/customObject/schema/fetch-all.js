@@ -29,7 +29,7 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-fetch-all', null, portalId);
 
   try {
-    await downloadSchemas(portalId, options.dest);
+    await downloadSchemas(portalId, options.dest, options.clean);
   } catch (e) {
     logErrorInstance(e);
     logger.error('Unable to fetch schemas');
@@ -52,5 +52,11 @@ exports.builder = yargs => {
     describe:
       'Local folder where schemas will be written.  If omitted, current working directory will be used',
     type: 'string',
+  });
+
+  yargs.option('clean', {
+    describe:
+      'When fetching the schemas, strip off any portal-specific properties',
+    type: 'boolean',
   });
 };
