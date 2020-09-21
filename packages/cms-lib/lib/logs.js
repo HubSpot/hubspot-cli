@@ -1,8 +1,14 @@
 const util = require('util');
 const moment = require('moment');
-const { logger } = require('../logger');
+const chalk = require('chalk');
+const { logger, Styles } = require('../logger');
 
 const SEPARATOR = ' - ';
+const LOG_STATUS_COLORS = {
+  SUCCESS: Styles.success,
+  UNHANDLED_ERROR: Styles.error,
+  HANDLED_ERROR: Styles.error,
+};
 
 const formatError = log => {
   return `/n${log.error.type}: ${log.error.message}\n${formatStackTrace(
@@ -27,9 +33,9 @@ const formatLogPayloadData = log => {
 };
 
 const formatLogHeader = log => {
-  return `${formatTimestamp(log)}${SEPARATOR}${
+  return `${formatTimestamp(log)}${SEPARATOR}${LOG_STATUS_COLORS[log.status](
     log.status
-  }${SEPARATOR}${formatExecutionTime(log)}`;
+  )}${SEPARATOR}${formatExecutionTime(log)}`;
 };
 
 const formatLog = log => {
@@ -46,18 +52,19 @@ const formatStackTrace = log => {
 };
 
 const formatTimestamp = log => {
-  return `${moment(log.createdAt).toISOString()}`;
+  return `${chalk.whiteBright(moment(log.createdAt).toISOString())}`;
 };
 
 const formatPayload = log => {
   return util.inspect(log.payload, {
+    colors: true,
     compact: true,
     depth: 'Infinity',
   });
 };
 
 const formatExecutionTime = log => {
-  return `Execution Time: ${log.executionTime}ms`;
+  return `${chalk.whiteBright('Execution Time:')} ${log.executionTime}ms`;
 };
 
 const processLog = (log, options) => {
