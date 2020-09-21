@@ -185,8 +185,11 @@ const builder = yargs => {
       type: 'boolean',
     },
     compact: {
-      alias: 'c',
       describe: 'output compact logs',
+      type: 'boolean',
+    },
+    oneline: {
+      describe: 'output only log headers',
       type: 'boolean',
     },
     tail: {
@@ -200,17 +203,16 @@ const builder = yargs => {
       type: 'number',
     },
     after: {
-      alias: ['--after', '--since'],
+      alias: ['after', 'since'],
       describe: 'show logs more recent than a specific date (format?)',
       type: 'string',
     },
     before: {
-      alias: ['--before', '--until'],
+      alias: ['before', 'until'],
       describe: 'show logs older than a specific date (format?)',
       type: 'string',
     },
     sort: {
-      alias: '--sort',
       describe: 'specify a sort direction (default: ?)',
       type: 'string',
     },
@@ -231,6 +233,7 @@ const configureCommanderLogsCommand = commander => {
     .arguments('<function_path>')
     .option('--latest', 'retrieve most recent log only')
     .option('--compact', 'output compact logs')
+    .option('--oneline', 'output only log headers')
     .option('-f, --follow', 'tail logs')
     .option('--limit, -n, --max-count', 'limit the number of logs to output')
     .option(
