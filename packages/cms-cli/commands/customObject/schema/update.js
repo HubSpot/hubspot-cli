@@ -17,6 +17,7 @@ const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { getEnv } = require('@hubspot/cms-lib/lib/config');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { updateSchema } = require('@hubspot/cms-lib/api/schema');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 
 exports.command = 'update <schemaObjectType> <definition>';
 exports.describe = 'Update an existing custom object schema';
@@ -44,9 +45,9 @@ exports.handler = async options => {
   try {
     const res = await updateSchema(portalId, schemaObjectType, filePath);
     logger.success(
-      `Schema can be viewed at ${
+      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
         getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      }/contacts/${portalId}/objects/${res.objectTypeId}`
+      )}/contacts/${portalId}/objects/${res.objectTypeId}`
     );
   } catch (e) {
     logErrorInstance(e, { portalId });

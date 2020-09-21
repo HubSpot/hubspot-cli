@@ -15,6 +15,7 @@ const { trackCommandUsage } = require('../../../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../../lib/debugInfo');
 // const { getEnv } = require('@hubspot/cms-lib/lib/config');
+// const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 
 exports.command = 'create <schemaObjectType> <definition>';
 exports.describe = 'Create a custom object schema association';
@@ -42,9 +43,9 @@ exports.handler = async options => {
   try {
     // const res = await createSchema(portalId, filePath);
     // logger.success(
-    //   `Schema can be viewed at ${
+    //   `Schema can be viewed at ${getHubSpotWebsiteOrigin(
     //     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    //   }/contacts/${portalId}/objects/${res.objectTypeId}`
+    //   )}/contacts/${portalId}/objects/${res.objectTypeId}`
     // );
   } catch (e) {
     logErrorInstance(e, { portalId });

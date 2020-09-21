@@ -8,22 +8,15 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
 const { validatePortal, isFileValidJSON } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const {
-  addTestingOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../../../lib/commonOpts');
-const { getEnv } = require('@hubspot/cms-lib/lib/config');
-const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
+const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { createSchema } = require('@hubspot/cms-lib/api/schema');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
+const { batchCreateObjects } = require('@hubspot/cms-lib/api/customObject');
 
-exports.command = 'create <definition>';
-exports.describe = 'Create a custom object schema';
+exports.command = 'create <objectTypeId> <definition>';
+exports.describe = 'Create a custom object instance';
 
 exports.handler = async options => {
-  const { definition } = options;
+  const { definition, objectTypeId } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -35,7 +28,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('custom-object-schema-create', null, portalId);
+  trackCommandUsage('custom-object-batch-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -43,23 +36,22 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createSchema(portalId, filePath);
-    logger.success(
-      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-        getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      )}/contacts/${portalId}/objects/${res.objectTypeId}`
-    );
+    await batchCreateObjects(portalId, objectTypeId, filePath);
+    logger.success(`Objects created`);
   } catch (e) {
     logErrorInstance(e, { portalId });
-    logger.error(`Schema creation from ${definition} failed`);
+    logger.error(`Object creation from ${definition} failed`);
   }
 };
 
 exports.builder = yargs => {
-  addTestingOptions(yargs, true);
+  yargs.positional('objectTypeId', {
+    describe: 'Schema objectTypeId or name to add the object instance to',
+    type: 'string',
+  });
 
   yargs.positional('definition', {
-    describe: 'Local path to the JSON file containing the schema definition',
+    describe: 'Local path to the JSON file containing the object definition',
     type: 'string',
   });
 };
