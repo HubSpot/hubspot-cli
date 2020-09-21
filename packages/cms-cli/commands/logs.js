@@ -206,10 +206,6 @@ const builder = yargs => {
       describe: 'show logs older than a specific date (format?)',
       type: 'string',
     },
-    sort: {
-      describe: 'specify a sort direction (default: ?)',
-      type: 'string',
-    },
   });
 
   addConfigOptions(yargs, true);
@@ -237,7 +233,6 @@ const configureCommanderLogsCommand = commander => {
       '--before, --until',
       'show logs older than a specific date (format?)'
     )
-    .option('--sort', 'specify a sort direction (default: ?)')
     .action(async (functionPath, command = {}) =>
       action({ functionPath }, command)
     );
