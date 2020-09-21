@@ -10,7 +10,7 @@ const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { listSchemas } = require('@hubspot/cms-lib/api/schema');
+const { listSchemas } = require('@hubspot/cms-lib/schema');
 
 exports.command = 'list';
 exports.describe = 'List schemas available on your portal';
