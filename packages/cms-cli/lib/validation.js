@@ -4,6 +4,7 @@ const {
   loadConfigFromEnvironment,
   Mode,
 } = require('@hubspot/cms-lib');
+const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
@@ -133,29 +134,30 @@ function validateMode(options) {
   return false;
 }
 
-const getAbsoluteFilePath = _path => {
-  const absoluteSrcPath = path.resolve(getCwd(), _path);
-
+const fileExists = _path => {
   let isFile;
   try {
+    const absoluteSrcPath = path.resolve(getCwd(), _path);
+    if (!absoluteSrcPath) return false;
+
     const stats = fs.statSync(absoluteSrcPath);
     isFile = stats.isFile();
 
     if (!isFile) {
       logger.error(`The path "${_path}" is not a path to a file`);
-      return null;
+      return false;
     }
   } catch (e) {
     logger.error(`The path "${_path}" is not a path to a file`);
-    return null;
+    return false;
   }
 
-  return absoluteSrcPath;
+  return true;
 };
 
 const isFileValidJSON = _path => {
   const filePath = getAbsoluteFilePath(_path);
-  if (!filePath) return false;
+  if (!fileExists(filePath)) return false;
 
   if (getExt(_path) !== 'json') {
     logger.error(`The file "${_path}" must be a valid JSON file`);
@@ -176,5 +178,5 @@ module.exports = {
   validateMode,
   validatePortal,
   isFileValidJSON,
-  getAbsoluteFilePath,
+  fileExists,
 };

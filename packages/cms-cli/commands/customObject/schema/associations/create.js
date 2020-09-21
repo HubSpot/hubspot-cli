@@ -8,12 +8,13 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
 const {
   validatePortal,
-  getAbsoluteFilePath,
   isFileValidJSON,
 } = require('../../../../lib/validation');
+const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
 const { trackCommandUsage } = require('../../../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../../lib/debugInfo');
+// const { getEnv } = require('@hubspot/cms-lib/lib/config');
 
 exports.command = 'create <schemaObjectType> <definition>';
 exports.describe = 'Create a Custom Object Schema Association';
@@ -34,16 +35,16 @@ exports.handler = async options => {
   trackCommandUsage('schema-association-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!filePath || !isFileValidJSON(filePath)) {
+  if (!isFileValidJSON(filePath)) {
     process.exit(1);
   }
 
   try {
     // const res = await createSchema(portalId, filePath);
     // logger.success(
-    //   `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-    //     options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    //   )}/contacts/${portalId}/objects/${res.objectTypeId}`
+    //   `Schema can be viewed at ${
+    //     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    //   }/contacts/${portalId}/objects/${res.objectTypeId}`
     // );
   } catch (e) {
     logErrorInstance(e, { portalId });

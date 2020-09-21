@@ -10,7 +10,7 @@ const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { downloadSchemas } = require('@hubspot/cms-lib/api/schema');
+const { downloadSchemas } = require('@hubspot/cms-lib/schema');
 
 exports.command = 'fetch-all [dest]';
 exports.describe = 'Fetch all Custom Object Schema for a portal';

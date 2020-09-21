@@ -16,6 +16,7 @@ exports.command = 'list <schemaObjectType>';
 exports.describe = 'List schemas available on your portal';
 
 exports.handler = async options => {
+  // eslint-disable-next-line
   const { schemaObjectType, config } = options;
   setLogLevel(options);
   logDebugInfo(options);

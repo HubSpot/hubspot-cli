@@ -5,13 +5,8 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
-
-const {
-  validatePortal,
-  getAbsoluteFilePath,
-  isFileValidJSON,
-} = require('../../../lib/validation');
+const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
+const { validatePortal, isFileValidJSON } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   addTestingOptions,
@@ -19,6 +14,7 @@ const {
   getPortalId,
 } = require('../../../lib/commonOpts');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
+const { getEnv } = require('@hubspot/cms-lib/lib/config');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { updateSchema } = require('@hubspot/cms-lib/api/schema');
 
@@ -41,16 +37,16 @@ exports.handler = async options => {
   trackCommandUsage('schema-update', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!filePath || !isFileValidJSON(filePath)) {
+  if (!isFileValidJSON(filePath)) {
     process.exit(1);
   }
 
   try {
     const res = await updateSchema(portalId, schemaObjectType, filePath);
     logger.success(
-      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-        options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      )}/contacts/${portalId}/objects/${res.objectTypeId}`
+      `Schema can be viewed at ${
+        getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+      }/contacts/${portalId}/objects/${res.objectTypeId}`
     );
   } catch (e) {
     logErrorInstance(e, { portalId });
