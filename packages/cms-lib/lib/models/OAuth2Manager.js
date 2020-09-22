@@ -15,6 +15,7 @@ class OAuth2Manager {
       scopes,
       environment = ENVIRONMENTS.PROD,
       tokenInfo = { expiresAt: null, refreshToken: null, accessToken: null },
+      name,
     },
     logger = console,
     writeTokenInfo
@@ -28,6 +29,7 @@ class OAuth2Manager {
     this.logger = logger;
     this.writeTokenInfo = writeTokenInfo;
     this.refreshTokenRequest = null;
+    this.name = name;
   }
 
   async accessToken() {
@@ -123,6 +125,7 @@ class OAuth2Manager {
       clientId: this.clientId,
       scopes: this.scopes,
       tokenInfo: this.tokenInfo,
+      name: this.name,
     };
   }
 

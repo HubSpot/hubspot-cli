@@ -3,6 +3,7 @@ const {
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  updateDefaultPortal,
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
@@ -71,6 +72,7 @@ const oauthConfigCreationFlow = async env => {
     env,
   };
   await authenticateWithOauth(portalConfig);
+  updateDefaultPortal(portalConfig.name);
   return portalConfig;
 };
 
@@ -81,6 +83,7 @@ const apiKeyConfigCreationFlow = async env => {
     env,
   };
   updatePortalConfig(portalConfig);
+  updateDefaultPortal(portalConfig.name);
   writeConfig();
   return portalConfig;
 };
