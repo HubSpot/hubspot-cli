@@ -152,6 +152,7 @@ const builder = yargs => {
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
       `${OAUTH_AUTH_METHOD.value}`,
+      `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn API Key tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
