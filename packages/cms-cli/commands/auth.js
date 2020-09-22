@@ -91,7 +91,6 @@ async function authAction(type, options) {
   let validName;
   switch (authType) {
     case API_KEY_AUTH_METHOD.value:
-      console.log('configData: ', configData);
       configData = await promptUser(API_KEY_FLOW);
       updatedConfig = await updatePortalConfig(configData);
       validName = await promptForPortalNameIfNotSet(updatedConfig);
