@@ -47,11 +47,6 @@ const TRACKING_STATUS = {
   ERROR: 'error',
   COMPLETE: 'complete',
 };
-const VALID_AUTH_TYPES = [
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  OAUTH_AUTH_METHOD,
-  API_KEY_AUTH_METHOD,
-].map(a => a.value);
 
 const personalAccessKeyConfigCreationFlow = async env => {
   const configData = await personalAccessKeyPrompt({ env });
@@ -99,14 +94,6 @@ const action = async options => {
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
-  if (VALID_AUTH_TYPES.indexOf(authType) === -1) {
-    logger.error(
-      `The auth type '${authType}' is invalid. Valid types are: ${VALID_AUTH_TYPES.join(
-        ', '
-      )}.`
-    );
-    process.exit(1);
-  }
 
   trackCommandUsage(COMMAND_NAME, {
     authType,
@@ -150,6 +137,13 @@ const builder = yargs => {
     describe:
       'specify auth method to use ["personalaccesskey", "oauth2", "apikey"]',
     type: 'string',
+    choices: [
+      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+      `${OAUTH_AUTH_METHOD.value}`,
+      `${API_KEY_AUTH_METHOD.value}`,
+    ],
+    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
   });
   addTestingOptions(yargs, true);
 
