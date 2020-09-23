@@ -17,6 +17,7 @@ const { getEnv } = require('@hubspot/cms-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cms-lib/api/schema');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 
 exports.command = 'create <definition>';
 exports.describe = 'Create a custom object schema';
@@ -44,9 +45,9 @@ exports.handler = async options => {
   try {
     const res = await createSchema(portalId, filePath);
     logger.success(
-      `Schema can be viewed at ${
+      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
         getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      }/contacts/${portalId}/objects/${res.objectTypeId}`
+      )}/contacts/${portalId}/objects/${res.objectTypeId}`
     );
   } catch (e) {
     logErrorInstance(e, { portalId });

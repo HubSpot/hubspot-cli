@@ -1,0 +1,983 @@
+[
+  {
+    "labels": {
+      "singular": "Listing Agent",
+      "plural": "Listing Agents"
+    },
+    "requiredProperties": ["agentfirstname", "agentlastname"],
+    "searchableProperties": ["agentfirstname"],
+    "primaryDisplayProperty": "agentfirstname",
+    "secondaryDisplayProperties": [],
+    "restorable": true,
+    "metaType": "PORTAL_SPECIFIC",
+    "id": "679660",
+    "fullyQualifiedName": "p102940484_listing_agent",
+    "createdAt": "2020-09-15T18:31:12.578Z",
+    "updatedAt": "2020-09-18T16:27:41.273Z",
+    "objectTypeId": "2-679660",
+    "properties": [
+      {
+        "updatedAt": "2020-09-15T18:31:13.041Z",
+        "createdAt": "2020-09-15T18:31:13.041Z",
+        "name": "agentfirstname",
+        "label": "Agent First Name",
+        "type": "string",
+        "fieldType": "text",
+        "groupName": "listing_agent_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-09-15T18:31:13.055Z",
+        "createdAt": "2020-09-15T18:31:13.055Z",
+        "name": "agentlastname",
+        "label": "Agent Last Name",
+        "type": "string",
+        "fieldType": "text",
+        "groupName": "listing_agent_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "name": "hs_all_accessible_team_ids",
+        "label": "All accessible team IDs",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The team IDs, including up the team hierarchy, corresponding to all owner referencing properties for this object, both default and custom",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_created_by_user_id",
+        "label": "Created by user ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The user that created this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_createdate",
+        "label": "Object create date/time",
+        "type": "datetime",
+        "fieldType": "date",
+        "description": "The date and time at which this object was created. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_lastmodifieddate",
+        "label": "Object last modified date/time",
+        "type": "datetime",
+        "fieldType": "date",
+        "description": "Most recent timestamp of any property update for this object. This includes HubSpot internal properties, which can be visible or hidden. This property is updated automatically.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_merged_object_ids",
+        "label": "Merged object IDs",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The list of object IDs that have been merged into this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_object_id",
+        "label": "Object ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The unique ID for this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_updated_by_user_id",
+        "label": "Updated by user ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The user that last updated this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_user_ids_of_all_owners",
+        "label": "User IDs of all owners",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The user IDs of all owners of this object",
+        "groupName": "listing_agent_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "updatedAt": "2020-09-15T18:31:13.042Z",
+        "createdAt": "2020-09-15T18:31:13.042Z",
+        "name": "photo",
+        "label": "Photo",
+        "type": "string",
+        "fieldType": "text",
+        "groupName": "listing_agent_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": false
+      }
+    ],
+    "associations": [
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "2-596521",
+        "name": "listing_agent_to_property_listing",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "39",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_property_listing",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "40",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-51",
+        "name": "listing_agent_to_conversation_session",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "41",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-51",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_conversation_session",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "42",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-49",
+        "name": "listing_agent_to_email",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "49",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-49",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_email",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "50",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-47",
+        "name": "listing_agent_to_meeting_event",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "47",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-47",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_meeting_event",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "48",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-1",
+        "name": "listing_agent_to_contact",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "31",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-1",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_contact",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "32",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-48",
+        "name": "listing_agent_to_call",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "37",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-48",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_call",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "38",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-46",
+        "name": "listing_agent_to_note",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "43",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-46",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_note",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "44",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "0-27",
+        "name": "listing_agent_to_task",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "45",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-27",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_task",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "46",
+        "createdAt": null,
+        "updatedAt": null
+      }
+    ],
+    "name": "listing_agent"
+  },
+  {
+    "labels": {
+      "singular": "Property Listing",
+      "plural": "Property Listings"
+    },
+    "requiredProperties": ["address"],
+    "searchableProperties": ["address"],
+    "primaryDisplayProperty": "address",
+    "secondaryDisplayProperties": [],
+    "restorable": true,
+    "metaType": "PORTAL_SPECIFIC",
+    "id": "596521",
+    "fullyQualifiedName": "p102940484_property-listing",
+    "createdAt": "2020-08-11T19:51:55.440Z",
+    "updatedAt": "2020-09-18T16:27:37.462Z",
+    "objectTypeId": "2-596521",
+    "properties": [
+      {
+        "updatedAt": "2020-09-04T16:31:24.857Z",
+        "createdAt": "2020-08-11T19:51:55.564Z",
+        "name": "address",
+        "label": "Address",
+        "type": "string",
+        "fieldType": "text",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-08-11T19:53:28.797Z",
+        "createdAt": "2020-08-11T19:53:28.797Z",
+        "name": "bathrooms",
+        "label": "Bathrooms",
+        "type": "number",
+        "fieldType": "number",
+        "description": "How many bathrooms",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-08-11T19:52:57.068Z",
+        "createdAt": "2020-08-11T19:52:57.068Z",
+        "name": "bedrooms",
+        "label": "Bedrooms",
+        "type": "number",
+        "fieldType": "number",
+        "description": "How many bedrooms the listing has",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-09-21T20:49:38.859Z",
+        "createdAt": "2020-09-21T20:49:14.499Z",
+        "name": "description",
+        "label": "Description",
+        "type": "string",
+        "fieldType": "textarea",
+        "groupName": "property-listing_information",
+        "createdUserId": "2138143",
+        "updatedUserId": "2138143",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-09-03T21:31:33.555Z",
+        "createdAt": "2020-09-03T21:31:33.555Z",
+        "name": "dynamic_page_title",
+        "label": "Dynamic Page Title",
+        "type": "string",
+        "fieldType": "text",
+        "description": "HTML title for object dynamic pages",
+        "groupName": "object_publishing_properties",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-09-15T17:41:13.067Z",
+        "createdAt": "2020-09-03T22:18:03.584Z",
+        "name": "dynamic_page_uri",
+        "label": "Dynamic Page Slug",
+        "type": "string",
+        "fieldType": "text",
+        "description": "The url slug for use in object dynamic pages",
+        "groupName": "object_publishing_properties",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": true,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "name": "hs_all_accessible_team_ids",
+        "label": "All accessible team IDs",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The team IDs, including up the team hierarchy, corresponding to all owner referencing properties for this object, both default and custom",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_created_by_user_id",
+        "label": "Created by user ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The user that created this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_createdate",
+        "label": "Object create date/time",
+        "type": "datetime",
+        "fieldType": "date",
+        "description": "The date and time at which this object was created. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_lastmodifieddate",
+        "label": "Object last modified date/time",
+        "type": "datetime",
+        "fieldType": "date",
+        "description": "Most recent timestamp of any property update for this object. This includes HubSpot internal properties, which can be visible or hidden. This property is updated automatically.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_merged_object_ids",
+        "label": "Merged object IDs",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The list of object IDs that have been merged into this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_object_id",
+        "label": "Object ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The unique ID for this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_updated_by_user_id",
+        "label": "Updated by user ID",
+        "type": "number",
+        "fieldType": "number",
+        "description": "The user that last updated this object. This value is automatically set by HubSpot and may not be modified.",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "name": "hs_user_ids_of_all_owners",
+        "label": "User IDs of all owners",
+        "type": "enumeration",
+        "fieldType": "checkbox",
+        "description": "The user IDs of all owners of this object",
+        "groupName": "property-listing_information",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "hasUniqueValue": false,
+        "hidden": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": true,
+          "readOnlyValue": true
+        },
+        "formField": false
+      },
+      {
+        "updatedAt": "2020-09-21T21:24:24.095Z",
+        "createdAt": "2020-09-21T21:24:24.095Z",
+        "name": "open_house_date",
+        "label": "Open House Date",
+        "type": "date",
+        "fieldType": "date",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-08-11T19:53:44.688Z",
+        "createdAt": "2020-08-11T19:53:44.688Z",
+        "name": "price",
+        "label": "Price",
+        "type": "number",
+        "fieldType": "number",
+        "description": "Price of property",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": true,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-08-11T19:54:27.287Z",
+        "createdAt": "2020-08-11T19:54:27.287Z",
+        "name": "property_image",
+        "label": "Property Image",
+        "type": "string",
+        "fieldType": "text",
+        "description": "Property Image",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      },
+      {
+        "updatedAt": "2020-08-11T19:59:58.868Z",
+        "createdAt": "2020-08-11T19:59:58.868Z",
+        "name": "square_feet",
+        "label": "Square Feet",
+        "type": "number",
+        "fieldType": "number",
+        "description": "Square feet of the property ",
+        "groupName": "property-listing_information",
+        "createdUserId": "981972",
+        "updatedUserId": "981972",
+        "displayOrder": -1,
+        "calculated": false,
+        "externalOptions": false,
+        "archived": false,
+        "hasUniqueValue": false,
+        "hidden": false,
+        "showCurrencySymbol": false,
+        "modificationMetadata": {
+          "archivable": true,
+          "readOnlyDefinition": false,
+          "readOnlyValue": false
+        },
+        "formField": true
+      }
+    ],
+    "associations": [
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-47",
+        "name": "property_listing_to_meeting_event",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "25",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-47",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_meeting_event",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "26",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-48",
+        "name": "property_listing_to_call",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "19",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-48",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_call",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "20",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "2-679660",
+        "name": "listing_agent_to_property_listing",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "40",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-679660",
+        "toObjectTypeId": "2-596521",
+        "name": "listing_agent_to_property_listing",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "39",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-49",
+        "name": "property_listing_to_email",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "29",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-49",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_email",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "30",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-27",
+        "name": "property_listing_to_task",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "21",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-27",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_task",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "22",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-51",
+        "name": "property_listing_to_conversation_session",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "23",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-51",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_conversation_session",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "24",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-1",
+        "name": "property_listing_to_contact",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "17",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-1",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_contact",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "18",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "2-596521",
+        "toObjectTypeId": "0-46",
+        "name": "property_listing_to_note",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "27",
+        "createdAt": null,
+        "updatedAt": null
+      },
+      {
+        "fromObjectTypeId": "0-46",
+        "toObjectTypeId": "2-596521",
+        "name": "property_listing_to_note",
+        "cardinality": "ONE_TO_MANY",
+        "inverseCardinality": "ONE_TO_MANY",
+        "id": "28",
+        "createdAt": null,
+        "updatedAt": null
+      }
+    ],
+    "name": "property-listing"
+  }
+]
