@@ -78,6 +78,7 @@ const downloadSchema = async (portalId, schemaObjectType, dest) => {
 module.exports = {
   writeSchemaToDisk,
   listSchemas,
+  cleanSchema,
   downloadSchemas,
   downloadSchema,
 };

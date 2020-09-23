@@ -10,10 +10,10 @@ const { validatePortal, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { createObject } = require('@hubspot/cms-lib/api/customObject');
+const { batchCreateObjects } = require('@hubspot/cms-lib/api/customObject');
 
 exports.command = 'create <objectTypeId> <definition>';
-exports.describe = 'Create a custom object instance';
+exports.describe = 'Create custom object instances';
 
 exports.handler = async options => {
   const { definition, objectTypeId } = options;
@@ -28,7 +28,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('custom-object-create', null, portalId);
+  trackCommandUsage('custom-object-batch-create', null, portalId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -36,8 +36,8 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createObject(portalId, objectTypeId, filePath);
-    logger.success(`Object created with id ${res.id}`);
+    await batchCreateObjects(portalId, objectTypeId, filePath);
+    logger.success(`Objects created`);
   } catch (e) {
     logErrorInstance(e, { portalId });
     logger.error(`Object creation from ${definition} failed`);
@@ -51,7 +51,8 @@ exports.builder = yargs => {
   });
 
   yargs.positional('definition', {
-    describe: 'Local path to the JSON file containing the object definition',
+    describe:
+      'Local path to the JSON file containing an array of object definitions',
     type: 'string',
   });
 };

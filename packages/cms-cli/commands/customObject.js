@@ -1,6 +1,5 @@
 const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
-const batchCommand = require('./customObject/batch');
 const createCommand = require('./customObject/create');
 
 exports.command = ['custom-object', 'custom', 'co'];
@@ -10,10 +9,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
-  yargs
-    .command(schemaCommand)
-    .command(batchCommand)
-    .command(createCommand);
+  yargs.command(schemaCommand).command(createCommand);
 
   return yargs;
 };
