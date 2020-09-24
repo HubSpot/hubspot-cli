@@ -18,7 +18,6 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 const {
   addLoggerOptions,
   addPortalOptions,
@@ -74,8 +73,8 @@ const loadAndValidateOptions = async options => {
 
 const logError = async (error, portalId, functionPath) => {
   return logServerlessFunctionApiErrorInstance(
+    portalId,
     error,
-    await getScopeDataForFunctions(portalId),
     new ApiErrorContext({ portalId, functionPath })
   );
 };

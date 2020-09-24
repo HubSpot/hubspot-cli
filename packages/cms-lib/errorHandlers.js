@@ -1,5 +1,11 @@
 const { HubSpotAuthError } = require('./lib/models/Errors');
 const { logger } = require('./logger');
+const { getPortalConfig } = require('./lib/config');
+const {
+  SCOPE_GROUPS,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('./lib/constants.js');
+const { fetchScopeData } = require('./api/localDevAuth/authenticated');
 
 const isApiStatusCodeError = err =>
   err.name === 'StatusCodeError' ||
@@ -304,35 +310,54 @@ function logFileSystemErrorInstance(error, context) {
   debugErrorAndContext(error, context);
 }
 
+async function verifyAccessKeyAndUserAccess(portalId, scopeGroup) {
+  const portalConfig = getPortalConfig(portalId);
+  const { authType } = portalConfig;
+  if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
+    return;
+  }
+
+  let scopesData;
+  try {
+    scopesData = await fetchScopeData(portalId, scopeGroup);
+  } catch (e) {
+    logger.debug('Error verifying function access');
+    return;
+  }
+  const { portalScopesInGroup, userScopesInGroup } = scopesData;
+
+  if (!portalScopesInGroup.length) {
+    logger.error(
+      'Your account does not have access to this action. Talk to an account admin to request it.'
+    );
+    return;
+  }
+
+  if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
+    logger.error(
+      "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+    );
+    return;
+  } else {
+    logger.error(
+      'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
+    );
+    return;
+  }
+}
+
 /**
  * Logs a message for an error instance resulting from API interaction
  * related to serverless function.
  *
+ * @param {int} portalId
  * @param {Error|SystemError|Object} error
  * @param {ApiErrorContext}          context
  */
-function logServerlessFunctionApiErrorInstance(error, scopesData, context) {
-  if (isMissingScopeError(error) && scopesData) {
-    const { portalScopesInGroup, userScopesInGroup } = scopesData;
-
-    if (!portalScopesInGroup.length) {
-      logger.error(
-        'Your account does not have access to this action. Talk to an account admin to request it.'
-      );
-      return;
-    }
-
-    if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
-      logger.error(
-        "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
-      );
-      return;
-    } else {
-      logger.error(
-        'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
-      );
-      return;
-    }
+async function logServerlessFunctionApiErrorInstance(portalId, error, context) {
+  if (isMissingScopeError(error)) {
+    await verifyAccessKeyAndUserAccess(portalId, SCOPE_GROUPS.functions);
+    return;
   }
 
   // StatusCodeError
