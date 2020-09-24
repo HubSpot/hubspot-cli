@@ -26,7 +26,7 @@ exports.main = ({ accountId }, sendResponse) => {
       // For full documentation, see: developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli#logs
       console.log('Data received from the search API:', response.data);
       // sendResponse is what you will send back to services hitting your serverless function
-      sendResponse({ body: { response: response }, statusCode: 200 });
+      sendResponse({ body: { response: response.data }, statusCode: 200 });
     })
     .catch(function(error) {
       // Handle error
