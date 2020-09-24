@@ -94,7 +94,6 @@ const action = async options => {
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
-
   trackCommandUsage(COMMAND_NAME, {
     authType,
   });
