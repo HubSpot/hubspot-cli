@@ -312,11 +312,7 @@ function logFileSystemErrorInstance(error, context) {
  * @param {ApiErrorContext}          context
  */
 function logServerlessFunctionApiErrorInstance(error, scopesData, context) {
-  if (!scopesData) {
-    return;
-  }
-
-  if (isMissingScopeError(error)) {
+  if (isMissingScopeError(error) && scopesData) {
     const { portalScopesInGroup, userScopesInGroup } = scopesData;
 
     if (!portalScopesInGroup.length) {
