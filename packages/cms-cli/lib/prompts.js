@@ -54,6 +54,21 @@ const CLIENT_ID = {
   },
 };
 
+const CLIENT_SECRET = {
+  name: 'clientSecret',
+  message: 'Enter your OAuth2 client secret:',
+  validate(val) {
+    if (typeof val !== 'string') {
+      return 'You entered an invalid OAuth2 client secret. Please try again.';
+    } else if (val.length !== 36) {
+      return 'The OAuth2 client secret must be 36 characters long. Please try again.';
+    } else if (val[0] === '*') {
+      return 'Please copy the actual OAuth2 client secret rather than the asterisks that mask it.';
+    }
+    return true;
+  },
+};
+
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
@@ -68,21 +83,6 @@ const PERSONAL_ACCESS_KEY = {
       return 'You did not enter a valid access key. Please try again.';
     } else if (val[0] === '•') {
       return 'Please copy the actual access key rather than the bullets that mask it.';
-    }
-    return true;
-  },
-};
-
-const CLIENT_SECRET = {
-  name: 'clientSecret',
-  message: 'Enter your OAuth2 client secret:',
-  validate(val) {
-    if (typeof val !== 'string') {
-      return 'You entered an invalid OAuth2 client secret. Please try again.';
-    } else if (val.length !== 36) {
-      return 'The OAuth2 client secret must be 36 characters long. Please try again.';
-    } else if (val[0] === '*') {
-      return 'Please copy the actual OAuth2 client secret rather than the asterisks that mask it.';
     }
     return true;
   },
