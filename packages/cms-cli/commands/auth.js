@@ -19,8 +19,12 @@ const {
   portalNameExistsInConfig,
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
-const { OAUTH_FLOW, PORTAL_NAME } = require('@hubspot/cms-lib/lib/prompts');
-const { promptUser, personalAccessKeyPrompt } = require('../lib/prompts');
+const {
+  promptUser,
+  personalAccessKeyPrompt,
+  OAUTH_FLOW,
+  PORTAL_NAME,
+} = require('../lib/prompts');
 const {
   addConfigOptions,
   addLoggerOptions,
