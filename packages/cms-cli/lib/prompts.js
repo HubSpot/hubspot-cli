@@ -1,10 +1,10 @@
 const inquirer = require('inquirer');
 const open = require('open');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cms-lib/lib/constants');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {
@@ -41,6 +41,19 @@ const PORTAL_ID = {
   },
 };
 
+const CLIENT_ID = {
+  name: 'clientId',
+  message: 'Enter your OAuth2 client ID:',
+  validate(val) {
+    if (typeof val !== 'string') {
+      return 'You entered an invalid OAuth2 client ID. Please try again.';
+    } else if (val.length !== 36) {
+      return 'The OAuth2 client ID must be 36 characters long. Please try again.';
+    }
+    return true;
+  },
+};
+
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
@@ -55,19 +68,6 @@ const PERSONAL_ACCESS_KEY = {
       return 'You did not enter a valid access key. Please try again.';
     } else if (val[0] === '•') {
       return 'Please copy the actual access key rather than the bullets that mask it.';
-    }
-    return true;
-  },
-};
-
-const CLIENT_ID = {
-  name: 'clientId',
-  message: 'Enter your OAuth2 client ID:',
-  validate(val) {
-    if (typeof val !== 'string') {
-      return 'You entered an invalid OAuth2 client ID. Please try again.';
-    } else if (val.length !== 36) {
-      return 'The OAuth2 client ID must be 36 characters long. Please try again.';
     }
     return true;
   },
