@@ -15,7 +15,8 @@ exports.builder = yargs => {
     .command(fetchAllCommand)
     .command(createCommand)
     .command(updateSchema)
-    .command(deleteCommand);
+    .command(deleteCommand)
+    .demandCommand(1, '');
   // .command(associationsCommand);
 
   return yargs;

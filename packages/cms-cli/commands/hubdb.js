@@ -22,7 +22,8 @@ const builder = yargs => {
     .command(clearCommand)
     .command(createCommand)
     .command(fetchCommand)
-    .command(deleteCommand);
+    .command(deleteCommand)
+    .demandCommand(1, '');
 
   return yargs;
 };

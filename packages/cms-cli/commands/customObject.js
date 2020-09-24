@@ -3,13 +3,15 @@ const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
 
 exports.command = ['custom-object', 'custom', 'co'];
-// This hides the command from --help until we are ready to release it
-exports.describe = false; // 'Manage Custom Objects';
+exports.describe = 'Manage Custom Objects';
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
-  yargs.command(schemaCommand).command(createCommand);
+  yargs
+    .command(schemaCommand)
+    .command(createCommand)
+    .demandCommand(1, '');
 
   return yargs;
 };
