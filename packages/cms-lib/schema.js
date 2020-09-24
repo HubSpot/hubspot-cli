@@ -25,15 +25,35 @@ const logSchemas = schemas => {
   logger.log(data.length ? table(data, tableConfig) : 'No Schemas were found');
 };
 
-const writeSchemaToDisk = (schema, dest) => {
-  const fullPath = path.resolve(getCwd(), dest || '', `${schema.name}.json`);
+const cleanSchema = schema => {
+  const parsedSchema = {};
+  parsedSchema.name = schema.name;
+  parsedSchema.labels = schema.labels;
+  parsedSchema.requiredProperties = schema.requiredProperties;
+  parsedSchema.searchableProperties = schema.searchableProperties;
+  parsedSchema.primaryDisplayProperty = schema.primaryDisplayProperty;
+  parsedSchema.associatedObjects = schema.associatedObjects;
+
+  parsedSchema.properties = schema.properties
+    .filter(p => !p.name.startsWith('hs_'))
+    .map(p => ({
+      name: p.name,
+      label: p.label,
+      type: p.type,
+      fieldType: p.fieldType,
+      description: p.description,
+    }));
+
+  return parsedSchema;
+};
+
+const writeSchemaToDisk = (schema, dest) =>
   fs.outputFileSync(
-    fullPath,
-    prettier.format(JSON.stringify(schema), {
+    path.resolve(getCwd(), dest || '', `${schema.name}.json`),
+    prettier.format(JSON.stringify(cleanSchema(schema)), {
       parser: 'json',
     })
   );
-};
 
 const listSchemas = async portalId => {
   const response = await fetchSchemas(portalId);
@@ -58,6 +78,7 @@ const downloadSchema = async (portalId, schemaObjectType, dest) => {
 module.exports = {
   writeSchemaToDisk,
   listSchemas,
+  cleanSchema,
   downloadSchemas,
   downloadSchema,
 };

@@ -25,7 +25,7 @@ const {
   PORTAL_NAME,
   OAUTH_FLOW,
   API_KEY_FLOW,
-} = require('@hubspot/cms-lib/lib/prompts');
+} = require('../lib/prompts');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
