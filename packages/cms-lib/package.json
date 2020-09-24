@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cms-lib",
-  "version": "2.0.1",
+  "version": "2.0.2-beta.1",
   "description": "Library for working with the HubSpot CMS",
   "license": "Apache-2.0",
   "main": "index.js",
@@ -19,7 +19,6 @@
     "ignore": "^5.1.4",
     "js-yaml": "^3.12.2",
     "moment": "^2.24.0",
-    "open": "^7.0.3",
     "p-queue": "^6.0.2",
     "prettier": "^1.19.1",
     "request": "^2.87.0",

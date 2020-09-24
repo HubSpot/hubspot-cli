@@ -24,7 +24,7 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   PORTAL_NAME,
-} = require('@hubspot/cms-lib/lib/prompts');
+} = require('../lib/prompts');
 const {
   addConfigOptions,
   addLoggerOptions,

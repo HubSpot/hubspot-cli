@@ -4,11 +4,15 @@ const {
   loadConfigFromEnvironment,
   Mode,
 } = require('@hubspot/cms-lib');
+const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
 const { getOauthManager } = require('@hubspot/cms-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
+const { getCwd, getExt } = require('@hubspot/cms-lib/path');
 const { getPortalId, getMode } = require('./commonOpts');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Validate that a portal was passed to the command and that the portal's configuration is valid
@@ -130,7 +134,49 @@ function validateMode(options) {
   return false;
 }
 
+const fileExists = _path => {
+  let isFile;
+  try {
+    const absoluteSrcPath = path.resolve(getCwd(), _path);
+    if (!absoluteSrcPath) return false;
+
+    const stats = fs.statSync(absoluteSrcPath);
+    isFile = stats.isFile();
+
+    if (!isFile) {
+      logger.error(`The path "${_path}" is not a path to a file`);
+      return false;
+    }
+  } catch (e) {
+    logger.error(`The path "${_path}" is not a path to a file`);
+    return false;
+  }
+
+  return true;
+};
+
+const isFileValidJSON = _path => {
+  const filePath = getAbsoluteFilePath(_path);
+  if (!fileExists(filePath)) return false;
+
+  if (getExt(_path) !== 'json') {
+    logger.error(`The file "${_path}" must be a valid JSON file`);
+    return false;
+  }
+
+  try {
+    JSON.parse(fs.readFileSync(filePath));
+  } catch (e) {
+    logger.error(`The file "${_path}" contains invalid JSON`);
+    return false;
+  }
+
+  return true;
+};
+
 module.exports = {
   validateMode,
   validatePortal,
+  isFileValidJSON,
+  fileExists,
 };

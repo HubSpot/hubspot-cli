@@ -97,6 +97,10 @@ const putRequest = async (portalId, options) => {
   return requestPN.put(await withAuth(portalId, options));
 };
 
+const patchRequest = async (portalId, options) => {
+  return requestPN.patch(await withAuth(portalId, options));
+};
+
 const deleteRequest = async (portalId, options) => {
   return requestPN.del(await withAuth(portalId, options));
 };
@@ -152,5 +156,6 @@ module.exports = {
   }),
   post: postRequest,
   put: putRequest,
+  patch: patchRequest,
   delete: deleteRequest,
 };

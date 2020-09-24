@@ -20,7 +20,7 @@ const {
   promptUser,
   personalAccessKeyPrompt,
   PORTAL_NAME,
-} = require('@hubspot/cms-lib/lib/prompts');
+} = require('../lib/prompts');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
