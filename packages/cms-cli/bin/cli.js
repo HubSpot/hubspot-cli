@@ -37,7 +37,6 @@ const argv = yargs
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
 
-    console.log(msg);
     if (msg === null) {
       yargs.showHelp();
       process.exit(0);
