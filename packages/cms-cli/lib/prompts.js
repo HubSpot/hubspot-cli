@@ -69,25 +69,6 @@ const CLIENT_SECRET = {
   },
 };
 
-const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
-  name: 'personalAcessKeyBrowserOpenPrep',
-  message:
-    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
-};
-
-const PERSONAL_ACCESS_KEY = {
-  name: 'personalAccessKey',
-  message: 'Enter your personal CMS access key:',
-  validate(val) {
-    if (typeof val !== 'string') {
-      return 'You did not enter a valid access key. Please try again.';
-    } else if (val[0] === '•') {
-      return 'Please copy the actual access key rather than the bullets that mask it.';
-    }
-    return true;
-  },
-};
-
 const PORTAL_NAME = {
   name: 'name',
   message: 'Enter a unique name to reference your account:',
@@ -110,6 +91,25 @@ const PORTAL_API_KEY = {
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
       return 'You did not enter a valid API key. Please try again.';
+    }
+    return true;
+  },
+};
+
+const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
+  name: 'personalAcessKeyBrowserOpenPrep',
+  message:
+    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
+};
+
+const PERSONAL_ACCESS_KEY = {
+  name: 'personalAccessKey',
+  message: 'Enter your personal CMS access key:',
+  validate(val) {
+    if (typeof val !== 'string') {
+      return 'You did not enter a valid access key. Please try again.';
+    } else if (val[0] === '•') {
+      return 'Please copy the actual access key rather than the bullets that mask it.';
     }
     return true;
   },
