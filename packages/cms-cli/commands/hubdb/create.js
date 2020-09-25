@@ -9,7 +9,7 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const { createHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
-const { validatePortal } = require('../../lib/validation');
+const { validatePortal, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { version } = require('../../package.json');
 const {
@@ -39,7 +39,12 @@ const action = async ({ src }, options) => {
   trackCommandUsage('hubdb-create', {}, portalId);
 
   try {
-    const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));
+    const filePath = path.resolve(getCwd(), src);
+    if (!isFileValidJSON(filePath)) {
+      process.exit(1);
+    }
+
+    const table = await createHubDbTable(portalId, filePath);
     logger.log(
       `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
     );

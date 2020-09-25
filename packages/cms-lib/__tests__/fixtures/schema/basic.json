@@ -1,0 +1,17 @@
+{
+  "labels": { "singular": "Schema", "plural": "Schemas" },
+  "associatedObjects": null,
+  "requiredProperties": [],
+  "searchableProperties": [],
+  "primaryDisplayProperty": "name",
+  "properties": [
+    {
+      "name": "name",
+      "label": "Name",
+      "type": "string",
+      "fieldType": "text",
+      "description": "Name Field"
+    }
+  ],
+  "name": "schema"
+}

@@ -11,7 +11,6 @@ const {
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cms-lib/lib/constants');
-const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
@@ -20,6 +19,12 @@ const {
   portalNameExistsInConfig,
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
+const {
+  promptUser,
+  personalAccessKeyPrompt,
+  OAUTH_FLOW,
+  PORTAL_NAME,
+} = require('../lib/prompts');
 const {
   addConfigOptions,
   addLoggerOptions,
@@ -31,13 +36,8 @@ const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
-const {
-  promptUser,
-  personalAccessKeyPrompt,
-  OAUTH_FLOW,
-  PORTAL_NAME,
-} = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
+const { authenticateWithOauth } = require('../lib/oauth');
 
 const COMMAND_NAME = 'auth';
 const ALLOWED_AUTH_METHODS = [
