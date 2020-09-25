@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/cms-lib/lib/constants');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
+} = require('@hubspot/cms-lib/updateConfigWithPersonalAccessKey');
 const {
   updatePortalConfig,
   portalNameExistsInConfig,

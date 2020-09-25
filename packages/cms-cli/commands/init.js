@@ -15,7 +15,7 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
+} = require('@hubspot/cms-lib/updateConfigWithPersonalAccessKey');
 const {
   promptUser,
   personalAccessKeyPrompt,
