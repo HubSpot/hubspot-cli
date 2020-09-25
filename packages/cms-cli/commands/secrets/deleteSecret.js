@@ -45,7 +45,7 @@ async function action({ secretName }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
       portalId,
       e,
       new ApiErrorContext({

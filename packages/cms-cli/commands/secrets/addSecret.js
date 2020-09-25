@@ -45,7 +45,7 @@ async function action({ secretName, secretValue }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not added`);
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
       portalId,
       e,
       new ApiErrorContext({
