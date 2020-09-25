@@ -31,6 +31,7 @@ const {
   addPortalOptions,
   addLoggerOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
   getMode,
@@ -53,6 +54,7 @@ const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:
@@ -73,7 +75,7 @@ const action = async ({ src, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
@@ -186,6 +188,7 @@ const configureCommanderUploadCommand = program => {
   addPortalOptions(program);
   addLoggerOptions(program);
   addModeOptions(program, { write: true });
+  addUseEnvironmentOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 };
 

@@ -16,6 +16,7 @@ const {
   addPortalOptions,
   addLoggerOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
   getMode,
@@ -41,7 +42,7 @@ const action = async ({ src, dest }, options) => {
     disableInitial,
     notify,
   } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
@@ -104,6 +105,7 @@ const builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:
@@ -169,6 +171,7 @@ const configureCommanderWatchCommand = program => {
   addPortalOptions(program);
   addLoggerOptions(program);
   addModeOptions(program, { write: true });
+  addUseEnvironmentOptions(program);
   addHelpUsageTracking(program, COMMAND_NAME);
 };
 

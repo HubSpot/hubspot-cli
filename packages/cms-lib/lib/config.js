@@ -319,16 +319,15 @@ const loadConfigFromFile = (path, options = {}) => {
 const loadConfig = (
   path,
   options = {
-    ignoreEnvironmentVariableConfig: false,
+    useEnv: false,
   }
 ) => {
-  if (
-    !options.ignoreEnvironmentVariableConfig &&
-    loadEnvironmentVariableConfig()
-  ) {
+  if (options.useEnv && loadEnvironmentVariableConfig()) {
+    logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
     return;
   } else {
+    logger.debug(`Loaded config from ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
     loadConfigFromFile(path, options);
   }
 };
@@ -398,9 +397,7 @@ const getPortalId = nameOrId => {
   let portalId;
   let portal;
 
-  if (process.env.HUBSPOT_PORTAL_ID) {
-    portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-  } else if (!nameOrId) {
+  if (!nameOrId) {
     if (config && config.defaultPortal) {
       name = config.defaultPortal;
     }
@@ -557,16 +554,18 @@ const getConfigVariablesFromEnv = () => {
     personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
     portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
     refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
+    env: getValidEnv(env[ENVIRONMENT_VARIABLES.HUBSPOT_ENVIRONMENT]),
   };
 };
 
-const generatePersonalAccessKeyConfig = (portalId, personalAccessKey) => {
+const generatePersonalAccessKeyConfig = (portalId, personalAccessKey, env) => {
   return {
     portals: [
       {
         authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
         portalId,
         personalAccessKey,
+        env,
       },
     ],
   };
@@ -577,7 +576,8 @@ const generateOauthConfig = (
   clientId,
   clientSecret,
   refreshToken,
-  scopes
+  scopes,
+  env
 ) => {
   return {
     portals: [
@@ -592,18 +592,20 @@ const generateOauthConfig = (
             refreshToken,
           },
         },
+        env,
       },
     ],
   };
 };
 
-const generateApiKeyConfig = (portalId, apiKey) => {
+const generateApiKeyConfig = (portalId, apiKey, env) => {
   return {
     portals: [
       {
         authType: API_KEY_AUTH_METHOD.value,
         portalId,
         apiKey,
+        env,
       },
     ],
   };
@@ -617,6 +619,7 @@ const loadConfigFromEnvironment = () => {
     personalAccessKey,
     portalId,
     refreshToken,
+    env,
   } = getConfigVariablesFromEnv();
 
   if (!portalId) {
@@ -624,17 +627,18 @@ const loadConfigFromEnvironment = () => {
   }
 
   if (personalAccessKey) {
-    return generatePersonalAccessKeyConfig(portalId, personalAccessKey);
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey, env);
   } else if (clientId && clientSecret && refreshToken) {
     return generateOauthConfig(
       portalId,
       clientId,
       clientSecret,
       refreshToken,
-      OAUTH_SCOPES.map(scope => scope.value)
+      OAUTH_SCOPES.map(scope => scope.value),
+      env
     );
   } else if (apiKey) {
-    return generateApiKeyConfig(portalId, apiKey);
+    return generateApiKeyConfig(portalId, apiKey, env);
   } else {
     return;
   }

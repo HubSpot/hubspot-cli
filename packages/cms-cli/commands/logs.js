@@ -23,6 +23,7 @@ const {
   addLoggerOptions,
   addPortalOptions,
   addConfigOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -64,7 +65,7 @@ const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -196,6 +197,7 @@ const builder = yargs => {
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   return yargs;
 };
@@ -217,6 +219,7 @@ const configureCommanderLogsCommand = commander => {
   addConfigOptions(commander);
   addPortalOptions(commander);
   addLoggerOptions(commander);
+  addUseEnvironmentOptions(commander);
   addHelpUsageTracking(commander, COMMAND_NAME);
 };
 

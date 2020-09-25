@@ -15,6 +15,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -26,7 +27,7 @@ const action = async ({ tableId, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -52,6 +53,7 @@ const handler = async argv =>
 const builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
     describe: 'HubDB Table ID',
@@ -77,6 +79,7 @@ function configureCommanderHubDbFetchCommand(commander) {
   addLoggerOptions(commander);
   addPortalOptions(commander);
   addConfigOptions(commander);
+  addUseEnvironmentOptions(commander);
 }
 
 module.exports = {

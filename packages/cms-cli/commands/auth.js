@@ -55,9 +55,7 @@ async function authAction(type, options) {
   logDebugInfo(options);
   const { config: configPath } = options;
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath, {
-    ignoreEnvironmentVariableConfig: true,
-  });
+  loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {

@@ -14,6 +14,7 @@ const {
   addLoggerOptions,
   addOverwriteOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   getPortalId,
   getMode,
   setLogLevel,
@@ -35,7 +36,7 @@ const action = async ({ src, dest }, options) => {
   logDebugInfo(options);
 
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
@@ -72,6 +73,7 @@ const builder = yargs => {
   addPortalOptions(yargs, true);
   addOverwriteOptions(yargs, true);
   addModeOptions(yargs, { read: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'Path in HubSpot Design Tools',
@@ -102,6 +104,7 @@ const configureCommanderFetchCommand = commander => {
   addLoggerOptions(commander);
   addOverwriteOptions(commander);
   addModeOptions(commander, { read: true });
+  addUseEnvironmentOptions(commander);
   addHelpUsageTracking(commander, COMMAND_NAME);
 };
 
