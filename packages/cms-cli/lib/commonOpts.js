@@ -81,7 +81,6 @@ const addTestingOptions = (program, useYargs = false) => {
 const addUseEnvironmentOptions = (program, useYargs = false) => {
   const option = 'use-env';
   const description = 'use environment variable config';
-  require('dotenv').config();
 
   if (useYargs) {
     return program.option(option, {
