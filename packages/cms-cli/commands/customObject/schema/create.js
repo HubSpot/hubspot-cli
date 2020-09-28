@@ -3,6 +3,7 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
+const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
@@ -43,6 +44,12 @@ exports.handler = async options => {
   }
 
   try {
+    const { name } = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    if (!name.match(/^[a-z0-9]+$/gi)) {
+      logger.error(`Schema name may only contain letters and numbers`);
+      process.exit(1);
+    }
+
     const res = await createSchema(portalId, filePath);
     logger.success(
       `Schema can be viewed at ${getHubSpotWebsiteOrigin(
