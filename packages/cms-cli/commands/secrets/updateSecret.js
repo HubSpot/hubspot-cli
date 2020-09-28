@@ -9,7 +9,6 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { updateSecret } = require('@hubspot/cms-lib/api/secrets');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -47,9 +46,9 @@ async function action({ secretName, secretValue }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not updated`);
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
+      portalId,
       e,
-      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
         request: 'update secret',
         portalId,

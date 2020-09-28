@@ -6,9 +6,9 @@ const yaml = require('js-yaml');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
 const {
-  logErrorInstance,
   logFileSystemErrorInstance,
-} = require('../errorHandlers');
+} = require('../errorHandlers/fileSystemErrors');
+const { logErrorInstance } = require('../errorHandlers/standardErrors');
 const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,

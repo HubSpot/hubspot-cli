@@ -18,7 +18,6 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 const {
   addLoggerOptions,
   addPortalOptions,
@@ -73,14 +72,6 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const logError = async (error, portalId, functionPath) => {
-  return logServerlessFunctionApiErrorInstance(
-    error,
-    await getScopeDataForFunctions(portalId),
-    new ApiErrorContext({ portalId, functionPath })
-  );
-};
-
 const tailLogs = async ({
   functionId,
   functionPath,
@@ -100,7 +91,11 @@ const tailLogs = async ({
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
-      await logError(e, portalId, functionPath);
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        e,
+        new ApiErrorContext({ portalId, functionPath })
+      );
     }
   }
 
@@ -143,7 +138,11 @@ const action = async ({ functionPath }, options) => {
 
   const functionResp = await getFunctionByPath(portalId, functionPath).catch(
     async e => {
-      await logError(e, portalId, functionPath);
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        e,
+        new ApiErrorContext({ portalId, functionPath })
+      );
       process.exit();
     }
   );
