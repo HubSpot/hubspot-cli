@@ -289,6 +289,7 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
       qs: getFileMapperApiQueryFromMode(input.mode),
     });
   } catch (err) {
+    await fs.unlink(filepath);
     logApiErrorInstance(
       err,
       new ApiErrorContext({

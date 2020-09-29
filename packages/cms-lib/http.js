@@ -135,12 +135,12 @@ const createGetRequestStream = ({ contentType }) => async (
         .on('response', r => {
           if (r.statusCode >= 200 && r.statusCode < 300) {
             response = r;
+            req.pipe(destination);
           } else {
             reject(r);
           }
         })
-        .on('end', () => resolve(response))
-        .pipe(destination);
+        .on('end', () => resolve(response));
     } catch (err) {
       reject(err);
     }
