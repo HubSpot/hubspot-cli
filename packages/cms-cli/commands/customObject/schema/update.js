@@ -19,11 +19,11 @@ const { logDebugInfo } = require('../../../lib/debugInfo');
 const { updateSchema } = require('@hubspot/cms-lib/api/schema');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 
-exports.command = 'update <schemaObjectType> <definition>';
+exports.command = 'update <name> <definition>';
 exports.describe = 'Update an existing custom object schema';
 
 exports.handler = async options => {
-  const { definition, schemaObjectType } = options;
+  const { definition, name } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -43,7 +43,7 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await updateSchema(portalId, schemaObjectType, filePath);
+    const res = await updateSchema(portalId, name, filePath);
     logger.success(
       `Schema can be viewed at ${getHubSpotWebsiteOrigin(
         getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
@@ -58,8 +58,8 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addTestingOptions(yargs, true);
 
-  yargs.positional('schemaObjectType', {
-    describe: 'Fully qualified name or object type ID of the target schema.',
+  yargs.positional('name', {
+    describe: 'Name of the target schema',
     type: 'string',
   });
 

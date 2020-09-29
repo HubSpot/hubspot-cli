@@ -12,11 +12,11 @@ const { setLogLevel, getPortalId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { batchCreateObjects } = require('@hubspot/cms-lib/api/customObject');
 
-exports.command = 'create <objectTypeId> <definition>';
+exports.command = 'create <name> <definition>';
 exports.describe = 'Create custom object instances';
 
 exports.handler = async options => {
-  const { definition, objectTypeId } = options;
+  const { definition, name } = options;
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
@@ -36,7 +36,7 @@ exports.handler = async options => {
   }
 
   try {
-    await batchCreateObjects(portalId, objectTypeId, filePath);
+    await batchCreateObjects(portalId, name, filePath);
     logger.success(`Objects created`);
   } catch (e) {
     logErrorInstance(e, { portalId });
@@ -45,8 +45,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('objectTypeId', {
-    describe: 'Schema objectTypeId or name to add the object instance to',
+  yargs.positional('name', {
+    describe: 'Schema name to add the object instance to',
     type: 'string',
   });
 
