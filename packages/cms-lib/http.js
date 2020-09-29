@@ -1,5 +1,6 @@
 const request = require('request');
 const requestPN = require('request-promise-native');
+const fs = require('fs-extra');
 const { getPortalConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
 const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
@@ -135,7 +136,10 @@ const createGetRequestStream = ({ contentType }) => async (
         .on('response', r => {
           if (r.statusCode >= 200 && r.statusCode < 300) {
             response = r;
-            req.pipe(destination);
+            let stream = fs.createWriteStream(destination, {
+              encoding: 'binary',
+            });
+            req.pipe(stream);
           } else {
             reject(r);
           }

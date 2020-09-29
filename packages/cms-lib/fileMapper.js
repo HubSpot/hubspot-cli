@@ -285,7 +285,7 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
   }
   let node;
   try {
-    node = await fetchFileStream(portalId, srcPath, writeStream, {
+    node = await fetchFileStream(portalId, srcPath, filepath, {
       qs: getFileMapperApiQueryFromMode(input.mode),
     });
   } catch (err) {
