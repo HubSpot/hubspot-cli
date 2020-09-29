@@ -81,4 +81,5 @@ module.exports = {
   cleanSchema,
   downloadSchemas,
   downloadSchema,
+  logSchemas,
 };

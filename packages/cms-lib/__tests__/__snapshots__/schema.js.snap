@@ -172,3 +172,32 @@ Array [
   },
 ]
 `;
+
+exports[`cms-lib/schema logSchemas() logs schemas 1`] = `
+"╔════════╤════════╤══════════════╗
+║ [1mLabel[22m  │ [1mName[22m   │ [1mobjectTypeId[22m ║
+║ Schema │ schema │              ║
+╚════════╧════════╧══════════════╝
+"
+`;
+
+exports[`cms-lib/schema writeSchemaToDisk() writes schema to disk 1`] = `
+"{
+  \\"name\\": \\"schema\\",
+  \\"labels\\": { \\"singular\\": \\"Schema\\", \\"plural\\": \\"Schemas\\" },
+  \\"requiredProperties\\": [],
+  \\"searchableProperties\\": [],
+  \\"primaryDisplayProperty\\": \\"name\\",
+  \\"associatedObjects\\": null,
+  \\"properties\\": [
+    {
+      \\"name\\": \\"name\\",
+      \\"label\\": \\"Name\\",
+      \\"type\\": \\"string\\",
+      \\"fieldType\\": \\"text\\",
+      \\"description\\": \\"Name Field\\"
+    }
+  ]
+}
+"
+`;
