@@ -265,31 +265,13 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
     throw new Error(message);
   }
   const { portalId } = input;
-  const logFsError = err => {
-    logFileSystemErrorInstance(
-      err,
-      new FileSystemErrorContext({
-        filepath,
-        portalId,
-        write: true,
-      })
-    );
-  };
-  let writeStream;
+
   try {
-    await fs.ensureFile(filepath);
-    writeStream = fs.createWriteStream(filepath, { encoding: 'binary' });
-  } catch (err) {
-    logFsError(err);
-    throw err;
-  }
-  let node;
-  try {
-    node = await fetchFileStream(portalId, srcPath, filepath, {
+    const node = await fetchFileStream(portalId, srcPath, filepath, {
       qs: getFileMapperApiQueryFromMode(input.mode),
     });
+    await writeUtimes(input, filepath, node);
   } catch (err) {
-    await fs.unlink(filepath);
     logApiErrorInstance(
       err,
       new ApiErrorContext({
@@ -299,17 +281,6 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
     );
     throw err;
   }
-  return new Promise((resolve, reject) => {
-    writeStream.on('error', err => {
-      logFsError(err);
-      reject(err);
-    });
-    writeStream.on('close', async () => {
-      await writeUtimes(input, filepath, node);
-      logger.log('Wrote file "%s"', filepath);
-      resolve(node);
-    });
-  });
 }
 
 /**
