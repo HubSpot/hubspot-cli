@@ -12,12 +12,11 @@ const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { deleteSchema } = require('@hubspot/cms-lib/api/schema');
 
-exports.command = 'delete <schemaObjectType>';
-exports.describe =
-  'Delete a custom object schema given a schemaObjectType. Delete operation is asynchronous and may take time to complete even after the command succeeds';
+exports.command = 'delete <name>';
+exports.describe = 'Delete a custom object schema';
 
 exports.handler = async options => {
-  let { schemaObjectType } = options;
+  let { name } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -32,18 +31,21 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-delete', null, portalId);
 
   try {
-    await deleteSchema(portalId, schemaObjectType);
+    await deleteSchema(portalId, name);
+    logger.success(`Successfully initiated deletion of ${name}`);
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to delete ${schemaObjectType}`);
+    logger.error(`Unable to delete ${name}`);
   }
 };
 
 exports.builder = yargs => {
-  yargs.example([['$0 schema delete schemaId', 'Delete `schemaId` schema']]);
+  yargs.example([
+    ['$0 schema delete schemaName', 'Delete `schemaName` schema'],
+  ]);
 
-  yargs.positional('schemaObjectType', {
-    describe: 'Fully qualified name or object type ID of the target schema.',
+  yargs.positional('name', {
+    describe: 'Name of the target schema',
     type: 'string',
   });
 };
