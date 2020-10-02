@@ -94,11 +94,14 @@ const isAllowedExtension = filepath => {
   return allowedExtensions.has(ext);
 };
 
+const getAbsoluteFilePath = _path => path.resolve(getCwd(), _path);
+
 module.exports = {
   convertToUnixPath,
   convertToWindowsPath,
   convertToLocalFileSystemPath,
   getAllowedExtensions,
+  getAbsoluteFilePath,
   getCwd,
   getExt,
   isAllowedExtension,

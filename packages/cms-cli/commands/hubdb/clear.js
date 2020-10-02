@@ -14,6 +14,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -35,7 +36,7 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-clear', null, portalId);
+  trackCommandUsage('hubdb-clear', {}, portalId);
 
   try {
     const { deletedRowCount } = await clearHubDbTableRows(portalId, tableId);
@@ -54,6 +55,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
     describe: 'HubDB Table ID',

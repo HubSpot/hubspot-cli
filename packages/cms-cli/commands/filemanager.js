@@ -14,7 +14,10 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
-  yargs.command(upload).command(fetch);
+  yargs
+    .command(upload)
+    .command(fetch)
+    .demandCommand(1, '');
 
   return yargs;
 };

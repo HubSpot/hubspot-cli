@@ -21,6 +21,7 @@ const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -35,10 +36,9 @@ exports.describe =
 exports.handler = async options => {
   const { config: configPath, src, dest } = options;
 
-  console.log('in');
   setLogLevel(options);
   logDebugInfo(options);
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!validateConfig() || !(await validatePortal(options))) {
@@ -130,6 +130,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:

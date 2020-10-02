@@ -21,6 +21,7 @@ const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
+const customObjectCommand = require('../commands/customObject');
 
 const notifier = updateNotifier({ pkg });
 
@@ -32,11 +33,16 @@ const argv = yargs
   .usage('Tools for working with the HubSpot CMS')
   .middleware([setLogLevel])
   .exitProcess(false)
-  .fail((msg, err) => {
+  .fail((msg, err, yargs) => {
     if (msg) logger.error(msg);
     if (err) logErrorInstance(err);
 
-    process.exit(1);
+    if (msg === null) {
+      yargs.showHelp();
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
   })
   .option('debug', {
     alias: 'd',
@@ -56,13 +62,12 @@ const argv = yargs
   .command(fetchCommand)
   .command(filemanagerCommand)
   .command(secretsCommand)
+  .command(customObjectCommand)
   .help()
   .recommendCommands()
+  .demandCommand(1, '')
   .strict().argv;
 
 if (argv.help) {
   trackHelpUsage(getCommandName(argv));
-} else if (argv['_'].length == 0) {
-  yargs.showHelp();
-  logger.error('Please specify a command to run');
 }

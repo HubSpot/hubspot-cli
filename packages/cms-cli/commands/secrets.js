@@ -15,6 +15,7 @@ exports.builder = yargs => {
     .command(listSecretsCommand)
     .command(addSecretCommand)
     .command(updateSecretCommand)
-    .command(deleteSecretCommand);
+    .command(deleteSecretCommand)
+    .demandCommand(1, '');
   return yargs;
 };

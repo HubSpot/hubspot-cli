@@ -1,14 +1,18 @@
 const {
   getConfigPath,
-  getPortalId,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  updateDefaultPortal,
+  writeConfig,
+  updatePortalConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -18,11 +22,14 @@ const {
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {
-  promptUser,
-  personalAccessKeyPrompt,
+  OAUTH_FLOW,
+  API_KEY_FLOW,
   PORTAL_NAME,
+  personalAccessKeyPrompt,
+  promptUser,
 } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
+const { authenticateWithOauth } = require('../lib/oauth');
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -30,14 +37,58 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
+const personalAccessKeyConfigCreationFlow = async env => {
+  const configData = await personalAccessKeyPrompt({ env });
+  const { name } = await promptUser([PORTAL_NAME]);
+  const portalConfig = {
+    ...configData,
+    name,
+  };
+
+  await updateConfigWithPersonalAccessKey(portalConfig, true);
+  return portalConfig;
+};
+
+const oauthConfigCreationFlow = async env => {
+  const configData = await promptUser(OAUTH_FLOW);
+  const portalConfig = {
+    ...configData,
+    env,
+  };
+  await authenticateWithOauth(portalConfig);
+  updateDefaultPortal(portalConfig.name);
+  return portalConfig;
+};
+
+const apiKeyConfigCreationFlow = async env => {
+  const configData = await promptUser(API_KEY_FLOW);
+  const portalConfig = {
+    ...configData,
+    env,
+  };
+  updatePortalConfig(portalConfig);
+  updateDefaultPortal(portalConfig.name);
+  writeConfig();
+  return portalConfig;
+};
+
+const CONFIG_CREATION_FLOWS = {
+  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: personalAccessKeyConfigCreationFlow,
+  [OAUTH_AUTH_METHOD.value]: oauthConfigCreationFlow,
+  [API_KEY_AUTH_METHOD.value]: apiKeyConfigCreationFlow,
+};
+
 exports.command = 'init';
 exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`;
 
 exports.handler = async options => {
+  const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value } = options;
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
-  trackCommandUsage('init', { authType: 'personalaccesskey' });
+  trackCommandUsage('init', {
+    authType,
+  });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (configPath) {
@@ -48,51 +99,40 @@ exports.handler = async options => {
     process.exit(1);
   }
 
-  trackAuthAction(
-    'init',
-    PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    TRACKING_STATUS.STARTED
-  );
+  trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
 
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
 
   try {
-    const configData = await personalAccessKeyPrompt({ env });
-    const { name } = await promptUser([PORTAL_NAME]);
-
-    await updateConfigWithPersonalAccessKey(
-      {
-        ...configData,
-        name,
-      },
-      true
-    );
-
+    const { portalId } = await CONFIG_CREATION_FLOWS[authType](env);
     const path = getConfigPath();
-    const portalId = getPortalId();
 
     logger.success(
       `The config file "${path}" was created using your personal access key for portal ${portalId}.`
     );
 
-    trackAuthAction(
-      'init',
-      PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      TRACKING_STATUS.COMPLETE,
-      portalId
-    );
+    trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, portalId);
+    process.exit();
   } catch (err) {
     logErrorInstance(err);
-    trackAuthAction(
-      'init',
-      PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      TRACKING_STATUS.ERROR
-    );
+    trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
   }
 };
 
 exports.builder = yargs => {
+  yargs.option('auth', {
+    describe:
+      'specify auth method to use ["personalaccesskey", "oauth2", "apikey"]',
+    type: 'string',
+    choices: [
+      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+      `${OAUTH_AUTH_METHOD.value}`,
+      `${API_KEY_AUTH_METHOD.value}`,
+    ],
+    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
+  });
   addTestingOptions(yargs, true);
 
   return yargs;

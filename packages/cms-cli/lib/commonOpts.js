@@ -78,6 +78,20 @@ const addTestingOptions = (program, useYargs = false) => {
   program.option('--qa', 'run command in qa mode', false);
 };
 
+const addUseEnvironmentOptions = (program, useYargs = false) => {
+  const option = 'use-env';
+  const description = 'use environment variable config';
+
+  if (useYargs) {
+    return program.option(option, {
+      describe: description,
+      type: 'boolean',
+      default: false,
+    });
+  }
+  program.option(`--${option}`, description, false);
+};
+
 const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
@@ -99,21 +113,21 @@ const getCommandName = argv => (argv && argv._ && argv._[0]) || '';
 const getPortalId = (options = {}) => {
   const { portal: portalNameOrId } = options;
 
-  if (process.env.HUBSPOT_PORTAL_ID) {
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
   return getPortalIdFromConfig(portalNameOrId);
 };
 
-const getMode = (options = {}) => {
+const getMode = (command = {}) => {
   // 1. --mode
-  const { mode } = options;
+  const { mode } = command;
   if (mode && typeof mode === 'string') {
     return mode.toLowerCase();
   }
   // 2. config[portal].defaultMode
-  const portalId = getPortalId(options);
+  const portalId = getPortalId(command);
   if (portalId) {
     const portalConfig = getPortalConfig(portalId);
     if (portalConfig && portalConfig.defaultMode) {
@@ -133,6 +147,7 @@ module.exports = {
   addOverwriteOptions,
   addModeOptions,
   addTestingOptions,
+  addUseEnvironmentOptions,
   getCommandName,
   getMode,
   getPortalId,

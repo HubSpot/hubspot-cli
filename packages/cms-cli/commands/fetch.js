@@ -11,6 +11,7 @@ const {
   addPortalOptions,
   addOverwriteOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   getPortalId,
   getMode,
   setLogLevel,
@@ -68,6 +69,7 @@ exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addOverwriteOptions(yargs, true);
   addModeOptions(yargs, { read: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'Path in HubSpot Design Tools',

@@ -19,7 +19,7 @@ const promptUser = async promptConfig => {
 const personalAccessKeyPrompt = async ({ env } = {}) => {
   await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
-  open(`${websiteOrigin}/l/personal-access-key`);
+  open(`${websiteOrigin}/l/personal-access-key`, { url: true });
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
@@ -124,7 +124,7 @@ const SCOPES = {
   choices: OAUTH_SCOPES,
 };
 
-const OAUTH_FLOW = [PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
+const OAUTH_FLOW = [PORTAL_NAME, PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
 
 module.exports = {

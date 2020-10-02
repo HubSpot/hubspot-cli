@@ -3,12 +3,11 @@ const fs = require('fs-extra');
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
-const { getPortalId } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
-const { setLogLevel } = require('../lib/commonOpts');
+const { setLogLevel, getPortalId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -224,7 +223,7 @@ exports.handler = async options => {
       break;
   }
 
-  trackCommandUsage('create', commandTrackingContext, getPortalId());
+  trackCommandUsage('create', commandTrackingContext, getPortalId(options));
 };
 
 exports.builder = yargs => {

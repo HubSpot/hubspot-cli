@@ -7,10 +7,10 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cms-lib/lib/constants');
-const { authenticateWithOauth } = require('@hubspot/cms-lib/oauth');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
@@ -20,19 +20,21 @@ const {
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const {
+  promptUser,
+  personalAccessKeyPrompt,
+  OAUTH_FLOW,
+  API_KEY_FLOW,
+  PORTAL_NAME,
+} = require('../lib/prompts');
+const {
   addConfigOptions,
   setLogLevel,
   addTestingOptions,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const {
-  promptUser,
-  personalAccessKeyPrompt,
-  OAUTH_FLOW,
-  PORTAL_NAME,
-} = require('../lib/prompts');
 const { commaSeparatedValues } = require('../lib/text');
+const { authenticateWithOauth } = require('../lib/oauth');
 
 const COMMAND_NAME = 'auth <type>';
 const ALLOWED_AUTH_METHODS = [
@@ -43,21 +45,37 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
+const promptForPortalNameIfNotSet = async updatedConfig => {
+  if (!updatedConfig.name) {
+    let promptAnswer;
+    let validName = null;
+    while (!validName) {
+      promptAnswer = await promptUser([PORTAL_NAME]);
+
+      if (!portalNameExistsInConfig(promptAnswer.name)) {
+        validName = promptAnswer.name;
+      } else {
+        logger.log(
+          `Account name "${promptAnswer.name}" already exists, please enter a different name.`
+        );
+      }
+    }
+    return validName;
+  }
+};
+
 exports.command = 'auth';
 exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
 
 exports.handler = async options => {
   const { type, config: configPath, qa } = options;
-
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
   logDebugInfo(options);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath, {
-    ignoreEnvironmentVariableConfig: true,
-  });
+  loadConfig(configPath);
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
@@ -65,10 +83,28 @@ exports.handler = async options => {
   }
 
   trackCommandUsage(COMMAND_NAME);
+
   let configData;
   let updatedConfig;
-  let promptAnswer;
+  let validName;
   switch (authType) {
+    case API_KEY_AUTH_METHOD.value:
+      configData = await promptUser(API_KEY_FLOW);
+      updatedConfig = await updatePortalConfig(configData);
+      validName = await promptForPortalNameIfNotSet(updatedConfig);
+
+      updatePortalConfig({
+        ...updatedConfig,
+        environment: updatedConfig.env,
+        name: validName,
+      });
+      writeConfig();
+
+      logger.success(
+        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} updated with ${API_KEY_AUTH_METHOD.name}.`
+      );
+
+      break;
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth({
@@ -79,32 +115,18 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+      validName = await promptForPortalNameIfNotSet(updatedConfig);
 
-      if (!updatedConfig.name) {
-        let validName = null;
-        while (!validName) {
-          promptAnswer = await promptUser([PORTAL_NAME]);
-
-          if (!portalNameExistsInConfig(promptAnswer.name)) {
-            validName = promptAnswer.name;
-          } else {
-            logger.log(
-              `Account name "${promptAnswer.name}" already exists, please enter a different name.`
-            );
-          }
-        }
-
-        updatePortalConfig({
-          ...updatedConfig,
-          environment: updatedConfig.env,
-          tokenInfo: updatedConfig.auth.tokenInfo,
-          name: validName,
-        });
-        writeConfig();
-      }
+      updatePortalConfig({
+        ...updatedConfig,
+        environment: updatedConfig.env,
+        tokenInfo: updatedConfig.auth.tokenInfo,
+        name: validName,
+      });
+      writeConfig();
 
       logger.success(
-        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} created with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} updated with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
       );
       break;
     default:
@@ -123,9 +145,10 @@ exports.builder = yargs => {
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
       `${OAUTH_AUTH_METHOD.value}`,
+      `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn API Key tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
+    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
   });
 
   addConfigOptions(yargs, true);

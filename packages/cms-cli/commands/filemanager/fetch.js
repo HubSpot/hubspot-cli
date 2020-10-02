@@ -10,6 +10,7 @@ const { resolveLocalPath } = require('../../lib/filesystem');
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -26,7 +27,7 @@ exports.handler = async options => {
 
   setLogLevel(options);
   logDebugInfo(options);
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!validateConfig() || !(await validatePortal(options))) {
@@ -42,7 +43,7 @@ exports.handler = async options => {
 
   const portalId = getPortalId(options);
 
-  trackCommandUsage('filemanager-fetch', null, portalId);
+  trackCommandUsage('filemanager-fetch', {}, portalId);
 
   // Fetch and write file/folder.
   downloadFileOrFolder(portalId, src, dest, options);
@@ -51,6 +52,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'Path in HubSpot Design Tools',

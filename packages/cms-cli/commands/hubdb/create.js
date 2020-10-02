@@ -9,11 +9,12 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const { createHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
-const { validatePortal } = require('../../lib/validation');
+const { validatePortal, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -27,7 +28,7 @@ exports.handler = async options => {
 
   setLogLevel(options);
   logDebugInfo(options);
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -35,9 +36,14 @@ exports.handler = async options => {
   }
   const portalId = getPortalId(options);
 
-  trackCommandUsage('hubdb-create', null, portalId);
+  trackCommandUsage('hubdb-create', {}, portalId);
 
   try {
+    const filePath = path.resolve(getCwd(), src);
+    if (!isFileValidJSON(filePath)) {
+      process.exit(1);
+    }
+
     const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));
     logger.log(
       `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
@@ -51,6 +57,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe: 'local path to file used for import',

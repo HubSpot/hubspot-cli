@@ -14,6 +14,7 @@ const {
   addConfigOptions,
   addPortalOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
   getMode,
@@ -39,7 +40,7 @@ exports.handler = async options => {
 
   setLogLevel(options);
   logDebugInfo(options);
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
@@ -99,6 +100,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:

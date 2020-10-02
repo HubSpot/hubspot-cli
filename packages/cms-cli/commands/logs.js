@@ -5,6 +5,7 @@ const {
   addConfigOptions,
   setLogLevel,
   getPortalId,
+  addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -19,14 +20,13 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
-const { validatePortal } = require('../lib/validation');
 const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
+const { validatePortal } = require('../lib/validation');
 
 const TAIL_DELAY = 5000;
 
@@ -57,20 +57,12 @@ const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
     process.exit(1);
   }
-};
-
-const logError = async (error, portalId, functionPath) => {
-  return logServerlessFunctionApiErrorInstance(
-    error,
-    await getScopeDataForFunctions(portalId),
-    new ApiErrorContext({ portalId, functionPath })
-  );
 };
 
 const tailLogs = async ({
@@ -92,7 +84,11 @@ const tailLogs = async ({
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
-      await logError(e, portalId, functionPath);
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        e,
+        new ApiErrorContext({ portalId, functionPath })
+      );
     }
   }
 
@@ -138,7 +134,11 @@ exports.handler = async options => {
 
   const functionResp = await getFunctionByPath(portalId, functionPath).catch(
     async e => {
-      await logError(e, portalId, functionPath);
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        e,
+        new ApiErrorContext({ portalId, functionPath })
+      );
       process.exit();
     }
   );
@@ -150,7 +150,6 @@ exports.handler = async options => {
       functionId: functionResp.id,
       functionPath,
       portalId,
-
       Name: options.portal,
       compact,
     });
@@ -190,6 +189,7 @@ exports.builder = yargs => {
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
 
   return yargs;
 };

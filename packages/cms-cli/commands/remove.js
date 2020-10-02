@@ -13,6 +13,7 @@ const {
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -27,7 +28,7 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath, path: hsPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -56,6 +57,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Remote hubspot path',
     type: 'string',

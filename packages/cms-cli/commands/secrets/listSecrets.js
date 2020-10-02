@@ -9,7 +9,6 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { fetchSecrets } = require('@hubspot/cms-lib/api/secrets');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -17,6 +16,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
@@ -29,7 +29,7 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -46,9 +46,9 @@ exports.handler = async options => {
     logger.groupEnd(groupLabel);
   } catch (e) {
     logger.error('The secrets could not be listed');
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
+      portalId,
       e,
-      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
         request: 'add secret',
         portalId,
@@ -60,5 +60,6 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   return yargs;
 };
