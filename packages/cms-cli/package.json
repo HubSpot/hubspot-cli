@@ -8,7 +8,6 @@
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "dependencies": {
-    "@hubspot/api-auth-lib": "^1.1.7",
     "@hubspot/cms-lib": "^2.1.0",
     "chalk": "^4.1.0",
     "commander": "^2.16.0",
