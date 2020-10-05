@@ -120,7 +120,7 @@ exports.describe = 'get logs for a function';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest, tail, compact, path: functionPath } = options;
+  const { latest, follow, compact, path: functionPath } = options;
   let logsResp;
   const portalId = getPortalId(options);
 
@@ -145,7 +145,7 @@ exports.handler = async options => {
 
   logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
-  if (tail) {
+  if (follow) {
     await tailLogs({
       functionId: functionResp.id,
       functionPath,
@@ -181,9 +181,9 @@ exports.builder = yargs => {
     describe: 'output compact logs',
     type: 'boolean',
   });
-  yargs.option('tail', {
-    alias: ['t', 'follow', 'f'],
-    describe: 'tail logs',
+  yargs.option('follow', {
+    alias: ['t', 'tail', 'f'],
+    describe: 'follow logs',
     type: 'boolean',
   });
 

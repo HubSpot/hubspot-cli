@@ -36,7 +36,6 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { commaSeparatedValues } = require('../lib/text');
 const { authenticateWithOauth } = require('../lib/oauth');
 
-const COMMAND_NAME = 'auth <type>';
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
   PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
@@ -64,7 +63,7 @@ const promptForPortalNameIfNotSet = async updatedConfig => {
   }
 };
 
-exports.command = 'auth';
+exports.command = 'auth <type>';
 exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
 
 exports.handler = async options => {
@@ -82,7 +81,7 @@ exports.handler = async options => {
     process.exit(1);
   }
 
-  trackCommandUsage(COMMAND_NAME);
+  trackCommandUsage('auth');
 
   let configData;
   let updatedConfig;
