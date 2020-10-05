@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { version } = require('../../package.json');
 
 const {
   loadConfig,
@@ -22,26 +21,23 @@ const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
 const {
   addConfigOptions,
   addPortalOptions,
-  addLoggerOptions,
   addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validatePortal } = require('../../lib/validation');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 
-const UPLOAD_COMMAND_NAME = 'filemanager-upload';
-const UPLOAD_DESCRIPTION =
+exports.command = 'upload <src> <dest>';
+exports.describe =
   'Upload a folder or file from your computer to the HubSpot File Manager';
 
-const action = async ({ src, dest }, options) => {
+exports.handler = async options => {
+  const { config: configPath, src, dest } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
@@ -70,7 +66,7 @@ const action = async ({ src, dest }, options) => {
   }
   const normalizedDest = convertToUnixPath(dest);
   trackCommandUsage(
-    UPLOAD_COMMAND_NAME,
+    'filemanager-upload',
     { type: stats.isFile() ? 'file' : 'folder' },
     portalId
   );
@@ -131,10 +127,7 @@ const action = async ({ src, dest }, options) => {
   }
 };
 
-const command = 'upload <src> <dest>';
-const describe = UPLOAD_DESCRIPTION;
-const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
-const builder = yargs => {
+exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
@@ -143,36 +136,9 @@ const builder = yargs => {
     describe:
       'Path to the local file, relative to your current working directory',
     type: 'string',
-    demand: true,
   });
   yargs.positional('dest', {
     describe: 'Path in HubSpot Design Tools, can be a net new path',
     type: 'string',
-    demand: true,
   });
-};
-
-const configureCommanderFileManagerUploadCommand = commander => {
-  commander
-    .version(version)
-    .description(UPLOAD_DESCRIPTION)
-    .arguments('<src> <dest>')
-    .action((src, dest) => action({ src, dest }, commander));
-
-  addConfigOptions(commander);
-  addPortalOptions(commander);
-  addLoggerOptions(commander);
-  addUseEnvironmentOptions(commander);
-  addHelpUsageTracking(commander, UPLOAD_COMMAND_NAME);
-};
-
-module.exports = {
-  UPLOAD_DESCRIPTION,
-  // Yargs
-  command,
-  describe,
-  handler,
-  builder,
-  // Commander
-  configureCommanderFileManagerUploadCommand,
 };

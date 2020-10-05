@@ -1,7 +1,5 @@
 const path = require('path');
 const fs = require('fs-extra');
-const { version } = require('../package.json');
-
 const {
   logFileSystemErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers');
@@ -9,17 +7,10 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { createProject } = require('@hubspot/cms-lib/projects');
 const { createFunction } = require('@hubspot/cms-lib/functions');
 
-const {
-  addLoggerOptions,
-  setLogLevel,
-  getPortalId,
-} = require('../lib/commonOpts');
+const { setLogLevel, getPortalId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
+const { trackCommandUsage } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
 const { createModulePrompt } = require('../lib/createModulePrompt');
@@ -64,9 +55,6 @@ const PROJECT_REPOSITORIES = {
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
-
-const COMMAND_NAME = 'create';
-const DESCRIPTION = `Create HubSpot CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;
 
 const createModule = (moduleDefinition, name, dest) => {
   const writeModuleMeta = ({ contentTypes, label, global }, dest) => {
@@ -132,51 +120,31 @@ const createTemplate = (name, dest, type = 'page-template') => {
   fs.copySync(assetPath, filePath);
 };
 
-// Yargs Configuration
-const command = `${COMMAND_NAME} <type> [name] [dest]`;
-const describe = DESCRIPTION;
-const builder = yargs => {
-  yargs.positional('type', {
-    describe: 'Type of asset',
-    type: 'string',
-    choices: Object.values(TYPES),
-    demand: true,
-  });
-  yargs.positional('name', {
-    describe: 'Name of new asset',
-    type: 'string',
-  });
-  yargs.positional('dest', {
-    describe:
-      'Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory.',
-    type: 'string',
-  });
+exports.command = 'create <type> [name] [dest]';
+exports.describe = `Create HubSpot CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;
 
-  return yargs;
-};
-const handler = async argv =>
-  action({ type: argv.type, name: argv.name, dest: argv.dest }, argv);
+exports.handler = async options => {
+  let { type: assetType, name, dest } = options;
 
-const action = async ({ type, name, dest }, options) => {
   setLogLevel(options);
   logDebugInfo(options);
-  type = typeof type === 'string' && type.toLowerCase();
+  assetType = typeof assetType === 'string' && assetType.toLowerCase();
 
-  if (type === 'global-partial') {
+  if (assetType === 'global-partial') {
     logger.error(
-      `The asset type ${type} has been deprecated. Please choose the "template" asset and select "global partial".`
+      `The asset type ${assetType} has been deprecated. Please choose the "template" asset and select "global partial".`
     );
     return;
   }
 
-  if (!type || !TYPES[type]) {
+  if (!assetType || !TYPES[assetType]) {
     logger.error(
-      `The asset type ${type} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
+      `The asset type ${assetType} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
     );
     return;
   }
 
-  switch (type) {
+  switch (assetType) {
     case TYPES.function:
       dest = name;
       break;
@@ -184,7 +152,7 @@ const action = async ({ type, name, dest }, options) => {
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']:
-      dest = name || type;
+      dest = name || assetType;
       break;
     default:
       break;
@@ -203,14 +171,16 @@ const action = async ({ type, name, dest }, options) => {
     return;
   }
 
-  let commandTrackingContext = { assetType: type };
+  let commandTrackingContext = { assetType: assetType };
 
-  if (!name && [TYPES.module, TYPES.template].includes(type)) {
-    logger.error(`The 'name' argument is required when creating a ${type}.`);
+  if (!name && [TYPES.module, TYPES.template].includes(assetType)) {
+    logger.error(
+      `The 'name' argument is required when creating a ${assetType}.`
+    );
     return;
   }
 
-  switch (type) {
+  switch (assetType) {
     case TYPES.module: {
       const moduleDefinition = await createModulePrompt();
       createModule(moduleDefinition, name, dest);
@@ -224,12 +194,24 @@ const action = async ({ type, name, dest }, options) => {
       break;
     }
     case TYPES['website-theme']:
-      createProject(dest, type, PROJECT_REPOSITORIES[type], 'src', options);
+      createProject(
+        dest,
+        assetType,
+        PROJECT_REPOSITORIES[assetType],
+        'src',
+        options
+      );
       break;
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']: {
-      createProject(dest, type, PROJECT_REPOSITORIES[type], '', options);
+      createProject(
+        dest,
+        assetType,
+        PROJECT_REPOSITORIES[assetType],
+        '',
+        options
+      );
       break;
     }
     case TYPES.function: {
@@ -241,39 +223,24 @@ const action = async ({ type, name, dest }, options) => {
       break;
   }
 
-  trackCommandUsage(COMMAND_NAME, commandTrackingContext, getPortalId(options));
+  trackCommandUsage('create', commandTrackingContext, getPortalId(options));
 };
 
-// Commander Configuration
-function configureCommanderCreateCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    // For a theme or function this is `<type> <dest>`
-    // TODO: Yargs allows an array of commands.
-    .arguments('<type> [name] [dest]')
-    .option(
-      '--theme-version <theme-version>',
-      'Theme boilerplate version to use',
-      ''
-    )
-    .option(
-      '--project-version <project-version>',
-      'Boilerplate version to use',
-      ''
-    )
-    .action(async (type, name, dest) => action({ type, name, dest }, program));
+exports.builder = yargs => {
+  yargs.positional('type', {
+    describe: 'Type of asset',
+    type: 'string',
+    choices: Object.values(TYPES),
+  });
+  yargs.positional('name', {
+    describe: 'Name of new asset',
+    type: 'string',
+  });
+  yargs.positional('dest', {
+    describe:
+      'Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory.',
+    type: 'string',
+  });
 
-  addLoggerOptions(program);
-  addHelpUsageTracking(program, COMMAND_NAME);
-}
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderCreateCommand,
+  return yargs;
 };

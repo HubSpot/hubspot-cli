@@ -12,11 +12,9 @@ const { updateSecret } = require('@hubspot/cms-lib/api/secrets');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
   addUseEnvironmentOptions,
   setLogLevel,
@@ -24,12 +22,14 @@ const {
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'Update an existing HubSpot secret';
+exports.command = 'update <name> <value>';
+exports.describe = 'Update an existing HubSpot secret';
 
-async function action({ secretName, secretValue }, options) {
+exports.handler = async options => {
+  const { name: secretName, value: secretValue, config: configPath } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
@@ -55,26 +55,7 @@ async function action({ secretName, secretValue }, options) {
       })
     );
   }
-}
-
-function configureSecretsUpdateCommand(program) {
-  program
-    .version(version)
-    .description('Update an existing HubSpot secret')
-    .arguments('<name> <value>')
-    .action(async (secretName, secretValue) => {
-      await action({ secretName, secretValue }, program);
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-  addUseEnvironmentOptions(program);
-}
-
-exports.command = 'update <name> <value>';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
@@ -90,9 +71,3 @@ exports.builder = yargs => {
   });
   return yargs;
 };
-
-exports.handler = async argv => {
-  await action({ secretName: argv.name, secretValue: argv.value }, argv);
-};
-
-exports.configureSecretsUpdateCommand = configureSecretsUpdateCommand;

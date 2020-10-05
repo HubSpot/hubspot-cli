@@ -9,11 +9,9 @@ const { downloadHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
   addUseEnvironmentOptions,
   setLogLevel,
@@ -21,12 +19,14 @@ const {
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const FETCH_DESCRIPTION = 'fetch a HubDB table';
+exports.command = 'fetch <tableId> [dest]';
+exports.describe = 'fetch a HubDB table';
 
-const action = async ({ tableId, dest }, options) => {
+exports.handler = async options => {
+  const { config: configPath, tableId, dest } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
@@ -46,11 +46,7 @@ const action = async ({ tableId, dest }, options) => {
   }
 };
 
-const command = 'fetch <tableId> [dest]';
-const describe = FETCH_DESCRIPTION;
-const handler = async argv =>
-  action({ tableId: argv.tableId, dest: argv.dest }, argv);
-const builder = yargs => {
+exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addConfigOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
@@ -58,37 +54,10 @@ const builder = yargs => {
   yargs.positional('tableId', {
     describe: 'HubDB Table ID',
     type: 'string',
-    demand: true,
   });
 
   yargs.positional('dest', {
     describe: 'Local destination folder to fetch table to',
     type: 'string',
   });
-};
-
-function configureCommanderHubDbFetchCommand(commander) {
-  commander
-    .version(version)
-    .description(FETCH_DESCRIPTION)
-    .arguments('<tableId> [dest]')
-    .action(async (tableId, dest, command = {}) =>
-      action({ tableId, dest }, command)
-    );
-
-  addLoggerOptions(commander);
-  addPortalOptions(commander);
-  addConfigOptions(commander);
-  addUseEnvironmentOptions(commander);
-}
-
-module.exports = {
-  FETCH_DESCRIPTION,
-  // Yargs
-  command,
-  describe,
-  handler,
-  builder,
-  // Commander
-  configureCommanderHubDbFetchCommand,
 };
