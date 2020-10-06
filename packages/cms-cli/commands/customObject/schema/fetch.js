@@ -10,13 +10,13 @@ const { validatePortal } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { downloadSchema } = require('@hubspot/cms-lib/schema');
+const { downloadSchema, getResolvedPath } = require('@hubspot/cms-lib/schema');
 
-exports.command = 'fetch <schemaObjectType> [dest]';
-exports.describe = 'Fetch a custom object schema given a schemaObjectType';
+exports.command = 'fetch <name> [dest]';
+exports.describe = 'Fetch a custom object schema';
 
 exports.handler = async options => {
-  let { schemaObjectType, dest } = options;
+  let { name, dest } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -31,10 +31,11 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-fetch', null, portalId);
 
   try {
-    await downloadSchema(portalId, schemaObjectType, dest);
+    await downloadSchema(portalId, name, dest);
+    logger.success(`Saved schema to ${getResolvedPath(dest, name)}`);
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to fetch ${schemaObjectType}`);
+    logger.error(`Unable to fetch ${name}`);
   }
 };
 
@@ -50,14 +51,13 @@ exports.builder = yargs => {
     ],
   ]);
 
-  yargs.positional('schemaObjectType', {
-    describe: 'Fully qualified name or object type ID of the target schema.',
+  yargs.positional('name', {
+    describe: 'Name of the target schema',
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe:
-      'Local folder where schema will be written.  If omitted, current working directory will be used',
+    describe: 'Local folder where schema will be written',
     type: 'string',
   });
 };

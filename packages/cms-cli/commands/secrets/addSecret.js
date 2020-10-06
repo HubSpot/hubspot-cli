@@ -9,28 +9,28 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { addSecret } = require('@hubspot/cms-lib/api/secrets');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'Add a HubSpot secret';
+exports.command = 'add <name> <value>';
+exports.describe = 'Add a HubSpot secret';
 
-async function action({ secretName, secretValue }, options) {
+exports.handler = async options => {
+  const { config: configPath, name: secretName, value: secretValue } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -46,38 +46,21 @@ async function action({ secretName, secretValue }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not added`);
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
+      portalId,
       e,
-      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
         request: 'add secret',
         portalId,
       })
     );
   }
-}
-
-function configureSecretsAddCommand(program) {
-  program
-    .version(version)
-    .description('Add a HubSpot secret')
-    .arguments('<name> <value>')
-    .action(async (secretName, secretValue) => {
-      await action({ secretName, secretValue }, program);
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-exports.command = 'add <name> <value>';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
     describe: 'Name of the secret',
     type: 'string',
@@ -88,9 +71,3 @@ exports.builder = yargs => {
   });
   return yargs;
 };
-
-exports.handler = async argv => {
-  await action({ secretName: argv.name, secretValue: argv.value }, argv);
-};
-
-exports.configureSecretsAddCommand = configureSecretsAddCommand;

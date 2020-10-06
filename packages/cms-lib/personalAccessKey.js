@@ -12,8 +12,8 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('./lib/constants');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
-const { logErrorInstance } = require('./errorHandlers');
 
 const refreshRequests = new Map();
 

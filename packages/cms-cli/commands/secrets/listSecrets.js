@@ -9,28 +9,27 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { fetchSecrets } = require('@hubspot/cms-lib/api/secrets');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'List all HubSpot secrets';
+exports.command = 'list';
+exports.describe = 'List all HubSpot secrets';
 
-async function action(options) {
+exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -47,38 +46,20 @@ async function action(options) {
     logger.groupEnd(groupLabel);
   } catch (e) {
     logger.error('The secrets could not be listed');
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
+      portalId,
       e,
-      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
         request: 'add secret',
         portalId,
       })
     );
   }
-}
-
-function configureSecretsListCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .action(action);
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-exports.command = 'list';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   return yargs;
 };
-
-exports.handler = action;
-
-exports.configureSecretsListCommand = configureSecretsListCommand;

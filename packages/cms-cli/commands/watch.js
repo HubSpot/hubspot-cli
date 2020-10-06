@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { version } = require('../package.json');
 
 const {
   watch,
@@ -14,34 +13,34 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const {
   addConfigOptions,
   addPortalOptions,
-  addLoggerOptions,
   addModeOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal, validateMode } = require('../lib/validation');
-const {
-  trackCommandUsage,
-  addHelpUsageTracking,
-} = require('../lib/usageTracking');
+const { trackCommandUsage } = require('../lib/usageTracking');
 
-const COMMAND_NAME = 'watch';
-const DESCRIPTION =
+exports.command = 'watch <src> <dest>';
+exports.describe =
   'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
 
-const action = async ({ src, dest }, options) => {
-  setLogLevel(options);
-  logDebugInfo(options);
+exports.handler = async options => {
   const {
+    src,
+    dest,
     config: configPath,
     remove,
     initialUpload,
     disableInitial,
     notify,
   } = options;
-  loadConfig(configPath);
+
+  setLogLevel(options);
+  logDebugInfo(options);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
@@ -87,7 +86,7 @@ const action = async ({ src, dest }, options) => {
     );
   }
 
-  trackCommandUsage(COMMAND_NAME, { mode }, portalId);
+  trackCommandUsage('watch', { mode }, portalId);
   watch(portalId, absoluteSrcPath, dest, {
     mode,
     cwd: getCwd(),
@@ -97,24 +96,20 @@ const action = async ({ src, dest }, options) => {
   });
 };
 
-// Yargs Configuration
-const command = `${COMMAND_NAME} <src> <dest>`;
-const describe = DESCRIPTION;
-const builder = yargs => {
+exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
+  addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
     describe:
       'Path to the local directory your files are in, relative to your current working directory',
     type: 'string',
-    demand: true,
   });
   yargs.positional('dest', {
     describe: 'Path in HubSpot Design Tools. Can be a net new path',
     type: 'string',
-    demand: true,
   });
   yargs.option('remove', {
     alias: 'r',
@@ -142,42 +137,4 @@ const builder = yargs => {
   });
 
   return yargs;
-};
-const handler = async argv => action({ src: argv.src, dest: argv.dest }, argv);
-
-const configureCommanderWatchCommand = program => {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<src> <dest>')
-    .option(
-      '--remove',
-      'Will cause watch to delete files in your HubSpot account that are not found locally.'
-    )
-    .option('--initial-upload', 'Upload directory before watching for updates')
-    .option(
-      '--disable-initial',
-      'Disable the initial upload when watching a directory (default)'
-    )
-    .option(
-      '--notify <path/to/file>',
-      'log to specified file when a watch task is triggered and after workers have gone idle'
-    )
-    .action((src, dest) => action({ src, dest }, program));
-
-  addConfigOptions(program);
-  addPortalOptions(program);
-  addLoggerOptions(program);
-  addModeOptions(program, { write: true });
-  addHelpUsageTracking(program, COMMAND_NAME);
-};
-
-module.exports = {
-  // Yargs
-  command,
-  describe,
-  builder,
-  handler,
-  // Commander
-  configureCommanderWatchCommand,
 };

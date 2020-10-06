@@ -47,9 +47,15 @@ const cleanSchema = schema => {
   return parsedSchema;
 };
 
+const getResolvedPath = (dest, name) => {
+  if (name) return path.resolve(getCwd(), dest || '', `${name}.json`);
+
+  return path.resolve(getCwd(), dest || '');
+};
+
 const writeSchemaToDisk = (schema, dest) =>
   fs.outputFileSync(
-    path.resolve(getCwd(), dest || '', `${schema.name}.json`),
+    getResolvedPath(dest, schema.name),
     prettier.format(JSON.stringify(cleanSchema(schema)), {
       parser: 'json',
     })
@@ -66,8 +72,9 @@ const downloadSchemas = async (portalId, dest) => {
 
   if (response.results.length) {
     response.results.forEach(r => writeSchemaToDisk(r, dest));
-    logger.log(`Wrote schemas to ${path.resolve(getCwd(), dest || '')}`);
   }
+
+  return;
 };
 
 const downloadSchema = async (portalId, schemaObjectType, dest) => {
@@ -77,8 +84,10 @@ const downloadSchema = async (portalId, schemaObjectType, dest) => {
 
 module.exports = {
   writeSchemaToDisk,
+  getResolvedPath,
   listSchemas,
   cleanSchema,
   downloadSchemas,
   downloadSchema,
+  logSchemas,
 };

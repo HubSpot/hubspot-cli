@@ -1,10 +1,17 @@
+const { StatusCodeError } = require('request-promise-native/errors');
+const { getPortalConfig } = require('../lib/config');
+const { fetchScopeData } = require('../api/localDevAuth/authenticated');
 const {
+  ApiErrorContext,
   logApiErrorInstance,
   logFileSystemErrorInstance,
+  logServerlessFunctionApiErrorInstance,
 } = require('../errorHandlers');
 const { LOG_LEVEL, logger } = require('../logger');
 
+jest.mock('../lib/config');
 jest.mock('../logger');
+jest.mock('../api/localDevAuth/authenticated');
 
 function createApiError(statusCode, method) {
   return Object.freeze({
@@ -177,6 +184,75 @@ describe('cms-lib/errorHandlers', () => {
       it('should log debugs with details of error and context', () => {
         expect(testErrorAndContextDebug(totalErrors)).toBe(totalErrors);
       });
+    });
+  });
+
+  describe('logServerlessApiErrorInstance', () => {
+    const portalId = 123;
+    const logErrorSpy = jest.spyOn(logger, 'error');
+    beforeEach(() => {
+      logger.clear();
+      getPortalConfig.mockReturnValue({
+        portalId,
+        authType: 'personalaccesskey',
+        personalAccessKey: 'let-me-in',
+      });
+    });
+    afterEach(() => {
+      logErrorSpy.mockReset();
+    });
+    it('logs normal errors', async () => {
+      const message = 'Something went wrong';
+      const error = new Error(message);
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        error,
+        new ApiErrorContext({
+          request: 'add secret',
+          portalId,
+        })
+      );
+      expect(logErrorSpy).toHaveBeenCalledWith(
+        `A Error has occurred. ${message}`
+      );
+    });
+    it('detects scope error with hub scope', async () => {
+      const error = new StatusCodeError(403, {
+        category: 'MISSING_SCOPES',
+      });
+      fetchScopeData.mockImplementation(() =>
+        Promise.resolve({
+          portalId,
+          userId: 456,
+          scopeGroup: 'cms.functions.read_write',
+          portalScopesInGroup: [
+            'SERVERLESS_FUNCTIONS',
+            'SERVERLESS_FUNCTIONS_READ',
+            'SERVERLESS_FUNCTIONS_WRITE',
+          ],
+          userScopesInGroup: [
+            'SERVERLESS_FUNCTIONS',
+            'SERVERLESS_FUNCTIONS_READ',
+            'SERVERLESS_FUNCTIONS_WRITE',
+          ],
+          portalUserScopeIntersection: [
+            'SERVERLESS_FUNCTIONS',
+            'SERVERLESS_FUNCTIONS_READ',
+            'SERVERLESS_FUNCTIONS_WRITE',
+          ],
+        })
+      );
+      await logServerlessFunctionApiErrorInstance(
+        portalId,
+        error,
+        new ApiErrorContext({
+          request: 'add secret',
+          portalId,
+        })
+      );
+      expect(logErrorSpy).toHaveBeenCalledWith(
+        'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
+      );
     });
   });
 });

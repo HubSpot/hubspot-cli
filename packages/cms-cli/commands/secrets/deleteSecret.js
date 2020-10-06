@@ -9,28 +9,28 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
-const { getScopeDataForFunctions } = require('@hubspot/cms-lib/lib/scopes');
 
 const { validatePortal } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { version } = require('../../package.json');
 
 const {
   addConfigOptions,
-  addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
-const DESCRIPTION = 'Delete a HubSpot secret';
+exports.command = 'delete <name>';
+exports.describe = 'Delete a HubSpot secret';
 
-async function action({ secretName }, options) {
+exports.handler = async options => {
+  const { config: configPath, name: secretName } = options;
+
   setLogLevel(options);
   logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validatePortal(options)))) {
@@ -46,47 +46,24 @@ async function action({ secretName }, options) {
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
-    logServerlessFunctionApiErrorInstance(
+    await logServerlessFunctionApiErrorInstance(
+      portalId,
       e,
-      await getScopeDataForFunctions(portalId),
       new ApiErrorContext({
         request: 'delete a secret',
         portalId,
       })
     );
   }
-}
-
-function configureSecretsDeleteCommand(program) {
-  program
-    .version(version)
-    .description(DESCRIPTION)
-    .arguments('<name>')
-    .action(async secretName => {
-      action({ secretName }, program);
-    });
-
-  addLoggerOptions(program);
-  addPortalOptions(program);
-  addConfigOptions(program);
-}
-
-exports.command = 'delete <name>';
-
-exports.describe = DESCRIPTION;
+};
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
     describe: 'Name of the secret',
     type: 'string',
   });
   return yargs;
 };
-
-exports.handler = async argv => {
-  await action({ secretName: argv.name }, argv);
-};
-
-exports.configureSecretsDeleteCommand = configureSecretsDeleteCommand;

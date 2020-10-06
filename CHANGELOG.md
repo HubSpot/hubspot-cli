@@ -1,5 +1,11 @@
 Change Log
 ==========
+## 2.1.0
+ * Initial version for custom object CLI functionality. Check out [CRM Custom Objects](https://developers.hubspot.com/docs/api/crm/crm-custom-objects) and type `hs custom-object` to get started
+ * Improve scope error handling and messaging ([#257](https://github.com/HubSpot/hubspot-cms-tools/issues/314))
+ * Make using environment variable based config explicit when running commands `--use-env` ([#257](https://github.com/HubSpot/hubspot-cms-tools/issues/257))
+ * Fix for `hs function create` ([#329](https://github.com/HubSpot/hubspot-cms-tools/issues/329))
+ * Circular dependency fixes
 
 ## 2.0.0
  * `hs watch` no longer does an initial upload when the command first runs.  You can opt into the old behavior by passing the `--enable-initial=true` flag. ([#273](https://github.com/HubSpot/hubspot-cms-tools/pull/273))

@@ -16,6 +16,7 @@ const {
   addConfigOptions,
   addLoggerOptions,
   addPortalOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getPortalId,
 } = require('../lib/commonOpts');
@@ -32,7 +33,7 @@ function configureServerCommand(program) {
       setLogLevel(options);
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;
-      loadConfig(configPath);
+      loadConfig(configPath, options);
       checkAndWarnGitInclusion();
 
       if (!validateConfig()) {
@@ -62,6 +63,7 @@ function configureServerCommand(program) {
   addLoggerOptions(program);
   addPortalOptions(program);
   addConfigOptions(program);
+  addUseEnvironmentOptions(program);
 }
 
 module.exports = {
