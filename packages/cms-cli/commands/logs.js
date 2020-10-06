@@ -179,25 +179,15 @@ exports.builder = yargs => {
       describe: 'output compact logs',
       type: 'boolean',
     },
-    tail: {
-      alias: ['t', 'follow', 'f'],
-      describe: 'tail logs',
+    follow: {
+      alias: ['t', 'tail', 'f'],
+      describe: 'follow logs',
       type: 'boolean',
     },
     limit: {
       alias: ['limit', 'n', 'max-count'],
       describe: 'limit the number of logs to output',
       type: 'number',
-    },
-    after: {
-      alias: ['after', 'since'],
-      describe: 'show logs more recent than a specific date (format?)',
-      type: 'string',
-    },
-    before: {
-      alias: ['before', 'until'],
-      describe: 'show logs older than a specific date (format?)',
-      type: 'string',
     },
   });
 
