@@ -33,7 +33,9 @@ const formatLogPayloadData = log => {
 };
 
 const formatLogHeader = log => {
-  return `${formatTimestamp(log)}${SEPARATOR}${LOG_STATUS_COLORS[log.status](
+  const color = LOG_STATUS_COLORS[log.status];
+
+  return `${formatTimestamp(log)}${SEPARATOR}${color(
     log.status
   )}${SEPARATOR}${formatExecutionTime(log)}`;
 };
