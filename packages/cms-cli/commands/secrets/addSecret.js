@@ -21,9 +21,9 @@ const {
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { secretValuePrompt } = require('../lib/secretPrompt');
+const { secretValuePrompt } = require('../../lib/secretPrompt');
 
-exports.command = 'add <name> <value>';
+exports.command = 'add <name>';
 exports.describe = 'Add a HubSpot secret';
 
 exports.handler = async options => {
