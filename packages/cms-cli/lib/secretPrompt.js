@@ -2,7 +2,8 @@ const inquirer = require('inquirer');
 
 const SECRET_VALUE_PROMPT = {
   name: 'secretValue',
-  message: 'What is the value of your secret',
+  type: 'password',
+  message: 'Enter a value for your secret',
   validate(val) {
     if (typeof val !== 'string') {
       return 'You entered an invalid value. Please try again.';

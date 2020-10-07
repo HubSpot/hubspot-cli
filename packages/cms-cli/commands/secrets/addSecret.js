@@ -41,7 +41,7 @@ exports.handler = async options => {
   trackCommandUsage('secrets-add', {}, portalId);
 
   try {
-    const secretValue = secretValuePrompt();
+    const { secretValue } = await secretValuePrompt();
 
     await addSecret(portalId, secretName, secretValue);
     logger.log(
