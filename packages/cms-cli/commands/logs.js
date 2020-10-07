@@ -169,27 +169,29 @@ exports.builder = yargs => {
     describe: 'Path to serverless function',
     type: 'string',
   });
-  yargs.options({
-    latest: {
-      alias: 'l',
-      describe: 'retrieve most recent log only',
-      type: 'boolean',
-    },
-    compact: {
-      describe: 'output compact logs',
-      type: 'boolean',
-    },
-    follow: {
-      alias: ['t', 'tail', 'f'],
-      describe: 'follow logs',
-      type: 'boolean',
-    },
-    limit: {
-      alias: ['limit', 'n', 'max-count'],
-      describe: 'limit the number of logs to output',
-      type: 'number',
-    },
-  });
+  yargs
+    .options({
+      latest: {
+        alias: 'l',
+        describe: 'retrieve most recent log only',
+        type: 'boolean',
+      },
+      compact: {
+        describe: 'output compact logs',
+        type: 'boolean',
+      },
+      follow: {
+        alias: ['t', 'tail', 'f'],
+        describe: 'follow logs',
+        type: 'boolean',
+      },
+      limit: {
+        alias: ['limit', 'n', 'max-count'],
+        describe: 'limit the number of logs to output',
+        type: 'number',
+      },
+    })
+    .conflicts('follow', 'limit');
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
