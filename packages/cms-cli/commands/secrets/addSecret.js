@@ -21,12 +21,13 @@ const {
   getPortalId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { secretValuePrompt } = require('../lib/secretPrompt');
 
 exports.command = 'add <name> <value>';
 exports.describe = 'Add a HubSpot secret';
 
 exports.handler = async options => {
-  const { config: configPath, name: secretName, value: secretValue } = options;
+  const { config: configPath, name: secretName } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -40,6 +41,8 @@ exports.handler = async options => {
   trackCommandUsage('secrets-add', {}, portalId);
 
   try {
+    const secretValue = secretValuePrompt();
+
     await addSecret(portalId, secretName, secretValue);
     logger.log(
       `The secret "${secretName}" was added to the HubSpot portal: ${portalId}`
