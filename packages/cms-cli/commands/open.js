@@ -5,11 +5,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const {
-  logSiteLinks,
-  getSiteLinks,
-  openLink,
-} = require('@hubspot/cms-lib/links');
+const { logSiteLinks, getSiteLinks, openLink } = require('../lib/links');
 
 exports.command = 'open [shortcut]';
 exports.describe = 'Quickly open a page to HubSpot in your browser';
