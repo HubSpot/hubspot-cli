@@ -30,6 +30,13 @@ fs.readFileSync = () => mockedReadFile;
 fs.existsSync = () => mockedExistsValue;
 fs.writeFileSync = () => true;
 fs.unlinkSync = () => true;
+fs.createWriteStream = jest.fn().mockReturnValue({
+  on: jest.fn((val, cb) => {
+    if (val === 'close') {
+      cb();
+    }
+  }),
+});
 fs.outputFile = jest.fn((dest, data) => {
   return data;
 });

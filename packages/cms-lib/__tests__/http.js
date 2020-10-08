@@ -1,4 +1,5 @@
-const request = require('request-promise-native');
+const requestPN = require('request-promise-native');
+const fs = require('fs-extra');
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
 const { ENVIRONMENTS } = require('../lib/constants');
@@ -9,6 +10,17 @@ jest.mock('request-promise-native', () => ({
   get: jest.fn().mockReturnValue(Promise.resolve()),
   post: jest.fn().mockReturnValue(Promise.resolve()),
 }));
+
+jest.mock('request', () => ({
+  get: jest.fn().mockReturnValue({
+    on: jest.fn((val, cb) => {
+      if (val === 'response') {
+        cb({ statusCode: 200 });
+      }
+    }),
+    pipe: jest.fn(),
+  }),
+}));
 jest.mock('../lib/config');
 jest.mock('../logger');
 
@@ -17,6 +29,29 @@ describe('http', () => {
     jest.clearAllMocks();
     getAndLoadConfigIfNeeded.mockReset();
     getPortalConfig.mockReset();
+  });
+  describe('getOctetStream()', () => {
+    it('not sure', async () => {
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        httpTimeout: 1000,
+        portals: [
+          {
+            id: 123,
+            apiKey: 'abc',
+          },
+        ],
+      });
+      getPortalConfig.mockReturnValue({
+        id: 123,
+        apiKey: 'abc',
+      });
+
+      await http.getOctetStream(123, {
+        uri: 'some/endpoint/path',
+      });
+
+      expect(fs.createWriteStream).toBeCalledWith();
+    });
   });
   describe('getRequestOptions()', () => {
     it('constructs baseUrl as expected based on environment', () => {
@@ -70,7 +105,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -108,7 +143,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -143,7 +178,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
