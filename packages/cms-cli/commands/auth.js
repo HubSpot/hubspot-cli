@@ -63,7 +63,7 @@ const promptForPortalNameIfNotSet = async updatedConfig => {
   }
 };
 
-exports.command = 'auth <type>';
+exports.command = 'auth [type]';
 exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
 
 exports.handler = async options => {
