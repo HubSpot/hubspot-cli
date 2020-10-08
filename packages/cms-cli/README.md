@@ -29,6 +29,15 @@ cd ~
 hs init
 ```
 
+#### Auto Completion
+You can set up command autocompletion by running
+
+```bash
+hs completion
+```
+
+and copying the output to either your `.bashrc` or `.zshrc`, and then sourcing that file `source ~/.bashrc` `source ~/.zshrc` or restarting your terminal.
+
 ## Commands
 A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cms-cli).
 
