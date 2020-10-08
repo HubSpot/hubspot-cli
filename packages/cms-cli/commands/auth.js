@@ -63,7 +63,7 @@ const promptForPortalNameIfNotSet = async updatedConfig => {
   }
 };
 
-exports.command = 'auth <type>';
+exports.command = 'auth [type]';
 exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
 
 exports.handler = async options => {
@@ -78,6 +78,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
+    logger.info('To create a new config file, use the "hs init" command.');
     process.exit(1);
   }
 
