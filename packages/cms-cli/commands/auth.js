@@ -78,6 +78,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!validateConfig()) {
+    logger.info('To create a new config file, use the "hs init" command.');
     process.exit(1);
   }
 
