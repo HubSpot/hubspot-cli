@@ -1,18 +1,16 @@
-const { getEnv } = require('./lib/config');
-const { ENVIRONMENTS } = require('./lib/constants');
-const { getHubSpotWebsiteOrigin } = require('./lib/urls');
-const { logger } = require('./logger');
+const { getEnv } = require('@hubspot/cms-lib/lib/config');
+const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
+const { logger } = require('@hubspot/cms-lib/logger');
 const chalk = require('chalk');
 const { table, getBorderCharacters } = require('table');
-var opn = require('opn');
+const open = require('open');
 
 const logSiteLinks = links => {
   const linksAsArray = Object.values(links)
     .sort((a, b) => (a.shortcut < b.shortcut ? -1 : 1))
-    .map((l, i) => [
-      `${i < 10 ? ` ${i}` : i}) ${l.shortcut}${
-        l.alias ? ` [alias: ${l.alias}]` : ''
-      }`,
+    .map(l => [
+      `${l.shortcut}${l.alias ? ` [alias: ${l.alias}]` : ''}`,
       '=>',
       l.url,
     ]);
@@ -106,20 +104,10 @@ const getSiteLinks = portalId => {
 };
 
 const openLink = (portalId, shortcut) => {
-  const links = getSiteLinks(portalId);
+  const match = Object.values(getSiteLinks(portalId)).find(
+    l => l.shortcut === shortcut || (l.alias && l.alias === shortcut)
+  );
 
-  const getMatch = () => {
-    const shortcutAsIndex = parseInt(shortcut, 10);
-    if (!Number.isNaN(shortcutAsIndex)) {
-      return Object.values(links)[shortcutAsIndex];
-    }
-
-    return Object.values(links).find(
-      l => l.shortcut === shortcut || (l.alias && l.alias === shortcut)
-    );
-  };
-
-  const match = getMatch();
   if (!match) {
     logger.error(
       `We couldn't find a shortcut matching ${shortcut}.  Type 'hs open list' to see a list of available shortcuts`
@@ -127,7 +115,7 @@ const openLink = (portalId, shortcut) => {
     return;
   }
 
-  opn(match.url);
+  open(match.url, { url: true });
   logger.success(`We opened ${match.url} in your browser`);
 };
 
