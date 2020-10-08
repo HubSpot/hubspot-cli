@@ -6,14 +6,12 @@ const chalk = require('chalk');
 const { table, getBorderCharacters } = require('table');
 const open = require('open');
 
-const logSiteLinks = links => {
-  const linksAsArray = Object.values(links)
-    .sort((a, b) => (a.shortcut < b.shortcut ? -1 : 1))
-    .map(l => [
-      `${l.shortcut}${l.alias ? ` [alias: ${l.alias}]` : ''}`,
-      '=>',
-      l.url,
-    ]);
+const logSiteLinks = portalId => {
+  const linksAsArray = getSiteLinksAsArray(portalId).map(l => [
+    `${l.shortcut}${l.alias ? ` [alias: ${l.alias}]` : ''}`,
+    '=>',
+    l.url,
+  ]);
 
   linksAsArray.unshift([chalk.bold('Shortcut'), '', chalk.bold('Url')]);
 
@@ -24,6 +22,11 @@ const logSiteLinks = links => {
 
   logger.log(table(linksAsArray, tableConfig));
 };
+
+const getSiteLinksAsArray = portalId =>
+  Object.values(getSiteLinks(portalId)).sort((a, b) =>
+    a.shortcut < b.shortcut ? -1 : 1
+  );
 
 const getSiteLinks = portalId => {
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -121,6 +124,7 @@ const openLink = (portalId, shortcut) => {
 
 module.exports = {
   getSiteLinks,
+  getSiteLinksAsArray,
   logSiteLinks,
   openLink,
 };
