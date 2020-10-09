@@ -72,6 +72,7 @@ exports.builder = yargs => {
     describe: 'Remote directory to list contents',
     type: 'string',
   });
+  yargs.example([['$0 ls'], ['$0 ls /'], ['$0 ls serverless']]);
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
