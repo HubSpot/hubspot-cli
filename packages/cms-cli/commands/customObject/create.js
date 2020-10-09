@@ -6,9 +6,9 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
-const { validatePortal, isFileValidJSON } = require('../../lib/validation');
+const { validateAccount, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { setLogLevel, getPortalId } = require('../../lib/commonOpts');
+const { setLogLevel, getAccountId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { batchCreateObjects } = require('@hubspot/cms-lib/api/customObject');
 
@@ -23,12 +23,12 @@ exports.handler = async options => {
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('custom-object-batch-create', null, portalId);
+  trackCommandUsage('custom-object-batch-create', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -36,10 +36,10 @@ exports.handler = async options => {
   }
 
   try {
-    await batchCreateObjects(portalId, name, filePath);
+    await batchCreateObjects(accountId, name, filePath);
     logger.success(`Objects created`);
   } catch (e) {
-    logErrorInstance(e, { portalId });
+    logErrorInstance(e, { accountId });
     logger.error(`Object creation from ${definition} failed`);
   }
 };

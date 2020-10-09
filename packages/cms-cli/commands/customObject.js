@@ -1,4 +1,4 @@
-const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
 const chalk = require('chalk');
@@ -9,7 +9,7 @@ exports.describe =
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
 
   yargs
     .command(schemaCommand)

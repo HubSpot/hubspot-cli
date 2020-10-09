@@ -1,6 +1,6 @@
 const request = require('request-promise-native');
 const moment = require('moment');
-const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { getAndLoadConfigIfNeeded, getAccountConfig } = require('../lib/config');
 const { ENVIRONMENTS } = require('../lib/constants');
 const http = require('../http');
 const { version } = require('../package.json');
@@ -16,12 +16,12 @@ describe('http', () => {
   afterEach(() => {
     jest.clearAllMocks();
     getAndLoadConfigIfNeeded.mockReset();
-    getPortalConfig.mockReset();
+    getAccountConfig.mockReset();
   });
   describe('getRequestOptions()', () => {
     it('constructs baseUrl as expected based on environment', () => {
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [],
+        accounts: [],
       });
 
       expect(http.getRequestOptions()).toMatchObject({
@@ -34,7 +34,7 @@ describe('http', () => {
     it('supports httpUseLocalhost config option to construct baseUrl for local HTTP services', () => {
       getAndLoadConfigIfNeeded.mockReturnValue({
         httpUseLocalhost: true,
-        portals: [],
+        accounts: [],
       });
 
       expect(http.getRequestOptions()).toMatchObject({
@@ -48,7 +48,7 @@ describe('http', () => {
   describe('get()', () => {
     it('adds authorization header when using OAuth2 with valid access token', async () => {
       const accessToken = 'let-me-in';
-      const portal = {
+      const account = {
         id: 123,
         authType: 'oauth2',
         clientId: 'd996372f-2b53-30d3-9c3b-4fdde4bce3a2',
@@ -63,9 +63,9 @@ describe('http', () => {
         },
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [portal],
+        accounts: [account],
       });
-      getPortalConfig.mockReturnValue(portal);
+      getAccountConfig.mockReturnValue(account);
       await http.get(123, {
         uri: 'some/endpoint/path',
       });
@@ -87,7 +87,7 @@ describe('http', () => {
     });
     it('adds authorization header when using a user token', async () => {
       const accessToken = 'let-me-in';
-      const portal = {
+      const account = {
         id: 123,
         authType: 'personalaccesskey',
         personalAccessKey: 'some-secret',
@@ -101,9 +101,9 @@ describe('http', () => {
         },
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [portal],
+        accounts: [account],
       });
-      getPortalConfig.mockReturnValue(portal);
+      getAccountConfig.mockReturnValue(account);
       await http.get(123, {
         uri: 'some/endpoint/path',
       });
@@ -127,14 +127,14 @@ describe('http', () => {
     it('supports setting a custom timeout', async () => {
       getAndLoadConfigIfNeeded.mockReturnValue({
         httpTimeout: 1000,
-        portals: [
+        accounts: [
           {
             id: 123,
             apiKey: 'abc',
           },
         ],
       });
-      getPortalConfig.mockReturnValue({
+      getAccountConfig.mockReturnValue({
         id: 123,
         apiKey: 'abc',
       });

@@ -1,67 +1,67 @@
 const http = require('../http');
 const HUBDB_API_PATH = 'cms/v3/hubdb';
 
-async function fetchTables(portalId) {
-  return http.get(portalId, {
+async function fetchTables(accountId) {
+  return http.get(accountId, {
     uri: `${HUBDB_API_PATH}/tables`,
   });
 }
 
-async function fetchTable(portalId, tableId) {
-  return http.get(portalId, {
+async function fetchTable(accountId, tableId) {
+  return http.get(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}`,
   });
 }
 
-async function createTable(portalId, schema) {
-  return http.post(portalId, {
+async function createTable(accountId, schema) {
+  return http.post(accountId, {
     uri: `${HUBDB_API_PATH}/tables`,
     body: schema,
   });
 }
 
-async function updateTable(portalId, tableId, schema) {
-  return http.put(portalId, {
+async function updateTable(accountId, tableId, schema) {
+  return http.put(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}`,
     body: schema,
   });
 }
 
-async function publishTable(portalId, tableId) {
-  return http.post(portalId, {
+async function publishTable(accountId, tableId) {
+  return http.post(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/push-live`,
   });
 }
 
-async function deleteTable(portalId, tableId) {
-  return http.delete(portalId, {
+async function deleteTable(accountId, tableId) {
+  return http.delete(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}`,
   });
 }
 
-async function updateRows(portalId, tableId, rows) {
-  return http.post(portalId, {
+async function updateRows(accountId, tableId, rows) {
+  return http.post(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/update`,
     body: rows,
   });
 }
 
-async function createRows(portalId, tableId, rows) {
-  return http.post(portalId, {
+async function createRows(accountId, tableId, rows) {
+  return http.post(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/create`,
     body: { inputs: rows },
   });
 }
 
-async function fetchRows(portalId, tableId, query = {}) {
-  return http.get(portalId, {
+async function fetchRows(accountId, tableId, query = {}) {
+  return http.get(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft`,
     query,
   });
 }
 
-async function deleteRows(portalId, tableId, rowIds) {
-  return http.post(portalId, {
+async function deleteRows(accountId, tableId, rowIds) {
+  return http.post(accountId, {
     uri: `${HUBDB_API_PATH}/tables/${tableId}/rows/draft/batch/purge`,
     body: { inputs: rowIds },
   });

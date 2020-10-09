@@ -49,22 +49,22 @@ hs help
 Upload a file or directory to the Design Manager
 
 ```bash
-hs upload --portal=DEV [src] [dest]
+hs upload --account=DEV [src] [dest]
 ```
 
 Fetch a file or directory by path from the Design Manager
 
 ```bash
-hs fetch --portal=DEV [path] [dest]
+hs fetch --account=DEV [path] [dest]
 
 # Overwrite existing files
-hs fetch --portal=DEV --overwrite [path] [dest]
+hs fetch --account=DEV --overwrite [path] [dest]
 ```
 
 Watch a directory of files and automatically upload changes to the Design Manager
 
 ```bash
-hs watch --portal=DEV [src] [dest]
+hs watch --account=DEV [src] [dest]
 ```
 
 Create a new asset locally
@@ -76,10 +76,10 @@ hs create [type] [dest]
 Delete a file or directory from the Design Manager
 
 ```bash
-hs remove --portal=DEV [path]
+hs remove --account=DEV [path]
 ```
 
-Authenticate against a portal using either `personalaccesskey` or `oauth2`
+Authenticate against a account using either `personalaccesskey` or `oauth2`
 
 ```bash
 hs auth personalaccesskey
@@ -90,16 +90,16 @@ hs auth personalaccesskey
 Upload a file or directory to the File Manager
 
 ```bash
-hs filemanager upload --portal=DEV [src] [dest]
+hs filemanager upload --account=DEV [src] [dest]
 ```
 
 Fetch a file or directory from the File Manager
 
 ```bash
-hs filemanager fetch --portal=DEV [src] [dest]
+hs filemanager fetch --account=DEV [src] [dest]
 
 # Overwrite existing files
-hs filemanager fetch --portal=DEV --overwrite [path] [dest]
+hs filemanager fetch --account=DEV --overwrite [path] [dest]
 ```
 
 ### HubDB Commands
@@ -143,18 +143,18 @@ There are three ways that the tools can authenticate with HubSpot.
 2. Run `hs auth oauth2`
 3. Select `OAuth2` and follow the steps
 
-_**Note:** The Portal ID used should be the CMS Portal ID (not the developer app ID). Client ID and Client Secret are from the developer app._
+_**Note:** The Account ID used should be the CMS Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
 
 ### HubSpot API Key
 
-1. [Set up an API Key for the CMS Portal](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
-2. Edit the `hubspot.config.yml` file to set the `authType` for the portal to `apikey` and add `apiKey` as shown below:
+1. [Set up an API Key for the CMS Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
+2. Edit the `hubspot.config.yml` file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
 
 ```yaml
-defaultPortal: DEV
-portals:
+defaultAccount: DEV
+accounts:
   - name: DEV
-    portalId: 123
+    accountId: 123
     authType: apikey
     apiKey: d1234567-123e-7890-b123-aaa80164b4cb
 ```

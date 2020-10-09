@@ -3,7 +3,7 @@ const path = require('path');
 const contentDisposition = require('content-disposition');
 const http = require('../http');
 const { getCwd } = require('../path');
-const { getEnv, getPortalConfig } = require('../lib/config');
+const { getEnv, getAccountConfig } = require('../lib/config');
 const { logger } = require('../logger');
 
 const FILE_MAPPER_API_PATH = 'content/filemapper/v1';
@@ -45,14 +45,14 @@ function createFileMapperNodeFromStreamResponse(filePath, response) {
 /**
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} src
  * @param {string} dest
  * @param {object} options
  * @returns {Promise}
  */
-async function upload(portalId, src, dest, options = {}) {
-  return http.post(portalId, {
+async function upload(accountId, src, dest, options = {}) {
+  return http.post(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/upload/${encodeURIComponent(dest)}`,
     formData: {
       file: fs.createReadStream(path.resolve(getCwd(), src)),
@@ -65,13 +65,13 @@ async function upload(portalId, src, dest, options = {}) {
  * Fetch a module by moduleId
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {number} moduleId
  * @param {object} options
  * @returns {Promise<FileMapperNode>}
  */
-async function fetchModule(portalId, moduleId, options = {}) {
-  return http.get(portalId, {
+async function fetchModule(accountId, moduleId, options = {}) {
+  return http.get(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/modules/${moduleId}`,
     ...options,
   });
@@ -81,15 +81,15 @@ async function fetchModule(portalId, moduleId, options = {}) {
  * Fetch a file by file path.
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} filePath
  * @param {stream.Writable} destination
  * @param {object} options
  * @returns {Promise<FileMapperNode>}
  */
-async function fetchFileStream(portalId, filePath, destination, options = {}) {
+async function fetchFileStream(accountId, filePath, destination, options = {}) {
   const response = await http.getOctetStream(
-    portalId,
+    accountId,
     {
       uri: `${FILE_MAPPER_API_PATH}/stream/${encodeURIComponent(filePath)}`,
       ...options,
@@ -103,13 +103,13 @@ async function fetchFileStream(portalId, filePath, destination, options = {}) {
  * Fetch a folder or file node by path.
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} filepath
  * @param {object} options
  * @returns {Promise<FileMapperNode>}
  */
-async function download(portalId, filepath, options = {}) {
-  return http.get(portalId, {
+async function download(accountId, filepath, options = {}) {
+  return http.get(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
     ...options,
   });
@@ -119,13 +119,13 @@ async function download(portalId, filepath, options = {}) {
  * Fetch a folder or file node by path.
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} filepath
  * @param {object} options
  * @returns {Promise<FileMapperNode>}
  */
-async function downloadDefault(portalId, filepath, options = {}) {
-  return http.get(portalId, {
+async function downloadDefault(accountId, filepath, options = {}) {
+  return http.get(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/download-default/${filepath}`,
     ...options,
   });
@@ -135,13 +135,13 @@ async function downloadDefault(portalId, filepath, options = {}) {
  * Delete a file or folder by path
  *
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} filePath
  * @param {object} options
  * @returns {Promise}
  */
-async function deleteFile(portalId, filePath, options = {}) {
-  return http.delete(portalId, {
+async function deleteFile(accountId, filePath, options = {}) {
+  return http.delete(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/delete/${filePath}`,
     ...options,
   });
@@ -152,16 +152,16 @@ async function deleteFile(portalId, filePath, options = {}) {
  *
  * @deprecated since 1.0.1 - use `deleteFile()` instead.
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} folderPath
  * @param {object} options
  * @returns {Promise}
  */
-async function deleteFolder(portalId, folderPath, options = {}) {
+async function deleteFolder(accountId, folderPath, options = {}) {
   logger.warn(
     '`cms-lib/api/fileMapper#deleteFolder()` is deprecated. Use `cms-lib/api/fileMapper#deleteFile()` instead.'
   );
-  return http.delete(portalId, {
+  return http.delete(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/delete/folder/${folderPath}`,
     ...options,
   });
@@ -173,26 +173,26 @@ async function deleteFolder(portalId, folderPath, options = {}) {
  * @async
  * @returns {Promise}
  */
-async function trackUsage(eventName, eventClass, meta = {}, portalId) {
+async function trackUsage(eventName, eventClass, meta = {}, accountId) {
   const usageEvent = {
-    portalId,
+    accountId,
     eventName,
     eventClass,
     meta,
   };
   const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
-  const portalConfig = portalId && getPortalConfig(portalId);
+  const accountConfig = accountId && getAccountConfig(accountId);
 
-  if (portalConfig && portalConfig.authType === 'personalaccesskey') {
+  if (accountConfig && accountConfig.authType === 'personalaccesskey') {
     logger.debug('Sending usage event to authenticated endpoint');
-    return http.post(portalId, {
+    return http.post(accountId, {
       uri: `${path}/authenticated`,
       body: usageEvent,
       resolveWithFullResponse: true,
     });
   }
 
-  const env = getEnv(portalId);
+  const env = getEnv(accountId);
   const requestOptions = http.getRequestOptions(
     { env },
     {

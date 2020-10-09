@@ -12,15 +12,15 @@ const { logger } = require('@hubspot/cms-lib/logger');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal, validateMode } = require('../lib/validation');
+const { validateAccount, validateMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 exports.command = 'watch <src> <dest>';
@@ -46,14 +46,14 @@ exports.handler = async options => {
   if (
     !(
       validateConfig() &&
-      (await validatePortal(options)) &&
+      (await validateAccount(options)) &&
       validateMode(options)
     )
   ) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   const mode = getMode(options);
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
@@ -86,8 +86,8 @@ exports.handler = async options => {
     );
   }
 
-  trackCommandUsage('watch', { mode }, portalId);
-  watch(portalId, absoluteSrcPath, dest, {
+  trackCommandUsage('watch', { mode }, accountId);
+  watch(accountId, absoluteSrcPath, dest, {
     mode,
     cwd: getCwd(),
     remove,
@@ -98,7 +98,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
   addUseEnvironmentOptions(yargs, true);
 

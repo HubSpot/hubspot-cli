@@ -6,15 +6,15 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteTable } = require('@hubspot/cms-lib/api/hubdb');
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
@@ -29,16 +29,16 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-delete', {}, portalId);
+  trackCommandUsage('hubdb-delete', {}, accountId);
 
   try {
-    await deleteTable(portalId, tableId);
-    logger.log(`The table ${tableId} was deleted from ${portalId}`);
+    await deleteTable(accountId, tableId);
+    logger.log(`The table ${tableId} was deleted from ${accountId}`);
   } catch (e) {
     logger.error(`Deleting the table ${tableId} failed`);
     logErrorInstance(e);
@@ -46,7 +46,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addConfigOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 

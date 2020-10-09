@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
+const { getAndLoadConfigIfNeeded, getAccountConfig } = require('../lib/config');
 const { fetchAccessToken } = require('../api/localDevAuth/unauthenticated');
 const { ENVIRONMENTS } = require('../lib/constants');
 
@@ -12,16 +12,16 @@ jest.mock('../api/localDevAuth/unauthenticated');
 describe('personalAccessKey', () => {
   describe('accessTokenForPersonalAccessKey()', () => {
     it('refreshes access token when access token is missing', async () => {
-      const portalId = 123;
-      const portal = {
-        portalId,
+      const accountId = 123;
+      const account = {
+        accountId,
         authType: 'personalaccesskey',
         personalAccessKey: 'let-me-in',
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [portal],
+        accounts: [account],
       });
-      getPortalConfig.mockReturnValue(portal);
+      getAccountConfig.mockReturnValue(account);
 
       const freshAccessToken = 'fresh-token';
       fetchAccessToken.mockReturnValue(
@@ -32,36 +32,36 @@ describe('personalAccessKey', () => {
             .valueOf(),
           encodedOAuthRefreshToken: 'let-me-in',
           scopeGroups: ['content'],
-          hubId: portalId,
+          hubId: accountId,
           userId: 456,
         })
       );
-      const accessToken = await accessTokenForPersonalAccessKey(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(accountId);
       expect(accessToken).toEqual(freshAccessToken);
     });
-    it('uses portalId when refreshing token', async () => {
-      const portalId = 123;
-      const portal = {
-        portalId,
+    it('uses accountId when refreshing token', async () => {
+      const accountId = 123;
+      const account = {
+        accountId,
         authType: 'personalaccesskey',
         personalAccessKey: 'let-me-in',
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [portal],
+        accounts: [account],
       });
-      getPortalConfig.mockReturnValue(portal);
+      getAccountConfig.mockReturnValue(account);
 
-      await accessTokenForPersonalAccessKey(portalId);
+      await accessTokenForPersonalAccessKey(accountId);
       expect(fetchAccessToken).toHaveBeenCalledWith(
         'let-me-in',
         ENVIRONMENTS.PROD,
-        portalId
+        accountId
       );
     });
     it('refreshes access token when the existing token is expired', async () => {
-      const portalId = 123;
-      const portal = {
-        portalId,
+      const accountId = 123;
+      const account = {
+        accountId,
         authType: 'personalaccesskey',
         personalAccessKey: 'let-me-in',
         auth: {
@@ -74,9 +74,9 @@ describe('personalAccessKey', () => {
         },
       };
       getAndLoadConfigIfNeeded.mockReturnValue({
-        portals: [portal],
+        accounts: [account],
       });
-      getPortalConfig.mockReturnValue(portal);
+      getAccountConfig.mockReturnValue(account);
 
       const freshAccessToken = 'fresh-token';
       fetchAccessToken.mockReturnValue(
@@ -87,19 +87,19 @@ describe('personalAccessKey', () => {
             .valueOf(),
           encodedOAuthRefreshToken: 'let-me-in',
           scopeGroups: ['content'],
-          hubId: portalId,
+          hubId: accountId,
           userId: 456,
         })
       );
-      const accessToken = await accessTokenForPersonalAccessKey(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(accountId);
       expect(accessToken).toEqual(freshAccessToken);
     });
     it('refreshes access tokens multiple times', async () => {
-      const portalId = 123;
+      const accountId = 123;
       const accessKey = 'let-me-in';
       const userId = 456;
-      const mockPortal = (expiresAt, accessToken) => ({
-        portalId,
+      const mockAccount = (expiresAt, accessToken) => ({
+        accountId,
         authType: 'personalaccesskey',
         personalAccessKey: accessKey,
         auth: {
@@ -109,16 +109,16 @@ describe('personalAccessKey', () => {
           },
         },
       });
-      const initialPortalConfig = mockPortal(
+      const initialAccountConfig = mockAccount(
         moment()
           .subtract(2, 'hours')
           .toISOString(),
         'test-token'
       );
       getAndLoadConfigIfNeeded.mockReturnValueOnce({
-        portals: [initialPortalConfig],
+        accounts: [initialAccountConfig],
       });
-      getPortalConfig.mockReturnValueOnce(initialPortalConfig);
+      getAccountConfig.mockReturnValueOnce(initialAccountConfig);
 
       const firstAccessToken = 'fresh-token';
       const expiresAtMillis = moment()
@@ -131,22 +131,22 @@ describe('personalAccessKey', () => {
           expiresAtMillis,
           encodedOAuthRefreshToken: accessKey,
           scopeGroups: ['content'],
-          hubId: portalId,
+          hubId: accountId,
           userId,
         })
       );
       const firstRefreshedAccessToken = await accessTokenForPersonalAccessKey(
-        portalId
+        accountId
       );
       expect(firstRefreshedAccessToken).toEqual(firstAccessToken);
-      const updatedPortalConfig = mockPortal(
+      const updatedAccountConfig = mockAccount(
         moment(expiresAtMillis).toISOString(),
         firstAccessToken
       );
       getAndLoadConfigIfNeeded.mockReturnValueOnce({
-        portals: [updatedPortalConfig],
+        accounts: [updatedAccountConfig],
       });
-      getPortalConfig.mockReturnValueOnce(updatedPortalConfig);
+      getAccountConfig.mockReturnValueOnce(updatedAccountConfig);
 
       const secondAccessToken = 'another-fresh-token';
       fetchAccessToken.mockReturnValueOnce(
@@ -155,13 +155,13 @@ describe('personalAccessKey', () => {
           expiresAtMillis,
           encodedOAuthRefreshToken: accessKey,
           scopeGroups: ['content'],
-          hubId: portalId,
+          hubId: accountId,
           userId,
         })
       );
 
       const secondRefreshedAccessToken = await accessTokenForPersonalAccessKey(
-        portalId
+        accountId
       );
       expect(secondRefreshedAccessToken).toEqual(secondAccessToken);
     });

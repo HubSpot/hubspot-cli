@@ -6,12 +6,12 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
-const { validatePortal, isFileValidJSON } = require('../../../lib/validation');
+const { validateAccount, isFileValidJSON } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
   addTestingOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../../lib/commonOpts');
 const { getEnv } = require('@hubspot/cms-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
@@ -30,12 +30,12 @@ exports.handler = async options => {
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('custom-object-schema-create', null, portalId);
+  trackCommandUsage('custom-object-schema-create', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
@@ -43,14 +43,14 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createSchema(portalId, filePath);
+    const res = await createSchema(accountId, filePath);
     logger.success(
       `Schema can be viewed at ${getHubSpotWebsiteOrigin(
         getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      )}/contacts/${portalId}/objects/${res.objectTypeId}`
+      )}/contacts/${accountId}/objects/${res.objectTypeId}`
     );
   } catch (e) {
-    logErrorInstance(e, { portalId });
+    logErrorInstance(e, { accountId });
     logger.error(`Schema creation from ${definition} failed`);
   }
 };

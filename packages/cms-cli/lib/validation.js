@@ -1,6 +1,6 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  getPortalConfig,
+  getAccountConfig,
   loadConfigFromEnvironment,
   Mode,
 } = require('@hubspot/cms-lib');
@@ -10,53 +10,63 @@ const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 const { getCwd, getExt } = require('@hubspot/cms-lib/path');
-const { getPortalId, getMode } = require('./commonOpts');
+const { getAccountId, getMode } = require('./commonOpts');
 const fs = require('fs');
 const path = require('path');
 
 /**
- * Validate that a portal was passed to the command and that the portal's configuration is valid
+ * Validate that a account was passed to the command and that the account's configuration is valid
  *
  *
  * @param {object} command options
  * @returns {boolean}
  */
-async function validatePortal(options) {
-  const portalId = getPortalId(options);
-  const { portalId: portalIdOption, portal: portalOption } = options;
-  if (!portalId) {
-    if (portalOption) {
+async function validateAccount(options) {
+  const accountId = getAccountId(options);
+  const {
+    portalId: portalIdOption,
+    portal: portalOption,
+    accountId: _accountIdOption,
+    account: _accountOption,
+  } = options;
+  const accountOption = portalOption || _accountOption;
+  const accountIdOption = portalIdOption || _accountIdOption;
+
+  if (!accountId) {
+    if (accountOption) {
       logger.error(
-        `The portal "${portalOption}" could not be found in the config`
+        `The account "${accountOption}" could not be found in the config`
       );
-    } else if (portalIdOption) {
-      logger.error(`The portal "${portalId}" could not be found in the config`);
+    } else if (accountIdOption) {
+      logger.error(
+        `The account "${accountIdOption}" could not be found in the config`
+      );
     } else {
       logger.error(
-        'A portal needs to be supplied either via "--portal" or through setting a "defaultPortal"'
+        'A account needs to be supplied either via "--account" or through setting a "defaultAccount"'
       );
     }
     return false;
   }
 
-  if (portalOption && loadConfigFromEnvironment()) {
+  if (accountOption && loadConfigFromEnvironment()) {
     throw new Error(
-      'Cannot specify a portal when environment variables are supplied. Please unset the environment variables or do not use the "--portal" flag.'
+      'Cannot specify a account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );
   }
 
-  const portalConfig = getPortalConfig(portalId);
-  if (!portalConfig) {
-    logger.error(`The portal ${portalId} has not been configured`);
+  const accountConfig = getAccountConfig(accountId);
+  if (!accountConfig) {
+    logger.error(`The account ${accountId} has not been configured`);
     return false;
   }
 
-  const { authType, auth, apiKey, personalAccessKey } = portalConfig;
+  const { authType, auth, apiKey, personalAccessKey } = accountConfig;
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {
       logger.error(
-        `The OAuth2 auth configuration for portal ${portalId} is missing`
+        `The OAuth2 auth configuration for account ${accountId} is missing`
       );
       return false;
     }
@@ -65,18 +75,18 @@ async function validatePortal(options) {
 
     if (!clientId || !clientSecret || !tokenInfo || !tokenInfo.refreshToken) {
       logger.error(
-        `The OAuth2 configuration for portal ${portalId} is incorrect`
+        `The OAuth2 configuration for account ${accountId} is incorrect`
       );
       logger.error('Run "hscms auth oauth2" to reauthenticate');
       return false;
     }
 
-    const oauth = getOauthManager(portalId, portalConfig);
+    const oauth = getOauthManager(accountId, accountConfig);
     try {
       const accessToken = await oauth.accessToken();
       if (!accessToken) {
         logger.error(
-          `The OAuth2 access token could not be found for portalId ${portalId}`
+          `The OAuth2 access token could not be found for accountId ${accountId}`
         );
         return false;
       }
@@ -87,16 +97,16 @@ async function validatePortal(options) {
   } else if (authType === 'personalaccesskey') {
     if (!personalAccessKey) {
       logger.error(
-        `The portal "${portalId}" is configured to use a CMS access key for authentication and is missing a "personalAccessKey" in the configuration file`
+        `The account "${accountId}" is configured to use a CMS access key for authentication and is missing a "personalAccessKey" in the configuration file`
       );
       return false;
     }
 
     try {
-      const accessToken = await accessTokenForPersonalAccessKey(portalId);
+      const accessToken = await accessTokenForPersonalAccessKey(accountId);
       if (!accessToken) {
         logger.error(
-          `An OAuth2 access token for portal "${portalId} could not be retrieved using the "personalAccessKey" provided`
+          `An OAuth2 access token for account "${accountId} could not be retrieved using the "personalAccessKey" provided`
         );
         return false;
       }
@@ -106,7 +116,7 @@ async function validatePortal(options) {
     }
   } else if (!apiKey) {
     logger.error(
-      `The portalId ${portalId} is missing authentication configuration`
+      `The accountId ${accountId} is missing authentication configuration`
     );
     return false;
   }
@@ -176,7 +186,7 @@ const isFileValidJSON = _path => {
 
 module.exports = {
   validateMode,
-  validatePortal,
+  validateAccount,
   isFileValidJSON,
   fileExists,
 };

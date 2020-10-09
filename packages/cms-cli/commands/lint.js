@@ -12,13 +12,13 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validatePortal } = require('../lib/validation');
+const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 const loadAndValidateOptions = async options => {
@@ -28,7 +28,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -41,21 +41,21 @@ exports.handler = async options => {
 
   await loadAndValidateOptions(options);
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   const localPath = resolveLocalPath(lintPath);
   const groupName = `Linting "${localPath}"`;
 
-  trackCommandUsage('lint', {}, portalId);
+  trackCommandUsage('lint', {}, accountId);
 
   logger.group(groupName);
   let count = 0;
   try {
-    await lint(portalId, localPath, result => {
+    await lint(accountId, localPath, result => {
       count += printHublValidationResult(result);
     });
   } catch (err) {
     logger.groupEnd(groupName);
-    logErrorInstance(err, { portalId });
+    logErrorInstance(err, { accountId });
     process.exit(1);
   }
   logger.groupEnd(groupName);
@@ -64,7 +64,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Local folder to lint',
     type: 'string',

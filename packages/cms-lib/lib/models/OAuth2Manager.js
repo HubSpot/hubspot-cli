@@ -9,7 +9,7 @@ const { getValidEnv } = require('../environment');
 class OAuth2Manager {
   constructor(
     {
-      portalId,
+      accountId,
       clientId,
       clientSecret,
       scopes,
@@ -24,7 +24,7 @@ class OAuth2Manager {
     this.clientSecret = clientSecret;
     this.scopes = scopes;
     this.tokenInfo = tokenInfo;
-    this.portalId = portalId;
+    this.accountId = accountId;
     this.env = getValidEnv(environment, true);
     this.logger = logger;
     this.writeTokenInfo = writeTokenInfo;
@@ -35,7 +35,7 @@ class OAuth2Manager {
   async accessToken() {
     if (!this.tokenInfo.refreshToken) {
       throw new Error(
-        `The portal ${this.portalId} has not been authenticated with Oauth2`
+        `The account ${this.accountId} has not been authenticated with Oauth2`
       );
     }
     if (
@@ -51,7 +51,7 @@ class OAuth2Manager {
 
   async fetchAccessToken(exchangeProof) {
     this.logger.debug(
-      `Fetching access token for portalId ${this.portalId} for clientId ${this.clientId}`
+      `Fetching access token for accountId ${this.accountId} for clientId ${this.clientId}`
     );
     try {
       this.refreshTokenRequest = request.post(
@@ -76,7 +76,7 @@ class OAuth2Manager {
       );
       if (this.writeTokenInfo) {
         this.logger.debug(
-          `Persisting updated tokenInfo for portalId ${this.portalId} for clientId ${this.clientId}`
+          `Persisting updated tokenInfo for accountId ${this.accountId} for clientId ${this.clientId}`
         );
         this.writeTokenInfo(this.tokenInfo);
       }
@@ -91,7 +91,7 @@ class OAuth2Manager {
     try {
       if (this.refreshTokenRequest) {
         this.logger.debug(
-          `Waiting for access token for portalId ${this.portalId} for clientId ${this.clientId} to be fetched`
+          `Waiting for access token for accountId ${this.accountId} for clientId ${this.clientId} to be fetched`
         );
         await this.refreshTokenRequest;
       } else {
@@ -129,9 +129,9 @@ class OAuth2Manager {
     };
   }
 
-  static fromConfig(portalId, portalConfig, logger, writeTokenInfo) {
-    const { env, auth, ...rest } = portalConfig;
-    if (portalConfig) {
+  static fromConfig(accountId, accountConfig, logger, writeTokenInfo) {
+    const { env, auth, ...rest } = accountConfig;
+    if (accountConfig) {
       return new OAuth2Manager(
         {
           ...rest,
@@ -143,7 +143,7 @@ class OAuth2Manager {
       );
     }
     throw new Error(
-      `Portal Id ${portalId} not found in the config. Did you authorize?`
+      `Account Id ${accountId} not found in the config. Did you authorize?`
     );
   }
 }

@@ -15,8 +15,8 @@ const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cms-lib/personalAccessKey');
 const {
-  updatePortalConfig,
-  portalNameExistsInConfig,
+  updateAccountConfig,
+  accountNameExistsInConfig,
   writeConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const {
@@ -24,7 +24,7 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   API_KEY_FLOW,
-  PORTAL_NAME,
+  ACCOUNT_NAME,
 } = require('../lib/prompts');
 const {
   addConfigOptions,
@@ -44,14 +44,14 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
-const promptForPortalNameIfNotSet = async updatedConfig => {
+const promptForAccountNameIfNotSet = async updatedConfig => {
   if (!updatedConfig.name) {
     let promptAnswer;
     let validName = null;
     while (!validName) {
-      promptAnswer = await promptUser([PORTAL_NAME]);
+      promptAnswer = await promptUser([ACCOUNT_NAME]);
 
-      if (!portalNameExistsInConfig(promptAnswer.name)) {
+      if (!accountNameExistsInConfig(promptAnswer.name)) {
         validName = promptAnswer.name;
       } else {
         logger.log(
@@ -90,10 +90,10 @@ exports.handler = async options => {
   switch (authType) {
     case API_KEY_AUTH_METHOD.value:
       configData = await promptUser(API_KEY_FLOW);
-      updatedConfig = await updatePortalConfig(configData);
-      validName = await promptForPortalNameIfNotSet(updatedConfig);
+      updatedConfig = await updateAccountConfig(configData);
+      validName = await promptForAccountNameIfNotSet(updatedConfig);
 
-      updatePortalConfig({
+      updateAccountConfig({
         ...updatedConfig,
         environment: updatedConfig.env,
         name: validName,
@@ -115,9 +115,9 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
-      validName = await promptForPortalNameIfNotSet(updatedConfig);
+      validName = await promptForAccountNameIfNotSet(updatedConfig);
 
-      updatePortalConfig({
+      updateAccountConfig({
         ...updatedConfig,
         environment: updatedConfig.env,
         tokenInfo: updatedConfig.auth.tokenInfo,

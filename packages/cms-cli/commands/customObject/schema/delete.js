@@ -6,9 +6,9 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 
-const { validatePortal } = require('../../../lib/validation');
+const { validateAccount } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { setLogLevel, getPortalId } = require('../../../lib/commonOpts');
+const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { deleteSchema } = require('@hubspot/cms-lib/api/schema');
 
@@ -23,15 +23,15 @@ exports.handler = async options => {
   loadConfig(options.config);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('custom-object-schema-delete', null, portalId);
+  trackCommandUsage('custom-object-schema-delete', null, accountId);
 
   try {
-    await deleteSchema(portalId, name);
+    await deleteSchema(accountId, name);
     logger.success(`Successfully initiated deletion of ${name}`);
   } catch (e) {
     logErrorInstance(e);

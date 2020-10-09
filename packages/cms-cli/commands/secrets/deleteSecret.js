@@ -10,15 +10,15 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
 
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
@@ -33,25 +33,25 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
-  trackCommandUsage('secrets-delete', {}, portalId);
+  const accountId = getAccountId(options);
+  trackCommandUsage('secrets-delete', {}, accountId);
 
   try {
-    await deleteSecret(portalId, secretName);
+    await deleteSecret(accountId, secretName);
     logger.log(
-      `The secret "${secretName}" was deleted from the HubSpot portal: ${portalId}`
+      `The secret "${secretName}" was deleted from the HubSpot account: ${accountId}`
     );
   } catch (e) {
     logger.error(`The secret "${secretName}" was not deleted`);
     await logServerlessFunctionApiErrorInstance(
-      portalId,
+      accountId,
       e,
       new ApiErrorContext({
         request: 'delete a secret',
-        portalId,
+        accountId,
       })
     );
   }
@@ -59,7 +59,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
     describe: 'Name of the secret',

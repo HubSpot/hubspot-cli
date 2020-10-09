@@ -1,13 +1,13 @@
 const request = require('request');
 const requestPN = require('request-promise-native');
-const { getPortalConfig } = require('./lib/config');
+const { getAccountConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
 const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
 const { getOauthManager } = require('./oauth');
 
-const withOauth = async (portalId, portalConfig, requestOptions) => {
+const withOauth = async (accountId, accountConfig, requestOptions) => {
   const { headers } = requestOptions;
-  const oauth = getOauthManager(portalId, portalConfig);
+  const oauth = getOauthManager(accountId, accountConfig);
   const accessToken = await oauth.accessToken();
   return {
     ...requestOptions,
@@ -19,12 +19,12 @@ const withOauth = async (portalId, portalConfig, requestOptions) => {
 };
 
 const withPersonalAccessKey = async (
-  portalId,
-  portalConfig,
+  accountId,
+  accountConfig,
   requestOptions
 ) => {
   const { headers } = requestOptions;
-  const accessToken = await accessTokenForPersonalAccessKey(portalId);
+  const accessToken = await accessTokenForPersonalAccessKey(accountId);
   return {
     ...requestOptions,
     headers: {
@@ -34,32 +34,32 @@ const withPersonalAccessKey = async (
   };
 };
 
-const withPortalId = (portalId, requestOptions) => {
+const withaccountId = (accountId, requestOptions) => {
   const { qs } = requestOptions;
 
   return {
     ...requestOptions,
     qs: {
       ...qs,
-      portalId,
+      accountId,
     },
   };
 };
 
-const withAuth = async (portalId, options) => {
-  const portalConfig = getPortalConfig(portalId);
-  const { env, authType, apiKey } = portalConfig;
-  const requestOptions = withPortalId(
-    portalId,
+const withAuth = async (accountId, options) => {
+  const accountConfig = getAccountConfig(accountId);
+  const { env, authType, apiKey } = accountConfig;
+  const requestOptions = withaccountId(
+    accountId,
     getRequestOptions({ env }, options)
   );
 
   if (authType === 'personalaccesskey') {
-    return withPersonalAccessKey(portalId, portalConfig, requestOptions);
+    return withPersonalAccessKey(accountId, accountConfig, requestOptions);
   }
 
   if (authType === 'oauth2') {
-    return withOauth(portalId, portalConfig, requestOptions);
+    return withOauth(accountId, accountConfig, requestOptions);
   }
   const { qs } = requestOptions;
 
@@ -83,30 +83,30 @@ const addQueryParams = (requestOptions, params = {}) => {
   };
 };
 
-const getRequest = async (portalId, options) => {
+const getRequest = async (accountId, options) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
-  return requestPN.get(await withAuth(portalId, requestOptions));
+  return requestPN.get(await withAuth(accountId, requestOptions));
 };
 
-const postRequest = async (portalId, options) => {
-  return requestPN.post(await withAuth(portalId, options));
+const postRequest = async (accountId, options) => {
+  return requestPN.post(await withAuth(accountId, options));
 };
 
-const putRequest = async (portalId, options) => {
-  return requestPN.put(await withAuth(portalId, options));
+const putRequest = async (accountId, options) => {
+  return requestPN.put(await withAuth(accountId, options));
 };
 
-const patchRequest = async (portalId, options) => {
-  return requestPN.patch(await withAuth(portalId, options));
+const patchRequest = async (accountId, options) => {
+  return requestPN.patch(await withAuth(accountId, options));
 };
 
-const deleteRequest = async (portalId, options) => {
-  return requestPN.del(await withAuth(portalId, options));
+const deleteRequest = async (accountId, options) => {
+  return requestPN.del(await withAuth(accountId, options));
 };
 
 const createGetRequestStream = ({ contentType }) => async (
-  portalId,
+  accountId,
   options,
   destination
 ) => {
@@ -119,7 +119,7 @@ const createGetRequestStream = ({ contentType }) => async (
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      const { headers, ...opts } = await withAuth(portalId, requestOptions);
+      const { headers, ...opts } = await withAuth(accountId, requestOptions);
       const req = request.get({
         ...opts,
         headers: {

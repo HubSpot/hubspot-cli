@@ -1,7 +1,7 @@
 const { upload } = require('@hubspot/cms-lib/api/fileMapper');
 const {
   loadConfig,
-  getPortalId,
+  getAccountId,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const {
@@ -23,11 +23,11 @@ const pluginName = 'HubSpotAutoUploadPlugin';
 
 class HubSpotAutoUploadPlugin {
   constructor(options = {}) {
-    const { src, dest, portal, autoupload } = options;
+    const { src, dest, portal, account, autoupload } = options;
     this.src = src;
     this.dest = dest;
     this.autoupload = autoupload;
-    this.portalId = getPortalId(portal);
+    this.accountId = getAccountId(portal || account);
   }
 
   apply(compiler) {
@@ -45,7 +45,7 @@ class HubSpotAutoUploadPlugin {
           }
 
           const dest = `${this.dest}/${filename}`;
-          upload(this.portalId, asset.existsAt, dest)
+          upload(this.accountId, asset.existsAt, dest)
             .then(() => {
               webpackLogger.info(`Uploaded ${dest}`);
             })
@@ -54,7 +54,7 @@ class HubSpotAutoUploadPlugin {
               logApiUploadErrorInstance(
                 error,
                 new ApiErrorContext({
-                  portalId: this.portalId,
+                  accountId: this.accountId,
                   request: dest,
                   payload: filepath,
                 })

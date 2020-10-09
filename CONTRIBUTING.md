@@ -17,12 +17,12 @@ yarn lerna bootstrap
 
 * To test a command
 
-First, you will need to create a config for the portals that you want to be able to test using.
+First, you will need to create a config for the accounts that you want to be able to test using.
 
 Once the config is created, commands can be run by providing a path to the executable file:
 
 ```
-yarn hscms upload --portalId [src] [dest]`
+yarn hscms upload --accountId [src] [dest]`
 ```
 
 * To test a command when `@hubspot/cms-cli` is a dependency in another package like `cms-theme-boilerplate`.

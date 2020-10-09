@@ -1,18 +1,18 @@
 const Logger = require('@hubspot/cms-lib/logger');
 const {
-  getPortalId: getPortalIdFromConfig,
-  getPortalConfig,
+  getAccountId: getAccountIdFromConfig,
+  getAccountConfig,
   getAndLoadConfigIfNeeded,
   DEFAULT_MODE,
   Mode,
 } = require('@hubspot/cms-lib');
 const { LOG_LEVEL } = Logger;
 
-const addPortalOptions = (program, useYargs = false) => {
+const addAccountOptions = (program, useYargs = false) => {
   if (useYargs) {
-    return program.option('portal', {
-      alias: 'p',
-      describe: 'HubSpot portal id or name from config',
+    return program.option('account', {
+      alias: ['a', 'portal', 'p'],
+      describe: 'HubSpot account id or name from config',
       type: 'string',
     });
   }
@@ -108,16 +108,20 @@ const setLogLevel = (options = {}) => {
 const getCommandName = argv => (argv && argv._ && argv._[0]) || '';
 
 /**
- * Obtains portalId using supplied --portal flag or from environment variables
+ * Obtains accountId using supplied --account flag or from environment variables
  */
-const getPortalId = (options = {}) => {
-  const { portal: portalNameOrId } = options;
+const getAccountId = (options = {}) => {
+  const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
-  return getPortalIdFromConfig(portalNameOrId);
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
+  }
+
+  return getAccountIdFromConfig(portal || account);
 };
 
 const getMode = (command = {}) => {
@@ -127,11 +131,11 @@ const getMode = (command = {}) => {
     return mode.toLowerCase();
   }
   // 2. config[portal].defaultMode
-  const portalId = getPortalId(command);
-  if (portalId) {
-    const portalConfig = getPortalConfig(portalId);
-    if (portalConfig && portalConfig.defaultMode) {
-      return portalConfig.defaultMode;
+  const accountId = getAccountId(command);
+  if (accountId) {
+    const accountConfig = getAccountConfig(accountId);
+    if (accountConfig && accountConfig.defaultMode) {
+      return accountConfig.defaultMode;
     }
   }
   // 3. config.defaultMode
@@ -141,7 +145,7 @@ const getMode = (command = {}) => {
 };
 
 module.exports = {
-  addPortalOptions,
+  addAccountOptions,
   addLoggerOptions,
   addConfigOptions,
   addOverwriteOptions,
@@ -150,6 +154,6 @@ module.exports = {
   addUseEnvironmentOptions,
   getCommandName,
   getMode,
-  getPortalId,
+  getAccountId,
   setLogLevel,
 };

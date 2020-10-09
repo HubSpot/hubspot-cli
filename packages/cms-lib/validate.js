@@ -7,13 +7,13 @@ const { getExt } = require('./path');
 
 /**
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} filepath
  * @param {function} callback - Optional
  * @returns {Promise<Array>}
  * @throws
  */
-async function lint(portalId, filepath, callback) {
+async function lint(accountId, filepath, callback) {
   const stats = await fs.stat(filepath);
   const files = stats.isDirectory() ? await walk(filepath) : [filepath];
   if (!(files && files.length)) {
@@ -31,7 +31,7 @@ async function lint(portalId, filepath, callback) {
           }
           return result;
         }
-        const validation = await validateHubl(portalId, source);
+        const validation = await validateHubl(accountId, source);
         const result = {
           file,
           validation,

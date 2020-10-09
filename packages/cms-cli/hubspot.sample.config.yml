@@ -1,6 +1,6 @@
-defaultPortal: DEV
+defaultAccount: DEV
 
-# Optionally set the default mode for all portals
+# Optionally set the default mode for all accounts
 defaultMode: publish
 
 # Override default HTTP timeout in milliseconds
@@ -9,18 +9,18 @@ httpTimeout: 30000
 # Disable usage tracking
 allowUsageTracking: false
 
-# List of portals that are intended to be used
-portals:
-  # Portal set up to use an API Key
+# List of accounts that are intended to be used
+accounts:
+  # Account set up to use an API Key
   - name: DEV
-    portalId: 123
-    # Override mode for portal
+    accountId: 123
+    # Override mode for account
     defaultMode: draft
     authType: apikey
     apiKey: d1234567-123e-7890-b123-aaa80164b4cb
-  # Portal set up to use OAuth2
+  # Account set up to use OAuth2
   - name: PROD
-    portalId: 456
+    accountId: 456
     authType: oauth2
     auth:
       clientId: d996372f-2b53-30d3-9c3b-4fdde4bce3a2
@@ -32,3 +32,4 @@ portals:
         refreshToken: 84d22710-4cb7-5581-ba05-35f9945e5e8e
         accessToken: >-
           CJDVnLanLRICEQIYyLu8LyDh9E4opf1GMhkAxGuU5XN_O2O2QhX0khw7cwIkPkBRHye-OfIADgLBAAADAIADAAAAAAAAAAJCGQC8a5TlhtSU8T-2mVLxOBpxS18aM42oGKk
+

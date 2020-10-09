@@ -61,13 +61,13 @@ const writeSchemaToDisk = (schema, dest) =>
     })
   );
 
-const listSchemas = async portalId => {
-  const response = await fetchSchemas(portalId);
+const listSchemas = async accountId => {
+  const response = await fetchSchemas(accountId);
   logSchemas(response.results);
 };
 
-const downloadSchemas = async (portalId, dest) => {
-  const response = await fetchSchemas(portalId);
+const downloadSchemas = async (accountId, dest) => {
+  const response = await fetchSchemas(accountId);
   logSchemas(response.results);
 
   if (response.results.length) {
@@ -77,8 +77,8 @@ const downloadSchemas = async (portalId, dest) => {
   return;
 };
 
-const downloadSchema = async (portalId, schemaObjectType, dest) => {
-  const response = await fetchSchema(portalId, schemaObjectType);
+const downloadSchema = async (accountId, schemaObjectType, dest) => {
+  const response = await fetchSchema(accountId, schemaObjectType);
   writeSchemaToDisk(response, dest);
 };
 
