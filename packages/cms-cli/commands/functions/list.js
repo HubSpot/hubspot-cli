@@ -69,6 +69,7 @@ exports.builder = yargs => {
   yargs
     .options({
       compact: {
+        alias: 'c',
         describe: 'output compact data',
         type: 'boolean',
       },
