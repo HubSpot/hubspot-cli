@@ -14,7 +14,7 @@ const {
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const {
@@ -52,7 +52,7 @@ exports.handler = async options => {
     portalId,
     directoryPath
   ).catch(async e => {
-    await logServerlessFunctionApiErrorInstance(
+    await logApiErrorInstance(
       portalId,
       e,
       new ApiErrorContext({ portalId, directoryPath })
