@@ -22,6 +22,8 @@ const {
 } = require('@hubspot/cms-lib/api/fileMapper');
 const { validatePortal } = require('../lib/validation');
 
+const FOLDER_DOT_EXTENSIONS = ['functions'];
+
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
@@ -61,7 +63,19 @@ exports.handler = async options => {
   });
 
   if (contentsResp.children.length) {
-    logger.log(contentsResp.children.sort().join('\n'));
+    const mappedContents = contentsResp.children.map(fileOrFolder => {
+      const splitName = fileOrFolder.split('.');
+
+      if (
+        splitName.length > 1 &&
+        FOLDER_DOT_EXTENSIONS.indexOf(splitName[1]) === -1
+      ) {
+        return fileOrFolder;
+      }
+
+      return `/${fileOrFolder}`;
+    });
+    logger.log(mappedContents.sort().join('\n'));
   } else {
     logger.info(`No files found in ${directoryPath}`);
   }
