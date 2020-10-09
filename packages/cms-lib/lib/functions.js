@@ -1,101 +1,61 @@
-// const util = require('util');
-// const moment = require('moment');
-// const chalk = require('chalk');
-const {
-  logger,
-  // Styles
-} = require('../logger');
+const moment = require('moment');
+const util = require('util');
 
-// const SEPARATOR = ' - ';
-// const LOG_STATUS_COLORS = {
-//   SUCCESS: Styles.success,
-//   UNHANDLED_ERROR: Styles.error,
-//   HANDLED_ERROR: Styles.error,
-// };
+const { logger } = require('../logger');
 
-// const formatError = log => {
-//   return `/n${log.error.type}: ${log.error.message}\n${formatStackTrace(
-//     log
-//   )}\n`;
-// };
+const formatCompactOutput = func => {
+  return `${func.method}\t/${func.route} (https://mtalley-101867970.hs-sitesqa.com/_hcms/api/${func.route})`;
+};
 
-// const logHandler = {
-//   UNHANDLED_ERROR: (log, { compact }) => {
-//     return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
-//   },
-//   HANDLED_ERROR: (log, { compact }) => {
-//     return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
-//   },
-//   SUCCESS: (log, { compact }) => {
-//     return `${formatLogHeader(log)}${compact ? '' : formatLogPayloadData(log)}`;
-//   },
-// };
+const formatFullOutput = func => {
+  return `/${
+    func.route
+  }\nURL: https://mtalley-101867970.hs-sitesqa.com/_hcms/api/${
+    func.route
+  }\nMethod: ${func.method}\nSecrets: ${util.inspect(func.secretNames, {
+    colors: true,
+    compact: true,
+    depth: 'Infinity',
+  })}\nCreated: ${func.created} (${moment(func.created).format()})\nUpdated: ${
+    func.updated
+  } (${moment(func.updated).format()})\n`;
+};
 
-// const formatLogPayloadData = log => {
-//   return `\n${formatPayload(log)}\n${formatLog(log)}`;
-// };
+const formatFunctionOutput = (func, options) => {
+  if (options.compact) {
+    return formatCompactOutput(func);
+  }
 
-// const formatLogHeader = log => {
-//   const color = LOG_STATUS_COLORS[log.status];
+  return formatFullOutput(func);
+};
 
-//   return `${formatTimestamp(log)}${SEPARATOR}${color(
-//     log.status
-//   )}${SEPARATOR}${formatExecutionTime(log)}`;
-// };
-
-// const formatLog = log => {
-//   return `${log.log}`;
-// };
-
-// const formatStackTrace = log => {
-//   const stackTrace = (log.error.stackTrace && log.error.stackTrace[0]) || [];
-//   return stackTrace
-//     .map(trace => {
-//       return `  at ${trace}\n`;
-//     })
-//     .join('');
-// };
-
-// const formatTimestamp = log => {
-//   return `${chalk.whiteBright(moment(log.createdAt).toISOString())}`;
-// };
-
-// const formatPayload = log => {
-//   return util.inspect(log.payload, {
-//     colors: true,
-//     compact: true,
-//     depth: 'Infinity',
-//   });
-// };
-
-// const formatExecutionTime = log => {
-//   return `${chalk.whiteBright('Execution Time:')} ${log.executionTime}ms`;
-// };
-
-// const processFunction = (func, options) => {
-//   try {
-//     return logHandler[func.status](func, options);
-//   } catch (e) {
-//     logger.error(`Unable to process log ${JSON.stringify(func)}`);
-//   }
-// };
+const processFunction = (func, options) => {
+  try {
+    return formatFunctionOutput(func, options);
+  } catch (e) {
+    logger.error(`Unable to process log ${JSON.stringify(func)}`);
+  }
+};
 
 const processOutput = (resp, options) => {
-  console.log('Process output: ', resp, options);
-  // if (!resp || (resp.results && !resp.results.length)) {
-  //   return 'No functions found.';
-  // } else if (resp.results && resp.results.length) {
-  //   return resp.results
-  //     .map(func => {
-  //       return processFunction(func, options);
-  //     })
-  //     .join('\n');
-  // }
-  // return processFunction(resp, options);
+  if (!resp || (resp.objects && !resp.objects.length)) {
+    return 'No functions found.';
+  } else if (resp.objects && resp.objects.length) {
+    return resp.objects
+      .map(func => {
+        return processFunction(func, options);
+      })
+      .join('\n');
+  }
+  return processFunction(resp, options);
 };
 
 const outputFunctions = (resp, options) => {
-  logger.log(processOutput(resp, options));
+  if (options.json) {
+    return logger.log(resp.objects);
+  }
+
+  return logger.log(processOutput(resp, options));
 };
 
 module.exports = {
