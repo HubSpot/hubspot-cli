@@ -1,4 +1,5 @@
 const requestPN = require('request-promise-native');
+const request = require('request');
 const fs = require('fs-extra');
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
@@ -12,13 +13,22 @@ jest.mock('request-promise-native', () => ({
 }));
 
 jest.mock('request', () => ({
-  get: jest.fn().mockReturnValue({
-    on: jest.fn((val, cb) => {
-      if (val === 'response') {
-        cb({ statusCode: 200 });
+  get: jest.fn(({ uri }) => {
+    const isValidPath = path => {
+      if (path === 'some/endpoint/path') {
+        return true;
+      } else {
+        return false;
       }
-    }),
-    pipe: jest.fn(),
+    };
+    return {
+      on: jest.fn((val, cb) => {
+        if (val === 'response') {
+          cb({ statusCode: isValidPath(uri) ? 200 : 404 });
+        }
+      }),
+      pipe: jest.fn(),
+    };
   }),
 }));
 jest.mock('../lib/config');
@@ -31,7 +41,7 @@ describe('http', () => {
     getPortalConfig.mockReset();
   });
   describe('getOctetStream()', () => {
-    it('not sure', async () => {
+    it('makes a get request', async () => {
       getAndLoadConfigIfNeeded.mockReturnValue({
         httpTimeout: 1000,
         portals: [
@@ -46,11 +56,71 @@ describe('http', () => {
         apiKey: 'abc',
       });
 
-      await http.getOctetStream(123, {
-        uri: 'some/endpoint/path',
+      await http.getOctetStream(
+        123,
+        {
+          uri: 'some/endpoint/path',
+        },
+        'path/to/local/file'
+      );
+
+      expect(request.get).toHaveBeenCalledWith(
+        expect.objectContaining({ uri: 'some/endpoint/path' })
+      );
+    });
+    it('fetches a file and attempts to write it', async () => {
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        httpTimeout: 1000,
+        portals: [
+          {
+            id: 123,
+            apiKey: 'abc',
+          },
+        ],
+      });
+      getPortalConfig.mockReturnValue({
+        id: 123,
+        apiKey: 'abc',
       });
 
-      expect(fs.createWriteStream).toBeCalledWith();
+      await http.getOctetStream(
+        123,
+        {
+          uri: 'some/endpoint/path',
+        },
+        'path/to/local/file'
+      );
+
+      expect(fs.createWriteStream).toBeCalledWith('path/to/local/file', {
+        encoding: 'binary',
+      });
+    });
+    it('fails to fetch a file and throws', async () => {
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        httpTimeout: 1000,
+        portals: [
+          {
+            id: 123,
+            apiKey: 'abc',
+          },
+        ],
+      });
+      getPortalConfig.mockReturnValue({
+        id: 123,
+        apiKey: 'abc',
+      });
+
+      try {
+        await http.getOctetStream(
+          123,
+          {
+            uri: 'some/nonexistent/path',
+          },
+          'path/to/local/file'
+        );
+      } catch (e) {
+        expect(e).rejects;
+      }
     });
   });
   describe('getRequestOptions()', () => {
