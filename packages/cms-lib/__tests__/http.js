@@ -119,7 +119,7 @@ describe('http', () => {
           'path/to/local/file'
         );
       } catch (e) {
-        expect(e).rejects;
+        expect(e.statusCode).toBe(404);
       }
     });
   });
