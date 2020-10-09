@@ -68,9 +68,5 @@ exports.builder = yargs => {
     describe: 'Name of the secret to be updated',
     type: 'string',
   });
-  yargs.positional('value', {
-    describe: 'The secret to be stored',
-    type: 'string',
-  });
   return yargs;
 };
