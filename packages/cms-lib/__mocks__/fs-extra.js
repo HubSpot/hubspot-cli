@@ -31,9 +31,9 @@ fs.existsSync = () => mockedExistsValue;
 fs.writeFileSync = () => true;
 fs.unlinkSync = () => true;
 fs.createWriteStream = jest.fn().mockReturnValue({
-  on: jest.fn((val, cb) => {
-    if (val === 'close') {
-      cb();
+  on: jest.fn((event, callback) => {
+    if (event === 'close') {
+      callback();
     }
   }),
 });

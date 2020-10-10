@@ -22,9 +22,9 @@ jest.mock('request', () => ({
       }
     };
     return {
-      on: jest.fn((val, cb) => {
-        if (val === 'response') {
-          cb({ statusCode: isValidPath(uri) ? 200 : 404 });
+      on: jest.fn((event, callback) => {
+        if (event === 'response') {
+          callback({ statusCode: isValidPath(uri) ? 200 : 404 });
         }
       }),
       pipe: jest.fn(),
