@@ -12,25 +12,7 @@ jest.mock('request-promise-native', () => ({
   post: jest.fn().mockReturnValue(Promise.resolve()),
 }));
 
-jest.mock('request', () => ({
-  get: jest.fn(({ uri }) => {
-    const isValidPath = path => {
-      if (path === 'some/endpoint/path') {
-        return true;
-      } else {
-        return false;
-      }
-    };
-    return {
-      on: jest.fn((event, callback) => {
-        if (event === 'response') {
-          callback({ statusCode: isValidPath(uri) ? 200 : 404 });
-        }
-      }),
-      pipe: jest.fn(),
-    };
-  }),
-}));
+jest.mock('request');
 jest.mock('../lib/config');
 jest.mock('../logger');
 
@@ -57,6 +39,14 @@ describe('http', () => {
       });
     });
     it('makes a get request', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 200 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
       await http.getOctetStream(
         123,
         {
@@ -70,6 +60,14 @@ describe('http', () => {
       );
     });
     it('fetches a file and attempts to write it', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 200 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
       await http.getOctetStream(
         123,
         {
@@ -83,6 +81,14 @@ describe('http', () => {
       });
     });
     it('fails to fetch a file and throws', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 404 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
       try {
         await http.getOctetStream(
           123,
