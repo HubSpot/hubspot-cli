@@ -41,7 +41,7 @@ describe('http', () => {
     getPortalConfig.mockReset();
   });
   describe('getOctetStream()', () => {
-    it('makes a get request', async () => {
+    beforeEach(() => {
       getAndLoadConfigIfNeeded.mockReturnValue({
         httpTimeout: 1000,
         portals: [
@@ -55,7 +55,8 @@ describe('http', () => {
         id: 123,
         apiKey: 'abc',
       });
-
+    });
+    it('makes a get request', async () => {
       await http.getOctetStream(
         123,
         {
@@ -69,20 +70,6 @@ describe('http', () => {
       );
     });
     it('fetches a file and attempts to write it', async () => {
-      getAndLoadConfigIfNeeded.mockReturnValue({
-        httpTimeout: 1000,
-        portals: [
-          {
-            id: 123,
-            apiKey: 'abc',
-          },
-        ],
-      });
-      getPortalConfig.mockReturnValue({
-        id: 123,
-        apiKey: 'abc',
-      });
-
       await http.getOctetStream(
         123,
         {
@@ -96,20 +83,6 @@ describe('http', () => {
       });
     });
     it('fails to fetch a file and throws', async () => {
-      getAndLoadConfigIfNeeded.mockReturnValue({
-        httpTimeout: 1000,
-        portals: [
-          {
-            id: 123,
-            apiKey: 'abc',
-          },
-        ],
-      });
-      getPortalConfig.mockReturnValue({
-        id: 123,
-        apiKey: 'abc',
-      });
-
       try {
         await http.getOctetStream(
           123,
