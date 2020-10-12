@@ -80,7 +80,7 @@ describe('http', () => {
         encoding: 'binary',
       });
     });
-    it('fails to fetch a file and throws', async () => {
+    it('fails to fetch a file and does not attempt to write to disk', async () => {
       request.get.mockReturnValue({
         on: jest.fn((event, callback) => {
           if (event === 'response') {
@@ -99,6 +99,7 @@ describe('http', () => {
         );
       } catch (e) {
         expect(e.statusCode).toBe(404);
+        expect(fs.createWriteStream).not.toBeCalled();
       }
     });
   });
