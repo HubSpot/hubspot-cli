@@ -21,12 +21,13 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { secretValuePrompt } = require('../../lib/secretPrompt');
 
-exports.command = 'add <name> <value>';
+exports.command = 'add <name>';
 exports.describe = 'Add a HubSpot secret';
 
 exports.handler = async options => {
-  const { config: configPath, name: secretName, value: secretValue } = options;
+  const { config: configPath, name: secretName } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -40,6 +41,8 @@ exports.handler = async options => {
   trackCommandUsage('secrets-add', {}, accountId);
 
   try {
+    const { secretValue } = await secretValuePrompt();
+
     await addSecret(accountId, secretName, secretValue);
     logger.log(
       `The secret "${secretName}" was added to the HubSpot account: ${accountId}`
@@ -63,10 +66,6 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
     describe: 'Name of the secret',
-    type: 'string',
-  });
-  yargs.positional('value', {
-    describe: 'The secret to be stored such as an API key',
     type: 'string',
   });
   return yargs;
