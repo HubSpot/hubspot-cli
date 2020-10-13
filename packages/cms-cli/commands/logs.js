@@ -156,13 +156,11 @@ exports.handler = async options => {
   } else if (latest) {
     logsResp = await getLatestFunctionLog(portalId, functionResp.id);
   } else {
-    logsResp = await getFunctionLogs(portalId, functionResp.id);
+    logsResp = await getFunctionLogs(portalId, functionResp.id, options);
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, {
-      compact,
-    });
+    return outputLogs(logsResp, options);
   }
 };
 
@@ -171,21 +169,29 @@ exports.builder = yargs => {
     describe: 'Path to serverless function',
     type: 'string',
   });
-  yargs.option('latest', {
-    alias: 'l',
-    describe: 'retrieve most recent log only',
-    type: 'boolean',
-  });
-  yargs.option('compact', {
-    alias: 'c',
-    describe: 'output compact logs',
-    type: 'boolean',
-  });
-  yargs.option('follow', {
-    alias: ['t', 'tail', 'f'],
-    describe: 'follow logs',
-    type: 'boolean',
-  });
+  yargs
+    .options({
+      latest: {
+        alias: 'l',
+        describe: 'retrieve most recent log only',
+        type: 'boolean',
+      },
+      compact: {
+        describe: 'output compact logs',
+        type: 'boolean',
+      },
+      follow: {
+        alias: ['t', 'tail', 'f'],
+        describe: 'follow logs',
+        type: 'boolean',
+      },
+      limit: {
+        alias: ['limit', 'n', 'max-count'],
+        describe: 'limit the number of logs to output',
+        type: 'number',
+      },
+    })
+    .conflicts('follow', 'limit');
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
