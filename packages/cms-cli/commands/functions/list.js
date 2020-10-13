@@ -1,7 +1,7 @@
 const { getRoutes } = require('@hubspot/cms-lib/api/function');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { outputFunctions } = require('@hubspot/cms-lib/lib/functions');
@@ -48,15 +48,9 @@ exports.handler = async options => {
   logger.debug('Getting currently deployed functions');
 
   const routesResp = await getRoutes(portalId).catch(async e => {
-    await logServerlessFunctionApiErrorInstance(
-      portalId,
-      e,
-      new ApiErrorContext({ portalId })
-    );
+    await logApiErrorInstance(portalId, e, new ApiErrorContext({ portalId }));
     process.exit();
   });
-
-  logger.debug(`Retrieving logs for functionId: ${routesResp.id}`);
 
   return outputFunctions(routesResp, options);
 };

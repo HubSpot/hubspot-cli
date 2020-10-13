@@ -4,19 +4,18 @@ const util = require('util');
 const { logger } = require('../logger');
 
 const formatCompactOutput = func => {
-  return `${func.method}\t/${func.route} (https://mtalley-101867970.hs-sitesqa.com/_hcms/api/${func.route})`;
+  return `${func.method}\t/${func.route}`;
 };
 
 const formatFullOutput = func => {
-  return `/${
-    func.route
-  }\nURL: https://mtalley-101867970.hs-sitesqa.com/_hcms/api/${
-    func.route
-  }\nMethod: ${func.method}\nSecrets: ${util.inspect(func.secretNames, {
-    colors: true,
-    compact: true,
-    depth: 'Infinity',
-  })}\nCreated: ${func.created} (${moment(func.created).format()})\nUpdated: ${
+  return `/${func.route}\nMethod: ${func.method}\nSecrets: ${util.inspect(
+    func.secretNames,
+    {
+      colors: true,
+      compact: true,
+      depth: 'Infinity',
+    }
+  )}\nCreated: ${func.created} (${moment(func.created).format()})\nUpdated: ${
     func.updated
   } (${moment(func.updated).format()})\n`;
 };
