@@ -34,6 +34,12 @@ const setConfig = updatedConfig => {
   return _config;
 };
 
+const getConfigAccounts = config =>
+  (config || getConfig()).accounts || getConfig().portals;
+
+const getConfigDefaultAccount = config =>
+  config.defaultAccount || config.defaultPortal;
+
 /**
  * @returns {boolean}
  */
@@ -43,13 +49,15 @@ const validateConfig = () => {
     logger.error('config is not defined');
     return false;
   }
-  if (!Array.isArray(config.accounts)) {
+
+  const accounts = getConfigAccounts();
+  if (!Array.isArray(accounts)) {
     logger.error('config.accounts[] is not defined');
     return false;
   }
   const accountIdsHash = {};
   const accountNamesHash = {};
-  return config.accounts.every(cfg => {
+  return accounts.every(cfg => {
     if (!cfg) {
       logger.error('config.accounts[] has an empty entry');
       return false;
@@ -86,12 +94,13 @@ const validateConfig = () => {
 
 const accountNameExistsInConfig = name => {
   const config = getConfig();
+  const accounts = getConfigAccounts();
 
-  if (!config || !Array.isArray(config.accounts)) {
+  if (!config || !Array.isArray(accounts)) {
     return false;
   }
 
-  return config.accounts.some(cfg => cfg.name && cfg.name === name);
+  return accounts.some(cfg => cfg.name && cfg.name === name);
 };
 
 const getOrderedAccount = unorderedAccount => {
@@ -383,10 +392,10 @@ const getEnv = nameOrId => {
   return env;
 };
 
-const getAccountConfig = accountId => {
-  const config = getAndLoadConfigIfNeeded();
-  return config.accounts.find(account => account.accountId === accountId);
-};
+const getAccountConfig = accountId =>
+  getConfigAccounts(getAndLoadConfigIfNeeded()).find(
+    account => account.accountId === accountId
+  );
 
 /*
  * Returns a accountId from the config if it exists, else returns null
@@ -411,10 +420,11 @@ const getAccountId = nameOrId => {
     }
   }
 
+  const accounts = getConfigAccounts(config);
   if (name) {
-    account = config.accounts.find(p => p.name === name);
+    account = accounts.find(p => p.name === name);
   } else if (accountId) {
-    account = config.accounts.find(p => p.accountId === accountId);
+    account = accounts.find(p => p.accountId === accountId);
   }
 
   if (account) {
@@ -476,16 +486,17 @@ const updateAccountConfig = configOptions => {
     personalAccessKey,
   };
 
+  let accounts = getConfigAccounts(config);
   if (accountConfig) {
     logger.debug(`Updating config for ${accountId}`);
-    const index = config.accounts.indexOf(accountConfig);
-    config.accounts[index] = nextAccountConfig;
+    const index = accounts.indexOf(accountConfig);
+    accounts[index] = nextAccountConfig;
   } else {
     logger.debug(`Adding config entry for ${accountId}`);
-    if (config.accounts) {
-      config.accounts.push(nextAccountConfig);
+    if (accounts) {
+      accounts.push(nextAccountConfig);
     } else {
-      config.accounts = [nextAccountConfig];
+      accounts = [nextAccountConfig];
     }
   }
   return nextAccountConfig;
