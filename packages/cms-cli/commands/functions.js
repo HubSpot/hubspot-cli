@@ -13,7 +13,12 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
 
-  yargs.command(list).demandCommand(1, '');
+  yargs
+    .command({
+      ...list,
+      aliases: 'ls',
+    })
+    .demandCommand(1, '');
 
   return yargs;
 };
