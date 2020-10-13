@@ -1,4 +1,6 @@
-const request = require('request-promise-native');
+const requestPN = require('request-promise-native');
+const request = require('request');
+const fs = require('fs-extra');
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getPortalConfig } = require('../lib/config');
 const { ENVIRONMENTS } = require('../lib/constants');
@@ -9,6 +11,8 @@ jest.mock('request-promise-native', () => ({
   get: jest.fn().mockReturnValue(Promise.resolve()),
   post: jest.fn().mockReturnValue(Promise.resolve()),
 }));
+
+jest.mock('request');
 jest.mock('../lib/config');
 jest.mock('../logger');
 
@@ -17,6 +21,87 @@ describe('http', () => {
     jest.clearAllMocks();
     getAndLoadConfigIfNeeded.mockReset();
     getPortalConfig.mockReset();
+  });
+  describe('getOctetStream()', () => {
+    beforeEach(() => {
+      getAndLoadConfigIfNeeded.mockReturnValue({
+        httpTimeout: 1000,
+        portals: [
+          {
+            id: 123,
+            apiKey: 'abc',
+          },
+        ],
+      });
+      getPortalConfig.mockReturnValue({
+        id: 123,
+        apiKey: 'abc',
+      });
+    });
+    it('makes a get request', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 200 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
+      await http.getOctetStream(
+        123,
+        {
+          uri: 'some/endpoint/path',
+        },
+        'path/to/local/file'
+      );
+
+      expect(request.get).toHaveBeenCalledWith(
+        expect.objectContaining({ uri: 'some/endpoint/path' })
+      );
+    });
+    it('fetches a file and attempts to write it', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 200 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
+      await http.getOctetStream(
+        123,
+        {
+          uri: 'some/endpoint/path',
+        },
+        'path/to/local/file'
+      );
+
+      expect(fs.createWriteStream).toBeCalledWith('path/to/local/file', {
+        encoding: 'binary',
+      });
+    });
+    it('fails to fetch a file and does not attempt to write to disk', async () => {
+      request.get.mockReturnValue({
+        on: jest.fn((event, callback) => {
+          if (event === 'response') {
+            callback({ statusCode: 404 });
+          }
+        }),
+        pipe: jest.fn(),
+      });
+      try {
+        await http.getOctetStream(
+          123,
+          {
+            uri: 'some/nonexistent/path',
+          },
+          'path/to/local/file'
+        );
+      } catch (e) {
+        expect(e.statusCode).toBe(404);
+        expect(fs.createWriteStream).not.toBeCalled();
+      }
+    });
   });
   describe('getRequestOptions()', () => {
     it('constructs baseUrl as expected based on environment', () => {
@@ -70,7 +155,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -108,7 +193,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -143,7 +228,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(request.get).toBeCalledWith({
+      expect(requestPN.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
