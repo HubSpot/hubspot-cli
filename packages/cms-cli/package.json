@@ -10,7 +10,6 @@
   "dependencies": {
     "@hubspot/cms-lib": "^2.1.1-beta.5",
     "chalk": "^4.1.0",
-    "commander": "^2.16.0",
     "express": "^4.17.1",
     "inquirer": "^6.3.1",
     "open": "^7.0.3",
