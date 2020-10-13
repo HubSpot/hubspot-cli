@@ -66,6 +66,7 @@ const argv = yargs
   .help()
   .recommendCommands()
   .demandCommand(1, '')
+  .completion()
   .strict().argv;
 
 if (argv.help) {
