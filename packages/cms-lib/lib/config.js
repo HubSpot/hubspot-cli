@@ -35,10 +35,13 @@ const setConfig = updatedConfig => {
 };
 
 const getConfigAccounts = config =>
-  (config || getConfig()).accounts || getConfig().portals;
+  (config || getConfig()).accounts || (config || getConfig()).portals;
 
 const getConfigDefaultAccount = config =>
   config.defaultAccount || config.defaultPortal;
+
+const getConfigAccountId = config =>
+  (config || getConfig()).accountId || (config || getConfig()).portalId;
 
 /**
  * @returns {boolean}
@@ -49,7 +52,6 @@ const validateConfig = () => {
     logger.error('config is not defined');
     return false;
   }
-
   const accounts = getConfigAccounts();
   if (!Array.isArray(accounts)) {
     logger.error('config.accounts[] is not defined');
@@ -62,13 +64,15 @@ const validateConfig = () => {
       logger.error('config.accounts[] has an empty entry');
       return false;
     }
-    if (!cfg.accountId) {
+
+    const accountId = getConfigAccountId(cfg);
+    if (!accountId) {
       logger.error('config.accounts[] has an entry missing accountId');
       return false;
     }
-    if (accountIdsHash[cfg.accountId]) {
+    if (accountIdsHash[accountId]) {
       logger.error(
-        `config.accounts[] has multiple entries with accountId=${cfg.accountId}`
+        `config.accounts[] has multiple entries with accountId=${accountId}`
       );
       return false;
     }
@@ -76,7 +80,7 @@ const validateConfig = () => {
     if (cfg.name) {
       if (accountNamesHash[cfg.name]) {
         logger.error(
-          `config.name has multiple entries with accountId=${cfg.accountId}`
+          `config.name has multiple entries with accountId=${accountId}`
         );
         return false;
       }
@@ -87,7 +91,7 @@ const validateConfig = () => {
       accountNamesHash[cfg.name] = cfg;
     }
 
-    accountIdsHash[cfg.accountId] = cfg;
+    accountIdsHash[accountId] = cfg;
     return true;
   });
 };
