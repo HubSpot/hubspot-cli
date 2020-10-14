@@ -88,7 +88,7 @@ Delete a file or directory from the Design Manager
 hs remove --account=DEV [path]
 ```
 
-Authenticate against a account using either `personalaccesskey` or `oauth2`
+Authenticate against an account using either `personalaccesskey` or `oauth2`
 
 ```bash
 hs auth personalaccesskey

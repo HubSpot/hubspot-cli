@@ -15,11 +15,11 @@ jest.mock('../commonOpts');
 
 describe('validation', () => {
   describe('validateAccount', () => {
-    it('returns false if a account is missing', async () => {
+    it('returns false if an account is missing', async () => {
       getAccountId.mockReturnValueOnce(null);
       expect(await validateAccount({ account: 123 })).toBe(false);
     });
-    it('returns false if a account config is missing', async () => {
+    it('returns false if an account config is missing', async () => {
       getAccountId.mockReturnValueOnce(123);
       getAccountConfig.mockReturnValueOnce(undefined);
       expect(await validateAccount({ account: 123 })).toBe(false);

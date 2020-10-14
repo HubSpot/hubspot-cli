@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Validate that a account was passed to the command and that the account's configuration is valid
+ * Validate that an account was passed to the command and that the account's configuration is valid
  *
  *
  * @param {object} command options
@@ -43,7 +43,7 @@ async function validateAccount(options) {
       );
     } else {
       logger.error(
-        'A account needs to be supplied either via "--account" or through setting a "defaultAccount"'
+        'An account needs to be supplied either via "--account" or through setting a "defaultAccount"'
       );
     }
     return false;
@@ -51,7 +51,7 @@ async function validateAccount(options) {
 
   if (accountOption && loadConfigFromEnvironment()) {
     throw new Error(
-      'Cannot specify a account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
+      'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );
   }
 
