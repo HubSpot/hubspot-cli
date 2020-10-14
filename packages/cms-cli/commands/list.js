@@ -99,15 +99,7 @@ exports.handler = async options => {
             return 1;
           }
 
-          // Sort alphabetically regardless of capitalization
-          const aVal = a.toLowerCase();
-          const bVal = b.toLowerCase();
-          if (aVal > bVal) {
-            return 1;
-          } else if (aVal < bVal) {
-            return -1;
-          }
-          return 0;
+          return a.localeCompare(b);
         })
         .join('\n')
     );
