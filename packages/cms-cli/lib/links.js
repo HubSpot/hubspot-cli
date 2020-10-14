@@ -82,9 +82,9 @@ const getSiteLinks = portalId => {
       alias: 'sn',
       url: `${baseUrl}/menus/${portalId}/edit/`,
     },
-    SETTINGS_PAGE: {
-      shortcut: 'settings/page',
-      alias: 'sp',
+    SETTINGS_WEBSITE: {
+      shortcut: 'settings/website',
+      alias: 'sw',
       url: `${baseUrl}/settings/${portalId}/website/pages/all-domains/page-templates`,
     },
     SETTINGS_URL_REDIRECTS: {

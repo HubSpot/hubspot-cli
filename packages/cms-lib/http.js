@@ -9,7 +9,7 @@ const { logger } = require('./logger');
 const {
   FileSystemErrorContext,
   logFileSystemErrorInstance,
-} = require('./errorHandlers');
+} = require('./errorHandlers/fileSystemErrors');
 
 const withOauth = async (accountId, accountConfig, requestOptions) => {
   const { headers } = requestOptions;
