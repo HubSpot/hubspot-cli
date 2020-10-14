@@ -40,8 +40,8 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'ls [path]';
-exports.describe = 'get remote contents of a directory';
+exports.command = 'list [path]';
+exports.describe = 'list remote contents of a directory';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -50,7 +50,7 @@ exports.handler = async options => {
   const directoryPath = path || '/';
   const portalId = getPortalId(options);
 
-  trackCommandUsage('ls', {}, portalId);
+  trackCommandUsage('list', {}, portalId);
 
   logger.debug(`Getting contents of ${directoryPath}`);
 
@@ -121,7 +121,7 @@ exports.builder = yargs => {
     describe: 'Remote directory to list contents',
     type: 'string',
   });
-  yargs.example([['$0 ls'], ['$0 ls /'], ['$0 ls serverless']]);
+  yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
