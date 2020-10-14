@@ -8,16 +8,12 @@ const {
 } = require('@hubspot/cms-lib');
 const { LOG_LEVEL } = Logger;
 
-const addAccountOptions = (program, useYargs = false) => {
-  if (useYargs) {
-    return program.option('account', {
-      alias: ['a', 'portal', 'p'],
-      describe: 'HubSpot account id or name from config',
-      type: 'string',
-    });
-  }
-  program.option('--portal <portal>', 'HubSpot portal id or name from config');
-};
+const addAccountOptions = program =>
+  program.option('account', {
+    alias: ['a', 'portal', 'p'],
+    describe: 'HubSpot account id or name from config',
+    type: 'string',
+  });
 
 const addConfigOptions = yargs =>
   yargs.option('config', {

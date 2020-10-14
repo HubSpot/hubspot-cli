@@ -22,14 +22,14 @@ const writeOauthTokenInfo = (AccountConfig, tokenInfo) => {
   writeConfig();
 };
 
-const getOauthManager = (accountId, AccountConfig) => {
+const getOauthManager = (accountId, accountConfig) => {
   if (!oauthManagers.has(accountId)) {
     const writeTokenInfo = tokenInfo => {
-      writeOauthTokenInfo(AccountConfig, tokenInfo);
+      writeOauthTokenInfo(accountConfig, tokenInfo);
     };
     oauthManagers.set(
       accountId,
-      OAuth2Manager.fromConfig(accountId, AccountConfig, logger, writeTokenInfo)
+      OAuth2Manager.fromConfig(accountId, accountConfig, logger, writeTokenInfo)
     );
   }
   return oauthManagers.get(accountId);
