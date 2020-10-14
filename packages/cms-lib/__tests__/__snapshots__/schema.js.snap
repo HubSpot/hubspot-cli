@@ -175,7 +175,7 @@ Array [
 
 exports[`cms-lib/schema logSchemas() logs schemas 1`] = `
 "╔════════╤════════╤══════════════╗
-║ Label  │ Name   │ objectTypeId ║
+║ [1mLabel[22m  │ [1mName[22m   │ [1mobjectTypeId[22m ║
 ║ Schema │ schema │              ║
 ╚════════╧════════╧══════════════╝
 "

@@ -40,14 +40,14 @@ const withPersonalAccessKey = async (
   };
 };
 
-const withaccountId = (accountId, requestOptions) => {
+const withPortalId = (portalId, requestOptions) => {
   const { qs } = requestOptions;
 
   return {
     ...requestOptions,
     qs: {
       ...qs,
-      accountId,
+      portalId,
     },
   };
 };
@@ -55,7 +55,7 @@ const withaccountId = (accountId, requestOptions) => {
 const withAuth = async (accountId, options) => {
   const accountConfig = getAccountConfig(accountId);
   const { env, authType, apiKey } = accountConfig;
-  const requestOptions = withaccountId(
+  const requestOptions = withPortalId(
     accountId,
     getRequestOptions({ env }, options)
   );

@@ -33,7 +33,7 @@ describe('http', () => {
           },
         ],
       });
-      getPortalConfig.mockReturnValue({
+      getAccountConfig.mockReturnValue({
         id: 123,
         apiKey: 'abc',
       });

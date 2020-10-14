@@ -37,8 +37,10 @@ const setConfig = updatedConfig => {
 const getConfigAccounts = config =>
   (config || getConfig()).accounts || (config || getConfig()).portals;
 
-const getConfigDefaultAccount = config =>
-  config.defaultAccount || config.defaultPortal;
+const getConfigDefaultAccount = config => {
+  if (!config) return;
+  return config.defaultAccount || config.defaultPortal;
+};
 
 const getConfigAccountId = config =>
   (config || getConfig()).accountId || (config || getConfig()).portalId;
@@ -108,11 +110,19 @@ const accountNameExistsInConfig = name => {
 };
 
 const getOrderedAccount = unorderedAccount => {
-  const { name, accountId, env, authType, ...rest } = unorderedAccount;
+  const {
+    name,
+    accountId,
+    portalId,
+    env,
+    authType,
+    ...rest
+  } = unorderedAccount;
 
   return {
     name,
-    accountId,
+    ...(accountId && { accountId }),
+    ...(portalId && { portalId }),
     env,
     authType,
     ...rest,
@@ -122,19 +132,22 @@ const getOrderedAccount = unorderedAccount => {
 const getOrderedConfig = unorderedConfig => {
   const {
     defaultAccount,
+    defaultPortal,
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
     accounts,
+    portals,
     ...rest
   } = unorderedConfig;
 
   return {
-    defaultAccount,
+    ...(defaultAccount && { defaultAccount }),
+    ...(defaultPortal && { defaultPortal }),
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    accounts: accounts.map(getOrderedAccount),
+    accounts: (accounts || portals).map(getOrderedAccount),
     ...rest,
   };
 };
@@ -398,7 +411,7 @@ const getEnv = nameOrId => {
 
 const getAccountConfig = accountId =>
   getConfigAccounts(getAndLoadConfigIfNeeded()).find(
-    account => account.accountId === accountId
+    account => account.accountId === accountId || account.portalId === accountId
   );
 
 /*
@@ -411,8 +424,10 @@ const getAccountId = nameOrId => {
   let account;
 
   if (!nameOrId) {
-    if (config && config.defaultAccount) {
-      name = config.defaultAccount;
+    const defaultAccount = getConfigDefaultAccount(config);
+
+    if (defaultAccount) {
+      name = defaultAccount;
     }
   } else {
     if (typeof nameOrId === 'number') {
@@ -432,7 +447,7 @@ const getAccountId = nameOrId => {
   }
 
   if (account) {
-    return account.accountId;
+    return account.accountId || account.portalId;
   }
 
   return null;
@@ -520,7 +535,12 @@ const updateDefaultAccount = defaultAccount => {
   }
 
   const config = getAndLoadConfigIfNeeded();
-  config.defaultAccount = defaultAccount;
+  if (config.defaultPortal) {
+    config.defaultPortal = defaultAccount;
+  } else {
+    config.defaultAccount = defaultAccount;
+  }
+
   setDefaultConfigPathIfUnset();
   writeConfig();
 };
