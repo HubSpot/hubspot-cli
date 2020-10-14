@@ -49,22 +49,22 @@ exports.handler = async options => {
   const { path } = options;
   const directoryPath = path || '/';
   const portalId = getPortalId(options);
+  let contentsResp;
 
   trackCommandUsage('list', {}, portalId);
 
   logger.debug(`Getting contents of ${directoryPath}`);
 
-  const contentsResp = await getDirectoryContentsByPath(
-    portalId,
-    directoryPath
-  ).catch(async e => {
+  try {
+    contentsResp = await getDirectoryContentsByPath(portalId, directoryPath);
+  } catch (e) {
     await logApiErrorInstance(
       portalId,
       e,
       new ApiErrorContext({ portalId, directoryPath })
     );
     process.exit();
-  });
+  }
 
   if (contentsResp.children.length) {
     const mappedContents = contentsResp.children.map(fileOrFolder => {
