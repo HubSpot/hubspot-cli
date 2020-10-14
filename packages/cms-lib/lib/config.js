@@ -34,16 +34,23 @@ const setConfig = updatedConfig => {
   return _config;
 };
 
-const getConfigAccounts = config =>
-  (config || getConfig()).accounts || (config || getConfig()).portals;
-
-const getConfigDefaultAccount = config => {
-  if (!config) return;
-  return config.defaultAccount || config.defaultPortal;
+const getConfigAccounts = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.accounts || __config.portals;
 };
 
-const getConfigAccountId = config =>
-  (config || getConfig()).accountId || (config || getConfig()).portalId;
+const getConfigDefaultAccount = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.defaultAccount || __config.defaultPortal;
+};
+
+const getConfigAccountId = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.accountId || __config.portalId;
+};
 
 /**
  * @returns {boolean}
