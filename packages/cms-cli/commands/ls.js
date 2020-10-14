@@ -7,6 +7,7 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
+const { validatePortal } = require('../lib/validation');
 const {
   loadConfig,
   validateConfig,
@@ -20,7 +21,10 @@ const {
 const {
   getDirectoryContentsByPath,
 } = require('@hubspot/cms-lib/api/fileMapper');
-const { validatePortal } = require('../lib/validation');
+const {
+  HUBSPOT_FOLDER,
+  MARKETPLACE_FOLDER,
+} = require('@hubspot/cms-lib/lib/constants');
 
 const FOLDER_DOT_EXTENSIONS = ['functions'];
 
@@ -75,9 +79,26 @@ exports.handler = async options => {
 
       return `/${fileOrFolder}`;
     });
+    const hubspotFolder = `/${HUBSPOT_FOLDER}`;
+    const marketplaceFolder = `/${MARKETPLACE_FOLDER}`;
+
     logger.log(
       mappedContents
         .sort(function(a, b) {
+          // Pin @hubspot folder to top
+          if (a === hubspotFolder) {
+            return -1;
+          } else if (b === hubspotFolder) {
+            return 1;
+          }
+
+          // Pin @marketplace folder to top
+          if (a === marketplaceFolder) {
+            return -1;
+          } else if (b === marketplaceFolder) {
+            return 1;
+          }
+
           // Sort alphabetically regardless of capitalization
           const aVal = a.toLowerCase();
           const bVal = b.toLowerCase();

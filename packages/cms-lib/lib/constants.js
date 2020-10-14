@@ -92,6 +92,9 @@ const SCOPE_GROUPS = {
   functions: 'cms.functions.read_write',
 };
 
+const HUBSPOT_FOLDER = '@hubspot';
+const MARKETPLACE_FOLDER = '@marketplace';
+
 module.exports = {
   Mode,
   ENVIRONMENTS,
@@ -110,4 +113,6 @@ module.exports = {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENT_VARIABLES,
   SCOPE_GROUPS,
+  HUBSPOT_FOLDER,
+  MARKETPLACE_FOLDER,
 };
