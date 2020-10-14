@@ -1,9 +1,15 @@
 const request = require('request');
 const requestPN = require('request-promise-native');
+const fs = require('fs-extra');
 const { getPortalConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
 const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
 const { getOauthManager } = require('./oauth');
+const { logger } = require('./logger');
+const {
+  FileSystemErrorContext,
+  logFileSystemErrorInstance,
+} = require('./errorHandlers/fileSystemErrors');
 
 const withOauth = async (portalId, portalConfig, requestOptions) => {
   const { headers } = requestOptions;
@@ -108,10 +114,22 @@ const deleteRequest = async (portalId, options) => {
 const createGetRequestStream = ({ contentType }) => async (
   portalId,
   options,
-  destination
+  filepath
 ) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
+
+  const logFsError = err => {
+    logFileSystemErrorInstance(
+      err,
+      new FileSystemErrorContext({
+        filepath,
+        portalId,
+        write: true,
+      })
+    );
+  };
+
   // Using `request` instead of `request-promise` per the docs so
   // the response can be piped.
   // https://github.com/request/request-promise#api-in-detail
@@ -129,18 +147,26 @@ const createGetRequestStream = ({ contentType }) => async (
         },
         json: false,
       });
-      let response;
-      req
-        .on('error', reject)
-        .on('response', r => {
-          if (r.statusCode >= 200 && r.statusCode < 300) {
-            response = r;
-          } else {
-            reject(r);
-          }
-        })
-        .on('end', () => resolve(response))
-        .pipe(destination);
+      req.on('error', reject);
+      req.on('response', res => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          const writeStream = fs.createWriteStream(filepath, {
+            encoding: 'binary',
+          });
+          req.pipe(writeStream);
+
+          writeStream.on('error', err => {
+            logFsError(err);
+            reject(err);
+          });
+          writeStream.on('close', async () => {
+            logger.log('Wrote file "%s"', filepath);
+            resolve(res);
+          });
+        } else {
+          reject(res);
+        }
+      });
     } catch (err) {
       reject(err);
     }

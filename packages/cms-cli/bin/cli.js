@@ -23,6 +23,7 @@ const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 const customObjectCommand = require('../commands/customObject');
 const lsCommand = require('../commands/ls');
+const openCommand = require('../commands/open');
 
 const notifier = updateNotifier({ pkg });
 
@@ -65,9 +66,11 @@ const argv = yargs
   .command(secretsCommand)
   .command(customObjectCommand)
   .command(lsCommand)
+  .command(openCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
+  .completion()
   .strict().argv;
 
 if (argv.help) {
