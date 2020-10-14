@@ -75,7 +75,21 @@ exports.handler = async options => {
 
       return `/${fileOrFolder}`;
     });
-    logger.log(mappedContents.sort().join('\n'));
+    logger.log(
+      mappedContents
+        .sort(function(a, b) {
+          // Sort alphabetically regardless of capitalization
+          const aVal = a.toLowerCase();
+          const bVal = b.toLowerCase();
+          if (aVal > bVal) {
+            return 1;
+          } else if (aVal < bVal) {
+            return -1;
+          }
+          return 0;
+        })
+        .join('\n')
+    );
   } else {
     logger.info(`No files found in ${directoryPath}`);
   }
