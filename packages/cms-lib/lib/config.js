@@ -351,15 +351,16 @@ const getAndLoadConfigIfNeeded = (options = {}) => {
 };
 
 const getConfigPath = path => {
-  return (
-    path ||
-    findup(
-      [
-        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-        DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
-      ],
-      { cwd: getCwd() }
-    )
+  return path || findConfig(getCwd());
+};
+
+const findConfig = directory => {
+  return findup(
+    [
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
+    ],
+    { cwd: directory }
   );
 };
 
@@ -668,6 +669,7 @@ module.exports = {
   setConfig,
   setConfigPath,
   loadConfig,
+  findConfig,
   loadConfigFromEnvironment,
   getPortalConfig,
   getPortalId,
