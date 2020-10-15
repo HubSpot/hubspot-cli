@@ -26,7 +26,7 @@ const {
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cms-lib/lib/constants');
 
-const FOLDER_DOT_EXTENSIONS = ['functions'];
+const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
