@@ -59,7 +59,7 @@ exports.handler = async options => {
   try {
     contentsResp = await getDirectoryContentsByPath(portalId, directoryPath);
   } catch (e) {
-    await logApiErrorInstance(
+    logApiErrorInstance(
       portalId,
       e,
       new ApiErrorContext({ portalId, directoryPath })
