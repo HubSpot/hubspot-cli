@@ -82,28 +82,27 @@ exports.handler = async options => {
     });
     const hubspotFolder = `/${HUBSPOT_FOLDER}`;
     const marketplaceFolder = `/${MARKETPLACE_FOLDER}`;
+    const folderContentsOutput = mappedContents
+      .sort(function(a, b) {
+        // Pin @hubspot folder to top
+        if (a === hubspotFolder) {
+          return -1;
+        } else if (b === hubspotFolder) {
+          return 1;
+        }
 
-    logger.log(
-      mappedContents
-        .sort(function(a, b) {
-          // Pin @hubspot folder to top
-          if (a === hubspotFolder) {
-            return -1;
-          } else if (b === hubspotFolder) {
-            return 1;
-          }
+        // Pin @marketplace folder to top
+        if (a === marketplaceFolder) {
+          return -1;
+        } else if (b === marketplaceFolder) {
+          return 1;
+        }
 
-          // Pin @marketplace folder to top
-          if (a === marketplaceFolder) {
-            return -1;
-          } else if (b === marketplaceFolder) {
-            return 1;
-          }
+        return a.localeCompare(b);
+      })
+      .join('\n');
 
-          return a.localeCompare(b);
-        })
-        .join('\n')
-    );
+    logger.log(folderContentsOutput);
   } else {
     logger.info(`No files found in ${directoryPath}`);
   }
