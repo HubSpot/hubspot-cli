@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const {
   addPortalOptions,
   addConfigOptions,
@@ -77,7 +78,7 @@ exports.handler = async options => {
         return fileOrFolder;
       }
 
-      return `/${fileOrFolder}`;
+      return chalk.reset.blue(fileOrFolder);
     });
     const hubspotFolder = `/${HUBSPOT_FOLDER}`;
     const marketplaceFolder = `/${MARKETPLACE_FOLDER}`;
