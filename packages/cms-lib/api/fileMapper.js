@@ -220,6 +220,19 @@ async function moveFile(portalId, srcPath, destPath) {
   });
 }
 
+/**
+ * Get directory contents
+ *
+ * @async
+ * @param {string} path
+ * @returns {Promise}
+ */
+async function getDirectoryContentsByPath(portalId, path) {
+  return http.get(portalId, {
+    uri: `${FILE_MAPPER_API_PATH}/meta/${path}`,
+  });
+}
+
 module.exports = {
   deleteFile,
   deleteFolder,
@@ -231,4 +244,5 @@ module.exports = {
   upload,
   createFileMapperNodeFromStreamResponse,
   moveFile,
+  getDirectoryContentsByPath,
 };
