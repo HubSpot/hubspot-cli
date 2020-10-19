@@ -22,7 +22,7 @@ First, you will need to create a config for the accounts that you want to be abl
 Once the config is created, commands can be run by providing a path to the executable file:
 
 ```
-yarn hscms upload --accountId [src] [dest]`
+yarn hs upload --account [src] [dest]`
 ```
 
 * To test a command when `@hubspot/cms-cli` is a dependency in another package like `cms-theme-boilerplate`.

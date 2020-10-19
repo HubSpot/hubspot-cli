@@ -28,13 +28,13 @@ describe('http', () => {
         httpTimeout: 1000,
         portals: [
           {
-            id: 123,
+            portalId: 123,
             apiKey: 'abc',
           },
         ],
       });
       getAccountConfig.mockReturnValue({
-        id: 123,
+        portalId: 123,
         apiKey: 'abc',
       });
     });
@@ -134,7 +134,7 @@ describe('http', () => {
     it('adds authorization header when using OAuth2 with valid access token', async () => {
       const accessToken = 'let-me-in';
       const account = {
-        id: 123,
+        portalId: 123,
         authType: 'oauth2',
         clientId: 'd996372f-2b53-30d3-9c3b-4fdde4bce3a2',
         clientSecret: 'f90a6248-fbc0-3b03-b0db-ec58c95e791',
@@ -173,7 +173,7 @@ describe('http', () => {
     it('adds authorization header when using a user token', async () => {
       const accessToken = 'let-me-in';
       const account = {
-        id: 123,
+        portalId: 123,
         authType: 'personalaccesskey',
         personalAccessKey: 'some-secret',
         auth: {
@@ -214,13 +214,13 @@ describe('http', () => {
         httpTimeout: 1000,
         accounts: [
           {
-            id: 123,
+            portalId: 123,
             apiKey: 'abc',
           },
         ],
       });
       getAccountConfig.mockReturnValue({
-        id: 123,
+        portalId: 123,
         apiKey: 'abc',
       });
 

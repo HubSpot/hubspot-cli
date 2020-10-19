@@ -450,7 +450,7 @@ const getAccountId = nameOrId => {
   if (name) {
     account = accounts.find(p => p.name === name);
   } else if (accountId) {
-    account = accounts.find(p => p.accountId === accountId);
+    account = accounts.find(p => [p.accountId, p.portalId].includes(accountId));
   }
 
   if (account) {
