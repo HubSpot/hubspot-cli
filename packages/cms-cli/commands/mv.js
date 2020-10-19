@@ -20,6 +20,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { isPathFolder } = require('../lib/filesystem');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -45,7 +46,11 @@ exports.handler = async options => {
   trackCommandUsage('mv', {}, portalId);
 
   try {
-    await moveFile(portalId, srcPath, destPath);
+    await moveFile(
+      portalId,
+      srcPath,
+      isPathFolder(srcPath) ? `${destPath}/${srcPath}` : destPath
+    );
     logger.log(`Moved "${srcPath}" to "${destPath}" in portal ${portalId}`);
   } catch (error) {
     logger.error(
