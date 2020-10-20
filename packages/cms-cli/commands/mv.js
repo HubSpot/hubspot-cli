@@ -39,6 +39,7 @@ const getCorrectedDestPath = (srcPath, destPath) => {
     return destPath;
   }
 
+  // Makes sure that nested folders are moved independently
   return `${destPath}/${srcPath.split('/').pop()}`;
 };
 
