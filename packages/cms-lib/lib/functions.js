@@ -7,8 +7,8 @@ const getFunctionArrays = resp => {
       route,
       method,
       secretNames.join(', '),
-      `${created} (${moment(created).format()})`,
-      `${updated} (${moment(updated).format()})`,
+      moment(created).format(),
+      moment(updated).format(),
     ];
   });
 };
