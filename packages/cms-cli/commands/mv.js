@@ -43,7 +43,7 @@ const getCorrectedDestPath = (srcPath, destPath) => {
   return `${destPath}/${srcPath.split('/').pop()}`;
 };
 
-exports.command = 'mv <srcPath> <destPath';
+exports.command = 'mv <srcPath> <destPath>';
 exports.describe = 'Move a remote file or folder in HubSpot';
 
 exports.handler = async options => {
@@ -56,7 +56,7 @@ exports.handler = async options => {
 
   try {
     await moveFile(portalId, srcPath, getCorrectedDestPath(srcPath, destPath));
-    logger.log(`Moved "${srcPath}" to "${destPath}" in portal ${portalId}`);
+    logger.success(`Moved "${srcPath}" to "${destPath}" in portal ${portalId}`);
   } catch (error) {
     logger.error(
       `Moving "${srcPath}" to "${destPath}" in portal ${portalId} failed`
