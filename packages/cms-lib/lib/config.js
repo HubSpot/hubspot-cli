@@ -465,7 +465,8 @@ const getAccountId = nameOrId => {
  */
 const updateAccountConfig = configOptions => {
   const {
-    accountId,
+    accountId: _accountId,
+    portalId,
     authType,
     environment,
     clientId,
@@ -477,9 +478,10 @@ const updateAccountConfig = configOptions => {
     apiKey,
     personalAccessKey,
   } = configOptions;
+  const accountId = _accountId || portalId;
 
   if (!accountId) {
-    throw new Error('A accountId is required to update the config');
+    throw new Error('An accountId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
@@ -504,7 +506,8 @@ const updateAccountConfig = configOptions => {
     ...accountConfig,
     name: name || (accountConfig && accountConfig.name),
     env,
-    accountId,
+    ...(_accountId && { accountId: _accountId }),
+    ...(portalId && { portalId }),
     authType,
     auth,
     apiKey,
@@ -542,10 +545,12 @@ const updateDefaultAccount = defaultAccount => {
   }
 
   const config = getAndLoadConfigIfNeeded();
+  if (config.defaultAccount) {
+    config.defaultAccount = defaultAccount;
+  }
+  // Keep for backcompat
   if (config.defaultPortal) {
     config.defaultPortal = defaultAccount;
-  } else {
-    config.defaultAccount = defaultAccount;
   }
 
   setDefaultConfigPathIfUnset();
@@ -712,7 +717,12 @@ module.exports = {
   getAndLoadConfigIfNeeded,
   getEnv,
   getConfig,
+  getConfigAccounts,
+  getConfigDefaultAccount,
+  getConfigAccountId,
   getConfigPath,
+  getOrderedAccount,
+  getOrderedConfig,
   setConfig,
   setConfigPath,
   loadConfig,

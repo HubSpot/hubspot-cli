@@ -1,9 +1,14 @@
 const {
   setConfig,
   getAndLoadConfigIfNeeded,
+  getOrderedAccount,
   getConfig,
+  getConfigAccounts,
+  getConfigDefaultAccount,
+  getConfigAccountId,
   getAccountConfig,
   getAccountId,
+  getOrderedConfig,
   updateDefaultAccount,
   updateAccountConfig,
   validateConfig,
@@ -22,6 +27,14 @@ const API_KEY_CONFIG = {
   authType: 'apikey',
   apiKey: 'secret',
 };
+
+const LEGACY_API_KEY_CONFIG = (() => {
+  const legacyObj = { ...API_KEY_CONFIG };
+  legacyObj.portalId = legacyObj.accountId + 1;
+  delete legacyObj.accountId;
+  return legacyObj;
+})();
+
 const OAUTH2_CONFIG = {
   name: 'OAUTH2',
   accountId: 2222,
@@ -37,6 +50,14 @@ const OAUTH2_CONFIG = {
     },
   },
 };
+
+const LEGACY_OAUTH2_CONFIG = (() => {
+  const legacyObj = { ...OAUTH2_CONFIG };
+  legacyObj.portalId = legacyObj.accountId + 1;
+  delete legacyObj.accountId;
+  return legacyObj;
+})();
+
 const PERSONAL_ACCESS_KEY_CONFIG = {
   name: 'PERSONALACCESSKEY',
   accountId: 3333,
@@ -50,6 +71,13 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
   },
   personalAccessKey: 'fakePersonalAccessKey',
 };
+
+const LEGACY_PERSONAL_ACCESS_KEY_CONFIG = (() => {
+  const legacyObj = { ...PERSONAL_ACCESS_KEY_CONFIG };
+  legacyObj.portalId = legacyObj.accountId + 1;
+  delete legacyObj.accountId;
+  return legacyObj;
+})();
 
 const ACCOUNTS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
@@ -548,6 +576,382 @@ describe('lib/config', () => {
         ])
       ).toBe(true);
       readFileSyncSpy.mockReset();
+    });
+  });
+
+  describe('legacy accounts (portals)', () => {
+    const LEGACY_ACCOUNTS = [
+      LEGACY_API_KEY_CONFIG,
+      LEGACY_OAUTH2_CONFIG,
+      LEGACY_PERSONAL_ACCESS_KEY_CONFIG,
+    ];
+
+    const COMBINED_ACCOUNTS = [
+      Object.assign({}, API_KEY_CONFIG, LEGACY_API_KEY_CONFIG),
+      Object.assign({}, OAUTH2_CONFIG, LEGACY_OAUTH2_CONFIG),
+      Object.assign(
+        {},
+        PERSONAL_ACCESS_KEY_CONFIG,
+        LEGACY_PERSONAL_ACCESS_KEY_CONFIG
+      ),
+    ];
+
+    describe('getConfigAccounts', () => {
+      it('supports legacy configs', () => {
+        expect(
+          getConfigAccounts({ portals: [{ portalId: 'foo' }] })[0].portalId
+        ).toEqual('foo');
+      });
+
+      it('supports combined configs, and favors accounts over portals', () => {
+        const config = {
+          portals: [{ portalId: 'foo' }],
+          accounts: [{ accountId: 'bar' }],
+        };
+        expect(getConfigAccounts(config)[0].portalId).toBeUndefined();
+        expect(getConfigAccounts(config)[0].accountId).toEqual('bar');
+      });
+    });
+
+    describe('getConfigDefaultAccount', () => {
+      it('supports legacy configs', () => {
+        expect(
+          getConfigDefaultAccount({
+            defaultPortal: 'fooPortal',
+          })
+        ).toEqual('fooPortal');
+      });
+
+      it('supports combined configs, and favors accounts over portals', () => {
+        expect(
+          getConfigDefaultAccount({
+            defaultPortal: 'fooPortal',
+            defaultAccount: 'fooAccount',
+          })
+        ).toEqual('fooAccount');
+      });
+    });
+
+    describe('getConfigAccountId', () => {
+      it('supports legacy configs', () => {
+        expect(
+          getConfigAccountId({
+            portalId: 'fooPortal',
+          })
+        ).toEqual('fooPortal');
+      });
+
+      it('supports combined configs, and favors accounts over portals', () => {
+        expect(
+          getConfigAccountId({
+            portalId: 'fooPortal',
+            accountId: 'fooAccount',
+          })
+        ).toEqual('fooAccount');
+      });
+    });
+
+    describe('getOrderedAccount', () => {
+      it('supports legacy portalId', () => {
+        expect(
+          getOrderedAccount({
+            portalId: '123',
+            name: 'this should go before',
+          })
+        ).toMatchInlineSnapshot(`
+          Object {
+            "authType": undefined,
+            "env": undefined,
+            "name": "this should go before",
+            "portalId": "123",
+          }
+        `);
+      });
+
+      it('supports combined configs', () => {
+        expect(
+          getOrderedAccount({
+            portalId: '123',
+            accountId: '123',
+            name: 'this should go before',
+          })
+        ).toMatchInlineSnapshot(`
+          Object {
+            "accountId": "123",
+            "authType": undefined,
+            "env": undefined,
+            "name": "this should go before",
+            "portalId": "123",
+          }
+        `);
+      });
+    });
+
+    describe('getOrderedConfig', () => {
+      it('supports legacy portal', () => {
+        expect(
+          getOrderedConfig({
+            defaultPortal: LEGACY_PERSONAL_ACCESS_KEY_CONFIG.portalId,
+            accounts: [LEGACY_PERSONAL_ACCESS_KEY_CONFIG],
+          })
+        ).toMatchInlineSnapshot(`
+          Object {
+            "accounts": Array [
+              Object {
+                "auth": Object {
+                  "scopes": Array [
+                    "content",
+                  ],
+                  "tokenInfo": Object {
+                    "accessToken": "fakePersonalAccessKeyAccessToken",
+                    "expiresAt": "2020-01-01T00:00:00.000Z",
+                  },
+                },
+                "authType": "personalaccesskey",
+                "env": undefined,
+                "name": "PERSONALACCESSKEY",
+                "personalAccessKey": "fakePersonalAccessKey",
+                "portalId": 3334,
+              },
+            ],
+            "allowsUsageTracking": undefined,
+            "defaultMode": undefined,
+            "defaultPortal": 3334,
+            "httpTimeout": undefined,
+          }
+        `);
+      });
+
+      it('supports combined', () => {
+        expect(
+          getOrderedConfig({
+            defaultAccount: PERSONAL_ACCESS_KEY_CONFIG.accountId,
+            defaultPortal: LEGACY_PERSONAL_ACCESS_KEY_CONFIG.portalId,
+            accounts: [
+              Object.assign(
+                {},
+                PERSONAL_ACCESS_KEY_CONFIG,
+                LEGACY_PERSONAL_ACCESS_KEY_CONFIG
+              ),
+            ],
+          })
+        ).toMatchInlineSnapshot(`
+          Object {
+            "accounts": Array [
+              Object {
+                "accountId": 3333,
+                "auth": Object {
+                  "scopes": Array [
+                    "content",
+                  ],
+                  "tokenInfo": Object {
+                    "accessToken": "fakePersonalAccessKeyAccessToken",
+                    "expiresAt": "2020-01-01T00:00:00.000Z",
+                  },
+                },
+                "authType": "personalaccesskey",
+                "env": undefined,
+                "name": "PERSONALACCESSKEY",
+                "personalAccessKey": "fakePersonalAccessKey",
+                "portalId": 3334,
+              },
+            ],
+            "allowsUsageTracking": undefined,
+            "defaultAccount": 3333,
+            "defaultMode": undefined,
+            "defaultPortal": 3334,
+            "httpTimeout": undefined,
+          }
+        `);
+      });
+    });
+
+    describe('getAccountConfig', () => {
+      describe('portalId', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: LEGACY_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports portalId', () => {
+          expect(getAccountConfig(2222)).toMatchInlineSnapshot(`undefined`);
+        });
+      });
+
+      describe('combined', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: COMBINED_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('favors account over portal', () => {
+          expect(getAccountConfig(2222)).toMatchInlineSnapshot(`
+            Object {
+              "accountId": 2222,
+              "auth": Object {
+                "clientId": "fakeClientId",
+                "clientSecret": "fakeClientSecret",
+                "scopes": Array [
+                  "content",
+                ],
+                "tokenInfo": Object {
+                  "accessToken": "fakeOauthAccessToken",
+                  "expiresAt": "2020-01-01T00:00:00.000Z",
+                  "refreshToken": "fakeOauthRefreshToken",
+                },
+              },
+              "authType": "oauth2",
+              "name": "OAUTH2",
+              "portalId": 2223,
+            }
+          `);
+        });
+      });
+    });
+
+    describe('getAccountId', () => {
+      describe('portalId', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: LEGACY_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports portalId', () => {
+          expect(getAccountId(LEGACY_API_KEY_CONFIG.name)).toEqual(
+            LEGACY_API_KEY_CONFIG.portalId
+          );
+        });
+      });
+
+      describe('combination', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: COMBINED_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('favors account over portal', () => {
+          expect(getAccountId(COMBINED_ACCOUNTS[0].name)).toEqual(
+            COMBINED_ACCOUNTS[0].accountId
+          );
+        });
+      });
+    });
+
+    describe('updateAccountConfig', () => {
+      describe('portalId', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: LEGACY_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports portalId', () => {
+          expect(
+            updateAccountConfig(
+              Object.assign({}, LEGACY_API_KEY_CONFIG, { portalId: 999 })
+            )
+          ).toMatchInlineSnapshot(`
+            Object {
+              "apiKey": "secret",
+              "auth": undefined,
+              "authType": "apikey",
+              "defaultMode": undefined,
+              "env": undefined,
+              "name": "API",
+              "personalAccessKey": undefined,
+              "portalId": 999,
+            }
+          `);
+        });
+      });
+
+      describe('combination', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            portals: LEGACY_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports combination, adds both', () => {
+          expect(
+            updateAccountConfig(
+              Object.assign({}, COMBINED_ACCOUNTS[0], { portalId: 999 })
+            )
+          ).toMatchInlineSnapshot(`
+            Object {
+              "accountId": 1111,
+              "apiKey": "secret",
+              "auth": undefined,
+              "authType": "apikey",
+              "defaultMode": undefined,
+              "env": undefined,
+              "name": "API",
+              "personalAccessKey": undefined,
+              "portalId": 999,
+            }
+          `);
+        });
+      });
+    });
+
+    describe('updateDefaultAccount', () => {
+      describe('legacy', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            defaultPortal: 9999,
+            portals: LEGACY_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports defaultPortal', () => {
+          updateDefaultAccount(LEGACY_ACCOUNTS[0].portalId);
+          expect(getConfigDefaultAccount()).toEqual(
+            LEGACY_ACCOUNTS[0].portalId
+          );
+        });
+      });
+    });
+
+    describe('getConfigVariablesFromEnv', () => {
+      describe('legacy', () => {
+        beforeEach(() => {
+          const CONFIG = {
+            defaultAccount: 8888,
+            defaultPortal: 9999,
+            portals: COMBINED_ACCOUNTS,
+          };
+
+          setConfig(CONFIG);
+        });
+
+        it('supports both defaultPortal and defaultAccount', () => {
+          updateDefaultAccount(LEGACY_ACCOUNTS[0].portalId);
+          expect(getConfig().defaultAccount).toEqual(
+            LEGACY_ACCOUNTS[0].portalId
+          );
+          expect(getConfig().defaultPortal).toEqual(
+            LEGACY_ACCOUNTS[0].portalId
+          );
+        });
+      });
     });
   });
 });
