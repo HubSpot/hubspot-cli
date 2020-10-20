@@ -68,7 +68,7 @@ exports.handler = async options => {
 
   if (contentsResp.children.length) {
     const mappedContents = contentsResp.children.map(fileOrFolder => {
-      if (isPathFolder(fileOrFolder)) {
+      if (!isPathFolder(fileOrFolder)) {
         return fileOrFolder;
       }
 
