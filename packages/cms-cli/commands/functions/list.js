@@ -4,7 +4,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
-const { outputFunctions } = require('@hubspot/cms-lib/lib/functions');
+const { getFunctionArrays } = require('@hubspot/cms-lib/lib/functions');
 const {
   loadConfig,
   validateConfig,
@@ -21,6 +21,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validatePortal } = require('../../lib/validation');
+const { getTableContents, getTableHeader } = require('../../lib/table');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -52,7 +53,19 @@ exports.handler = async options => {
     process.exit();
   });
 
-  return outputFunctions(routesResp, options);
+  if (!routesResp.objects.length) {
+    return logger.info('No functions found.');
+  }
+
+  if (options.json) {
+    return logger.log(routesResp.objects);
+  }
+
+  const functionsAsArrays = getFunctionArrays(routesResp);
+  functionsAsArrays.unshift(
+    getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
+  );
+  return logger.log(getTableContents(functionsAsArrays));
 };
 
 exports.builder = yargs => {
@@ -60,16 +73,10 @@ exports.builder = yargs => {
   addPortalOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
-  yargs
-    .options({
-      compact: {
-        describe: 'output compact data',
-        type: 'boolean',
-      },
-      json: {
-        describe: 'output raw json data',
-        type: 'boolean',
-      },
-    })
-    .conflicts('compact', 'json');
+  yargs.options({
+    json: {
+      describe: 'output raw json data',
+      type: 'boolean',
+    },
+  });
 };

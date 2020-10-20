@@ -2,9 +2,9 @@ const { getEnv } = require('@hubspot/cms-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 const { logger } = require('@hubspot/cms-lib/logger');
-const chalk = require('chalk');
-const { table, getBorderCharacters } = require('table');
+
 const open = require('open');
+const { getTableContents, getTableHeader } = require('./table');
 
 const logSiteLinks = portalId => {
   const linksAsArray = getSiteLinksAsArray(portalId).map(l => [
@@ -13,14 +13,9 @@ const logSiteLinks = portalId => {
     l.url,
   ]);
 
-  linksAsArray.unshift([chalk.bold('Shortcut'), '', chalk.bold('Url')]);
+  linksAsArray.unshift(getTableHeader(['Shortcut', '', 'Url']));
 
-  const tableConfig = {
-    singleLine: true,
-    border: getBorderCharacters(`void`),
-  };
-
-  logger.log(table(linksAsArray, tableConfig));
+  logger.log(getTableContents(linksAsArray));
 };
 
 const getSiteLinksAsArray = portalId =>
