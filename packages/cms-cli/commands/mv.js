@@ -34,6 +34,14 @@ const loadAndValidateOptions = async options => {
   }
 };
 
+const getCorrectedDestPath = (srcPath, destPath) => {
+  if (!isPathFolder(srcPath)) {
+    return destPath;
+  }
+
+  return `${destPath}/${srcPath.split('/').pop()}`;
+};
+
 exports.command = 'mv <srcPath> <destPath';
 exports.describe = 'Move a remote file or folder in HubSpot';
 
@@ -46,11 +54,7 @@ exports.handler = async options => {
   trackCommandUsage('mv', {}, portalId);
 
   try {
-    await moveFile(
-      portalId,
-      srcPath,
-      isPathFolder(srcPath) ? `${destPath}/${srcPath}` : destPath
-    );
+    await moveFile(portalId, srcPath, getCorrectedDestPath(srcPath, destPath));
     logger.log(`Moved "${srcPath}" to "${destPath}" in portal ${portalId}`);
   } catch (error) {
     logger.error(
