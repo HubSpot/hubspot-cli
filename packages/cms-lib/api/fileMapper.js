@@ -206,6 +206,21 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
 }
 
 /**
+ * Moves file from srcPath to destPath
+ *
+ * @async
+ * @param {number} portalId
+ * @param {string} srcPath
+ * @param {string} destPath
+ * @returns {Promise}
+ */
+async function moveFile(portalId, srcPath, destPath) {
+  return http.put(portalId, {
+    uri: `${FILE_MAPPER_API_PATH}/rename/${srcPath}?path=${destPath}`,
+  });
+}
+
+/**
  * Get directory contents
  *
  * @async
@@ -228,5 +243,6 @@ module.exports = {
   trackUsage,
   upload,
   createFileMapperNodeFromStreamResponse,
+  moveFile,
   getDirectoryContentsByPath,
 };

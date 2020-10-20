@@ -9,6 +9,7 @@ const {
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
+const { isPathFolder } = require('../lib/filesystem');
 const {
   loadConfig,
   validateConfig,
@@ -26,8 +27,6 @@ const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cms-lib/lib/constants');
-
-const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -69,12 +68,7 @@ exports.handler = async options => {
 
   if (contentsResp.children.length) {
     const mappedContents = contentsResp.children.map(fileOrFolder => {
-      const splitName = fileOrFolder.split('.');
-
-      if (
-        splitName.length > 1 &&
-        FOLDER_DOT_EXTENSIONS.indexOf(splitName[1]) === -1
-      ) {
+      if (!isPathFolder(fileOrFolder)) {
         return fileOrFolder;
       }
 

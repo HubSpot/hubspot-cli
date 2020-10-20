@@ -95,6 +95,8 @@ const SCOPE_GROUPS = {
 const HUBSPOT_FOLDER = '@hubspot';
 const MARKETPLACE_FOLDER = '@marketplace';
 
+const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
+
 module.exports = {
   Mode,
   ENVIRONMENTS,
@@ -115,4 +117,5 @@ module.exports = {
   SCOPE_GROUPS,
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
+  FOLDER_DOT_EXTENSIONS,
 };

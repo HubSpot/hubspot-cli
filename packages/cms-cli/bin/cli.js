@@ -25,6 +25,7 @@ const customObjectCommand = require('../commands/customObject');
 const functionsCommand = require('../commands/functions');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
+const mvCommand = require('../commands/mv');
 
 const notifier = updateNotifier({ pkg });
 
@@ -72,6 +73,7 @@ const argv = yargs
     aliases: 'ls',
   })
   .command(openCommand)
+  .command(mvCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
