@@ -129,10 +129,11 @@ function watch(
     logger.log(`Watcher is ready and watching ${src}`);
   });
 
-  watcher.on('add', async filePath => {
+  watcher.on('add', filePath => {
     console.log('add event', filePath);
 
     if (checkIfWasMoved(filePath)) {
+      console.log('short circuiting add', path, checkIfWasMoved(path));
       return;
     }
 
@@ -145,7 +146,7 @@ function watch(
   });
 
   if (remove) {
-    const deleteFileOrFolder = type => async filePath => {
+    const deleteFileOrFolder = type => filePath => {
       console.log('unlink/unlinkDir event');
       const remotePath = getDesignManagerPath(filePath);
 
@@ -185,7 +186,7 @@ function watch(
     watcher.on('unlinkDir', deleteFileOrFolder('folder'));
   }
 
-  watcher.on('change', async filePath => {
+  watcher.on('change', filePath => {
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(portalId, filePath, destPath, {
       mode,
@@ -197,12 +198,14 @@ function watch(
   const movedPaths = {};
   const rawMovedPaths = [];
 
-  const checkIfWasMoved = async function(path) {
+  const checkIfWasMoved = function(path) {
+    console.log('movedPaths', movedPaths);
     return movedPaths[path];
   };
 
-  watcher.on('raw', async (event, path) => {
+  watcher.on('raw', (event, path) => {
     if (event === 'moved') {
+      console.log('moved event', path);
       rawMovedPaths.push(path);
       movedPaths[path] = true;
 
@@ -211,7 +214,6 @@ function watch(
         watcher.emit('rename', rawMovedPaths.shift(), rawMovedPaths.shift());
       }
     }
-    // console.log('RAW: ', event, path, details);
   });
 
   function isPathFolder(path) {
