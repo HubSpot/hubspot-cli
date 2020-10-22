@@ -218,14 +218,24 @@ function watch(
       return;
     }
 
-    logger.debug('Attempting to move %s "%s"', type, remoteSrc);
+    logger.debug(
+      'Attempting to move %s "%s" to "%s"',
+      type,
+      remoteSrc,
+      remoteDest
+    );
     queue.add(() => {
       const deletePromise = moveFile(portalId, remoteSrc, remoteDest)
         .then(() => {
-          logger.log('Moved %s "%s"', type, remoteSrc);
+          logger.log('Moved %s "%s" to "%s"', type, remoteSrc, remoteDest);
         })
         .catch(error => {
-          logger.error('Moving %s "%s" failed', type, remoteSrc);
+          logger.error(
+            'Moving %s "%s" to "%s" failed',
+            type,
+            remoteSrc,
+            remoteDest
+          );
           logApiErrorInstance(
             error,
             new ApiErrorContext({
