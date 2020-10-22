@@ -1,6 +1,7 @@
 const path = require('path');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
+const { FOLDER_DOT_EXTENSIONS } = require('@hubspot/cms-lib/lib/constants');
 
 const { logger } = require('../logger');
 const {
@@ -12,7 +13,7 @@ const {
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperApiQueryFromMode } = require('../fileMapper');
-const { upload, deleteFile } = require('../api/fileMapper');
+const { upload, deleteFile, moveFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
@@ -129,6 +130,12 @@ function watch(
   });
 
   watcher.on('add', async filePath => {
+    console.log('add event', filePath);
+
+    if (checkIfWasMoved(filePath)) {
+      return;
+    }
+
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(portalId, filePath, destPath, {
       mode,
@@ -138,8 +145,13 @@ function watch(
   });
 
   if (remove) {
-    const deleteFileOrFolder = type => filePath => {
+    const deleteFileOrFolder = type => async filePath => {
+      console.log('unlink/unlinkDir event');
       const remotePath = getDesignManagerPath(filePath);
+
+      if (checkIfWasMoved(filePath)) {
+        return;
+      }
 
       if (shouldIgnoreFile(filePath, cwd)) {
         logger.debug(`Skipping ${filePath} due to an ignore rule`);
@@ -180,6 +192,75 @@ function watch(
       cwd,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
+  });
+
+  const movedPaths = {};
+  const rawMovedPaths = [];
+
+  const checkIfWasMoved = async function(path) {
+    return movedPaths[path];
+  };
+
+  watcher.on('raw', async (event, path) => {
+    if (event === 'moved') {
+      rawMovedPaths.push(path);
+      movedPaths[path] = true;
+
+      if (rawMovedPaths.length >= 2) {
+        console.log('emitting rename');
+        watcher.emit('rename', rawMovedPaths.shift(), rawMovedPaths.shift());
+      }
+    }
+    // console.log('RAW: ', event, path, details);
+  });
+
+  function isPathFolder(path) {
+    const splitPath = path.split('/');
+    const fileOrFolderName = splitPath[splitPath.length - 1];
+    const splitName = fileOrFolderName.split('.');
+
+    if (
+      splitName.length > 1 &&
+      FOLDER_DOT_EXTENSIONS.indexOf(splitName[1]) === -1
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  watcher.on('rename', (srcPath, destPath) => {
+    console.log('rename event', srcPath, destPath);
+    const remoteSrc = getDesignManagerPath(srcPath);
+    const remoteDest = getDesignManagerPath(destPath);
+    console.log('remoteSrc', remoteSrc);
+    console.log('remoteDest', remoteDest);
+    const type = isPathFolder(srcPath) ? 'folder' : 'file';
+
+    if (shouldIgnoreFile(srcPath, cwd)) {
+      logger.debug(`Skipping ${srcPath} due to an ignore rule`);
+      return;
+    }
+
+    logger.debug('Attempting to move %s "%s"', type, remoteSrc);
+    queue.add(() => {
+      const deletePromise = moveFile(portalId, remoteSrc, remoteDest)
+        .then(() => {
+          logger.log('Moved %s "%s"', type, remoteSrc);
+        })
+        .catch(error => {
+          logger.error('Moving %s "%s" failed', type, remoteSrc);
+          logApiErrorInstance(
+            error,
+            new ApiErrorContext({
+              portalId,
+              request: remoteSrc,
+            })
+          );
+        });
+      triggerNotify(notify, 'Moved', srcPath, deletePromise);
+      return deletePromise;
+    });
   });
 
   return watcher;
