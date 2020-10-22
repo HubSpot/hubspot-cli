@@ -129,10 +129,7 @@ function watch(
   });
 
   watcher.on('add', filePath => {
-    console.log('add event', filePath);
-
     if (checkIfWasMoved(filePath)) {
-      console.log('short circuiting add', path, checkIfWasMoved(path));
       return;
     }
 
@@ -146,7 +143,6 @@ function watch(
 
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
-      console.log('unlink/unlinkDir event');
       const remotePath = getDesignManagerPath(filePath);
 
       if (checkIfWasMoved(filePath)) {
@@ -198,29 +194,23 @@ function watch(
   const rawMovedPaths = [];
 
   const checkIfWasMoved = function(path) {
-    console.log('movedPaths', movedPaths);
     return movedPaths[path];
   };
 
   watcher.on('raw', (event, path) => {
     if (event === 'moved') {
-      console.log('moved event', path);
       rawMovedPaths.push(path);
       movedPaths[path] = true;
 
       if (rawMovedPaths.length >= 2) {
-        console.log('emitting rename');
         watcher.emit('rename', rawMovedPaths.shift(), rawMovedPaths.shift());
       }
     }
   });
 
   watcher.on('rename', (srcPath, destPath) => {
-    console.log('rename event', srcPath, destPath);
     const remoteSrc = getDesignManagerPath(srcPath);
     const remoteDest = getDesignManagerPath(destPath);
-    console.log('remoteSrc', remoteSrc);
-    console.log('remoteDest', remoteDest);
     const type = isFolder(srcPath) ? 'folder' : 'file';
 
     if (shouldIgnoreFile(srcPath, cwd)) {
@@ -243,6 +233,10 @@ function watch(
               request: remoteSrc,
             })
           );
+        })
+        .finally(() => {
+          delete movedPaths[srcPath];
+          delete movedPaths[destPath];
         });
       triggerNotify(notify, 'Moved', srcPath, deletePromise);
       return deletePromise;
