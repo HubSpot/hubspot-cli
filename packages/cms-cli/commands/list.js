@@ -1,16 +1,5 @@
 const chalk = require('chalk');
 const {
-  addPortalOptions,
-  addConfigOptions,
-  setLogLevel,
-  getPortalId,
-  addUseEnvironmentOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal } = require('../lib/validation');
-const { isPathFolder } = require('../lib/filesystem');
-const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -27,6 +16,17 @@ const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cms-lib/lib/constants');
+const { isFolder } = require('@hubspot/cms-lib/path');
+const {
+  addPortalOptions,
+  addConfigOptions,
+  setLogLevel,
+  getPortalId,
+  addUseEnvironmentOptions,
+} = require('../lib/commonOpts');
+const { trackCommandUsage } = require('../lib/usageTracking');
+const { logDebugInfo } = require('../lib/debugInfo');
+const { validatePortal } = require('../lib/validation');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -68,7 +68,7 @@ exports.handler = async options => {
 
   if (contentsResp.children.length) {
     const mappedContents = contentsResp.children.map(fileOrFolder => {
-      if (!isPathFolder(fileOrFolder)) {
+      if (!isFolder(fileOrFolder)) {
         return fileOrFolder;
       }
 

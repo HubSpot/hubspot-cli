@@ -1,7 +1,6 @@
 const path = require('path');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
-const { FOLDER_DOT_EXTENSIONS } = require('@hubspot/cms-lib/lib/constants');
 
 const { logger } = require('../logger');
 const {
@@ -15,7 +14,7 @@ const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperApiQueryFromMode } = require('../fileMapper');
 const { upload, deleteFile, moveFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension } = require('../path');
+const { convertToUnixPath, isAllowedExtension, isFolder } = require('../path');
 const { triggerNotify } = require('./notify');
 
 const queue = new PQueue({
@@ -216,28 +215,13 @@ function watch(
     }
   });
 
-  function isPathFolder(path) {
-    const splitPath = path.split('/');
-    const fileOrFolderName = splitPath[splitPath.length - 1];
-    const splitName = fileOrFolderName.split('.');
-
-    if (
-      splitName.length > 1 &&
-      FOLDER_DOT_EXTENSIONS.indexOf(splitName[1]) === -1
-    ) {
-      return false;
-    }
-
-    return true;
-  }
-
   watcher.on('rename', (srcPath, destPath) => {
     console.log('rename event', srcPath, destPath);
     const remoteSrc = getDesignManagerPath(srcPath);
     const remoteDest = getDesignManagerPath(destPath);
     console.log('remoteSrc', remoteSrc);
     console.log('remoteDest', remoteDest);
-    const type = isPathFolder(srcPath) ? 'folder' : 'file';
+    const type = isFolder(srcPath) ? 'folder' : 'file';
 
     if (shouldIgnoreFile(srcPath, cwd)) {
       logger.debug(`Skipping ${srcPath} due to an ignore rule`);

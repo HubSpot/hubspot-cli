@@ -9,6 +9,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
+const { isFolder } = require('@hubspot/cms-lib/path');
 
 const {
   addConfigOptions,
@@ -20,7 +21,6 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validatePortal } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { isPathFolder } = require('../lib/filesystem');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -35,7 +35,7 @@ const loadAndValidateOptions = async options => {
 };
 
 const getCorrectedDestPath = (srcPath, destPath) => {
-  if (!isPathFolder(srcPath)) {
+  if (!isFolder(srcPath)) {
     return destPath;
   }
 

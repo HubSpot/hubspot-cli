@@ -1,6 +1,9 @@
 const path = require('path');
 const unixify = require('unixify');
-const { ALLOWED_EXTENSIONS } = require('./lib/constants');
+const {
+  ALLOWED_EXTENSIONS,
+  FOLDER_DOT_EXTENSIONS,
+} = require('./lib/constants');
 
 const convertToUnixPath = _path => {
   return unixify(path.normalize(_path));
@@ -96,6 +99,21 @@ const isAllowedExtension = filepath => {
 
 const getAbsoluteFilePath = _path => path.resolve(getCwd(), _path);
 
+function isFolder(path) {
+  const splitPath = path.split('/');
+  const fileOrFolderName = splitPath[splitPath.length - 1];
+  const splitName = fileOrFolderName.split('.');
+
+  if (
+    splitName.length > 1 &&
+    FOLDER_DOT_EXTENSIONS.indexOf(splitName[1]) === -1
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 module.exports = {
   convertToUnixPath,
   convertToWindowsPath,
@@ -105,6 +123,7 @@ module.exports = {
   getCwd,
   getExt,
   isAllowedExtension,
+  isFolder,
   splitHubSpotPath,
   splitLocalPath,
 };
