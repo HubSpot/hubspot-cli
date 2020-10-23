@@ -61,14 +61,18 @@ exports.handler = async options => {
     logger.error(
       `Moving "${srcPath}" to "${destPath}" in portal ${portalId} failed`
     );
-    logApiErrorInstance(
-      error,
-      new ApiErrorContext({
-        portalId,
-        srcPath,
-        destPath,
-      })
-    );
+    if (error.statusCode === 409) {
+      logger.error(`The folder "${srcPath}" already exists in "${destPath}".`);
+    } else {
+      logApiErrorInstance(
+        error,
+        new ApiErrorContext({
+          portalId,
+          srcPath,
+          destPath,
+        })
+      );
+    }
   }
 };
 
