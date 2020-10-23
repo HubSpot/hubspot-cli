@@ -21,8 +21,8 @@ async function createTable(portalId, schema) {
 }
 
 async function updateTable(portalId, tableId, schema) {
-  return http.put(portalId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}`,
+  return http.patch(portalId, {
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft`,
     body: schema,
   });
 }
