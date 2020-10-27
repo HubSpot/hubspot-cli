@@ -215,8 +215,12 @@ async function trackUsage(eventName, eventClass, meta = {}, portalId) {
  * @returns {Promise}
  */
 async function moveFile(portalId, srcPath, destPath) {
+  console.log('moveFile: ', srcPath, destPath);
+  const src = srcPath[0] === '/' ? srcPath.slice(1) : srcPath;
+  const dest = destPath[0] === '/' ? destPath.slice(1) : destPath;
+
   return http.put(portalId, {
-    uri: `${FILE_MAPPER_API_PATH}/rename/${srcPath}?path=${destPath}`,
+    uri: `${FILE_MAPPER_API_PATH}/rename/${src}?path=${dest}`,
   });
 }
 

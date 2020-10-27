@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs-extra');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
@@ -145,6 +146,7 @@ function watch(
     const deleteFileOrFolder = type => filePath => {
       const remotePath = getDesignManagerPath(filePath);
 
+      console.log('deleteFileOrFolder: ', filePath);
       if (checkIfWasMoved(filePath)) {
         return;
       }
@@ -193,17 +195,59 @@ function watch(
   const movedPaths = {};
   const rawMovedPaths = [];
 
-  const checkIfWasMoved = function(path) {
-    return movedPaths[path];
+  const getLastMovedPath = () => {
+    return rawMovedPaths[rawMovedPaths.length - 1];
   };
 
-  watcher.on('raw', (event, path) => {
+  const checkIfWasMoved = function(path) {
+    console.log(
+      'checkifwasmoved: ',
+      path,
+      path
+        .split('/')
+        .slice(0, -1)
+        .join('/'),
+      rawMovedPaths
+    );
+    return (
+      movedPaths[path] ||
+      movedPaths[
+        path
+          .split('/')
+          .slice(0, -1)
+          .join('/')
+      ]
+    );
+  };
+
+  watcher.on('raw', async (event, path) => {
     if (event === 'moved') {
+      const folder = isFolder(path);
+      console.log('moved path: ', path, folder);
+      console.log('rawmovedpaths: ', rawMovedPaths);
       rawMovedPaths.push(path);
       movedPaths[path] = true;
 
+      // TODO - Add all children to movedPaths if path is folder
+      if (folder) {
+        const sourceFolder = getLastMovedPath(path);
+
+        await fs.readdir(path, (err, files) => {
+          if (err) {
+            console.log('readdir err: ', err);
+          }
+          if (files && files.length) {
+            files.forEach(file => {
+              const childPath = `${sourceFolder}/${file}`;
+              console.log('adding child: ', childPath);
+              movedPaths[childPath] = true;
+            });
+          }
+        });
+      }
+
       if (rawMovedPaths.length >= 2) {
-        watcher.emit('rename', rawMovedPaths.shift(), rawMovedPaths.shift());
+        watcher.emit('rename', rawMovedPaths[0], rawMovedPaths[1]);
       }
     }
   });
@@ -247,6 +291,8 @@ function watch(
         .finally(() => {
           delete movedPaths[srcPath];
           delete movedPaths[destPath];
+          rawMovedPaths.shift();
+          rawMovedPaths.shift();
         });
       triggerNotify(notify, 'Moved', srcPath, deletePromise);
       return deletePromise;
