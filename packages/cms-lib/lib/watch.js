@@ -220,17 +220,30 @@ function watch(
     );
   };
 
-  watcher.on('raw', async (event, path) => {
+  watcher.on('raw', async (event, path, details) => {
+    console.log('raw: ', event, path, details);
     if (event === 'moved') {
       const folder = isFolder(path);
       console.log('moved path: ', path, folder);
       console.log('rawmovedpaths: ', rawMovedPaths);
-      rawMovedPaths.push(path);
-      movedPaths[path] = true;
+
+      // This is needed to allow deletion
+      // Also, having this creates an issue where moved folder
+      // names are not properly identified
+      // TODO - Figure out a solution that allows deletion to
+      // work properly AND folder w/ contents moves to happen
+      // properly
+      if (!folder && fs.existsSync(path)) {
+        rawMovedPaths.push(path);
+        movedPaths[path] = true;
+      }
 
       // TODO - Add all children to movedPaths if path is folder
       if (folder) {
+        rawMovedPaths.push(path);
+        movedPaths[path] = true;
         const sourceFolder = getLastMovedPath(path);
+        // const sourceFolder = path;
 
         await fs.readdir(path, (err, files) => {
           if (err) {
@@ -289,8 +302,15 @@ function watch(
           );
         })
         .finally(() => {
-          delete movedPaths[srcPath];
-          delete movedPaths[destPath];
+          const pathsToRemove = Object.keys(movedPaths).filter(path => {
+            return (
+              path.indexOf(srcPath) !== -1 && path.indexOf(destPath) !== -1
+            );
+          });
+
+          pathsToRemove.forEach(path => {
+            delete movedPaths[path];
+          });
           rawMovedPaths.shift();
           rawMovedPaths.shift();
         });
