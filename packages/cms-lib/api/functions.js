@@ -14,7 +14,17 @@ async function getRoutes(portalId) {
   });
 }
 
+async function buildPackage(portalId, path) {
+  return http.post(portalId, {
+    uri: `${FUNCTION_API_PATH}/package`,
+    body: {
+      path,
+    },
+  });
+}
+
 module.exports = {
+  buildPackage,
   getFunctionByPath,
   getRoutes,
 };

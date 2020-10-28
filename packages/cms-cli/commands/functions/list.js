@@ -1,4 +1,4 @@
-const { getRoutes } = require('@hubspot/cms-lib/api/function');
+const { getRoutes } = require('@hubspot/cms-lib/api/functions');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   logApiErrorInstance,
