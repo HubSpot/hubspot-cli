@@ -66,7 +66,7 @@ exports.handler = async options => {
   });
 
   await buildPackage(portalId, `${functionPath}/package.json`);
-  spinner.clear();
+  spinner.stop();
   logger.success(
     `Successfully built bundle from package.json for ${functionPath} on portal ${portalId}.`
   );
