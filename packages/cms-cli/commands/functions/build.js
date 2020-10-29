@@ -60,7 +60,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to serverless function',
+    describe: 'Path to serverless function folder',
     type: 'string',
   });
   yargs.example([['$0 functions build myFunctionFolder.functions']]);
