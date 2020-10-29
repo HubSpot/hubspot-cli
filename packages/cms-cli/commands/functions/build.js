@@ -19,7 +19,9 @@ const { buildPackage } = require('@hubspot/cms-lib/api/functions');
 const { validatePortal } = require('../../lib/validation');
 
 const makeSpinner = (functionPath, portalIdentifier) => {
-  return ora(`Building '${functionPath}' on portal '${portalIdentifier}'.\n`);
+  return ora(
+    `Building new bundle for '${functionPath}' on portal '${portalIdentifier}'.\n`
+  );
 };
 
 const handleKeypressToExit = exit => {
@@ -45,7 +47,8 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'build <path>';
-exports.describe = 'build a new function dependency bundle';
+exports.describe =
+  'builds a new dependency bundle for the specified function folder';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -56,7 +59,7 @@ exports.handler = async options => {
 
   trackCommandUsage('functions-build', { functionPath }, portalId);
 
-  logger.debug(`Starting build for function with path: ${functionPath}`);
+  logger.debug(`Starting build for function(s) with path: ${functionPath}`);
 
   spinner.start();
 
@@ -77,6 +80,7 @@ exports.builder = yargs => {
     describe: 'Path to serverless function',
     type: 'string',
   });
+  yargs.example([['$0 functions build myFunctionFolder.functions']]);
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
