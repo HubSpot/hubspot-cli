@@ -44,7 +44,8 @@ const getCorrectedDestPath = (srcPath, destPath) => {
 };
 
 exports.command = 'mv <srcPath> <destPath>';
-exports.describe = 'Move a remote file or folder in HubSpot';
+exports.describe =
+  'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
