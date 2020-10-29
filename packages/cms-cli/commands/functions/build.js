@@ -1,4 +1,3 @@
-const readline = require('readline');
 const ora = require('ora');
 const {
   addPortalOptions,
@@ -22,16 +21,6 @@ const makeSpinner = (functionPath, portalIdentifier) => {
   return ora(
     `Building new bundle for '${functionPath}' on portal '${portalIdentifier}'.\n`
   );
-};
-
-const handleKeypressToExit = exit => {
-  readline.emitKeypressEvents(process.stdin);
-  process.stdin.setRawMode(true);
-  process.stdin.on('keypress', (str, key) => {
-    if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
-      exit();
-    }
-  });
 };
 
 const loadAndValidateOptions = async options => {
@@ -62,12 +51,6 @@ exports.handler = async options => {
   logger.debug(`Starting build for function(s) with path: ${functionPath}`);
 
   spinner.start();
-
-  handleKeypressToExit(() => {
-    spinner.stop();
-    process.exit();
-  });
-
   await buildPackage(portalId, `${functionPath}/package.json`);
   spinner.stop();
   logger.success(
