@@ -92,7 +92,12 @@ exports.builder = yargs => {
     describe: 'Path to .functions folder',
     type: 'string',
   });
-  yargs.example([['$0 functions package myFunctionFolder.functions']]);
+  yargs.example([
+    [
+      '$0 functions package myFunctionFolder.functions',
+      'Build a new bundle for all functions within the myFunctionFolder.functions folder',
+    ],
+  ]);
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
