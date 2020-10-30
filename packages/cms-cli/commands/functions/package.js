@@ -39,9 +39,9 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'build <path>';
+exports.command = 'package <path>';
 exports.describe =
-  'builds a new dependency bundle for the specified function folder';
+  'builds a new dependency bundle for the specified .functions folder';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -50,9 +50,8 @@ exports.handler = async options => {
   const portalId = getPortalId(options);
   const spinner = makeSpinner(functionPath, portalId);
 
-  trackCommandUsage('functions-build', { functionPath }, portalId);
+  trackCommandUsage('functions-package', { functionPath }, portalId);
 
-  logger.debug(`Starting build for function(s) with path: ${functionPath}`);
   const splitFunctionPath = functionPath.split('.');
 
   if (
@@ -62,6 +61,10 @@ exports.handler = async options => {
     logger.error(`Specified path ${functionPath} is not a .functions folder.`);
     return;
   }
+
+  logger.debug(
+    `Starting build for .functions folder with path: ${functionPath}`
+  );
 
   spinner.start();
   try {
@@ -86,10 +89,10 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to serverless function folder',
+    describe: 'Path to .functions folder',
     type: 'string',
   });
-  yargs.example([['$0 functions build myFunctionFolder.functions']]);
+  yargs.example([['$0 functions package myFunctionFolder.functions']]);
 
   addConfigOptions(yargs, true);
   addPortalOptions(yargs, true);
