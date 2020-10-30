@@ -53,6 +53,15 @@ exports.handler = async options => {
   trackCommandUsage('functions-build', { functionPath }, portalId);
 
   logger.debug(`Starting build for function(s) with path: ${functionPath}`);
+  const splitFunctionPath = functionPath.split('.');
+
+  if (
+    !splitFunctionPath.length ||
+    splitFunctionPath[splitFunctionPath.length - 1] !== 'functions'
+  ) {
+    logger.error(`Specified path ${functionPath} is not a .functions folder.`);
+    return;
+  }
 
   spinner.start();
   try {
