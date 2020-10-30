@@ -13,6 +13,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cms-lib/errorHandlers');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { buildPackage } = require('@hubspot/cms-lib/api/functions');
 const { validatePortal } = require('../../lib/validation');
@@ -51,11 +55,24 @@ exports.handler = async options => {
   logger.debug(`Starting build for function(s) with path: ${functionPath}`);
 
   spinner.start();
-  await buildPackage(portalId, `${functionPath}/package.json`);
-  spinner.stop();
-  logger.success(
-    `Successfully built bundle from package.json for ${functionPath} on portal ${portalId}.`
-  );
+  try {
+    await buildPackage(portalId, `${functionPath}/package.json`);
+    spinner.stop();
+    logger.success(
+      `Successfully built bundle from package.json for ${functionPath} on portal ${portalId}.`
+    );
+  } catch (e) {
+    spinner.stop();
+    if (e.statusCode === 404) {
+      logger.error(`Unable to find package.json for function ${functionPath}.`);
+    } else {
+      logApiErrorInstance(
+        portalId,
+        e,
+        new ApiErrorContext({ portalId, functionPath })
+      );
+    }
+  }
 };
 
 exports.builder = yargs => {
