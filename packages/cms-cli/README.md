@@ -165,5 +165,5 @@ portals:
   - name: DEV
     portalId: 123
     authType: apikey
-    apiKey: d1234567-123e-7890-b123-aaa80164b4cb
+    apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 ```
