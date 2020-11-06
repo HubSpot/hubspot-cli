@@ -2,9 +2,9 @@ const moment = require('moment');
 const { HubSpotAuthError } = require('./lib/models/Errors');
 const {
   getEnv,
-  getPortalConfig,
-  updatePortalConfig,
-  updateDefaultPortal,
+  getAccountConfig,
+  updateAccountConfig,
+  updateDefaultAccount,
   writeConfig,
 } = require('./lib/config');
 const { getValidEnv } = require('./lib/environment');
@@ -24,11 +24,11 @@ function getRefreshKey(personalAccessKey, expiration) {
 async function getAccessToken(
   personalAccessKey,
   env = ENVIRONMENTS.PROD,
-  portalId
+  accountId
 ) {
   let response;
   try {
-    response = await fetchAccessToken(personalAccessKey, env, portalId);
+    response = await fetchAccessToken(personalAccessKey, env, accountId);
   } catch (e) {
     if (e.response) {
       const errorOutput = `Error while retrieving new access token: ${e.response.body.message}.`;
@@ -44,7 +44,7 @@ async function getAccessToken(
     }
   }
   return {
-    portalId: response.hubId,
+    accountId: response.hubId,
     accessToken: response.oauthAccessToken,
     expiresAt: moment(response.expiresAtMillis),
     scopeGroups: response.scopeGroups,
@@ -53,20 +53,20 @@ async function getAccessToken(
 }
 
 async function refreshAccessToken(
-  portalId,
+  accountId,
   personalAccessKey,
   env = ENVIRONMENTS.PROD
 ) {
   const { accessToken, expiresAt } = await getAccessToken(
     personalAccessKey,
     env,
-    portalId
+    accountId
   );
-  const config = getPortalConfig(portalId);
+  const config = getAccountConfig(accountId);
 
-  updatePortalConfig({
+  updateAccountConfig({
     ...config,
-    portalId,
+    accountId,
     tokenInfo: {
       accessToken,
       expiresAt: expiresAt.toISOString(),
@@ -77,7 +77,7 @@ async function refreshAccessToken(
   return accessToken;
 }
 
-async function getNewAccessToken(portalId, personalAccessKey, expiresAt, env) {
+async function getNewAccessToken(accountId, personalAccessKey, expiresAt, env) {
   const key = getRefreshKey(personalAccessKey, expiresAt);
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
@@ -85,7 +85,7 @@ async function getNewAccessToken(portalId, personalAccessKey, expiresAt, env) {
   let accessToken;
   try {
     const refreshAccessPromise = refreshAccessToken(
-      portalId,
+      accountId,
       personalAccessKey,
       env
     );
@@ -102,8 +102,8 @@ async function getNewAccessToken(portalId, personalAccessKey, expiresAt, env) {
   return accessToken;
 }
 
-async function accessTokenForPersonalAccessKey(portalId) {
-  const { auth, personalAccessKey, env } = getPortalConfig(portalId);
+async function accessTokenForPersonalAccessKey(accountId) {
+  const { auth, personalAccessKey, env } = getAccountConfig(accountId);
   const authTokenInfo = auth && auth.tokenInfo;
   const authDataExists = authTokenInfo && auth.tokenInfo.accessToken;
 
@@ -114,7 +114,7 @@ async function accessTokenForPersonalAccessKey(portalId) {
       .isAfter(moment(authTokenInfo.expiresAt))
   ) {
     return getNewAccessToken(
-      portalId,
+      accountId,
       personalAccessKey,
       authTokenInfo && authTokenInfo.expiresAt,
       env
@@ -125,38 +125,38 @@ async function accessTokenForPersonalAccessKey(portalId) {
 }
 
 /**
- * Adds a portal to the config using authType: personalAccessKey
+ * Adds a account to the config using authType: personalAccessKey
  *
  * @param {object} configData Data containing personalAccessKey and name properties
  * @param {string} configData.personalAccessKey Personal access key string to place in config
  * @param {string} configData.name Unique name to identify this config entry
- * @param {boolean} makeDefault option to make the portal being added to the config the default portal
+ * @param {boolean} makeDefault option to make the account being added to the config the default account
  */
 const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   const { personalAccessKey, name, env } = configData;
-  const portalEnv = env || getEnv(name);
+  const accountEnv = env || getEnv(name);
 
   let token;
   try {
-    token = await getAccessToken(personalAccessKey, portalEnv);
+    token = await getAccessToken(personalAccessKey, accountEnv);
   } catch (err) {
     logErrorInstance(err);
     return;
   }
-  const { portalId, accessToken, expiresAt } = token;
+  const { accountId, accessToken, expiresAt } = token;
 
-  const updatedConfig = updatePortalConfig({
-    portalId,
+  const updatedConfig = updateAccountConfig({
+    accountId,
     personalAccessKey,
     name,
-    environment: getValidEnv(portalEnv, true),
+    environment: getValidEnv(accountEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
   });
   writeConfig();
 
   if (makeDefault) {
-    updateDefaultPortal(name);
+    updateDefaultAccount(name);
   }
 
   return updatedConfig;

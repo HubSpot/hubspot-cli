@@ -32,7 +32,7 @@ function validateJsonFile(src) {
   validateJsonPath(src);
 }
 
-async function addRowsToHubDbTable(portalId, tableId, rows) {
+async function addRowsToHubDbTable(accountId, tableId, rows) {
   const rowsToUpdate = rows.map(row => {
     const values = row.values;
 
@@ -45,10 +45,10 @@ async function addRowsToHubDbTable(portalId, tableId, rows) {
   });
 
   if (rowsToUpdate.length > 0) {
-    await createRows(portalId, tableId, rowsToUpdate);
+    await createRows(accountId, tableId, rowsToUpdate);
   }
 
-  const { rowCount } = await publishTable(portalId, tableId);
+  const { rowCount } = await publishTable(accountId, tableId);
 
   return {
     tableId,
@@ -56,23 +56,23 @@ async function addRowsToHubDbTable(portalId, tableId, rows) {
   };
 }
 
-async function createHubDbTable(portalId, src) {
+async function createHubDbTable(accountId, src) {
   validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
   const { rows, ...schema } = table;
-  const { columns, id } = await createTable(portalId, schema);
+  const { columns, id } = await createTable(accountId, schema);
 
-  return addRowsToHubDbTable(portalId, id, rows, columns);
+  return addRowsToHubDbTable(accountId, id, rows, columns);
 }
 
-async function updateHubDbTable(portalId, tableId, src) {
+async function updateHubDbTable(accountId, tableId, src) {
   validateJsonFile(src);
 
   const table = fs.readJsonSync(src);
   const { ...schema } = table;
 
-  return updateTable(portalId, tableId, schema);
+  return updateTable(accountId, tableId, schema);
 }
 
 function convertToJSON(table, rows) {
@@ -124,8 +124,8 @@ function convertToJSON(table, rows) {
   };
 }
 
-async function downloadHubDbTable(portalId, tableId, dest) {
-  const table = await fetchTable(portalId, tableId);
+async function downloadHubDbTable(accountId, tableId, dest) {
+  const table = await fetchTable(accountId, tableId);
 
   dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
 
@@ -140,7 +140,7 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   let count = 0;
   let offset = 0;
   while (totalRows === null || count < totalRows) {
-    const response = await fetchRows(portalId, tableId, { offset });
+    const response = await fetchRows(accountId, tableId, { offset });
     if (totalRows === null) {
       totalRows = response.total;
     }
@@ -160,13 +160,13 @@ async function downloadHubDbTable(portalId, tableId, dest) {
   return { filePath: dest };
 }
 
-async function clearHubDbTableRows(portalId, tableId) {
+async function clearHubDbTableRows(accountId, tableId) {
   let totalRows = null;
   let rows = [];
   let count = 0;
   let offset = 0;
   while (totalRows === null || count < totalRows) {
-    const response = await fetchRows(portalId, tableId, { offset });
+    const response = await fetchRows(accountId, tableId, { offset });
     if (totalRows === null) {
       totalRows = response.total;
     }
@@ -176,7 +176,7 @@ async function clearHubDbTableRows(portalId, tableId) {
     const rowIds = response.results.map(row => row.id);
     rows = rows.concat(rowIds);
   }
-  await deleteRows(portalId, tableId, rows);
+  await deleteRows(accountId, tableId, rows);
 
   return {
     deletedRowCount: rows.length,

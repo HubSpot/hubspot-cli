@@ -145,7 +145,7 @@ const allRequestData = {
  * These must be wrapped with `jest.fn()` otherwise `jest.spyOn()` will not work.
  */
 
-fileMapper.download = jest.fn(async (portalId, filepath) => {
+fileMapper.download = jest.fn(async (accountId, filepath) => {
   if (filepath === '@root') {
     return allRequestData;
   }

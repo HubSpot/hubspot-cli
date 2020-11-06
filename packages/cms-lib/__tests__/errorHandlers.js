@@ -1,5 +1,5 @@
 const { StatusCodeError } = require('request-promise-native/errors');
-const { getPortalConfig } = require('../lib/config');
+const { getAccountConfig } = require('../lib/config');
 const { fetchScopeData } = require('../api/localDevAuth/authenticated');
 const {
   ApiErrorContext,
@@ -58,7 +58,7 @@ const systemError = Object.freeze({
 });
 
 const errorContext = Object.freeze({
-  portalId: 12345,
+  accountId: 12345,
 });
 
 const apiErrorContext = Object.freeze({
@@ -111,18 +111,18 @@ describe('cms-lib/errorHandlers', () => {
       });
       it('should log a readable error message from provided Status Code error and optional context data', () => {
         expect(logger.logs[LOG_LEVEL.ERROR]).toEqual([
-          'The request for "a/b/c" in portal 12345 failed.',
-          'The request in portal 12345 was not found.',
-          'The request failed because "a/b/c" was not found in portal 12345.',
-          'Unable to upload "new.js". The update failed because "a/b/c" was not found in portal 12345.',
-          'Unable to upload "new.js". The post failed because "a/b/c" was not found in portal 12345.',
-          'The delete failed because "a/b/c" was not found in portal 12345.',
-          'The delete of "a/b/c" in portal 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
-          'The request for "a/b/c" in portal 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
-          'Unable to upload "new.js". The post to "a/b/c" in portal 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
-          'The request for "a/b/c" in portal 12345 could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
-          'The post failed because "a/b/c" was not found in portal 12345.',
-          'The request failed because "a/b/c" was not found in portal 12345. Meaningful message from server.',
+          'The request for "a/b/c" in account 12345 failed.',
+          'The request in account 12345 was not found.',
+          'The request failed because "a/b/c" was not found in account 12345.',
+          'Unable to upload "new.js". The update failed because "a/b/c" was not found in account 12345.',
+          'Unable to upload "new.js". The post failed because "a/b/c" was not found in account 12345.',
+          'The delete failed because "a/b/c" was not found in account 12345.',
+          'The delete of "a/b/c" in account 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
+          'The request for "a/b/c" in account 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
+          'Unable to upload "new.js". The post to "a/b/c" in account 12345 failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
+          'The request for "a/b/c" in account 12345 could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.',
+          'The post failed because "a/b/c" was not found in account 12345.',
+          'The request failed because "a/b/c" was not found in account 12345. Meaningful message from server.',
         ]);
       });
       it('should log debugs with details of error and context', () => {
@@ -188,12 +188,12 @@ describe('cms-lib/errorHandlers', () => {
   });
 
   describe('logServerlessApiErrorInstance', () => {
-    const portalId = 123;
+    const accountId = 123;
     const logErrorSpy = jest.spyOn(logger, 'error');
     beforeEach(() => {
       logger.clear();
-      getPortalConfig.mockReturnValue({
-        portalId,
+      getAccountConfig.mockReturnValue({
+        accountId,
         authType: 'personalaccesskey',
         personalAccessKey: 'let-me-in',
       });
@@ -205,11 +205,11 @@ describe('cms-lib/errorHandlers', () => {
       const message = 'Something went wrong';
       const error = new Error(message);
       await logServerlessFunctionApiErrorInstance(
-        portalId,
+        accountId,
         error,
         new ApiErrorContext({
           request: 'add secret',
-          portalId,
+          accountId,
         })
       );
       expect(logErrorSpy).toHaveBeenCalledWith(
@@ -222,7 +222,7 @@ describe('cms-lib/errorHandlers', () => {
       });
       fetchScopeData.mockImplementation(() =>
         Promise.resolve({
-          portalId,
+          accountId,
           userId: 456,
           scopeGroup: 'cms.functions.read_write',
           portalScopesInGroup: [
@@ -243,11 +243,11 @@ describe('cms-lib/errorHandlers', () => {
         })
       );
       await logServerlessFunctionApiErrorInstance(
-        portalId,
+        accountId,
         error,
         new ApiErrorContext({
           request: 'add secret',
-          portalId,
+          accountId,
         })
       );
       expect(logErrorSpy).toHaveBeenCalledWith(

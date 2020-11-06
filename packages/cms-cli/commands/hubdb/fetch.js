@@ -7,15 +7,15 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { downloadHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
@@ -30,15 +30,15 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-fetch', {}, portalId);
+  trackCommandUsage('hubdb-fetch', {}, accountId);
 
   try {
-    const { filePath } = await downloadHubDbTable(portalId, tableId, dest);
+    const { filePath } = await downloadHubDbTable(accountId, tableId, dest);
 
     logger.log(`Downloaded HubDB table ${tableId} to ${filePath}`);
   } catch (e) {
@@ -47,7 +47,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addConfigOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 

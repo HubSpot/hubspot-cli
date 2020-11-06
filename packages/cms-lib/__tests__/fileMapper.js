@@ -196,11 +196,11 @@ describe('cms-lib/fileMapper', () => {
   });
 
   describe('fetchFolderFromApi()', () => {
-    const portalId = 67890;
+    const accountId = 67890;
 
     describe('fetch folder', () => {
       const input = {
-        portalId,
+        accountId,
         src: '1234',
       };
       it('should execute the download client per the request input', async () => {
@@ -223,7 +223,7 @@ describe('cms-lib/fileMapper', () => {
 
     describe('fetch module (.module)', () => {
       const input = {
-        portalId,
+        accountId,
         src: 'cms-theme-boilerplate/modules/Card section.module',
       };
       it('should execute the download client per the request input', async () => {
@@ -251,7 +251,7 @@ describe('cms-lib/fileMapper', () => {
 
     describe('fetch all (/)', () => {
       const input = {
-        portalId,
+        accountId,
         src: '/',
       };
       it('should execute the download client per the request input', async () => {

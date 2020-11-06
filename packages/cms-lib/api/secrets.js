@@ -2,8 +2,8 @@ const http = require('../http');
 
 const SECRETS_API_PATH = 'cms/v3/functions/secrets';
 
-async function addSecret(portalId, key, value) {
-  return http.post(portalId, {
+async function addSecret(accountId, key, value) {
+  return http.post(accountId, {
     uri: SECRETS_API_PATH,
     body: {
       key,
@@ -12,8 +12,8 @@ async function addSecret(portalId, key, value) {
   });
 }
 
-async function updateSecret(portalId, key, value) {
-  return http.put(portalId, {
+async function updateSecret(accountId, key, value) {
+  return http.put(accountId, {
     uri: SECRETS_API_PATH,
     body: {
       key,
@@ -22,14 +22,14 @@ async function updateSecret(portalId, key, value) {
   });
 }
 
-async function deleteSecret(portalId, key) {
-  return http.delete(portalId, {
+async function deleteSecret(accountId, key) {
+  return http.delete(accountId, {
     uri: `${SECRETS_API_PATH}/${key}`,
   });
 }
 
-async function fetchSecrets(portalId) {
-  return http.get(portalId, {
+async function fetchSecrets(accountId) {
+  return http.get(accountId, {
     uri: `${SECRETS_API_PATH}`,
   });
 }

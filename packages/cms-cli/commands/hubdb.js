@@ -1,4 +1,4 @@
-const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const createCommand = require('./hubdb/create');
 const fetchCommand = require('./hubdb/fetch');
 const deleteCommand = require('./hubdb/delete');
@@ -9,7 +9,7 @@ exports.describe = 'Manage HubDB tables';
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
 
   yargs
     .command(clearCommand)

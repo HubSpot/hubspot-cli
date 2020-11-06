@@ -4,11 +4,11 @@ const DESIGN_MANAGER_API_PATH = 'designmanager/v1';
 
 /**
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @returns {Promise}
  */
-async function fetchMenus(portalId, query = {}) {
-  return http.get(portalId, {
+async function fetchMenus(accountId, query = {}) {
+  return http.get(accountId, {
     uri: `${DESIGN_MANAGER_API_PATH}/menus`,
     query,
   });
@@ -16,11 +16,11 @@ async function fetchMenus(portalId, query = {}) {
 
 /**
  * @async
- * @param {number} portalId
+ * @param {number} accountId
  * @returns {Promise}
  */
-async function fetchBuiltinMapping(portalId) {
-  return http.get(portalId, {
+async function fetchBuiltinMapping(accountId) {
+  return http.get(accountId, {
     uri: `${DESIGN_MANAGER_API_PATH}/widgets/builtin-mapping`,
   });
 }

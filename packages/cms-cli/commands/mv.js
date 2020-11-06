@@ -12,13 +12,13 @@ const {
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal } = require('../lib/validation');
+const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
 
@@ -29,7 +29,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -51,16 +51,18 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { srcPath, destPath } = options;
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('mv', {}, portalId);
+  trackCommandUsage('mv', {}, accountId);
 
   try {
-    await moveFile(portalId, srcPath, getCorrectedDestPath(srcPath, destPath));
-    logger.success(`Moved "${srcPath}" to "${destPath}" in portal ${portalId}`);
+    await moveFile(accountId, srcPath, getCorrectedDestPath(srcPath, destPath));
+    logger.success(
+      `Moved "${srcPath}" to "${destPath}" in account ${accountId}`
+    );
   } catch (error) {
     logger.error(
-      `Moving "${srcPath}" to "${destPath}" in portal ${portalId} failed`
+      `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`
     );
     if (error.statusCode === 409) {
       logger.error(`The folder "${srcPath}" already exists in "${destPath}".`);
@@ -68,7 +70,7 @@ exports.handler = async options => {
       logApiErrorInstance(
         error,
         new ApiErrorContext({
-          portalId,
+          accountId,
           srcPath,
           destPath,
         })
@@ -79,7 +81,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',

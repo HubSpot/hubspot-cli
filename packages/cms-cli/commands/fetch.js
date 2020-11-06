@@ -8,16 +8,16 @@ const { logger } = require('@hubspot/cms-lib/logger');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addOverwriteOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  getPortalId,
+  getAccountId,
   getMode,
   setLogLevel,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validatePortal, validateMode } = require('../lib/validation');
+const { validateAccount, validateMode } = require('../lib/validation');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
@@ -37,7 +37,7 @@ exports.handler = async options => {
   if (
     !(
       validateConfig() &&
-      (await validatePortal(options)) &&
+      (await validateAccount(options)) &&
       validateMode(options)
     )
   ) {
@@ -49,14 +49,14 @@ exports.handler = async options => {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   const mode = getMode(options);
 
-  trackCommandUsage('fetch', { mode }, portalId);
+  trackCommandUsage('fetch', { mode }, accountId);
 
   // Fetch and write file/folder.
   downloadFileOrFolder({
-    portalId,
+    accountId,
     src,
     dest: resolveLocalPath(dest),
     mode,
@@ -66,7 +66,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addOverwriteOptions(yargs, true);
   addModeOptions(yargs, { read: true }, true);
   addUseEnvironmentOptions(yargs, true);

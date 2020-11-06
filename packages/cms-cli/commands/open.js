@@ -1,7 +1,7 @@
 const {
-  addPortalOptions,
+  addAccountOptions,
   addConfigOptions,
-  getPortalId,
+  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -9,7 +9,7 @@ const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
 const inquirer = require('inquirer');
 
 const separator = ' => ';
-const createListPrompt = async portalId =>
+const createListPrompt = async accountId =>
   inquirer.prompt([
     {
       type: 'rawlist',
@@ -17,7 +17,7 @@ const createListPrompt = async portalId =>
       name: 'open',
       pageSize: 20,
       message: 'Select a link to open',
-      choices: getSiteLinksAsArray(portalId).map(
+      choices: getSiteLinksAsArray(accountId).map(
         l => `${l.shortcut}${separator}${l.url}`
       ),
       filter: val => val.split(separator)[0],
@@ -29,18 +29,18 @@ exports.describe = 'Quickly open a page to HubSpot in your browser';
 
 exports.handler = async options => {
   const { shortcut, list } = options;
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('open', { shortcut }, portalId);
+  trackCommandUsage('open', { shortcut }, accountId);
 
   if (shortcut === undefined && !list) {
-    const choice = await createListPrompt(portalId);
-    openLink(portalId, choice.open);
+    const choice = await createListPrompt(accountId);
+    openLink(accountId, choice.open);
   } else if (list) {
-    logSiteLinks(portalId);
+    logSiteLinks(accountId);
     return;
   } else {
-    openLink(portalId, shortcut);
+    openLink(accountId, shortcut);
   }
 };
 
@@ -65,7 +65,7 @@ exports.builder = yargs => {
   ]);
 
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   return yargs;

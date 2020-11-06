@@ -3,41 +3,41 @@ const http = require('../http');
 
 const CUSTOM_OBJECTS_API_PATH = 'crm/v3/objects';
 
-const createObject = (portalId, objectTypeId, filePath) =>
-  http.post(portalId, {
+const createObject = (accountId, objectTypeId, filePath) =>
+  http.post(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}`,
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });
 
-const updateObject = async (portalId, objectTypeId, filePath) =>
-  http.post(portalId, {
+const updateObject = async (accountId, objectTypeId, filePath) =>
+  http.post(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}`,
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });
 
-const fetchObject = async (portalId, objectTypeId, instanceId) =>
-  http.get(portalId, {
+const fetchObject = async (accountId, objectTypeId, instanceId) =>
+  http.get(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}/${instanceId}`,
   });
 
-const fetchObjects = async (portalId, objectTypeId) =>
-  http.get(portalId, {
+const fetchObjects = async (accountId, objectTypeId) =>
+  http.get(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}`,
   });
 
-const archiveObject = async (portalId, objectTypeId, instanceId) =>
-  http.delete(portalId, {
+const archiveObject = async (accountId, objectTypeId, instanceId) =>
+  http.delete(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}/${instanceId}`,
   });
 
-const searchObjects = async (portalId, objectTypeId, filePath) =>
-  http.post(portalId, {
+const searchObjects = async (accountId, objectTypeId, filePath) =>
+  http.post(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}/search`,
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });
 
-const batchCreateObjects = (portalId, objectTypeId, filePath) =>
-  http.post(portalId, {
+const batchCreateObjects = (accountId, objectTypeId, filePath) =>
+  http.post(accountId, {
     uri: `${CUSTOM_OBJECTS_API_PATH}/${objectTypeId}/batch/create`,
     body: JSON.parse(fs.readFileSync(filePath, 'utf-8')),
   });

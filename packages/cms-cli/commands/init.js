@@ -2,9 +2,9 @@ const {
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
-  updateDefaultPortal,
+  updateDefaultAccount,
   writeConfig,
-  updatePortalConfig,
+  updateAccountConfig,
 } = require('@hubspot/cms-lib/lib/config');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
@@ -24,7 +24,7 @@ const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {
   OAUTH_FLOW,
   API_KEY_FLOW,
-  PORTAL_NAME,
+  ACCOUNT_NAME,
   personalAccessKeyPrompt,
   promptUser,
 } = require('../lib/prompts');
@@ -39,37 +39,37 @@ const TRACKING_STATUS = {
 
 const personalAccessKeyConfigCreationFlow = async env => {
   const configData = await personalAccessKeyPrompt({ env });
-  const { name } = await promptUser([PORTAL_NAME]);
-  const portalConfig = {
+  const { name } = await promptUser([ACCOUNT_NAME]);
+  const accountConfig = {
     ...configData,
     name,
   };
 
-  await updateConfigWithPersonalAccessKey(portalConfig, true);
-  return portalConfig;
+  await updateConfigWithPersonalAccessKey(accountConfig, true);
+  return accountConfig;
 };
 
 const oauthConfigCreationFlow = async env => {
   const configData = await promptUser(OAUTH_FLOW);
-  const portalConfig = {
+  const accountConfig = {
     ...configData,
     env,
   };
-  await authenticateWithOauth(portalConfig);
-  updateDefaultPortal(portalConfig.name);
-  return portalConfig;
+  await authenticateWithOauth(accountConfig);
+  updateDefaultAccount(accountConfig.name);
+  return accountConfig;
 };
 
 const apiKeyConfigCreationFlow = async env => {
   const configData = await promptUser(API_KEY_FLOW);
-  const portalConfig = {
+  const accountConfig = {
     ...configData,
     env,
   };
-  updatePortalConfig(portalConfig);
-  updateDefaultPortal(portalConfig.name);
+  updateAccountConfig(accountConfig);
+  updateDefaultAccount(accountConfig.name);
   writeConfig();
-  return portalConfig;
+  return accountConfig;
 };
 
 const CONFIG_CREATION_FLOWS = {
@@ -79,7 +79,7 @@ const CONFIG_CREATION_FLOWS = {
 };
 
 exports.command = 'init';
-exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot portal`;
+exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot account`;
 
 exports.handler = async options => {
   const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value } = options;
@@ -105,14 +105,14 @@ exports.handler = async options => {
   handleExit(deleteEmptyConfigFile);
 
   try {
-    const { portalId } = await CONFIG_CREATION_FLOWS[authType](env);
+    const { accountId } = await CONFIG_CREATION_FLOWS[authType](env);
     const path = getConfigPath();
 
     logger.success(
-      `The config file "${path}" was created using your personal access key for portal ${portalId}.`
+      `The config file "${path}" was created using your personal access key for account ${accountId}.`
     );
 
-    trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, portalId);
+    trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
     process.exit();
   } catch (err) {
     logErrorInstance(err);

@@ -21,7 +21,7 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function uploadFile(portalId, file, dest, { mode, cwd }) {
+function uploadFile(accountId, file, dest, { mode, cwd }) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -36,7 +36,7 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
     qs: getFileMapperApiQueryFromMode(mode),
   };
   return queue.add(() => {
-    return upload(portalId, file, dest, apiOptions)
+    return upload(accountId, file, dest, apiOptions)
       .then(() => {
         logger.log(`Uploaded file ${file} to ${dest}`);
       })
@@ -44,12 +44,12 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
         const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
         logger.debug(uploadFailureMessage);
         logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-        return upload(portalId, file, dest, apiOptions).catch(error => {
+        return upload(accountId, file, dest, apiOptions).catch(error => {
           logger.error(uploadFailureMessage);
           logApiUploadErrorInstance(
             error,
             new ApiErrorContext({
-              portalId,
+              accountId,
               request: dest,
               payload: file,
             })
@@ -59,7 +59,7 @@ function uploadFile(portalId, file, dest, { mode, cwd }) {
   });
 }
 
-async function deleteRemoteFile(portalId, filePath, remoteFilePath, { cwd }) {
+async function deleteRemoteFile(accountId, filePath, remoteFilePath, { cwd }) {
   if (shouldIgnoreFile(filePath, cwd)) {
     logger.debug(`Skipping ${filePath} due to an ignore rule`);
     return;
@@ -67,7 +67,7 @@ async function deleteRemoteFile(portalId, filePath, remoteFilePath, { cwd }) {
 
   logger.debug('Attempting to delete file "%s"', remoteFilePath);
   return queue.add(() => {
-    return deleteFile(portalId, remoteFilePath)
+    return deleteFile(accountId, remoteFilePath)
       .then(() => {
         logger.log(`Deleted file ${remoteFilePath}`);
       })
@@ -76,7 +76,7 @@ async function deleteRemoteFile(portalId, filePath, remoteFilePath, { cwd }) {
         logApiErrorInstance(
           error,
           new ApiErrorContext({
-            portalId,
+            accountId,
             request: remoteFilePath,
           })
         );
@@ -85,7 +85,7 @@ async function deleteRemoteFile(portalId, filePath, remoteFilePath, { cwd }) {
 }
 
 function watch(
-  portalId,
+  accountId,
   src,
   dest,
   { mode, cwd, remove, disableInitial, notify }
@@ -108,18 +108,18 @@ function watch(
 
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
-    uploadFolder(portalId, src, dest, { mode, cwd })
+    uploadFolder(accountId, src, dest, { mode, cwd })
       .then(() => {
         logger.success(
-          `Completed uploading files in ${src} to ${dest} in ${portalId}`
+          `Completed uploading files in ${src} to ${dest} in ${accountId}`
         );
       })
       .catch(error => {
         logger.error(
-          `Initial uploading of folder "${src}" to "${dest} in portal ${portalId} failed`
+          `Initial uploading of folder "${src}" to "${dest} in account ${accountId} failed`
         );
         logErrorInstance(error, {
-          portalId,
+          accountId,
         });
       });
   }
@@ -130,7 +130,7 @@ function watch(
 
   watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(portalId, filePath, destPath, {
+    const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
       cwd,
     });
@@ -148,9 +148,14 @@ function watch(
 
       logger.debug('Attempting to delete %s "%s"', type, remotePath);
       queue.add(() => {
-        const deletePromise = deleteRemoteFile(portalId, filePath, remotePath, {
-          cwd,
-        })
+        const deletePromise = deleteRemoteFile(
+          accountId,
+          filePath,
+          remotePath,
+          {
+            cwd,
+          }
+        )
           .then(() => {
             logger.log('Deleted %s "%s"', type, remotePath);
           })
@@ -159,7 +164,7 @@ function watch(
             logApiErrorInstance(
               error,
               new ApiErrorContext({
-                portalId,
+                accountId,
                 request: remotePath,
               })
             );
@@ -175,7 +180,7 @@ function watch(
 
   watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(portalId, filePath, destPath, {
+    const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
       cwd,
     });

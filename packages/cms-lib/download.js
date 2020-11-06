@@ -54,10 +54,10 @@ function writeFiles(dest, tree) {
   tree.children.forEach(subtree => writeFiles(dest, subtree));
 }
 
-async function downloadModule(portalId, moduleId, dest) {
+async function downloadModule(accountId, moduleId, dest) {
   let response;
   try {
-    response = await fetchModule(portalId, moduleId);
+    response = await fetchModule(accountId, moduleId);
   } catch (error) {
     logger.error('Failed to download %s', moduleId);
     if (error.response && error.response.body) {
@@ -71,8 +71,8 @@ async function downloadModule(portalId, moduleId, dest) {
   logger.log('Downloaded %s', response.path);
 }
 
-async function downloadBuiltinModules(portalId, dest) {
-  const builtinMappings = await fetchBuiltinMapping(portalId);
+async function downloadBuiltinModules(accountId, dest) {
+  const builtinMappings = await fetchBuiltinMapping(accountId);
   const downloaded = new Set();
   Object.values(builtinMappings).forEach(moduleId => {
     if (downloaded.has(moduleId)) {
@@ -80,7 +80,7 @@ async function downloadBuiltinModules(portalId, dest) {
     }
     logger.log('Downloading module %s', moduleId);
     downloaded.add(moduleId);
-    downloadModule(portalId, moduleId, dest);
+    downloadModule(accountId, moduleId, dest);
     logger.error('Failed to download %s', moduleId);
   });
 }

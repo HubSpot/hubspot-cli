@@ -6,8 +6,8 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const open = require('open');
 const { getTableContents, getTableHeader } = require('./table');
 
-const logSiteLinks = portalId => {
-  const linksAsArray = getSiteLinksAsArray(portalId).map(l => [
+const logSiteLinks = accountId => {
+  const linksAsArray = getSiteLinksAsArray(accountId).map(l => [
     `${l.shortcut}${l.alias ? ` [alias: ${l.alias}]` : ''}`,
     '=>',
     l.url,
@@ -18,12 +18,12 @@ const logSiteLinks = portalId => {
   logger.log(getTableContents(linksAsArray));
 };
 
-const getSiteLinksAsArray = portalId =>
-  Object.values(getSiteLinks(portalId)).sort((a, b) =>
+const getSiteLinksAsArray = accountId =>
+  Object.values(getSiteLinks(accountId)).sort((a, b) =>
     a.shortcut < b.shortcut ? -1 : 1
   );
 
-const getSiteLinks = portalId => {
+const getSiteLinks = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
@@ -32,22 +32,22 @@ const getSiteLinks = portalId => {
     APPS_MARKETPLACE: {
       shortcut: 'apps-marketplace',
       alias: 'apm',
-      url: `${baseUrl}/ecosystem/${portalId}/marketplace/apps`,
+      url: `${baseUrl}/ecosystem/${accountId}/marketplace/apps`,
     },
     ASSET_MARKETPLACE: {
       shortcut: 'asset-marketplace',
       alias: 'asm',
-      url: `${baseUrl}/ecosystem/${portalId}/marketplace/products`,
+      url: `${baseUrl}/ecosystem/${accountId}/marketplace/products`,
     },
     CONTENT_STAGING: {
       shortcut: 'content-staging',
       alias: 'cs',
-      url: `${baseUrl}/content/${portalId}/staging`,
+      url: `${baseUrl}/content/${accountId}/staging`,
     },
     DESIGN_MANAGER: {
       shortcut: 'design-manager',
       alias: 'dm',
-      url: `${baseUrl}/design-manager/${portalId}`,
+      url: `${baseUrl}/design-manager/${accountId}`,
     },
     DOCS: {
       shortcut: 'docs',
@@ -56,7 +56,7 @@ const getSiteLinks = portalId => {
     FILE_MANAGER: {
       shortcut: 'file-manager',
       alias: 'fm',
-      url: `${baseUrl}/files/${portalId}`,
+      url: `${baseUrl}/files/${accountId}`,
     },
     FORUMS: {
       shortcut: 'forums',
@@ -65,44 +65,44 @@ const getSiteLinks = portalId => {
     HUBDB: {
       shortcut: 'hubdb',
       alias: 'hdb',
-      url: `${baseUrl}/hubdb/${portalId}`,
+      url: `${baseUrl}/hubdb/${accountId}`,
     },
     SETTINGS: {
       shortcut: 'settings',
       alias: 's',
-      url: `${baseUrl}/settings/${portalId}`,
+      url: `${baseUrl}/settings/${accountId}`,
     },
     SETTINGS_NAVIGATION: {
       shortcut: 'settings/navigation',
       alias: 'sn',
-      url: `${baseUrl}/menus/${portalId}/edit/`,
+      url: `${baseUrl}/menus/${accountId}/edit/`,
     },
     SETTINGS_WEBSITE: {
       shortcut: 'settings/website',
       alias: 'sw',
-      url: `${baseUrl}/settings/${portalId}/website/pages/all-domains/page-templates`,
+      url: `${baseUrl}/settings/${accountId}/website/pages/all-domains/page-templates`,
     },
     SETTINGS_URL_REDIRECTS: {
       shortcut: 'settings/url-redirects',
       alias: 'sur',
-      url: `${baseUrl}/domains/${portalId}/url-redirects`,
+      url: `${baseUrl}/domains/${accountId}/url-redirects`,
     },
     PURCHASED_ASSETS: {
       shortcut: 'purchased-assets',
       alias: 'pa',
-      url: `${baseUrl}/marketplace/${portalId}/manage-purchases`,
+      url: `${baseUrl}/marketplace/${accountId}/manage-purchases`,
     },
 
     WEBSITE_PAGES: {
       shortcut: 'website-pages',
       alias: 'wp',
-      url: `${baseUrl}/website/${portalId}/pages/site`,
+      url: `${baseUrl}/website/${accountId}/pages/site`,
     },
   };
 };
 
-const openLink = (portalId, shortcut) => {
-  const match = Object.values(getSiteLinks(portalId)).find(
+const openLink = (accountId, shortcut) => {
+  const match = Object.values(getSiteLinks(accountId)).find(
     l => l.shortcut === shortcut || (l.alias && l.alias === shortcut)
   );
 

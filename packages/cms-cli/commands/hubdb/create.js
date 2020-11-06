@@ -9,14 +9,14 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cms-lib/path');
 const { createHubDbTable } = require('@hubspot/cms-lib/hubdb');
 
-const { validatePortal, isFileValidJSON } = require('../../lib/validation');
+const { validateAccount, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
@@ -31,12 +31,12 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-create', {}, portalId);
+  trackCommandUsage('hubdb-create', {}, accountId);
 
   try {
     const filePath = path.resolve(getCwd(), src);
@@ -44,9 +44,12 @@ exports.handler = async options => {
       process.exit(1);
     }
 
-    const table = await createHubDbTable(portalId, path.resolve(getCwd(), src));
+    const table = await createHubDbTable(
+      accountId,
+      path.resolve(getCwd(), src)
+    );
     logger.log(
-      `The table ${table.tableId} was created in ${portalId} with ${table.rowCount} rows`
+      `The table ${table.tableId} was created in ${accountId} with ${table.rowCount} rows`
     );
   } catch (e) {
     logger.error(`Creating the table at "${src}" failed`);
@@ -55,7 +58,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addConfigOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 

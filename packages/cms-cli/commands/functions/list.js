@@ -13,14 +13,14 @@ const {
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
-  getPortalId,
+  getAccountId,
   setLogLevel,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { getTableContents, getTableHeader } = require('../../lib/table');
 
 const loadAndValidateOptions = async options => {
@@ -30,7 +30,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -42,14 +42,14 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { json, compact } = options;
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-list', { json, compact }, portalId);
+  trackCommandUsage('functions-list', { json, compact }, accountId);
 
   logger.debug('Getting currently deployed functions');
 
-  const routesResp = await getRoutes(portalId).catch(async e => {
-    await logApiErrorInstance(portalId, e, new ApiErrorContext({ portalId }));
+  const routesResp = await getRoutes(accountId).catch(async e => {
+    await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
     process.exit();
   });
 
@@ -70,7 +70,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   yargs.options({

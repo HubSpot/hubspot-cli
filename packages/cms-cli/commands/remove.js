@@ -12,13 +12,13 @@ const {
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal } = require('../lib/validation');
+const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 exports.command = 'remove <path>';
@@ -31,23 +31,23 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('remove', {}, portalId);
+  trackCommandUsage('remove', {}, accountId);
 
   try {
-    await deleteFile(portalId, hsPath);
-    logger.log(`Deleted "${hsPath}" from portal ${portalId}`);
+    await deleteFile(accountId, hsPath);
+    logger.log(`Deleted "${hsPath}" from account ${accountId}`);
   } catch (error) {
-    logger.error(`Deleting "${hsPath}" from portal ${portalId} failed`);
+    logger.error(`Deleting "${hsPath}" from account ${accountId} failed`);
     logApiErrorInstance(
       error,
       new ApiErrorContext({
-        portalId,
+        accountId,
         request: hsPath,
       })
     );
@@ -56,7 +56,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('path', {
     describe: 'Remote hubspot path',
