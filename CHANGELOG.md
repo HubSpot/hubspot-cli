@@ -1,5 +1,18 @@
 Change Log
 ==========
+## 2.2.0
+* **New Command**: `hs completion`.  Generate a `bash` or `zsh` completion script and be able to install it for command completion capabilities (https://github.com/HubSpot/hubspot-cms-tools/pull/342)
+* **New Command**: `hs open`.  Open a shortcut specific to your HubSpot account. Try `hs open --list` to see all available shortcuts (https://github.com/HubSpot/hubspot-cms-tools/pull/344)
+* **New Command**: `hs functions list`. Output information about currently deployed serverless functions (https://github.com/HubSpot/hubspot-cms-tools/pull/352)
+* **New Command**: `hs list`.  List contents of a remote path (https://github.com/HubSpot/hubspot-cms-tools/pull/354)
+* **New command**: `hs mv`. Move a remote file or folder (https://github.com/HubSpot/hubspot-cms-tools/pull/363)
+* Fully migrated to `yargs` from `commander`, removed old `commander` code (https://github.com/HubSpot/hubspot-cms-tools/pull/320)
+* Prompt for values when adding or updating a secret (https://github.com/HubSpot/hubspot-cms-tools/pull/345)
+* Fix to prevent `hs fetch` failures from writing to disk (https://github.com/HubSpot/hubspot-cms-tools/pull/339)
+* Support loading the `hubspot.config.yml` file relative to a specified directory (https://github.com/HubSpot/hubspot-cms-tools/pull/362)
+* `hs logs` now has `--limit=<num>` option to limit the amount of logs displayed in output (https://github.com/HubSpot/hubspot-cms-tools/pull/323)
+* Fixed bug where certain hubdb command used the wrong endpoint
+
 ## 2.1.0
  * Initial version for custom object CLI functionality. Check out [CRM Custom Objects](https://developers.hubspot.com/docs/api/crm/crm-custom-objects) and type `hs custom-object` to get started
  * Improve scope error handling and messaging ([#257](https://github.com/HubSpot/hubspot-cms-tools/issues/314))

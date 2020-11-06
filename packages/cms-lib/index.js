@@ -5,10 +5,12 @@ const {
   getConfig,
   getAccountId,
   getAccountConfig,
+  findConfig,
   loadConfig,
   loadConfigFromEnvironment,
   updateAccountConfig,
   validateConfig,
+  isTrackingAllowed,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
@@ -21,6 +23,7 @@ module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
+  findConfig,
   loadConfig,
   loadConfigFromEnvironment,
   getAccountConfig,
@@ -31,6 +34,7 @@ module.exports = {
   updatePortalConfig: updateAccountConfig,
   uploadFolder,
   validateConfig,
+  isTrackingAllowed,
   watch,
   walk,
 };
