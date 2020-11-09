@@ -136,10 +136,6 @@ async function _fetchRows(accountId, tableId) {
 
     rows = rows.concat(results);
     after = paging && paging.next ? paging.next.after : null;
-
-    if (after === null) {
-      break;
-    }
   } while (after !== null);
 
   return rows;
