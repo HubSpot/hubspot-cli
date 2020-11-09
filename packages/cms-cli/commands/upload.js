@@ -27,15 +27,15 @@ const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
   getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal, validateMode } = require('../lib/validation');
+const { validateAccount, validateMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 exports.command = 'upload <src> <dest>';
@@ -52,14 +52,14 @@ exports.handler = async options => {
   if (
     !(
       validateConfig() &&
-      (await validatePortal(options)) &&
+      (await validateAccount(options)) &&
       validateMode(options)
     )
   ) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   const mode = getMode(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
   let stats;
@@ -82,7 +82,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'upload',
     { mode, type: stats.isFile() ? 'file' : 'folder' },
-    portalId
+    accountId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
@@ -104,15 +104,15 @@ exports.handler = async options => {
       return;
     }
 
-    upload(portalId, absoluteSrcPath, normalizedDest, {
+    upload(accountId, absoluteSrcPath, normalizedDest, {
       qs: getFileMapperApiQueryFromMode(mode),
     })
       .then(() => {
         logger.success(
-          'Uploaded file from "%s" to "%s" in the Design Manager of portal %s',
+          'Uploaded file from "%s" to "%s" in the Design Manager of account %s',
           src,
           normalizedDest,
-          portalId
+          accountId
         );
       })
       .catch(error => {
@@ -120,7 +120,7 @@ exports.handler = async options => {
         logApiUploadErrorInstance(
           error,
           new ApiErrorContext({
-            portalId,
+            accountId,
             request: normalizedDest,
             payload: src,
           })
@@ -128,9 +128,9 @@ exports.handler = async options => {
       });
   } else {
     logger.log(
-      `Uploading files from "${src}" to "${dest}" in the Design Manager of portal ${portalId}`
+      `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`
     );
-    uploadFolder(portalId, absoluteSrcPath, dest, {
+    uploadFolder(accountId, absoluteSrcPath, dest, {
       mode,
       cwd: getCwd(),
     })
@@ -142,7 +142,7 @@ exports.handler = async options => {
       .catch(error => {
         logger.error('Uploading failed');
         logErrorInstance(error, {
-          portalId,
+          accountId,
         });
       });
   }
@@ -150,7 +150,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addModeOptions(yargs, { write: true }, true);
   addUseEnvironmentOptions(yargs, true);
 

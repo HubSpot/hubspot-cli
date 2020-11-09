@@ -1,6 +1,6 @@
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addOverwriteOptions,
 } = require('../lib/commonOpts');
 const upload = require('./filemanager/upload');
@@ -12,7 +12,7 @@ exports.describe = 'Commands for working with the File Manager';
 exports.builder = yargs => {
   addOverwriteOptions(yargs, true);
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
 
   yargs
     .command(upload)

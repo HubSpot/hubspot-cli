@@ -9,7 +9,7 @@ const isFatalError = err => err instanceof HubSpotAuthError;
 class ErrorContext {
   constructor(props = {}) {
     /** @type {number} */
-    this.portalId = props.portalId;
+    this.accountId = props.accountId;
   }
 }
 

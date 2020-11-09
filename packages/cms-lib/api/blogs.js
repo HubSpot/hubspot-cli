@@ -1,8 +1,8 @@
 const http = require('../http');
 const BLOGS_API_PATH = 'blogs/v3';
 
-async function fetchBlogs(portalId, query = {}) {
-  return http.get(portalId, {
+async function fetchBlogs(accountId, query = {}) {
+  return http.get(accountId, {
     uri: `${BLOGS_API_PATH}/blogs`,
     query,
   });

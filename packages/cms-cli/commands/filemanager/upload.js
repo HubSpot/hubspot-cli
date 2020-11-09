@@ -20,13 +20,13 @@ const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 exports.command = 'upload <src> <dest>';
@@ -41,11 +41,11 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!validateConfig() || !(await validatePortal(options))) {
+  if (!validateConfig() || !(await validateAccount(options))) {
     process.exit(1);
   }
 
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
   let stats;
@@ -68,7 +68,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'filemanager-upload',
     { type: stats.isFile() ? 'file' : 'folder' },
-    portalId
+    accountId
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(
@@ -86,13 +86,13 @@ exports.handler = async options => {
       return;
     }
 
-    uploadFile(portalId, absoluteSrcPath, normalizedDest)
+    uploadFile(accountId, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
-          'Uploaded file from "%s" to "%s" in the File Manager of portal %s',
+          'Uploaded file from "%s" to "%s" in the File Manager of account %s',
           src,
           normalizedDest,
-          portalId
+          accountId
         );
       })
       .catch(error => {
@@ -100,7 +100,7 @@ exports.handler = async options => {
         logApiUploadErrorInstance(
           error,
           new ApiErrorContext({
-            portalId,
+            accountId,
             request: normalizedDest,
             payload: src,
           })
@@ -108,9 +108,9 @@ exports.handler = async options => {
       });
   } else {
     logger.log(
-      `Uploading files from "${src}" to "${dest}" in the File Manager of portal ${portalId}`
+      `Uploading files from "${src}" to "${dest}" in the File Manager of account ${accountId}`
     );
-    uploadFolder(portalId, absoluteSrcPath, dest, {
+    uploadFolder(accountId, absoluteSrcPath, dest, {
       cwd: getCwd(),
     })
       .then(() => {
@@ -121,7 +121,7 @@ exports.handler = async options => {
       .catch(error => {
         logger.error('Uploading failed');
         logErrorInstance(error, {
-          portalId,
+          accountId,
         });
       });
   }
@@ -129,7 +129,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {

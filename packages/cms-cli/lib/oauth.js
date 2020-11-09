@@ -1,8 +1,8 @@
 const express = require('express');
 const open = require('open');
 const OAuth2Manager = require('@hubspot/cms-lib/lib/models/OAuth2Manager');
-const { getPortalConfig } = require('@hubspot/cms-lib/lib/config');
-const { addOauthToPortalConfig } = require('@hubspot/cms-lib/oauth');
+const { getAccountConfig } = require('@hubspot/cms-lib/lib/config');
+const { addOauthToAccountConfig } = require('@hubspot/cms-lib/oauth');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -14,7 +14,7 @@ const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 const buildAuthUrl = oauthManager => {
   return (
     `${getHubSpotWebsiteOrigin(oauthManager.env)}/oauth/${
-      oauthManager.portalId
+      oauthManager.accountId
     }/authorize` +
     `?client_id=${encodeURIComponent(oauthManager.clientId)}` + // app's client ID
     `&scope=${encodeURIComponent(oauthManager.scopes.join(' '))}` + // scopes being requested by the app
@@ -79,23 +79,23 @@ const authorize = async oauthManager => {
   });
 };
 
-const setupOauth = (portalId, portalConfig) => {
-  const config = getPortalConfig(portalId) || {};
+const setupOauth = (accountId, accountConfig) => {
+  const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager(
     {
-      ...portalConfig,
-      environment: portalConfig.env || config.env || ENVIRONMENTS.PROD,
+      ...accountConfig,
+      environment: accountConfig.env || config.env || ENVIRONMENTS.PROD,
     },
     logger
   );
 };
 
 const authenticateWithOauth = async configData => {
-  const portalId = parseInt(configData.portalId, 10);
-  const oauthManager = setupOauth(portalId, configData);
+  const accountId = parseInt(configData.accountId, 10);
+  const oauthManager = setupOauth(accountId, configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
-  addOauthToPortalConfig(portalId, oauthManager);
+  addOauthToAccountConfig(accountId, oauthManager);
 };
 
 module.exports = {

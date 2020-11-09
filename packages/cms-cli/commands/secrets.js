@@ -1,4 +1,4 @@
-const { addConfigOptions, addPortalOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 
 const addSecretCommand = require('./secrets/addSecret');
 const listSecretsCommand = require('./secrets/listSecrets');
@@ -10,7 +10,7 @@ exports.describe = 'Manage HubSpot secrets';
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   yargs
     .command(listSecretsCommand)
     .command(addSecretCommand)

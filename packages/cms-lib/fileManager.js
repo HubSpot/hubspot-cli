@@ -29,12 +29,12 @@ const {
 
 /**
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} src
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(portalId, src, dest, { cwd }) {
+async function uploadFolder(accountId, src, dest, { cwd }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const files = await walk(src);
 
@@ -46,13 +46,13 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
     const relativePath = file.replace(regex, '');
     const destPath = convertToUnixPath(path.join(dest, relativePath));
     logger.debug(
-      'Uploading files from "%s" to "%s" in the File Manager of portal %s',
+      'Uploading files from "%s" to "%s" in the File Manager of account %s',
       file,
       destPath,
-      portalId
+      accountId
     );
     try {
-      await uploadFile(portalId, file, destPath);
+      await uploadFile(accountId, file, destPath);
       logger.log('Uploaded file "%s" to "%s"', file, destPath);
     } catch (error) {
       logger.error('Uploading file "%s" to "%s" failed', file, destPath);
@@ -62,7 +62,7 @@ async function uploadFolder(portalId, src, dest, { cwd }) {
       logApiUploadErrorInstance(
         error,
         new ApiErrorContext({
-          portalId,
+          accountId,
           request: destPath,
           payload: file,
         })
@@ -91,12 +91,12 @@ async function skipExisting(overwrite, filepath) {
 
 /**
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {object} file
  * @param {string} dest
  * @param {object} options
  */
-async function downloadFile(portalId, file, dest, options) {
+async function downloadFile(accountId, file, dest, options) {
   const fileName = `${file.name}.${file.extension}`;
   const destPath = convertToLocalFileSystemPath(path.join(dest, fileName));
 
@@ -109,7 +109,7 @@ async function downloadFile(portalId, file, dest, options) {
       err,
       new FileSystemErrorContext({
         destPath,
-        portalId,
+        accountId,
         write: true,
       })
     );
@@ -126,7 +126,7 @@ async function downloadFile(portalId, file, dest, options) {
 
   try {
     await http.getOctetStream(
-      portalId,
+      accountId,
       {
         baseUrl: file.url,
         uri: '',
@@ -141,16 +141,16 @@ async function downloadFile(portalId, file, dest, options) {
 
 /**
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} folderPath
  */
-async function fetchAllPagedFiles(portalId, folderId, { includeArchived }) {
+async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
   let totalFiles = null;
   let files = [];
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
-    const response = await fetchFiles(portalId, folderId, {
+    const response = await fetchFiles(accountId, folderId, {
       offset,
       archived: includeArchived,
     });
@@ -168,46 +168,46 @@ async function fetchAllPagedFiles(portalId, folderId, { includeArchived }) {
 
 /**
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {object} folder
  * @param {string} dest
  * @param {object} options
  */
-async function fetchFolderContents(portalId, folder, dest, options) {
-  const files = await fetchAllPagedFiles(portalId, folder.id, options);
+async function fetchFolderContents(accountId, folder, dest, options) {
+  const files = await fetchAllPagedFiles(accountId, folder.id, options);
   for (const file of files) {
-    await downloadFile(portalId, file, dest, options);
+    await downloadFile(accountId, file, dest, options);
   }
 
-  const { objects: folders } = await fetchFolders(portalId, folder.id);
+  const { objects: folders } = await fetchFolders(accountId, folder.id);
   for (const folder of folders) {
     const nestedFolder = path.join(dest, folder.name);
-    await fetchFolderContents(portalId, folder, nestedFolder, options);
+    await fetchFolderContents(accountId, folder, nestedFolder, options);
   }
 }
 
 /**
  * Download a folder and write to local file system.
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} src
  * @param {string} dest
  * @param {object} file
  * @param {object} options
  */
-async function downloadFolder(portalId, src, dest, folder, options) {
+async function downloadFolder(accountId, src, dest, folder, options) {
   try {
     const rootPath =
       dest === getCwd()
         ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
         : dest;
     logger.log(
-      'Fetching folder from "%s" to "%s" in the File Manager of portal %s',
+      'Fetching folder from "%s" to "%s" in the File Manager of account %s',
       src,
       rootPath,
-      portalId
+      accountId
     );
-    await fetchFolderContents(portalId, folder, rootPath, options);
+    await fetchFolderContents(accountId, folder, rootPath, options);
     logger.success(
       'Completed fetch of folder "%s" to "%s" from the File Manager',
       src,
@@ -221,13 +221,13 @@ async function downloadFolder(portalId, src, dest, folder, options) {
 /**
  * Download a single file and write to local file system.
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} src
  * @param {string} dest
  * @param {object} file
  * @param {object} options
  */
-async function downloadSingleFile(portalId, src, dest, file, options) {
+async function downloadSingleFile(accountId, src, dest, file, options) {
   if (!options.includeArchived && file.archived) {
     logger.error(
       '"%s" in the File Manager is an archived file. Try fetching again with the "--include-archived" flag.',
@@ -242,12 +242,12 @@ async function downloadSingleFile(portalId, src, dest, file, options) {
 
   try {
     logger.log(
-      'Fetching file from "%s" to "%s" in the File Manager of portal %s',
+      'Fetching file from "%s" to "%s" in the File Manager of account %s',
       src,
       dest,
-      portalId
+      accountId
     );
-    await downloadFile(portalId, file, dest, options);
+    await downloadFile(accountId, file, dest, options);
     logger.success(
       'Completed fetch of file "%s" to "%s" from the File Manager',
       src,
@@ -261,29 +261,29 @@ async function downloadSingleFile(portalId, src, dest, file, options) {
 /**
  * Lookup path in file manager and initiate download
  *
- * @param {number} portalId
+ * @param {number} accountId
  * @param {string} src
  * @param {string} dest
  * @param {object} options
  */
-async function downloadFileOrFolder(portalId, src, dest, options) {
+async function downloadFileOrFolder(accountId, src, dest, options) {
   if (src === '/') {
-    await downloadFolder(portalId, src, dest, '', options);
+    await downloadFolder(accountId, src, dest, '', options);
   } else {
     try {
-      const { file, folder } = await fetchStat(portalId, src);
+      const { file, folder } = await fetchStat(accountId, src);
 
       if (file) {
-        downloadSingleFile(portalId, src, dest, file, options);
+        downloadSingleFile(accountId, src, dest, file, options);
       } else if (folder) {
-        downloadFolder(portalId, src, dest, folder, options);
+        downloadFolder(accountId, src, dest, folder, options);
       }
     } catch (err) {
       logApiErrorInstance(
         err,
         new ApiErrorContext({
           request: src,
-          portalId,
+          accountId,
         })
       );
     }

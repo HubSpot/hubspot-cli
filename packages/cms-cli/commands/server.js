@@ -15,10 +15,10 @@ const { updateServerContext } = require('../lib/server/updateContext');
 const {
   addConfigOptions,
   addLoggerOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 
@@ -40,11 +40,11 @@ function configureServerCommand(program) {
         process.exit(1);
       }
 
-      const portalId = getPortalId(options);
+      const accountId = getAccountId(options);
 
       // TODO: add flag to bypass
-      logger.log(`Fetching portal data for ${portalId} to update context`);
-      await updateServerContext(portalId, path.join(getCwd(), contextDir));
+      logger.log(`Fetching account data for ${accountId} to update context`);
+      await updateServerContext(accountId, path.join(getCwd(), contextDir));
 
       const cwd = getCwd();
       const cmd = `
@@ -61,7 +61,7 @@ function configureServerCommand(program) {
     });
 
   addLoggerOptions(program);
-  addPortalOptions(program);
+  addAccountOptions(program);
   addConfigOptions(program);
   addUseEnvironmentOptions(program);
 }

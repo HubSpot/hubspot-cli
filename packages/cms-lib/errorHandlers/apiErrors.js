@@ -1,5 +1,5 @@
 const { logger } = require('../logger');
-const { getPortalConfig } = require('../lib/config');
+const { getAccountConfig } = require('../lib/config');
 const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -122,7 +122,7 @@ function logApiStatusCodeError(error, context) {
     const request = context.request
       ? `${action} ${preposition} "${context.request}"`
       : action;
-    messageDetail = `${request} in portal ${context.portalId}`;
+    messageDetail = `${request} in account ${context.accountId}`;
   }
   const errorMessage = [];
   if (isPutOrPost && context.payload) {
@@ -141,7 +141,7 @@ function logApiStatusCodeError(error, context) {
     case 404:
       if (context.request) {
         errorMessage.push(
-          `The ${action} failed because "${context.request}" was not found in portal ${context.portalId}.`
+          `The ${action} failed because "${context.request}" was not found in account ${context.accountId}.`
         );
       } else {
         errorMessage.push(`The ${messageDetail} was not found.`);
@@ -200,16 +200,16 @@ function logApiUploadErrorInstance(error, context) {
   logApiErrorInstance(error, context);
 }
 
-async function verifyAccessKeyAndUserAccess(portalId, scopeGroup) {
-  const portalConfig = getPortalConfig(portalId);
-  const { authType } = portalConfig;
+async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
+  const accountConfig = getAccountConfig(accountId);
+  const { authType } = accountConfig;
   if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
     return;
   }
 
   let scopesData;
   try {
-    scopesData = await fetchScopeData(portalId, scopeGroup);
+    scopesData = await fetchScopeData(accountId, scopeGroup);
   } catch (e) {
     logger.debug('Error verifying access');
     return;
@@ -240,13 +240,17 @@ async function verifyAccessKeyAndUserAccess(portalId, scopeGroup) {
  * Logs a message for an error instance resulting from API interaction
  * related to serverless function.
  *
- * @param {int} portalId
+ * @param {int} accountId
  * @param {Error|SystemError|Object} error
  * @param {ApiErrorContext}          context
  */
-async function logServerlessFunctionApiErrorInstance(portalId, error, context) {
+async function logServerlessFunctionApiErrorInstance(
+  accountId,
+  error,
+  context
+) {
   if (isMissingScopeError(error)) {
-    await verifyAccessKeyAndUserAccess(portalId, SCOPE_GROUPS.functions);
+    await verifyAccessKeyAndUserAccess(accountId, SCOPE_GROUPS.functions);
     return;
   }
 

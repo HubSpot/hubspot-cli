@@ -34,6 +34,24 @@ const setConfig = updatedConfig => {
   return _config;
 };
 
+const getConfigAccounts = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.accounts || __config.portals;
+};
+
+const getConfigDefaultAccount = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.defaultAccount || __config.defaultPortal;
+};
+
+const getConfigAccountId = config => {
+  const __config = config || getConfig();
+  if (!__config) return;
+  return __config.accountId || __config.portalId;
+};
+
 /**
  * @returns {boolean}
  */
@@ -43,32 +61,35 @@ const validateConfig = () => {
     logger.error('config is not defined');
     return false;
   }
-  if (!Array.isArray(config.portals)) {
-    logger.error('config.portals[] is not defined');
+  const accounts = getConfigAccounts();
+  if (!Array.isArray(accounts)) {
+    logger.error('config.accounts[] is not defined');
     return false;
   }
-  const portalIdsHash = {};
-  const portalNamesHash = {};
-  return config.portals.every(cfg => {
+  const accountIdsHash = {};
+  const accountNamesHash = {};
+  return accounts.every(cfg => {
     if (!cfg) {
-      logger.error('config.portals[] has an empty entry');
+      logger.error('config.accounts[] has an empty entry');
       return false;
     }
-    if (!cfg.portalId) {
-      logger.error('config.portals[] has an entry missing portalId');
+
+    const accountId = getConfigAccountId(cfg);
+    if (!accountId) {
+      logger.error('config.accounts[] has an entry missing accountId');
       return false;
     }
-    if (portalIdsHash[cfg.portalId]) {
+    if (accountIdsHash[accountId]) {
       logger.error(
-        `config.portals[] has multiple entries with portalId=${cfg.portalId}`
+        `config.accounts[] has multiple entries with accountId=${accountId}`
       );
       return false;
     }
 
     if (cfg.name) {
-      if (portalNamesHash[cfg.name]) {
+      if (accountNamesHash[cfg.name]) {
         logger.error(
-          `config.name has multiple entries with portalId=${cfg.portalId}`
+          `config.name has multiple entries with accountId=${accountId}`
         );
         return false;
       }
@@ -76,30 +97,39 @@ const validateConfig = () => {
         logger.error(`config.name '${cfg.name}' cannot contain spaces`);
         return false;
       }
-      portalNamesHash[cfg.name] = cfg;
+      accountNamesHash[cfg.name] = cfg;
     }
 
-    portalIdsHash[cfg.portalId] = cfg;
+    accountIdsHash[accountId] = cfg;
     return true;
   });
 };
 
-const portalNameExistsInConfig = name => {
+const accountNameExistsInConfig = name => {
   const config = getConfig();
+  const accounts = getConfigAccounts();
 
-  if (!config || !Array.isArray(config.portals)) {
+  if (!config || !Array.isArray(accounts)) {
     return false;
   }
 
-  return config.portals.some(cfg => cfg.name && cfg.name === name);
+  return accounts.some(cfg => cfg.name && cfg.name === name);
 };
 
-const getOrderedPortal = unorderedPortal => {
-  const { name, portalId, env, authType, ...rest } = unorderedPortal;
+const getOrderedAccount = unorderedAccount => {
+  const {
+    name,
+    accountId,
+    portalId,
+    env,
+    authType,
+    ...rest
+  } = unorderedAccount;
 
   return {
     name,
-    portalId,
+    ...(accountId && { accountId }),
+    ...(portalId && { portalId }),
     env,
     authType,
     ...rest,
@@ -108,20 +138,23 @@ const getOrderedPortal = unorderedPortal => {
 
 const getOrderedConfig = unorderedConfig => {
   const {
+    defaultAccount,
     defaultPortal,
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
+    accounts,
     portals,
     ...rest
   } = unorderedConfig;
 
   return {
-    defaultPortal,
+    ...(defaultAccount && { defaultAccount }),
+    ...(defaultPortal && { defaultPortal }),
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    portals: portals.map(getOrderedPortal),
+    accounts: (accounts || portals).map(getOrderedAccount),
     ...rest,
   };
 };
@@ -311,7 +344,7 @@ const loadConfigFromFile = (path, options = {}) => {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
     _config = {
-      portals: [],
+      accounts: [],
     };
   }
 };
@@ -371,12 +404,12 @@ const setConfigPath = path => {
 const getEnv = nameOrId => {
   let env = ENVIRONMENTS.PROD;
   const config = getAndLoadConfigIfNeeded();
-  const portalId = getPortalId(nameOrId);
+  const accountId = getAccountId(nameOrId);
 
-  if (portalId) {
-    const portalConfig = getPortalConfig(portalId);
-    if (portalConfig.env) {
-      env = portalConfig.env;
+  if (accountId) {
+    const accountConfig = getAccountConfig(accountId);
+    if (accountConfig.env) {
+      env = accountConfig.env;
     }
   } else if (config && config.env) {
     env = config.env;
@@ -384,42 +417,45 @@ const getEnv = nameOrId => {
   return env;
 };
 
-const getPortalConfig = portalId => {
-  const config = getAndLoadConfigIfNeeded();
-  return config.portals.find(portal => portal.portalId === portalId);
-};
+const getAccountConfig = accountId =>
+  getConfigAccounts(getAndLoadConfigIfNeeded()).find(
+    account => account.accountId === accountId || account.portalId === accountId
+  );
 
 /*
- * Returns a portalId from the config if it exists, else returns null
+ * Returns a accountId from the config if it exists, else returns null
  */
-const getPortalId = nameOrId => {
+const getAccountId = nameOrId => {
   const config = getAndLoadConfigIfNeeded();
   let name;
-  let portalId;
-  let portal;
+  let accountId;
+  let account;
 
   if (!nameOrId) {
-    if (config && config.defaultPortal) {
-      name = config.defaultPortal;
+    const defaultAccount = getConfigDefaultAccount(config);
+
+    if (defaultAccount) {
+      name = defaultAccount;
     }
   } else {
     if (typeof nameOrId === 'number') {
-      portalId = nameOrId;
+      accountId = nameOrId;
     } else if (/^\d+$/.test(nameOrId)) {
-      portalId = parseInt(nameOrId, 10);
+      accountId = parseInt(nameOrId, 10);
     } else {
       name = nameOrId;
     }
   }
 
+  const accounts = getConfigAccounts(config);
   if (name) {
-    portal = config.portals.find(p => p.name === name);
-  } else if (portalId) {
-    portal = config.portals.find(p => p.portalId === portalId);
+    account = accounts.find(p => p.name === name);
+  } else if (accountId) {
+    account = accounts.find(p => [p.accountId, p.portalId].includes(accountId));
   }
 
-  if (portal) {
-    return portal.portalId;
+  if (account) {
+    return account.accountId || account.portalId;
   }
 
   return null;
@@ -428,8 +464,9 @@ const getPortalId = nameOrId => {
 /**
  * @throws {Error}
  */
-const updatePortalConfig = configOptions => {
+const updateAccountConfig = configOptions => {
   const {
+    accountId: _accountId,
     portalId,
     authType,
     environment,
@@ -442,18 +479,19 @@ const updatePortalConfig = configOptions => {
     apiKey,
     personalAccessKey,
   } = configOptions;
+  const accountId = _accountId || portalId;
 
-  if (!portalId) {
-    throw new Error('A portalId is required to update the config');
+  if (!accountId) {
+    throw new Error('An accountId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
-  const portalConfig = getPortalConfig(portalId);
+  const accountConfig = getAccountConfig(accountId);
 
   let auth;
   if (clientId || clientSecret || scopes || tokenInfo) {
     auth = {
-      ...(portalConfig ? portalConfig.auth : {}),
+      ...(accountConfig ? accountConfig.auth : {}),
       clientId,
       clientSecret,
       scopes,
@@ -461,15 +499,16 @@ const updatePortalConfig = configOptions => {
     };
   }
 
-  const env = getValidEnv(environment || (portalConfig && portalConfig.env), {
+  const env = getValidEnv(environment || (accountConfig && accountConfig.env), {
     maskedProductionValue: undefined,
   });
   const mode = defaultMode && defaultMode.toLowerCase();
-  const nextPortalConfig = {
-    ...portalConfig,
-    name: name || (portalConfig && portalConfig.name),
+  const nextAccountConfig = {
+    ...accountConfig,
+    name: name || (accountConfig && accountConfig.name),
     env,
-    portalId,
+    ...(_accountId && { accountId: _accountId }),
+    ...(portalId && { portalId }),
     authType,
     auth,
     apiKey,
@@ -477,36 +516,44 @@ const updatePortalConfig = configOptions => {
     personalAccessKey,
   };
 
-  if (portalConfig) {
-    logger.debug(`Updating config for ${portalId}`);
-    const index = config.portals.indexOf(portalConfig);
-    config.portals[index] = nextPortalConfig;
+  let accounts = getConfigAccounts(config);
+  if (accountConfig) {
+    logger.debug(`Updating config for ${accountId}`);
+    const index = accounts.indexOf(accountConfig);
+    accounts[index] = nextAccountConfig;
   } else {
-    logger.debug(`Adding config entry for ${portalId}`);
-    if (config.portals) {
-      config.portals.push(nextPortalConfig);
+    logger.debug(`Adding config entry for ${accountId}`);
+    if (accounts) {
+      accounts.push(nextAccountConfig);
     } else {
-      config.portals = [nextPortalConfig];
+      accounts = [nextAccountConfig];
     }
   }
-  return nextPortalConfig;
+  return nextAccountConfig;
 };
 
 /**
  * @throws {Error}
  */
-const updateDefaultPortal = defaultPortal => {
+const updateDefaultAccount = defaultAccount => {
   if (
-    !defaultPortal ||
-    (typeof defaultPortal !== 'number' && typeof defaultPortal !== 'string')
+    !defaultAccount ||
+    (typeof defaultAccount !== 'number' && typeof defaultAccount !== 'string')
   ) {
     throw new Error(
-      'A defaultPortal with value of number or string is required to update the config'
+      'A defaultAccount with value of number or string is required to update the config'
     );
   }
 
   const config = getAndLoadConfigIfNeeded();
-  config.defaultPortal = defaultPortal;
+  if (config.defaultAccount) {
+    config.defaultAccount = defaultAccount;
+  }
+  // Keep for backcompat
+  if (config.defaultPortal) {
+    config.defaultPortal = defaultAccount;
+  }
+
   setDefaultConfigPathIfUnset();
   writeConfig();
 };
@@ -553,18 +600,24 @@ const getConfigVariablesFromEnv = () => {
     clientId: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_ID],
     clientSecret: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_SECRET],
     personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
-    portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
+    accountId: parseInt(
+      env[
+        ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID ||
+          ENVIRONMENT_VARIABLES.HUBSPOT_ACCOUNT_ID
+      ],
+      10
+    ),
     refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
     env: getValidEnv(env[ENVIRONMENT_VARIABLES.HUBSPOT_ENVIRONMENT]),
   };
 };
 
-const generatePersonalAccessKeyConfig = (portalId, personalAccessKey, env) => {
+const generatePersonalAccessKeyConfig = (accountId, personalAccessKey, env) => {
   return {
-    portals: [
+    accounts: [
       {
         authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        portalId,
+        accountId,
         personalAccessKey,
         env,
       },
@@ -573,7 +626,7 @@ const generatePersonalAccessKeyConfig = (portalId, personalAccessKey, env) => {
 };
 
 const generateOauthConfig = (
-  portalId,
+  accountId,
   clientId,
   clientSecret,
   refreshToken,
@@ -581,10 +634,10 @@ const generateOauthConfig = (
   env
 ) => {
   return {
-    portals: [
+    accounts: [
       {
         authType: OAUTH_AUTH_METHOD.value,
-        portalId,
+        accountId,
         auth: {
           clientId,
           clientSecret,
@@ -599,12 +652,12 @@ const generateOauthConfig = (
   };
 };
 
-const generateApiKeyConfig = (portalId, apiKey, env) => {
+const generateApiKeyConfig = (accountId, apiKey, env) => {
   return {
-    portals: [
+    accounts: [
       {
         authType: API_KEY_AUTH_METHOD.value,
-        portalId,
+        accountId,
         apiKey,
         env,
       },
@@ -618,20 +671,20 @@ const loadConfigFromEnvironment = () => {
     clientId,
     clientSecret,
     personalAccessKey,
-    portalId,
+    accountId,
     refreshToken,
     env,
   } = getConfigVariablesFromEnv();
 
-  if (!portalId) {
+  if (!accountId) {
     return;
   }
 
   if (personalAccessKey) {
-    return generatePersonalAccessKeyConfig(portalId, personalAccessKey, env);
+    return generatePersonalAccessKeyConfig(accountId, personalAccessKey, env);
   } else if (clientId && clientSecret && refreshToken) {
     return generateOauthConfig(
-      portalId,
+      accountId,
       clientId,
       clientSecret,
       refreshToken,
@@ -639,7 +692,7 @@ const loadConfigFromEnvironment = () => {
       env
     );
   } else if (apiKey) {
-    return generateApiKeyConfig(portalId, apiKey, env);
+    return generateApiKeyConfig(accountId, apiKey, env);
   } else {
     return;
   }
@@ -651,10 +704,10 @@ const loadEnvironmentVariableConfig = () => {
   if (!envConfig) {
     return;
   }
-  const { portalId } = getConfigVariablesFromEnv();
+  const { accountId } = getConfigVariablesFromEnv();
 
   logger.debug(
-    `Loaded config from enviroment variables for portal ${portalId}`
+    `Loaded config from environment variables for account ${accountId}`
   );
 
   return setConfig(envConfig);
@@ -665,21 +718,26 @@ module.exports = {
   getAndLoadConfigIfNeeded,
   getEnv,
   getConfig,
+  getConfigAccounts,
+  getConfigDefaultAccount,
+  getConfigAccountId,
   getConfigPath,
+  getOrderedAccount,
+  getOrderedConfig,
   setConfig,
   setConfigPath,
   loadConfig,
   findConfig,
   loadConfigFromEnvironment,
-  getPortalConfig,
-  getPortalId,
-  updatePortalConfig,
-  updateDefaultPortal,
+  getAccountConfig,
+  getAccountId,
+  updateAccountConfig,
+  updateDefaultAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   isTrackingAllowed,
   validateConfig,
   writeConfig,
   configFilenameIsIgnoredByGitignore,
-  portalNameExistsInConfig,
+  accountNameExistsInConfig,
 };

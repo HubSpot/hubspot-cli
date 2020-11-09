@@ -166,7 +166,7 @@ function getTypeDataFromPath(src) {
 
 /**
  * @typedef {Object} FileMapperInputArguments
- * @property {number} portalId
+ * @property {number} accountId
  * @property {string} src
  * @property {string} dest
  * @property {string} mode
@@ -219,7 +219,7 @@ async function writeUtimes(input, filepath, node) {
       err,
       new FileSystemErrorContext({
         filepath,
-        portalId: input.portalId,
+        accountId: input.accountId,
         write: true,
       })
     );
@@ -264,10 +264,10 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
     logger.error(message);
     throw new Error(message);
   }
-  const { portalId } = input;
+  const { accountId } = input;
 
   try {
-    const node = await fetchFileStream(portalId, srcPath, filepath, {
+    const node = await fetchFileStream(accountId, srcPath, filepath, {
       qs: getFileMapperApiQueryFromMode(input.mode),
     });
     await writeUtimes(input, filepath, node);
@@ -275,7 +275,7 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
     logApiErrorInstance(
       err,
       new ApiErrorContext({
-        portalId,
+        accountId,
         request: srcPath,
       })
     );
@@ -315,7 +315,7 @@ async function writeFileMapperNode(input, node, filepath) {
       err,
       new FileSystemErrorContext({
         filepath,
-        portalId: input.portalId,
+        accountId: input.accountId,
         write: true,
       })
     );
@@ -390,7 +390,7 @@ async function downloadFile(input) {
  * @returns {Promise<FileMapperNode}
  */
 async function fetchFolderFromApi(input) {
-  const { portalId, src, mode } = input;
+  const { accountId, src, mode } = input;
   const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
@@ -399,12 +399,12 @@ async function fetchFolderFromApi(input) {
     const srcPath = isRoot ? '@root' : src;
     const qs = getFileMapperApiQueryFromMode(mode);
     const node = isHubspot
-      ? await downloadDefault(portalId, srcPath, { qs })
-      : await download(portalId, srcPath, { qs });
+      ? await downloadDefault(accountId, srcPath, { qs })
+      : await download(accountId, srcPath, { qs });
     logger.log(
-      'Fetched "%s" from portal %d from the Desing Manager successfully',
+      'Fetched "%s" from account %d from the Design Manager successfully',
       src,
-      portalId
+      accountId
     );
     return node;
   } catch (err) {
@@ -414,7 +414,7 @@ async function fetchFolderFromApi(input) {
       logApiErrorInstance(
         err,
         new ApiErrorContext({
-          portalId,
+          accountId,
           request: src,
         })
       );

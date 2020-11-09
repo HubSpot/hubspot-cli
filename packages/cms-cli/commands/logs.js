@@ -1,10 +1,10 @@
 const readline = require('readline');
 const ora = require('ora');
 const {
-  addPortalOptions,
+  addAccountOptions,
   addConfigOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -26,19 +26,19 @@ const {
   getLatestFunctionLog,
 } = require('@hubspot/cms-lib/api/results');
 const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
-const { validatePortal } = require('../lib/validation');
+const { validateAccount } = require('../lib/validation');
 
 const TAIL_DELAY = 5000;
 
-const makeSpinner = (functionPath, portalIdentifier) => {
+const makeSpinner = (functionPath, accountId) => {
   return ora(
-    `Waiting for log entries for '${functionPath}' on portal '${portalIdentifier}'.\n`
+    `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
   );
 };
 
-const makeTailCall = (portalId, functionId) => {
+const makeTailCall = (accountId, functionId) => {
   return async after => {
-    const latestLog = await getFunctionLogs(portalId, functionId, { after });
+    const latestLog = await getFunctionLogs(accountId, functionId, { after });
     return latestLog;
   };
 };
@@ -60,7 +60,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -68,26 +68,26 @@ const loadAndValidateOptions = async options => {
 const tailLogs = async ({
   functionId,
   functionPath,
-  portalId,
-  portalName,
+  accountId,
+  accountName,
   compact,
 }) => {
-  const tailCall = makeTailCall(portalId, functionId);
-  const spinner = makeSpinner(functionPath, portalName || portalId);
+  const tailCall = makeTailCall(accountId, functionId);
+  const spinner = makeSpinner(functionPath, accountName || accountId);
   let initialAfter;
 
   spinner.start();
 
   try {
-    const latestLog = await getLatestFunctionLog(portalId, functionId);
+    const latestLog = await getLatestFunctionLog(accountId, functionId);
     initialAfter = base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {
       await logServerlessFunctionApiErrorInstance(
-        portalId,
+        accountId,
         e,
-        new ApiErrorContext({ portalId, functionPath })
+        new ApiErrorContext({ accountId, functionPath })
       );
     }
   }
@@ -122,9 +122,9 @@ exports.handler = async options => {
 
   const { latest, follow, compact, path: functionPath } = options;
   let logsResp;
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('logs', { latest }, portalId);
+  trackCommandUsage('logs', { latest }, accountId);
 
   logger.debug(
     `Getting ${
@@ -132,12 +132,12 @@ exports.handler = async options => {
     }logs for function with path: ${functionPath}`
   );
 
-  const functionResp = await getFunctionByPath(portalId, functionPath).catch(
+  const functionResp = await getFunctionByPath(accountId, functionPath).catch(
     async e => {
       await logServerlessFunctionApiErrorInstance(
-        portalId,
+        accountId,
         e,
-        new ApiErrorContext({ portalId, functionPath })
+        new ApiErrorContext({ accountId, functionPath })
       );
       process.exit();
     }
@@ -149,14 +149,14 @@ exports.handler = async options => {
     await tailLogs({
       functionId: functionResp.id,
       functionPath,
-      portalId,
-      Name: options.portal,
+      accountId,
+      accountName: options.portal || options.account,
       compact,
     });
   } else if (latest) {
-    logsResp = await getLatestFunctionLog(portalId, functionResp.id);
+    logsResp = await getLatestFunctionLog(accountId, functionResp.id);
   } else {
-    logsResp = await getFunctionLogs(portalId, functionResp.id, options);
+    logsResp = await getFunctionLogs(accountId, functionResp.id, options);
   }
 
   if (logsResp) {
@@ -194,7 +194,7 @@ exports.builder = yargs => {
     .conflicts('follow', 'limit');
 
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   return yargs;

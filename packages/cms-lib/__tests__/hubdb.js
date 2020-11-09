@@ -14,7 +14,7 @@ jest.mock('../api/hubdb');
 
 describe('cms-lib/hubdb', () => {
   it('downloads hubdb table', async () => {
-    const portalId = 123;
+    const accountId = 123;
     const tableId = 456;
     const destPath = 'tmp.json';
     const projectCwd = '/home/tom/projects';
@@ -24,7 +24,7 @@ describe('cms-lib/hubdb', () => {
     hubdb.fetchRows.mockReturnValue(hubdbFetchRowResponse);
     hubdb.fetchTable.mockReturnValue(hubdbFetchTableResponse);
 
-    const { filePath } = await downloadHubDbTable(portalId, tableId, destPath);
+    const { filePath } = await downloadHubDbTable(accountId, tableId, destPath);
     const fileOutput = JSON.parse(fs.outputFile.mock.results[0].value);
 
     describe('outputs correct rows', () => {
@@ -44,7 +44,7 @@ describe('cms-lib/hubdb', () => {
   });
 
   it('uploads hubdb table', async () => {
-    const portalId = 123;
+    const accountId = 123;
     const srcPath = 'tmp.json';
     const projectCwd = '/home/tom/projects';
 
@@ -55,7 +55,7 @@ describe('cms-lib/hubdb', () => {
     hubdb.createRows.mockReturnValue(hubdbCreateRowsResponse);
     hubdb.publishTable.mockReturnValue(hubdbPublishTableResponse);
 
-    const table = await createHubDbTable(portalId, `${projectCwd}/${srcPath}`);
+    const table = await createHubDbTable(accountId, `${projectCwd}/${srcPath}`);
 
     describe('has the correct number of rows', () => {
       expect(table.rowCount).toEqual(3);

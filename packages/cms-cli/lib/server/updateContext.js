@@ -9,8 +9,8 @@ const { fetchContent } = require('@hubspot/cms-lib/api/content');
 const { fetchBlogs } = require('@hubspot/cms-lib/api/blogs');
 const { fetchMenus } = require('@hubspot/cms-lib/api/designManager');
 
-async function writeObjects(portalId, contextPath, objectType, objects) {
-  const dest = path.join(contextPath, objectType, portalId.toString());
+async function writeObjects(accountId, contextPath, objectType, objects) {
+  const dest = path.join(contextPath, objectType, accountId.toString());
   logger.debug('Writing %s data to %s', objectType, dest);
   fs.mkdirpSync(dest);
   return Promise.all(
@@ -21,14 +21,14 @@ async function writeObjects(portalId, contextPath, objectType, objects) {
   );
 }
 
-async function fetchAll(portalId, apiHelper, params) {
+async function fetchAll(accountId, apiHelper, params) {
   let objects = [];
   let count = 0;
   let totalObjects = null;
   let offset = 0;
 
   while (totalObjects === null || count < totalObjects) {
-    const response = await apiHelper(portalId, { ...params, offset });
+    const response = await apiHelper(accountId, { ...params, offset });
     if (totalObjects === null) {
       totalObjects = response.total;
     }
@@ -56,43 +56,43 @@ function copyDefaultContext(contextPath) {
   });
 }
 
-async function updateServerContext(portalId, contextPath) {
+async function updateServerContext(accountId, contextPath) {
   copyDefaultContext(contextPath);
 
   try {
-    const blogs = await fetchAll(portalId, fetchBlogs, { casing: 'snake_r' });
-    await writeObjects(portalId, contextPath, 'blogs', blogs);
+    const blogs = await fetchAll(accountId, fetchBlogs, { casing: 'snake_r' });
+    await writeObjects(accountId, contextPath, 'blogs', blogs);
   } catch (e) {
     logErrorInstance(
       e,
       new ApiErrorContext({
-        portalId,
+        accountId,
       })
     );
   }
   try {
-    const contentObjects = await fetchAll(portalId, fetchContent, {
+    const contentObjects = await fetchAll(accountId, fetchContent, {
       casing: 'snake_r',
     });
-    await writeObjects(portalId, contextPath, 'content', contentObjects);
+    await writeObjects(accountId, contextPath, 'content', contentObjects);
   } catch (e) {
     logErrorInstance(
       e,
       new ApiErrorContext({
-        portalId,
+        accountId,
       })
     );
   }
   try {
-    const menus = await fetchAll(portalId, fetchMenus, {
+    const menus = await fetchAll(accountId, fetchMenus, {
       casing: 'snake_r',
     });
-    await writeObjects(portalId, contextPath, 'menus', menus);
+    await writeObjects(accountId, contextPath, 'menus', menus);
   } catch (e) {
     logErrorInstance(
       e,
       new ApiErrorContext({
-        portalId,
+        accountId,
       })
     );
   }

@@ -1,5 +1,5 @@
 const { trackUsage } = require('@hubspot/cms-lib/api/fileMapper');
-const { getPortalConfig } = require('@hubspot/cms-lib');
+const { getAccountConfig } = require('@hubspot/cms-lib');
 const { isTrackingAllowed } = require('@hubspot/cms-lib/lib/config');
 const { API_KEY_AUTH_METHOD } = require('@hubspot/cms-lib/lib/constants');
 const { logger } = require('@hubspot/cms-lib/logger');
@@ -19,17 +19,17 @@ const getNodeVersionData = () => ({
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
 
-function trackCommandUsage(command, meta = {}, portalId) {
+function trackCommandUsage(command, meta = {}, accountId) {
   if (!isTrackingAllowed()) {
     return;
   }
   logger.debug('Attempting to track usage of "%s" command', command);
   let authType = 'unknown';
-  if (portalId) {
-    const portalConfig = getPortalConfig(portalId);
+  if (accountId) {
+    const accountConfig = getAccountConfig(accountId);
     authType =
-      portalConfig && portalConfig.authType
-        ? portalConfig.authType
+      accountConfig && accountConfig.authType
+        ? accountConfig.authType
         : API_KEY_AUTH_METHOD.value;
   }
   setImmediate(async () => {
@@ -47,7 +47,7 @@ function trackCommandUsage(command, meta = {}, portalId) {
         'cli-interaction',
         EventClass.INTERACTION,
         usageTrackingEvent,
-        portalId
+        accountId
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
@@ -85,7 +85,7 @@ const addHelpUsageTracking = (program, command) => {
   });
 };
 
-const trackAuthAction = async (command, authType, step, portalId) => {
+const trackAuthAction = async (command, authType, step, accountId) => {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -103,7 +103,7 @@ const trackAuthAction = async (command, authType, step, portalId) => {
       'cli-interaction',
       EventClass.INTERACTION,
       usageTrackingEvent,
-      portalId
+      accountId
     );
 
     logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);

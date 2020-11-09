@@ -8,15 +8,15 @@ const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { clearHubDbTableRows } = require('@hubspot/cms-lib/hubdb');
 const { publishTable } = require('@hubspot/cms-lib/api/hubdb');
 
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
-  addPortalOptions,
+  addAccountOptions,
   addUseEnvironmentOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 
@@ -31,18 +31,18 @@ exports.handler = async options => {
   loadConfig(configPath);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-clear', {}, portalId);
+  trackCommandUsage('hubdb-clear', {}, accountId);
 
   try {
-    const { deletedRowCount } = await clearHubDbTableRows(portalId, tableId);
+    const { deletedRowCount } = await clearHubDbTableRows(accountId, tableId);
     if (deletedRowCount > 0) {
       logger.log(`Removed ${deletedRowCount} rows from HubDB table ${tableId}`);
-      const { rowCount } = await publishTable(portalId, tableId);
+      const { rowCount } = await publishTable(accountId, tableId);
       logger.log(`HubDB table ${tableId} now contains ${rowCount} rows`);
     } else {
       logger.log(`HubDB table ${tableId} is already empty`);
@@ -53,7 +53,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addConfigOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 

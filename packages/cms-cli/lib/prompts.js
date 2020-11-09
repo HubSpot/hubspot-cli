@@ -28,16 +28,16 @@ const personalAccessKeyPrompt = async ({ env } = {}) => {
   };
 };
 
-const PORTAL_ID = {
-  name: 'portalId',
+const ACCOUNT_ID = {
+  name: 'accountId',
   message:
-    'Enter the portal ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):',
+    'Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):',
   type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
       return true;
     }
-    return 'You did not enter a valid portal ID. Please try again.';
+    return 'You did not enter a valid account ID. Please try again.';
   },
 };
 
@@ -69,7 +69,7 @@ const CLIENT_SECRET = {
   },
 };
 
-const PORTAL_NAME = {
+const ACCOUNT_NAME = {
   name: 'name',
   message: 'Enter a unique name to reference your account:',
   validate(val) {
@@ -84,10 +84,10 @@ const PORTAL_NAME = {
   },
 };
 
-const PORTAL_API_KEY = {
+const ACCOUNT_API_KEY = {
   name: 'apiKey',
   message:
-    'Enter the API key for your portal (found at https://app.hubspot.com/l/api-key):',
+    'Enter the API key for your account (found at https://app.hubspot.com/l/api-key):',
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
       return 'You did not enter a valid API key. Please try again.';
@@ -124,17 +124,17 @@ const SCOPES = {
   choices: OAUTH_SCOPES,
 };
 
-const OAUTH_FLOW = [PORTAL_NAME, PORTAL_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
-const API_KEY_FLOW = [PORTAL_NAME, PORTAL_ID, PORTAL_API_KEY];
+const OAUTH_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
+const API_KEY_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, ACCOUNT_API_KEY];
 
 module.exports = {
   promptUser,
   personalAccessKeyPrompt,
   CLIENT_ID,
   CLIENT_SECRET,
-  PORTAL_API_KEY,
-  PORTAL_ID,
-  PORTAL_NAME,
+  ACCOUNT_API_KEY,
+  ACCOUNT_ID,
+  ACCOUNT_NAME,
   SCOPES,
   PERSONAL_ACCESS_KEY,
 

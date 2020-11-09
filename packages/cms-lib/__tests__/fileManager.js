@@ -21,16 +21,16 @@ describe('uploadFolder', () => {
       uploadFile.mockImplementation(() => Promise.resolve());
       createIgnoreFilter.mockImplementation(() => () => true);
 
-      const portalId = 123;
+      const accountId = 123;
       const src = 'folder';
       const dest = 'folder';
 
-      await uploadFolder(portalId, src, dest, { cwd: '/home/tom' });
+      await uploadFolder(accountId, src, dest, { cwd: '/home/tom' });
 
       expect(uploadFile).toReturnTimes(4);
 
       files.forEach((file, index) => {
-        expect(uploadFile).nthCalledWith(index + 1, portalId, file, file);
+        expect(uploadFile).nthCalledWith(index + 1, accountId, file, file);
       });
     });
   });

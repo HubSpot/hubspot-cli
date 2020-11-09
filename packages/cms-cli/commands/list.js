@@ -1,14 +1,14 @@
 const chalk = require('chalk');
 const {
-  addPortalOptions,
+  addAccountOptions,
   addConfigOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { validatePortal } = require('../lib/validation');
+const { validateAccount } = require('../lib/validation');
 const { isPathFolder } = require('../lib/filesystem');
 const {
   loadConfig,
@@ -35,7 +35,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -48,20 +48,20 @@ exports.handler = async options => {
 
   const { path } = options;
   const directoryPath = path || '/';
-  const portalId = getPortalId(options);
+  const accountId = getAccountId(options);
   let contentsResp;
 
-  trackCommandUsage('list', {}, portalId);
+  trackCommandUsage('list', {}, accountId);
 
   logger.debug(`Getting contents of ${directoryPath}`);
 
   try {
-    contentsResp = await getDirectoryContentsByPath(portalId, directoryPath);
+    contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
   } catch (e) {
     logApiErrorInstance(
-      portalId,
+      accountId,
       e,
-      new ApiErrorContext({ portalId, directoryPath })
+      new ApiErrorContext({ accountId, directoryPath })
     );
     process.exit();
   }
@@ -110,7 +110,7 @@ exports.builder = yargs => {
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
 
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   return yargs;
