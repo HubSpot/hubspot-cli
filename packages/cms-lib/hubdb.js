@@ -135,20 +135,22 @@ async function downloadHubDbTable(accountId, tableId, dest) {
     validateJsonPath(dest);
   }
 
-  let totalRows = null;
   let rows = [];
-  let count = 0;
-  let offset = 0;
-  while (totalRows === null || count < totalRows) {
-    const response = await fetchRows(accountId, tableId, { offset });
-    if (totalRows === null) {
-      totalRows = response.total;
-    }
+  let after = null;
+  do {
+    const { paging, results } = await fetchRows(
+      accountId,
+      tableId,
+      after ? { after } : null
+    );
 
-    count += response.results.length;
-    offset += response.results.length;
-    rows = rows.concat(response.results);
-  }
+    rows = rows.concat(results);
+    after = paging && paging.next ? paging.next.after : null;
+
+    if (after === null) {
+      break;
+    }
+  } while (after !== null);
 
   const tableToWrite = JSON.stringify(convertToJSON(table, rows));
   const tableJson = prettier.format(tableToWrite, {
