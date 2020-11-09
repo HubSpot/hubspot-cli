@@ -124,17 +124,7 @@ function convertToJSON(table, rows) {
   };
 }
 
-async function downloadHubDbTable(accountId, tableId, dest) {
-  const table = await fetchTable(accountId, tableId);
-
-  dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
-
-  if (fs.pathExistsSync(dest)) {
-    validateJsonFile(dest);
-  } else {
-    validateJsonPath(dest);
-  }
-
+async function _fetchRows(accountId, tableId) {
   let rows = [];
   let after = null;
   do {
@@ -152,6 +142,21 @@ async function downloadHubDbTable(accountId, tableId, dest) {
     }
   } while (after !== null);
 
+  return rows;
+}
+
+async function downloadHubDbTable(accountId, tableId, dest) {
+  const table = await fetchTable(accountId, tableId);
+
+  dest = path.resolve(getCwd(), dest || `${table.name}.hubdb.json`);
+
+  if (fs.pathExistsSync(dest)) {
+    validateJsonFile(dest);
+  } else {
+    validateJsonPath(dest);
+  }
+
+  const rows = await _fetchRows(accountId, tableId);
   const tableToWrite = JSON.stringify(convertToJSON(table, rows));
   const tableJson = prettier.format(tableToWrite, {
     parser: 'json',
@@ -163,22 +168,12 @@ async function downloadHubDbTable(accountId, tableId, dest) {
 }
 
 async function clearHubDbTableRows(accountId, tableId) {
-  let totalRows = null;
-  let rows = [];
-  let count = 0;
-  let offset = 0;
-  while (totalRows === null || count < totalRows) {
-    const response = await fetchRows(accountId, tableId, { offset });
-    if (totalRows === null) {
-      totalRows = response.total;
-    }
-
-    count += response.results.length;
-    offset += response.results.length;
-    const rowIds = response.results.map(row => row.id);
-    rows = rows.concat(rowIds);
-  }
-  await deleteRows(accountId, tableId, rows);
+  const rows = await _fetchRows(accountId, tableId);
+  await deleteRows(
+    accountId,
+    tableId,
+    rows.map(row => row.id)
+  );
 
   return {
     deletedRowCount: rows.length,
