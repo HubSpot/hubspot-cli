@@ -40,8 +40,8 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'package <path>';
-exports.describe =
-  'builds a new dependency bundle for the specified .functions folder';
+exports.describe = false;
+// Uncomment to unhide 'builds a new dependency bundle for the specified .functions folder';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
