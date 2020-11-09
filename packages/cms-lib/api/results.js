@@ -7,9 +7,7 @@ async function getFunctionLogs(accountId, functionId, query = {}) {
 
   return http.get(accountId, {
     uri: `${RESULTS_API_PATH}/${functionId}`,
-    query: {
-      limit,
-    },
+    query: { ...query, limit },
   });
 }
 
