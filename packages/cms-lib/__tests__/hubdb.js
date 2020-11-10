@@ -4,6 +4,7 @@ const hubdb = require('../api/hubdb');
 const { getCwd } = require('../path');
 const hubdbJson = require('./fixtures/hubdb/hubdbTableData');
 const hubdbFetchRowResponse = require('./fixtures/hubdb/hubdbFetchRowsResponse.json');
+const hubdbFetchRowsWithPagingResponse = require('./fixtures/hubdb/hubdbFetchRowsWithPaging.json');
 const hubdbFetchTableResponse = require('./fixtures/hubdb/hubdbFetchTableResponse.json');
 const hubdbCreateTableResponse = require('./fixtures/hubdb/hubdbCreateTableResponse.json');
 const hubdbCreateRowsResponse = require('./fixtures/hubdb/hubdbCreateRowsResponse.json');
@@ -40,6 +41,28 @@ describe('cms-lib/hubdb', () => {
     });
     describe('returns destination file path', () => {
       expect(filePath).toEqual(`${projectCwd}/${destPath}`);
+    });
+  });
+
+  describe('paging', () => {
+    it('fetches all results', async () => {
+      const accountId = 123;
+      const tableId = 456;
+      const destPath = 'tmp.json';
+      const projectCwd = '/home/tom/projects';
+
+      getCwd.mockReturnValue(projectCwd);
+
+      hubdb.fetchRows.mockReturnValue(hubdbFetchRowResponse);
+      hubdb.fetchTable.mockReturnValue(hubdbFetchTableResponse);
+
+      hubdb.fetchRows.mockReturnValueOnce(hubdbFetchRowsWithPagingResponse);
+
+      await downloadHubDbTable(accountId, tableId, destPath);
+      const fileOutput = JSON.parse(fs.outputFile.mock.results[1].value);
+      expect(fileOutput.rows.length).toEqual(6);
+      expect(fileOutput.rows[0].name).toMatchInlineSnapshot(`"Paging 1"`);
+      expect(fileOutput.rows[5].name).toMatchInlineSnapshot(`"My Best Event"`);
     });
   });
 
