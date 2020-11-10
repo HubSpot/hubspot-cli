@@ -1,4 +1,5 @@
 const { cleanSchema, writeSchemaToDisk, logSchemas } = require('../schema');
+const chalk = require('chalk');
 const basic = require('./fixtures/schema/basic.json');
 const full = require('./fixtures/schema/full.json');
 const { getCwd } = require('@hubspot/cms-lib/path');
@@ -36,6 +37,7 @@ describe('cms-lib/schema', () => {
   describe('logSchemas()', () => {
     it('logs schemas', () => {
       const spy = jest.spyOn(logger, 'log');
+      chalk.level = 0;
       logSchemas([basic]);
       expect(spy.mock.calls[0][0]).toMatchSnapshot();
     });

@@ -425,33 +425,20 @@ const getAccountConfig = accountId =>
 /*
  * Returns a accountId from the config if it exists, else returns null
  */
-const getAccountId = nameOrId => {
+const getAccountId = _nameOrId => {
   const config = getAndLoadConfigIfNeeded();
-  let name;
-  let accountId;
-  let account;
 
-  if (!nameOrId) {
-    const defaultAccount = getConfigDefaultAccount(config);
-
-    if (defaultAccount) {
-      name = defaultAccount;
-    }
-  } else {
-    if (typeof nameOrId === 'number') {
-      accountId = nameOrId;
-    } else if (/^\d+$/.test(nameOrId)) {
-      accountId = parseInt(nameOrId, 10);
-    } else {
-      name = nameOrId;
-    }
+  let nameOrId = _nameOrId || getConfigDefaultAccount(config);
+  if (/^\d+$/.test(nameOrId)) {
+    nameOrId = parseInt(nameOrId, 10);
   }
 
   const accounts = getConfigAccounts(config);
-  if (name) {
-    account = accounts.find(p => p.name === name);
-  } else if (accountId) {
-    account = accounts.find(p => [p.accountId, p.portalId].includes(accountId));
+  let account;
+  if (nameOrId) {
+    account = accounts.find(
+      a => a.name === nameOrId || [a.accountId, a.portalId].includes(nameOrId)
+    );
   }
 
   if (account) {

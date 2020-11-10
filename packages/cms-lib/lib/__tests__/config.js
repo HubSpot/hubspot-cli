@@ -124,6 +124,15 @@ describe('lib/config', () => {
     it('returns defaultAccount from config', () => {
       expect(getAccountId()).toEqual(PERSONAL_ACCESS_KEY_CONFIG.accountId);
     });
+
+    it('supports defaultAccount also being an accountId', () => {
+      setConfig({
+        defaultAccount: PERSONAL_ACCESS_KEY_CONFIG.accountId,
+        accounts: ACCOUNTS,
+      });
+
+      expect(getAccountId()).toEqual(PERSONAL_ACCESS_KEY_CONFIG.accountId);
+    });
   });
 
   describe('updateDefaultAccount method', () => {
