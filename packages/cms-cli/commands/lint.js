@@ -34,7 +34,8 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'lint <path>';
-exports.describe = 'Lint a file or folder for HubL syntax';
+// Hiding since this command is still experimental
+exports.describe = null; //'Lint a file or folder for HubL syntax';
 
 exports.handler = async options => {
   const { path: lintPath } = options;
