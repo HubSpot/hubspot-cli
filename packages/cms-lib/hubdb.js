@@ -124,7 +124,7 @@ function convertToJSON(table, rows) {
   };
 }
 
-async function _fetchRows(accountId, tableId) {
+async function fetchAllRows(accountId, tableId) {
   let rows = [];
   let after = null;
   do {
@@ -152,7 +152,7 @@ async function downloadHubDbTable(accountId, tableId, dest) {
     validateJsonPath(dest);
   }
 
-  const rows = await _fetchRows(accountId, tableId);
+  const rows = await fetchAllRows(accountId, tableId);
   const tableToWrite = JSON.stringify(convertToJSON(table, rows));
   const tableJson = prettier.format(tableToWrite, {
     parser: 'json',
@@ -164,7 +164,7 @@ async function downloadHubDbTable(accountId, tableId, dest) {
 }
 
 async function clearHubDbTableRows(accountId, tableId) {
-  const rows = await _fetchRows(accountId, tableId);
+  const rows = await fetchAllRows(accountId, tableId);
   await deleteRows(
     accountId,
     tableId,
