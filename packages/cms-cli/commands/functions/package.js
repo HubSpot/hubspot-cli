@@ -1,9 +1,9 @@
 const ora = require('ora');
 const {
-  addPortalOptions,
+  addAccountOptions,
   addConfigOptions,
   setLogLevel,
-  getPortalId,
+  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -19,11 +19,11 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { buildPackage } = require('@hubspot/cms-lib/api/functions');
-const { validatePortal } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 
-const makeSpinner = (functionPath, portalIdentifier) => {
+const makeSpinner = (functionPath, accountIdentifier) => {
   return ora(
-    `Building new bundle for '${functionPath}' on portal '${portalIdentifier}'.\n`
+    `Building new bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
   );
 };
 
@@ -34,7 +34,7 @@ const loadAndValidateOptions = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validatePortal(options)))) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 };
@@ -47,10 +47,10 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { path: functionPath } = options;
-  const portalId = getPortalId(options);
-  const spinner = makeSpinner(functionPath, portalId);
+  const accountId = getAccountId(options);
+  const spinner = makeSpinner(functionPath, accountId);
 
-  trackCommandUsage('functions-package', { functionPath }, portalId);
+  trackCommandUsage('functions-package', { functionPath }, accountId);
 
   const splitFunctionPath = functionPath.split('.');
 
@@ -68,10 +68,10 @@ exports.handler = async options => {
 
   spinner.start();
   try {
-    await buildPackage(portalId, `${functionPath}/package.json`);
+    await buildPackage(accountId, `${functionPath}/package.json`);
     spinner.stop();
     logger.success(
-      `Successfully built bundle from package.json for ${functionPath} on portal ${portalId}.`
+      `Successfully built bundle from package.json for ${functionPath} on account ${accountId}.`
     );
   } catch (e) {
     spinner.stop();
@@ -79,9 +79,9 @@ exports.handler = async options => {
       logger.error(`Unable to find package.json for function ${functionPath}.`);
     } else {
       logApiErrorInstance(
-        portalId,
+        accountId,
         e,
-        new ApiErrorContext({ portalId, functionPath })
+        new ApiErrorContext({ accountId, functionPath })
       );
     }
   }
@@ -100,7 +100,7 @@ exports.builder = yargs => {
   ]);
 
   addConfigOptions(yargs, true);
-  addPortalOptions(yargs, true);
+  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   return yargs;
