@@ -20,7 +20,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
-const { getFunctionByPath } = require('@hubspot/cms-lib/api/function');
+const { getFunctionByPath } = require('@hubspot/cms-lib/api/functions');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
