@@ -104,26 +104,6 @@ async function downloadFile(accountId, file, dest, options) {
     return;
   }
 
-  const logFsError = err => {
-    logFileSystemErrorInstance(
-      err,
-      new FileSystemErrorContext({
-        destPath,
-        accountId,
-        write: true,
-      })
-    );
-  };
-  let writeStream;
-
-  try {
-    await fs.ensureFile(destPath);
-    writeStream = fs.createWriteStream(destPath, { encoding: 'binary' });
-  } catch (err) {
-    logFsError(err);
-    throw err;
-  }
-
   try {
     await http.getOctetStream(
       accountId,
@@ -131,7 +111,7 @@ async function downloadFile(accountId, file, dest, options) {
         baseUrl: file.url,
         uri: '',
       },
-      writeStream
+      destPath
     );
     logger.log(`Wrote file "${destPath}"`);
   } catch (err) {
@@ -174,6 +154,19 @@ async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
  * @param {object} options
  */
 async function fetchFolderContents(accountId, folder, dest, options) {
+  try {
+    await fs.ensureDir(dest);
+    logger.log('Wrote folder "%s"', dest);
+  } catch (err) {
+    logFileSystemErrorInstance(
+      err,
+      new FileSystemErrorContext({
+        dest,
+        accountId,
+        write: true,
+      })
+    );
+  }
   const files = await fetchAllPagedFiles(accountId, folder.id, options);
   for (const file of files) {
     await downloadFile(accountId, file, dest, options);
