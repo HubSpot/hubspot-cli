@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cms-cli",
-  "version": "2.2.1-beta.1",
+  "version": "2.2.1-beta.2",
   "description": "CLI for interacting with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
