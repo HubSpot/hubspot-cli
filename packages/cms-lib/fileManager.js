@@ -156,7 +156,6 @@ async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
 async function fetchFolderContents(accountId, folder, dest, options) {
   try {
     await fs.ensureDir(dest);
-    logger.log('Wrote folder "%s"', dest);
   } catch (err) {
     logFileSystemErrorInstance(
       err,
