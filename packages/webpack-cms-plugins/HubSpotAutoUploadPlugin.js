@@ -47,7 +47,9 @@ class HubSpotAutoUploadPlugin {
           const dest = `${this.dest}/${filename}`;
           upload(this.accountId, asset.existsAt, dest)
             .then(() => {
-              webpackLogger.info(`Uploaded ${dest} to ${this.accountId}`);
+              webpackLogger.info(
+                `Uploaded ${dest} to account ${this.accountId}`
+              );
             })
             .catch(error => {
               webpackLogger.error(`Uploading ${dest} failed`);
