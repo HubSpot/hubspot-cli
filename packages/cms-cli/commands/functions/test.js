@@ -34,6 +34,12 @@ const loadAndValidateOptions = async options => {
   }
 };
 
+/*
+  ==== TODO ====
+  - Handle functions with no package.json
+  - Handle functions with multiple methods
+*/
+
 const installDeps = folderPath => {
   const npmCmd = os.platform().startsWith('win') ? 'npm.cmd' : 'npm';
 
@@ -112,7 +118,6 @@ const runTestServer = async (port, accountId, functionPath) => {
 
       const { parsed } = config;
 
-      // console.log('main: ', main);
       try {
         const dataForFunc = {
           accountId,
@@ -121,9 +126,7 @@ const runTestServer = async (port, accountId, functionPath) => {
           ...environment,
         };
 
-        // console.log('dataForFunc: ', dataForFunc);
         await main(dataForFunc, sendResponseValue => {
-          // console.log('sendResponseValue: ', sendResponseValue);
           res.json(sendResponseValue);
         });
       } catch (e) {
