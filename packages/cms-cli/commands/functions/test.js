@@ -2,6 +2,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const cp = require('child_process');
+const os = require('os');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -37,7 +39,40 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const runTestServer = (accountId, functionPath) => {
+const installDeps = folderPath => {
+  const npmCmd = os.platform().startsWith('win') ? 'npm.cmd' : 'npm';
+
+  return new Promise((resolve, reject) => {
+    try {
+      // install folder
+      const npmInstallProcess = cp.spawn(npmCmd, ['i'], {
+        env: process.env,
+        cwd: folderPath,
+        stdio: 'inherit',
+      });
+
+      npmInstallProcess.on('exit', resolve);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+// const cleanupDeps = folderPath => {
+//   // Delete node_modules and package-lock.json from folderPath
+// };
+
+const loadEnvVars = folderPath => {
+  const dotEnvPathMaybe = `${folderPath}/.env`;
+
+  if (fs.existsSync(dotEnvPathMaybe)) {
+    return require('dotenv').config({ path: dotEnvPathMaybe });
+  }
+
+  return {};
+};
+
+const runTestServer = async (accountId, functionPath) => {
   /*
     Load .env from path
     Load serverless.json
@@ -60,15 +95,39 @@ const runTestServer = (accountId, functionPath) => {
     logger.error('No endpoints found in serverless.json.');
   }
 
+  await installDeps(functionPath);
+
   const app = express();
   routes.forEach(route => {
     const { method, file } = endpoints[route];
 
     // TODO - Handle multiple methods here
-    app[method.toLowerCase()](route, (/*req, res*/) => {
+    app[method.toLowerCase()](route, async req => {
       const { main } = require(path.resolve(`${functionPath}/${file}`));
+      const config = await loadEnvVars(functionPath);
+
+      if (config.error) {
+        throw config.error;
+      }
+
+      const { parsed } = config;
 
       console.log('main: ', main);
+      return new Promise((resolve, reject) => {
+        try {
+          const dataForFunc = {
+            accountId,
+            ...req,
+            ...parsed,
+          };
+
+          console.log('dataForFunc: ', dataForFunc);
+
+          return main(dataForFunc, resolve);
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
   });
 
