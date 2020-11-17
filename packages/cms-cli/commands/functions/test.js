@@ -82,7 +82,7 @@ const runTestServer = async (accountId, functionPath) => {
     Load package.json
       - Inject deps into functions
   */
-  const { endpoints /*environment, secrets*/ } = JSON.parse(
+  const { endpoints, environment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
@@ -118,6 +118,7 @@ const runTestServer = async (accountId, functionPath) => {
           accountId,
           ...req,
           ...parsed,
+          ...environment,
         };
 
         console.log('dataForFunc: ', dataForFunc);
