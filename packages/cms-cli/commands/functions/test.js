@@ -1,8 +1,8 @@
-// const ora = require('ora');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const cp = require('child_process');
+const util = require('util');
+const { spawn } = require('child_process');
 const os = require('os');
 const {
   addAccountOptions,
@@ -19,13 +19,8 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { validateAccount } = require('../../lib/validation');
-
-// const makeSpinner = (functionPath, accountIdentifier) => {
-//   return ora(
-//     `Test server running for '${functionPath}' on account '${accountIdentifier}'.\n`
-//   );
-// };
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -44,8 +39,7 @@ const installDeps = folderPath => {
 
   return new Promise((resolve, reject) => {
     try {
-      // install folder
-      const npmInstallProcess = cp.spawn(npmCmd, ['i'], {
+      const npmInstallProcess = spawn(npmCmd, ['i'], {
         env: process.env,
         cwd: folderPath,
         stdio: 'inherit',
@@ -58,9 +52,10 @@ const installDeps = folderPath => {
   });
 };
 
-// const cleanupDeps = folderPath => {
-//   // Delete node_modules and package-lock.json from folderPath
-// };
+const cleanupArtifacts = folderPath => {
+  fs.rmdirSync(`${folderPath}/node_modules`, { recursive: true });
+  fs.unlinkSync(`${folderPath}/package-lock.json`);
+};
 
 const loadEnvVars = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
@@ -72,16 +67,7 @@ const loadEnvVars = folderPath => {
   return {};
 };
 
-const runTestServer = async (accountId, functionPath) => {
-  /*
-    Load .env from path
-    Load serverless.json
-      - Mapping routes:files
-      - Environment?
-      - Secrets?
-    Load package.json
-      - Inject deps into functions
-  */
+const runTestServer = async (port, accountId, functionPath) => {
   const { endpoints, environment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
@@ -89,21 +75,35 @@ const runTestServer = async (accountId, functionPath) => {
   );
   const routes = Object.keys(endpoints);
 
-  console.log('serverlessJson endpoints: ', endpoints);
-
   if (!routes.length) {
-    logger.error('No endpoints found in serverless.json.');
+    logger.error(`No endpoints found in ${functionPath}/serverless.json.`);
+    return;
   }
 
   await installDeps(functionPath);
+  handleExit(() => {
+    cleanupArtifacts(functionPath);
+  });
 
   const app = express();
   routes.forEach(route => {
     const { method, file } = endpoints[route];
 
-    // TODO - Handle multiple methods here
+    // TODO - Handle multiple methods here(GET & POST)
     app[method.toLowerCase()](route, async (req, res) => {
-      const { main } = require(path.resolve(`${functionPath}/${file}`));
+      const functionFilePath = path.resolve(`${functionPath}/${file}`);
+      if (!fs.existsSync(functionFilePath)) {
+        logger.error(`Could not find file ${functionPath}/${file}.`);
+        return;
+      }
+      const { main } = require(functionFilePath);
+
+      if (!main) {
+        logger.error(
+          `Could not find "main" export in ${functionPath}/${file}.`
+        );
+      }
+
       const config = await loadEnvVars(functionPath);
 
       if (config.error) {
@@ -112,7 +112,7 @@ const runTestServer = async (accountId, functionPath) => {
 
       const { parsed } = config;
 
-      console.log('main: ', main);
+      // console.log('main: ', main);
       try {
         const dataForFunc = {
           accountId,
@@ -121,9 +121,9 @@ const runTestServer = async (accountId, functionPath) => {
           ...environment,
         };
 
-        console.log('dataForFunc: ', dataForFunc);
+        // console.log('dataForFunc: ', dataForFunc);
         await main(dataForFunc, sendResponseValue => {
-          console.log('sendResponseValue: ', sendResponseValue);
+          // console.log('sendResponseValue: ', sendResponseValue);
           res.json(sendResponseValue);
         });
       } catch (e) {
@@ -132,21 +132,29 @@ const runTestServer = async (accountId, functionPath) => {
     });
   });
 
-  app.listen(5432, () => {
-    console.log(`Example app listening at http://localhost:${5432}`);
+  app.listen(port, () => {
+    console.log(
+      `Local function test server running at http://localhost:${port}`
+    );
+    console.log(
+      'Endpoints: ',
+      util.inspect(endpoints, {
+        colors: true,
+        compact: true,
+        depth: 'Infinity',
+      })
+    );
   });
 };
 
 exports.command = 'test <path>';
 exports.describe = false;
-// Uncomment to unhide 'builds a new dependency bundle for the specified .functions folder';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: functionPath } = options;
+  const { path: functionPath, port } = options;
   const accountId = getAccountId(options);
-  // const spinner = makeSpinner(functionPath, accountId);
 
   trackCommandUsage('functions-test', { functionPath }, accountId);
 
@@ -164,12 +172,9 @@ exports.handler = async options => {
     `Starting test server for .functions folder with path: ${functionPath}`
   );
 
-  // spinner.start();
   try {
-    await runTestServer(accountId, functionPath);
-    // spinner.stop();
+    await runTestServer(port, accountId, functionPath);
   } catch (e) {
-    // spinner.stop();
     console.log('============ ERROR ===============');
     console.log(e);
   }
@@ -180,10 +185,15 @@ exports.builder = yargs => {
     describe: 'Path to local .functions folder',
     type: 'string',
   });
+  yargs.option('port', {
+    describe: 'port to run the test server on',
+    type: 'string',
+    default: 5432,
+  });
   yargs.example([
     [
       '$0 functions test ./tmp/myFunctionFolder.functions',
-      "Run a local serverless function test server (I know it's quite ironic)",
+      'Run a local function test server.',
     ],
   ]);
 
