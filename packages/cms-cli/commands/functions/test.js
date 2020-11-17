@@ -102,7 +102,7 @@ const runTestServer = async (accountId, functionPath) => {
     const { method, file } = endpoints[route];
 
     // TODO - Handle multiple methods here
-    app[method.toLowerCase()](route, async req => {
+    app[method.toLowerCase()](route, async (req, res) => {
       const { main } = require(path.resolve(`${functionPath}/${file}`));
       const config = await loadEnvVars(functionPath);
 
@@ -113,21 +113,21 @@ const runTestServer = async (accountId, functionPath) => {
       const { parsed } = config;
 
       console.log('main: ', main);
-      return new Promise((resolve, reject) => {
-        try {
-          const dataForFunc = {
-            accountId,
-            ...req,
-            ...parsed,
-          };
+      try {
+        const dataForFunc = {
+          accountId,
+          ...req,
+          ...parsed,
+        };
 
-          console.log('dataForFunc: ', dataForFunc);
-
-          return main(dataForFunc, resolve);
-        } catch (e) {
-          reject(e);
-        }
-      });
+        console.log('dataForFunc: ', dataForFunc);
+        await main(dataForFunc, sendResponseValue => {
+          console.log('sendResponseValue: ', sendResponseValue);
+          res.json(sendResponseValue);
+        });
+      } catch (e) {
+        res.json(e);
+      }
     });
   });
 
