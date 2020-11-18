@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const http = require('../http');
 
-const FILE_MANAGER_API_PATH = 'filemanager/api/v2';
+const FILE_MANAGER_V2_API_PATH = 'filemanager/api/v2';
+const FILE_MANAGER_V3_API_PATH = 'filemanager/api/v3';
 
 async function uploadFile(accountId, src, dest) {
   const directory = path.dirname(dest);
@@ -17,7 +18,7 @@ async function uploadFile(accountId, src, dest) {
   }
 
   return http.post(accountId, {
-    uri: `${FILE_MANAGER_API_PATH}/files`,
+    uri: `${FILE_MANAGER_V3_API_PATH}/files`,
     qs: {
       overwrite: 'true',
     },
@@ -27,13 +28,13 @@ async function uploadFile(accountId, src, dest) {
 
 async function fetchStat(accountId, src) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_API_PATH}/files/stat/${src}`,
+    uri: `${FILE_MANAGER_V2_API_PATH}/files/stat/${src}`,
   });
 }
 
 async function fetchFiles(accountId, folderId, { offset, archived }) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_API_PATH}/files/`,
+    uri: `${FILE_MANAGER_V2_API_PATH}/files/`,
     qs: {
       hidden: 0,
       offset: offset,
@@ -45,7 +46,7 @@ async function fetchFiles(accountId, folderId, { offset, archived }) {
 
 async function fetchFolders(accountId, folderId) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_API_PATH}/folders/`,
+    uri: `${FILE_MANAGER_V2_API_PATH}/folders/`,
     qs: {
       hidden: 0,
       parent_folder_id: folderId || 'None',
