@@ -21,6 +21,7 @@ const {
 const { logger } = require('@hubspot/cms-lib/logger');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { validateAccount } = require('../../lib/validation');
+const defaultFunctionPackageJson = require('../../lib/templates/default-function-package.json');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -34,13 +35,16 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-/*
-  ==== TODO ====
-  - Handle functions with no package.json
-*/
-
 const installDeps = folderPath => {
   const npmCmd = os.platform().startsWith('win') ? 'npm.cmd' : 'npm';
+  const packageJsonExists = fs.existsSync(`${folderPath}/package.json`);
+
+  if (!packageJsonExists) {
+    fs.writeFileSync(
+      `${folderPath}/package.json`,
+      JSON.stringify(defaultFunctionPackageJson)
+    );
+  }
 
   return new Promise((resolve, reject) => {
     try {
@@ -50,7 +54,12 @@ const installDeps = folderPath => {
         stdio: 'inherit',
       });
 
-      npmInstallProcess.on('exit', resolve);
+      npmInstallProcess.on('exit', data => {
+        if (!packageJsonExists) {
+          fs.unlinkSync(`${folderPath}/package.json`);
+        }
+        resolve(data);
+      });
     } catch (e) {
       reject(e);
     }
