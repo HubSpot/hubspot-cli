@@ -37,7 +37,6 @@ const loadAndValidateOptions = async options => {
 /*
   ==== TODO ====
   - Handle functions with no package.json
-  - Handle functions with multiple methods
 */
 
 const installDeps = folderPath => {
@@ -73,6 +72,52 @@ const loadEnvVars = folderPath => {
   return {};
 };
 
+const addEndpointToApp = (
+  app,
+  method,
+  route,
+  functionPath,
+  file,
+  accountId,
+  environment
+) => {
+  app[method.toLowerCase()](route, async (req, res) => {
+    const functionFilePath = path.resolve(`${functionPath}/${file}`);
+    if (!fs.existsSync(functionFilePath)) {
+      logger.error(`Could not find file ${functionPath}/${file}.`);
+      return;
+    }
+    const { main } = require(functionFilePath);
+
+    if (!main) {
+      logger.error(`Could not find "main" export in ${functionPath}/${file}.`);
+    }
+
+    const config = await loadEnvVars(functionPath);
+
+    if (config.error) {
+      throw config.error;
+    }
+
+    const { parsed } = config;
+
+    try {
+      const dataForFunc = {
+        accountId,
+        ...req,
+        ...parsed,
+        ...environment,
+      };
+
+      await main(dataForFunc, sendResponseValue => {
+        res.json(sendResponseValue);
+      });
+    } catch (e) {
+      res.json(e);
+    }
+  });
+};
+
 const runTestServer = async (port, accountId, functionPath) => {
   const { endpoints, environment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
@@ -95,44 +140,29 @@ const runTestServer = async (port, accountId, functionPath) => {
   routes.forEach(route => {
     const { method, file } = endpoints[route];
 
-    // TODO - Handle multiple methods here(GET & POST)
-    app[method.toLowerCase()](route, async (req, res) => {
-      const functionFilePath = path.resolve(`${functionPath}/${file}`);
-      if (!fs.existsSync(functionFilePath)) {
-        logger.error(`Could not find file ${functionPath}/${file}.`);
-        return;
-      }
-      const { main } = require(functionFilePath);
-
-      if (!main) {
-        logger.error(
-          `Could not find "main" export in ${functionPath}/${file}.`
-        );
-      }
-
-      const config = await loadEnvVars(functionPath);
-
-      if (config.error) {
-        throw config.error;
-      }
-
-      const { parsed } = config;
-
-      try {
-        const dataForFunc = {
+    if (Array.isArray(method)) {
+      method.forEach(methodType => {
+        addEndpointToApp(
+          app,
+          methodType,
+          route,
+          functionPath,
+          file,
           accountId,
-          ...req,
-          ...parsed,
-          ...environment,
-        };
-
-        await main(dataForFunc, sendResponseValue => {
-          res.json(sendResponseValue);
-        });
-      } catch (e) {
-        res.json(e);
-      }
-    });
+          environment
+        );
+      });
+    } else {
+      addEndpointToApp(
+        app,
+        method,
+        route,
+        functionPath,
+        file,
+        accountId,
+        environment
+      );
+    }
   });
 
   app.listen(port, () => {
