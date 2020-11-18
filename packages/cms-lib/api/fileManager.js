@@ -10,18 +10,19 @@ async function uploadFile(accountId, src, dest) {
   const filename = path.basename(dest);
   const formData = {
     file: fs.createReadStream(src),
-    file_names: filename,
+    fileName: filename,
+    options: JSON.stringify({
+      access: 'PUBLIC_INDEXABLE',
+      overwrite: true,
+    }),
   };
 
   if (directory && directory !== '.' && directory !== '/') {
-    formData.folder_paths = directory;
+    formData.folderPath = directory;
   }
 
   return http.post(accountId, {
-    uri: `${FILE_MANAGER_V3_API_PATH}/files`,
-    qs: {
-      overwrite: 'true',
-    },
+    uri: `${FILE_MANAGER_V3_API_PATH}/files/upload`,
     formData,
   });
 }
