@@ -10,6 +10,7 @@ const ignoreList = [
   '.*', // hidden files/folders
   '*.log', // Error log for npm
   '*.swp', // Swap file for vim state
+  '.env', // Dotenv file
 
   // # macOS
   'Icon\\r', // Custom Finder icon: http://superuser.com/questions/298785/icon-file-on-os-x-desktop
