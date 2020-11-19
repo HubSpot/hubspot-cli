@@ -162,12 +162,8 @@ const runTestServer = async (port, accountId, functionPath) => {
   }
 
   await installDeps(functionPath);
-  handleExit(() => {
-    console.log('fooooo');
-    cleanupArtifacts(functionPath);
-  });
-
   const app = express();
+
   routes.forEach(route => {
     const { method, file, environment: localEnvironment } = endpoints[route];
 
@@ -198,7 +194,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     }
   });
 
-  app.listen(port, () => {
+  const localFunctionTestServer = app.listen(port, () => {
     console.log(
       `Local function test server running at http://localhost:${port}`
     );
@@ -210,6 +206,13 @@ const runTestServer = async (port, accountId, functionPath) => {
         depth: 'Infinity',
       })
     );
+  });
+
+  handleExit(() => {
+    localFunctionTestServer.close(() => {
+      logger.info('Local function test server terminated.');
+      cleanupArtifacts(functionPath);
+    });
   });
 };
 
