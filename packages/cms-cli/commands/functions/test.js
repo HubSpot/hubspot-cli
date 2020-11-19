@@ -40,11 +40,14 @@ const installDeps = folderPath => {
   const packageJsonExists = fs.existsSync(`${folderPath}/package.json`);
 
   if (!packageJsonExists) {
+    logger.debug(`No package.json found: using default dependencies.`);
     fs.writeFileSync(
       `${folderPath}/package.json`,
       JSON.stringify(defaultFunctionPackageJson)
     );
   }
+
+  logger.debug(`Installing dependencies from ${folderPath}/package.json`);
 
   return new Promise((resolve, reject) => {
     try {
@@ -67,6 +70,9 @@ const installDeps = folderPath => {
 };
 
 const cleanupArtifacts = folderPath => {
+  logger.debug(
+    `Cleaning up artifacts: ${folderPath}/node_modules and ${folderPath}/package-lock.json.`
+  );
   fs.rmdirSync(`${folderPath}/node_modules`, { recursive: true });
   fs.unlinkSync(`${folderPath}/package-lock.json`);
 };
@@ -75,7 +81,9 @@ const loadEnvVars = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
 
   if (fs.existsSync(dotEnvPathMaybe)) {
-    return require('dotenv').config({ path: dotEnvPathMaybe });
+    const loadedConfig = require('dotenv').config({ path: dotEnvPathMaybe });
+    logger.debug(`Loaded .env config: ${loadedConfig}`);
+    return loadedConfig;
   }
 
   return {};
@@ -88,7 +96,8 @@ const addEndpointToApp = (
   functionPath,
   file,
   accountId,
-  environment
+  globalEnvironment,
+  localEnvironment
 ) => {
   app[method.toLowerCase()](route, async (req, res) => {
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
@@ -112,10 +121,11 @@ const addEndpointToApp = (
 
     try {
       const dataForFunc = {
+        ...globalEnvironment,
+        ...localEnvironment,
         accountId,
         ...req,
         ...parsed,
-        ...environment,
       };
 
       await main(dataForFunc, sendResponseValue => {
@@ -139,7 +149,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     }
   }
 
-  const { endpoints, environment } = JSON.parse(
+  const { endpoints, environment: globalEnvironment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
@@ -153,12 +163,13 @@ const runTestServer = async (port, accountId, functionPath) => {
 
   await installDeps(functionPath);
   handleExit(() => {
+    console.log('fooooo');
     cleanupArtifacts(functionPath);
   });
 
   const app = express();
   routes.forEach(route => {
-    const { method, file } = endpoints[route];
+    const { method, file, environment: localEnvironment } = endpoints[route];
 
     if (Array.isArray(method)) {
       method.forEach(methodType => {
@@ -169,7 +180,8 @@ const runTestServer = async (port, accountId, functionPath) => {
           functionPath,
           file,
           accountId,
-          environment
+          globalEnvironment,
+          localEnvironment
         );
       });
     } else {
@@ -180,7 +192,8 @@ const runTestServer = async (port, accountId, functionPath) => {
         functionPath,
         file,
         accountId,
-        environment
+        globalEnvironment,
+        localEnvironment
       );
     }
   });
