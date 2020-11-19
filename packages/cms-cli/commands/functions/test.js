@@ -128,6 +128,17 @@ const addEndpointToApp = (
 };
 
 const runTestServer = async (port, accountId, functionPath) => {
+  if (!fs.existsSync(functionPath)) {
+    logger.error(`The path ${functionPath} does not exist.`);
+    return;
+  } else {
+    const stats = fs.lstatSync(functionPath);
+    if (!stats.isDirectory()) {
+      logger.error(`${functionPath} is not a valid functions directory.`);
+      return;
+    }
+  }
+
   const { endpoints, environment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
