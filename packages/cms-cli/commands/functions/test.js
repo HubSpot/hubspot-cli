@@ -1,7 +1,8 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const util = require('util');
+const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
 const {
@@ -68,9 +69,6 @@ const installDeps = folderPath => {
       });
 
       npmInstallProcess.on('exit', data => {
-        if (!packageJsonExists) {
-          fs.unlinkSync(`${folderPath}/package.json`);
-        }
         resolve(data);
       });
     } catch (e) {
@@ -80,14 +78,9 @@ const installDeps = folderPath => {
 };
 
 const cleanupArtifacts = folderPath => {
-  if (fs.existsSync(`${folderPath}/node_modules`)) {
-    logger.debug(`Cleaning up artifacts: ${folderPath}/node_modules.`);
-    fs.rmdirSync(`${folderPath}/node_modules`, { recursive: true });
-  }
-
-  if (fs.existsSync(`${folderPath}/package-lock.json`)) {
-    logger.debug(`Cleaning up artifacts: ${folderPath}/package-lock.json.`);
-    fs.unlinkSync(`${folderPath}/package-lock.json`);
+  if (fs.existsSync(folderPath)) {
+    logger.debug(`Cleaning up artifacts: ${folderPath}.`);
+    fs.rmdirSync(folderPath, { recursive: true });
   }
 };
 
@@ -151,7 +144,7 @@ const addEndpointToApp = (
   });
 };
 
-const runTestServer = async (port, accountId, functionPath) => {
+const getValidatedFunctionData = functionPath => {
   if (!fs.existsSync(functionPath)) {
     logger.error(`The path ${functionPath} does not exist.`);
     return;
@@ -163,7 +156,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     }
   }
 
-  const { endpoints, environment: globalEnvironment } = JSON.parse(
+  const { endpoints, environment } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
@@ -175,7 +168,50 @@ const runTestServer = async (port, accountId, functionPath) => {
     return;
   }
 
-  await installDeps(functionPath);
+  return {
+    srcPath: functionPath,
+    endpoints,
+    environment,
+    routes,
+  };
+};
+
+const initializeFunction = async functionData => {
+  const tmpDir = tmp.dirSync();
+
+  logger.debug(`Created temporary function test folder: ${tmpDir.name}`);
+
+  await fs.copy(functionData.srcPath, tmpDir.name, {
+    overwrite: false,
+    errorOnExist: true,
+  });
+
+  await installDeps(tmpDir.name);
+
+  handleExit(() => {
+    cleanupArtifacts(tmpDir.name);
+  });
+
+  return {
+    ...functionData,
+    testPath: tmpDir.name,
+  };
+};
+
+const runTestServer = async (port, accountId, functionPath) => {
+  const validatedFunctionData = getValidatedFunctionData(functionPath);
+
+  if (!validatedFunctionData) {
+    process.exit();
+  }
+
+  const {
+    endpoints,
+    routes,
+    environment: globalEnvironment,
+    testPath,
+  } = await initializeFunction(validatedFunctionData);
+
   const app = express();
 
   routes.forEach(route => {
@@ -187,7 +223,7 @@ const runTestServer = async (port, accountId, functionPath) => {
           app,
           methodType,
           route,
-          functionPath,
+          testPath,
           file,
           accountId,
           globalEnvironment,
@@ -199,7 +235,7 @@ const runTestServer = async (port, accountId, functionPath) => {
         app,
         method,
         route,
-        functionPath,
+        testPath,
         file,
         accountId,
         globalEnvironment,
@@ -220,11 +256,6 @@ const runTestServer = async (port, accountId, functionPath) => {
         depth: 'Infinity',
       })
     );
-  });
-
-  handleExit(() => {
-    cleanupArtifacts(functionPath);
-    process.exit();
   });
 };
 
