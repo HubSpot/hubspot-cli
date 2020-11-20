@@ -23,6 +23,14 @@ const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { validateAccount } = require('../../lib/validation');
 const defaultFunctionPackageJson = require('../../lib/templates/default-function-package.json');
 
+/* TODO
+  - Move files to temp dir and perform actions there to prevent messing with original files
+  - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
+  - Determine how to properly limit the secrets/environment variables that are accessible
+    - Add limitations of vars that cannot be used due to AWS (see https://github.com/vercel/fun/blob/master/src/index.ts#L33-L51)
+  - Figure out timeout limit (AWS default 3s, max 900s) and how to indicate if function exceeds time limit
+*/
+
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
@@ -82,7 +90,7 @@ const loadEnvVars = folderPath => {
 
   if (fs.existsSync(dotEnvPathMaybe)) {
     const loadedConfig = require('dotenv').config({ path: dotEnvPathMaybe });
-    logger.debug(`Loaded .env config: ${loadedConfig}`);
+    logger.debug(`Loaded .env config from ${dotEnvPathMaybe}.`);
     return loadedConfig;
   }
 
@@ -99,7 +107,7 @@ const addEndpointToApp = (
   globalEnvironment,
   localEnvironment
 ) => {
-  app[method.toLowerCase()](route, async (req, res) => {
+  app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
