@@ -29,6 +29,8 @@ const defaultFunctionPackageJson = require('../../lib/templates/default-function
   - Determine how to properly limit the secrets/environment variables that are accessible
     - Add limitations of vars that cannot be used due to AWS (see https://github.com/vercel/fun/blob/master/src/index.ts#L33-L51)
   - Figure out timeout limit (AWS default 3s, max 900s) and how to indicate if function exceeds time limit
+  - userIsLoggedIn -- visitorId etc that gets passed in, how can we mimic?
+  -- Warn if too many deps are found in package.json
 */
 
 const loadAndValidateOptions = async options => {
@@ -78,11 +80,15 @@ const installDeps = folderPath => {
 };
 
 const cleanupArtifacts = folderPath => {
-  logger.debug(
-    `Cleaning up artifacts: ${folderPath}/node_modules and ${folderPath}/package-lock.json.`
-  );
-  fs.rmdirSync(`${folderPath}/node_modules`, { recursive: true });
-  fs.unlinkSync(`${folderPath}/package-lock.json`);
+  if (fs.existsSync(`${folderPath}/node_modules`)) {
+    logger.debug(`Cleaning up artifacts: ${folderPath}/node_modules.`);
+    fs.rmdirSync(`${folderPath}/node_modules`, { recursive: true });
+  }
+
+  if (fs.existsSync(`${folderPath}/package-lock.json`)) {
+    logger.debug(`Cleaning up artifacts: ${folderPath}/package-lock.json.`);
+    fs.unlinkSync(`${folderPath}/package-lock.json`);
+  }
 };
 
 const loadEnvVars = folderPath => {
@@ -202,7 +208,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     }
   });
 
-  const localFunctionTestServer = app.listen(port, () => {
+  app.listen(port, () => {
     console.log(
       `Local function test server running at http://localhost:${port}`
     );
@@ -217,10 +223,8 @@ const runTestServer = async (port, accountId, functionPath) => {
   });
 
   handleExit(() => {
-    localFunctionTestServer.close(() => {
-      logger.info('Local function test server terminated.');
-      cleanupArtifacts(functionPath);
-    });
+    cleanupArtifacts(functionPath);
+    process.exit();
   });
 };
 
