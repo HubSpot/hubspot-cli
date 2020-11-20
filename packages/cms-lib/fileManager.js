@@ -189,10 +189,12 @@ async function fetchFolderContents(accountId, folder, dest, options) {
  */
 async function downloadFolder(accountId, src, dest, folder, options) {
   try {
-    const rootPath =
-      dest === getCwd()
-        ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
-        : dest;
+    let rootPath = dest;
+
+    if (dest === getCwd() && folder.name) {
+      rootPath = convertToLocalFileSystemPath(path.resolve(dest, folder.name));
+    }
+
     logger.log(
       'Fetching folder from "%s" to "%s" in the File Manager of account %s',
       src,
