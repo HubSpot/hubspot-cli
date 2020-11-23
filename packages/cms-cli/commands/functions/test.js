@@ -87,7 +87,7 @@ const cleanupArtifacts = folderPath => {
   }
 };
 
-const loadEnvVars = folderPath => {
+const loadDotEnvFile = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
 
   if (fs.existsSync(dotEnvPathMaybe)) {
@@ -99,13 +99,36 @@ const loadEnvVars = folderPath => {
   return {};
 };
 
+const loadEnvironmentVariables = (
+  globalEnvironment = {},
+  localEnvironment = {}
+) => {
+  Object.keys(globalEnvironment).forEach(globalEnvironmentVariable => {
+    logger.debug(
+      `Setting environment variable(global) ${globalEnvironmentVariable} to ${localEnvironment[globalEnvironmentVariable]}.`
+    );
+    process.env[globalEnvironmentVariable] =
+      globalEnvironment[globalEnvironmentVariable];
+  });
+
+  Object.keys(localEnvironment).forEach(localEnvironmentVariable => {
+    logger.debug(
+      `Setting environment variable(local) ${localEnvironmentVariable} to ${localEnvironment[localEnvironmentVariable]}.`
+    );
+    process.env[localEnvironmentVariable] =
+      localEnvironment[localEnvironmentVariable];
+  });
+};
+
 const addEndpointToApp = (
   app,
   method,
   route,
   functionPath,
   file,
-  accountId
+  accountId,
+  globalEnvironment,
+  localEnvironment
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
@@ -119,7 +142,9 @@ const addEndpointToApp = (
       logger.error(`Could not find "main" export in ${functionPath}/${file}.`);
     }
 
-    const config = await loadEnvVars(functionPath);
+    // TODO - Figure out ordering based on presidence in prod
+    const config = await loadDotEnvFile(functionPath);
+    loadEnvironmentVariables(globalEnvironment, localEnvironment);
 
     if (config.error) {
       throw config.error;
