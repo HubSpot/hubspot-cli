@@ -23,6 +23,9 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { validateAccount } = require('../../lib/validation');
 const defaultFunctionPackageJson = require('../../lib/templates/default-function-package.json');
+const {
+  logErrorInstance,
+} = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
 /* TODO
   - Move files to temp dir and perform actions there to prevent messing with original files
@@ -287,8 +290,11 @@ exports.handler = async options => {
   try {
     await runTestServer(port, accountId, functionPath);
   } catch (e) {
-    console.log('============ ERROR ===============');
-    console.log(e);
+    logErrorInstance(e, {
+      port,
+      accountId,
+      functionPath,
+    });
   }
 };
 
