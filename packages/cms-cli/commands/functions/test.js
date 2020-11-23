@@ -5,6 +5,7 @@ const util = require('util');
 const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
+const bodyParser = require('body-parser');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -104,9 +105,7 @@ const addEndpointToApp = (
   route,
   functionPath,
   file,
-  accountId,
-  globalEnvironment,
-  localEnvironment
+  accountId
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
@@ -126,15 +125,19 @@ const addEndpointToApp = (
       throw config.error;
     }
 
-    const { parsed } = config;
+    const { parsed: parsedDotEnvConfig } = config;
 
     try {
       const dataForFunc = {
-        ...globalEnvironment,
-        ...localEnvironment,
+        secrets: parsedDotEnvConfig,
+        params: req.query,
+        limits: {
+          timeRemaining: 600000,
+          executionsRemaining: 60,
+        },
+        body: req.body,
+        headers: req.headers,
         accountId,
-        ...req,
-        ...parsed,
       };
 
       await main(dataForFunc, sendResponseValue => {
@@ -211,6 +214,7 @@ const runTestServer = async (port, accountId, functionPath) => {
   } = await createTemporaryFunction(validatedFunctionData);
 
   const app = express();
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   routes.forEach(route => {
     const { method, file, environment: localEnvironment } = endpoints[route];
