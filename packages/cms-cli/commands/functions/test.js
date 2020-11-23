@@ -20,7 +20,6 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { handleExit } = require('@hubspot/cms-lib/lib/process');
 const { validateAccount } = require('../../lib/validation');
 const defaultFunctionPackageJson = require('../../lib/templates/default-function-package.json');
 const {
@@ -179,7 +178,7 @@ const getValidatedFunctionData = functionPath => {
   };
 };
 
-const initializeFunction = async functionData => {
+const createTemporaryFunction = async functionData => {
   const tmpDir = tmp.dirSync();
 
   logger.debug(`Created temporary function test folder: ${tmpDir.name}`);
@@ -191,13 +190,9 @@ const initializeFunction = async functionData => {
 
   await installDeps(tmpDir.name);
 
-  handleExit(() => {
-    cleanupArtifacts(tmpDir.name);
-  });
-
   return {
     ...functionData,
-    testPath: tmpDir.name,
+    tmpDir,
   };
 };
 
@@ -212,8 +207,8 @@ const runTestServer = async (port, accountId, functionPath) => {
     endpoints,
     routes,
     environment: globalEnvironment,
-    testPath,
-  } = await initializeFunction(validatedFunctionData);
+    tmpDir,
+  } = await createTemporaryFunction(validatedFunctionData);
 
   const app = express();
 
@@ -226,7 +221,7 @@ const runTestServer = async (port, accountId, functionPath) => {
           app,
           methodType,
           route,
-          testPath,
+          tmpDir.name,
           file,
           accountId,
           globalEnvironment,
@@ -238,7 +233,7 @@ const runTestServer = async (port, accountId, functionPath) => {
         app,
         method,
         route,
-        testPath,
+        tmpDir.name,
         file,
         accountId,
         globalEnvironment,
@@ -247,7 +242,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     }
   });
 
-  app.listen(port, () => {
+  const localFunctionTestServer = app.listen(port, () => {
     console.log(
       `Local function test server running at http://localhost:${port}`
     );
@@ -259,6 +254,13 @@ const runTestServer = async (port, accountId, functionPath) => {
         depth: 'Infinity',
       })
     );
+  });
+
+  process.on('SIGINT', () => {
+    localFunctionTestServer.close();
+    logger.info('Local function test server closed.');
+    cleanupArtifacts(tmpDir.name);
+    process.exit();
   });
 };
 
