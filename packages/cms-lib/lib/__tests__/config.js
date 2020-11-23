@@ -808,7 +808,6 @@ describe('lib/config', () => {
               },
               "authType": "oauth2",
               "name": "OAUTH2",
-              "portalId": 2223,
             }
           `);
         });
@@ -942,12 +941,9 @@ describe('lib/config', () => {
           setConfig(CONFIG);
         });
 
-        it('supports both defaultPortal and defaultAccount', () => {
+        it('supports defaultAccount', () => {
           updateDefaultAccount(LEGACY_ACCOUNTS[0].portalId);
           expect(getConfig().defaultAccount).toEqual(
-            LEGACY_ACCOUNTS[0].portalId
-          );
-          expect(getConfig().defaultPortal).toEqual(
             LEGACY_ACCOUNTS[0].portalId
           );
         });

@@ -37,6 +37,7 @@ const setConfig = updatedConfig => {
 const getConfigAccounts = config => {
   const __config = config || getConfig();
   if (!__config) return;
+
   return __config.accounts || __config.portals;
 };
 
@@ -417,10 +418,18 @@ const getEnv = nameOrId => {
   return env;
 };
 
-const getAccountConfig = accountId =>
-  getConfigAccounts(getAndLoadConfigIfNeeded()).find(
+const getAccountConfig = accountId => {
+  const account = getConfigAccounts(getAndLoadConfigIfNeeded()).find(
     account => account.accountId === accountId || account.portalId === accountId
   );
+
+  if (account && account.portalId) {
+    account.accountId = account.accountId || account.portalId;
+    delete account.portalId;
+  }
+
+  return account;
+};
 
 /*
  * Returns a accountId from the config if it exists, else returns null
@@ -529,6 +538,7 @@ const updateAccountConfig = configOptions => {
       accounts = [nextAccountConfig];
     }
   }
+
   return nextAccountConfig;
 };
 
@@ -546,12 +556,10 @@ const updateDefaultAccount = defaultAccount => {
   }
 
   const config = getAndLoadConfigIfNeeded();
-  if (config.defaultAccount) {
-    config.defaultAccount = defaultAccount;
-  }
-  // Keep for backcompat
+  config.defaultAccount = defaultAccount;
+
   if (config.defaultPortal) {
-    config.defaultPortal = defaultAccount;
+    delete config.defaultPortal;
   }
 
   setDefaultConfigPathIfUnset();
