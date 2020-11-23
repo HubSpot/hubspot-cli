@@ -28,13 +28,14 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
 /* TODO
-  - Move files to temp dir and perform actions there to prevent messing with original files
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
-  - Determine how to properly limit the secrets/environment variables that are accessible
-    - Add limitations of vars that cannot be used due to AWS (see https://github.com/vercel/fun/blob/master/src/index.ts#L33-L51)
-  - Figure out timeout limit (AWS default 3s, max 900s) and how to indicate if function exceeds time limit
-  - userIsLoggedIn -- visitorId etc that gets passed in, how can we mimic?
-  -- Warn if too many deps are found in package.json
+    - Check if secrets or environment variables take presidence
+    - Determine how to pass isLoggedIn values
+  - Add warnings
+    - Vars that cannot be used due to AWS (see https://github.com/vercel/fun/blob/master/src/index.ts#L33-L51)
+    - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
+    - Exceeding limit of 50 secrets
+    - Too many deps are found in package.json()
 */
 
 const loadAndValidateOptions = async options => {
