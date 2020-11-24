@@ -101,7 +101,6 @@ const installDeps = folderPath => {
       const npmInstallProcess = spawn(npmCmd, ['i'], {
         env: process.env,
         cwd: folderPath,
-        stdio: 'inherit',
       });
 
       npmInstallProcess.on('exit', data => {
