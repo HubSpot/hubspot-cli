@@ -4,7 +4,6 @@ const path = require('path');
 const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
-const { performance } = require('perf_hooks');
 const bodyParser = require('body-parser');
 const {
   addAccountOptions,
@@ -27,6 +26,7 @@ const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 const { getTableContents, getTableHeader } = require('../../lib/table');
+const { processLog } = require('@hubspot/cms-lib/lib/logs');
 
 const MAX_SECRETS = 50;
 const MAX_DEPS = 3;
@@ -203,6 +203,29 @@ const getHeaders = req => {
   };
 };
 
+const logFunctionExecution = (status, payload, startTime, endTime, logs) => {
+  const runTime = endTime - startTime;
+  const roundedRuntime = Math.round(runTime * 100);
+  const executionData = {
+    executionTime: runTime,
+    log: logs.join('\n'),
+    duration: `${roundedRuntime} ms`,
+    status,
+    createdAt: startTime,
+    memory: '74/128 MB',
+    id: -1,
+    payload,
+  };
+
+  logger.log(processLog(executionData, {}));
+
+  if (runTime > MAX_RUNTIME) {
+    logger.warn(
+      `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
+    );
+  }
+};
+
 const addEndpointToApp = (
   app,
   method,
@@ -215,7 +238,7 @@ const addEndpointToApp = (
   secrets
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
-    const startTime = performance.now();
+    const startTime = Date.now();
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
@@ -227,9 +250,14 @@ const addEndpointToApp = (
       logger.error(`Could not find "main" export in ${functionPath}/${file}.`);
     }
 
-    loadEnvironmentVariables(globalEnvironment, localEnvironment);
+    const originalConsoleLog = console.log;
+    const trackedLogs = [];
+    console.log = log => {
+      trackedLogs.push(log);
+    };
 
     try {
+      loadEnvironmentVariables(globalEnvironment, localEnvironment);
       const dataForFunc = {
         secrets: await getSecrets(functionPath, secrets),
         params: req.query,
@@ -243,21 +271,22 @@ const addEndpointToApp = (
       };
 
       await main(dataForFunc, sendResponseValue => {
-        const endTime = performance.now();
-        const runTime = endTime - startTime;
-        const roundedRuntime = Math.round(runTime);
+        const endTime = Date.now();
 
-        if (runTime > MAX_RUNTIME) {
-          logger.warn(
-            `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
-          );
-        } else {
-          logger.info(`Function executed in ${roundedRuntime}ms.`);
-        }
-
+        console.log = originalConsoleLog;
+        logFunctionExecution(
+          'SUCCESS',
+          sendResponseValue,
+          startTime,
+          endTime,
+          trackedLogs
+        );
         res.json(sendResponseValue);
       });
     } catch (e) {
+      const endTime = Date.now();
+      console.log = originalConsoleLog;
+      logFunctionExecution('UNHANDLED_ERROR', startTime, endTime, trackedLogs);
       res.json(e);
     }
   });
