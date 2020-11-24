@@ -37,7 +37,7 @@ async function fetchFiles(accountId, folderId, { offset, archived }) {
     qs: {
       hidden: 0,
       offset: offset,
-      folder_id: folderId || 'None',
+      folder_id: folderId,
       ...(!archived && { archived: 0 }),
     },
   });
@@ -48,7 +48,7 @@ async function fetchFolders(accountId, folderId) {
     uri: `${FILE_MANAGER_API_PATH}/folders/`,
     qs: {
       hidden: 0,
-      parent_folder_id: folderId || 'None',
+      parent_folder_id: folderId,
     },
   });
 }
