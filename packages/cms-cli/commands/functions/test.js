@@ -380,7 +380,7 @@ const runTestServer = async (port, accountId, functionPath) => {
         `${testServerPath}/${route}`,
         method.join(', '),
         secrets.join(', '),
-        Object.keys(localEnvironment),
+        Object.keys(localEnvironment).join(', '),
       ];
     });
     functionsAsArrays.unshift(
