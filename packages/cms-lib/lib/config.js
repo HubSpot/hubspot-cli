@@ -37,6 +37,7 @@ const setConfig = updatedConfig => {
 const getConfigAccounts = config => {
   const __config = config || getConfig();
   if (!__config) return;
+
   return __config.accounts || __config.portals;
 };
 
@@ -488,6 +489,14 @@ const updateAccountConfig = configOptions => {
   const config = getAndLoadConfigIfNeeded();
   const accountConfig = getAccountConfig(accountId);
 
+  if (accountConfig && accountConfig.portalId) {
+    accountConfig.accountId = accountConfig.accountId || accountConfig.portalId;
+    delete accountConfig.portalId;
+    logger.warn(
+      `The 'portalId' property within hubspot.config.yml has been deprecated.  Your config has been automatically migrated to use 'accountId'.`
+    );
+  }
+
   let auth;
   if (clientId || clientSecret || scopes || tokenInfo) {
     auth = {
@@ -529,6 +538,7 @@ const updateAccountConfig = configOptions => {
       accounts = [nextAccountConfig];
     }
   }
+
   return nextAccountConfig;
 };
 
@@ -546,12 +556,13 @@ const updateDefaultAccount = defaultAccount => {
   }
 
   const config = getAndLoadConfigIfNeeded();
-  if (config.defaultAccount) {
-    config.defaultAccount = defaultAccount;
-  }
-  // Keep for backcompat
+  config.defaultAccount = defaultAccount;
+
   if (config.defaultPortal) {
-    config.defaultPortal = defaultAccount;
+    delete config.defaultPortal;
+    logger.warn(
+      `The 'defaultPortal' property within hubspot.config.yml has been deprecated.  Your config has been automatically migrated to use 'defaultAccount'.`
+    );
   }
 
   setDefaultConfigPathIfUnset();

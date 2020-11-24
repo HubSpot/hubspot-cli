@@ -780,39 +780,6 @@ describe('lib/config', () => {
           expect(getAccountConfig(2222)).toMatchInlineSnapshot(`undefined`);
         });
       });
-
-      describe('combined', () => {
-        beforeEach(() => {
-          const CONFIG = {
-            portals: COMBINED_ACCOUNTS,
-          };
-
-          setConfig(CONFIG);
-        });
-
-        it('favors account over portal', () => {
-          expect(getAccountConfig(2222)).toMatchInlineSnapshot(`
-            Object {
-              "accountId": 2222,
-              "auth": Object {
-                "clientId": "fakeClientId",
-                "clientSecret": "fakeClientSecret",
-                "scopes": Array [
-                  "content",
-                ],
-                "tokenInfo": Object {
-                  "accessToken": "fakeOauthAccessToken",
-                  "expiresAt": "2020-01-01T00:00:00.000Z",
-                  "refreshToken": "fakeOauthRefreshToken",
-                },
-              },
-              "authType": "oauth2",
-              "name": "OAUTH2",
-              "portalId": 2223,
-            }
-          `);
-        });
-      });
     });
 
     describe('getAccountId', () => {
@@ -942,12 +909,9 @@ describe('lib/config', () => {
           setConfig(CONFIG);
         });
 
-        it('supports both defaultPortal and defaultAccount', () => {
+        it('supports defaultAccount', () => {
           updateDefaultAccount(LEGACY_ACCOUNTS[0].portalId);
           expect(getConfig().defaultAccount).toEqual(
-            LEGACY_ACCOUNTS[0].portalId
-          );
-          expect(getConfig().defaultPortal).toEqual(
             LEGACY_ACCOUNTS[0].portalId
           );
         });
