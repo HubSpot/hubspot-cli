@@ -185,6 +185,25 @@ const loadEnvironmentVariables = (
   });
 };
 
+const getHeaders = req => {
+  const reqHeaders = req.headers;
+
+  return {
+    Accept: reqHeaders.accept,
+    'Accept-Encoding': reqHeaders['accept-encoding'],
+    'Accept-Language': reqHeaders['accept-language'],
+    'Cache-Control': reqHeaders['cache-control'],
+    Connection: reqHeaders.connection,
+    Cookie: req.cookies,
+    Host: reqHeaders.host,
+    'True-Client-IP': req.ip, // https://stackoverflow.com/a/14631683/3612910
+    'upgrade-insecure-requests': reqHeaders['upgrade-insecure-requests'],
+    'User-Agent': reqHeaders['user-agent'],
+    'X-Forwarded-For':
+      req.headers['x-forwarded-for'] || req.connection.remoteAddress, // https://stackoverflow.com/a/14631683/3612910
+  };
+};
+
 const addEndpointToApp = (
   app,
   method,
@@ -220,7 +239,7 @@ const addEndpointToApp = (
           executionsRemaining: 60,
         },
         body: req.body,
-        headers: req.headers,
+        headers: getHeaders(req),
         accountId,
       };
 
@@ -319,6 +338,7 @@ const runTestServer = async (port, accountId, functionPath) => {
 
   const app = express();
   app.use(bodyParser.urlencoded({ extended: true }));
+  app.set('trust proxy', true);
 
   routes.forEach(route => {
     const { method, file, environment: localEnvironment } = endpoints[route];
