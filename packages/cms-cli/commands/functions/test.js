@@ -58,8 +58,6 @@ const AWS_RESERVED_VARS_INFO_URL =
 /* TODO
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
     - Determine how to pass isLoggedIn values
-  - Update output
-    - res.json() -- use same same output as hs logs
   - Move to separate package?
 */
 
