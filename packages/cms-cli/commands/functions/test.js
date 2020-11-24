@@ -58,6 +58,10 @@ const AWS_RESERVED_VARS_INFO_URL =
     - Determine how to pass isLoggedIn values
   - Add warnings
     - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
+  - Update output
+    - res.json() -- use same same output as hs logs
+    - localFunctionTestServer endpoints list -- use same output as hs functions list
+  - Move to separate package?
 */
 
 const loadAndValidateOptions = async options => {
