@@ -418,17 +418,10 @@ const getEnv = nameOrId => {
   return env;
 };
 
-const getAccountConfig = accountId => {
-  const account = getConfigAccounts(getAndLoadConfigIfNeeded()).find(
+const getAccountConfig = accountId =>
+  getConfigAccounts(getAndLoadConfigIfNeeded()).find(
     account => account.accountId === accountId || account.portalId === accountId
   );
-
-  if (account && account.portalId) {
-    account.accountId = account.accountId || account.portalId;
-  }
-
-  return account;
-};
 
 /*
  * Returns a accountId from the config if it exists, else returns null
@@ -497,6 +490,7 @@ const updateAccountConfig = configOptions => {
   const accountConfig = getAccountConfig(accountId);
 
   if (accountConfig && accountConfig.portalId) {
+    accountConfig.accountId = accountConfig.accountId || accountConfig.portalId;
     delete accountConfig.portalId;
     logger.warn(
       `The 'portalId' property within hubspot.config.yml has been deprecated.  Your config has been automatically migrated to use 'accountId'.`
