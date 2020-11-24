@@ -28,6 +28,7 @@ const {
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
 const MAX_SECRETS = 50;
+const MAX_DEPS = 3;
 // AWS does not allow overriding these
 // https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables
 const AWS_RESERVED_VARS = [
@@ -57,8 +58,6 @@ const AWS_RESERVED_VARS_INFO_URL =
     - Determine how to pass isLoggedIn values
   - Add warnings
     - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
-    - Exceeding limit of 50 secrets
-    - Too many deps are found in package.json()
 */
 
 const loadAndValidateOptions = async options => {
@@ -75,13 +74,23 @@ const loadAndValidateOptions = async options => {
 
 const installDeps = folderPath => {
   const npmCmd = os.platform().startsWith('win') ? 'npm.cmd' : 'npm';
-  const packageJsonExists = fs.existsSync(`${folderPath}/package.json`);
+  const packageJsonPath = `${folderPath}/package.json`;
+  const packageJsonExists = fs.existsSync(packageJsonPath);
 
   if (!packageJsonExists) {
     logger.debug(`No package.json found: using default dependencies.`);
     fs.writeFileSync(
       `${folderPath}/package.json`,
       JSON.stringify(defaultFunctionPackageJson)
+    );
+  }
+
+  const packageJson = require(packageJsonPath);
+  const numDeps = Object.keys(packageJson.dependencies).length;
+
+  if (numDeps > MAX_DEPS) {
+    logger.warn(
+      `This function exceeds the maximum number of ${MAX_DEPS} dependencies.`
     );
   }
 
