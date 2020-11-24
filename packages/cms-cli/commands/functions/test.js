@@ -27,12 +27,35 @@ const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
+// AWS does not allow overriding these
+// https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables
+const AWS_RESERVED_VARS = [
+  '_HANDLER',
+  'LAMBDA_TASK_ROOT',
+  'LAMBDA_RUNTIME_DIR',
+  'AWS_EXECUTION_ENV',
+  'AWS_DEFAULT_REGION',
+  'AWS_REGION',
+  'AWS_LAMBDA_LOG_GROUP_NAME',
+  'AWS_LAMBDA_LOG_STREAM_NAME',
+  'AWS_LAMBDA_FUNCTION_NAME',
+  'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
+  'AWS_LAMBDA_FUNCTION_VERSION',
+  'AWS_ACCESS_KEY',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_KEY',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_SESSION_TOKEN',
+  'TZ',
+];
+const AWS_RESERVED_VARS_INFO_URL =
+  'https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables';
+
 /* TODO
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
     - Check if secrets or environment variables take presidence
     - Determine how to pass isLoggedIn values
   - Add warnings
-    - Vars that cannot be used due to AWS (see https://github.com/vercel/fun/blob/master/src/index.ts#L33-L51)
     - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
     - Exceeding limit of 50 secrets
     - Too many deps are found in package.json()
@@ -105,6 +128,12 @@ const loadEnvironmentVariables = (
   localEnvironment = {}
 ) => {
   Object.keys(globalEnvironment).forEach(globalEnvironmentVariable => {
+    if (AWS_RESERVED_VARS.indexOf(globalEnvironmentVariable) !== -1) {
+      logger.warn(
+        `The variable ${globalEnvironmentVariable} is a reserved AWS variable and should not be used. See ${AWS_RESERVED_VARS_INFO_URL} for more info.`
+      );
+    }
+
     logger.debug(
       `Setting environment variable(global) ${globalEnvironmentVariable} to ${localEnvironment[globalEnvironmentVariable]}.`
     );
@@ -113,6 +142,12 @@ const loadEnvironmentVariables = (
   });
 
   Object.keys(localEnvironment).forEach(localEnvironmentVariable => {
+    if (AWS_RESERVED_VARS.indexOf(localEnvironmentVariable) !== -1) {
+      logger.warn(
+        `The variable ${localEnvironmentVariable} is a reserved AWS variable and should not be used. See ${AWS_RESERVED_VARS_INFO_URL} for more info.`
+      );
+    }
+
     logger.debug(
       `Setting environment variable(local) ${localEnvironmentVariable} to ${localEnvironment[localEnvironmentVariable]}.`
     );
