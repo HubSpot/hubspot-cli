@@ -184,7 +184,7 @@ async function fetchFolderContents(accountId, folder, dest, options) {
  * @param {number} accountId
  * @param {string} src
  * @param {string} dest
- * @param {object} file
+ * @param {object} folder
  * @param {object} options
  */
 async function downloadFolder(accountId, src, dest, folder, options) {
