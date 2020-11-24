@@ -58,8 +58,6 @@ const AWS_RESERVED_VARS_INFO_URL =
 /* TODO
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
     - Determine how to pass isLoggedIn values
-  - Add warnings
-    - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
   - Update output
     - res.json() -- use same same output as hs logs
     - localFunctionTestServer endpoints list -- use same output as hs functions list
@@ -96,7 +94,7 @@ const installDeps = folderPath => {
 
   if (numDeps > MAX_DEPS) {
     logger.warn(
-      `This function exceeds the maximum number of ${MAX_DEPS} dependencies.`
+      `This function exceeds the maximum number of ${MAX_DEPS} dependencies. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
     );
   }
 
@@ -233,7 +231,7 @@ const addEndpointToApp = (
 
         if (runTime > MAX_RUNTIME) {
           logger.warn(
-            `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}.`
+            `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
           );
         } else {
           logger.info(`Function executed in ${roundedRuntime}ms.`);
@@ -273,7 +271,7 @@ const getValidatedFunctionData = functionPath => {
 
   if (secrets.length > MAX_SECRETS) {
     logger.warn(
-      `This function currently exceeds the limit of ${MAX_SECRETS} secrets.`
+      `This function currently exceeds the limit of ${MAX_SECRETS} secrets. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
     );
   }
 
