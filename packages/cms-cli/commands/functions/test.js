@@ -1,7 +1,6 @@
 const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
-const util = require('util');
 const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
@@ -27,6 +26,7 @@ const defaultFunctionPackageJson = require('../../lib/templates/default-function
 const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
+const { getTableContents, getTableHeader } = require('../../lib/table');
 
 const MAX_SECRETS = 50;
 const MAX_DEPS = 3;
@@ -60,7 +60,6 @@ const AWS_RESERVED_VARS_INFO_URL =
     - Determine how to pass isLoggedIn values
   - Update output
     - res.json() -- use same same output as hs logs
-    - localFunctionTestServer endpoints list -- use same output as hs functions list
   - Move to separate package?
 */
 
@@ -373,15 +372,26 @@ const runTestServer = async (port, accountId, functionPath) => {
   });
 
   const localFunctionTestServer = app.listen(port, () => {
-    console.log(`Local test server running at http://localhost:${port}`);
-    console.log(
-      'Endpoints:\n',
-      util.inspect(endpoints, {
-        colors: true,
-        compact: true,
-        depth: 'Infinity',
-      })
+    const testServerPath = `http://localhost:${port}`;
+    logger.log(`Local test server running at ${testServerPath}`);
+    const functionsAsArrays = routes.map(route => {
+      const { method, environment: localEnvironment } = endpoints[route];
+      return [
+        `${testServerPath}/${route}`,
+        method.join(', '),
+        secrets.join(', '),
+        Object.keys(localEnvironment),
+      ];
+    });
+    functionsAsArrays.unshift(
+      getTableHeader([
+        'Endpoint',
+        'Methods',
+        'Secrets',
+        'Environment Variables',
+      ])
     );
+    return logger.log(getTableContents(functionsAsArrays));
   });
 
   process.on('SIGINT', () => {
