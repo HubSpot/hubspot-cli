@@ -5,6 +5,7 @@ const util = require('util');
 const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
+const { performance } = require('perf_hooks');
 const bodyParser = require('body-parser');
 const {
   addAccountOptions,
@@ -29,6 +30,7 @@ const {
 
 const MAX_SECRETS = 50;
 const MAX_DEPS = 3;
+const MAX_RUNTIME = 3000;
 // AWS does not allow overriding these
 // https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables
 const AWS_RESERVED_VARS = [
@@ -197,6 +199,7 @@ const addEndpointToApp = (
   secrets
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
+    const startTime = performance.now();
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
@@ -224,6 +227,18 @@ const addEndpointToApp = (
       };
 
       await main(dataForFunc, sendResponseValue => {
+        const endTime = performance.now();
+        const runTime = endTime - startTime;
+        const roundedRuntime = Math.round(runTime);
+
+        if (runTime > MAX_RUNTIME) {
+          logger.warn(
+            `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}.`
+          );
+        } else {
+          logger.info(`Function executed in ${roundedRuntime}ms.`);
+        }
+
         res.json(sendResponseValue);
       });
     } catch (e) {
