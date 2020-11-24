@@ -27,6 +27,7 @@ const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
+const MAX_SECRETS = 50;
 // AWS does not allow overriding these
 // https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables
 const AWS_RESERVED_VARS = [
@@ -241,6 +242,12 @@ const getValidatedFunctionData = functionPath => {
   if (!routes.length) {
     logger.error(`No endpoints found in ${functionPath}/serverless.json.`);
     return;
+  }
+
+  if (secrets.length > MAX_SECRETS) {
+    logger.warn(
+      `This function currently exceeds the limit of ${MAX_SECRETS} secrets.`
+    );
   }
 
   return {
