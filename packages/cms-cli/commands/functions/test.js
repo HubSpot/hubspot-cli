@@ -53,7 +53,6 @@ const AWS_RESERVED_VARS_INFO_URL =
 
 /* TODO
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
-    - Check if secrets or environment variables take presidence
     - Determine how to pass isLoggedIn values
   - Add warnings
     - Set a timer and warn if function exceeds time limit(see https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits)
@@ -123,6 +122,23 @@ const loadDotEnvFile = folderPath => {
   return {};
 };
 
+const getSecrets = async (functionPath, secrets) => {
+  const config = await loadDotEnvFile(functionPath);
+  let secretsDict = {};
+
+  if (config.error) {
+    throw config.error;
+  }
+
+  secrets.forEach(secret => {
+    if (Object.prototype.hasOwnProperty.call(process.env, secret)) {
+      secretsDict[secret] = process.env[secret];
+    }
+  });
+
+  return secretsDict;
+};
+
 const loadEnvironmentVariables = (
   globalEnvironment = {},
   localEnvironment = {}
@@ -164,7 +180,8 @@ const addEndpointToApp = (
   file,
   accountId,
   globalEnvironment,
-  localEnvironment
+  localEnvironment,
+  secrets
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const functionFilePath = path.resolve(`${functionPath}/${file}`);
@@ -178,19 +195,11 @@ const addEndpointToApp = (
       logger.error(`Could not find "main" export in ${functionPath}/${file}.`);
     }
 
-    // TODO - Figure out ordering based on presidence in prod
-    const config = await loadDotEnvFile(functionPath);
     loadEnvironmentVariables(globalEnvironment, localEnvironment);
-
-    if (config.error) {
-      throw config.error;
-    }
-
-    const { parsed: parsedDotEnvConfig } = config;
 
     try {
       const dataForFunc = {
-        secrets: parsedDotEnvConfig,
+        secrets: await getSecrets(functionPath, secrets),
         params: req.query,
         limits: {
           timeRemaining: 600000,
@@ -222,7 +231,7 @@ const getValidatedFunctionData = functionPath => {
     }
   }
 
-  const { endpoints, environment } = JSON.parse(
+  const { endpoints, environment, secrets } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
@@ -239,6 +248,7 @@ const getValidatedFunctionData = functionPath => {
     endpoints,
     environment,
     routes,
+    secrets,
   };
 };
 
@@ -272,6 +282,7 @@ const runTestServer = async (port, accountId, functionPath) => {
     routes,
     environment: globalEnvironment,
     tmpDir,
+    secrets,
   } = await createTemporaryFunction(validatedFunctionData);
 
   const app = express();
@@ -290,7 +301,8 @@ const runTestServer = async (port, accountId, functionPath) => {
           file,
           accountId,
           globalEnvironment,
-          localEnvironment
+          localEnvironment,
+          secrets
         );
       });
     } else {
@@ -302,17 +314,16 @@ const runTestServer = async (port, accountId, functionPath) => {
         file,
         accountId,
         globalEnvironment,
-        localEnvironment
+        localEnvironment,
+        secrets
       );
     }
   });
 
   const localFunctionTestServer = app.listen(port, () => {
+    console.log(`Local test server running at http://localhost:${port}`);
     console.log(
-      `Local function test server running at http://localhost:${port}`
-    );
-    console.log(
-      'Endpoints: ',
+      'Endpoints:\n',
       util.inspect(endpoints, {
         colors: true,
         compact: true,
