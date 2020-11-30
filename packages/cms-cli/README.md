@@ -160,10 +160,10 @@ _**Note:** The Account ID used should be the CMS Account ID (not the developer a
 2. Edit the `hubspot.config.yml` file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
 
 ```yaml
-defaultAccount: DEV
-accounts:
+defaultPortal: DEV
+portals:
   - name: DEV
-    accountId: 123
+    portalId: 123
     authType: apikey
     apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 ```

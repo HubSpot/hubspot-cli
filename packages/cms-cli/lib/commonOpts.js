@@ -85,10 +85,6 @@ const getAccountId = (options = {}) => {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
-  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
-  }
-
   return getAccountIdFromConfig(portal || account);
 };
 
