@@ -103,7 +103,6 @@ async function downloadFile(accountId, file, dest, options) {
   if (await skipExisting(options.overwrite, destPath)) {
     return;
   }
-
   try {
     await http.getOctetStream(
       accountId,
@@ -113,7 +112,6 @@ async function downloadFile(accountId, file, dest, options) {
       },
       destPath
     );
-    logger.log(`Wrote file "${destPath}"`);
   } catch (err) {
     logErrorInstance(err);
   }
@@ -261,26 +259,26 @@ async function downloadSingleFile(accountId, src, dest, file, options) {
  * @param {object} options
  */
 async function downloadFileOrFolder(accountId, src, dest, options) {
-  if (src === '/') {
-    await downloadFolder(accountId, src, dest, '', options);
-  } else {
-    try {
+  try {
+    if (src == '/') {
+      const rootFolder = { id: 'None', name: '/' };
+      await downloadFolder(accountId, src, dest, rootFolder, options);
+    } else {
       const { file, folder } = await fetchStat(accountId, src);
-
       if (file) {
-        downloadSingleFile(accountId, src, dest, file, options);
+        await downloadSingleFile(accountId, src, dest, file, options);
       } else if (folder) {
-        downloadFolder(accountId, src, dest, folder, options);
+        await downloadFolder(accountId, src, dest, folder, options);
       }
-    } catch (err) {
-      logApiErrorInstance(
-        err,
-        new ApiErrorContext({
-          request: src,
-          accountId,
-        })
-      );
     }
+  } catch (err) {
+    logApiErrorInstance(
+      err,
+      new ApiErrorContext({
+        request: src,
+        accountId,
+      })
+    );
   }
 }
 
