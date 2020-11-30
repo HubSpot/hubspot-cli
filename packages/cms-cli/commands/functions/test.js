@@ -191,7 +191,7 @@ const getHeaders = req => {
     'Accept-Language': reqHeaders['accept-language'],
     'Cache-Control': reqHeaders['cache-control'],
     Connection: reqHeaders.connection,
-    Cookie: req.cookies,
+    Cookie: reqHeaders.cookie,
     Host: reqHeaders.host,
     'True-Client-IP': req.ip, // https://stackoverflow.com/a/14631683/3612910
     'upgrade-insecure-requests': reqHeaders['upgrade-insecure-requests'],
