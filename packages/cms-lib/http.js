@@ -150,8 +150,11 @@ const createGetRequestStream = ({ contentType }) => async (
       req.on('error', reject);
       req.on('response', res => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          fs.ensureFileSync(filepath);
-
+          try {
+            fs.ensureFileSync(filepath);
+          } catch (err) {
+            reject(err);
+          }
           const writeStream = fs.createWriteStream(filepath, {
             encoding: 'binary',
           });
