@@ -187,19 +187,23 @@ async function fetchFolderContents(accountId, folder, dest, options) {
  */
 async function downloadFolder(accountId, src, dest, folder, options) {
   try {
-    let rootPath = dest;
+    let absolutePath;
 
-    if (dest === getCwd() && folder.name) {
-      rootPath = convertToLocalFileSystemPath(path.resolve(dest, folder.name));
+    if (folder.name) {
+      absolutePath = convertToLocalFileSystemPath(
+        path.resolve(getCwd(), dest, folder.name)
+      );
+    } else {
+      absolutePath = convertToLocalFileSystemPath(path.resolve(getCwd(), dest));
     }
 
     logger.log(
       'Fetching folder from "%s" to "%s" in the File Manager of account %s',
       src,
-      rootPath,
+      absolutePath,
       accountId
     );
-    await fetchFolderContents(accountId, folder, rootPath, options);
+    await fetchFolderContents(accountId, folder, absolutePath, options);
     logger.success(
       'Completed fetch of folder "%s" to "%s" from the File Manager',
       src,
@@ -261,7 +265,7 @@ async function downloadSingleFile(accountId, src, dest, file, options) {
 async function downloadFileOrFolder(accountId, src, dest, options) {
   try {
     if (src == '/') {
-      const rootFolder = { id: 'None', name: '/' };
+      const rootFolder = { id: 'None' };
       await downloadFolder(accountId, src, dest, rootFolder, options);
     } else {
       const { file, folder } = await fetchStat(accountId, src);
