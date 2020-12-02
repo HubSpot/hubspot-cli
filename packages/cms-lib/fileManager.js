@@ -265,6 +265,7 @@ async function downloadSingleFile(accountId, src, dest, file, options) {
 async function downloadFileOrFolder(accountId, src, dest, options) {
   try {
     if (src == '/') {
+      // Filemanager API treats 'None' as the root
       const rootFolder = { id: 'None' };
       await downloadFolder(accountId, src, dest, rootFolder, options);
     } else {
