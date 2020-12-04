@@ -646,20 +646,20 @@ const loadConfigFromEnvironment = () => {
     clientId,
     clientSecret,
     personalAccessKey,
-    accountId,
+    portalId,
     refreshToken,
     env,
   } = getConfigVariablesFromEnv();
 
-  if (!accountId) {
+  if (!portalId) {
     return;
   }
 
   if (personalAccessKey) {
-    return generatePersonalAccessKeyConfig(accountId, personalAccessKey, env);
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey, env);
   } else if (clientId && clientSecret && refreshToken) {
     return generateOauthConfig(
-      accountId,
+      portalId,
       clientId,
       clientSecret,
       refreshToken,
@@ -667,7 +667,7 @@ const loadConfigFromEnvironment = () => {
       env
     );
   } else if (apiKey) {
-    return generateApiKeyConfig(accountId, apiKey, env);
+    return generateApiKeyConfig(portalId, apiKey, env);
   } else {
     return;
   }
