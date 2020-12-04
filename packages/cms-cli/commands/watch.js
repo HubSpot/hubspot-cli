@@ -89,7 +89,6 @@ exports.handler = async options => {
   trackCommandUsage('watch', { mode }, accountId);
   watch(accountId, absoluteSrcPath, dest, {
     mode,
-    cwd: getCwd(),
     remove,
     disableInitial: initialUpload ? false : true,
     notify,

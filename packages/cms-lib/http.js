@@ -96,7 +96,9 @@ const getRequest = async (accountId, options) => {
 };
 
 const postRequest = async (accountId, options) => {
-  return requestPN.post(await withAuth(accountId, options));
+  const data = await withAuth(accountId, options);
+  console.log(data);
+  return requestPN.post(data);
 };
 
 const putRequest = async (accountId, options) => {

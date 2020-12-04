@@ -81,7 +81,7 @@ exports.handler = async options => {
   }
 
   if (stats.isFile()) {
-    if (shouldIgnoreFile(absoluteSrcPath, getCwd())) {
+    if (shouldIgnoreFile(absoluteSrcPath)) {
       logger.error(`The file "${src}" is being ignored via an .hsignore rule`);
       return;
     }
@@ -110,9 +110,7 @@ exports.handler = async options => {
     logger.log(
       `Uploading files from "${src}" to "${dest}" in the File Manager of account ${accountId}`
     );
-    uploadFolder(accountId, absoluteSrcPath, dest, {
-      cwd: getCwd(),
-    })
+    uploadFolder(accountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
           `Uploading files to "${dest}" in the File Manager is complete`

@@ -43,16 +43,17 @@ function loadIgnoreConfig() {
   loaded = true;
 }
 
-function shouldIgnoreFile(file, cwd) {
+function shouldIgnoreFile(file) {
   loadIgnoreConfig();
-  const relativeTo = configPath || cwd;
+  const relativeTo = configPath || '/';
   const relativePath = path.relative(relativeTo, file);
+
   return !!relativePath && ignoreRules.ignores(relativePath);
 }
 
-function createIgnoreFilter(cwd) {
+function createIgnoreFilter() {
   loadIgnoreConfig();
-  return file => !shouldIgnoreFile(file, cwd);
+  return file => !shouldIgnoreFile(file);
 }
 
 function ignoreFile(filePath) {

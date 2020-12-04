@@ -34,11 +34,11 @@ const {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(accountId, src, dest, { cwd }) {
+async function uploadFolder(accountId, src, dest) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const files = await walk(src);
 
-  const filesToUpload = files.filter(createIgnoreFilter(cwd));
+  const filesToUpload = files.filter(createIgnoreFilter());
 
   const len = filesToUpload.length;
   for (let index = 0; index < len; index++) {
