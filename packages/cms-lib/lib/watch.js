@@ -36,15 +36,11 @@ function uploadFile(accountId, file, dest, { mode }) {
     qs: getFileMapperApiQueryFromMode(mode),
   };
   return queue.add(() => {
-    console.log('doing it');
     return upload(accountId, file, dest, apiOptions)
       .then(() => {
-        console.log('then');
         logger.log(`Uploaded file ${file} to ${dest}`);
       })
-      .catch(e => {
-        console.log('catch');
-        console.log(e);
+      .catch(() => {
         const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
         logger.debug(uploadFailureMessage);
         logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
@@ -71,7 +67,6 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
 
   logger.debug('Attempting to delete file "%s"', remoteFilePath);
   return queue.add(() => {
-    console.log('doing it 2');
     return deleteFile(accountId, remoteFilePath)
       .then(() => {
         logger.log(`Deleted file ${remoteFilePath}`);
@@ -147,7 +142,6 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
 
       logger.debug('Attempting to delete %s "%s"', type, remotePath);
       queue.add(() => {
-        console.log('doing it 3');
         const deletePromise = deleteRemoteFile(accountId, filePath, remotePath)
           .then(() => {
             logger.log('Deleted %s "%s"', type, remotePath);
