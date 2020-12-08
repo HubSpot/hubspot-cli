@@ -103,7 +103,6 @@ async function downloadFile(accountId, file, dest, options) {
   if (await skipExisting(options.overwrite, destPath)) {
     return;
   }
-
   try {
     await http.getOctetStream(
       accountId,
@@ -113,7 +112,6 @@ async function downloadFile(accountId, file, dest, options) {
       },
       destPath
     );
-    logger.log(`Wrote file "${destPath}"`);
   } catch (err) {
     logErrorInstance(err);
   }
@@ -184,22 +182,28 @@ async function fetchFolderContents(accountId, folder, dest, options) {
  * @param {number} accountId
  * @param {string} src
  * @param {string} dest
- * @param {object} file
+ * @param {object} folder
  * @param {object} options
  */
 async function downloadFolder(accountId, src, dest, folder, options) {
   try {
-    const rootPath =
-      dest === getCwd()
-        ? convertToLocalFileSystemPath(path.resolve(dest, folder.name))
-        : dest;
+    let absolutePath;
+
+    if (folder.name) {
+      absolutePath = convertToLocalFileSystemPath(
+        path.resolve(getCwd(), dest, folder.name)
+      );
+    } else {
+      absolutePath = convertToLocalFileSystemPath(path.resolve(getCwd(), dest));
+    }
+
     logger.log(
       'Fetching folder from "%s" to "%s" in the File Manager of account %s',
       src,
-      rootPath,
+      absolutePath,
       accountId
     );
-    await fetchFolderContents(accountId, folder, rootPath, options);
+    await fetchFolderContents(accountId, folder, absolutePath, options);
     logger.success(
       'Completed fetch of folder "%s" to "%s" from the File Manager',
       src,
@@ -259,26 +263,27 @@ async function downloadSingleFile(accountId, src, dest, file, options) {
  * @param {object} options
  */
 async function downloadFileOrFolder(accountId, src, dest, options) {
-  if (src === '/') {
-    await downloadFolder(accountId, src, dest, '', options);
-  } else {
-    try {
+  try {
+    if (src == '/') {
+      // Filemanager API treats 'None' as the root
+      const rootFolder = { id: 'None' };
+      await downloadFolder(accountId, src, dest, rootFolder, options);
+    } else {
       const { file, folder } = await fetchStat(accountId, src);
-
       if (file) {
-        downloadSingleFile(accountId, src, dest, file, options);
+        await downloadSingleFile(accountId, src, dest, file, options);
       } else if (folder) {
-        downloadFolder(accountId, src, dest, folder, options);
+        await downloadFolder(accountId, src, dest, folder, options);
       }
-    } catch (err) {
-      logApiErrorInstance(
-        err,
-        new ApiErrorContext({
-          request: src,
-          accountId,
-        })
-      );
     }
+  } catch (err) {
+    logApiErrorInstance(
+      err,
+      new ApiErrorContext({
+        request: src,
+        accountId,
+      })
+    );
   }
 }
 
