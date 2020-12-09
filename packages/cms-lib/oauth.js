@@ -6,15 +6,15 @@ const { AUTH_METHODS } = require('./lib/constants');
 const oauthManagers = new Map();
 
 const writeOauthTokenInfo = (AccountConfig, tokenInfo) => {
-  const { accountId, authType, auth, env, name, apiKey } = AccountConfig;
+  const { portalId, authType, auth, env, name, apiKey } = AccountConfig;
 
-  logger.debug(`Updating Oauth2 token info for accountId: ${accountId}`);
+  logger.debug(`Updating Oauth2 token info for portalId: ${portalId}`);
 
   updateAccountConfig({
     name,
     apiKey,
     environment: env,
-    accountId,
+    portalId,
     authType,
     ...auth,
     tokenInfo,
@@ -35,13 +35,13 @@ const getOauthManager = (accountId, accountConfig) => {
   return oauthManagers.get(accountId);
 };
 
-const addOauthToAccountConfig = (accountId, oauth) => {
+const addOauthToAccountConfig = (portalId, oauth) => {
   logger.log('Updating configuration');
   try {
     updateAccountConfig({
       ...oauth.toObj(),
       authType: AUTH_METHODS.oauth.value,
-      accountId,
+      portalId,
     });
     writeConfig();
     logger.log('Configuration updated');

@@ -44,7 +44,7 @@ async function getAccessToken(
     }
   }
   return {
-    accountId: response.hubId,
+    portalId: response.hubId,
     accessToken: response.oauthAccessToken,
     expiresAt: moment(response.expiresAtMillis),
     scopeGroups: response.scopeGroups,
@@ -66,7 +66,7 @@ async function refreshAccessToken(
 
   updateAccountConfig({
     ...config,
-    accountId,
+    portalId: accountId,
     tokenInfo: {
       accessToken,
       expiresAt: expiresAt.toISOString(),
@@ -143,10 +143,10 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     logErrorInstance(err);
     return;
   }
-  const { accountId, accessToken, expiresAt } = token;
+  const { portalId, accessToken, expiresAt } = token;
 
   const updatedConfig = updateAccountConfig({
-    accountId,
+    portalId,
     personalAccessKey,
     name,
     environment: getValidEnv(accountEnv, true),
