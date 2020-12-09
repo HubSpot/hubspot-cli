@@ -27,7 +27,7 @@ const ignoreList = [
 
 const ignoreRules = ignore().add(ignoreList);
 
-let configPath = null;
+let searchDomain = null;
 let loaded = false;
 function loadIgnoreConfig() {
   if (loaded) {
@@ -37,7 +37,7 @@ function loadIgnoreConfig() {
   if (file) {
     if (fs.existsSync(file)) {
       ignoreRules.add(fs.readFileSync(file).toString());
-      configPath = path.dirname(file);
+      searchDomain = path.dirname(file);
     }
   }
   loaded = true;
@@ -45,7 +45,7 @@ function loadIgnoreConfig() {
 
 function shouldIgnoreFile(file) {
   loadIgnoreConfig();
-  const relativeTo = configPath || '/';
+  const relativeTo = searchDomain || '/';
   const relativePath = path.relative(relativeTo, file);
 
   return !!relativePath && ignoreRules.ignores(relativePath);
