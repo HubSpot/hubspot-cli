@@ -37,20 +37,19 @@ const setConfig = updatedConfig => {
 const getConfigAccounts = config => {
   const __config = config || getConfig();
   if (!__config) return;
-
-  return __config.accounts || __config.portals;
+  return __config.portals;
 };
 
 const getConfigDefaultAccount = config => {
   const __config = config || getConfig();
   if (!__config) return;
-  return __config.defaultAccount || __config.defaultPortal;
+  return __config.defaultPortal;
 };
 
 const getConfigAccountId = config => {
   const __config = config || getConfig();
   if (!__config) return;
-  return __config.accountId || __config.portalId;
+  return __config.portalId;
 };
 
 /**
@@ -64,25 +63,25 @@ const validateConfig = () => {
   }
   const accounts = getConfigAccounts();
   if (!Array.isArray(accounts)) {
-    logger.error('config.accounts[] is not defined');
+    logger.error('config.portals[] is not defined');
     return false;
   }
   const accountIdsHash = {};
   const accountNamesHash = {};
   return accounts.every(cfg => {
     if (!cfg) {
-      logger.error('config.accounts[] has an empty entry');
+      logger.error('config.portals[] has an empty entry');
       return false;
     }
 
     const accountId = getConfigAccountId(cfg);
     if (!accountId) {
-      logger.error('config.accounts[] has an entry missing accountId');
+      logger.error('config.portals[] has an entry missing portalId');
       return false;
     }
     if (accountIdsHash[accountId]) {
       logger.error(
-        `config.accounts[] has multiple entries with accountId=${accountId}`
+        `config.portals[] has multiple entries with portalId=${accountId}`
       );
       return false;
     }
@@ -90,7 +89,7 @@ const validateConfig = () => {
     if (cfg.name) {
       if (accountNamesHash[cfg.name]) {
         logger.error(
-          `config.name has multiple entries with accountId=${accountId}`
+          `config.name has multiple entries with portalId=${accountId}`
         );
         return false;
       }
@@ -118,18 +117,10 @@ const accountNameExistsInConfig = name => {
 };
 
 const getOrderedAccount = unorderedAccount => {
-  const {
-    name,
-    accountId,
-    portalId,
-    env,
-    authType,
-    ...rest
-  } = unorderedAccount;
+  const { name, portalId, env, authType, ...rest } = unorderedAccount;
 
   return {
     name,
-    ...(accountId && { accountId }),
     ...(portalId && { portalId }),
     env,
     authType,
@@ -139,23 +130,20 @@ const getOrderedAccount = unorderedAccount => {
 
 const getOrderedConfig = unorderedConfig => {
   const {
-    defaultAccount,
     defaultPortal,
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    accounts,
     portals,
     ...rest
   } = unorderedConfig;
 
   return {
-    ...(defaultAccount && { defaultAccount }),
     ...(defaultPortal && { defaultPortal }),
     defaultMode,
     httpTimeout,
     allowsUsageTracking,
-    accounts: (accounts || portals).map(getOrderedAccount),
+    portals: portals.map(getOrderedAccount),
     ...rest,
   };
 };
@@ -345,7 +333,7 @@ const loadConfigFromFile = (path, options = {}) => {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
     _config = {
-      accounts: [],
+      portals: [],
     };
   }
 };
@@ -420,11 +408,11 @@ const getEnv = nameOrId => {
 
 const getAccountConfig = accountId =>
   getConfigAccounts(getAndLoadConfigIfNeeded()).find(
-    account => account.accountId === accountId || account.portalId === accountId
+    account => account.portalId === accountId
   );
 
 /*
- * Returns a accountId from the config if it exists, else returns null
+ * Returns a portalId from the config if it exists, else returns null
  */
 const getAccountId = nameOrId => {
   const config = getAndLoadConfigIfNeeded();
@@ -452,11 +440,11 @@ const getAccountId = nameOrId => {
   if (name) {
     account = accounts.find(p => p.name === name);
   } else if (accountId) {
-    account = accounts.find(p => [p.accountId, p.portalId].includes(accountId));
+    account = accounts.find(p => accountId === p.portalId);
   }
 
   if (account) {
-    return account.accountId || account.portalId;
+    return account.portalId;
   }
 
   return null;
@@ -467,7 +455,6 @@ const getAccountId = nameOrId => {
  */
 const updateAccountConfig = configOptions => {
   const {
-    accountId: _accountId,
     portalId,
     authType,
     environment,
@@ -480,22 +467,13 @@ const updateAccountConfig = configOptions => {
     apiKey,
     personalAccessKey,
   } = configOptions;
-  const accountId = _accountId || portalId;
 
-  if (!accountId) {
-    throw new Error('An accountId is required to update the config');
+  if (!portalId) {
+    throw new Error('An portalId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
-  const accountConfig = getAccountConfig(accountId);
-
-  if (accountConfig && accountConfig.portalId) {
-    accountConfig.accountId = accountConfig.accountId || accountConfig.portalId;
-    delete accountConfig.portalId;
-    logger.warn(
-      `The 'portalId' property within hubspot.config.yml has been deprecated.  Your config has been automatically migrated to use 'accountId'.`
-    );
-  }
+  const accountConfig = getAccountConfig(portalId);
 
   let auth;
   if (clientId || clientSecret || scopes || tokenInfo) {
@@ -516,7 +494,6 @@ const updateAccountConfig = configOptions => {
     ...accountConfig,
     name: name || (accountConfig && accountConfig.name),
     env,
-    ...(_accountId && { accountId: _accountId }),
     ...(portalId && { portalId }),
     authType,
     auth,
@@ -527,11 +504,11 @@ const updateAccountConfig = configOptions => {
 
   let accounts = getConfigAccounts(config);
   if (accountConfig) {
-    logger.debug(`Updating config for ${accountId}`);
+    logger.debug(`Updating config for ${portalId}`);
     const index = accounts.indexOf(accountConfig);
     accounts[index] = nextAccountConfig;
   } else {
-    logger.debug(`Adding config entry for ${accountId}`);
+    logger.debug(`Adding config entry for ${portalId}`);
     if (accounts) {
       accounts.push(nextAccountConfig);
     } else {
@@ -551,19 +528,12 @@ const updateDefaultAccount = defaultAccount => {
     (typeof defaultAccount !== 'number' && typeof defaultAccount !== 'string')
   ) {
     throw new Error(
-      'A defaultAccount with value of number or string is required to update the config'
+      `A 'defaultPortal' with value of number or string is required to update the config`
     );
   }
 
   const config = getAndLoadConfigIfNeeded();
-  config.defaultAccount = defaultAccount;
-
-  if (config.defaultPortal) {
-    delete config.defaultPortal;
-    logger.warn(
-      `The 'defaultPortal' property within hubspot.config.yml has been deprecated.  Your config has been automatically migrated to use 'defaultAccount'.`
-    );
-  }
+  config.defaultPortal = defaultAccount;
 
   setDefaultConfigPathIfUnset();
   writeConfig();
@@ -611,24 +581,18 @@ const getConfigVariablesFromEnv = () => {
     clientId: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_ID],
     clientSecret: env[ENVIRONMENT_VARIABLES.HUBSPOT_CLIENT_SECRET],
     personalAccessKey: env[ENVIRONMENT_VARIABLES.HUBSPOT_PERSONAL_ACCESS_KEY],
-    accountId: parseInt(
-      env[
-        ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID ||
-          ENVIRONMENT_VARIABLES.HUBSPOT_ACCOUNT_ID
-      ],
-      10
-    ),
+    portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
     refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
     env: getValidEnv(env[ENVIRONMENT_VARIABLES.HUBSPOT_ENVIRONMENT]),
   };
 };
 
-const generatePersonalAccessKeyConfig = (accountId, personalAccessKey, env) => {
+const generatePersonalAccessKeyConfig = (portalId, personalAccessKey, env) => {
   return {
-    accounts: [
+    portals: [
       {
         authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        accountId,
+        portalId,
         personalAccessKey,
         env,
       },
@@ -637,7 +601,7 @@ const generatePersonalAccessKeyConfig = (accountId, personalAccessKey, env) => {
 };
 
 const generateOauthConfig = (
-  accountId,
+  portalId,
   clientId,
   clientSecret,
   refreshToken,
@@ -645,10 +609,10 @@ const generateOauthConfig = (
   env
 ) => {
   return {
-    accounts: [
+    portals: [
       {
         authType: OAUTH_AUTH_METHOD.value,
-        accountId,
+        portalId,
         auth: {
           clientId,
           clientSecret,
@@ -663,12 +627,12 @@ const generateOauthConfig = (
   };
 };
 
-const generateApiKeyConfig = (accountId, apiKey, env) => {
+const generateApiKeyConfig = (portalId, apiKey, env) => {
   return {
-    accounts: [
+    portals: [
       {
         authType: API_KEY_AUTH_METHOD.value,
-        accountId,
+        portalId,
         apiKey,
         env,
       },
@@ -682,20 +646,20 @@ const loadConfigFromEnvironment = () => {
     clientId,
     clientSecret,
     personalAccessKey,
-    accountId,
+    portalId,
     refreshToken,
     env,
   } = getConfigVariablesFromEnv();
 
-  if (!accountId) {
+  if (!portalId) {
     return;
   }
 
   if (personalAccessKey) {
-    return generatePersonalAccessKeyConfig(accountId, personalAccessKey, env);
+    return generatePersonalAccessKeyConfig(portalId, personalAccessKey, env);
   } else if (clientId && clientSecret && refreshToken) {
     return generateOauthConfig(
-      accountId,
+      portalId,
       clientId,
       clientSecret,
       refreshToken,
@@ -703,7 +667,7 @@ const loadConfigFromEnvironment = () => {
       env
     );
   } else if (apiKey) {
-    return generateApiKeyConfig(accountId, apiKey, env);
+    return generateApiKeyConfig(portalId, apiKey, env);
   } else {
     return;
   }
@@ -715,10 +679,10 @@ const loadEnvironmentVariableConfig = () => {
   if (!envConfig) {
     return;
   }
-  const { accountId } = getConfigVariablesFromEnv();
+  const { portalId } = getConfigVariablesFromEnv();
 
   logger.debug(
-    `Loaded config from environment variables for account ${accountId}`
+    `Loaded config from environment variables for account ${portalId}`
   );
 
   return setConfig(envConfig);
