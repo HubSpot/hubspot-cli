@@ -23,7 +23,7 @@ const { validateAccount } = require('../../lib/validation');
 
 const makeSpinner = (functionPath, accountIdentifier) => {
   return ora(
-    `Building new bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
+    `Building and deploying new bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
   );
 };
 
@@ -39,7 +39,7 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'package <path>';
+exports.command = 'deploy <path>';
 exports.describe = false;
 // Uncomment to unhide 'builds a new dependency bundle for the specified .functions folder';
 
@@ -50,7 +50,7 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const spinner = makeSpinner(functionPath, accountId);
 
-  trackCommandUsage('functions-package', { functionPath }, accountId);
+  trackCommandUsage('functions-deploy', { functionPath }, accountId);
 
   const splitFunctionPath = functionPath.split('.');
 
@@ -63,7 +63,7 @@ exports.handler = async options => {
   }
 
   logger.debug(
-    `Starting build for .functions folder with path: ${functionPath}`
+    `Starting build and deploy for .functions folder with path: ${functionPath}`
   );
 
   spinner.start();
@@ -71,7 +71,7 @@ exports.handler = async options => {
     await buildPackage(accountId, `${functionPath}/package.json`);
     spinner.stop();
     logger.success(
-      `Successfully built bundle from package.json for ${functionPath} on account ${accountId}.`
+      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId}.`
     );
   } catch (e) {
     spinner.stop();
@@ -94,8 +94,8 @@ exports.builder = yargs => {
   });
   yargs.example([
     [
-      '$0 functions package myFunctionFolder.functions',
-      'Build a new bundle for all functions within the myFunctionFolder.functions folder',
+      '$0 functions deploy myFunctionFolder.functions',
+      'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
     ],
   ]);
 
