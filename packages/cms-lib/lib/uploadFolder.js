@@ -54,7 +54,7 @@ function getFilesByType(files) {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(accountId, src, dest, { mode, cwd }) {
+async function uploadFolder(accountId, src, dest, { mode }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const apiOptions = {
     qs: getFileMapperApiQueryFromMode(mode),
@@ -68,7 +68,7 @@ async function uploadFolder(accountId, src, dest, { mode, cwd }) {
       }
       return true;
     })
-    .filter(createIgnoreFilter(cwd));
+    .filter(createIgnoreFilter());
 
   const filesByType = getFilesByType(allowedFiles);
 

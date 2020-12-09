@@ -30,7 +30,6 @@ describe('uploadFolder', () => {
       const accountId = 123;
       const src = 'folder';
       const dest = 'folder';
-      const cwd = '/home/tom';
       const uploadedFilesInOrder = [
         'folder/images/image.png',
         'folder/images/image.jpg',
@@ -44,7 +43,7 @@ describe('uploadFolder', () => {
         'folder/templates/page.html',
       ];
 
-      await uploadFolder(accountId, src, dest, { mode: 'publish', cwd });
+      await uploadFolder(accountId, src, dest, { mode: 'publish' });
 
       expect(upload).toReturnTimes(10);
 

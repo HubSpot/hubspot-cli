@@ -27,7 +27,7 @@ const ignoreList = [
 
 const ignoreRules = ignore().add(ignoreList);
 
-let configPath = null;
+let searchDomain = null;
 let loaded = false;
 function loadIgnoreConfig() {
   if (loaded) {
@@ -37,22 +37,23 @@ function loadIgnoreConfig() {
   if (file) {
     if (fs.existsSync(file)) {
       ignoreRules.add(fs.readFileSync(file).toString());
-      configPath = path.dirname(file);
+      searchDomain = path.dirname(file);
     }
   }
   loaded = true;
 }
 
-function shouldIgnoreFile(file, cwd) {
+function shouldIgnoreFile(file) {
   loadIgnoreConfig();
-  const relativeTo = configPath || cwd;
+  const relativeTo = searchDomain || '/';
   const relativePath = path.relative(relativeTo, file);
+
   return !!relativePath && ignoreRules.ignores(relativePath);
 }
 
-function createIgnoreFilter(cwd) {
+function createIgnoreFilter() {
   loadIgnoreConfig();
-  return file => !shouldIgnoreFile(file, cwd);
+  return file => !shouldIgnoreFile(file);
 }
 
 function ignoreFile(filePath) {

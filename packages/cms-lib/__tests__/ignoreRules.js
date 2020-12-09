@@ -8,43 +8,41 @@ const NODE_MODULES_FILE = `${NODE_MODULES_FOLDER}/a-really-fake-package-name/REA
 describe('ignoreRules', () => {
   describe('shouldIgnoreFile', () => {
     it('ignores node_modules folder', () => {
-      expect(shouldIgnoreFile(NODE_MODULES_FOLDER, CWD)).toBe(true);
+      expect(shouldIgnoreFile(NODE_MODULES_FOLDER)).toBe(true);
     });
 
     it('ignores files nested within node_modules folder', () => {
-      expect(shouldIgnoreFile(NODE_MODULES_FILE, CWD)).toBe(true);
+      expect(shouldIgnoreFile(NODE_MODULES_FILE)).toBe(true);
     });
 
     it('ignores CLI config files', () => {
-      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yml`, CWD)).toBe(true);
-      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yaml`, CWD)).toBe(true);
-      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yml`, CWD)).toBe(
-        true
-      );
-      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yaml`, CWD)).toBe(
+      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yml`)).toBe(true);
+      expect(shouldIgnoreFile(`${CWD}/hubspot.config.yaml`)).toBe(true);
+      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yml`)).toBe(true);
+      expect(shouldIgnoreFile(`${CWD}/some/dir/hubspot.config.yaml`)).toBe(
         true
       );
     });
 
     it('ignores hidden folders', () => {
-      expect(shouldIgnoreFile(`${REPO_FOLDER}/.hiddenFolder`, CWD)).toBe(true);
+      expect(shouldIgnoreFile(`${REPO_FOLDER}/.hiddenFolder`)).toBe(true);
     });
 
     it('ignores hidden files', () => {
-      expect(shouldIgnoreFile(`${REPO_FOLDER}/.hiddenFile.js`, CWD)).toBe(true);
-      expect(shouldIgnoreFile(`${REPO_FOLDER}/.*`, CWD)).toBe(true);
+      expect(shouldIgnoreFile(`${REPO_FOLDER}/.hiddenFile.js`)).toBe(true);
+      expect(shouldIgnoreFile(`${REPO_FOLDER}/.*`)).toBe(true);
     });
 
     it('does not ignore allowed folders', () => {
-      expect(shouldIgnoreFile(`${REPO_FOLDER}/hiddenFile/`, CWD)).toBe(false);
+      expect(shouldIgnoreFile(`${REPO_FOLDER}/hiddenFile/`)).toBe(false);
     });
 
     it('does not ignore allowed files', () => {
-      expect(shouldIgnoreFile(`${REPO_FOLDER}/hiddenFile.js`, CWD)).toBe(false);
+      expect(shouldIgnoreFile(`${REPO_FOLDER}/hiddenFile.js`)).toBe(false);
     });
 
     it('does not ignore the current folder', () => {
-      expect(shouldIgnoreFile('.', process.cwd())).toBe(false);
+      expect(shouldIgnoreFile('.')).toBe(false);
     });
   });
 });
