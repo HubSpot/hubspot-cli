@@ -9,9 +9,9 @@ const {
 const { LOG_LEVEL } = Logger;
 
 const addAccountOptions = program =>
-  program.option('account', {
-    alias: ['a', 'portal', 'p'],
-    describe: 'HubSpot account id or name from config',
+  program.option('portal', {
+    alias: ['p', 'account', 'a'],
+    describe: 'HubSpot portal id or name from config',
     type: 'string',
   });
 
