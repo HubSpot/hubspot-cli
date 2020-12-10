@@ -77,6 +77,8 @@ exports.handler = async options => {
     spinner.stop();
     if (e.statusCode === 404) {
       logger.error(`Unable to find package.json for function ${functionPath}.`);
+    } else if (e.statusCode === 400) {
+      logger.error(e.error.message);
     } else {
       logApiErrorInstance(
         accountId,
