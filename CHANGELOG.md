@@ -1,7 +1,6 @@
 Change Log
 ==========
 ## 2.3.0
-* Deprecated `portalId` in favor of `accountId` in `hubspot.config.yml` (https://github.com/HubSpot/hubspot-cms-tools/pull/359)
 * Fixed an issue preventing serverless function log tailing from displaying properly (https://github.com/HubSpot/hubspot-cms-tools/pull/379)
 * Fixed a bug where large HubDB tables would not download correctly (https://github.com/HubSpot/hubspot-cms-tools/pull/384)
 * Fixed a bug where fetching filemanager files failed (https://github.com/HubSpot/hubspot-cms-tools/pull/387)
