@@ -150,7 +150,7 @@ exports.handler = async options => {
       functionId: functionResp.id,
       functionPath,
       accountId,
-      accountName: options.portal || options.account,
+      accountName: options.portal,
       compact,
     });
   } else if (latest) {

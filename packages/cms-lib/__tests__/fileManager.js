@@ -25,7 +25,7 @@ describe('uploadFolder', () => {
       const src = 'folder';
       const dest = 'folder';
 
-      await uploadFolder(accountId, src, dest, { cwd: '/home/tom' });
+      await uploadFolder(accountId, src, dest);
 
       expect(uploadFile).toReturnTimes(4);
 

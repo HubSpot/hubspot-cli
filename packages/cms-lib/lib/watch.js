@@ -21,12 +21,12 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function uploadFile(accountId, file, dest, { mode, cwd }) {
+function uploadFile(accountId, file, dest, { mode }) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
   }
-  if (shouldIgnoreFile(file, cwd)) {
+  if (shouldIgnoreFile(file)) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
@@ -59,8 +59,8 @@ function uploadFile(accountId, file, dest, { mode, cwd }) {
   });
 }
 
-async function deleteRemoteFile(accountId, filePath, remoteFilePath, { cwd }) {
-  if (shouldIgnoreFile(filePath, cwd)) {
+async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
+  if (shouldIgnoreFile(filePath)) {
     logger.debug(`Skipping ${filePath} due to an ignore rule`);
     return;
   }
@@ -84,12 +84,7 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath, { cwd }) {
   });
 }
 
-function watch(
-  accountId,
-  src,
-  dest,
-  { mode, cwd, remove, disableInitial, notify }
-) {
+function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   if (notify) {
@@ -98,7 +93,7 @@ function watch(
 
   const watcher = chokidar.watch(src, {
     ignoreInitial: true,
-    ignored: file => shouldIgnoreFile(file, cwd),
+    ignored: file => shouldIgnoreFile(file),
   });
 
   const getDesignManagerPath = file => {
@@ -108,7 +103,7 @@ function watch(
 
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
-    uploadFolder(accountId, src, dest, { mode, cwd })
+    uploadFolder(accountId, src, dest, { mode })
       .then(() => {
         logger.success(
           `Completed uploading files in ${src} to ${dest} in ${accountId}`
@@ -132,7 +127,6 @@ function watch(
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
-      cwd,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
@@ -141,21 +135,14 @@ function watch(
     const deleteFileOrFolder = type => filePath => {
       const remotePath = getDesignManagerPath(filePath);
 
-      if (shouldIgnoreFile(filePath, cwd)) {
+      if (shouldIgnoreFile(filePath)) {
         logger.debug(`Skipping ${filePath} due to an ignore rule`);
         return;
       }
 
       logger.debug('Attempting to delete %s "%s"', type, remotePath);
       queue.add(() => {
-        const deletePromise = deleteRemoteFile(
-          accountId,
-          filePath,
-          remotePath,
-          {
-            cwd,
-          }
-        )
+        const deletePromise = deleteRemoteFile(accountId, filePath, remotePath)
           .then(() => {
             logger.log('Deleted %s "%s"', type, remotePath);
           })
@@ -182,7 +169,6 @@ function watch(
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
-      cwd,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });

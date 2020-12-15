@@ -9,9 +9,9 @@ const {
 const { LOG_LEVEL } = Logger;
 
 const addAccountOptions = program =>
-  program.option('account', {
-    alias: ['a', 'portal', 'p'],
-    describe: 'HubSpot account id or name from config',
+  program.option('portal', {
+    alias: ['p', 'account', 'a'],
+    describe: 'HubSpot portal id or name from config',
     type: 'string',
   });
 
@@ -83,10 +83,6 @@ const getAccountId = (options = {}) => {
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-  }
-
-  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
-    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   }
 
   return getAccountIdFromConfig(portal || account);

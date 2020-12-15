@@ -4,7 +4,7 @@ const {
   addOverwriteOptions,
 } = require('../lib/commonOpts');
 const list = require('./functions/list');
-const package = require('./functions/package');
+const deploy = require('./functions/deploy');
 const test = require('./functions/test');
 
 exports.command = 'functions';
@@ -20,7 +20,7 @@ exports.builder = yargs => {
       ...list,
       aliases: 'ls',
     })
-    .command(package)
+    .command(deploy)
     .command(test)
     .demandCommand(1, '');
 
