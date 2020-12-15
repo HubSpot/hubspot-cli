@@ -1,5 +1,8 @@
 Change Log
 ==========
+## 2.2.1
+* To align with preferred terminology, we replaced instances of the word `portal` with the word `account`.  This was done in a non-breaking way, and any flag that currently accepts `account` will still accept `portal`.  The one exception to this migration is the `hubspot.config.yml` file.  We excluded this from the migration since it could potentially break backwards compatibility.  The `portals`, `portal`, and `defaultPortal` nomenclature will remain for `hubspot.config.yml`
+
 ## 2.2.0
 * **New Command**: `hs completion`.  Generate a `bash` or `zsh` completion script and be able to install it for command completion capabilities (https://github.com/HubSpot/hubspot-cms-tools/pull/342)
 * **New Command**: `hs open`.  Open a shortcut specific to your HubSpot account. Try `hs open --list` to see all available shortcuts (https://github.com/HubSpot/hubspot-cms-tools/pull/344)
