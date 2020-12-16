@@ -55,6 +55,11 @@ const AWS_RESERVED_VARS = [
 ];
 const AWS_RESERVED_VARS_INFO_URL =
   'https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables';
+const DEFAULTS = {
+  HUBSPOT_CONTACT_VID: 123,
+  HUBSPOT_CONTACT_IS_LOGGED_IN: false,
+  HUBSPOT_CONTACT_LIST_MEMBERSHIPS: [],
+};
 
 /* TODO
   - Make sure the shape of dataForFunc mimics shape of data passed in first param in cloud functions
@@ -234,7 +239,8 @@ const addEndpointToApp = (
   accountId,
   globalEnvironment,
   localEnvironment,
-  secrets
+  secrets,
+  options
 ) => {
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const startTime = Date.now();
@@ -257,6 +263,11 @@ const addEndpointToApp = (
 
     try {
       loadEnvironmentVariables(globalEnvironment, localEnvironment);
+      const {
+        HUBSPOT_CONTACT_VID,
+        HUBSPOT_CONTACT_IS_LOGGED_IN,
+        HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+      } = process.env;
       const dataForFunc = {
         secrets: await getSecrets(functionPath, secrets),
         params: req.query,
@@ -267,6 +278,20 @@ const addEndpointToApp = (
         body: req.body,
         headers: getHeaders(req),
         accountId,
+        contact: options.contact
+          ? {
+              vid:
+                parseInt(HUBSPOT_CONTACT_VID, 10) ||
+                DEFAULTS.HUBSPOT_CONTACT_VID,
+              isLoggedIn:
+                HUBSPOT_CONTACT_IS_LOGGED_IN ||
+                DEFAULTS.HUBSPOT_CONTACT_IS_LOGGED_IN,
+              listMemberships:
+                (HUBSPOT_CONTACT_LIST_MEMBERSHIPS.length &&
+                  HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
+                DEFAULTS.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+            }
+          : null,
       };
 
       await main(dataForFunc, sendResponseValue => {
@@ -348,7 +373,8 @@ const createTemporaryFunction = async functionData => {
   };
 };
 
-const runTestServer = async (port, accountId, functionPath) => {
+const runTestServer = async (accountId, options) => {
+  const { path: functionPath, port } = options;
   const validatedFunctionData = getValidatedFunctionData(functionPath);
 
   if (!validatedFunctionData) {
@@ -382,7 +408,8 @@ const runTestServer = async (port, accountId, functionPath) => {
           accountId,
           globalEnvironment,
           localEnvironment,
-          secrets
+          secrets,
+          options
         );
       });
     } else {
@@ -395,7 +422,8 @@ const runTestServer = async (port, accountId, functionPath) => {
         accountId,
         globalEnvironment,
         localEnvironment,
-        secrets
+        secrets,
+        options
       );
     }
   });
@@ -457,7 +485,7 @@ exports.handler = async options => {
   );
 
   try {
-    await runTestServer(port, accountId, functionPath);
+    await runTestServer(accountId, options);
   } catch (e) {
     logErrorInstance(e, {
       port,
@@ -477,6 +505,12 @@ exports.builder = yargs => {
     type: 'string',
     default: 5432,
   });
+  yargs.option('contact', {
+    describe: 'pass contact data to the test function',
+    type: 'boolean',
+    default: true,
+  });
+
   yargs.example([
     [
       '$0 functions test ./tmp/myFunctionFolder.functions',
