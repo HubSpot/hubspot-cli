@@ -56,6 +56,8 @@ const AWS_RESERVED_VARS = [
 const AWS_RESERVED_VARS_INFO_URL =
   'https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables';
 const DEFAULTS = {
+  HUBSPOT_LIMITS_TIME_REMAINING: 600000,
+  HUBSPOT_LIMITS_EXECUTIONS_REMAINING: 60,
   HUBSPOT_CONTACT_VID: 123,
   HUBSPOT_CONTACT_IS_LOGGED_IN: false,
   HUBSPOT_CONTACT_LIST_MEMBERSHIPS: [],
@@ -264,6 +266,8 @@ const addEndpointToApp = (
     try {
       loadEnvironmentVariables(globalEnvironment, localEnvironment);
       const {
+        HUBSPOT_LIMITS_TIME_REMAINING,
+        HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
         HUBSPOT_CONTACT_VID,
         HUBSPOT_CONTACT_IS_LOGGED_IN,
         HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
@@ -272,8 +276,12 @@ const addEndpointToApp = (
         secrets: await getSecrets(functionPath, secrets),
         params: req.query,
         limits: {
-          timeRemaining: 600000,
-          executionsRemaining: 60,
+          timeRemaining:
+            HUBSPOT_LIMITS_TIME_REMAINING ||
+            DEFAULTS.HUBSPOT_LIMITS_TIME_REMAINING,
+          executionsRemaining:
+            HUBSPOT_LIMITS_EXECUTIONS_REMAINING ||
+            DEFAULTS.HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
         },
         body: req.body,
         headers: getHeaders(req),
