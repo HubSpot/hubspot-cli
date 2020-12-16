@@ -5,6 +5,7 @@ const tmp = require('tmp');
 const { spawn } = require('child_process');
 const os = require('os');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -364,6 +365,7 @@ const runTestServer = async (port, accountId, functionPath) => {
 
   const app = express();
   app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(cors());
   app.set('trust proxy', true);
 
   routes.forEach(route => {
