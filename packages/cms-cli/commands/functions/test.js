@@ -30,7 +30,6 @@ const { getTableContents, getTableHeader } = require('../../lib/table');
 const { processLog } = require('@hubspot/cms-lib/lib/logs');
 
 const MAX_SECRETS = 50;
-const MAX_DEPS = 3;
 const MAX_RUNTIME = 3000;
 // AWS does not allow overriding these
 // https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables
@@ -91,15 +90,6 @@ const installDeps = folderPath => {
     fs.writeFileSync(
       `${folderPath}/package.json`,
       JSON.stringify(defaultFunctionPackageJson)
-    );
-  }
-
-  const packageJson = require(packageJsonPath);
-  const numDeps = Object.keys(packageJson.dependencies).length;
-
-  if (numDeps > MAX_DEPS) {
-    logger.warn(
-      `This function exceeds the maximum number of ${MAX_DEPS} dependencies. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
     );
   }
 
