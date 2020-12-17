@@ -1,6 +1,6 @@
 # @hubspot/local-serverless-server
 
-Provides an `hs` command for interacting with the HubSpot CMS. [Learn more about building on the HubSpot CMS](https://designers.hubspot.com/docs/key-concepts).
+A server to test CMS serverless functions locally.
 
 ## Getting started
 
@@ -20,150 +20,52 @@ yarn add @hubspot/cms-cli --dev
 npm install @hubspot/cms-cli
 ```
 
-### Configuring
-
-Once the `@hubspot/cms-cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
-
-```bash
-cd ~
-hs init
-```
-
-#### Auto Completion
-You can set up command autocompletion by running
+### Usage
+To start the server, the `start` method can be imported from the `@hubspot/local-serverless-server` package and run with settings like so...
 
 ```bash
-hs completion
+const { start } = require('@hubspot/local-serverless-server');
+
+start({
+  accountId: <portalId/accountId>,                                                  // default: 123456
+  contact: <booleanValueToSpecifyIfContactDataShouldBePassedToServerlessFunction>,  // default: true
+  path: <pathToLocalDotFunctionsFolder>,                                            // required
+  port: <customPortToRunServerOn>                                                   // default: 5432
+});
 ```
 
-and copying the output to either your `.bashrc` or `.zshrc`, and then sourcing that file `source ~/.bashrc` `source ~/.zshrc` or restarting your terminal.
+### Mocked Data
+Some of the data that is passed to the serverless function context is mocked. Specifically the `contact` and `limits` properties. It is possible
+to modify the mocked data values by setting values within the `environment` property of the `serverless.json` file.
 
-## Commands
-A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cms-cli).
+The environment variables to use to modify the data are:
 
-**Note:** When `@hubspot/cms-cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
-
-Initialize the CLI and create a config file
-
-```bash
-hs init
+```
+HUBSPOT_LIMITS_TIME_REMAINING       // default: 600000
+HUBSPOT_LIMITS_EXECUTIONS_REMAINING // default: 60
+HUBSPOT_CONTACT_VID                 // default: 123
+HUBSPOT_CONTACT_IS_LOGGED_IN        // default: false
+HUBSPOT_CONTACT_LIST_MEMBERSHIPS    // default: []
 ```
 
-Show all commands
+Usage example:
 
-```bash
-hs help
 ```
-
-Upload a file or directory to the Design Manager
-
-```bash
-hs upload --account=DEV [src] [dest]
-```
-
-Fetch a file or directory by path from the Design Manager
-
-```bash
-hs fetch --account=DEV [path] [dest]
-
-# Overwrite existing files
-hs fetch --account=DEV --overwrite [path] [dest]
-```
-
-Watch a directory of files and automatically upload changes to the Design Manager
-
-```bash
-hs watch --account=DEV [src] [dest]
-```
-
-Create a new asset locally
-
-```bash
-hs create [type] [dest]
-```
-
-Delete a file or directory from the Design Manager
-
-```bash
-hs remove --account=DEV [path]
-```
-
-Authenticate against an account using either `personalaccesskey` or `oauth2`
-
-```bash
-hs auth personalaccesskey
-```
-
-### File Manager Commands
-
-Upload a file or directory to the File Manager
-
-```bash
-hs filemanager upload --account=DEV [src] [dest]
-```
-
-Fetch a file or directory from the File Manager
-
-```bash
-hs filemanager fetch --account=DEV [src] [dest]
-
-# Overwrite existing files
-hs filemanager fetch --account=DEV --overwrite [path] [dest]
-```
-
-### HubDB Commands
-
-Create a new HubDB table
-
-```bash
-hs hubdb create <src>
-```
-
-Fetch a HubDB table
-
-```bash
-hs hubdb fetch <id or name> <src>
-```
-
-Clear all rows in a HubDB table
-
-```bash
-hs hubdb clear <id or name>
-```
-
-Delete a HubDB table
-
-```bash
-hs hubdb delete <id or name>
-```
-
-
-## Authentication
-
-There are three ways that the tools can authenticate with HubSpot.
-
-### Personal CMS Access Key (recommended)
-
-1. Run `hs init` or `hs auth personalaccesskey` and follow the instructions
-
-### OAuth2
-
-1. [Create a developer app](https://developers.hubspot.com/docs/faq/how-do-i-create-an-app-in-hubspot)
-2. Run `hs auth oauth2`
-3. Select `OAuth2` and follow the steps
-
-_**Note:** The Account ID used should be the CMS Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
-
-### HubSpot API Key
-
-1. [Set up an API Key for the CMS Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
-2. Edit the `hubspot.config.yml` file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
-
-```yaml
-defaultPortal: DEV
-portals:
-  - name: DEV
-    portalId: 123
-    authType: apikey
-    apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+{
+  "runtime": "nodejs12.x",
+  "version": "1.0",
+  "environment": {},
+  "secrets": [],
+  "endpoints": {
+    "myCustomEndpoint": {
+      "method": ["GET"],
+      "file": "myCustomEndpoint.js",
+      "environment": {
+        "HUBSPOT_CONTACT_VID": 456,
+        "HUBSPOT_CONTACT_IS_LOGGED_IN": true,
+        "HUBSPOT_CONTACT_LIST_MEMBERSHIPS": ["some", "memberships"]
+      }
+    }
+  }
+}
 ```
