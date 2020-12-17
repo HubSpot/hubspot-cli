@@ -43,7 +43,6 @@ exports.handler = async options => {
     `Starting test server for .functions folder with path: ${functionPath}`
   );
 
-  // await needed?
   startTestServer({
     accountId,
     ...options,
