@@ -23,7 +23,11 @@ const validateFunctionPath = functionPath => {
 const validatePort = port => {
   const parsedPort = parseInt(port, 10);
 
-  if (typeof parsedPort !== 'number' || parsedPort < 1 || parsedPort > 65535) {
+  if (
+    (port && typeof parsedPort !== 'number') ||
+    parsedPort < 1 ||
+    parsedPort > 65535
+  ) {
     logger.error(`Specified port ${port} is not valid.`);
     process.exit();
   }
