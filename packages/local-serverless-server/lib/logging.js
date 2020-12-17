@@ -8,7 +8,7 @@ const logFunctionExecution = (status, payload, startTime, endTime, logs) => {
   const roundedRuntime = Math.round(runTime * 100);
   const executionData = {
     executionTime: runTime,
-    log: logs.join('\n'),
+    log: (logs && logs.length && logs.join('\n')) || '',
     duration: `${roundedRuntime} ms`,
     status,
     createdAt: startTime,
