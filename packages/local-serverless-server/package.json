@@ -6,6 +6,7 @@
   "repository": "https://github.com/HubSpot/hubspot-cms-tools",
   "license": "Apache-2.0",
   "dependencies": {
+    "@hubspot/cms-lib": "^2.2.1",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "cors": "^2.8.5",
