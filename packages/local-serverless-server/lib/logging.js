@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cms-lib/logger');
 const { processLog } = require('@hubspot/cms-lib/lib/logs');
 
-const { MAX_RUNTIME } = './lib/constants';
+const { MAX_RUNTIME } = require('./constants');
 
 const logFunctionExecution = (status, payload, startTime, endTime, logs) => {
   const runTime = endTime - startTime;

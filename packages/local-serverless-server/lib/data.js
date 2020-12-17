@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { MAX_SECRETS } = './constants';
+const { MAX_SECRETS } = require('./constants');
 
 const getValidatedFunctionData = functionPath => {
   if (!fs.existsSync(functionPath)) {

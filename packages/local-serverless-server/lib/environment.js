@@ -1,5 +1,8 @@
 const { logger } = require('@hubspot/cms-lib/logger');
-const { AWS_RESERVED_VARS, AWS_RESERVED_VARS_INFO_URL } = './constants';
+const {
+  AWS_RESERVED_VARS,
+  AWS_RESERVED_VARS_INFO_URL,
+} = require('./constants');
 
 const loadEnvironmentVariables = (
   globalEnvironment = {},
