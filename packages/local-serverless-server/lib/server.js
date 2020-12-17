@@ -8,9 +8,7 @@ const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
-// Future
-// const { validateInputs } = require('./lib/validation');
-
+const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { getSecrets } = require('./secrets');
@@ -227,7 +225,7 @@ const runTestServer = async options => {
 
 const start = async options => {
   const { accountId, path: functionPath, port } = options;
-  // validateInputs(options);
+  validateInputs(options);
   // const app = express();
   // installMiddleware(app);
   // configure(app);
