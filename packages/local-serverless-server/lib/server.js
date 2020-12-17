@@ -3,6 +3,10 @@ const express = require('express');
 const fs = require('fs-extra');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { logger } = require('@hubspot/cms-lib/logger');
+const {
+  logErrorInstance,
+} = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
 // Future
 // const { validateInputs } = require('./lib/validation');
@@ -14,11 +18,6 @@ const { logFunctionExecution } = require('./logging');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
 const { DEFAULTS } = require('./constants');
-
-const { logger } = require('@hubspot/cms-lib/logger');
-const {
-  logErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers/standardErrors');
 
 const getHeaders = req => {
   const reqHeaders = req.headers;
