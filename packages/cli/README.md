@@ -1,6 +1,6 @@
-# @hubspot/cms-cli
+# @hubspot/cli
 
-Provides an `hs` command for interacting with the HubSpot CMS. [Learn more about building on the HubSpot CMS](https://designers.hubspot.com/docs/key-concepts).
+Provides an `hs` command for interacting with the HubSpot. [Learn more about building on HubSpot](https://developers.hubspot.com).
 
 ## Getting started
 
@@ -8,21 +8,14 @@ For more information on using these tools, see [Local Development Tooling: Getti
 
 ### Installation
 
-#### Using `yarn`
 
 ```bash
-yarn add @hubspot/cms-cli --dev
-```
-
-#### Using `npm`
-
-```bash
-npm install @hubspot/cms-cli
+npm install -g @hubspot/cli
 ```
 
 ### Configuring
 
-Once the `@hubspot/cms-cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
+Once the `@hubspot/cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
 
 ```bash
 cd ~
@@ -39,9 +32,9 @@ hs completion
 and copying the output to either your `.bashrc` or `.zshrc`, and then sourcing that file `source ~/.bashrc` `source ~/.zshrc` or restarting your terminal.
 
 ## Commands
-A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cms-cli).
+A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cli).
 
-**Note:** When `@hubspot/cms-cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
+**Note:** When `@hubspot/cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
 
 Initialize the CLI and create a config file
 

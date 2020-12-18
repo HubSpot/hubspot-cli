@@ -10,7 +10,7 @@ const { getMode } = require('../commonOpts');
 
 jest.mock('@hubspot/cms-lib');
 
-describe('@hubspot/cms-cli/lib/commonOpts', () => {
+describe('@hubspot/cli/lib/commonOpts', () => {
   describe('getMode()', () => {
     const accounts = {
       PROD: 123,

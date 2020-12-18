@@ -34,7 +34,7 @@ notifier.notify({
 });
 
 const argv = yargs
-  .usage('Tools for working with the HubSpot CMS')
+  .usage('Tools for working with the HubSpot')
   .middleware([setLogLevel])
   .exitProcess(false)
   .fail((msg, err, yargs) => {

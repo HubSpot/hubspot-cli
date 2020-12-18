@@ -3,7 +3,7 @@ Node packages intended for HubSpot CMS developers to enable local development an
 
 ## Getting Started
 
-See the `@hubspot/cms-cli` [README](./packages/cms-cli/README.md).
+See the `@hubspot/cli` [README](./packages/cli/README.md).
 
 
 ## Contributing
