@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { MAX_SECRETS } = require('./constants');
+const { getSecrets } = require('./secrets');
+const { DEFAULTS, MAX_SECRETS } = require('./constants');
 
 const getValidatedFunctionData = functionPath => {
   if (!fs.existsSync(functionPath)) {
@@ -41,6 +42,74 @@ const getValidatedFunctionData = functionPath => {
   };
 };
 
+const getHeaders = req => {
+  const reqHeaders = req.headers;
+
+  return {
+    Accept: reqHeaders.accept,
+    'Accept-Encoding': reqHeaders['accept-encoding'],
+    'Accept-Language': reqHeaders['accept-language'],
+    'Cache-Control': reqHeaders['cache-control'],
+    Connection: reqHeaders.connection,
+    Cookie: reqHeaders.cookie,
+    Host: reqHeaders.host,
+    'True-Client-IP': req.ip, // https://stackoverflow.com/a/14631683/3612910
+    'upgrade-insecure-requests': reqHeaders['upgrade-insecure-requests'],
+    'User-Agent': reqHeaders['user-agent'],
+    'X-Forwarded-For':
+      req.headers['x-forwarded-for'] || req.connection.remoteAddress, // https://stackoverflow.com/a/14631683/3612910
+  };
+};
+
+const getFunctionDataContext = async (
+  req,
+  functionPath,
+  secrets,
+  accountId,
+  contact
+) => {
+  const {
+    HUBSPOT_LIMITS_TIME_REMAINING,
+    HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
+    HUBSPOT_CONTACT_VID,
+    HUBSPOT_CONTACT_IS_LOGGED_IN,
+    HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+  } = process.env;
+  const secretValues = await getSecrets(functionPath, secrets);
+  const data = {
+    secrets: secretValues,
+    params: req.query,
+    limits: {
+      timeRemaining:
+        HUBSPOT_LIMITS_TIME_REMAINING || DEFAULTS.HUBSPOT_LIMITS_TIME_REMAINING,
+      executionsRemaining:
+        HUBSPOT_LIMITS_EXECUTIONS_REMAINING ||
+        DEFAULTS.HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
+    },
+    body: req.body,
+    headers: getHeaders(req),
+    accountId,
+    contact: contact
+      ? {
+          vid:
+            parseInt(HUBSPOT_CONTACT_VID, 10) || DEFAULTS.HUBSPOT_CONTACT_VID,
+          isLoggedIn:
+            HUBSPOT_CONTACT_IS_LOGGED_IN ||
+            DEFAULTS.HUBSPOT_CONTACT_IS_LOGGED_IN,
+          listMemberships:
+            (HUBSPOT_CONTACT_LIST_MEMBERSHIPS.length &&
+              HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
+            DEFAULTS.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+        }
+      : null,
+  };
+
+  console.log('data: ', data);
+
+  return data;
+};
+
 module.exports = {
   getValidatedFunctionData,
+  getFunctionDataContext,
 };
