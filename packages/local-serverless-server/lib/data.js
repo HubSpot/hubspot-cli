@@ -64,18 +64,18 @@ const getHeaders = req => {
 const getFunctionDataContext = async (
   req,
   functionPath,
-  secrets,
+  allowedSecrets,
   accountId,
   contact
 ) => {
+  const secretValues = getSecrets(functionPath, allowedSecrets);
   const {
     HUBSPOT_LIMITS_TIME_REMAINING,
     HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
     HUBSPOT_CONTACT_VID,
     HUBSPOT_CONTACT_IS_LOGGED_IN,
     HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
-  } = process.env;
-  const secretValues = await getSecrets(functionPath, secrets);
+  } = secretValues;
   const data = {
     secrets: secretValues,
     params: req.query,
@@ -89,19 +89,20 @@ const getFunctionDataContext = async (
     body: req.body,
     headers: getHeaders(req),
     accountId,
-    contact: contact
-      ? {
-          vid:
-            parseInt(HUBSPOT_CONTACT_VID, 10) || DEFAULTS.HUBSPOT_CONTACT_VID,
-          isLoggedIn:
-            HUBSPOT_CONTACT_IS_LOGGED_IN ||
-            DEFAULTS.HUBSPOT_CONTACT_IS_LOGGED_IN,
-          listMemberships:
-            (HUBSPOT_CONTACT_LIST_MEMBERSHIPS.length &&
-              HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
-            DEFAULTS.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
-        }
-      : null,
+    contact:
+      contact === 'true' || contact === true
+        ? {
+            vid:
+              parseInt(HUBSPOT_CONTACT_VID, 10) || DEFAULTS.HUBSPOT_CONTACT_VID,
+            isLoggedIn:
+              HUBSPOT_CONTACT_IS_LOGGED_IN ||
+              DEFAULTS.HUBSPOT_CONTACT_IS_LOGGED_IN,
+            listMemberships:
+              (HUBSPOT_CONTACT_LIST_MEMBERSHIPS &&
+                HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
+              DEFAULTS.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+          }
+        : null,
   };
 
   return data;

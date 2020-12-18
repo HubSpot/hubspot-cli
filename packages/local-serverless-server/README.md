@@ -36,9 +36,9 @@ start({
 
 ### Mocked Data
 Some of the data that is passed to the serverless function context is mocked. Specifically the `contact` and `limits` properties. It is possible
-to modify the mocked data values by setting values within the `environment` property of the `serverless.json` file.
+to modify the mocked data by setting values for specific variables within a `.env` file within the `.functions` folder.
 
-The environment variables to use to modify the data are:
+The variables used to modify the data are:
 
 ```
 HUBSPOT_LIMITS_TIME_REMAINING       // default: 600000
@@ -48,24 +48,10 @@ HUBSPOT_CONTACT_IS_LOGGED_IN        // default: false
 HUBSPOT_CONTACT_LIST_MEMBERSHIPS    // default: []
 ```
 
-Usage example:
+Usage example `.env`:
 
 ```
-{
-  "runtime": "nodejs12.x",
-  "version": "1.0",
-  "environment": {},
-  "secrets": [],
-  "endpoints": {
-    "myCustomEndpoint": {
-      "method": ["GET"],
-      "file": "myCustomEndpoint.js",
-      "environment": {
-        "HUBSPOT_CONTACT_VID": 456,
-        "HUBSPOT_CONTACT_IS_LOGGED_IN": true,
-        "HUBSPOT_CONTACT_LIST_MEMBERSHIPS": ["some", "memberships"]
-      }
-    }
-  }
-}
+HUBSPOT_CONTACT_VID=456
+HUBSPOT_CONTACT_IS_LOGGED_IN=true
+HUBSPOT_CONTACT_LIST_MEMBERSHIPS="some, memberships"
 ```

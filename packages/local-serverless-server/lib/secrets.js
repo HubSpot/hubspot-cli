@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
+const { DEFAULTS } = require('./constants');
 
 const loadDotEnvFile = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
@@ -13,15 +14,15 @@ const loadDotEnvFile = folderPath => {
   return {};
 };
 
-const getSecrets = async (functionPath, secrets) => {
-  const config = await loadDotEnvFile(functionPath);
+const getSecrets = (functionPath, secrets) => {
+  const config = loadDotEnvFile(functionPath);
   let secretsDict = {};
 
   if (config.error) {
     throw config.error;
   }
 
-  secrets.forEach(secret => {
+  secrets.concat(Object.keys(DEFAULTS)).forEach(secret => {
     if (Object.prototype.hasOwnProperty.call(process.env, secret)) {
       secretsDict[secret] = process.env[secret];
     }
