@@ -22,7 +22,7 @@ const getSecrets = (functionPath, secrets) => {
     throw config.error;
   }
 
-  secrets.concat(Object.keys(DEFAULTS)).forEach(secret => {
+  secrets.forEach(secret => {
     if (Object.prototype.hasOwnProperty.call(process.env, secret)) {
       secretsDict[secret] = process.env[secret];
     }
@@ -31,7 +31,25 @@ const getSecrets = (functionPath, secrets) => {
   return secretsDict;
 };
 
+const getMockedDataFromDotEnv = functionPath => {
+  const config = loadDotEnvFile(functionPath);
+  let mockedDataDict = {};
+
+  if (config.error) {
+    throw config.error;
+  }
+
+  Object.keys(DEFAULTS).forEach(mockValue => {
+    if (Object.prototype.hasOwnProperty.call(process.env, mockValue)) {
+      mockedDataDict[mockValue] = process.env[mockValue];
+    }
+  });
+
+  return mockedDataDict;
+};
+
 module.exports = {
   loadDotEnvFile,
+  getMockedDataFromDotEnv,
   getSecrets,
 };

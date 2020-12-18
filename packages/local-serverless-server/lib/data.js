@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { getSecrets } = require('./secrets');
+const { getMockedDataFromDotEnv, getSecrets } = require('./secrets');
 const { DEFAULTS, MAX_SECRETS } = require('./constants');
 
 const getValidatedFunctionData = functionPath => {
@@ -75,7 +75,7 @@ const getFunctionDataContext = async (
     HUBSPOT_CONTACT_VID,
     HUBSPOT_CONTACT_IS_LOGGED_IN,
     HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
-  } = secretValues;
+  } = getMockedDataFromDotEnv(functionPath);
   const data = {
     secrets: secretValues,
     params: req.query,
