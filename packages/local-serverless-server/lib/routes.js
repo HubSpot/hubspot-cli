@@ -36,7 +36,7 @@ const addEndpointToApp = (
 
     try {
       loadEnvironmentVariables(globalEnvironment, localEnvironment);
-      const dataForFunc = getFunctionDataContext(
+      const dataForFunc = await getFunctionDataContext(
         req,
         functionPath,
         secrets,

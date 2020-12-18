@@ -104,8 +104,6 @@ const getFunctionDataContext = async (
       : null,
   };
 
-  console.log('data: ', data);
-
   return data;
 };
 
