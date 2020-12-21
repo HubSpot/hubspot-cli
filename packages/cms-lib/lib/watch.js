@@ -99,6 +99,7 @@ function watch(
   const watcher = chokidar.watch(src, {
     ignoreInitial: true,
     ignored: file => shouldIgnoreFile(file, cwd),
+    alwaysStat: true,
   });
 
   const getDesignManagerPath = file => {
