@@ -13,7 +13,7 @@ const { setupRoutes } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
 const { DEFAULTS } = require('./constants');
-const { watch } = require('./watch');
+const { watch: watchFolder } = require('./watch');
 
 let connections = [];
 let isRestarting = false;
@@ -135,10 +135,7 @@ const runTestServer = async callback => {
 const restartServer = (event, filePath) => {
   if (!isRestarting) {
     isRestarting = true;
-    logger.log(
-      `Restarting Server: Changes detected in ${filePath}.`,
-      currentServer
-    );
+    logger.log(`Restarting Server: Changes detected in ${filePath}.`);
     return shutdownServer(currentServer, () => {
       cleanupArtifacts(tmpDir.name);
       return startServer(() => {
@@ -165,8 +162,10 @@ const startServer = async callback => {
 
 const start = async props => {
   options = props;
-  const { path: functionPath } = options;
-  watch(functionPath, restartServer);
+  const { path: functionPath, watch } = options;
+  if (watch) {
+    watchFolder(functionPath, restartServer);
+  }
   startServer();
 };
 

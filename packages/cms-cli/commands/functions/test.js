@@ -64,6 +64,12 @@ exports.builder = yargs => {
     type: 'boolean',
     default: true,
   });
+  yargs.option('watch', {
+    describe:
+      'watch the specified .functions folder for changes and restart the server',
+    type: 'boolean',
+    default: true,
+  });
 
   yargs.example([
     [
