@@ -99,6 +99,7 @@ function watch(
   const watcher = chokidar.watch(src, {
     ignoreInitial: true,
     ignored: file => shouldIgnoreFile(file, cwd),
+    // Before removing this line, look at https://github.com/HubSpot/hubspot-cms-tools/pull/407
     alwaysStat: true,
   });
 
