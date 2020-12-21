@@ -52,6 +52,7 @@ function createFileMapperNodeFromStreamResponse(filePath, response) {
  * @returns {Promise}
  */
 async function upload(accountId, src, dest, options = {}) {
+  console.log('upload: ', fs.createReadStream(path.resolve(getCwd(), src)));
   return http.post(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/upload/${encodeURIComponent(dest)}`,
     formData: {

@@ -16,6 +16,10 @@ const { DEFAULTS } = require('./constants');
 const { watch } = require('./watch');
 
 let connections = [];
+let isRestarting = false;
+let tmpDir;
+let currentServer;
+let options;
 
 const installMiddleware = app => {
   app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,16 +31,20 @@ const configure = app => {
 };
 
 const shutdownServer = (server, callback) => {
+  logger.debug(`Clearing ${connections.length} active server connections.`);
   connections.forEach(connection => {
     if (connection.destroyed === false) {
       connection.destroy();
     }
   });
 
-  server.close(callback);
+  connections = [];
+
+  logger.debug('Closing server.');
+  return server.close(callback);
 };
 
-const runTestServer = async options => {
+const runTestServer = async callback => {
   const { accountId, path: functionPath, port } = options;
   const validatedFunctionData = getValidatedFunctionData(functionPath);
 
@@ -48,9 +56,10 @@ const runTestServer = async options => {
     endpoints,
     routes,
     environment: globalEnvironment,
-    tmpDir,
+    tmpDir: temporaryDir,
     secrets,
   } = await createTemporaryFunction(validatedFunctionData);
+  tmpDir = temporaryDir;
 
   const app = express();
   installMiddleware(app);
@@ -66,7 +75,7 @@ const runTestServer = async options => {
     options
   );
 
-  const localFunctionTestServer = app.listen(port, () => {
+  currentServer = app.listen(port, () => {
     const testServerPath = `http://localhost:${port}`;
     logger.log(`Local test server running at ${testServerPath}`);
     const envVarsForMockedData = Object.keys(DEFAULTS);
@@ -93,51 +102,58 @@ const runTestServer = async options => {
         'Environment Variables',
       ])
     );
+
+    if (typeof callback === 'function') {
+      callback(currentServer);
+    }
+
     return logger.log(getTableContents(functionsAsArrays));
   });
 
-  localFunctionTestServer.on('connection', connection => {
+  currentServer.on('connection', connection => {
     connections.push(connection);
     connection.on('close', connection => {
       connections = connections.filter(curr => curr !== connection);
     });
   });
 
-  let wasRestarted = false;
+  let hasBeenRestarted = false;
   const onSigInt = () => {
-    if (!wasRestarted) {
-      shutdownServer(localFunctionTestServer);
+    if (!hasBeenRestarted) {
+      shutdownServer(currentServer);
       cleanupArtifacts(tmpDir.name);
       logger.info('Local function test server closed.');
       process.exit();
     }
   };
-  const restart = getRestart(options, tmpDir, localFunctionTestServer);
 
   process.on('SIGINT', onSigInt);
 
-  watch(functionPath, () => {
-    wasRestarted = true;
-    restart();
-  });
+  return currentServer;
 };
 
-const getRestart = (options, tmpDir, server) => {
-  return (event, filePath) => {
-    logger.log(`Restarting Server: Changes detected to ${filePath}.`);
-    shutdownServer(server, () => {
+const restartServer = (event, filePath) => {
+  if (!isRestarting) {
+    isRestarting = true;
+    logger.log(
+      `Restarting Server: Changes detected in ${filePath}.`,
+      currentServer
+    );
+    return shutdownServer(currentServer, () => {
       cleanupArtifacts(tmpDir.name);
-      start(options);
+      return startServer(() => {
+        isRestarting = false;
+      });
     });
-  };
+  }
 };
 
-const start = async options => {
+const startServer = async callback => {
   const { accountId, path: functionPath, port } = options;
   validateInputs(options);
 
   try {
-    await runTestServer(options);
+    await runTestServer(callback);
   } catch (e) {
     logErrorInstance(e, {
       port,
@@ -145,6 +161,13 @@ const start = async options => {
       functionPath,
     });
   }
+};
+
+const start = async props => {
+  options = props;
+  const { path: functionPath } = options;
+  watch(functionPath, restartServer);
+  startServer();
 };
 
 module.exports = {
