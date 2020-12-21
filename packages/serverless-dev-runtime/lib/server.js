@@ -13,6 +13,9 @@ const { setupRoutes } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
 const { DEFAULTS } = require('./constants');
+const { watch } = require('./watch');
+
+let connections = [];
 
 const installMiddleware = app => {
   app.use(bodyParser.urlencoded({ extended: true }));
@@ -21,6 +24,16 @@ const installMiddleware = app => {
 
 const configure = app => {
   app.set('trust proxy', true);
+};
+
+const shutdownServer = (server, callback) => {
+  connections.forEach(connection => {
+    if (connection.destroyed === false) {
+      connection.destroy();
+    }
+  });
+
+  server.close(callback);
 };
 
 const runTestServer = async options => {
@@ -83,12 +96,40 @@ const runTestServer = async options => {
     return logger.log(getTableContents(functionsAsArrays));
   });
 
-  process.on('SIGINT', () => {
-    localFunctionTestServer.close();
-    logger.info('Local function test server closed.');
-    cleanupArtifacts(tmpDir.name);
-    process.exit();
+  localFunctionTestServer.on('connection', connection => {
+    connections.push(connection);
+    connection.on('close', connection => {
+      connections = connections.filter(curr => curr !== connection);
+    });
   });
+
+  let wasRestarted = false;
+  const onSigInt = () => {
+    if (!wasRestarted) {
+      shutdownServer(localFunctionTestServer);
+      cleanupArtifacts(tmpDir.name);
+      logger.info('Local function test server closed.');
+      process.exit();
+    }
+  };
+  const restart = getRestart(options, tmpDir, localFunctionTestServer);
+
+  process.on('SIGINT', onSigInt);
+
+  watch(functionPath, () => {
+    wasRestarted = true;
+    restart();
+  });
+};
+
+const getRestart = (options, tmpDir, server) => {
+  return (event, filePath) => {
+    logger.log(`Restarting Server: Changes detected to ${filePath}.`);
+    shutdownServer(server, () => {
+      cleanupArtifacts(tmpDir.name);
+      start(options);
+    });
+  };
 };
 
 const start = async options => {

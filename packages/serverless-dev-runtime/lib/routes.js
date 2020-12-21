@@ -17,6 +17,9 @@ const addEndpointToApp = (
   secrets,
   options
 ) => {
+  logger.debug(
+    `Setting up route: ${route} to run function ${functionPath}/${file}.`
+  );
   const { contact } = options;
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const startTime = Date.now();
