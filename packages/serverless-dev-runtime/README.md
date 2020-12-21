@@ -1,6 +1,6 @@
-# @hubspot/local-serverless-server
+# @hubspot/serverless-dev-runtime
 
-A server to test CMS serverless functions locally.
+A serverless function development runtime that can be used to test CMS serverless functions. This is intended for use with the [CMS CLI](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli).
 
 ## Getting started
 
@@ -21,10 +21,10 @@ npm install @hubspot/cms-cli
 ```
 
 ### Usage
-To start the server, the `start` method can be imported from the `@hubspot/local-serverless-server` package and run with settings like so...
+To start the server, the `start` method can be imported from the `@hubspot/serverless-dev-runtime` package and run with settings like so...
 
 ```bash
-const { start } = require('@hubspot/local-serverless-server');
+const { start } = require('@hubspot/serverless-dev-runtime');
 
 start({
   accountId: <portalId/accountId>,                                                  // default: 123456

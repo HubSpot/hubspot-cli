@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hubspot/cms-lib": "^2.2.1",
-    "local-serverless-server": "^1.0.0",
+    "@hubspot/serverless-dev-runtime": "^1.0.0",
     "chalk": "^4.1.0",
     "inquirer": "^6.3.1",
     "open": "^7.0.3",

@@ -1,5 +1,5 @@
 {
-  "name": "local-serverless-server",
+  "name": "@hubspot/serverless-dev-runtime",
   "version": "1.0.0",
   "description": "A tool for testing HubSpot CMS serverless functions locally",
   "main": "index.js",

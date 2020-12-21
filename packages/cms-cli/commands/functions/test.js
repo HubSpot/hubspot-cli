@@ -13,7 +13,7 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cms-lib');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { start: startTestServer } = require('local-serverless-server');
+const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { validateAccount } = require('../../lib/validation');
 
 const loadAndValidateOptions = async options => {
