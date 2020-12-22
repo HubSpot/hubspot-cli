@@ -9,15 +9,6 @@ const validateFunctionPath = functionPath => {
   if (typeof functionPath !== 'string') {
     isInvalid();
   }
-
-  const splitFunctionPath = functionPath.split('.');
-
-  if (
-    !splitFunctionPath.length ||
-    splitFunctionPath[splitFunctionPath.length - 1] !== 'functions'
-  ) {
-    isInvalid();
-  }
 };
 
 const validatePort = port => {

@@ -3,7 +3,14 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { getMockedDataFromDotEnv, getSecrets } = require('./secrets');
 const { MOCK_DATA, MAX_SECRETS } = require('./constants');
 
-const getValidatedFunctionData = functionPath => {
+const getValidatedFunctionData = path => {
+  // Allow passing serverless folder path with and without .functions extension
+  const splitPath = path.split('.');
+  const functionPath =
+    splitPath[splitPath.length - 1] === 'functions'
+      ? path
+      : `${path}.functions`;
+
   if (!fs.existsSync(functionPath)) {
     logger.error(`The path ${functionPath} does not exist.`);
     return;
