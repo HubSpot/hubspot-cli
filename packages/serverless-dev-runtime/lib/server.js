@@ -12,7 +12,7 @@ const { getValidatedFunctionData } = require('./data');
 const { setupRoutes } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
-const { DEFAULTS } = require('./constants');
+const { MOCK_DATA } = require('./constants');
 const { watch: watchFolder } = require('./watch');
 
 let connections = [];
@@ -79,13 +79,10 @@ const runTestServer = async callback => {
   currentServer = app.listen(port, () => {
     const testServerPath = `http://localhost:${port}`;
     logger.log(`Local test server running at ${testServerPath}`);
-    const envVarsForMockedData = Object.keys(DEFAULTS);
+    const envVarsForMockedData = Object.keys(MOCK_DATA);
     const functionsAsArrays = routes.map(route => {
       const { method, environment: localEnvironment } = endpoints[route];
-      return [
-        `${testServerPath}/${route}`,
-        method.join(', '),
-        secrets.join(', '),
+      const environmentVariables =
         (localEnvironment &&
           Object.keys(localEnvironment)
             .map(envVar => {
@@ -94,9 +91,16 @@ const runTestServer = async callback => {
                 : chalk.keyword('orange')(envVar);
             })
             .join(', ')) ||
-          [],
+        [];
+
+      return [
+        `${testServerPath}/${route}`,
+        typeof method === 'string' ? method : method.join(', '),
+        secrets.join(', '),
+        environmentVariables,
       ];
     });
+
     functionsAsArrays.unshift(
       getTableHeader([
         'Endpoint',
@@ -125,7 +129,6 @@ const runTestServer = async callback => {
     if (!hasBeenRestarted) {
       shutdownServer(currentServer);
       cleanupArtifacts(tmpDir.name);
-      logger.info('Local function test server closed.');
       process.exit();
     }
   };

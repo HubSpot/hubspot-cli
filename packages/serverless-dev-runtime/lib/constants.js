@@ -21,7 +21,7 @@ const AWS_RESERVED_VARS = [
 ];
 const AWS_RESERVED_VARS_INFO_URL =
   'https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html#lambda-environment-variables';
-const DEFAULTS = {
+const MOCK_DATA = {
   HUBSPOT_LIMITS_TIME_REMAINING: 600000,
   HUBSPOT_LIMITS_EXECUTIONS_REMAINING: 60,
   HUBSPOT_CONTACT_VID: 123,
@@ -34,7 +34,7 @@ const MAX_RUNTIME = 3000;
 module.exports = {
   AWS_RESERVED_VARS,
   AWS_RESERVED_VARS_INFO_URL,
-  DEFAULTS,
   MAX_RUNTIME,
   MAX_SECRETS,
+  MOCK_DATA,
 };

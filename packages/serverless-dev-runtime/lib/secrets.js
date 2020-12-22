@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { DEFAULTS } = require('./constants');
+const { MOCK_DATA } = require('./constants');
 
 const loadDotEnvFile = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
@@ -39,7 +39,7 @@ const getMockedDataFromDotEnv = functionPath => {
     throw config.error;
   }
 
-  Object.keys(DEFAULTS).forEach(mockValue => {
+  Object.keys(MOCK_DATA).forEach(mockValue => {
     if (Object.prototype.hasOwnProperty.call(process.env, mockValue)) {
       mockedDataDict[mockValue] = process.env[mockValue];
     }

@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { getMockedDataFromDotEnv, getSecrets } = require('./secrets');
-const { DEFAULTS, MAX_SECRETS } = require('./constants');
+const { MOCK_DATA, MAX_SECRETS } = require('./constants');
 
 const getValidatedFunctionData = functionPath => {
   if (!fs.existsSync(functionPath)) {
@@ -81,10 +81,11 @@ const getFunctionDataContext = async (
     params: req.query,
     limits: {
       timeRemaining:
-        HUBSPOT_LIMITS_TIME_REMAINING || DEFAULTS.HUBSPOT_LIMITS_TIME_REMAINING,
+        HUBSPOT_LIMITS_TIME_REMAINING ||
+        MOCK_DATA.HUBSPOT_LIMITS_TIME_REMAINING,
       executionsRemaining:
         HUBSPOT_LIMITS_EXECUTIONS_REMAINING ||
-        DEFAULTS.HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
+        MOCK_DATA.HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
     },
     body: req.body,
     headers: getHeaders(req),
@@ -93,14 +94,15 @@ const getFunctionDataContext = async (
       contact === 'true' || contact === true
         ? {
             vid:
-              parseInt(HUBSPOT_CONTACT_VID, 10) || DEFAULTS.HUBSPOT_CONTACT_VID,
+              parseInt(HUBSPOT_CONTACT_VID, 10) ||
+              MOCK_DATA.HUBSPOT_CONTACT_VID,
             isLoggedIn:
               HUBSPOT_CONTACT_IS_LOGGED_IN ||
-              DEFAULTS.HUBSPOT_CONTACT_IS_LOGGED_IN,
+              MOCK_DATA.HUBSPOT_CONTACT_IS_LOGGED_IN,
             listMemberships:
               (HUBSPOT_CONTACT_LIST_MEMBERSHIPS &&
                 HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
-              DEFAULTS.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+              MOCK_DATA.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
           }
         : null,
   };
