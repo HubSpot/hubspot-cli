@@ -76,7 +76,7 @@ const addEndpointToApp = endpointData => {
         const { statusCode, body } = sendResponseValue;
         const endTime = Date.now();
         console.log = originalConsoleLog;
-        logFunctionExecution('SUCCESS', sendResponseValue, startTime, endTime);
+        logFunctionExecution('SUCCESS', body, startTime, endTime);
         outputTrackedLogs(trackedLogs);
         res.status(statusCode).json(body);
       });
