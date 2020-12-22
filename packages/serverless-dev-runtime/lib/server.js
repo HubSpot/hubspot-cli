@@ -21,6 +21,13 @@ let tmpDir;
 let currentServer;
 let options;
 
+const setOptions = optionsData => {
+  if (optionsData.contact === undefined) {
+    optionsData.contact = true;
+  }
+  options = optionsData;
+};
+
 const installMiddleware = app => {
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(cors());
@@ -167,7 +174,7 @@ const startServer = async callback => {
 };
 
 const start = async props => {
-  options = props;
+  setOptions(props);
   const { path: functionPath, watch, debug } = options;
   setLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
   if (watch) {
