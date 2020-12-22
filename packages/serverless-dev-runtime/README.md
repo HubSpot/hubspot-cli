@@ -21,6 +21,14 @@ npm install @hubspot/cms-cli
 ```
 
 ### Usage
+
+#### CLI Command
+To run the CLI command to test a local serverless function run...
+```bash
+hs functions <localDotFunctionsFolderPath>
+```
+
+#### Importing
 To start the server, the `start` method can be imported from the `@hubspot/serverless-dev-runtime` package and run with settings like so...
 
 ```bash
@@ -51,6 +59,8 @@ HUBSPOT_CONTACT_LIST_MEMBERSHIPS    // default: []
 Usage example `.env`:
 
 ```
+HUBSPOT_LIMITS_TIME_REMAINING=1000
+HUBSPOT_LIMITS_EXECUTIONS_REMAINING=2
 HUBSPOT_CONTACT_VID=456
 HUBSPOT_CONTACT_IS_LOGGED_IN=true
 HUBSPOT_CONTACT_LIST_MEMBERSHIPS="some, memberships"
