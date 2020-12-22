@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cms-lib/logger');
 const {
   logErrorInstance,
 } = require('@hubspot/cms-lib/errorHandlers/standardErrors');
@@ -168,7 +168,8 @@ const startServer = async callback => {
 
 const start = async props => {
   options = props;
-  const { path: functionPath, watch } = options;
+  const { path: functionPath, watch, debug } = options;
+  setLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
   if (watch) {
     watchFolder(functionPath, restartServer);
   }
