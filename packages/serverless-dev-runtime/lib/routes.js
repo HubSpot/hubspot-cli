@@ -5,25 +5,44 @@ const { getFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');
 
-const addEndpointToApp = (
-  app,
-  method,
-  route,
-  functionPath,
-  file,
-  accountId,
-  globalEnvironment,
-  localEnvironment,
-  secrets,
-  options
-) => {
+const outputTrackedLogs = trackedLogs => {
+  trackedLogs.forEach(trackedLog => {
+    logger.log(...trackedLog);
+  });
+};
+
+const addEndpointToApp = endpointData => {
+  const {
+    app,
+    method,
+    route,
+    functionPath,
+    tmpDir: { name: tmpDirName },
+    file,
+    accountId,
+    globalEnvironment,
+    localEnvironment,
+    secrets,
+    options,
+  } = endpointData;
   logger.debug(
     `Setting up route: ${route} to run function ${functionPath}/${file}.`
   );
   const { contact } = options;
+
+  if (!method) {
+    logger.error(`No method was specified for route "${route}"`);
+    process.exit();
+  }
+
+  if (!file) {
+    logger.error(`No file was specified for route "${route}"`);
+    process.exit();
+  }
+
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const startTime = Date.now();
-    const functionFilePath = path.resolve(`${functionPath}/${file}`);
+    const functionFilePath = path.resolve(`${tmpDirName}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
       return;
@@ -41,79 +60,59 @@ const addEndpointToApp = (
       loadEnvironmentVariables(globalEnvironment, localEnvironment);
       const dataForFunc = await getFunctionDataContext(
         req,
-        functionPath,
+        tmpDirName,
         secrets,
         accountId,
         contact
       );
 
+      // Capture anything logged within the serverless function
+      // for output later. Placement of this code matters!
       console.log = (...args) => {
         trackedLogs.push(args);
       };
 
       await main(dataForFunc, sendResponseValue => {
         const endTime = Date.now();
-
         console.log = originalConsoleLog;
         logFunctionExecution('SUCCESS', sendResponseValue, startTime, endTime);
-        trackedLogs.forEach(trackedLog => {
-          console.log(...trackedLog);
-        });
+        outputTrackedLogs(trackedLogs);
         res.json(sendResponseValue);
       });
     } catch (e) {
       const endTime = Date.now();
       console.log = originalConsoleLog;
       logFunctionExecution('UNHANDLED_ERROR', startTime, endTime);
-      trackedLogs.forEach(trackedLog => {
-        console.log(...trackedLog);
-      });
+      outputTrackedLogs(trackedLogs);
       res.json(e);
     }
   });
 };
 
-const setupRoutes = (
-  app,
-  routes,
-  endpoints,
-  tmpDir,
-  accountId,
-  globalEnvironment,
-  secrets,
-  options
-) => {
+const setupRoutes = routeData => {
+  const { routes, endpoints } = routeData;
+
   routes.forEach(route => {
     const { method, file, environment: localEnvironment } = endpoints[route];
 
     if (Array.isArray(method)) {
       method.forEach(methodType => {
-        addEndpointToApp(
-          app,
-          methodType,
+        addEndpointToApp({
+          ...routeData,
+          method: methodType,
           route,
-          tmpDir.name,
           file,
-          accountId,
-          globalEnvironment,
           localEnvironment,
-          secrets,
-          options
-        );
+        });
       });
     } else {
-      addEndpointToApp(
-        app,
+      addEndpointToApp({
+        ...routeData,
         method,
         route,
-        tmpDir.name,
         file,
-        accountId,
-        globalEnvironment,
         localEnvironment,
-        secrets,
-        options
-      );
+      });
     }
   });
 };

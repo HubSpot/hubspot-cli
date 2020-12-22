@@ -15,7 +15,7 @@ const getValidatedFunctionData = functionPath => {
     }
   }
 
-  const { endpoints, environment, secrets } = JSON.parse(
+  const { endpoints = [], environment = {}, secrets = [] } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })

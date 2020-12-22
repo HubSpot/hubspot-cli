@@ -64,16 +64,17 @@ const runTestServer = async callback => {
   const app = express();
   installMiddleware(app);
   configure(app);
-  setupRoutes(
+  setupRoutes({
     app,
     routes,
     endpoints,
+    functionPath,
     tmpDir,
     accountId,
     globalEnvironment,
     secrets,
-    options
-  );
+    options,
+  });
 
   currentServer = app.listen(port, () => {
     const testServerPath = `http://localhost:${port}`;
@@ -85,13 +86,15 @@ const runTestServer = async callback => {
         `${testServerPath}/${route}`,
         method.join(', '),
         secrets.join(', '),
-        Object.keys(localEnvironment)
-          .map(envVar => {
-            return envVarsForMockedData.indexOf(envVar) === -1
-              ? envVar
-              : chalk.keyword('orange')(envVar);
-          })
-          .join(', '),
+        (localEnvironment &&
+          Object.keys(localEnvironment)
+            .map(envVar => {
+              return envVarsForMockedData.indexOf(envVar) === -1
+                ? envVar
+                : chalk.keyword('orange')(envVar);
+            })
+            .join(', ')) ||
+          [],
       ];
     });
     functionsAsArrays.unshift(
@@ -135,7 +138,7 @@ const runTestServer = async callback => {
 const restartServer = (event, filePath) => {
   if (!isRestarting) {
     isRestarting = true;
-    logger.log(`Restarting Server: Changes detected in ${filePath}.`);
+    logger.info(`Restarting Server: Changes detected in ${filePath}.`);
     return shutdownServer(currentServer, () => {
       cleanupArtifacts(tmpDir.name);
       return startServer(() => {
