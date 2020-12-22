@@ -74,7 +74,6 @@ const addEndpointToApp = endpointData => {
 
       await main(dataForFunc, sendResponseValue => {
         const { statusCode, body } = sendResponseValue;
-        console.log('sendResponseValue: ', sendResponseValue);
         const endTime = Date.now();
         console.log = originalConsoleLog;
         logFunctionExecution('SUCCESS', sendResponseValue, startTime, endTime);
