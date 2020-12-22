@@ -73,18 +73,18 @@ const addEndpointToApp = endpointData => {
       };
 
       await main(dataForFunc, sendResponseValue => {
+        const { statusCode, body } = sendResponseValue;
+        console.log('sendResponseValue: ', sendResponseValue);
         const endTime = Date.now();
         console.log = originalConsoleLog;
         logFunctionExecution('SUCCESS', sendResponseValue, startTime, endTime);
         outputTrackedLogs(trackedLogs);
-        res.json(sendResponseValue.body);
+        res.status(statusCode).json(body);
       });
     } catch (e) {
-      const endTime = Date.now();
       console.log = originalConsoleLog;
-      logFunctionExecution('UNHANDLED_ERROR', startTime, endTime);
-      outputTrackedLogs(trackedLogs);
-      res.json(e);
+      logger.error(e);
+      res.status(500).json(e);
     }
   });
 };
