@@ -96,5 +96,4 @@ const outputLogs = (logsResp, options) => {
 
 module.exports = {
   outputLogs,
-  processLog,
 };
