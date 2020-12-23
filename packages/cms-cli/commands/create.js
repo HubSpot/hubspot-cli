@@ -1,4 +1,5 @@
 const path = require('path');
+const ora = require('ora');
 const fs = require('fs-extra');
 const {
   logFileSystemErrorInstance,
@@ -14,12 +15,18 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
 const { createModulePrompt } = require('../lib/createModulePrompt');
+const {
+  createApiSamplePrompt,
+  overwriteSamplePrompt,
+} = require('../lib/createApiSamplePrompt');
 const { commaSeparatedValues } = require('../lib/text');
+const { downloadConfig } = require('../lib/configs');
 
 const TYPES = {
   function: 'function',
   module: 'module',
   template: 'template',
+  'api-sample': 'api-sample',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
   'vue-app': 'vue-app',
@@ -52,6 +59,7 @@ const PROJECT_REPOSITORIES = {
   [TYPES['vue-app']]: 'cms-vue-boilerplate',
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
   [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
+  [TYPES['api-sample']]: 'hubspot-api-nodejs',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -173,7 +181,10 @@ exports.handler = async options => {
 
   let commandTrackingContext = { assetType: assetType };
 
-  if (!name && [TYPES.module, TYPES.template].includes(assetType)) {
+  if (
+    !name &&
+    [TYPES.module, TYPES.template, TYPES['api-sample']].includes(assetType)
+  ) {
     logger.error(
       `The 'name' argument is required when creating a ${assetType}.`
     );
@@ -191,6 +202,58 @@ exports.handler = async options => {
 
       commandTrackingContext.templateType = templateType;
       createTemplate(name, dest, templateType);
+      break;
+    }
+    case TYPES['api-sample']: {
+      const filePath = path.join(dest, name);
+      console.log(`File path ${filePath}, exists ${fs.existsSync(filePath)}`);
+      if (fs.existsSync(filePath)) {
+        const { overwrite } = await overwriteSamplePrompt(filePath);
+        if (overwrite) {
+          const removingSpinner = ora(`Removing existing ${filePath} folder`);
+          removingSpinner.start();
+          fs.rmdirSync(filePath, { recursive: true });
+          removingSpinner.stop();
+        } else {
+          return;
+        }
+      }
+      const downloadSpinner = ora('Downloading API samples config');
+      downloadSpinner.start();
+      const samplesConfig = await downloadConfig(
+        PROJECT_REPOSITORIES[assetType],
+        'sample-apps/samples-list.json'
+      );
+      downloadSpinner.stop();
+      if (!samplesConfig) {
+        logger.error(
+          `Currently there are no samples available, please, try again later.`
+        );
+        return;
+      }
+      const { sampleType, sampleLanguage } = await createApiSamplePrompt(
+        samplesConfig
+      );
+      if (!sampleType || !sampleLanguage) {
+        logger.error(
+          `Currently there are no samples available, please, try again later.`
+        );
+        return;
+      }
+      logger.info(
+        `You've chosen ${sampleType} sample written on ${sampleLanguage} language`
+      );
+      commandTrackingContext.templateType = sampleType;
+      await createProject(
+        filePath,
+        assetType,
+        PROJECT_REPOSITORIES[assetType],
+        `sample-apps/${sampleType}`,
+        options
+      );
+      logger.success(
+        `Please, follow ${filePath}/src/README.md to find out how to run the sample`
+      );
       break;
     }
     case TYPES['website-theme']:
