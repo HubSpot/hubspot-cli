@@ -1,8 +1,8 @@
 # Technical Design
 
-To provide CMS developers with a flexible and powerful set of tools, the technical design is as follows:
+To provide HubSpot developers with a flexible and powerful set of tools, the technical design is as follows:
 
-1. The commands should follow Unix best practices in terms of composibility. See [Unix Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
+1. The commands should follow Unix best practices in terms of composability. See [Unix Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
 
 ```
 Write programs that do one thing and do it well.

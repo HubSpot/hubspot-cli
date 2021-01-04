@@ -97,7 +97,7 @@ async function validateAccount(options) {
   } else if (authType === 'personalaccesskey') {
     if (!personalAccessKey) {
       logger.error(
-        `The account "${accountId}" is configured to use a CMS access key for authentication and is missing a "personalAccessKey" in the configuration file`
+        `The account "${accountId}" is configured to use a access key for authentication and is missing a "personalAccessKey" in the configuration file`
       );
       return false;
     }

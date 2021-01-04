@@ -159,7 +159,7 @@ describe('http', () => {
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
-          'User-Agent': `HubSpot CMS Tools/${version}`,
+          'User-Agent': `HubSpot CLI/${version}`,
           Authorization: `Bearer ${accessToken}`,
         },
         json: true,
@@ -197,7 +197,7 @@ describe('http', () => {
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
-          'User-Agent': `HubSpot CMS Tools/${version}`,
+          'User-Agent': `HubSpot CLI/${version}`,
           Authorization: `Bearer ${accessToken}`,
         },
         json: true,
@@ -232,7 +232,7 @@ describe('http', () => {
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
-          'User-Agent': `HubSpot CMS Tools/${version}`,
+          'User-Agent': `HubSpot CLI/${version}`,
         },
         json: true,
         simple: true,

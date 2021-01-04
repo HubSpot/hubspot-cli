@@ -8,7 +8,7 @@ const logDebugInfo = ({ debug }) => {
   console.log('');
   console.log('Debugging info');
   console.log('==============');
-  console.log(`CMS CLI version: ${version}`);
+  console.log(`CLI version: ${version}`);
   console.log(`node version: ${process.version}`);
   console.log(`platform: ${getPlatform()}`);
   console.log('');

@@ -8,7 +8,7 @@ const getRequestOptions = (options = {}, requestOptions = {}) => {
   return {
     baseUrl: getHubSpotApiOrigin(env, httpUseLocalhost),
     headers: {
-      'User-Agent': `HubSpot CMS Tools/${version}`,
+      'User-Agent': `HubSpot CLI/${version}`,
     },
     json: true,
     simple: true,

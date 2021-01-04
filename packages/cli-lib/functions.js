@@ -22,7 +22,7 @@ exports.main = ({ accountId }, sendResponse) => {
     })
     .then(function(response) {
       // Handle success
-      // The console.log statement will appear in the terminal when you run the hs logs CMS CLI command
+      // The console.log statement will appear in the terminal when you run the hs logs CLI command
       // For full documentation, see: developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli#logs
       console.log('Data received from the search API:', response.data);
       // sendResponse is what you will send back to services hitting your serverless function

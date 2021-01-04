@@ -121,7 +121,7 @@ const createTemplate = (name, dest, type = 'page-template') => {
 };
 
 exports.command = 'create <type> [name] [dest]';
-exports.describe = `Create HubSpot CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;
+exports.describe = `Create HubSpot sample apps and CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;
 
 exports.handler = async options => {
   let { type: assetType, name, dest } = options;

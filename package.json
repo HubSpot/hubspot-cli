@@ -1,7 +1,7 @@
 {
   "name": "hubspot-cms-tools",
   "version": "1.0.0",
-  "description": "Tooling for interacting with the HubSpot CMS",
+  "description": "CLI tools for working with HubSpot",
   "repository": "https://github.com/HubSpot/hubspot-cms-tools",
   "private": true,
   "devDependencies": {

@@ -135,7 +135,7 @@ hs hubdb delete <id or name>
 
 There are three ways that the tools can authenticate with HubSpot.
 
-### Personal CMS Access Key (recommended)
+### Personal Access Key (recommended)
 
 1. Run `hs init` or `hs auth personalaccesskey` and follow the instructions
 
@@ -145,11 +145,11 @@ There are three ways that the tools can authenticate with HubSpot.
 2. Run `hs auth oauth2`
 3. Select `OAuth2` and follow the steps
 
-_**Note:** The Account ID used should be the CMS Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
+_**Note:** The Account ID used should be the Test Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
 
 ### HubSpot API Key
 
-1. [Set up an API Key for the CMS Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
+1. [Set up an API Key for the Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
 2. Edit the `hubspot.config.yml` file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
 
 ```yaml

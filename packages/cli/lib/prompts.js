@@ -99,12 +99,12 @@ const ACCOUNT_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal CMS access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
+    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
 };
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
-  message: 'Enter your personal CMS access key:',
+  message: 'Enter your personal access key:',
   validate(val) {
     if (typeof val !== 'string') {
       return 'You did not enter a valid access key. Please try again.';

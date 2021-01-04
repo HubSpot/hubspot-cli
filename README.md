@@ -1,5 +1,5 @@
-# hubspot-cms-tools
-Node packages intended for HubSpot CMS developers to enable local development and advanced workflows like continuous deployment.
+# HubSpot CLI
+A CLI for HubSpot developers to enable local CMS development and automate their work.
 
 ## Getting Started
 
