@@ -2,11 +2,13 @@ const fs = require('fs-extra');
 const { logger } = require('@hubspot/cms-lib/logger');
 const { MOCK_DATA } = require('./constants');
 
-const loadDotEnvFile = folderPath => {
+const getDotEnvConfig = folderPath => {
   const dotEnvPathMaybe = `${folderPath}/.env`;
 
   if (fs.existsSync(dotEnvPathMaybe)) {
-    const loadedConfig = require('dotenv').config({ path: dotEnvPathMaybe });
+    const loadedConfig = require('dotenv').config({
+      path: dotEnvPathMaybe,
+    });
     logger.debug(`Loaded .env config from ${dotEnvPathMaybe}.`);
     return loadedConfig;
   }
@@ -14,42 +16,43 @@ const loadDotEnvFile = folderPath => {
   return {};
 };
 
-const getSecrets = (functionPath, secrets) => {
-  const config = loadDotEnvFile(functionPath);
+const getSecrets = (dotEnvConfig, allowedSecrets) => {
   let secretsDict = {};
 
-  if (config.error) {
-    throw config.error;
-  }
-
-  secrets.forEach(secret => {
-    if (Object.prototype.hasOwnProperty.call(process.env, secret)) {
-      secretsDict[secret] = process.env[secret];
+  allowedSecrets.forEach(secret => {
+    if (Object.prototype.hasOwnProperty.call(dotEnvConfig, secret)) {
+      secretsDict[secret] = dotEnvConfig[secret];
     }
   });
 
   return secretsDict;
 };
 
-const getMockedDataFromDotEnv = functionPath => {
-  const config = loadDotEnvFile(functionPath);
+const getMockedDataFromDotEnv = dotEnvConfig => {
   let mockedDataDict = {};
 
-  if (config.error) {
-    throw config.error;
-  }
-
   Object.keys(MOCK_DATA).forEach(mockValue => {
-    if (Object.prototype.hasOwnProperty.call(process.env, mockValue)) {
-      mockedDataDict[mockValue] = process.env[mockValue];
+    if (Object.prototype.hasOwnProperty.call(dotEnvConfig, mockValue)) {
+      mockedDataDict[mockValue] = dotEnvConfig[mockValue];
     }
   });
 
   return mockedDataDict;
 };
 
+const getDotEnvData = (functionPath, allowedSecrets) => {
+  const config = getDotEnvConfig(functionPath);
+
+  if (config.error) {
+    throw config.error;
+  }
+
+  return {
+    secrets: getSecrets(config.parsed, allowedSecrets),
+    mockData: getMockedDataFromDotEnv(config.parsed),
+  };
+};
+
 module.exports = {
-  loadDotEnvFile,
-  getMockedDataFromDotEnv,
-  getSecrets,
+  getDotEnvData,
 };
