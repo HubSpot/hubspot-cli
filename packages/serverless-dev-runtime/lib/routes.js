@@ -75,8 +75,9 @@ const addEndpointToApp = endpointData => {
       await main(dataForFunc, sendResponseValue => {
         const { statusCode, body } = sendResponseValue;
         const endTime = Date.now();
+        const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log = originalConsoleLog;
-        logFunctionExecution('SUCCESS', body, startTime, endTime);
+        logFunctionExecution('SUCCESS', body, startTime, endTime, memoryUsed);
         outputTrackedLogs(trackedLogs);
         res.status(statusCode).json(body);
       });
