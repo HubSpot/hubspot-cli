@@ -1,5 +1,5 @@
 {
-  "name": "@hubspot/cms-lib",
+  "name": "@hubspot/cli-lib",
   "version": "2.2.2",
   "description": "Library for working with the HubSpot CMS",
   "license": "Apache-2.0",

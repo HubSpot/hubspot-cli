@@ -12,16 +12,16 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
+} = require('@hubspot/cli-lib');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
   deletePackage,
-} = require('@hubspot/cms-lib/api/functions');
+} = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 
 const makeSpinner = (actionText, functionPath, accountIdentifier) => {

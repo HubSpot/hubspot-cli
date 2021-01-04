@@ -2,10 +2,10 @@ const path = require('path');
 const fs = require('fs-extra');
 const {
   logFileSystemErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { createProject } = require('@hubspot/cms-lib/projects');
-const { createFunction } = require('@hubspot/cms-lib/functions');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { createProject } = require('@hubspot/cli-lib/projects');
+const { createFunction } = require('@hubspot/cli-lib/functions');
 
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');

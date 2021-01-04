@@ -1,10 +1,10 @@
-const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileMapper');
+const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileMapper');
 const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
   addConfigOptions,

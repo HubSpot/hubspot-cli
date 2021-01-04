@@ -3,8 +3,8 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { trackHelpUsage } = require('../lib/usageTracking');
 const pkg = require('../package.json');

@@ -2,10 +2,10 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { validateAccount, isFileValidJSON } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
@@ -13,11 +13,11 @@ const {
   setLogLevel,
   getAccountId,
 } = require('../../../lib/commonOpts');
-const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
-const { getEnv } = require('@hubspot/cms-lib/lib/config');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { updateSchema } = require('@hubspot/cms-lib/api/schema');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
+const { updateSchema } = require('@hubspot/cli-lib/api/schema');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 exports.command = 'update <name> <definition>';
 exports.describe = 'Update an existing custom object schema';

@@ -2,9 +2,9 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { downloadFileOrFolder } = require('@hubspot/cms-lib/fileManager');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileManager');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { resolveLocalPath } = require('../../lib/filesystem');
 
 const {

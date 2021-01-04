@@ -1,15 +1,15 @@
-const { getRoutes } = require('@hubspot/cms-lib/api/functions');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { getRoutes } = require('@hubspot/cli-lib/api/functions');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { getFunctionArrays } = require('@hubspot/cms-lib/lib/functions');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { getFunctionArrays } = require('@hubspot/cli-lib/lib/functions');
 const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
+} = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,

@@ -1,12 +1,12 @@
 const express = require('express');
 const open = require('open');
-const OAuth2Manager = require('@hubspot/cms-lib/lib/models/OAuth2Manager');
-const { getAccountConfig } = require('@hubspot/cms-lib/lib/config');
-const { addOauthToAccountConfig } = require('@hubspot/cms-lib/oauth');
-const { handleExit } = require('@hubspot/cms-lib/lib/process');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
+const OAuth2Manager = require('@hubspot/cli-lib/lib/models/OAuth2Manager');
+const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { addOauthToAccountConfig } = require('@hubspot/cli-lib/oauth');
+const { handleExit } = require('@hubspot/cli-lib/lib/process');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;

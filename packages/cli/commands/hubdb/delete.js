@@ -2,10 +2,10 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { deleteTable } = require('@hubspot/cms-lib/api/hubdb');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { deleteTable } = require('@hubspot/cli-lib/api/hubdb');
 const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 

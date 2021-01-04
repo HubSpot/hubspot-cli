@@ -5,20 +5,20 @@ const {
   updateDefaultAccount,
   writeConfig,
   updateAccountConfig,
-} = require('@hubspot/cms-lib/lib/config');
-const { handleExit } = require('@hubspot/cms-lib/lib/process');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib/lib/config');
+const { handleExit } = require('@hubspot/cli-lib/lib/process');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
-} = require('@hubspot/cms-lib/lib/constants');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib/lib/constants');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
+} = require('@hubspot/cli-lib/personalAccessKey');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {

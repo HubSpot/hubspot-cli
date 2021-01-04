@@ -5,10 +5,10 @@ const {
   getAccountId,
   getAccountConfig,
   loadConfigFromEnvironment,
-} = require('@hubspot/cms-lib');
+} = require('@hubspot/cli-lib');
 const { getMode } = require('../commonOpts');
 
-jest.mock('@hubspot/cms-lib');
+jest.mock('@hubspot/cli-lib');
 
 describe('@hubspot/cli/lib/commonOpts', () => {
   describe('getMode()', () => {

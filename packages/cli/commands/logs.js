@@ -13,19 +13,19 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
-const { getFunctionByPath } = require('@hubspot/cms-lib/api/functions');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
+const { getFunctionByPath } = require('@hubspot/cli-lib/api/functions');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
-} = require('@hubspot/cms-lib/api/results');
-const { base64EncodeString } = require('@hubspot/cms-lib/lib/encoding');
+} = require('@hubspot/cli-lib/api/results');
+const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
 const { validateAccount } = require('../lib/validation');
 
 const TAIL_DELAY = 5000;

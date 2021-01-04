@@ -1,16 +1,16 @@
-const { getAccountConfig } = require('@hubspot/cms-lib');
-const { getOauthManager } = require('@hubspot/cms-lib/oauth');
+const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
+} = require('@hubspot/cli-lib/personalAccessKey');
 
 const { getAccountId } = require('../commonOpts');
 const { validateAccount } = require('../validation');
 
-jest.mock('@hubspot/cms-lib');
-jest.mock('@hubspot/cms-lib/logger');
-jest.mock('@hubspot/cms-lib/oauth');
-jest.mock('@hubspot/cms-lib/personalAccessKey');
+jest.mock('@hubspot/cli-lib');
+jest.mock('@hubspot/cli-lib/logger');
+jest.mock('@hubspot/cli-lib/oauth');
+jest.mock('@hubspot/cli-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
 describe('validation', () => {

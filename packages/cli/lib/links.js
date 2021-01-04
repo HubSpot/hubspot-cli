@@ -1,7 +1,7 @@
-const { getEnv } = require('@hubspot/cms-lib/lib/config');
-const { ENVIRONMENTS } = require('@hubspot/cms-lib/lib/constants');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const open = require('open');
 const { getTableContents, getTableHeader } = require('./table');

@@ -1,13 +1,13 @@
 const path = require('path');
 const fs = require('fs-extra');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { fetchContent } = require('@hubspot/cms-lib/api/content');
-const { fetchBlogs } = require('@hubspot/cms-lib/api/blogs');
-const { fetchMenus } = require('@hubspot/cms-lib/api/designManager');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { fetchContent } = require('@hubspot/cli-lib/api/content');
+const { fetchBlogs } = require('@hubspot/cli-lib/api/blogs');
+const { fetchMenus } = require('@hubspot/cli-lib/api/designManager');
 
 async function writeObjects(accountId, contextPath, objectType, objects) {
   const dest = path.join(contextPath, objectType, accountId.toString());

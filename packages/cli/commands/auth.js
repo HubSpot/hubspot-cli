@@ -2,23 +2,23 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} = require('@hubspot/cms-lib/lib/constants');
+} = require('@hubspot/cli-lib/lib/constants');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
+} = require('@hubspot/cli-lib/personalAccessKey');
 const {
   updateAccountConfig,
   accountNameExistsInConfig,
   writeConfig,
-} = require('@hubspot/cms-lib/lib/config');
+} = require('@hubspot/cli-lib/lib/config');
 const {
   promptUser,
   personalAccessKeyPrompt,

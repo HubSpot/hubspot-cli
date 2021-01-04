@@ -2,13 +2,13 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { deleteSecret } = require('@hubspot/cms-lib/api/secrets');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { deleteSecret } = require('@hubspot/cli-lib/api/secrets');
 
 const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');

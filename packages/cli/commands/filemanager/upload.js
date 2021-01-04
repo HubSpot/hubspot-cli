@@ -5,18 +5,18 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
-const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
-const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
+const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
+const { getCwd, convertToUnixPath } = require('@hubspot/cli-lib/path');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
   ApiErrorContext,
   logApiUploadErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { validateSrcAndDestPaths } = require('@hubspot/cms-lib/modules');
-const { shouldIgnoreFile } = require('@hubspot/cms-lib/ignoreRules');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
 const {
   addConfigOptions,

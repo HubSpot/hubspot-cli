@@ -3,8 +3,8 @@ const open = require('open');
 const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
-} = require('@hubspot/cms-lib/lib/constants');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cms-lib/lib/urls');
+} = require('@hubspot/cli-lib/lib/constants');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {

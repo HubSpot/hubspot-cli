@@ -1,11 +1,11 @@
-const Logger = require('@hubspot/cms-lib/logger');
+const Logger = require('@hubspot/cli-lib/logger');
 const {
   getAccountId: getAccountIdFromConfig,
   getAccountConfig,
   getAndLoadConfigIfNeeded,
   DEFAULT_MODE,
   Mode,
-} = require('@hubspot/cms-lib');
+} = require('@hubspot/cli-lib');
 const { LOG_LEVEL } = Logger;
 
 const addAccountOptions = program =>

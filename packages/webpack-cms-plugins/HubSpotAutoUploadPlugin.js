@@ -1,19 +1,19 @@
-const { upload } = require('@hubspot/cms-lib/api/fileMapper');
+const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   loadConfig,
   getAccountId,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
+} = require('@hubspot/cli-lib');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers');
-const { isAllowedExtension } = require('@hubspot/cms-lib/path');
+} = require('@hubspot/cli-lib/errorHandlers');
+const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const {
   LOG_LEVEL,
   setLogLevel,
   setLogger,
-} = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib/logger');
 
 setLogLevel(LOG_LEVEL.LOG);
 loadConfig();

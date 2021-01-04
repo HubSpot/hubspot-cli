@@ -1,11 +1,11 @@
-const { cleanSchema, writeSchemaToDisk, logSchemas } = require('../schema');
-const basic = require('./fixtures/schema/basic.json');
-const full = require('./fixtures/schema/full.json');
-const { getCwd } = require('@hubspot/cms-lib/path');
-const multiple = require('./fixtures/schema/multiple.json');
 const fs = require('fs-extra');
 const path = require('path');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { cleanSchema, writeSchemaToDisk, logSchemas } = require('../schema');
+const { logger } = require('../logger');
+const { getCwd } = require('../path');
+const basic = require('./fixtures/schema/basic.json');
+const full = require('./fixtures/schema/full.json');
+const multiple = require('./fixtures/schema/multiple.json');
 
 describe('cms-lib/schema', () => {
   describe('cleanSchema()', () => {

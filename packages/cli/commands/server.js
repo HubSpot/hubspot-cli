@@ -5,9 +5,9 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { getCwd } = require('@hubspot/cms-lib/path');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { getCwd } = require('@hubspot/cli-lib/path');
 
 const { version } = require('../package.json');
 const { updateServerContext } = require('../lib/server/updateContext');

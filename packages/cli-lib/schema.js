@@ -1,8 +1,8 @@
 const fs = require('fs-extra');
 const path = require('path');
 const prettier = require('prettier');
-const { getCwd } = require('@hubspot/cms-lib/path');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { getCwd } = require('./path');
+const { logger } = require('./logger');
 const { fetchSchemas, fetchSchema } = require('./api/schema');
 const chalk = require('chalk');
 const { table, getBorderCharacters } = require('table');

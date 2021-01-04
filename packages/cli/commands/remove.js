@@ -1,14 +1,14 @@
-const { deleteFile } = require('@hubspot/cms-lib/api/fileMapper');
+const { deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib/errorHandlers');
 
 const {
   addConfigOptions,

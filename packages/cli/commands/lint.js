@@ -1,14 +1,14 @@
 const {
   lint,
   printHublValidationResult,
-} = require('@hubspot/cms-lib/validate');
+} = require('@hubspot/cli-lib/validate');
 const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const {
   addConfigOptions,

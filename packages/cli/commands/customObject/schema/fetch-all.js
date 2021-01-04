@@ -2,15 +2,15 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const { validateAccount } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { downloadSchemas, getResolvedPath } = require('@hubspot/cms-lib/schema');
+const { downloadSchemas, getResolvedPath } = require('@hubspot/cli-lib/schema');
 
 exports.command = 'fetch-all [dest]';
 exports.describe = 'Fetch all custom object schemas for an account';

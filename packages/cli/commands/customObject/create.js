@@ -2,15 +2,15 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
-const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { validateAccount, isFileValidJSON } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { batchCreateObjects } = require('@hubspot/cms-lib/api/customObject');
+const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
 
 exports.command = 'create <name> <definition>';
 exports.describe = 'Create custom object instances';

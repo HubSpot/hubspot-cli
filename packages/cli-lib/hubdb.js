@@ -11,7 +11,7 @@ const {
   publishTable,
   deleteRows,
 } = require('./api/hubdb');
-const { getCwd } = require('@hubspot/cms-lib/path');
+const { getCwd } = require('./path');
 
 function validateJsonPath(src) {
   if (path.extname(src) !== '.json') {

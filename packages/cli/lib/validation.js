@@ -1,15 +1,15 @@
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getAccountConfig,
   loadConfigFromEnvironment,
   Mode,
-} = require('@hubspot/cms-lib');
-const { getAbsoluteFilePath } = require('@hubspot/cms-lib/path');
-const { getOauthManager } = require('@hubspot/cms-lib/oauth');
+} = require('@hubspot/cli-lib');
+const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cms-lib/personalAccessKey');
-const { getCwd, getExt } = require('@hubspot/cms-lib/path');
+} = require('@hubspot/cli-lib/personalAccessKey');
+const { getCwd, getExt } = require('@hubspot/cli-lib/path');
 const { getAccountId, getMode } = require('./commonOpts');
 const fs = require('fs');
 const path = require('path');

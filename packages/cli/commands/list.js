@@ -14,19 +14,19 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib/errorHandlers');
 const {
   getDirectoryContentsByPath,
-} = require('@hubspot/cms-lib/api/fileMapper');
+} = require('@hubspot/cli-lib/api/fileMapper');
 const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
-} = require('@hubspot/cms-lib/lib/constants');
+} = require('@hubspot/cli-lib/lib/constants');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);

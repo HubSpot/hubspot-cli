@@ -2,15 +2,15 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
-} = require('@hubspot/cms-lib');
-const { logger } = require('@hubspot/cms-lib/logger');
-const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
+} = require('@hubspot/cli-lib');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const { validateAccount } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
-const { listSchemas } = require('@hubspot/cms-lib/schema');
+const { listSchemas } = require('@hubspot/cli-lib/schema');
 
 exports.command = 'list';
 exports.describe = 'List schemas available on your account';
