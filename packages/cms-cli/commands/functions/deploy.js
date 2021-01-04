@@ -18,12 +18,15 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cms-lib/errorHandlers');
 const { logger } = require('@hubspot/cms-lib/logger');
-const { buildPackage } = require('@hubspot/cms-lib/api/functions');
+const {
+  buildPackage,
+  deletePackage,
+} = require('@hubspot/cms-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 
-const makeSpinner = (functionPath, accountIdentifier) => {
+const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
-    `Building and deploying new bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
+    `${actionText} bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
   );
 };
 
@@ -48,11 +51,11 @@ exports.handler = async options => {
 
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
-  const spinner = makeSpinner(functionPath, accountId);
+  const { delete: shouldDeletePackage } = options;
+  const splitFunctionPath = functionPath.split('.');
+  let spinner;
 
   trackCommandUsage('functions-deploy', { functionPath }, accountId);
-
-  const splitFunctionPath = functionPath.split('.');
 
   if (
     !splitFunctionPath.length ||
@@ -66,15 +69,23 @@ exports.handler = async options => {
     `Starting build and deploy for .functions folder with path: ${functionPath}`
   );
 
-  spinner.start();
   try {
-    await buildPackage(accountId, `${functionPath}/package.json`);
+    let successMessage;
+    if (shouldDeletePackage) {
+      spinner = makeSpinner('Deleting', functionPath, accountId);
+      spinner.start();
+      await deletePackage(accountId, `${functionPath}/package.json`);
+      successMessage = `Successfully removed build package for ${functionPath} on account ${accountId}.`;
+    } else {
+      spinner = makeSpinner('Building and deploying', functionPath, accountId);
+      spinner.start();
+      await buildPackage(accountId, `${functionPath}/package.json`);
+      successMessage = `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId}.`;
+    }
     spinner.stop();
-    logger.success(
-      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId}.`
-    );
+    logger.success(successMessage);
   } catch (e) {
-    spinner.stop();
+    spinner && spinner.stop && spinner.stop();
     if (e.statusCode === 404) {
       logger.error(`Unable to find package.json for function ${functionPath}.`);
     } else if (e.statusCode === 400) {
@@ -94,10 +105,21 @@ exports.builder = yargs => {
     describe: 'Path to .functions folder',
     type: 'string',
   });
+
+  yargs.option('delete', {
+    alias: 'D',
+    describe: 'Remove currently built and deployed package',
+    type: 'boolean',
+  });
+
   yargs.example([
     [
       '$0 functions deploy myFunctionFolder.functions',
       'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
+    ],
+    [
+      '$0 functions deploy myFunctionFolder.functions --delete',
+      'Delete the currently built and deployed bundle used by all functions within the myFunctionFolder.functions folder',
     ],
   ]);
 

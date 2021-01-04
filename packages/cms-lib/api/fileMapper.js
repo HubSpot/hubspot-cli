@@ -1,4 +1,5 @@
-const fs = require('fs-extra');
+// We are purposely using fs instaed of fs-extra here. See https://github.com/HubSpot/hubspot-cms-tools/pull/407
+const fs = require('fs');
 const path = require('path');
 const contentDisposition = require('content-disposition');
 const http = require('../http');

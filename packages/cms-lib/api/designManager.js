@@ -25,7 +25,14 @@ async function fetchBuiltinMapping(accountId) {
   });
 }
 
+async function fetchRawAssetByPath(accountId, path) {
+  return http.get(accountId, {
+    uri: `${DESIGN_MANAGER_API_PATH}/raw-assets/by-path/${path}?portalId=${accountId}`,
+  });
+}
+
 module.exports = {
   fetchBuiltinMapping,
   fetchMenus,
+  fetchRawAssetByPath,
 };
