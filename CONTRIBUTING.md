@@ -25,13 +25,13 @@ Once the config is created, commands can be run by providing a path to the execu
 yarn hs upload --account [src] [dest]`
 ```
 
-* To test a command when `@hubspot/cms-cli` is a dependency in another package like `cms-theme-boilerplate`.
+* To test a command when `@hubspot/cli` is a dependency in another package like `cms-theme-boilerplate`.
 
-In order to test changes in another npm package that is using `@hubspot/cms-cli`, [yarn link](https://yarnpkg.com/lang/en/docs/cli/link/) can be used.
+In order to test changes in another npm package that is using `@hubspot/cli`, [yarn link](https://yarnpkg.com/lang/en/docs/cli/link/) can be used.
 
 ```bash
 cd /path/to/other-npm-package
-yarn link @hubspot/cms-cli
+yarn link @hubspot/cli
 ```
 
 ## Documentation
