@@ -21,7 +21,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
   deletePackage,
-  pollBuild,
+  getBuildStatus,
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 
@@ -34,7 +34,7 @@ const makeSpinner = (actionText, functionPath, accountIdentifier) => {
 const pollBuildStatus = (accountId, buildId) => {
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
-      const pollResp = await pollBuild(accountId, buildId);
+      const pollResp = await getBuildStatus(accountId, buildId);
       const { status } = pollResp;
 
       if (status === 'SUCCESS') {

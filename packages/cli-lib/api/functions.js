@@ -24,7 +24,7 @@ async function buildPackage(portalId, folderPath) {
   });
 }
 
-async function pollBuild(portalId, buildId) {
+async function getBuildStatus(portalId, buildId) {
   return http.get(portalId, {
     uri: `${FUNCTION_API_PATH}/build/${buildId}/poll`,
   });
@@ -41,7 +41,7 @@ async function deletePackage(portalId, path) {
 module.exports = {
   buildPackage,
   deletePackage,
+  getBuildStatus,
   getFunctionByPath,
   getRoutes,
-  pollBuild,
 };
