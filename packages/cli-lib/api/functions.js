@@ -15,12 +15,18 @@ async function getRoutes(accountId) {
   });
 }
 
-async function buildPackage(portalId, path) {
+async function buildPackage(portalId, folderPath) {
   return http.post(portalId, {
-    uri: `${FUNCTION_API_PATH}/package`,
+    uri: `${FUNCTION_API_PATH}/build`,
     body: {
-      path,
+      folderPath,
     },
+  });
+}
+
+async function pollBuild(portalId, buildId) {
+  return http.get(portalId, {
+    uri: `${FUNCTION_API_PATH}/build/${buildId}/poll`,
   });
 }
 
@@ -37,4 +43,5 @@ module.exports = {
   deletePackage,
   getFunctionByPath,
   getRoutes,
+  pollBuild,
 };

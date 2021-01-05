@@ -21,6 +21,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
   deletePackage,
+  pollBuild,
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 
@@ -28,6 +29,23 @@ const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
     `${actionText} bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
   );
+};
+
+const pollBuildStatus = (accountId, buildId) => {
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      const pollResp = await pollBuild(accountId, buildId);
+      const { status } = pollResp;
+
+      if (status === 'SUCCESS') {
+        clearInterval(pollInterval);
+        resolve(pollResp);
+      } else if (status === 'ERROR') {
+        clearInterval(pollInterval);
+        reject(pollResp);
+      }
+    }, 1000);
+  });
 };
 
 const loadAndValidateOptions = async options => {
@@ -72,15 +90,19 @@ exports.handler = async options => {
   try {
     let successMessage;
     if (shouldDeletePackage) {
-      spinner = makeSpinner('Deleting', functionPath, accountId);
-      spinner.start();
+      spinner = makeSpinner('Deleting', functionPath, accountId).start();
       await deletePackage(accountId, `${functionPath}/package.json`);
       successMessage = `Successfully removed build package for ${functionPath} on account ${accountId}.`;
     } else {
-      spinner = makeSpinner('Building and deploying', functionPath, accountId);
-      spinner.start();
-      await buildPackage(accountId, `${functionPath}/package.json`);
-      successMessage = `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId}.`;
+      spinner = makeSpinner(
+        'Building and deploying',
+        functionPath,
+        accountId
+      ).start();
+      const buildId = await buildPackage(accountId, functionPath);
+      const successResp = await pollBuildStatus(accountId, buildId);
+      const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
+      successMessage = `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`;
     }
     spinner.stop();
     logger.success(successMessage);
