@@ -102,9 +102,7 @@ const getFunctionDataContext = async (
     contact:
       contact === 'true' || contact === true
         ? {
-            vid:
-              parseInt(HUBSPOT_CONTACT_VID, 10) ||
-              MOCK_DATA.HUBSPOT_CONTACT_VID,
+            vid: HUBSPOT_CONTACT_VID || MOCK_DATA.HUBSPOT_CONTACT_VID,
             isLoggedIn:
               HUBSPOT_CONTACT_IS_LOGGED_IN ||
               MOCK_DATA.HUBSPOT_CONTACT_IS_LOGGED_IN,
