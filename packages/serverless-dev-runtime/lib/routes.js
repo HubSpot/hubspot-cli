@@ -87,6 +87,10 @@ const addEndpointToApp = endpointData => {
       res.status(500).json(e);
     }
   });
+
+  app.all('*', req => {
+    logger.warn(`No route found for ${req.method} request to ${req.url}`);
+  });
 };
 
 const setupRoutes = routeData => {
