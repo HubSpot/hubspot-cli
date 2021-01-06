@@ -77,6 +77,14 @@ const addEndpointToApp = endpointData => {
         const endTime = Date.now();
         const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log = originalConsoleLog;
+
+        if (statusCode === 500) {
+          logFunctionExecution('ERROR', body, startTime, endTime, memoryUsed);
+          outputTrackedLogs(trackedLogs);
+          res.end();
+          return;
+        }
+
         logFunctionExecution('SUCCESS', body, startTime, endTime, memoryUsed);
         outputTrackedLogs(trackedLogs);
         res.status(statusCode).json(body);
