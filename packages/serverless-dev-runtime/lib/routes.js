@@ -79,13 +79,35 @@ const addEndpointToApp = endpointData => {
         console.log = originalConsoleLog;
 
         if (statusCode === 500) {
-          logFunctionExecution('ERROR', body, startTime, endTime, memoryUsed);
+          logFunctionExecution({
+            status: 'ERROR',
+            payload: body,
+            startTime,
+            endTime,
+            memoryUsed,
+            options: {
+              insertions: {
+                header: `${method} ${formattedRoute}`,
+              },
+            },
+          });
           outputTrackedLogs(trackedLogs);
           res.end();
           return;
         }
 
-        logFunctionExecution('SUCCESS', body, startTime, endTime, memoryUsed);
+        logFunctionExecution({
+          status: 'SUCCESS',
+          payload: body,
+          startTime,
+          endTime,
+          memoryUsed,
+          options: {
+            insertions: {
+              header: `${method} ${formattedRoute}`,
+            },
+          },
+        });
         outputTrackedLogs(trackedLogs);
         res.status(statusCode).json(body);
       };

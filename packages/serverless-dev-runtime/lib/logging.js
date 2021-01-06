@@ -2,14 +2,15 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
 const { MAX_RUNTIME } = require('./constants');
 
-const logFunctionExecution = (
+const logFunctionExecution = ({
   status,
   payload,
   startTime,
   endTime,
   memoryUsed,
-  logs
-) => {
+  logs,
+  options,
+}) => {
   const runTime = endTime - startTime;
   const roundedRuntime = Math.round(runTime * 100);
   const roundedMemoryUsed = Math.round(memoryUsed);
@@ -24,7 +25,7 @@ const logFunctionExecution = (
     payload,
   };
 
-  outputLogs(executionData, {});
+  outputLogs(executionData, options);
 
   if (runTime > MAX_RUNTIME) {
     logger.warn(
