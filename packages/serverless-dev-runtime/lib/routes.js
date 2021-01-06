@@ -120,7 +120,7 @@ const addEndpointToApp = endpointData => {
     }
   });
 
-  app.all('*', req => {
+  app.get('*', req => {
     logger.warn(`No route found for ${req.method} request to ${req.url}`);
   });
 };
