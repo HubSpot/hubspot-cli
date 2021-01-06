@@ -42,6 +42,13 @@ const addEndpointToApp = endpointData => {
 
   app[method.toLowerCase()](`/${route}`, async (req, res) => {
     const startTime = Date.now();
+    const dataForFunc = await getFunctionDataContext(
+      req,
+      tmpDirName,
+      secrets,
+      accountId,
+      contact
+    );
     const functionFilePath = path.resolve(`${tmpDirName}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
@@ -58,13 +65,6 @@ const addEndpointToApp = endpointData => {
 
     try {
       loadEnvironmentVariables(globalEnvironment, localEnvironment);
-      const dataForFunc = await getFunctionDataContext(
-        req,
-        tmpDirName,
-        secrets,
-        accountId,
-        contact
-      );
 
       // Capture anything logged within the serverless function
       // for output later. Placement of this code matters!
