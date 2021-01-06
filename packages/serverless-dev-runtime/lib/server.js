@@ -29,6 +29,7 @@ const setOptions = optionsData => {
 };
 
 const installMiddleware = app => {
+  app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(cors());
 };
