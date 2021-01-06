@@ -39,8 +39,9 @@ const addEndpointToApp = endpointData => {
     logger.error(`No file was specified for route "${route}"`);
     process.exit();
   }
+  const formattedRoute = `/${route}`;
 
-  app[method.toLowerCase()](`/${route}`, async (req, res) => {
+  app[method.toLowerCase()](formattedRoute, async (req, res) => {
     const startTime = Date.now();
     const dataForFunc = await getFunctionDataContext(
       req,
@@ -71,8 +72,7 @@ const addEndpointToApp = endpointData => {
       console.log = (...args) => {
         trackedLogs.push(args);
       };
-
-      await main(dataForFunc, sendResponseValue => {
+      const functionExecutionCallback = sendResponseValue => {
         const { statusCode, body } = sendResponseValue;
         const endTime = Date.now();
         const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024;
@@ -88,7 +88,9 @@ const addEndpointToApp = endpointData => {
         logFunctionExecution('SUCCESS', body, startTime, endTime, memoryUsed);
         outputTrackedLogs(trackedLogs);
         res.status(statusCode).json(body);
-      });
+      };
+
+      await main(dataForFunc, functionExecutionCallback);
     } catch (e) {
       console.log = originalConsoleLog;
       logger.error(e);
