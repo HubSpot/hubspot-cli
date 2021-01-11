@@ -10,7 +10,8 @@ const TEMPLATE_TYPE_PROMPT = {
     { name: 'email', value: 'email-template' },
     { name: 'partial', value: 'partial' },
     { name: 'global partial', value: 'global-partial' },
-    { name: 'blog', value: 'blog-template' },
+    { name: 'blog listing', value: 'blog-listing-template' },
+    { name: 'blog post', value: 'blog-post-template' },
     { name: 'search results', value: 'search-template' },
   ],
 };
