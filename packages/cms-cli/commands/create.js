@@ -57,9 +57,9 @@ const PROJECT_REPOSITORIES = {
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
 const createModule = (moduleDefinition, name, dest) => {
-  const writeModuleMeta = ({ contentTypes, label, global }, dest) => {
+  const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
     const metaData = {
-      label: label,
+      label: moduleLabel,
       css_assets: [],
       external_js: [],
       global: global,
