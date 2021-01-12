@@ -1,6 +1,4 @@
 const http = require('../http');
-const { fetchRawAssetByPath } = require('./designManager');
-
 const FUNCTION_API_PATH = 'cms/v3/functions';
 
 async function getFunctionByPath(accountId, functionPath) {
@@ -30,17 +28,8 @@ async function getBuildStatus(portalId, buildId) {
   });
 }
 
-async function deletePackage(portalId, path) {
-  return fetchRawAssetByPath(portalId, path).then(resp => {
-    return http.delete(portalId, {
-      uri: `${FUNCTION_API_PATH}/package?portalId=${portalId}&rawAssetId=${resp.id}`,
-    });
-  });
-}
-
 module.exports = {
   buildPackage,
-  deletePackage,
   getBuildStatus,
   getFunctionByPath,
   getRoutes,
