@@ -43,7 +43,7 @@ const pollBuildStatus = (accountId, buildId) => {
         clearInterval(pollInterval);
         reject(pollResp);
       }
-    }, 1000);
+    }, 5000);
   });
 };
 
