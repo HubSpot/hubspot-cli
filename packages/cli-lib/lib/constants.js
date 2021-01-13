@@ -97,6 +97,8 @@ const MARKETPLACE_FOLDER = '@marketplace';
 
 const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
 
+const POLLING_DELAY = 5000;
+
 module.exports = {
   Mode,
   ENVIRONMENTS,
@@ -118,4 +120,5 @@ module.exports = {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
   FOLDER_DOT_EXTENSIONS,
+  POLLING_DELAY,
 };

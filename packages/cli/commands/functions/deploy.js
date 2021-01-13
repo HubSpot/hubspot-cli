@@ -17,6 +17,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { POLLING_DELAY } = require('@hubspot/cli-lib/lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
@@ -43,7 +44,7 @@ const pollBuildStatus = (accountId, buildId) => {
         clearInterval(pollInterval);
         reject(pollResp);
       }
-    }, 5000);
+    }, POLLING_DELAY);
   });
 };
 
