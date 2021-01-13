@@ -1,5 +1,8 @@
 Change Log
 ==========
+## 2.2.3
+* Updated hs functions deploy command to use the new API endpoints and poll for status
+
 ## 2.2.1
 * To align with preferred terminology, we replaced instances of the word `portal` with the word `account`.  This was done in a non-breaking way, and any flag that currently accepts `account` will still accept `portal`.  The one exception to this migration is the `hubspot.config.yml` file.  We excluded this from the migration since it could potentially break backwards compatibility.  The `portals`, `portal`, and `defaultPortal` nomenclature will remain for `hubspot.config.yml` (https://github.com/HubSpot/hubspot-cms-tools/pull/394 and https://github.com/HubSpot/hubspot-cms-tools/pull/397)
 * Fixed an issue preventing serverless function log tailing from displaying properly (https://github.com/HubSpot/hubspot-cms-tools/pull/379)
