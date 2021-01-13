@@ -30,6 +30,7 @@ const MOCK_DATA = {
 };
 const MAX_SECRETS = 50;
 const MAX_RUNTIME = 3000;
+const ROUTE_PATH_PREFIX = '_hcms/api/';
 
 module.exports = {
   AWS_RESERVED_VARS,
@@ -37,4 +38,5 @@ module.exports = {
   MAX_RUNTIME,
   MAX_SECRETS,
   MOCK_DATA,
+  ROUTE_PATH_PREFIX,
 };

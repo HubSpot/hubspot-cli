@@ -4,6 +4,7 @@ const { logger } = require('@hubspot/cms-lib/logger');
 const { getFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');
+const { ROUTE_PATH_PREFIX } = require('./constants');
 
 const outputTrackedLogs = trackedLogs => {
   trackedLogs.forEach(trackedLog => {
@@ -119,9 +120,11 @@ const addEndpointToApp = endpointData => {
       res.status(500).json(e);
     }
   });
+};
 
-  app.get('*', req => {
-    logger.warn(`No route found for ${req.method} request to ${req.url}`);
+const updateRoutePaths = routes => {
+  return routes.map(route => {
+    return `${ROUTE_PATH_PREFIX}${route}`;
   });
 };
 
@@ -129,7 +132,8 @@ const setupRoutes = routeData => {
   const { routes, endpoints } = routeData;
 
   routes.forEach(route => {
-    const { method, file, environment: localEnvironment } = endpoints[route];
+    const rawRoute = route.replace(ROUTE_PATH_PREFIX, '');
+    const { method, file, environment: localEnvironment } = endpoints[rawRoute];
 
     if (Array.isArray(method)) {
       method.forEach(methodType => {
@@ -155,4 +159,5 @@ const setupRoutes = routeData => {
 
 module.exports = {
   setupRoutes,
+  updateRoutePaths,
 };

@@ -9,10 +9,10 @@ const {
 
 const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
-const { setupRoutes } = require('./routes');
+const { setupRoutes, updateRoutePaths } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
-const { MOCK_DATA } = require('./constants');
+const { MOCK_DATA, ROUTE_PATH_PREFIX } = require('./constants');
 const { watch: watchFolder } = require('./watch');
 
 let connections = [];
@@ -62,11 +62,12 @@ const runTestServer = async callback => {
 
   const {
     endpoints,
-    routes,
+    routes: rawRoutes,
     environment: globalEnvironment,
     tmpDir: temporaryDir,
     secrets,
   } = await createTemporaryFunction(validatedFunctionData);
+  const routes = updateRoutePaths(rawRoutes);
   tmpDir = temporaryDir;
 
   const app = express();
@@ -89,7 +90,8 @@ const runTestServer = async callback => {
     logger.log(`Local test server running at ${testServerPath}`);
     const envVarsForMockedData = Object.keys(MOCK_DATA);
     const functionsAsArrays = routes.map(route => {
-      const { method, environment: localEnvironment } = endpoints[route];
+      const rawRoute = route.replace(ROUTE_PATH_PREFIX, '');
+      const { method, environment: localEnvironment } = endpoints[rawRoute];
       const environmentVariables =
         (localEnvironment &&
           Object.keys(localEnvironment)
