@@ -20,7 +20,7 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
-  deletePackage,
+  getBuildStatus,
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 
@@ -28,6 +28,23 @@ const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
     `${actionText} bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
   );
+};
+
+const pollBuildStatus = (accountId, buildId) => {
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      const pollResp = await getBuildStatus(accountId, buildId);
+      const { status } = pollResp;
+
+      if (status === 'SUCCESS') {
+        clearInterval(pollInterval);
+        resolve(pollResp);
+      } else if (status === 'ERROR') {
+        clearInterval(pollInterval);
+        reject(pollResp);
+      }
+    }, 5000);
+  });
 };
 
 const loadAndValidateOptions = async options => {
@@ -44,14 +61,12 @@ const loadAndValidateOptions = async options => {
 
 exports.command = 'deploy <path>';
 exports.describe = false;
-// Uncomment to unhide 'builds a new dependency bundle for the specified .functions folder';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
-  const { delete: shouldDeletePackage } = options;
   const splitFunctionPath = functionPath.split('.');
   let spinner;
 
@@ -70,20 +85,18 @@ exports.handler = async options => {
   );
 
   try {
-    let successMessage;
-    if (shouldDeletePackage) {
-      spinner = makeSpinner('Deleting', functionPath, accountId);
-      spinner.start();
-      await deletePackage(accountId, `${functionPath}/package.json`);
-      successMessage = `Successfully removed build package for ${functionPath} on account ${accountId}.`;
-    } else {
-      spinner = makeSpinner('Building and deploying', functionPath, accountId);
-      spinner.start();
-      await buildPackage(accountId, `${functionPath}/package.json`);
-      successMessage = `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId}.`;
-    }
+    spinner = makeSpinner(
+      'Building and deploying',
+      functionPath,
+      accountId
+    ).start();
+    const buildId = await buildPackage(accountId, functionPath);
+    const successResp = await pollBuildStatus(accountId, buildId);
+    const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
-    logger.success(successMessage);
+    logger.success(
+      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
+    );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
     if (e.statusCode === 404) {
@@ -106,20 +119,10 @@ exports.builder = yargs => {
     type: 'string',
   });
 
-  yargs.option('delete', {
-    alias: 'D',
-    describe: 'Remove currently built and deployed package',
-    type: 'boolean',
-  });
-
   yargs.example([
     [
       '$0 functions deploy myFunctionFolder.functions',
       'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
-    ],
-    [
-      '$0 functions deploy myFunctionFolder.functions --delete',
-      'Delete the currently built and deployed bundle used by all functions within the myFunctionFolder.functions folder',
     ],
   ]);
 
