@@ -10,17 +10,15 @@ const LOG_STATUS_COLORS = {
 };
 
 const formatError = log => {
-  return `/n${log.error.type}: ${log.error.message}\n${formatStackTrace(
-    log
-  )}\n`;
+  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 };
 
 const logHandler = {
   UNHANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
+    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
   },
   HANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
+    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
   },
   SUCCESS: (log, { compact }) => {
     return `${formatLogHeader(log)}${compact ? '' : `\n${formatLog(log)}`}`;
