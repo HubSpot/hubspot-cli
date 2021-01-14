@@ -1,4 +1,5 @@
 const ora = require('ora');
+var https = require('https');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -60,6 +61,26 @@ const loadAndValidateOptions = async options => {
   }
 };
 
+const logBuildOutput = async resp => {
+  return new Promise((resolve, reject) => {
+    try {
+      https
+        .get(resp.cdnUrl, response => {
+          let data = '';
+          response.on('data', chunk => {
+            data += chunk;
+          });
+          response.on('end', () => {
+            resolve(data);
+          });
+        })
+        .on('error', reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 exports.command = 'deploy <path>';
 exports.describe = false;
 
@@ -95,8 +116,9 @@ exports.handler = async options => {
     const successResp = await pollBuildStatus(accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
+    const buildOutput = await logBuildOutput(successResp);
     logger.success(
-      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
+      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s. Build output: \n${buildOutput}`
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
@@ -104,6 +126,9 @@ exports.handler = async options => {
       logger.error(`Unable to find package.json for function ${functionPath}.`);
     } else if (e.statusCode === 400) {
       logger.error(e.error.message);
+    } else if (e.status === 'ERROR') {
+      const buildOutput = await logBuildOutput(e);
+      logger.error(`Build error: ${e.errorReason}\n${buildOutput}`);
     } else {
       logApiErrorInstance(
         accountId,
