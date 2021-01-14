@@ -39,7 +39,14 @@ const ASSET_PATHS = {
       __dirname,
       '../defaults/email-template.html'
     ),
-    'blog-template': path.resolve(__dirname, '../defaults/blog-template.html'),
+    'blog-listing-template': path.resolve(
+      __dirname,
+      '../defaults/blog-listing-template.html'
+    ),
+    'blog-post-template': path.resolve(
+      __dirname,
+      '../defaults/blog-post-template.html'
+    ),
     'search-template': path.resolve(
       __dirname,
       '../defaults/search-template.html'
@@ -57,9 +64,9 @@ const PROJECT_REPOSITORIES = {
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
 
 const createModule = (moduleDefinition, name, dest) => {
-  const writeModuleMeta = ({ contentTypes, label, global }, dest) => {
+  const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
     const metaData = {
-      label: label,
+      label: moduleLabel,
       css_assets: [],
       external_js: [],
       global: global,
