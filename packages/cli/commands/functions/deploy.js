@@ -129,7 +129,8 @@ exports.handler = async options => {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       const buildOutput = await logBuildOutput(e);
-      logger.error(`Build error: ${e.errorReason}\n${buildOutput}`);
+      logger.log(buildOutput);
+      logger.error(`Build error: ${e.errorReason}`);
     } else {
       logApiErrorInstance(
         accountId,
