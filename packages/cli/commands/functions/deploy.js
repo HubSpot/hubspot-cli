@@ -117,8 +117,9 @@ exports.handler = async options => {
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
     const buildOutput = await logBuildOutput(successResp);
+    logger.log(buildOutput);
     logger.success(
-      `Successfully built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s. Build output: \n${buildOutput}`
+      `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
