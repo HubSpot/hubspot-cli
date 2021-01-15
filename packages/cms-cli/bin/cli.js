@@ -2,12 +2,13 @@
 
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
+const chalk = require('chalk');
 
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { trackHelpUsage } = require('../lib/usageTracking');
-const pkg = require('../package.json');
+const { version } = require('../package.json');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -27,10 +28,16 @@ const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 
+// Point update-notifier towards @hubspot/cli
+const pkg = { name: '@hubspot/cli', version };
+
 const notifier = updateNotifier({ pkg });
 
 notifier.notify({
   shouldNotifyInNpmScript: true,
+  message:
+    chalk.bold('The CMS CLI is now the HubSpot CLI') +
+    '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli',
 });
 
 const argv = yargs
