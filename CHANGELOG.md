@@ -1,5 +1,18 @@
 Change Log
 ==========
+## 2.2.3
+* Updated hs functions deploy command to use the new API endpoints and poll for status
+
+## 2.2.1
+* To align with preferred terminology, we replaced instances of the word `portal` with the word `account`.  This was done in a non-breaking way, and any flag that currently accepts `account` will still accept `portal`.  The one exception to this migration is the `hubspot.config.yml` file.  We excluded this from the migration since it could potentially break backwards compatibility.  The `portals`, `portal`, and `defaultPortal` nomenclature will remain for `hubspot.config.yml` (https://github.com/HubSpot/hubspot-cms-tools/pull/394 and https://github.com/HubSpot/hubspot-cms-tools/pull/397)
+* Fixed an issue preventing serverless function log tailing from displaying properly (https://github.com/HubSpot/hubspot-cms-tools/pull/379)
+* Fixed a bug where large HubDB tables would not download correctly (https://github.com/HubSpot/hubspot-cms-tools/pull/384)
+* Fixed a bug where fetching filemanager files failed (https://github.com/HubSpot/hubspot-cms-tools/pull/387)
+* Fixed to prevent fetching filemanager files to `.` from failing (https://github.com/HubSpot/hubspot-cms-tools/pull/392)
+* Fixed a bug that prevented accounts using APIKEY auth from fetching filemanager files (https://github.com/HubSpot/hubspot-cms-tools/pull/390)
+* Adjust output of Webpack Auto Upload Plugin to include account ID (https://github.com/HubSpot/hubspot-cms-tools/pull/383)
+* Added command to build and deploy custom `package.json` dependencies (https://github.com/HubSpot/hubspot-cms-tools/pull/377)
+
 ## 2.2.0
 * **New Command**: `hs completion`.  Generate a `bash` or `zsh` completion script and be able to install it for command completion capabilities (https://github.com/HubSpot/hubspot-cms-tools/pull/342)
 * **New Command**: `hs open`.  Open a shortcut specific to your HubSpot account. Try `hs open --list` to see all available shortcuts (https://github.com/HubSpot/hubspot-cms-tools/pull/344)

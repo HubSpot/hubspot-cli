@@ -1,0 +1,34 @@
+{
+  "name": "@hubspot/cli",
+  "version": "2.2.3-beta.3",
+  "description": "CLI for working with HubSpot",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+  },
+  "dependencies": {
+    "@hubspot/cli-lib": "^2.2.3-beta.3",
+    "chalk": "^4.1.0",
+    "express": "^4.17.1",
+    "inquirer": "^6.3.1",
+    "open": "^7.0.3",
+    "ora": "^4.0.3",
+    "readline": "^1.3.0",
+    "shelljs": "0.8.3",
+    "table": "^6.0.3",
+    "update-notifier": "3.0.1",
+    "yargs": "15.4.1"
+  },
+  "engines": {
+    "node": ">=8.9.1"
+  },
+  "bin": {
+    "hs": "./bin/hs",
+    "hscms": "./bin/hscms"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
+}

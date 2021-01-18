@@ -1,0 +1,151 @@
+<!--
+    templateType: blog_listing
+    isAvailableForNewContent: true
+    label: Blog listing
+-->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{ content.html_title }}</title>
+    <meta name="description" content="{{ content.meta_description }}">
+    {{ standard_header_includes }}
+  </head>
+  <body>
+    <main>
+
+      {# Blog author listing #}
+      {% if blog_author %}
+        <div>
+          {% if blog_author.avatar %}
+            <img src="{{ blog_author.avatar }}" alt="image of blog {{ blog_author.display_name }}">
+          {% endif %}
+          <h1>{{ blog_author.display_name }}</h1>
+          {% if blog_author.bio %}
+            <p>{{ blog_author.bio }}</p>
+          {% endif %}
+          {% if blog_author.has_social_profiles %}
+            <div>
+              {% if blog_author.website %}
+                <a href="{{ blog_author.website }}" target="_blank" rel="noopener">
+                  {% icon
+                    name='link',
+                    purpose='semantic',
+                    style='SOLID',
+                    title='Follow me on my website',
+                    width='10'
+                  %}
+                </a>
+              {% endif %}
+              {% if blog_author.facebook %}
+                <a href="{{ blog_author.facebook }}" target="_blank" rel="noopener">
+                  {% icon
+                    name='facebook-f',
+                    purpose='semantic',
+                    style='SOLID',
+                    title='Follow me on Facebook',
+                    width='10'
+                  %}
+                </a>
+              {% endif %}
+              {% if blog_author.linkedin %}
+                <a href="{{ blog_author.linkedin }}" target="_blank" rel="noopener">
+                  {% icon
+                    name='linkedin-in',
+                    purpose='semantic',
+                    style='SOLID',
+                    title='Follow me on LinkedIn',
+                    width='10'
+                  %}
+                </a>
+              {% endif %}
+              {% if blog_author.twitter %}
+                <a href="{{ blog_author.twitter }}" target="_blank" rel="noopener">
+                  {% icon
+                    name='twitter',
+                    purpose='semantic',
+                    style='SOLID',
+                    title='Follow me on Twitter',
+                    width='10'
+                  %}
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% elif tag %}
+      {# End blog author listing #}
+
+      {# Blog tag listing #}
+        <div>
+          <h1>Posts about {{ page_meta.html_title|split(' | ')|last }}</h1>
+        </div>
+      {% else %}
+      {# End blog tag listing #}
+
+      {# Blog header #}
+        <div>
+          <h1>{{ group.public_title }}</h1>
+          <p>{{ group.description }}</p>
+        </div>
+      {% endif %}
+      {# End blog header #}
+
+      <div>
+
+        {# Blog listing section #}
+        <section>
+
+          {# Blog listing #}
+          {% for content in contents %}
+              <article>
+                {% if content.featured_image and group.use_featured_image_in_summary %}
+                  <a href="{{ content.absolute_url }}">
+                    <img src="{{ content.featured_image }}" alt="{{ content.featured_image_alt_text }}">
+                  </a>
+                {% endif %}
+                <div>
+                  <h2><a href="{{ content.absolute_url }}">{{ content.name }}</a></h2>
+                  {% if content_group.show_summary_in_listing %}
+                    {{ content.post_list_content|truncatehtml(100) }}
+                  {% endif %}
+                </div>
+              </article>
+          {% endfor %}
+          {# End blog listing #}
+
+        </section>
+        {# End blog listing section #}
+
+        {# Blog pagination #}
+        {% if contents.total_page_count > 1 %}
+          <nav aria-label="Pagination" role="navigation">
+            {% set page_list = [-2, -1, 0, 1, 2] %}
+            {% if contents.total_page_count - current_page_num == 1 %}{% set offset = -1 %}
+            {% elif contents.total_page_count - current_page_num == 0 %}{% set offset = -2 %}
+            {% elif current_page_num == 2 %}{% set offset = 1 %}
+            {% elif current_page_num == 1 %}{% set offset = 2 %}
+            {% else %}{% set offset = 0 %}{% endif %}
+
+            <a class="blog-pagination__link blog-pagination__prev-link {{ 'blog-pagination__prev-link--disabled' if !last_page_num }}"{% if last_page_num %} href="{% if current_page_num == 2 %}{{ group.absolute_url }} {% else %}{{ blog_page_link(last_page_num) }}{% endif %}" rel="prev"{% else %} aria-disabled="true" disabled {% endif %} role="button" aria-label="Go to previous page">
+              Prev
+            </a>
+            {% for page in page_list %}
+              {% set this_page = current_page_num + page + offset %}
+              {% if this_page > 0 and this_page <= contents.total_page_count %}
+                <a class="blog-pagination__link blog-pagination__number-link {{ 'blog-pagination__link--active' if this_page == current_page_num }}" aria-label="Go to Page {{ this_page }}" {% if this_page == current_page_num %}aria-current="true"{% endif %} href="{% if this_page == 1 %}{{ group.absolute_url }}{% else %}{{ blog_page_link(this_page) }}{% endif %}">{{ this_page }}</a>
+              {% endif %}
+            {% endfor %}
+            <a class="blog-pagination__link blog-pagination__next-link {{ 'blog-pagination__next-link--disabled' if !next_page_num }}"{% if next_page_num %} href="{{ blog_page_link(current_page_num + 1) }}"  rel="prev" {% else %} aria-disabled="true" disabled {% endif %} role="button" aria-label="Go to next page">
+              Next
+            </a>
+          </nav>
+        {% endif %}
+        {# End blog pagination #}
+
+      </div>
+
+    </main>
+    {{ standard_footer_includes }}
+  </body>
+</html>
