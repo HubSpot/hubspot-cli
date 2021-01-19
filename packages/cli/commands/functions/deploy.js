@@ -66,6 +66,11 @@ const logBuildOutput = async resp => {
     try {
       https
         .get(resp.cdnUrl, response => {
+          // If the cdnUrl is not found, just display success message
+          if (response.statusCode === 404) {
+            resolve('');
+          }
+
           let data = '';
           response.on('data', chunk => {
             data += chunk;
