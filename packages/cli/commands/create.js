@@ -66,7 +66,7 @@ const PROJECT_REPOSITORIES = {
   [TYPES['vue-app']]: 'cms-vue-boilerplate',
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
   [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
-  [TYPES['api-sample']]: 'hubspot-api-nodejs',
+  [TYPES['api-sample']]: 'sample-apps-list',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -228,7 +228,7 @@ exports.handler = async options => {
       downloadSpinner.start();
       const samplesConfig = await downloadConfig(
         PROJECT_REPOSITORIES[assetType],
-        'sample-apps/samples-list.json'
+        'samples.json'
       );
       downloadSpinner.stop();
       if (!samplesConfig) {
@@ -262,7 +262,7 @@ exports.handler = async options => {
       );
       if (created) {
         logger.success(
-          `Please, follow ${filePath}/src/README.md to find out how to run the sample`
+          `Please, follow ${filePath}/README.md to find out how to run the sample`
         );
       }
       break;
