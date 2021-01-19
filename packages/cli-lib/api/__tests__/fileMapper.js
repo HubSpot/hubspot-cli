@@ -1,7 +1,7 @@
 const fileStreamResponse = require('./fixtures/fileStreamResponse');
 const { createFileMapperNodeFromStreamResponse } = require('../fileMapper');
 
-describe('cms-lib/api/fileMapper', () => {
+describe('cli-lib/api/fileMapper', () => {
   describe('createFileMapperNodeFromStreamResponse()', () => {
     const src = '1234/test.html';
     it('should return request#tranform to create a FileMapperNode from the octet-stream response', () => {

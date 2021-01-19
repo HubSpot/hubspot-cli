@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
-const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cms-lib/logger');
+const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
-} = require('@hubspot/cms-lib/errorHandlers/standardErrors');
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 
 const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');

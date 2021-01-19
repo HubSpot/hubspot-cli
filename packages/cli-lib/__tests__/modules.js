@@ -16,7 +16,7 @@ const isHubSpot = true;
 // ca. 2016 https://github.com/facebook/jest/issues/335#issuecomment-250400941
 jest.mock('../lib/walk', () => require('../lib/__mocks__/walk'));
 
-describe('cms-lib/modules', () => {
+describe('cli-lib/modules', () => {
   describe('isModuleFolder()', () => {
     it('should throw on invalid input', () => {
       expect(() => isModuleFolder('foo')).toThrow();

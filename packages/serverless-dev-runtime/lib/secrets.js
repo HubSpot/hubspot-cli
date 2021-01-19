@@ -1,5 +1,5 @@
 const fs = require('fs-extra');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { MOCK_DATA } = require('./constants');
 
 const getDotEnvConfig = folderPath => {

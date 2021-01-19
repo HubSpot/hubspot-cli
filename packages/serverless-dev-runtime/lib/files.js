@@ -2,7 +2,7 @@ const os = require('os');
 const { spawn } = require('child_process');
 const fs = require('fs-extra');
 const tmp = require('tmp');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 const defaultFunctionPackageJson = require('./templates/default-function-package.json');
 
 const installDeps = folderPath => {

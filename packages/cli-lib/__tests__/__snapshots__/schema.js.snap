@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`cms-lib/schema cleanSchema() cleans a full schema 1`] = `
+exports[`cli-lib/schema cleanSchema() cleans a full schema 1`] = `
 Object {
   "associatedObjects": undefined,
   "labels": Object {
@@ -42,7 +42,7 @@ Object {
 }
 `;
 
-exports[`cms-lib/schema cleanSchema() cleans multiple schema 1`] = `
+exports[`cli-lib/schema cleanSchema() cleans multiple schema 1`] = `
 Array [
   Object {
     "associatedObjects": undefined,
@@ -173,7 +173,7 @@ Array [
 ]
 `;
 
-exports[`cms-lib/schema logSchemas() logs schemas 1`] = `
+exports[`cli-lib/schema logSchemas() logs schemas 1`] = `
 "╔════════╤════════╤══════════════╗
 ║ Label  │ Name   │ objectTypeId ║
 ║ Schema │ schema │              ║
@@ -181,7 +181,7 @@ exports[`cms-lib/schema logSchemas() logs schemas 1`] = `
 "
 `;
 
-exports[`cms-lib/schema writeSchemaToDisk() writes schema to disk 1`] = `
+exports[`cli-lib/schema writeSchemaToDisk() writes schema to disk 1`] = `
 "{
   \\"name\\": \\"schema\\",
   \\"labels\\": { \\"singular\\": \\"Schema\\", \\"plural\\": \\"Schemas\\" },

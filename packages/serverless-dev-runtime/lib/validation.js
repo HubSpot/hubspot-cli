@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const validateFunctionPath = functionPath => {
   const isInvalid = () => {

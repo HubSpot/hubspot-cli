@@ -1,5 +1,5 @@
-const { logger } = require('@hubspot/cms-lib/logger');
-const { outputLogs } = require('@hubspot/cms-lib/lib/logs');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const { MAX_RUNTIME } = require('./constants');
 
 const logFunctionExecution = ({

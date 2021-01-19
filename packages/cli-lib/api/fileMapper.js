@@ -161,7 +161,7 @@ async function deleteFile(accountId, filePath, options = {}) {
  */
 async function deleteFolder(accountId, folderPath, options = {}) {
   logger.warn(
-    '`cms-lib/api/fileMapper#deleteFolder()` is deprecated. Use `cms-lib/api/fileMapper#deleteFile()` instead.'
+    '`cli-lib/api/fileMapper#deleteFolder()` is deprecated. Use `cli-lib/api/fileMapper#deleteFile()` instead.'
   );
   return http.delete(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/delete/folder/${folderPath}`,

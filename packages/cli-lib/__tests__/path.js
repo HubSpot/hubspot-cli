@@ -1,7 +1,7 @@
 const path = require('path');
 const { splitHubSpotPath, splitLocalPath } = require('../path');
 
-describe('cms-lib/path', () => {
+describe('cli-lib/path', () => {
   describe('splitHubSpotPath()', () => {
     const testSplit = (filepath, expectedParts, joined) => {
       test(filepath, () => {

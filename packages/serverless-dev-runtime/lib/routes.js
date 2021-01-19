@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs-extra');
-const { logger } = require('@hubspot/cms-lib/logger');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { getFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');

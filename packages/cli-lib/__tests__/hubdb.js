@@ -13,7 +13,7 @@ const hubdbPublishTableResponse = require('./fixtures/hubdb/hubdbPublishTableRes
 jest.mock('../path');
 jest.mock('../api/hubdb');
 
-describe('cms-lib/hubdb', () => {
+describe('cli-lib/hubdb', () => {
   it('downloads hubdb table', async () => {
     const accountId = 123;
     const tableId = 456;
