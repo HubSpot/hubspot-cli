@@ -16,7 +16,7 @@ const logFunctionExecution = ({
   const roundedMemoryUsed = Math.round(memoryUsed);
   const executionData = {
     executionTime: runTime,
-    log: (logs && logs.length && logs.join('\n')) || [],
+    log: (logs && logs.length && logs.join('\n')) || '',
     duration: `${roundedRuntime} ms`,
     status,
     createdAt: startTime,
