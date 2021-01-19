@@ -213,7 +213,6 @@ exports.handler = async options => {
     }
     case TYPES['api-sample']: {
       const filePath = path.join(dest, name);
-      console.log(`File path ${filePath}, exists ${fs.existsSync(filePath)}`);
       if (fs.existsSync(filePath)) {
         const { overwrite } = await overwriteSamplePrompt(filePath);
         if (overwrite) {
@@ -251,16 +250,21 @@ exports.handler = async options => {
         `You've chosen ${sampleType} sample written on ${sampleLanguage} language`
       );
       commandTrackingContext.templateType = sampleType;
-      await createProject(
+      const created = await createProject(
         filePath,
         assetType,
-        PROJECT_REPOSITORIES[assetType],
-        `sample-apps/${sampleType}`,
-        options
+        sampleType,
+        sampleLanguage,
+        {
+          ...options,
+          repositoryType: 'repository',
+        }
       );
-      logger.success(
-        `Please, follow ${filePath}/src/README.md to find out how to run the sample`
-      );
+      if (created) {
+        logger.success(
+          `Please, follow ${filePath}/src/README.md to find out how to run the sample`
+        );
+      }
       break;
     }
     case TYPES['website-theme']:
