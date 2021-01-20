@@ -1,4 +1,3 @@
-const util = require('util');
 const moment = require('moment');
 const chalk = require('chalk');
 const { logger, Styles } = require('../logger');
@@ -11,25 +10,19 @@ const LOG_STATUS_COLORS = {
 };
 
 const formatError = log => {
-  return `/n${log.error.type}: ${log.error.message}\n${formatStackTrace(
-    log
-  )}\n`;
+  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 };
 
 const logHandler = {
   UNHANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
+    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
   },
   HANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : formatError(log)}`;
+    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
   },
   SUCCESS: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : formatLogPayloadData(log)}`;
+    return `${formatLogHeader(log)}${compact ? '' : `\n${formatLog(log)}`}`;
   },
-};
-
-const formatLogPayloadData = log => {
-  return `\n${formatPayload(log)}\n${formatLog(log)}`;
 };
 
 const formatLogHeader = log => {
@@ -55,14 +48,6 @@ const formatStackTrace = log => {
 
 const formatTimestamp = log => {
   return `${chalk.whiteBright(moment(log.createdAt).toISOString())}`;
-};
-
-const formatPayload = log => {
-  return util.inspect(log.payload, {
-    colors: true,
-    compact: true,
-    depth: 'Infinity',
-  });
 };
 
 const formatExecutionTime = log => {
