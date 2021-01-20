@@ -10,7 +10,6 @@
   "dependencies": {
     "@hubspot/cli-lib": "^2.2.3-beta.3",
     "chalk": "^4.1.0",
-    "express": "^4.17.1",
     "inquirer": "^6.3.1",
     "open": "^7.0.3",
     "ora": "^4.0.3",

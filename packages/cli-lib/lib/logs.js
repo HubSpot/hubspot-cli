@@ -14,27 +14,31 @@ const formatError = log => {
 };
 
 const logHandler = {
-  UNHANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
+  UNHANDLED_ERROR: (log, options) => {
+    return `${formatLogHeader(log, options)}${
+      options.compact ? '' : `\n${formatError(log)}`
+    }`;
   },
-  HANDLED_ERROR: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : `\n${formatError(log)}`}`;
+  HANDLED_ERROR: (log, options) => {
+    return `${formatLogHeader(log, options)}${
+      options.compact ? '' : `\n${formatError(log)}`
+    }`;
   },
-  SUCCESS: (log, { compact }) => {
-    return `${formatLogHeader(log)}${compact ? '' : `\n${formatLog(log)}`}`;
+  SUCCESS: (log, options) => {
+    return `${formatLogHeader(log, options)}${
+      options.compact ? '' : `\n${log.log}`
+    }`;
   },
 };
 
-const formatLogHeader = log => {
+const formatLogHeader = (log, options) => {
   const color = LOG_STATUS_COLORS[log.status];
+  const headerInsertion =
+    options && options.insertions && options.insertions.header;
 
-  return `${formatTimestamp(log)}${SEPARATOR}${color(
-    log.status
-  )}${SEPARATOR}${formatExecutionTime(log)}`;
-};
-
-const formatLog = log => {
-  return `${log.log}`;
+  return `${formatTimestamp(log)}${SEPARATOR}${color(log.status)}${
+    headerInsertion ? `${SEPARATOR}${headerInsertion}` : ''
+  }${SEPARATOR}${formatExecutionTime(log)}`;
 };
 
 const formatStackTrace = log => {

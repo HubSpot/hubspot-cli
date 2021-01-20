@@ -72,7 +72,7 @@ const fileSystemErrorContext = Object.freeze({
   filepath: 'x/y/z.html',
 });
 
-describe('cms-lib/errorHandlers', () => {
+describe('cli-lib/errorHandlers', () => {
   beforeEach(() => {
     logger.clear();
   });

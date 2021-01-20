@@ -49,7 +49,7 @@ function testPathDeterminationFunction(name, pathType, fn, truthy, falsey) {
   });
 }
 
-describe('cms-lib/fileMapper', () => {
+describe('cli-lib/fileMapper', () => {
   testPathDeterminationFunction(
     'isPathToFile',
     'file',

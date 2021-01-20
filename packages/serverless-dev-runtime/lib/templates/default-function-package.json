@@ -1,0 +1,17 @@
+{
+  "name": "content20200508",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hubspot/api-client": "^1.0.0-beta",
+    "axios": "^0.19.2",
+    "request": "^2.88.0",
+    "requests": "^0.2.2"
+  }
+}
