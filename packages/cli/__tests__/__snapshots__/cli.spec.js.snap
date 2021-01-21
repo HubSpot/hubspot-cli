@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`my cli program should print the correct output 1`] = `
+Object {
+  "defaultPortal": "QA",
+  "portals": Array [
+    Object {
+      "auth": Object {
+        "tokenInfo": Any<Object>,
+      },
+      "authType": "personalaccesskey",
+      "env": "qa",
+      "name": "QA",
+      "personalAccessKey": "CiRjYTYyMmY0YS0xODQyLTQyMmYtOTc3OC1hMDEzMDExZTRjMjMQ8tW5MRin-NoBKhkABeaRgpKG4ptdbYYuc5IuNjUG7DE4CE0F",
+      "portalId": 103705330,
+    },
+  ],
+}
+`;
