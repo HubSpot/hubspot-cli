@@ -1,6 +1,6 @@
 const request = require('request-promise-native');
-const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logger } = require('./logger');
+const { logErrorInstance } = require('./errorHandlers');
 
 // https://developer.github.com/v3/#user-agent-required
 const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
@@ -34,13 +34,13 @@ async function downloadConfig(repoName, filePath) {
     const configData = await fetchRawConfig(repoName, filePath);
     if (!configData) return;
     const { download_url: downloadUrl, name } = configData;
-    logger.log(`Fetching ${name}...`);
+    logger.debug(`Fetching ${name}...`);
     const config = await request.get(downloadUrl, {
-      encoding: null,
+      json: true,
       headers: { ...USER_AGENT_HEADERS },
     });
-    logger.log('Finished downloading config file');
-    return JSON.parse(config.toString());
+    logger.debug('Finished downloading config file');
+    return config;
   } catch (err) {
     logger.error('An error occured fetching the config file.');
     logErrorInstance(err);

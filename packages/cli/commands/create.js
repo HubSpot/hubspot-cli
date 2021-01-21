@@ -7,6 +7,8 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { createProject } = require('@hubspot/cli-lib/projects');
 const { createFunction } = require('@hubspot/cli-lib/functions');
+const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { downloadConfig } = require('@hubspot/cli-lib/github');
 
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -20,7 +22,6 @@ const {
   overwriteSamplePrompt,
 } = require('../lib/createApiSamplePrompt');
 const { commaSeparatedValues } = require('../lib/text');
-const { downloadConfig } = require('../lib/configs');
 
 const TYPES = {
   function: 'function',
@@ -216,15 +217,12 @@ exports.handler = async options => {
       if (fs.existsSync(filePath)) {
         const { overwrite } = await overwriteSamplePrompt(filePath);
         if (overwrite) {
-          const removingSpinner = ora(`Removing existing ${filePath} folder`);
-          removingSpinner.start();
           fs.rmdirSync(filePath, { recursive: true });
-          removingSpinner.stop();
         } else {
           return;
         }
       }
-      const downloadSpinner = ora('Downloading API samples config');
+      const downloadSpinner = ora('Loading available API samples');
       downloadSpinner.start();
       const samplesConfig = await downloadConfig(
         PROJECT_REPOSITORIES[assetType],
@@ -249,7 +247,6 @@ exports.handler = async options => {
       logger.info(
         `You've chosen ${sampleType} sample written on ${sampleLanguage} language`
       );
-      commandTrackingContext.templateType = sampleType;
       const created = await createProject(
         filePath,
         assetType,
@@ -257,7 +254,7 @@ exports.handler = async options => {
         sampleLanguage,
         {
           ...options,
-          repositoryType: 'repository',
+          releaseType: GITHUB_RELEASE_TYPES.REPOSITORY,
         }
       );
       if (created) {
@@ -304,7 +301,8 @@ exports.builder = yargs => {
   yargs.positional('type', {
     describe: 'Type of asset',
     type: 'string',
-    choices: Object.values(TYPES),
+    // temporarily disable showing api-sample for users, since it's in beta
+    choices: Object.values(TYPES).filter(type => type !== 'api-sample'),
   });
   yargs.positional('name', {
     describe: 'Name of new asset',

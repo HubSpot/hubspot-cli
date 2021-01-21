@@ -12,6 +12,8 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
+const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
+
 // https://developer.github.com/v3/#user-agent-required
 const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
 
@@ -47,14 +49,18 @@ async function fetchReleaseData(repoName, tag = '') {
 /**
  * @param {String} repoName - Name of GitHub repository to download.
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
- * @param {String} repositoryType - type of content
+ * @param {String} releaseType - type of content
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadProject(repoName, tag = '', repositoryType = 'release') {
+async function downloadProject(
+  repoName,
+  tag = '',
+  releaseType = GITHUB_RELEASE_TYPES.RELEASE
+) {
   try {
     let zipUrl;
-    if (repositoryType === 'repository') {
-      logger.log(`Fetching ${repositoryType} with name ${repoName}...`);
+    if (releaseType === GITHUB_RELEASE_TYPES.REPOSITORY) {
+      logger.log(`Fetching ${releaseType} with name ${repoName}...`);
       zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball`;
     } else {
       const releaseData = await fetchReleaseData(repoName, tag);
@@ -172,9 +178,9 @@ function cleanupTemp(tmpDir) {
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createProject(dest, type, repoName, sourceDir, options = {}) {
-  const { themeVersion, projectVersion, repositoryType } = options;
+  const { themeVersion, projectVersion, releaseType } = options;
   const tag = projectVersion || themeVersion;
-  const zip = await downloadProject(repoName, tag, repositoryType);
+  const zip = await downloadProject(repoName, tag, releaseType);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
   const success =
