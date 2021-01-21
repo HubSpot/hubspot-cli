@@ -26,6 +26,9 @@
     "hs": "./bin/hs",
     "hscms": "./bin/hscms"
   },
+  "scripts": {
+    "test": "NODE_ENV=DEBUG jest ./bin/__tests__"
+  },
   "publishConfig": {
     "access": "public"
   },

@@ -19,7 +19,11 @@ const promptUser = async promptConfig => {
 const personalAccessKeyPrompt = async ({ env } = {}) => {
   await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
-  open(`${websiteOrigin}/l/personal-access-key`, { url: true });
+
+  console.log(process.env.NODE_ENV);
+  if (process.env.NODE_ENV !== 'test') {
+    open(`${websiteOrigin}/l/personal-access-key`, { url: true });
+  }
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {

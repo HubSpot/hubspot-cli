@@ -7,10 +7,11 @@
   "devDependencies": {
     "eslint": "^6.5.1",
     "husky": "^1.3.1",
+    "jest": "^26.6.3",
     "lerna": "^3.13.1",
     "lint-staged": "^8.1.4",
     "madge": "^3.9.0",
-    "prettier": "^1.19.1"
+    "rimraf": "^2.6.3"
   },
   "workspaces": [
     "packages/*"
@@ -20,7 +21,7 @@
     "prettier:write": "prettier --write 'packages/**/*.{js,json}'",
     "publish-release": "yarn lerna publish --conventional-graduate",
     "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
-    "test": "jest",
+    "test": "jest ./tests",
     "jest": "jest --watch",
     "circular-deps": "yarn madge --circular packages"
   },
@@ -34,8 +35,5 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "dependencies": {
-    "jest": "^26.6.3"
   }
 }
