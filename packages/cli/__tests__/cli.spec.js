@@ -12,7 +12,7 @@ describe('my cli program', () => {
     rimraf.sync('./hubspot.config.yml');
 
     await cliProcess.execute(
-      ['init', '--qa'], // args
+      ['init', '--qa'],
       [
         cmd.ENTER,
         'CiRjYTYyMmY0YS0xODQyLTQyMmYtOTc3OC1hMDEzMDExZTRjMjMQ8tW5MRin-NoBKhkABeaRgpKG4ptdbYYuc5IuNjUG7DE4CE0F',
