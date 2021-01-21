@@ -2,6 +2,7 @@
 
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
+const chalk = require('chalk');
 
 const { logger } = require('@hubspot/cms-lib/logger');
 const { logErrorInstance } = require('@hubspot/cms-lib/errorHandlers');
@@ -27,10 +28,15 @@ const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 
-const notifier = updateNotifier({ pkg });
+const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
+
+const CLI_UPGRADE_MESSAGE =
+  chalk.bold('The CMS CLI is now the HubSpot CLI') +
+  '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli';
 
 notifier.notify({
   shouldNotifyInNpmScript: true,
+  message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
 });
 
 const argv = yargs
