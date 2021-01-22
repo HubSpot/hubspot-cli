@@ -1,6 +1,20 @@
 Change Log
 ==========
+
+## 3.0.0
+
+The HubSpot CMS CLI is now the HubSpot CLI!
+
+* Rename `@hubspot/cms-cli` to `@hubspot/cli` and `@hubspot/cms-lib` to `@hubspot/cli-lib`.
+* **New command**: Add beta `hs functions test` command to make it easier to develop serverless API endpoints locally. ([#389](https://github.com/HubSpot/hubspot-cli/pull/389))
+* Add ability to create API sample apps to `hs create`.  ([#421](https://github.com/HubSpot/hubspot-cli/pull/421))
+* Fix issue with `undefined` lines in `hs logs` output. ([#419](https://github.com/HubSpot/hubspot-cli/pull/419))
+
 ## 2.2.3
+
+* Notify of new `@hubspot/cli` package. ([#420](https://github.com/HubSpot/hubspot-cli/pull/420))
+* Add new blog template types to `hs create template` flow. ([#414](https://github.com/HubSpot/hubspot-cli/pull/414))
+* Fix module label when running `hs create module`. ([#413](https://github.com/HubSpot/hubspot-cli/pull/413))
 * Updated hs functions deploy command to use the new API endpoints and poll for status
 
 ## 2.2.1
