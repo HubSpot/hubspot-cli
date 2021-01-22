@@ -99,6 +99,11 @@ const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
 
 const POLLING_DELAY = 5000;
 
+const GITHUB_RELEASE_TYPES = {
+  RELEASE: 'release',
+  REPOSITORY: 'repository',
+};
+
 module.exports = {
   Mode,
   ENVIRONMENTS,
@@ -121,4 +126,5 @@ module.exports = {
   MARKETPLACE_FOLDER,
   FOLDER_DOT_EXTENSIONS,
   POLLING_DELAY,
+  GITHUB_RELEASE_TYPES,
 };

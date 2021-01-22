@@ -1,4 +1,5 @@
 const path = require('path');
+const ora = require('ora');
 const fs = require('fs-extra');
 const {
   logFileSystemErrorInstance,
@@ -6,6 +7,8 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { createProject } = require('@hubspot/cli-lib/projects');
 const { createFunction } = require('@hubspot/cli-lib/functions');
+const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -14,12 +17,17 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { createFunctionPrompt } = require('../lib/createFunctionPrompt');
 const { createTemplatePrompt } = require('../lib/createTemplatePrompt');
 const { createModulePrompt } = require('../lib/createModulePrompt');
+const {
+  createApiSamplePrompt,
+  overwriteSamplePrompt,
+} = require('../lib/createApiSamplePrompt');
 const { commaSeparatedValues } = require('../lib/text');
 
 const TYPES = {
   function: 'function',
   module: 'module',
   template: 'template',
+  'api-sample': 'api-sample',
   'website-theme': 'website-theme',
   'react-app': 'react-app',
   'vue-app': 'vue-app',
@@ -59,6 +67,7 @@ const PROJECT_REPOSITORIES = {
   [TYPES['vue-app']]: 'cms-vue-boilerplate',
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
   [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
+  [TYPES['api-sample']]: 'sample-apps-list',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
@@ -180,7 +189,10 @@ exports.handler = async options => {
 
   let commandTrackingContext = { assetType: assetType };
 
-  if (!name && [TYPES.module, TYPES.template].includes(assetType)) {
+  if (
+    !name &&
+    [TYPES.module, TYPES.template, TYPES['api-sample']].includes(assetType)
+  ) {
     logger.error(
       `The 'name' argument is required when creating a ${assetType}.`
     );
@@ -198,6 +210,58 @@ exports.handler = async options => {
 
       commandTrackingContext.templateType = templateType;
       createTemplate(name, dest, templateType);
+      break;
+    }
+    case TYPES['api-sample']: {
+      const filePath = path.join(dest, name);
+      if (fs.existsSync(filePath)) {
+        const { overwrite } = await overwriteSamplePrompt(filePath);
+        if (overwrite) {
+          fs.rmdirSync(filePath, { recursive: true });
+        } else {
+          return;
+        }
+      }
+      const downloadSpinner = ora('Loading available API samples');
+      downloadSpinner.start();
+      const samplesConfig = await fetchJsonFromRepository(
+        PROJECT_REPOSITORIES[assetType],
+        'main/samples.json'
+      );
+      downloadSpinner.stop();
+      if (!samplesConfig) {
+        logger.error(
+          `Currently there are no samples available, please, try again later.`
+        );
+        return;
+      }
+      const { sampleType, sampleLanguage } = await createApiSamplePrompt(
+        samplesConfig
+      );
+      if (!sampleType || !sampleLanguage) {
+        logger.error(
+          `Currently there are no samples available, please, try again later.`
+        );
+        return;
+      }
+      logger.info(
+        `You've chosen ${sampleType} sample written on ${sampleLanguage} language`
+      );
+      const created = await createProject(
+        filePath,
+        assetType,
+        sampleType,
+        sampleLanguage,
+        {
+          ...options,
+          releaseType: GITHUB_RELEASE_TYPES.REPOSITORY,
+        }
+      );
+      if (created) {
+        logger.success(
+          `Please, follow ${filePath}/README.md to find out how to run the sample`
+        );
+      }
       break;
     }
     case TYPES['website-theme']:
@@ -237,7 +301,8 @@ exports.builder = yargs => {
   yargs.positional('type', {
     describe: 'Type of asset',
     type: 'string',
-    choices: Object.values(TYPES),
+    // temporarily disable showing api-sample for users, since it's in beta
+    choices: Object.values(TYPES).filter(type => type !== 'api-sample'),
   });
   yargs.positional('name', {
     describe: 'Name of new asset',

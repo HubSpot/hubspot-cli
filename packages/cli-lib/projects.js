@@ -12,11 +12,12 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
-// https://developer.github.com/v3/#user-agent-required
-const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
+const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
+const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 /**
  * https://developer.github.com/v3/repos/releases/#get-the-latest-release
+ * @param {String} repoName - Name of GitHub repository to fetch.
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
  */
 async function fetchReleaseData(repoName, tag = '') {
@@ -29,7 +30,7 @@ async function fetchReleaseData(repoName, tag = '') {
     : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
     return await request.get(URI, {
-      headers: { ...USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
       json: true,
     });
   } catch (err) {
@@ -44,18 +45,31 @@ async function fetchReleaseData(repoName, tag = '') {
 }
 
 /**
+ * @param {String} repoName - Name of GitHub repository to download.
  * @param {String} tag - Git tag to fetch for. If omitted latest will be fetched.
+ * @param {String} releaseType - type of content
  * @returns {Buffer|Null} Zip data buffer
  */
-async function downloadProject(repoName, tag = '') {
+async function downloadProject(
+  repoName,
+  tag = '',
+  releaseType = GITHUB_RELEASE_TYPES.RELEASE
+) {
   try {
-    const releaseData = await fetchReleaseData(repoName, tag);
-    if (!releaseData) return;
-    const { zipball_url: zipUrl, name } = releaseData;
-    logger.log(`Fetching ${name}...`);
+    let zipUrl;
+    if (releaseType === GITHUB_RELEASE_TYPES.REPOSITORY) {
+      logger.log(`Fetching ${releaseType} with name ${repoName}...`);
+      zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball`;
+    } else {
+      const releaseData = await fetchReleaseData(repoName, tag);
+      if (!releaseData) return;
+      ({ zipball_url: zipUrl } = releaseData);
+      const { name } = releaseData;
+      logger.log(`Fetching ${name}...`);
+    }
     const zip = await request.get(zipUrl, {
       encoding: null,
-      headers: { ...USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });
     logger.log('Completed project fetch.');
     return zip;
@@ -67,6 +81,7 @@ async function downloadProject(repoName, tag = '') {
 }
 
 /**
+ * @param {String} repoName - Name of repository.
  * @param {Buffer} zip
  * @returns {String|Null} Temp dir where zip has been extracted.
  */
@@ -115,6 +130,7 @@ async function extractProjectZip(repoName, zip) {
 
 /**
  * @param {String} src - Dir where boilerplate repo files have been extracted.
+ * @param {String} sourceDir - Directory in project that should get copied.
  * @param {String} dest - Dir to copy boilerplate src files to.
  * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
@@ -160,9 +176,9 @@ function cleanupTemp(tmpDir) {
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createProject(dest, type, repoName, sourceDir, options = {}) {
-  const { themeVersion, projectVersion } = options;
+  const { themeVersion, projectVersion, releaseType } = options;
   const tag = projectVersion || themeVersion;
-  const zip = await downloadProject(repoName, tag);
+  const zip = await downloadProject(repoName, tag, releaseType);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
   const success =
