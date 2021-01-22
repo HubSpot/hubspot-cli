@@ -8,7 +8,7 @@
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "engines": {
-    "node": ">=8.9.1"
+    "node": ">=10"
   },
   "publishConfig": {
     "access": "public"
