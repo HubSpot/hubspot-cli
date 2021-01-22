@@ -5,6 +5,7 @@ Change Log
 
 The HubSpot CMS CLI is now the HubSpot CLI!
 
+* Bump minimum Node.js version to 10.x. ([#427](https://github.com/HubSpot/hubspot-cli/pull/427))
 * Rename `@hubspot/cms-cli` to `@hubspot/cli` and `@hubspot/cms-lib` to `@hubspot/cli-lib`.
 * **New command**: Add beta `hs functions test` command to make it easier to develop serverless API endpoints locally. ([#389](https://github.com/HubSpot/hubspot-cli/pull/389))
 * Add ability to create API sample apps to `hs create`.  ([#421](https://github.com/HubSpot/hubspot-cli/pull/421))
