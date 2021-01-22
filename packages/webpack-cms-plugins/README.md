@@ -1,6 +1,6 @@
 # `@hubspot/webpack-cms-plugins`
 
-The `@hubspot/webpack-cms-plugins` packages contains plugins designed to make using webpack to compile HubSpot CMS assets more straightforward. Instead of using `webpack-dev-server`, the idea is to use generate assets locally and then upload them to the HubSpot CMS for previewing and testing. The plugin is designed to work together with [@hubspot/cms-cli](https://www.npmjs.com/package/@hubspot/cms-cli).
+The `@hubspot/webpack-cms-plugins` packages contains plugins designed to make using webpack to compile HubSpot CMS assets more straightforward. Instead of using `webpack-dev-server`, the idea is to use generate assets locally and then upload them to the HubSpot CMS for previewing and testing. The plugin is designed to work together with [@hubspot/cli](https://www.npmjs.com/package/@hubspot/cli).
 
 ## Why is this needed?
 
