@@ -2,34 +2,24 @@
 
 A serverless function development runtime that can be used to test CMS serverless functions. This is intended for use with the [CMS CLI](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cms-cli).
 
+⚠️ **This is a BETA release that uses some HubSpot features that are not available to all customer accounts. Please refer to the HubSpot [Developer Beta Terms](https://legal.hubspot.com/developerbetaterms)** ⚠️
+
 ## Getting started
 
-For more information on using these tools, see [Local Development Tooling: Getting Started](https://designers.hubspot.com/tutorials/getting-started-with-local-development)
-
-### Installation
-
-#### Using `yarn`
-
-```bash
-yarn add @hubspot/cms-cli --dev
-```
-
-#### Using `npm`
-
-```bash
-npm install @hubspot/cms-cli
-```
+For more information on using these tools, see [Local Development Tooling: Getting Started](https://designers.hubspot.com/tutorials/getting-started-with-local-development).
 
 ### Usage
 
-#### CLI Command
-To run the CLI command to test a local serverless function run...
+#### CLI Command (recommended)
+Using the CLI to run serverless functions locally, requires installing [@hubspot/cli](https://www.npmjs.com/package/@hubspot/cms-cli). Once installed, to test your functions run…
+
 ```bash
-hs functions <localDotFunctionsFolderPath>
+hs functions test <folder.functions>
 ```
 
 #### Importing
-To start the server, the `start` method can be imported from the `@hubspot/serverless-dev-runtime` package and run with settings like so...
+
+It also is possible to use the runtime inside your own tooling. To start the server, the `start` method can be imported from the `@hubspot/serverless-dev-runtime` package and run with settings like so...
 
 ```bash
 const { start } = require('@hubspot/serverless-dev-runtime');

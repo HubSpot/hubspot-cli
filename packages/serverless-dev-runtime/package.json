@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A tool for testing HubSpot CMS serverless functions locally",
   "main": "index.js",
-  "repository": "https://github.com/HubSpot/hubspot-cms-tools",
+  "repository": "https://github.com/HubSpot/hubspot-cli",
   "license": "Apache-2.0",
   "dependencies": {
     "@hubspot/cli-lib": "^2.2.3-beta.3",
