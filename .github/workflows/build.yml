@@ -19,6 +19,9 @@ jobs:
     - name: Force local package symlinks
       run: |
           yarn lerna link --force-local
+    - name: Verify package dependencies
+      run: |
+          yarn check-deps
     - name: Lint
       run: |
           yarn lint
