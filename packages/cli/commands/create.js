@@ -8,7 +8,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { createProject } = require('@hubspot/cli-lib/projects');
 const { createFunction } = require('@hubspot/cli-lib/functions');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
-const { downloadConfig } = require('@hubspot/cli-lib/github');
+const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -224,9 +224,9 @@ exports.handler = async options => {
       }
       const downloadSpinner = ora('Loading available API samples');
       downloadSpinner.start();
-      const samplesConfig = await downloadConfig(
+      const samplesConfig = await fetchJsonFromRepository(
         PROJECT_REPOSITORIES[assetType],
-        'samples.json'
+        'main/samples.json'
       );
       downloadSpinner.stop();
       if (!samplesConfig) {

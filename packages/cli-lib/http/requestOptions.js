@@ -2,13 +2,17 @@ const { version } = require('../package.json');
 const { getAndLoadConfigIfNeeded } = require('../lib/config');
 const { getHubSpotApiOrigin } = require('../lib/urls');
 
+const DEFAULT_USER_AGENT_HEADERS = {
+  'User-Agent': `HubSpot CLI/${version}`,
+};
+
 const getRequestOptions = (options = {}, requestOptions = {}) => {
   const { env } = options;
   const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
   return {
     baseUrl: getHubSpotApiOrigin(env, httpUseLocalhost),
     headers: {
-      'User-Agent': `HubSpot CLI/${version}`,
+      ...DEFAULT_USER_AGENT_HEADERS,
     },
     json: true,
     simple: true,
@@ -19,4 +23,5 @@ const getRequestOptions = (options = {}, requestOptions = {}) => {
 
 module.exports = {
   getRequestOptions,
+  DEFAULT_USER_AGENT_HEADERS,
 };

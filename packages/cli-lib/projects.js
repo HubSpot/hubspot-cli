@@ -13,9 +13,7 @@ const {
 } = require('./errorHandlers');
 
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
-
-// https://developer.github.com/v3/#user-agent-required
-const USER_AGENT_HEADERS = { 'User-Agent': 'HubSpot/hubspot-cms-tools' };
+const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 /**
  * https://developer.github.com/v3/repos/releases/#get-the-latest-release
@@ -32,7 +30,7 @@ async function fetchReleaseData(repoName, tag = '') {
     : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
     return await request.get(URI, {
-      headers: { ...USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
       json: true,
     });
   } catch (err) {
@@ -71,7 +69,7 @@ async function downloadProject(
     }
     const zip = await request.get(zipUrl, {
       encoding: null,
-      headers: { ...USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });
     logger.log('Completed project fetch.');
     return zip;
