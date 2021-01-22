@@ -9,6 +9,8 @@ The HubSpot CMS CLI is now the HubSpot CLI!
 * **New command**: Add beta `hs functions test` command to make it easier to develop serverless API endpoints locally. ([#389](https://github.com/HubSpot/hubspot-cli/pull/389))
 * Add ability to create API sample apps to `hs create`.  ([#421](https://github.com/HubSpot/hubspot-cli/pull/421))
 * Fix issue with `undefined` lines in `hs logs` output. ([#419](https://github.com/HubSpot/hubspot-cli/pull/419))
+* Endpoints for serverless deploys have been updated and polling for status added. ([#411](https://github.com/HubSpot/hubspot-cli/pull/411))
+* Log output for serverless deploy is now displayed for errors and success. ([#417](https://github.com/HubSpot/hubspot-cli/pull/417))
 
 ## 2.2.3
 
