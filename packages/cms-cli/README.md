@@ -1,3 +1,11 @@
+## This package has been renamed
+
+The `@hubspot/cms-cli` is now `@hubspot/cli`. This package will receive patches and bug fixes, but we encourage you to upgrade to the new, actively maintained HubSpot CLI. To upgrade, run:
+
+```npm uninstall -g @hubspot/cms-cli ```
+and 
+```npm install -g @hubspot/cli```
+
 # @hubspot/cms-cli
 
 Provides an `hs` command for interacting with the HubSpot CMS. [Learn more about building on the HubSpot CMS](https://designers.hubspot.com/docs/key-concepts).

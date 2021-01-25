@@ -1,5 +1,13 @@
 Change Log
 ==========
+## 2.2.3
+
+* **This package is being renamed** `@hubspot/cms-cli` is now `@hubspot/ci`
+* Notify of new `@hubspot/cli` package. ([#420](https://github.com/HubSpot/hubspot-cli/pull/420))
+* Add new blog template types to `hs create template` flow. ([#414](https://github.com/HubSpot/hubspot-cli/pull/414))
+* Fix module label when running `hs create module`. ([#413](https://github.com/HubSpot/hubspot-cli/pull/413))
+* Updated hs functions deploy command to use the new API endpoints and poll for status
+
 ## 2.2.1
 * To align with preferred terminology, we replaced instances of the word `portal` with the word `account`.  This was done in a non-breaking way, and any flag that currently accepts `account` will still accept `portal`.  The one exception to this migration is the `hubspot.config.yml` file.  We excluded this from the migration since it could potentially break backwards compatibility.  The `portals`, `portal`, and `defaultPortal` nomenclature will remain for `hubspot.config.yml` (https://github.com/HubSpot/hubspot-cms-tools/pull/394 and https://github.com/HubSpot/hubspot-cms-tools/pull/397)
 * Fixed an issue preventing serverless function log tailing from displaying properly (https://github.com/HubSpot/hubspot-cms-tools/pull/379)
