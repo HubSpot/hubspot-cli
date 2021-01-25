@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 3.0.2
+
+* Adjust `hs create` so that the beta `api-sample` asset type works. ([#431](https://github.com/HubSpot/hubspot-cli/pull/431))
+
+## 3.0.1
+
+* Fix runtime issue due to missing dependencies. ([#428](https://github.com/HubSpot/hubspot-cli/pull/428))
+
 ## 3.0.0
 
 The HubSpot CMS CLI is now the HubSpot CLI!
