@@ -70,7 +70,9 @@ const PROJECT_REPOSITORIES = {
   [TYPES['api-sample']]: 'sample-apps-list',
 };
 
-const SUPPORTED_ASSET_TYPES = commaSeparatedValues(Object.values(TYPES));
+const SUPPORTED_ASSET_TYPES = commaSeparatedValues(
+  Object.values(TYPES).filter(type => type !== 'api-sample')
+);
 
 const createModule = (moduleDefinition, name, dest) => {
   const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
@@ -301,8 +303,6 @@ exports.builder = yargs => {
   yargs.positional('type', {
     describe: 'Type of asset',
     type: 'string',
-    // temporarily disable showing api-sample for users, since it's in beta
-    choices: Object.values(TYPES).filter(type => type !== 'api-sample'),
   });
   yargs.positional('name', {
     describe: 'Name of new asset',
