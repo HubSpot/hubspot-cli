@@ -74,7 +74,7 @@ const addEndpointToApp = endpointData => {
         trackedLogs.push(args);
       };
       const functionExecutionCallback = sendResponseValue => {
-        const { statusCode, body } = sendResponseValue;
+        const { statusCode, body, headers = {} } = sendResponseValue;
         const endTime = Date.now();
         const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log = originalConsoleLog;
@@ -110,14 +110,17 @@ const addEndpointToApp = endpointData => {
           },
         });
         outputTrackedLogs(trackedLogs);
-        res.status(statusCode).json(body);
+        res
+          .status(statusCode)
+          .set(headers)
+          .send(body);
       };
 
       await main(dataForFunc, functionExecutionCallback);
     } catch (e) {
       console.log = originalConsoleLog;
       logger.error(e);
-      res.status(500).json(e);
+      res.status(500).send(e);
     }
   });
 };
