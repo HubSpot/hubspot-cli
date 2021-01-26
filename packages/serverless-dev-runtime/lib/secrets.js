@@ -28,7 +28,7 @@ const getSecrets = (dotEnvConfig, allowedSecrets) => {
   return secretsDict;
 };
 
-const getMockedDataFromDotEnv = dotEnvConfig => {
+const getMockedDataFromDotEnv = (dotEnvConfig = {}) => {
   let mockedDataDict = {};
 
   Object.keys(MOCK_DATA).forEach(mockValue => {
