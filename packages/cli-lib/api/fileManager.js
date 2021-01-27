@@ -17,8 +17,10 @@ async function uploadFile(accountId, src, dest) {
     }),
   };
 
-  if (directory && directory !== '.' && directory !== '/') {
+  if (directory && directory !== '.') {
     formData.folderPath = directory;
+  } else {
+    formData.folderPath = '/';
   }
 
   return http.post(accountId, {
