@@ -183,7 +183,7 @@ const start = async props => {
   if (watch) {
     watchFolder(functionPath, restartServer);
   }
-  startServer();
+  return startServer();
 };
 
 module.exports = {
