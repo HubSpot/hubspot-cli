@@ -5,6 +5,7 @@ const { logger, Styles } = require('../logger');
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS = {
   SUCCESS: Styles.success,
+  ERROR: Styles.error,
   UNHANDLED_ERROR: Styles.error,
   HANDLED_ERROR: Styles.error,
 };
