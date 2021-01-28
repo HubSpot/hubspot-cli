@@ -9,26 +9,29 @@ const LOG_STATUS_COLORS = {
   HANDLED_ERROR: Styles.error,
 };
 
-const formatError = log => {
-  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
+const errorHandler = (log, options) => {
+  return `${formatLogHeader(log, options)}${
+    options.compact ? '' : `\n${formatError(log)}`
+  }`;
 };
 
 const logHandler = {
-  UNHANDLED_ERROR: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${formatError(log)}`
-    }`;
-  },
-  HANDLED_ERROR: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${formatError(log)}`
-    }`;
-  },
+  ERROR: errorHandler,
+  UNHANDLED_ERROR: errorHandler,
+  HANDLED_ERROR: errorHandler,
   SUCCESS: (log, options) => {
     return `${formatLogHeader(log, options)}${
       options.compact ? '' : `\n${log.log}`
     }`;
   },
+};
+
+const formatError = log => {
+  if (!log.error) {
+    return '';
+  }
+
+  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 };
 
 const formatLogHeader = (log, options) => {
