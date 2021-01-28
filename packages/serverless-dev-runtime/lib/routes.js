@@ -1,4 +1,5 @@
 const path = require('path');
+const util = require('util');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getFunctionDataContext } = require('./data');
@@ -109,6 +110,15 @@ const addEndpointToApp = endpointData => {
             },
           },
         });
+        if (options.logOutput) {
+          logger.log(
+            util.inspect(body, {
+              colors: true,
+              compact: true,
+              depth: 'Infinity',
+            })
+          );
+        }
         outputTrackedLogs(trackedLogs);
         res
           .status(statusCode)
