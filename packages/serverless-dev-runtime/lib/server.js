@@ -166,7 +166,13 @@ const startServer = async callback => {
   validateInputs(options);
 
   try {
-    await runTestServer(callback);
+    const currentServer = await runTestServer(callback);
+    return {
+      server: currentServer,
+      exit: () => {
+        shutdownServer(currentServer);
+      },
+    };
   } catch (e) {
     logErrorInstance(e, {
       port,
@@ -176,7 +182,7 @@ const startServer = async callback => {
   }
 };
 
-const start = async props => {
+const start = props => {
   setOptions(props);
   const { path: functionPath, watch, debug } = options;
   setLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
