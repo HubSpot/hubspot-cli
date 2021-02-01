@@ -170,7 +170,7 @@ const startServer = async callback => {
     return {
       server: currentServer,
       exit: callback => {
-        shutdownServer(currentServer, callback);
+        return shutdownServer(currentServer, callback);
       },
     };
   } catch (e) {
