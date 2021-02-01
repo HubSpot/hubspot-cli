@@ -78,11 +78,12 @@ const getFunctionDataContext = async (
   const {
     secrets,
     mockData: {
-      HUBSPOT_LIMITS_TIME_REMAINING,
-      HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
-      HUBSPOT_CONTACT_VID,
+      HUBSPOT_ACCOUNT_ID,
       HUBSPOT_CONTACT_IS_LOGGED_IN,
       HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+      HUBSPOT_CONTACT_VID,
+      HUBSPOT_LIMITS_TIME_REMAINING,
+      HUBSPOT_LIMITS_EXECUTIONS_REMAINING,
     },
   } = getDotEnvData(functionPath, allowedSecrets);
   const data = {
@@ -98,7 +99,7 @@ const getFunctionDataContext = async (
     },
     body: req.body,
     headers: getHeaders(req),
-    accountId,
+    accountId: accountId || HUBSPOT_ACCOUNT_ID || MOCK_DATA.HUBSPOT_ACCOUNT_ID,
     contact:
       contact === 'true' || contact === true
         ? {
@@ -106,10 +107,10 @@ const getFunctionDataContext = async (
             isLoggedIn:
               HUBSPOT_CONTACT_IS_LOGGED_IN ||
               MOCK_DATA.HUBSPOT_CONTACT_IS_LOGGED_IN,
-            listMemberships:
-              (HUBSPOT_CONTACT_LIST_MEMBERSHIPS &&
-                HUBSPOT_CONTACT_LIST_MEMBERSHIPS.split(',')) ||
-              MOCK_DATA.HUBSPOT_CONTACT_LIST_MEMBERSHIPS,
+            listMemberships: (
+              HUBSPOT_CONTACT_LIST_MEMBERSHIPS ||
+              MOCK_DATA.HUBSPOT_CONTACT_LIST_MEMBERSHIPS
+            ).split(','),
           }
         : null,
   };

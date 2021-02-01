@@ -169,8 +169,8 @@ const startServer = async callback => {
     const currentServer = await runTestServer(callback);
     return {
       server: currentServer,
-      exit: () => {
-        shutdownServer(currentServer);
+      exit: callback => {
+        return shutdownServer(currentServer, callback);
       },
     };
   } catch (e) {
