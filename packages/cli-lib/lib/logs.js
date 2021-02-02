@@ -11,9 +11,7 @@ const LOG_STATUS_COLORS = {
 };
 
 const errorHandler = (log, options) => {
-  return `${formatLogHeader(log, options)}${
-    options.compact ? '' : `\n${formatError(log)}`
-  }`;
+  return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 };
 
 const logHandler = {
@@ -33,8 +31,8 @@ const formatSuccess = (log, options) => {
   return `\n${log.log}`;
 };
 
-const formatError = log => {
-  if (!log.error) {
+const formatError = (log, options) => {
+  if (!log.error || options.compact) {
     return '';
   }
 
