@@ -70,6 +70,12 @@ exports.builder = yargs => {
     type: 'boolean',
     default: true,
   });
+  yargs.option('log-output', {
+    describe:
+      'output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)',
+    type: 'boolean',
+    default: false,
+  });
 
   yargs.example([
     [
