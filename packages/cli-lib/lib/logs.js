@@ -26,11 +26,11 @@ const logHandler = {
 };
 
 const formatSuccess = (log, options) => {
-  if (!log.log) {
+  if (!log.log || options.compact) {
     return '';
   }
 
-  return options.compact ? '' : `\n${log.log}`;
+  return `\n${log.log}`;
 };
 
 const formatError = log => {
