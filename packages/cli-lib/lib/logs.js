@@ -5,30 +5,38 @@ const { logger, Styles } = require('../logger');
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS = {
   SUCCESS: Styles.success,
+  ERROR: Styles.error,
   UNHANDLED_ERROR: Styles.error,
   HANDLED_ERROR: Styles.error,
 };
 
-const formatError = log => {
-  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
+const errorHandler = (log, options) => {
+  return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 };
 
 const logHandler = {
-  UNHANDLED_ERROR: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${formatError(log)}`
-    }`;
-  },
-  HANDLED_ERROR: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${formatError(log)}`
-    }`;
-  },
+  ERROR: errorHandler,
+  UNHANDLED_ERROR: errorHandler,
+  HANDLED_ERROR: errorHandler,
   SUCCESS: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${log.log}`
-    }`;
+    return `${formatLogHeader(log, options)}${formatSuccess(log, options)}`;
   },
+};
+
+const formatSuccess = (log, options) => {
+  if (!log.log || options.compact) {
+    return '';
+  }
+
+  return `\n${log.log}`;
+};
+
+const formatError = (log, options) => {
+  if (!log.error || options.compact) {
+    return '';
+  }
+
+  return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 };
 
 const formatLogHeader = (log, options) => {
