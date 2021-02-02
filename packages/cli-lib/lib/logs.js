@@ -21,10 +21,16 @@ const logHandler = {
   UNHANDLED_ERROR: errorHandler,
   HANDLED_ERROR: errorHandler,
   SUCCESS: (log, options) => {
-    return `${formatLogHeader(log, options)}${
-      options.compact ? '' : `\n${log.log}`
-    }`;
+    return `${formatLogHeader(log, options)}${formatSuccess(log, options)}`;
   },
+};
+
+const formatSuccess = (log, options) => {
+  if (!log.log) {
+    return '';
+  }
+
+  return options.compact ? '' : `\n${log.log}`;
 };
 
 const formatError = log => {
