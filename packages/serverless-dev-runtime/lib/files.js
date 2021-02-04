@@ -24,13 +24,22 @@ const installDeps = (functionData, folderPath) => {
 
   return new Promise((resolve, reject) => {
     try {
+      let errorData = '';
       const npmInstallProcess = spawn(npmCmd, ['i'], {
         env: process.env,
         cwd: folderPath,
       });
 
-      npmInstallProcess.on('exit', data => {
-        resolve(data);
+      npmInstallProcess.stderr.on('data', data => {
+        errorData += data;
+      });
+
+      npmInstallProcess.on('exit', code => {
+        if (code) {
+          logger.error(`Unable to install dependencies\n${errorData}`);
+          process.exit();
+        }
+        return resolve(code);
       });
     } catch (e) {
       reject(e);
