@@ -65,7 +65,9 @@ const logBuildOutput = async resp => {
   const { cdnUrl } = resp;
 
   if (!cdnUrl) {
-    logger.debug('Unable to display build output. No cdnUrl was provided.');
+    logger.debug(
+      'Unable to display build output. No build log URL was provided.'
+    );
     return;
   }
 
