@@ -28,7 +28,7 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'offline <path>';
+exports.command = 'server <path>';
 exports.describe = false;
 
 exports.handler = async options => {
@@ -79,7 +79,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 functions offline ./tmp/myFunctionFolder.functions',
+      '$0 functions server ./tmp/myFunctionFolder.functions',
       'Run a local function test server.',
     ],
   ]);
