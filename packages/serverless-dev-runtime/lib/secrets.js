@@ -19,11 +19,13 @@ const getDotEnvConfig = folderPath => {
 const getSecrets = (dotEnvConfig, allowedSecrets) => {
   let secretsDict = {};
 
-  allowedSecrets.forEach(secret => {
-    if (Object.prototype.hasOwnProperty.call(dotEnvConfig, secret)) {
-      secretsDict[secret] = dotEnvConfig[secret];
-    }
-  });
+  if (dotEnvConfig) {
+    allowedSecrets.forEach(secret => {
+      if (Object.prototype.hasOwnProperty.call(dotEnvConfig, secret)) {
+        secretsDict[secret] = dotEnvConfig[secret];
+      }
+    });
+  }
 
   return secretsDict;
 };
