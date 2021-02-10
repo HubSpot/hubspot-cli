@@ -122,10 +122,11 @@ const addEndpointToApp = endpointData => {
         }
 
         outputTrackedLogs(trackedLogs);
-        res
-          .status(statusCode || 200)
-          .set(headers)
-          .send(body);
+
+        if (statusCode) {
+          res.status(statusCode);
+        }
+        res.set(headers).send(body);
       };
 
       await main(dataForFunc, functionExecutionCallback);
