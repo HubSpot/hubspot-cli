@@ -62,6 +62,15 @@ const loadAndValidateOptions = async options => {
 };
 
 const logBuildOutput = async resp => {
+  const { cdnUrl } = resp;
+
+  if (!cdnUrl) {
+    logger.debug(
+      'Unable to display build output. No build log URL was provided.'
+    );
+    return;
+  }
+
   return new Promise((resolve, reject) => {
     try {
       https
@@ -76,6 +85,7 @@ const logBuildOutput = async resp => {
             data += chunk;
           });
           response.on('end', () => {
+            logger.log(data);
             resolve(data);
           });
         })
@@ -121,8 +131,7 @@ exports.handler = async options => {
     const successResp = await pollBuildStatus(accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
-    const buildOutput = await logBuildOutput(successResp);
-    logger.log(buildOutput);
+    await logBuildOutput(successResp);
     logger.success(
       `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
     );

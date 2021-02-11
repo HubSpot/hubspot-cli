@@ -5,7 +5,7 @@ const {
 } = require('../lib/commonOpts');
 const list = require('./functions/list');
 const deploy = require('./functions/deploy');
-const test = require('./functions/test');
+const server = require('./functions/server');
 
 exports.command = 'functions';
 exports.describe = 'Commands for working with functions';
@@ -21,7 +21,7 @@ exports.builder = yargs => {
       aliases: 'ls',
     })
     .command(deploy)
-    .command(test)
+    .command(server)
     .demandCommand(1, '');
 
   return yargs;

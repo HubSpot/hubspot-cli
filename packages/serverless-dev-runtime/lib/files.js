@@ -5,7 +5,7 @@ const tmp = require('tmp');
 const { logger } = require('@hubspot/cli-lib/logger');
 const defaultFunctionPackageJson = require('./templates/default-function-package.json');
 
-const installDeps = folderPath => {
+const installDeps = (functionData, folderPath) => {
   const npmCmd = os.platform().startsWith('win') ? 'npm.cmd' : 'npm';
   const packageJsonPath = `${folderPath}/package.json`;
   const packageJsonExists = fs.existsSync(packageJsonPath);
@@ -18,17 +18,28 @@ const installDeps = folderPath => {
     );
   }
 
-  logger.debug(`Installing dependencies from ${folderPath}/package.json`);
+  logger.log(
+    `Installing dependencies from ${functionData.srcPath}/package.json`
+  );
 
   return new Promise((resolve, reject) => {
     try {
+      let errorData = '';
       const npmInstallProcess = spawn(npmCmd, ['i'], {
         env: process.env,
         cwd: folderPath,
       });
 
-      npmInstallProcess.on('exit', data => {
-        resolve(data);
+      npmInstallProcess.stderr.on('data', data => {
+        errorData += data;
+      });
+
+      npmInstallProcess.on('exit', code => {
+        if (code) {
+          logger.error(`Unable to install dependencies\n${errorData}`);
+          process.exit();
+        }
+        return resolve(code);
       });
     } catch (e) {
       reject(e);
@@ -53,7 +64,7 @@ const createTemporaryFunction = async functionData => {
     errorOnExist: true,
   });
 
-  await installDeps(tmpDir.name);
+  await installDeps(functionData, tmpDir.name);
 
   return {
     ...functionData,

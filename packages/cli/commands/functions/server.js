@@ -28,7 +28,7 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'test <path>';
+exports.command = 'server <path>';
 exports.describe = false;
 
 exports.handler = async options => {
@@ -40,7 +40,7 @@ exports.handler = async options => {
   trackCommandUsage('functions-test', { functionPath }, accountId);
 
   logger.debug(
-    `Starting test server for .functions folder with path: ${functionPath}`
+    `Starting local test server for .functions folder with path: ${functionPath}`
   );
 
   startTestServer({
@@ -79,7 +79,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 functions test ./tmp/myFunctionFolder.functions',
+      '$0 functions server ./tmp/myFunctionFolder.functions',
       'Run a local function test server.',
     ],
   ]);

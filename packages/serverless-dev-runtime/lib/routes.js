@@ -110,6 +110,7 @@ const addEndpointToApp = endpointData => {
             },
           },
         });
+
         if (options.logOutput) {
           logger.log(
             util.inspect(body, {
@@ -119,11 +120,13 @@ const addEndpointToApp = endpointData => {
             })
           );
         }
+
         outputTrackedLogs(trackedLogs);
-        res
-          .status(statusCode)
-          .set(headers)
-          .send(body);
+
+        if (statusCode) {
+          res.status(statusCode);
+        }
+        res.set(headers).send(body);
       };
 
       await main(dataForFunc, functionExecutionCallback);
