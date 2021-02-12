@@ -3,7 +3,7 @@ const unixify = require('unixify');
 const { ALLOWED_EXTENSIONS } = require('./lib/constants');
 
 const convertToUnixPath = _path => {
-  return unixify(encodeURI(path.normalize(_path)));
+  return unixify(path.normalize(_path));
 };
 
 const convertToWindowsPath = _path => {
