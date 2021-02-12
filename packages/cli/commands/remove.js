@@ -20,6 +20,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { convertToUnixPath } = require('@hubspot/cli-lib/path');
 
 exports.command = 'remove <path>';
 exports.describe = 'Delete a file or folder from HubSpot';
@@ -40,7 +41,8 @@ exports.handler = async options => {
   trackCommandUsage('remove', {}, accountId);
 
   try {
-    await deleteFile(accountId, hsPath);
+    let unixPath = convertToUnixPath(hsPath);
+    await deleteFile(accountId, unixPath);
     logger.log(`Deleted "${hsPath}" from account ${accountId}`);
   } catch (error) {
     logger.error(`Deleting "${hsPath}" from account ${accountId} failed`);
