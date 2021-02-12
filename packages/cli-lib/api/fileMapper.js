@@ -181,7 +181,12 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
     eventClass,
     meta,
   };
-  const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
+  const endpointMapping = {
+    'cli-interaction': 'cms-cli-usage',
+    'vscode-extension-interaction': 'vscode-extension-usage',
+  };
+  const path = `${FILE_MAPPER_API_PATH}/${endpointMapping[eventName]}`;
+
   const accountConfig = accountId && getAccountConfig(accountId);
 
   if (accountConfig && accountConfig.authType === 'personalaccesskey') {
