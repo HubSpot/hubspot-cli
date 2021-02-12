@@ -181,11 +181,23 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
     eventClass,
     meta,
   };
-  const endpointMapping = {
-    'cli-interaction': 'cms-cli-usage',
-    'vscode-extension-interaction': 'vscode-extension-usage',
+  const EVENT_TYPES = {
+    VSCODE_EXTENSION_INTERACTION: 'vscode-extension-interaction',
+    CLI_INTERACTION: 'cli-interaction',
   };
-  const path = `${FILE_MAPPER_API_PATH}/${endpointMapping[eventName]}`;
+
+  let analyticsEndpoint;
+
+  switch (eventName) {
+    case EVENT_TYPES.CLI_INTERACTION:
+      analyticsEndpoint = 'cms-cli-usage';
+      break;
+    case EVENT_TYPES.VSCODE_EXTENSION_INTERACTION:
+      analyticsEndpoint = 'vscode-extension-usage';
+      break;
+  }
+
+  const path = `${FILE_MAPPER_API_PATH}/${analyticsEndpoint}`;
 
   const accountConfig = accountId && getAccountConfig(accountId);
 
