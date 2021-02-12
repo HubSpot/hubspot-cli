@@ -195,6 +195,10 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
     case EVENT_TYPES.VSCODE_EXTENSION_INTERACTION:
       analyticsEndpoint = 'vscode-extension-usage';
       break;
+    default:
+      logger.debug(
+        `Usage tracking event '${eventName}' is not a valid event type.`
+      );
   }
 
   const path = `${FILE_MAPPER_API_PATH}/${analyticsEndpoint}`;
