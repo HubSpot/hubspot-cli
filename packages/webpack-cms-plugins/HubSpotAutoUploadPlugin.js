@@ -33,10 +33,25 @@ class HubSpotAutoUploadPlugin {
   apply(compiler) {
     const webpackLogger = compiler.getInfrastructureLogger(pluginName);
     setLogger(webpackLogger);
+    let isFirstCompile = true;
 
     compiler.hooks.done.tapPromise(pluginName, async stats => {
       const { compilation } = stats;
-      compilation.emittedAssets.forEach(filename => {
+
+      const isAssetEmitted = asset => {
+        return (
+          compilation.assets[asset].emitted ||
+          compilation.emittedAssets.has(asset)
+        );
+      };
+
+      const assets = Object.keys(compilation.assets).filter(asset => {
+        return isFirstCompile || isAssetEmitted(asset);
+      });
+
+      isFirstCompile = false;
+
+      assets.forEach(filename => {
         const outputPath = compilation.getPath(compilation.compiler.outputPath);
         const filepath = path.join(outputPath, filename);
 
