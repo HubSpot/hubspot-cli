@@ -181,7 +181,28 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
     eventClass,
     meta,
   };
-  const path = `${FILE_MAPPER_API_PATH}/cms-cli-usage`;
+  const EVENT_TYPES = {
+    VSCODE_EXTENSION_INTERACTION: 'vscode-extension-interaction',
+    CLI_INTERACTION: 'cli-interaction',
+  };
+
+  let analyticsEndpoint;
+
+  switch (eventName) {
+    case EVENT_TYPES.CLI_INTERACTION:
+      analyticsEndpoint = 'cms-cli-usage';
+      break;
+    case EVENT_TYPES.VSCODE_EXTENSION_INTERACTION:
+      analyticsEndpoint = 'vscode-extension-usage';
+      break;
+    default:
+      logger.debug(
+        `Usage tracking event '${eventName}' is not a valid event type.`
+      );
+  }
+
+  const path = `${FILE_MAPPER_API_PATH}/${analyticsEndpoint}`;
+
   const accountConfig = accountId && getAccountConfig(accountId);
 
   if (accountConfig && accountConfig.authType === 'personalaccesskey') {
