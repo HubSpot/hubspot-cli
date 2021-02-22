@@ -14,7 +14,7 @@ const {
   setLogLevel,
   setLogger,
 } = require('@hubspot/cli-lib/logger');
-
+const path = require('path');
 setLogLevel(LOG_LEVEL.LOG);
 loadConfig();
 checkAndWarnGitInclusion();
@@ -33,36 +33,48 @@ class HubSpotAutoUploadPlugin {
   apply(compiler) {
     const webpackLogger = compiler.getInfrastructureLogger(pluginName);
     setLogger(webpackLogger);
-    compiler.hooks.afterEmit.tapPromise(pluginName, async compilation => {
-      Object.keys(compilation.assets).forEach(filename => {
-        const asset = compilation.assets[filename];
-        // assets with `emitted = false` haven't changed since the previous compilation
-        if (asset.emitted) {
-          const filepath = asset.existsAt;
+    let isFirstCompile = true;
 
-          if (!this.autoupload || !isAllowedExtension(filepath)) {
-            return;
-          }
+    compiler.hooks.done.tapPromise(pluginName, async stats => {
+      const { compilation } = stats;
 
-          const dest = `${this.dest}/${filename}`;
-          upload(this.accountId, asset.existsAt, dest)
-            .then(() => {
-              webpackLogger.info(
-                `Uploaded ${dest} to account ${this.accountId}`
-              );
-            })
-            .catch(error => {
-              webpackLogger.error(`Uploading ${dest} failed`);
-              logApiUploadErrorInstance(
-                error,
-                new ApiErrorContext({
-                  accountId: this.accountId,
-                  request: dest,
-                  payload: filepath,
-                })
-              );
-            });
+      const isAssetEmitted = asset => {
+        return (
+          compilation.assets[asset].emitted ||
+          compilation.emittedAssets.has(asset)
+        );
+      };
+
+      const assets = Object.keys(compilation.assets).filter(asset => {
+        return isFirstCompile || isAssetEmitted(asset);
+      });
+
+      isFirstCompile = false;
+
+      assets.forEach(filename => {
+        const outputPath = compilation.getPath(compilation.compiler.outputPath);
+        const filepath = path.join(outputPath, filename);
+
+        if (!this.autoupload || !isAllowedExtension(filepath)) {
+          return;
         }
+
+        const dest = `${this.dest}/${filename}`;
+        upload(this.accountId, filepath, dest)
+          .then(() => {
+            webpackLogger.info(`Uploaded ${dest} to account ${this.accountId}`);
+          })
+          .catch(error => {
+            webpackLogger.error(`Uploading ${dest} failed`);
+            logApiUploadErrorInstance(
+              error,
+              new ApiErrorContext({
+                accountId: this.accountId,
+                request: dest,
+                payload: filepath,
+              })
+            );
+          });
       });
     });
   }
