@@ -37,7 +37,7 @@ exports.handler = async options => {
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-test', { functionPath }, accountId);
+  trackCommandUsage('functions-server', { functionPath }, accountId);
 
   logger.debug(
     `Starting local test server for .functions folder with path: ${functionPath}`
