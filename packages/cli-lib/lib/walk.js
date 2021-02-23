@@ -7,7 +7,7 @@ const STAT_TYPES = {
   DIRECTORY: 'dir',
 };
 
-const generateFilePromise = (dir, file) => {
+const generateFilePromise = (dir, file, shallow = false) => {
   return new Promise((resolve, reject) => {
     const filepath = path.join(dir, file);
     fs.lstat(filepath, (error, stats) => {
@@ -21,13 +21,21 @@ const generateFilePromise = (dir, file) => {
         });
       }
       if (stats.isDirectory()) {
-        walk(filepath).then(files => {
-          return resolve({
+        if (shallow) {
+          resolve({
             filepath,
             type: STAT_TYPES.DIRECTORY,
-            files,
+            files: [],
           });
-        });
+        } else {
+          walk(filepath).then(files => {
+            return resolve({
+              filepath,
+              type: STAT_TYPES.DIRECTORY,
+              files,
+            });
+          });
+        }
       } else if (stats.isFile()) {
         resolve({
           filepath,
@@ -52,9 +60,11 @@ const filesDataReducer = (allFiles, fileData) => {
   }
 };
 
-function walk(dir) {
+function walk(dir, shallow) {
   const processFiles = files => {
-    return Promise.all(files.map(file => generateFilePromise(dir, file)));
+    return Promise.all(
+      files.map(file => generateFilePromise(dir, file, shallow))
+    );
   };
   return new Promise((resolve, reject) => {
     fs.readdir(dir, (error, files) => {
