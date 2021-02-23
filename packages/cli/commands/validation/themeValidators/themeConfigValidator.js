@@ -4,6 +4,9 @@ const { ERROR_SEVERITY } = require('../validationErrorUtils');
 const VALIDATOR_NAME = 'ThemeConfigValidator';
 const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
 
+//TODO branden do we need this validation? Should we also look at the fields in
+// the theme.json file?
+
 // Validate that the theme contains a theme.json file
 async function themeConfigValidator(absoluteThemePath) {
   return walk(absoluteThemePath, true).then(topLevelFolderFiles => {

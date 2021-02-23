@@ -1,5 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 
+//TODO branden I'm sure this should live somewhere else, but not sure where
+
 const WARNING = 'WARNING';
 const FATAL = 'FATAL';
 
