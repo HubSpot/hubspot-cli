@@ -120,7 +120,7 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
   }
 
   watcher.on('ready', () => {
-    logger.log(`Watcher is ready and watching ${src}`);
+    logger.log(`Watcher is ready and watching ${src}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system.`);
   });
 
   watcher.on('add', async filePath => {
