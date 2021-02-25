@@ -204,7 +204,7 @@ exports.builder = yargs => {
     ],
     [
       '$0 logs my-endpoint --follow',
-      'Poll for and Output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
+      'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
     ],
   ]);
 
