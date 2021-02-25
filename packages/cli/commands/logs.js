@@ -114,13 +114,13 @@ const tailLogs = async ({
   tail(initialAfter);
 };
 
-exports.command = 'logs <path>';
+exports.command = 'logs <endpoint>';
 exports.describe = 'get logs for a function';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest, follow, compact, path: functionPath } = options;
+  const { latest, follow, compact, endpoint: functionPath } = options;
   let logsResp;
   const accountId = getAccountId(options);
 
@@ -165,8 +165,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: 'Path to serverless function',
+  yargs.positional('endpoint', {
+    describe: 'Serverless function endpoint',
     type: 'string',
   });
   yargs
@@ -192,6 +192,21 @@ exports.builder = yargs => {
       },
     })
     .conflicts('follow', 'limit');
+
+  yargs.example([
+    [
+      '$0 logs my-endpoint',
+      'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint',
+    ],
+    [
+      '$0 logs my-endpoint --limit=10',
+      'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
+    ],
+    [
+      '$0 logs my-endpoint --follow',
+      'Poll for and Output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
+    ],
+  ]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
