@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## 3.0.3
+* Updated watch text to be more explicit about what it does ([#446](https://github.com/HubSpot/hubspot-cli/pull/446))
+* Added endpoint for VSCode usage tracking ([#443](https://github.com/HubSpot/hubspot-cli/pull/443))
+* International characters are handled in remote HS paths ([#442](https://github.com/HubSpot/hubspot-cli/pull/442))
+* Misc local serverless testing bugfixes ([#435](https://github.com/HubSpot/hubspot-cli/pull/435) [#436](https://github.com/HubSpot/hubspot-cli/pull/436) [#437](https://github.com/HubSpot/hubspot-cli/pull/437) [#438](https://github.com/HubSpot/hubspot-cli/pull/438) [#439](https://github.com/HubSpot/hubspot-cli/pull/439) [#440](https://github.com/HubSpot/hubspot-cli/pull/440) [#441](https://github.com/HubSpot/hubspot-cli/pull/441))
+* Webpack autoupload plugin is now compatible with webpack 5 ([#434](https://github.com/HubSpot/hubspot-cli/pull/434))
+* Fixed bug with uploading files to root ([#433](https://github.com/HubSpot/hubspot-cli/pull/433))
+
 ## 3.0.2
 
 * Adjust `hs create` so that the beta `api-sample` asset type works. ([#431](https://github.com/HubSpot/hubspot-cli/pull/431))
