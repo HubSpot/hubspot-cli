@@ -2,6 +2,7 @@ Change Log
 ==========
 
 ## 3.0.3
+* Updated help text for hs logs ([#448](https://github.com/HubSpot/hubspot-cli/pull/448))
 * Updated watch text to be more explicit about what it does ([#446](https://github.com/HubSpot/hubspot-cli/pull/446))
 * Added endpoint for VSCode usage tracking ([#443](https://github.com/HubSpot/hubspot-cli/pull/443))
 * International characters are handled in remote HS paths ([#442](https://github.com/HubSpot/hubspot-cli/pull/442))
