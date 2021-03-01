@@ -23,19 +23,10 @@ const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount, validateMode } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logValidationErrors } = require('./validationErrorUtils');
+const { applyValidators } = require('./applyValidators');
 
 exports.command = 'validate-theme <src>';
 exports.describe = 'Validate your theme';
-
-function getValidationErrors(absoluteSrcPath) {
-  return Promise.all(
-    themeValidators.map(validator => validator.validate(absoluteSrcPath))
-  ).then(errorsGroupedByValidatorType =>
-    errorsGroupedByValidatorType.reduce((errorGroup, acc) => {
-      return [...acc, ...errorGroup];
-    }, [])
-  );
-}
 
 exports.handler = async options => {
   const { src, config: configPath } = options;
@@ -70,14 +61,14 @@ exports.handler = async options => {
     return;
   }
 
-  logger.log(`Validating theme at: "${src}"`);
+  logger.log(`Validating theme "${src}" \n`);
   trackCommandUsage('validate', {}, accountId);
 
-  getValidationErrors(absoluteSrcPath).then(errors => {
+  applyValidators(themeValidators, absoluteSrcPath).then(errors => {
     if (errors.length) {
       logValidationErrors(errors);
     } else {
-      logger.success(`Theme is valid`);
+      logger.success(`Theme is valid \n`);
     }
   });
 };

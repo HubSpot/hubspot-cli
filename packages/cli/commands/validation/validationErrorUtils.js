@@ -8,6 +8,7 @@ const FATAL = 'FATAL';
 const ERROR_SEVERITY = { WARNING, FATAL };
 
 function logValidationErrors(errors) {
+  logger.log('Validation failed');
   errors.forEach(({ error, validator, severity }) => {
     const message = `${validator}: ${error}`;
     switch (severity) {
@@ -21,6 +22,7 @@ function logValidationErrors(errors) {
         logger.log(message);
     }
   });
+  logger.log('\n');
 }
 
 module.exports = { ERROR_SEVERITY, logValidationErrors };
