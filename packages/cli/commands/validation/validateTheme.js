@@ -9,7 +9,6 @@ const {
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 
-const themeValidators = require('./themeValidators');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -22,11 +21,14 @@ const {
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount, validateMode } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logValidationErrors } = require('./validationErrorUtils');
-const { applyValidators } = require('./applyValidators');
+const {
+  logValidatorErrors,
+} = require('../../lib/validators/logValidatorErrors');
+const { applyValidators } = require('../../lib/validators/applyValidators');
+const themeValidators = require('../../lib/validators/marketplaceValidators');
 
-exports.command = 'validate-theme <src>';
-exports.describe = 'Validate your theme';
+exports.command = 'marketplace-theme <src>';
+exports.describe = 'Validate your theme for the marketplace';
 
 exports.handler = async options => {
   const { src, config: configPath } = options;
@@ -66,7 +68,7 @@ exports.handler = async options => {
 
   applyValidators(themeValidators, absoluteSrcPath).then(errors => {
     if (errors.length) {
-      logValidationErrors(errors);
+      logValidatorErrors(errors);
     } else {
       logger.success(`Theme is valid \n`);
     }

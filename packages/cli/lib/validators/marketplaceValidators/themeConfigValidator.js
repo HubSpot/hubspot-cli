@@ -1,5 +1,5 @@
-const { walk } = require('@hubspot/cli-lib/lib/walk');
-const { ERROR_SEVERITY } = require('../validationErrorUtils');
+const { getDirectoryFiles } = require('@hubspot/cli-lib/lib/walk');
+const { ERROR_SEVERITY } = require('../constants');
 
 const VALIDATOR_NAME = 'ThemeConfigValidator';
 const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
@@ -9,7 +9,7 @@ const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
 
 // Validate that the theme contains a theme.json file
 async function themeConfigValidator(absoluteThemePath) {
-  return walk(absoluteThemePath, true).then(topLevelFolderFiles => {
+  return getDirectoryFiles(absoluteThemePath).then(topLevelFolderFiles => {
     let validationErrors = [];
 
     const hasThemeJSONFile = topLevelFolderFiles.find(fileName => {

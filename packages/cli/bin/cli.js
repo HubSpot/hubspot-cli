@@ -27,7 +27,7 @@ const functionsCommand = require('../commands/functions');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
-const validateThemeCommand = require('../commands/validation/validateTheme');
+const validateCommand = require('../commands/validate');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
 
@@ -81,7 +81,7 @@ const argv = yargs
   })
   .command(openCommand)
   .command(mvCommand)
-  .command(validateThemeCommand)
+  .command(validateCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')

@@ -130,7 +130,6 @@ const logger = {
 module.exports = {
   LOG_LEVEL,
   Styles,
-  stylize,
   setLogger,
   setLogLevel,
   logger,
