@@ -73,7 +73,6 @@ const getHeaders = req => {
 // expected instead of always being an array.
 // See https://git.hubteam.com/HubSpot/ContentServerlessFunctions/pull/228
 const getRequestQueryParams = req => {
-  console.log('getting Request params!', req.query);
   const paramsObj = {};
 
   Object.keys(req.query).forEach(param => {
