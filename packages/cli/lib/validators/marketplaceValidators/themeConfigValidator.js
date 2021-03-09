@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const { read } = require('@hubspot/cli-lib/lib/read');
 
-const { ERROR_SEVERITY } = require('../constants');
+const { VALIDATION_RESULT } = require('../constants');
 
 const VALIDATOR_NAME = 'ThemeConfigValidator';
 const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
@@ -20,7 +20,7 @@ async function themeConfigValidator(absoluteThemePath) {
       validationErrors.push({
         validator: VALIDATOR_NAME,
         error: 'Missing a theme.json file',
-        severity: ERROR_SEVERITY.FATAL,
+        result: VALIDATION_RESULT.FATAL,
       });
     } else {
       let themeJSON;
@@ -28,11 +28,10 @@ async function themeConfigValidator(absoluteThemePath) {
       try {
         themeJSON = JSON.parse(fs.readFileSync(themeJSONFile));
       } catch (err) {
-        //TODO branden show more useful error here?
         validationErrors.push({
           validator: VALIDATOR_NAME,
-          error: 'Invalid theme.json file',
-          severity: ERROR_SEVERITY.FATAL,
+          error: 'Invalid json in theme.json file',
+          result: VALIDATION_RESULT.FATAL,
         });
       }
 
@@ -41,7 +40,7 @@ async function themeConfigValidator(absoluteThemePath) {
           validationErrors.push({
             validator: VALIDATOR_NAME,
             error: 'The theme.json file must have a "label" field',
-            severity: ERROR_SEVERITY.FATAL,
+            result: VALIDATION_RESULT.FATAL,
           });
         }
       }
@@ -51,4 +50,7 @@ async function themeConfigValidator(absoluteThemePath) {
   });
 }
 
-module.exports = { validate: themeConfigValidator };
+module.exports = {
+  name: VALIDATOR_NAME,
+  validate: themeConfigValidator,
+};

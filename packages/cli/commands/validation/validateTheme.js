@@ -12,23 +12,21 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   addConfigOptions,
   addAccountOptions,
-  addModeOptions,
-  addUseEnvironmentOptions,
   setLogLevel,
   getAccountId,
-  //getMode,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount, validateMode } = require('../../lib/validation');
+const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
-  logValidatorErrors,
-} = require('../../lib/validators/logValidatorErrors');
+  logValidatorResults,
+} = require('../../lib/validators/logValidatorResults');
 const { applyValidators } = require('../../lib/validators/applyValidators');
 const themeValidators = require('../../lib/validators/marketplaceValidators');
+const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 
-exports.command = 'marketplace-theme <src>';
-exports.describe = 'Validate your theme for the marketplace';
+exports.command = 'theme <src>';
+exports.describe = 'Validate a theme';
 
 exports.handler = async options => {
   const { src, config: configPath } = options;
@@ -37,19 +35,11 @@ exports.handler = async options => {
   loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
-  //TODO branden do I need this?
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
+  if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
 
   const accountId = getAccountId(options);
-  //TODO branden do I need this? const mode = getMode(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
   let stats;
   try {
@@ -63,14 +53,21 @@ exports.handler = async options => {
     return;
   }
 
-  logger.log(`Validating theme "${src}" \n`);
+  if (!options.json) {
+    logger.log(`Validating theme "${src}" \n`);
+  }
   trackCommandUsage('validate', {}, accountId);
 
-  applyValidators(themeValidators, absoluteSrcPath).then(errors => {
-    if (errors.length) {
-      logValidatorErrors(errors);
-    } else {
-      logger.success(`Theme is valid \n`);
+  const validators = options.marketplace
+    ? themeValidators.marketplaceValidators
+    : themeValidators.hubspotValidators;
+
+  applyValidators(validators, absoluteSrcPath).then(results => {
+    logValidatorResults(results, { logAsJson: options.json });
+
+    // TODO branden should this be configurable?
+    if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
+      process.exit(1);
     }
   });
 };
@@ -78,9 +75,18 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
-  addModeOptions(yargs, { write: true }, true);
-  addUseEnvironmentOptions(yargs, true);
-
+  yargs.options({
+    marketplace: {
+      describe: 'validate asset for the marketplace',
+      type: 'boolean',
+    },
+  });
+  yargs.options({
+    json: {
+      describe: 'output raw json data',
+      type: 'boolean',
+    },
+  });
   yargs.positional('src', {
     describe:
       'Path to the local theme, relative to your current working directory.',
