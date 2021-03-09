@@ -68,6 +68,26 @@ const getHeaders = req => {
   };
 };
 
+// This purposefully puts each param into an array to mimic the way production
+// does it. This should be updated when production is fixed so params work as
+// expected instead of always being an array.
+// See https://git.hubteam.com/HubSpot/ContentServerlessFunctions/pull/228
+const getRequestQueryParams = req => {
+  console.log('getting Request params!', req.query);
+  const paramsObj = {};
+
+  Object.keys(req.query).forEach(param => {
+    const currentValue = req.query[param];
+    const newValue = Array.isArray(currentValue)
+      ? currentValue
+      : [currentValue];
+
+    paramsObj[param] = newValue;
+  });
+
+  return paramsObj;
+};
+
 const getFunctionDataContext = async (
   req,
   functionPath,
@@ -88,7 +108,7 @@ const getFunctionDataContext = async (
   } = getDotEnvData(functionPath, allowedSecrets);
   const data = {
     secrets,
-    params: req.query,
+    params: getRequestQueryParams(req),
     limits: {
       timeRemaining:
         HUBSPOT_LIMITS_TIME_REMAINING ||
