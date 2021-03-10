@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "3.0.3",
+  "version": "3.0.4-beta.0",
   "description": "CLI for working with HubSpot",
   "license": "Apache-2.0",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hubspot/cli-lib": "^3.0.3",
-    "@hubspot/serverless-dev-runtime": "^3.0.3",
+    "@hubspot/serverless-dev-runtime": "^3.0.4-beta.0",
     "chalk": "^4.1.0",
     "express": "^4.17.1",
     "fs-extra": "^8.1.0",
