@@ -255,9 +255,24 @@ async function getDirectoryContentsByPath(portalId, path) {
   });
 }
 
+/**
+ * Deploy project
+ *
+ * @async
+ * @param {string} projectPath
+ * @returns {Promise}
+ */
+async function deployProject(portalId, projectPath) {
+  console.log('projectPath: ', projectPath);
+  return http.post(portalId, {
+    uri: `${FILE_MAPPER_API_PATH}/deploy/${encodeURIComponent(projectPath)}`,
+  });
+}
+
 module.exports = {
   deleteFile,
   deleteFolder,
+  deployProject,
   download,
   downloadDefault,
   fetchFileStream,
