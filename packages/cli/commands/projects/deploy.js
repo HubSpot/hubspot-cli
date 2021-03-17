@@ -64,22 +64,15 @@ exports.handler = async options => {
       `Deployed project in ${projectPath} on account ${accountId}.`
     );
   } catch (e) {
-    // spinner && spinner.stop && spinner.stop();
-    // if (e.statusCode === 404) {
-    //   logger.error(`Unable to find package.json for function ${functionPath}.`);
-    // } else if (e.statusCode === 400) {
-    //   logger.error(e.error.message);
-    // } else if (e.status === 'ERROR') {
-    //   const buildOutput = await logBuildOutput(e);
-    //   logger.log(buildOutput);
-    //   logger.error(`Build error: ${e.errorReason}`);
-    // } else {
-    logApiErrorInstance(
-      accountId,
-      e,
-      new ApiErrorContext({ accountId, projectPath })
-    );
-    // }
+    if (e.statusCode === 400) {
+      logger.error(e.error.message);
+    } else {
+      logApiErrorInstance(
+        accountId,
+        e,
+        new ApiErrorContext({ accountId, projectPath })
+      );
+    }
   }
 };
 

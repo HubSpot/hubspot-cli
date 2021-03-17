@@ -263,7 +263,6 @@ async function getDirectoryContentsByPath(portalId, path) {
  * @returns {Promise}
  */
 async function deployProject(portalId, projectPath) {
-  console.log('projectPath: ', projectPath);
   return http.post(portalId, {
     uri: `${FILE_MAPPER_API_PATH}/deploy/${encodeURIComponent(projectPath)}`,
   });
