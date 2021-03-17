@@ -390,7 +390,7 @@ async function downloadFile(input) {
  * @returns {Promise<FileMapperNode}
  */
 async function fetchFolderFromApi(input) {
-  const { accountId, src, mode } = input;
+  const { accountId, src, mode, options } = input;
   const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
@@ -399,8 +399,14 @@ async function fetchFolderFromApi(input) {
     const srcPath = isRoot ? '@root' : src;
     const qs = getFileMapperApiQueryFromMode(mode);
     const node = isHubspot
-      ? await downloadDefault(accountId, srcPath, { qs })
-      : await download(accountId, srcPath, { qs });
+      ? await downloadDefault(accountId, srcPath, {
+          qs,
+          environmentId: options.staging ? 2 : 1,
+        })
+      : await download(accountId, srcPath, {
+          qs,
+          environmentId: options.staging ? 2 : 1,
+        });
     logger.log(
       'Fetched "%s" from account %d from the Design Manager successfully',
       src,
