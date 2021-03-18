@@ -11,7 +11,7 @@ const {
 } = require('../errorHandlers');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
-const { getFileMapperApiQueryFromMode } = require('../fileMapper');
+const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
@@ -21,7 +21,7 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function uploadFile(accountId, file, dest, { mode }) {
+function uploadFile(accountId, file, dest, options) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -32,9 +32,7 @@ function uploadFile(accountId, file, dest, { mode }) {
   }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
-  const apiOptions = {
-    qs: getFileMapperApiQueryFromMode(mode),
-  };
+  const apiOptions = getFileMapperQueryValues(options);
   return queue.add(() => {
     return upload(accountId, file, dest, apiOptions)
       .then(() => {
