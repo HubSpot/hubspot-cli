@@ -5,7 +5,7 @@ const {
 } = require('../lib/commonOpts');
 const deploy = require('./projects/deploy');
 
-exports.command = 'project';
+exports.command = 'projects';
 exports.describe = 'Commands for working with projects';
 
 exports.builder = yargs => {
