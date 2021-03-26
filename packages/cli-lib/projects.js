@@ -71,7 +71,6 @@ async function downloadProject(
       encoding: null,
       headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });
-    logger.log('Completed project fetch.');
     return zip;
   } catch (err) {
     logger.error('An error occured fetching the project source.');
@@ -124,7 +123,6 @@ async function extractProjectZip(repoName, zip) {
     logErrorInstance(err);
     return null;
   }
-  logger.log('Completed project source extraction.');
   return { extractDir, tmpDir };
 }
 
@@ -141,7 +139,6 @@ async function copyProjectToDest(src, sourceDir, dest) {
     const rootDir = files[0];
     const projectSrcDir = path.join(src, rootDir, sourceDir);
     await fs.copy(projectSrcDir, dest);
-    logger.log('Completed copying project source.');
     return true;
   } catch (err) {
     logger.error(`An error occured copying project source to ${dest}.`);
