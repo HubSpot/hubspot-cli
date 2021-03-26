@@ -260,6 +260,9 @@ exports.handler = async options => {
         }
       );
       if (created) {
+        if (fs.existsSync(`${filePath}/.env.template`)) {
+          fs.copySync(`${filePath}/.env.template`, `${filePath}/.env`);
+        }
         logger.success(
           `Please, follow ${filePath}/README.md to find out how to run the sample`
         );
