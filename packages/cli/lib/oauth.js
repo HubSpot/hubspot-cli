@@ -13,9 +13,9 @@ const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
 const buildAuthUrl = oauthManager => {
   return (
-    `${getHubSpotWebsiteOrigin(oauthManager.env)}/oauth/${
-      oauthManager.portalId
-    }/authorize` +
+    `${getHubSpotWebsiteOrigin(
+      oauthManager.env
+    )}/oauth/${oauthManager.portalId || oauthManager.accountId}/authorize` +
     `?client_id=${encodeURIComponent(oauthManager.clientId)}` + // app's client ID
     `&scope=${encodeURIComponent(oauthManager.scopes.join(' '))}` + // scopes being requested by the app
     `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
@@ -95,7 +95,7 @@ const authenticateWithOauth = async configData => {
   const oauthManager = setupOauth(accountId, configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
-  addOauthToAccountConfig(accountId, oauthManager);
+  addOauthToAccountConfig(oauthManager);
 };
 
 module.exports = {
