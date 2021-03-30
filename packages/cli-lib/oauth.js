@@ -42,7 +42,7 @@ const addOauthToAccountConfig = oauth => {
     updateAccountConfig({
       ...oauth.toObj(),
       authType: AUTH_METHODS.oauth.value,
-      portalId: oauth.accountId || oauth.portalId,
+      portalId: oauth.accountId,
     });
     writeConfig();
     logger.log('Configuration updated');
