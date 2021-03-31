@@ -1,5 +1,3 @@
-// const ora = require('ora');
-// var https = require('https');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -21,12 +19,6 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject } = require('@hubspot/cli-lib/api/fileMapper');
 const { validateAccount } = require('../../lib/validation');
-
-// const makeSpinner = (actionText, functionPath, accountIdentifier) => {
-//   return ora(
-//     `${actionText} bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
-//   );
-// };
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
