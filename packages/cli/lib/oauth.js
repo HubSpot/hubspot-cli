@@ -79,7 +79,8 @@ const authorize = async oauthManager => {
   });
 };
 
-const setupOauth = (accountId, accountConfig) => {
+const setupOauth = accountConfig => {
+  const accountId = parseInt(accountConfig.portalId, 10);
   const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager(
     {
@@ -91,8 +92,7 @@ const setupOauth = (accountId, accountConfig) => {
 };
 
 const authenticateWithOauth = async configData => {
-  const accountId = parseInt(configData.portalId, 10);
-  const oauthManager = setupOauth(accountId, configData);
+  const oauthManager = setupOauth(configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
   addOauthToAccountConfig(oauthManager);
