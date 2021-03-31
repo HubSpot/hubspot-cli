@@ -1,6 +1,7 @@
 const OAuth2Manager = require('./lib/models/OAuth2Manager');
 const { updateAccountConfig, writeConfig } = require('./lib/config');
-const { logger, logErrorInstance } = require('./logger');
+const { logger } = require('./logger');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { AUTH_METHODS } = require('./lib/constants');
 
 const oauthManagers = new Map();
@@ -35,13 +36,13 @@ const getOauthManager = (accountId, accountConfig) => {
   return oauthManagers.get(accountId);
 };
 
-const addOauthToAccountConfig = (portalId, oauth) => {
+const addOauthToAccountConfig = oauth => {
   logger.log('Updating configuration');
   try {
     updateAccountConfig({
       ...oauth.toObj(),
       authType: AUTH_METHODS.oauth.value,
-      portalId,
+      portalId: oauth.accountId,
     });
     writeConfig();
     logger.log('Configuration updated');
