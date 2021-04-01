@@ -105,11 +105,12 @@ exports.handler = async options => {
   handleExit(deleteEmptyConfigFile);
 
   try {
-    const { accountId } = await CONFIG_CREATION_FLOWS[authType](env);
+    const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](env);
     const path = getConfigPath();
 
     logger.success(
-      `The config file "${path}" was created using your personal access key for account ${accountId}.`
+      `The config file "${path}" was created using your personal access key for account ${name ||
+        accountId}.`
     );
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);

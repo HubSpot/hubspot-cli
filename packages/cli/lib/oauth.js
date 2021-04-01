@@ -14,7 +14,7 @@ const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 const buildAuthUrl = oauthManager => {
   return (
     `${getHubSpotWebsiteOrigin(oauthManager.env)}/oauth/${
-      oauthManager.portalId
+      oauthManager.accountId
     }/authorize` +
     `?client_id=${encodeURIComponent(oauthManager.clientId)}` + // app's client ID
     `&scope=${encodeURIComponent(oauthManager.scopes.join(' '))}` + // scopes being requested by the app
@@ -79,7 +79,8 @@ const authorize = async oauthManager => {
   });
 };
 
-const setupOauth = (accountId, accountConfig) => {
+const setupOauth = accountConfig => {
+  const accountId = parseInt(accountConfig.portalId, 10);
   const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager(
     {
@@ -91,11 +92,10 @@ const setupOauth = (accountId, accountConfig) => {
 };
 
 const authenticateWithOauth = async configData => {
-  const accountId = parseInt(configData.portalId, 10);
-  const oauthManager = setupOauth(accountId, configData);
+  const oauthManager = setupOauth(configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
-  addOauthToAccountConfig(accountId, oauthManager);
+  addOauthToAccountConfig(oauthManager);
 };
 
 module.exports = {

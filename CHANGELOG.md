@@ -1,5 +1,30 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+## [3.0.4](https://github.com/HubSpot/hubspot-cms-tools/compare/v3.0.4-beta.1...v3.0.4) (2021-04-01)
+
+**Note:** Version bump only for package hubspot-cms-tools
+
+
+
+
+
 Change Log
 ==========
+
+## 3.0.4
+* Fixed issue with oauth flow not working ([#460](https://github.com/HubSpot/hubspot-cli/pull/460))
+
+## 3.0.3
+* Updated help text for hs logs ([#448](https://github.com/HubSpot/hubspot-cli/pull/448))
+* Updated watch text to be more explicit about what it does ([#446](https://github.com/HubSpot/hubspot-cli/pull/446))
+* Added endpoint for VSCode usage tracking ([#443](https://github.com/HubSpot/hubspot-cli/pull/443))
+* International characters are handled in remote HS paths ([#442](https://github.com/HubSpot/hubspot-cli/pull/442))
+* Misc local serverless testing bugfixes ([#435](https://github.com/HubSpot/hubspot-cli/pull/435) [#436](https://github.com/HubSpot/hubspot-cli/pull/436) [#437](https://github.com/HubSpot/hubspot-cli/pull/437) [#438](https://github.com/HubSpot/hubspot-cli/pull/438) [#439](https://github.com/HubSpot/hubspot-cli/pull/439) [#440](https://github.com/HubSpot/hubspot-cli/pull/440) [#441](https://github.com/HubSpot/hubspot-cli/pull/441))
+* Webpack autoupload plugin is now compatible with webpack 5 ([#434](https://github.com/HubSpot/hubspot-cli/pull/434))
+* Fixed bug with uploading files to root ([#433](https://github.com/HubSpot/hubspot-cli/pull/433))
 
 ## 3.0.2
 

@@ -143,7 +143,7 @@ async function downloadDefault(accountId, filepath, options = {}) {
  */
 async function deleteFile(accountId, filePath, options = {}) {
   return http.delete(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/delete/${filePath}`,
+    uri: `${FILE_MAPPER_API_PATH}/delete/${encodeURIComponent(filePath)}`,
     ...options,
   });
 }
