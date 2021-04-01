@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+## 3.0.4
+* Fixed issue with oauth flow not working ([#460](https://github.com/HubSpot/hubspot-cli/pull/460))
+
 ## 3.0.3
 * Updated help text for hs logs ([#448](https://github.com/HubSpot/hubspot-cli/pull/448))
 * Updated watch text to be more explicit about what it does ([#446](https://github.com/HubSpot/hubspot-cli/pull/446))
