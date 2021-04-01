@@ -7,7 +7,7 @@ const STAT_TYPES = {
   DIRECTORY: 'dir',
 };
 
-const generateFilePromise = (dir, file) => {
+const getFileInfoAsync = (dir, file) => {
   return new Promise((resolve, reject) => {
     const filepath = path.join(dir, file);
     fs.lstat(filepath, (error, stats) => {
@@ -27,7 +27,7 @@ const generateFilePromise = (dir, file) => {
   });
 };
 
-const formatFilesData = filesData => {
+const flattenAndRemoveSymlinks = filesData => {
   return filesData.reduce((acc, fileData) => {
     switch (fileData.type) {
       case STAT_TYPES.FILE:
@@ -35,7 +35,6 @@ const formatFilesData = filesData => {
       case STAT_TYPES.DIRECTORY:
         return acc.concat(fileData.files || []);
       case STAT_TYPES.SYMBOLIC_LINK:
-        // Skip symlinks
         return acc;
       default:
         return acc;
@@ -45,23 +44,21 @@ const formatFilesData = filesData => {
 
 async function read(dir) {
   const processFiles = files =>
-    Promise.all(files.map(file => generateFilePromise(dir, file)));
+    Promise.all(files.map(file => getFileInfoAsync(dir, file)));
 
-  return new Promise((resolve, reject) => {
-    fs.readdir(dir, (error, files) => {
-      if (error) {
-        reject(error);
-      }
-      processFiles(files).then(filesData => {
-        resolve(formatFilesData(filesData));
-      });
+  return fs.promises.readdir(dir, (error, files) => {
+    if (error) {
+      return error;
+    }
+    processFiles(files).then(filesData => {
+      return flattenAndRemoveSymlinks(filesData);
     });
   });
 }
 
 module.exports = {
-  formatFilesData,
-  generateFilePromise,
+  flattenAndRemoveSymlinks,
+  getFileInfoAsync,
   read,
   STAT_TYPES,
 };
