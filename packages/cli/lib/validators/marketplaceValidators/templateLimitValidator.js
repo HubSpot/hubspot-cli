@@ -1,4 +1,4 @@
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/cli-lib');
 const { VALIDATION_RESULT } = require('../constants');
 
 const VALIDATOR_NAME = 'TemplateLimitValidator';

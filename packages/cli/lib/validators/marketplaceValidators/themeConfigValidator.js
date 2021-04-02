@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const { read } = require('@hubspot/cli-lib/lib/read');
+const { read } = require('@hubspot/cli-lib');
 
 const { VALIDATION_RESULT } = require('../constants');
 
