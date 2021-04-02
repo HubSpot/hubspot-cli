@@ -2,14 +2,22 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { VALIDATION_RESULT } = require('./constants');
 
 function logResultsAsJson(results) {
-  const resultsAsJson = results.reduce((acc, result) => {
+  let success = true;
+  const resultObj = results.reduce((acc, result) => {
     if (!acc[result.validator]) {
+      if (success && result.result !== VALIDATION_RESULT.SUCCESS) {
+        success = false;
+      }
       acc[result.validator] = [];
     }
     acc[result.validator].push(result);
     return acc;
   }, {});
-  return logger.log(JSON.stringify(resultsAsJson));
+  const result = {
+    success,
+    results: resultObj,
+  };
+  return logger.log(JSON.stringify(result));
 }
 
 function logValidatorResults(results, { logAsJson = false } = {}) {

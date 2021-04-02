@@ -65,7 +65,6 @@ exports.handler = async options => {
   applyValidators(validators, absoluteSrcPath).then(results => {
     logValidatorResults(results, { logAsJson: options.json });
 
-    // TODO branden should this be configurable?
     if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
       process.exit(1);
     }
