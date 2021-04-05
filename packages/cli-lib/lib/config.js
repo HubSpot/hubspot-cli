@@ -421,20 +421,24 @@ const getAccountId = nameOrId => {
   let accountId;
   let account;
 
+  const setNameOrAccountFromSuppliedValue = suppliedValue => {
+    if (typeof suppliedValue === 'number') {
+      accountId = suppliedValue;
+    } else if (/^\d+$/.test(suppliedValue)) {
+      accountId = parseInt(suppliedValue, 10);
+    } else {
+      name = suppliedValue;
+    }
+  };
+
   if (!nameOrId) {
     const defaultAccount = getConfigDefaultAccount(config);
 
     if (defaultAccount) {
-      name = defaultAccount;
+      setNameOrAccountFromSuppliedValue(defaultAccount);
     }
   } else {
-    if (typeof nameOrId === 'number') {
-      accountId = nameOrId;
-    } else if (/^\d+$/.test(nameOrId)) {
-      accountId = parseInt(nameOrId, 10);
-    } else {
-      name = nameOrId;
-    }
+    setNameOrAccountFromSuppliedValue(nameOrId);
   }
 
   const accounts = getConfigAccounts(config);
