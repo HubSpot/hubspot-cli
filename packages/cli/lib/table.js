@@ -4,6 +4,13 @@ const { table, getBorderCharacters } = require('table');
 const tableConfigDefaults = {
   singleLine: true,
   border: getBorderCharacters(`void`),
+  columnDefault: {
+    paddingLeft: 0,
+    paddingRight: 1,
+  },
+  drawHorizontalLine: () => {
+    return false;
+  },
 };
 
 const getTableContents = (
