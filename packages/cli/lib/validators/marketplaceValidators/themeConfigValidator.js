@@ -11,7 +11,6 @@ const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
 async function themeConfigValidator(absoluteThemePath) {
   return read(absoluteThemePath).then(topLevelFolderFiles => {
     let validationErrors = [];
-
     const themeJSONFile = topLevelFolderFiles.find(fileName => {
       return THEME_JSON_REGEX.test(fileName);
     });
@@ -26,7 +25,8 @@ async function themeConfigValidator(absoluteThemePath) {
       let themeJSON;
 
       try {
-        themeJSON = JSON.parse(fs.readFileSync(themeJSONFile));
+        const absoluteThemeJSONPath = `${absoluteThemePath}/${themeJSONFile}`;
+        themeJSON = JSON.parse(fs.readFileSync(absoluteThemeJSONPath));
       } catch (err) {
         validationErrors.push({
           validator: VALIDATOR_NAME,
