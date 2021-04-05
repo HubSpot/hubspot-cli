@@ -544,6 +544,39 @@ const updateDefaultAccount = defaultAccount => {
   writeConfig();
 };
 
+/**
+ * @throws {Error}
+ */
+const renameAccount = async (currentName, newName) => {
+  if (!newName) {
+    throw new Error('Please provide a new name for the portal');
+  }
+
+  if (!currentName) {
+    throw new Error(
+      'Please provide the portal name or id that should be renamed'
+    );
+  }
+  const accountId = getAccountId(currentName);
+  const accountConfigToRename = getAccountConfig(accountId);
+  const defaultAccount = getConfigDefaultAccount();
+
+  if (!accountConfigToRename) {
+    throw new Error(`Cannot find account with identifier ${currentName}`);
+  }
+
+  await updateAccountConfig({
+    ...accountConfigToRename,
+    name: newName,
+  });
+
+  if (accountConfigToRename.name === defaultAccount) {
+    updateDefaultAccount(newName);
+  }
+
+  return writeConfig();
+};
+
 const setDefaultConfigPathIfUnset = () => {
   if (!_configPath) {
     setDefaultConfigPath();
@@ -728,6 +761,7 @@ module.exports = {
   getAccountId,
   updateAccountConfig,
   updateDefaultAccount,
+  renameAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   isTrackingAllowed,
