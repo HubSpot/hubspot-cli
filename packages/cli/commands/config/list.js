@@ -41,7 +41,7 @@ exports.handler = async options => {
   trackCommandUsage('functions-list', {}, accountId);
 
   const config = getConfig();
-  const portalData = Array.from(config.portals).reduce((acc, portal) => {
+  const portalData = config.portals.reduce((acc, portal) => {
     acc.push([portal.name, portal.portalId, portal.authType]);
 
     return acc;
