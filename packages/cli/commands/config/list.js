@@ -56,4 +56,8 @@ exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
+
+  yargs.example([['$0 config list']]);
+
+  return yargs;
 };
