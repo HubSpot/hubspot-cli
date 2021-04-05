@@ -1,8 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getConfig,
-  setConfig,
-  writeConfig,
+  updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const inquirer = require('inquirer');
 const {
@@ -56,9 +55,7 @@ exports.handler = async options => {
       default: config.defaultPortal,
     },
   ]);
-  config.defaultPortal = newDefault;
-  setConfig(config);
-  writeConfig();
+  updateDefaultAccount(newDefault);
 
   return logger.log(`Default portal updated to: ${newDefault}`);
 };
