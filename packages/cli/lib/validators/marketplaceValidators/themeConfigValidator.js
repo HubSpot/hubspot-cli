@@ -1,53 +1,49 @@
 const fs = require('fs');
 
-const { read } = require('@hubspot/cli-lib');
-
 const { VALIDATION_RESULT } = require('../constants');
 
 const VALIDATOR_NAME = 'ThemeConfigValidator';
-const THEME_JSON_REGEX = new RegExp(/theme\.json+$/);
+const THEME_JSON_REGEX = new RegExp(/^theme\.json$/);
 
 // Validate that the theme contains a theme.json file
-async function themeConfigValidator(absoluteThemePath) {
-  return read(absoluteThemePath).then(topLevelFolderFiles => {
-    let validationErrors = [];
-    const themeJSONFile = topLevelFolderFiles.find(fileName => {
-      return THEME_JSON_REGEX.test(fileName);
-    });
+function themeConfigValidator(absoluteThemePath, files) {
+  let validationErrors = [];
+  const themeJSONFile = files.find(fileName => {
+    return THEME_JSON_REGEX.test(fileName);
+  });
 
-    if (!themeJSONFile) {
+  if (!themeJSONFile) {
+    validationErrors.push({
+      validator: VALIDATOR_NAME,
+      error: 'Missing a theme.json file',
+      result: VALIDATION_RESULT.FATAL,
+    });
+  } else {
+    let themeJSON;
+
+    try {
+      const absoluteThemeJSONPath = `${absoluteThemePath}/${themeJSONFile}`;
+      themeJSON = JSON.parse(fs.readFileSync(absoluteThemeJSONPath));
+    } catch (err) {
       validationErrors.push({
         validator: VALIDATOR_NAME,
-        error: 'Missing a theme.json file',
+        error: 'Invalid json in theme.json file',
         result: VALIDATION_RESULT.FATAL,
       });
-    } else {
-      let themeJSON;
+    }
 
-      try {
-        const absoluteThemeJSONPath = `${absoluteThemePath}/${themeJSONFile}`;
-        themeJSON = JSON.parse(fs.readFileSync(absoluteThemeJSONPath));
-      } catch (err) {
+    if (themeJSON) {
+      if (!themeJSON.label) {
         validationErrors.push({
           validator: VALIDATOR_NAME,
-          error: 'Invalid json in theme.json file',
+          error: 'The theme.json file must have a "label" field',
           result: VALIDATION_RESULT.FATAL,
         });
       }
-
-      if (themeJSON) {
-        if (!themeJSON.label) {
-          validationErrors.push({
-            validator: VALIDATOR_NAME,
-            error: 'The theme.json file must have a "label" field',
-            result: VALIDATION_RESULT.FATAL,
-          });
-        }
-      }
     }
+  }
 
-    return validationErrors;
-  });
+  return validationErrors;
 }
 
 module.exports = {

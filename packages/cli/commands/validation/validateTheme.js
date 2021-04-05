@@ -8,6 +8,7 @@ const {
 } = require('@hubspot/cli-lib');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { walk } = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,
@@ -62,7 +63,9 @@ exports.handler = async options => {
     ? themeValidators.marketplaceValidators
     : themeValidators.hubspotValidators;
 
-  applyValidators(validators, absoluteSrcPath).then(results => {
+  const themeFiles = await walk(absoluteSrcPath);
+
+  applyValidators(validators, absoluteSrcPath, themeFiles).then(results => {
     logValidatorResults(results, { logAsJson: options.json });
 
     if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
