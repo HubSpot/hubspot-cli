@@ -1,6 +1,7 @@
 const templates = require('@hubspot/cli-lib/templates');
-const templateLimitValidator = require('../../validators/marketplaceValidators/templateLimitValidator');
-const { VALIDATION_RESULT } = require('../../validators/constants');
+
+const templateLimitValidator = require('../marketplaceValidators/templateLimitValidator');
+const { VALIDATION_RESULT } = require('../constants');
 
 jest.mock('@hubspot/cli-lib/templates');
 

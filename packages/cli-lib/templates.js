@@ -1,7 +1,10 @@
 const fs = require('fs');
 
+// Matches the .html file extension, excluding module.html
 const TEMPLATE_EXTENSION_REGEX = new RegExp(/(?<!module)\.html$/);
+// Matches the comment brackets that wrap annotations
 const ANNOTATIONS_REGEX = /<!--([\s\S]*?)-->/;
+// Matches an annotation value, ending at space, newline, or end of string
 const ANNOTATION_VALUE_REGEX = ':\\s?([\\S]*?)(\\s|\n|$)';
 
 const ANNOTATION_KEYS = {

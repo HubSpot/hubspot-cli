@@ -3,7 +3,6 @@ const fs = require('fs');
 const { VALIDATION_RESULT } = require('../constants');
 
 const VALIDATOR_NAME = 'ThemeConfigValidator';
-const THEME_JSON_REGEX = new RegExp(/^theme\.json$/);
 
 // Validate that the theme contains a theme.json file
 function themeConfigValidator(absoluteThemePath, files) {
@@ -11,7 +10,7 @@ function themeConfigValidator(absoluteThemePath, files) {
   const themeJSONFile = files.find(filePath => {
     // Check for theme.json at the theme root
     const fileName = filePath.replace(`${absoluteThemePath}/`, '');
-    return THEME_JSON_REGEX.test(fileName);
+    return fileName === 'theme.json';
   });
 
   if (!themeJSONFile) {
