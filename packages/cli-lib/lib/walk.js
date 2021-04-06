@@ -1,12 +1,13 @@
 const fs = require('fs');
 
+const { logger } = require('../logger');
 const {
   getFileInfoAsync,
   flattenAndRemoveSymlinks,
   STAT_TYPES,
 } = require('./read');
 
-const generateRecursiveFilePromise = (dir, file) => {
+const generateRecursiveFilePromise = async (dir, file) => {
   return getFileInfoAsync(dir, file).then(fileData => {
     return new Promise(resolve => {
       if (fileData.type === STAT_TYPES.DIRECTORY) {
@@ -20,18 +21,18 @@ const generateRecursiveFilePromise = (dir, file) => {
   });
 };
 
-function walk(dir) {
+async function walk(dir) {
   const processFiles = files =>
     Promise.all(files.map(file => generateRecursiveFilePromise(dir, file)));
 
-  return fs.promises.readdir(dir, (error, files) => {
-    if (error) {
-      return error;
-    }
-    processFiles(files).then(filesData => {
-      return flattenAndRemoveSymlinks(filesData);
+  return fs.promises
+    .readdir(dir)
+    .then(processFiles)
+    .then(flattenAndRemoveSymlinks)
+    .catch(err => {
+      logger.debug(err);
+      return [];
     });
-  });
 }
 
 module.exports = {

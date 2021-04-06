@@ -1,13 +1,16 @@
+const { isTemplate } = require('@hubspot/cli-lib/templates');
+
 const { VALIDATION_RESULT } = require('../constants');
 
 const VALIDATOR_NAME = 'TemplateLimitValidator';
 const TEMPLATE_LIMIT = 50;
-const TEMPLATE_REGEX = new RegExp(/.html+$/);
 
 // Validate that the theme does not contain more than TEMPLATE_LIMIT templates
 function templateLimitValidator(absoluteThemePath, files) {
   let validationResult = [];
-  const numTemplates = files.filter(file => TEMPLATE_REGEX.test(file)).length;
+  const templates = files.filter(isTemplate);
+
+  const numTemplates = templates.length;
 
   if (numTemplates > TEMPLATE_LIMIT) {
     validationResult.push({

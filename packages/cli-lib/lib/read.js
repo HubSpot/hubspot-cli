@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const { logger } = require('../logger');
+
 const STAT_TYPES = {
   FILE: 'file',
   SYMBOLIC_LINK: 'symlink',
@@ -46,14 +48,14 @@ async function read(dir) {
   const processFiles = files =>
     Promise.all(files.map(file => getFileInfoAsync(dir, file)));
 
-  return fs.promises.readdir(dir, (error, files) => {
-    if (error) {
-      return error;
-    }
-    processFiles(files).then(filesData => {
-      return flattenAndRemoveSymlinks(filesData);
+  return fs.promises
+    .readdir(dir)
+    .then(processFiles)
+    .then(flattenAndRemoveSymlinks)
+    .catch(err => {
+      logger.debug(err);
+      return [];
     });
-  });
 }
 
 module.exports = {

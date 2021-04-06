@@ -8,7 +8,9 @@ const THEME_JSON_REGEX = new RegExp(/^theme\.json$/);
 // Validate that the theme contains a theme.json file
 function themeConfigValidator(absoluteThemePath, files) {
   let validationErrors = [];
-  const themeJSONFile = files.find(fileName => {
+  const themeJSONFile = files.find(filePath => {
+    // Check for theme.json at the theme root
+    const fileName = filePath.replace(`${absoluteThemePath}/`, '');
     return THEME_JSON_REGEX.test(fileName);
   });
 
@@ -22,8 +24,7 @@ function themeConfigValidator(absoluteThemePath, files) {
     let themeJSON;
 
     try {
-      const absoluteThemeJSONPath = `${absoluteThemePath}/${themeJSONFile}`;
-      themeJSON = JSON.parse(fs.readFileSync(absoluteThemeJSONPath));
+      themeJSON = JSON.parse(fs.readFileSync(themeJSONFile));
     } catch (err) {
       validationErrors.push({
         validator: VALIDATOR_NAME,

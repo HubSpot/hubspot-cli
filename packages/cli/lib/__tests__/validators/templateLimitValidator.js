@@ -1,15 +1,22 @@
+const templates = require('@hubspot/cli-lib/templates');
 const templateLimitValidator = require('../../validators/marketplaceValidators/templateLimitValidator');
 const { VALIDATION_RESULT } = require('../../validators/constants');
 
-const makeFilesList = (numFiles, ext = '.html') => {
+jest.mock('@hubspot/cli-lib/templates');
+
+const makeFilesList = numFiles => {
   const files = [];
   for (let i = 0; i < numFiles; i++) {
-    files.push(`file-${i}${ext}`);
+    files.push(`file-${i}.html`);
   }
   return files;
 };
 
 describe('validators/templateLimitValidator', () => {
+  beforeEach(() => {
+    templates.isTemplate.mockReturnValue(true);
+  });
+
   it('returns error if template limit is exceeded', async () => {
     const validationErrors = templateLimitValidator.validate(
       'dirName',
@@ -22,15 +29,7 @@ describe('validators/templateLimitValidator', () => {
   it('returns no errors if template limit is not exceeded', async () => {
     const validationErrors = templateLimitValidator.validate(
       'dirName',
-      makeFilesList(49)
-    );
-    expect(validationErrors.length).toBe(0);
-  });
-
-  it('ignores all files without the .html extension', async () => {
-    const validationErrors = templateLimitValidator.validate(
-      'dirName',
-      makeFilesList(51, '.js')
+      makeFilesList(50)
     );
     expect(validationErrors.length).toBe(0);
   });
