@@ -5,6 +5,7 @@ const {
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 
 const promptUser = async promptConfig => {
@@ -19,7 +20,9 @@ const promptUser = async promptConfig => {
 const personalAccessKeyPrompt = async ({ env } = {}) => {
   await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
-  open(`${websiteOrigin}/l/personal-access-key`, { url: true });
+  const url = `${websiteOrigin}/l/personal-access-key`;
+  open(url, { url: true });
+  logger.log(`Opening ${url} in your web browser`);
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
@@ -99,7 +102,7 @@ const ACCOUNT_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   message:
-    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter when you are ready to continue>",
+    "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>",
 };
 
 const PERSONAL_ACCESS_KEY = {
