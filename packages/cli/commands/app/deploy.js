@@ -11,8 +11,6 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { deployApp } = require('@hubspot/cli-lib/api/appPipeline');
 
 const {
-  addAccountOptions,
-  addConfigOptions,
   setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
@@ -68,12 +66,8 @@ exports.builder = yargs => {
     type: 'string',
   });
 
-  yargs.example([
-    ['$0 app deploy /example-app', 'Build and deploy private app'],
-  ]);
+  yargs.example([['$0 app deploy /example-app', 'Build and deploy app']]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   return yargs;
