@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+const { setArgsOverrides, getTestConfig } = require('./env');
+const path = require('path');
+const Jasmine = require('jasmine');
+const rimraf = require('rimraf');
+const cmd = require('./spec/helpers/cmd');
+const Reporter = require('jasmine-terminal-reporter');
+const { config } = require('yargs');
+const reporter = new Reporter({
+  isVerbose: true,
+  includeStackTrace: true,
+});
+
+setArgsOverrides(
+  yargs(hideBin(process.argv))
+    .option('portalId', {
+      alias: 'p',
+      type: 'string',
+      description: 'Portal Id',
+    })
+    .option('cliPath', {
+      alias: 'c',
+      type: 'string',
+      description: 'CLI Path',
+    })
+    .option('personalAccessKey', {
+      alias: 'a',
+      type: 'string',
+      description: 'Personal Access Key',
+    })
+    .option('clientId', {
+      type: 'string',
+      default: false,
+      description: 'ClientId for oauth',
+    })
+    .option('clientSecret', {
+      type: 'string',
+      default: false,
+      description: 'Client secret for oauth',
+    })
+    .option('refreshToken', {
+      type: 'string',
+      default: false,
+      description: 'Refresh token for oauth',
+    })
+    .option('qa', {
+      type: 'boolean',
+      default: false,
+      description: 'Set this if you are using a app.hubspotqa.com site',
+    })
+    .option('debug', {
+      type: 'boolean',
+      default: false,
+      description: 'Add additional debugging information',
+    })
+    .argv
+);
+
+(async () => {
+  try {
+    const testRunner = new Jasmine();
+    testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
+    testRunner.addReporter(reporter);
+    testRunner.onComplete(function(passed) {
+      rimraf.sync('hubspot.config.yml');
+    });
+
+    const cliPath = path.join(process.cwd(), 'packages/cli/bin/hs');
+    global.cli = cmd.create(cliPath, '.');
+    global.config = getTestConfig();
+
+    rimraf.sync('hubspot.config.yml');
+
+    await cli.execute(
+      ['init'],
+      [cmd.ENTER, config.personalAccessKey, cmd.ENTER]
+    );
+
+    testRunner.execute();
+  } catch (e) {
+    console.log(e);
+  }
+})();
