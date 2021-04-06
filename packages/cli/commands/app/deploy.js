@@ -59,7 +59,7 @@ exports.handler = async options => {
     process.exit(1);
   }
 
-  logger.log(result);
+  logger.log(`Deploy task "${result.id}" has been started.`);
 };
 
 exports.builder = yargs => {
