@@ -1,7 +1,27 @@
-const dotEnvConfig = require('dotenv').config();
+const dotEnvConfig = require('dotenv').config() || {};
+
+const getTruthyValuesOnly = obj => {
+  const truthyValuesObj = {};
+
+  Object.keys(obj).forEach(prop => {
+    const truthyValue = obj[prop];
+    if (truthyValue) {
+      truthyValuesObj[prop] = truthyValue;
+    }
+  });
+
+  return truthyValuesObj;
+};
 
 let localOverrides = {};
 let localTestOverrides = {};
+
+const getEnvValue = envVariable => {
+  return (
+    (dotEnvConfig.parsed && dotEnvConfig.parsed[envVariable]) ||
+    process.env[envVariable]
+  );
+};
 
 const setLocalTestOverrides = (overrides = {}) => {
   localOverrides = { localOverrides, ...overrides };
@@ -19,23 +39,20 @@ const setArgsOverrides = args => {
   localOverrides.debug = args.debug;
 };
 
-const envOverrides = {
-  ...(process.env.PORTAL_ID && { portalId: process.env.PORTAL_ID }),
-  ...(process.env.CLI_PATH && { cliPath: process.env.CLI_PATH }),
-  ...(process.env.PERSONAL_ACCESS_KEY && {
-    personalAccessKey: process.env.PERSONAL_ACCESS_KEY,
-  }),
-  ...(process.env.CLIENT_ID && { clientId: process.env.CLIENT_ID }),
-  ...(process.env.CLIENT_SECRET && { clientSecret: process.env.CLIENT_SECRET }),
-  ...(process.env.REFRESH_TOKEN && { clientSecret: process.env.REFRESH_TOKEN }),
-};
+const envOverrides = getTruthyValuesOnly({
+  portalId: getEnvValue('PORTAL_ID'),
+  cliPath: getEnvValue('CLI_PATH'),
+  personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
+  clientId: getEnvValue('CLIENT_ID'),
+  clientSecret: getEnvValue('CLIENT_SECRET'),
+  refreshToken: getEnvValue('REFRESH_TOKEN'),
+});
 
 const getTestConfig = () => {
-  // Test-specific Overrides > Command-line Args > DotEnv Vars > Env vars
+  // Test-specific Overrides > Command-line Args > Env vars
   const config = Object.assign(
     {},
     envOverrides,
-    dotEnvConfig,
     localOverrides,
     localTestOverrides
   );
