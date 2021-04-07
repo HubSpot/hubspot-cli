@@ -59,20 +59,22 @@ const getTestConfig = () => {
 
   if (!config.portalId)
     throw new Error(
-      'portalId must be defined.  Either set the PORTAL_ID environment variable or use the --portal flag to pass it in'
+      'portalId must be defined.  Either set the PORTAL_ID environment variable or use the --portal flag to pass it in.'
     );
 
   if (!config.cliPath)
     throw new Error(
-      'cliPath must be defined.  Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in'
+      'cliPath must be defined.  Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in.'
     );
 
-  if (
-    !config.personalAccessKey &&
-    !(config.clientId && config.clientSecret && config.refreshToken)
-  )
+  if (!config.personalAccessKey)
     throw new Error(
-      'no valid auth combination was found. Either set the PERSONAL_ACCESS_KEY or CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN environment variables or use the --personalAccessKey or --clientId, --clientSecret, and --refreshToken flags to pass it in'
+      'No valid auth for personalAccessKey was found. Set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
+    );
+
+  if (!(config.clientId && config.clientSecret && config.refreshToken))
+    throw new Error(
+      'No valid auth combination for oauth2 was found. Set the CLIENT_ID, CLIENT_SECRET, and REFRESH_TOKEN environment variables or use the --clientId, --clientSecret, and --refreshToken flags to pass them in.'
     );
 
   return config;
