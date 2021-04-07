@@ -20,7 +20,7 @@ describe('hs init using oauth2', () => {
       ['init', '--auth=oauth2'],
       [
         cmd.ENTER,
-        'Foo',
+        'Oauth2',
         cmd.ENTER,
         config.portalId,
         cmd.ENTER,
@@ -52,6 +52,12 @@ describe('hs init using oauth2', () => {
     expect(existsSync('hubspot.config.yml')).toBe(true);
   }, 20000);
 
+  it('should populate the config file with the correct name', async () => {
+    const portalConfig = yaml.load(readFileSync('hubspot.config.yml', 'utf8'))
+      .portals[0];
+    expect(portalConfig.name).toEqual('Oauth2');
+  });
+
   it('should populate the config file with the correct authType', async () => {
     const portalConfig = yaml.load(readFileSync('hubspot.config.yml', 'utf8'))
       .portals[0];
@@ -76,5 +82,10 @@ describe('hs init using oauth2', () => {
     expect(portalConfig.auth.tokenInfo.refreshToken).toEqual(
       config.refreshToken
     );
+  });
+
+  it('should populate the config file with the correct defaultPortal', async () => {
+    const config = yaml.load(readFileSync('hubspot.config.yml', 'utf8'));
+    expect(config.defaultPortal).toEqual('Oauth2');
   });
 });

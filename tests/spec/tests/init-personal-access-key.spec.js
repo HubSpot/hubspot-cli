@@ -29,4 +29,9 @@ describe('hs init using personalAccessKey', () => {
         .personalAccessKey
     ).toEqual(config.personalAccessKey);
   });
+
+  it('should populate the config file with the correct defaultPortal', async () => {
+    const config = yaml.load(readFileSync('hubspot.config.yml', 'utf8'));
+    expect(config.defaultPortal).toEqual('QA');
+  });
 });
