@@ -75,5 +75,7 @@ describe('hs init', () => {
         config.refreshToken
       );
     }, 20000);
+  } else {
+    console.log('Skipped oauth2 tests due to missing env values.');
   }
 });
