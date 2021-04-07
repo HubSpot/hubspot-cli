@@ -40,11 +40,9 @@ exports.handler = async options => {
   trackCommandUsage('config-list', {}, accountId);
 
   const config = getConfig();
-  const portalData = config.portals.reduce((acc, portal) => {
-    acc.push([portal.name, portal.portalId, portal.authType]);
-
-    return acc;
-  }, []);
+  const portalData = config.portals.map(portal => {
+    return [portal.name, portal.portalId, portal.authType];
+  });
   portalData.unshift(getTableHeader(['Name', 'Account ID', 'Auth Type']));
 
   logger.log(getTableContents(portalData));
