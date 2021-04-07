@@ -31,7 +31,7 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'list';
-exports.describe = 'List names of portals defined in config';
+exports.describe = 'List names of accounts defined in config';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -46,10 +46,10 @@ exports.handler = async options => {
 
     return acc;
   }, []);
-  portalData.unshift(getTableHeader(['Name', 'Portal ID', 'Auth Type']));
+  portalData.unshift(getTableHeader(['Name', 'Account ID', 'Auth Type']));
 
   logger.log(getTableContents(portalData));
-  logger.log('Default Portal: ', config.defaultPortal);
+  logger.log('Default Account: ', config.defaultPortal);
 };
 
 exports.builder = yargs => {

@@ -29,8 +29,8 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'rename <portalName> <newName>';
-exports.describe = 'Rename portal in config';
+exports.command = 'rename <accountName> <newName>';
+exports.describe = 'Rename account in config';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -42,7 +42,7 @@ exports.handler = async options => {
 
   await renameAccount(portalName, newName);
 
-  return logger.log(`Portal ${portalName} renamed to ${newName}`);
+  return logger.log(`Account ${portalName} renamed to ${newName}`);
 };
 
 exports.builder = yargs => {
@@ -50,12 +50,12 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
-  yargs.positional('portalName', {
-    describe: 'Name of portal to be renamed.',
+  yargs.positional('accountName', {
+    describe: 'Name of account to be renamed.',
     type: 'string',
   });
   yargs.positional('newName', {
-    describe: 'New name for portal.',
+    describe: 'New name for account.',
     type: 'string',
   });
 

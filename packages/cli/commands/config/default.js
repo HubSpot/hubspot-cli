@@ -34,7 +34,7 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'default';
-exports.describe = 'Change default portal used in config';
+exports.describe = 'Change default account used in config';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -50,14 +50,14 @@ exports.handler = async options => {
       look: false,
       name: 'default',
       pageSize: 20,
-      message: 'Select a portal to use as the defaultPortal',
+      message: 'Select an account to use as the default',
       choices: config.portals.map(p => p.name || p.portalId),
       default: config.defaultPortal,
     },
   ]);
   updateDefaultAccount(newDefault);
 
-  return logger.log(`Default portal updated to: ${newDefault}`);
+  return logger.log(`Default account updated to: ${newDefault}`);
 };
 
 exports.builder = yargs => {
