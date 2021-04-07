@@ -13,7 +13,6 @@ const {
 const {
   addConfigOptions,
   addAccountOptions,
-  addUseEnvironmentOptions,
   getAccountId,
   setLogLevel,
 } = require('../../lib/commonOpts');
@@ -63,7 +62,6 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
 
   yargs.example([['$0 config default']]);
 
