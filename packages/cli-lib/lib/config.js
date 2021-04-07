@@ -548,15 +548,6 @@ const updateDefaultAccount = defaultAccount => {
  * @throws {Error}
  */
 const renameAccount = async (currentName, newName) => {
-  if (!newName) {
-    throw new Error('Please provide a new name for the portal');
-  }
-
-  if (!currentName) {
-    throw new Error(
-      'Please provide the portal name or id that should be renamed'
-    );
-  }
   const accountId = getAccountId(currentName);
   const accountConfigToRename = getAccountConfig(accountId);
   const defaultAccount = getConfigDefaultAccount();
