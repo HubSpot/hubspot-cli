@@ -10,9 +10,20 @@ Note that if you are testing against a QA portal, not a PROD one, you'll need to
 
 ### Configuration
 
-There are three ways to pass in necessary configuration to the script.
+There are four ways to pass in necessary configuration to the script.
 
-1. Through environment variables.
+1. Creating a .env file within the /tests folder.
+
+```bash
+PORTAL_ID="9289088"
+CLI_PATH="hs"
+PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
+CLIENT_ID="123a4b56-****-****-****-************"
+CLIENT_SECRET="ab12345c-****-****-****-************"
+REFRESH_TOKEN="1234a5bc-****-****-****-************"
+```
+
+2. Through environment variables.
 
 ```bash
 export PORTAL_ID="9289088"
@@ -20,7 +31,7 @@ export CLI_PATH="hs"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 ```
 
-2. Through arguments on the `run-tests` script
+3. Through arguments on the `run-tests` script
 
 ```bash
 run-tests --portalId=9289088
@@ -28,7 +39,7 @@ run-tests --cliPath=hs
 run-tests --personalAccessKey="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 ```
 
-3. If you need to override any environment variables at a test variable, you can do that via the `setLocalTestOverrides` function available in `env.js`
+4. If you need to override any environment variables at a test variable, you can do that via the `setLocalTestOverrides` function available in `env.js`
 
 The priority is Local Test Overrides > CLI Arg Overrides > Environment Variables
 
