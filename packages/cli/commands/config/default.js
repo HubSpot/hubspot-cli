@@ -41,7 +41,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-default', {}, accountId);
+  trackCommandUsage('config-default', {}, accountId);
 
   const config = getConfig();
   const { default: newDefault } = await inquirer.prompt([

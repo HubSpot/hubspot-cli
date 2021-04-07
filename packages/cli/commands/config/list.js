@@ -38,7 +38,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-list', {}, accountId);
+  trackCommandUsage('config-list', {}, accountId);
 
   const config = getConfig();
   const portalData = config.portals.reduce((acc, portal) => {

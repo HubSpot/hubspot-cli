@@ -38,7 +38,7 @@ exports.handler = async options => {
   const { portalName, newName } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-rename', {}, accountId);
+  trackCommandUsage('config-rename', {}, accountId);
 
   await renameAccount(portalName, newName);
 
