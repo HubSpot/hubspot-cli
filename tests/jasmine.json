@@ -1,5 +1,5 @@
 {
-  "spec_dir": "node_modules/hubspot-cli-tests/spec",
+  "spec_dir": "spec",
   "spec_files": ["tests/*[sS]pec.js"],
   "helpers": ["helpers/**/*.js"],
   "stopSpecOnExpectationFailure": false,

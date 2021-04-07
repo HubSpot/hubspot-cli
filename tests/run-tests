@@ -54,8 +54,7 @@ setArgsOverrides(
       type: 'boolean',
       default: false,
       description: 'Add additional debugging information',
-    })
-    .argv
+    }).argv
 );
 
 (async () => {
@@ -63,12 +62,12 @@ setArgsOverrides(
     const testRunner = new Jasmine();
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    testRunner.onComplete(function(passed) {
+    testRunner.onComplete(function() {
       rimraf.sync('hubspot.config.yml');
     });
-
-    const cliPath = path.join(process.cwd(), 'packages/cli/bin/hs');
-    global.cli = cmd.create(cliPath, '.');
+    const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
+    const cli = cmd.create(cliPath, '.');
+    global.cli = cli;
     global.config = getTestConfig();
 
     rimraf.sync('hubspot.config.yml');

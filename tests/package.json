@@ -4,7 +4,7 @@
   "description": "",
   "main": "run-tests.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node run-tests",
     "lint": "eslint .",
     "prettier": "prettier --write './*.{js,json}'"
   },
