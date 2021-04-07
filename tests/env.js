@@ -44,11 +44,12 @@ const getTestConfig = () => {
     throw new Error(
       'portalId must be defined.  Either set the PORTAL_ID environment variable or use the --portal flag to pass it in'
     );
-  // TODO - Use 'hs' as default for cliPath?
+
   if (!config.cliPath)
     throw new Error(
       'cliPath must be defined.  Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in'
     );
+
   if (
     !config.personalAccessKey &&
     !(config.clientId && config.clientSecret && config.refreshToken)

@@ -155,13 +155,9 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
 
 module.exports = {
   createProcess,
-  create: processPath => {
-    const fn = (...args) => executeWithInput(processPath, ...args);
-
-    return {
-      execute: fn,
-    };
-  },
+  create: processPath => ({
+    execute: (...args) => executeWithInput(processPath, ...args),
+  }),
   DOWN: '\x1B\x5B\x42',
   UP: '\x1B\x5B\x41',
   ENTER: '\x0D',

@@ -1,10 +1,10 @@
 # HubSpot CLI E2E tests
 
-To assist in adding test coverage to the CLI, this project attempts to test `hs.*` commands as if they were being used by an end-user.
+This project tests `hs.*` commands as if they were being used by an end-user.
 
 ## Getting Started
 
-The main test execution is kicked of via the `run-tests` script. `run-tests` itself is a CLI, so to see the available options, you can `run-tests --help`. This was done so that the tests can be installed against any given version of teh CLI and tested against it. In addition, it was done to keep the test logic separated from the CLI library
+The main test execution is kicked off via the `run-tests` script. `run-tests` itself is a CLI, so to see the available options, you can `run-tests --help`. This was done so that the tests can be installed against any given version of the CLI and tested against it. In addition, it was done to keep the test logic separated from the CLI library.
 
 Note that if you are testing against a QA portal, not a PROD one, you'll need to add the `--qa` flag when running the script. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
 
@@ -55,9 +55,9 @@ This repository should be added to the `hubspot-cli` repo, root folder, as a dep
 
 You may be wondering why we are using Jasmine, and not Jest. The reason is because Jest does not provide an API for executing the tests within code. We need to do this since we are wrapping the tests within a CLI.
 
-## Portals
+## Accounts
 
-A couple of portals have been set up specifically for testing. They are QA Portal 105786502 and Prod Portal 9289088. If you add any test data to the portals for testing, ensure you add it to the above two.
+A couple of account have been set up specifically for testing. They are QA Account 105786502 and Prod Account 9289088. If you add any test data to the accounts for testing, ensure you add it to the above two.
 
 ## To Do
 
