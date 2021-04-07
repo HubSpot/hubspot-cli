@@ -1,5 +1,5 @@
 const ora = require('ora');
-var https = require('https');
+const https = require('https');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -149,7 +149,7 @@ exports.handler = async options => {
       logApiErrorInstance(
         accountId,
         e,
-        new ApiErrorContext({ accountId, functionPath })
+        new ApiErrorContext({ accountId, request: functionPath })
       );
     }
   }
