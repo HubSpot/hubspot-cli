@@ -16,7 +16,7 @@ describe('hs init using personalAccessKey', () => {
 
   it('should create a new config file', async () => {
     await cli.execute(
-      ['init'],
+      ['init', '--force'],
       [cmd.ENTER, config.personalAccessKey, cmd.ENTER, 'QA', cmd.ENTER]
     );
 

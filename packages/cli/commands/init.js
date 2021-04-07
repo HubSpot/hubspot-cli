@@ -1,3 +1,4 @@
+const path = require('path');
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -5,6 +6,7 @@ const {
   updateDefaultAccount,
   writeConfig,
   updateAccountConfig,
+  setConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -82,7 +84,10 @@ exports.command = 'init';
 exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot account`;
 
 exports.handler = async options => {
-  const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value } = options;
+  const {
+    auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    force,
+  } = options;
   const configPath = getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
@@ -91,7 +96,7 @@ exports.handler = async options => {
   });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if (configPath) {
+  if (!force && configPath) {
     logger.error(`The config file '${configPath}' already exists.`);
     logger.info(
       'To update an existing config file, use the "hs auth" command.'
@@ -101,6 +106,11 @@ exports.handler = async options => {
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
 
+  if (force) {
+    setConfigPath(
+      path.join(process.cwd(), DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME)
+    );
+  }
   createEmptyConfigFile();
   handleExit(deleteEmptyConfigFile);
 
@@ -134,6 +144,14 @@ exports.builder = yargs => {
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
   });
+
+  yargs.option('force', {
+    describe:
+      'force config creation without looking for config in parent folders',
+    type: 'boolean',
+    default: false,
+  });
+
   addTestingOptions(yargs, true);
 
   return yargs;

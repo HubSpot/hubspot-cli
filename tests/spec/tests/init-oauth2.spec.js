@@ -17,7 +17,7 @@ describe('hs init using oauth2', () => {
 
   it('should create a new config file', async () => {
     await cli.execute(
-      ['init', '--auth=oauth2'],
+      ['init', '--auth=oauth2', '--force'],
       [
         cmd.ENTER,
         'Oauth2',

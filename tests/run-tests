@@ -70,10 +70,8 @@ setArgsOverrides(
     global.cli = cli;
     global.config = getTestConfig();
 
-    rimraf.sync('hubspot.config.yml');
-
     await cli.execute(
-      ['init'],
+      ['init', '--force'],
       [cmd.ENTER, config.personalAccessKey, cmd.ENTER]
     );
 
