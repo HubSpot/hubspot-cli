@@ -13,6 +13,7 @@
   "devDependencies": {
     "concat-stream": "^2.0.0",
     "cross-spawn": "^7.0.3",
+    "dotenv": "^8.2.0",
     "eslint": "6.5.1",
     "jasmine": "^3.6.4",
     "jasmine-terminal-reporter": "^1.0.3",

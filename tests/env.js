@@ -1,3 +1,5 @@
+const dotEnvConfig = require('dotenv').config();
+
 let localOverrides = {};
 let localTestOverrides = {};
 
@@ -29,10 +31,11 @@ const envOverrides = {
 };
 
 const getTestConfig = () => {
-  // Test-specific Overrides > Command-line Args > Env vars
+  // Test-specific Overrides > Command-line Args > DotEnv Vars > Env vars
   const config = Object.assign(
     {},
     envOverrides,
+    dotEnvConfig,
     localOverrides,
     localTestOverrides
   );
