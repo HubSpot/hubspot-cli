@@ -1,5 +1,5 @@
-const cmd = require('../helpers/cmd');
-const { CONFIG_FILE_PATH } = require('../../lib/constants');
+const cmd = require('./helpers/cmd');
+const { CONFIG_FILE_PATH } = require('../lib/constants');
 const rimraf = require('rimraf');
 const { existsSync, readFileSync } = require('fs');
 const yaml = require('js-yaml');

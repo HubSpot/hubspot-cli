@@ -1,4 +1,4 @@
-const { CONFIG_FILE_PATH } = require('../../lib/constants');
+const { CONFIG_FILE_PATH } = require('../lib/constants');
 
 describe('hs list', () => {
   const { cli } = global;
