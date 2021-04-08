@@ -10,7 +10,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 10.x
+    - name: Install Yarn
+      run: npm install -g yarn
     - name: Install deps
+      run: |
+          yarn install
+    - name: Install testing deps
+      working-directory: ./tests
       run: |
           yarn install
     - name: Bootstrap packages
@@ -25,9 +31,13 @@ jobs:
     - name: Lint
       run: |
           yarn lint
-    - name: Test
-      run: |
-          yarn test
     - name: Circular dependency check
       run: |
           yarn run madge --circular packages
+    - name: Test
+      run: |
+          yarn test
+    - name: Test-CLI
+      working-directory: ./tests
+      run: |
+          yarn test
