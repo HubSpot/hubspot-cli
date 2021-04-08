@@ -1,4 +1,4 @@
-# HubSpot CLI E2E tests
+# HubSpot CLI Acceptance Tests
 
 This project tests `hs.*` commands as if they were being used by an end-user.
 
@@ -12,7 +12,7 @@ Note that if you are testing against a QA portal, not a PROD one, you'll need to
 
 There are four ways to pass in necessary configuration to the script.
 
-1. Creating a .env file within the /tests folder.
+1. Creating a .env file within the `/acceptance-tests` folder.
 
 ```bash
 PORTAL_ID="9289088"
@@ -45,11 +45,7 @@ The priority is Local Test Overrides > CLI Arg Overrides > Environment Variables
 
 ### Running Locally
 
-This repository should be added to the `hubspot-cli` repo, root folder, as a dependency. You can accomplish this locally by utilizing yarn linking.
-
-1. In `hubspot-cli-tests`, `yarn link`
-2. In `hubspot-cli`, `yarn link hubspot-cli-tests`
-3. To run it, `cd hubspot-cli`, `./node_modules/hubspot-cli-tests/run-tests`
+1. In `/acceptance-tests`, `yarn test`
 
 ## Why Jasmine
 

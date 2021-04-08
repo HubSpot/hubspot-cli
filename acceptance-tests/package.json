@@ -2,11 +2,10 @@
   "name": "hubspot-cli-tests",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "main": "run-tests.js",
   "scripts": {
-    "test": "node run-tests",
-    "lint": "eslint .",
-    "prettier": "prettier --write './*.{js,json}'"
+    "test": "node run-tests"
   },
   "author": "",
   "license": "ISC",

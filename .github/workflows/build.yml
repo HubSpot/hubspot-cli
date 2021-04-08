@@ -5,6 +5,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Report Status
+      if: always()
+      uses: ravsamhq/notify-slack-action@master
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
     - uses: actions/checkout@v1
     - name: Use Node.js
       uses: actions/setup-node@v1
@@ -16,7 +24,7 @@ jobs:
       run: |
           yarn install
     - name: Install testing deps
-      working-directory: ./tests
+      working-directory: ./acceptance-tests
       run: |
           yarn install
     - name: Bootstrap packages
@@ -38,6 +46,6 @@ jobs:
       run: |
           yarn test
     - name: Test-CLI
-      working-directory: ./tests
+      working-directory: ./acceptance-tests
       run: |
           yarn test
