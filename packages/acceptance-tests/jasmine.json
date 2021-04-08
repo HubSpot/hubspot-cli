@@ -1,5 +1,5 @@
 {
-  "spec_dir": "packages/acceptance-tests/__tests__",
+  "spec_dir": "packages/acceptance-tests/tests",
   "spec_files": ["*[sS]pec.js"],
   "helpers": ["helpers/**/*.js"],
   "stopSpecOnExpectationFailure": false,
