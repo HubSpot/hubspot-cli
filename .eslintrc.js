@@ -20,7 +20,7 @@ module.exports = {
       files: [
         '**/__tests__/**/*.js',
         '**/__mocks__/**/*.js',
-        'acceptance-tests/**/*.js',
+        'packages/acceptance-tests/**/*.js',
       ],
       env: {
         jest: true,
