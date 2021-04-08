@@ -48,8 +48,7 @@ const personalAccessKeyConfigCreationFlow = async env => {
     name,
   };
 
-  await updateConfigWithPersonalAccessKey(accountConfig, true);
-  return accountConfig;
+  return updateConfigWithPersonalAccessKey(accountConfig, true);
 };
 
 const oauthConfigCreationFlow = async env => {
