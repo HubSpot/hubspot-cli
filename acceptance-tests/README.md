@@ -12,7 +12,7 @@ Note that if you are testing against a QA portal, not a PROD one, you'll need to
 
 There are four ways to pass in necessary configuration to the script.
 
-1. Creating a .env file within the `/acceptance-tests` folder.
+1. Creating a .env file in the root of the `hubspot-cli` folder.
 
 ```bash
 PORTAL_ID="9289088"
@@ -45,7 +45,7 @@ The priority is Local Test Overrides > CLI Arg Overrides > Environment Variables
 
 ### Running Locally
 
-1. In `/acceptance-tests`, `yarn test`
+1. In `/hubspot-cli`, `yarn test-cli`
 
 ## Why Jasmine
 

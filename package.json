@@ -23,6 +23,7 @@
     "publish-release": "yarn lerna publish --conventional-graduate",
     "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
     "test": "jest",
+    "test-cli": "yarn --cwd 'acceptance-tests' && ./acceptance-tests/run-tests",
     "jest": "jest --watch",
     "circular-deps": "yarn madge --circular packages"
   },

@@ -2,6 +2,7 @@
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { setArgsOverrides, getTestConfig } = require('./env');
+const { CONFIG_FILE_PATH } = require('./constants');
 const path = require('path');
 const Jasmine = require('jasmine');
 const rimraf = require('rimraf');
@@ -63,15 +64,15 @@ setArgsOverrides(
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
     testRunner.onComplete(function() {
-      rimraf.sync('hubspot.config.yml');
+      rimraf.sync(CONFIG_FILE_PATH);
     });
-    const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
+    const cliPath = path.join(process.cwd(), './packages/cli/bin/hs');
     const cli = cmd.create(cliPath, '.');
     global.cli = cli;
     global.config = getTestConfig();
 
     await cli.execute(
-      ['init', '--force'],
+      ['init', `--c="${CONFIG_FILE_PATH}"`],
       [cmd.ENTER, config.personalAccessKey, cmd.ENTER]
     );
 
