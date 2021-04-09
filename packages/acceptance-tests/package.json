@@ -2,6 +2,7 @@
   "name": "acceptance-tests",
   "version": "0.1.0",
   "description": "Acceptance tests for cli",
+  "private": true,
   "author": "Mike Talley <mtalley@hubspot.com>",
   "homepage": "https://github.com/HubSpot/hubspot-cli#readme",
   "license": "ISC",
