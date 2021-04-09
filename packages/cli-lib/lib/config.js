@@ -373,7 +373,7 @@ const getAndLoadConfigIfNeeded = (options = {}) => {
 };
 
 const getConfigPath = path => {
-  return path || findConfig(getCwd());
+  return path || _configPath || findConfig(getCwd());
 };
 
 const findConfig = directory => {
