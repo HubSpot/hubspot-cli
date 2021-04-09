@@ -111,10 +111,10 @@ exports.handler = async options => {
 
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](env);
-    const path = getConfigPath();
+    const configPath = getConfigPath();
 
     logger.success(
-      `The config file "${path}" was created using your personal access key for account ${name ||
+      `The config file "${configPath}" was created using your personal access key for account ${name ||
         accountId}.`
     );
 
