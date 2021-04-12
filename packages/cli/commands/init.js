@@ -109,7 +109,7 @@ exports.handler = async options => {
     const path = getConfigPath();
 
     logger.success(
-      `The config file "${path}" was created using ${authType} for account ${name ||
+      `The config file "${path}" was created using "${authType}" for account ${name ||
         accountId}.`
     );
 
