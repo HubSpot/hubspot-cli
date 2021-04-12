@@ -40,7 +40,6 @@ const setArgsOverrides = args => {
     (localOverrides.personalAccessKey = args.personalAccessKey);
   args.clientId && (localOverrides.clientId = args.clientId);
   args.clientSecret && (localOverrides.clientSecret = args.clientSecret);
-  args.refreshToken && (localOverrides.refreshToken = args.refreshToken);
   localOverrides.qa = args.qa;
   localOverrides.debug = args.debug;
 };
@@ -51,7 +50,6 @@ const envOverrides = getTruthyValuesOnly({
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
   clientId: getEnvValue('CLIENT_ID'),
   clientSecret: getEnvValue('CLIENT_SECRET'),
-  refreshToken: getEnvValue('REFRESH_TOKEN'),
 });
 
 const getTestConfig = () => {
@@ -78,9 +76,9 @@ const getTestConfig = () => {
       'No valid auth for personalAccessKey was found. Set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
 
-  if (!(config.clientId && config.clientSecret && config.refreshToken))
+  if (!(config.clientId && config.clientSecret))
     throw new Error(
-      'No valid auth combination for oauth2 was found. Set the CLIENT_ID, CLIENT_SECRET, and REFRESH_TOKEN environment variables or use the --clientId, --clientSecret, and --refreshToken flags to pass them in.'
+      'No valid auth combination for oauth2 was found. Set the CLIENT_ID and CLIENT_SECRET environment variables or use the --clientId and --clientSecret flags to pass them in.'
     );
 
   return config;

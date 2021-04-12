@@ -20,7 +20,6 @@ CLI_PATH="hs"
 PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 CLIENT_ID="123a4b56-****-****-****-************"
 CLIENT_SECRET="ab12345c-****-****-****-************"
-REFRESH_TOKEN="1234a5bc-****-****-****-************"
 ```
 
 2. Through environment variables.
