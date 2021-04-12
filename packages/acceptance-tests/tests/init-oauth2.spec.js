@@ -45,6 +45,8 @@ describe('hs init using oauth2', () => {
             }
           });
 
+          req.end();
+
           return req;
         },
       ]
