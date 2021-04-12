@@ -3,7 +3,7 @@ process.env.FORCE_COLOR = 0;
 
 module.exports = {
   testEnvironment: 'node',
-  projects: ['<rootDir>/packages/cli-lib'],
+  projects: ['<rootDir>/packages/*'],
   roots: ['packages'],
   collectCoverage: true,
 };

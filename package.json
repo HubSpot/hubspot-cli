@@ -14,7 +14,8 @@
     "prettier": "^1.19.1"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "acceptance-tests"
   ],
   "scripts": {
     "check-deps": "node bin/depcheck.js",
