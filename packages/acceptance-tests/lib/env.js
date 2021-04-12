@@ -1,4 +1,10 @@
-const dotEnvConfig = require('dotenv').config() || {};
+const path = require('path');
+const dotEnv = require('dotenv');
+let dotEnvConfig;
+
+(() => {
+  dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
+})();
 
 const getTruthyValuesOnly = obj => {
   const truthyValuesObj = {};
