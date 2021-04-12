@@ -79,14 +79,6 @@ describe('hs init using oauth2', () => {
     expect(portalConfig.auth.clientSecret).toEqual(config.clientSecret);
   });
 
-  it('should populate the config file with the correct refreshToken', async () => {
-    const portalConfig = yaml.load(readFileSync(CONFIG_FILE_PATH, 'utf8'))
-      .portals[0];
-    expect(portalConfig.auth.tokenInfo.refreshToken).toEqual(
-      config.refreshToken
-    );
-  });
-
   it('should populate the config file with the correct defaultPortal', async () => {
     const config = yaml.load(readFileSync(CONFIG_FILE_PATH, 'utf8'));
     expect(config.defaultPortal).toEqual('Oauth2');
