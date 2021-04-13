@@ -17,13 +17,16 @@ module.exports = {
 
   overrides: [
     {
-      files: [
-        '**/__tests__/**/*.js',
-        '**/__mocks__/**/*.js',
-        'acceptance-tests/tests/**/*.js',
-      ],
+      files: ['**/__tests__/**/*.js', '**/__mocks__/**/*.js'],
       env: {
         jest: true,
+        node: true,
+      },
+    },
+    {
+      files: ['acceptance-tests/tests/**/*.js'],
+      env: {
+        jasmine: true,
         node: true,
       },
     },
