@@ -28,14 +28,14 @@ CLIENT_SECRET="ab12345c-****-****-****-************"
 export PORTAL_ID="9289088"
 export CLI_PATH="hs"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
+export CLIENT_ID="123a4b56-****-****-****-************"
+export CLIENT_SECRET="ab12345c-****-****-****-************"
 ```
 
 3. Through arguments on the `run-tests` script
 
 ```bash
-run-tests --portalId=9289088
-run-tests --cliPath=hs
-run-tests --personalAccessKey="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
+run-tests --portalId=9289088 --cliPath=hs --personalAccessKey="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX" --clientId="123a4b56-****-****-****-************" --clientSecret="ab12345c-****-****-****-************"
 ```
 
 4. If you need to override any environment variables at a test variable, you can do that via the `setLocalTestOverrides` function available in `env.js`
