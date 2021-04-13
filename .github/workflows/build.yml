@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Failure Slack Report
+    - name: Build Failure Slack Report
       if: ${{ github.ref == 'refs/heads/master' }}
       uses: ravsamhq/notify-slack-action@master
       with:
