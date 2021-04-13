@@ -364,7 +364,7 @@ const isTrackingAllowed = () => {
 
 const getAndLoadConfigIfNeeded = (options = {}) => {
   if (!_config) {
-    loadConfig(_configPath, {
+    loadConfig(null, {
       silenceErrors: true,
       ...options,
     });
