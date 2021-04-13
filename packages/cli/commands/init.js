@@ -102,11 +102,7 @@ exports.handler = async options => {
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-
-  if (c) {
-    setConfigPath(path.join(process.cwd(), c));
-  }
-  createEmptyConfigFile();
+  createEmptyConfigFile({ path: c });
   handleExit(deleteEmptyConfigFile);
 
   try {
