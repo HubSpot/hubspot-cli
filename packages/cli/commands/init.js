@@ -1,4 +1,3 @@
-const path = require('path');
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -6,7 +5,6 @@ const {
   updateDefaultAccount,
   writeConfig,
   updateAccountConfig,
-  setConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
