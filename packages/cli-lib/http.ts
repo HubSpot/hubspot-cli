@@ -1,17 +1,22 @@
-const request = require('request');
-const requestPN = require('request-promise-native');
-const fs = require('fs-extra');
 const { getAccountConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
 const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
 const { getOauthManager } = require('./oauth');
-const { logger } = require('./logger');
 const {
   FileSystemErrorContext,
   logFileSystemErrorInstance,
 } = require('./errorHandlers/fileSystemErrors');
+import { AccountConfig, RequestOptions } from './types';
+import requestPN from 'request-promise-native';
+import fs from 'fs-extra';
+import request from 'request';
+import { logger } from './logger';
 
-const withOauth = async (accountId, accountConfig, requestOptions) => {
+const withOauth = async (
+  accountId: number,
+  accountConfig: AccountConfig,
+  requestOptions: RequestOptions
+) => {
   const { headers } = requestOptions;
   const oauth = getOauthManager(accountId, accountConfig);
   const accessToken = await oauth.accessToken();
@@ -25,9 +30,9 @@ const withOauth = async (accountId, accountConfig, requestOptions) => {
 };
 
 const withPersonalAccessKey = async (
-  accountId,
-  accountConfig,
-  requestOptions
+  accountId: number,
+  accountConfig: AccountConfig,
+  requestOptions: RequestOptions
 ) => {
   const { headers } = requestOptions;
   const accessToken = await accessTokenForPersonalAccessKey(accountId);
@@ -40,7 +45,7 @@ const withPersonalAccessKey = async (
   };
 };
 
-const withPortalId = (portalId, requestOptions) => {
+const withPortalId = (portalId: number, requestOptions: RequestOptions) => {
   const { qs } = requestOptions;
 
   return {
@@ -52,7 +57,7 @@ const withPortalId = (portalId, requestOptions) => {
   };
 };
 
-const withAuth = async (accountId, options) => {
+const withAuth = async (accountId: number, options: RequestOptions) => {
   const accountConfig = getAccountConfig(accountId);
   const { env, authType, apiKey } = accountConfig;
   const requestOptions = withPortalId(
@@ -78,7 +83,7 @@ const withAuth = async (accountId, options) => {
   };
 };
 
-const addQueryParams = (requestOptions, params = {}) => {
+const addQueryParams = (requestOptions: RequestOptions, params = {}) => {
   const { qs } = requestOptions;
   return {
     ...requestOptions,
@@ -89,37 +94,37 @@ const addQueryParams = (requestOptions, params = {}) => {
   };
 };
 
-const getRequest = async (accountId, options) => {
+const getRequest = async (accountId: number, options: RequestOptions) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
   return requestPN.get(await withAuth(accountId, requestOptions));
 };
 
-const postRequest = async (accountId, options) => {
+const postRequest = async (accountId: number, options: RequestOptions) => {
   return requestPN.post(await withAuth(accountId, options));
 };
 
-const putRequest = async (accountId, options) => {
+const putRequest = async (accountId: number, options: RequestOptions) => {
   return requestPN.put(await withAuth(accountId, options));
 };
 
-const patchRequest = async (accountId, options) => {
+const patchRequest = async (accountId: number, options: RequestOptions) => {
   return requestPN.patch(await withAuth(accountId, options));
 };
 
-const deleteRequest = async (accountId, options) => {
+const deleteRequest = async (accountId: number, options: RequestOptions) => {
   return requestPN.del(await withAuth(accountId, options));
 };
 
-const createGetRequestStream = ({ contentType }) => async (
-  accountId,
-  options,
-  filepath
-) => {
+const createGetRequestStream = ({
+  contentType,
+}: {
+  contentType: string;
+}) => async (accountId: number, options: RequestOptions, filepath: string) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
 
-  const logFsError = err => {
+  const logFsError = (err: Error) => {
     logFileSystemErrorInstance(
       err,
       new FileSystemErrorContext({
@@ -178,15 +183,17 @@ const createGetRequestStream = ({ contentType }) => async (
   });
 };
 
-module.exports = {
+const getOctetStream = createGetRequestStream({
+  contentType: 'application/octet-stream',
+});
+
+export {
   getRequestOptions,
-  request: requestPN,
-  get: getRequest,
-  getOctetStream: createGetRequestStream({
-    contentType: 'application/octet-stream',
-  }),
-  post: postRequest,
-  put: putRequest,
-  patch: patchRequest,
-  delete: deleteRequest,
+  requestPN as request,
+  getRequest as get,
+  postRequest as post,
+  putRequest as put,
+  patchRequest as patch,
+  deleteRequest as delete,
+  getOctetStream,
 };

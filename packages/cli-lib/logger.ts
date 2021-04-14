@@ -1,16 +1,6 @@
-const chalk = require('chalk');
+import chalk from 'chalk';
+import { LOG_LEVEL } from './types';
 
-const LOG_LEVEL = {
-  NONE: 0,
-  DEBUG: 1,
-  LOG: 2,
-  WARN: 4,
-  ERROR: 8,
-};
-
-/**
- * Chalk styles for logger strings.
- */
 const Styles = {
   debug: chalk.reset.blue,
   log: chalk.reset,
@@ -20,7 +10,11 @@ const Styles = {
   error: chalk.reset.red,
 };
 
-const stylize = (label, style, args) => {
+const stylize = (
+  label: string,
+  style: (label: string) => string,
+  args: Array<any>
+) => {
   const styledLabel = style(label);
   const [firstArg, ...rest] = args;
   if (typeof firstArg === 'string') {
@@ -30,40 +24,40 @@ const stylize = (label, style, args) => {
 };
 
 class Logger {
-  error(...args) {
+  error(...args: Array<any>) {
     console.error(...stylize('[ERROR]', Styles.error, args));
   }
-  warn(...args) {
+  warn(...args: Array<any>) {
     console.warn(...stylize('[WARNING]', Styles.warn, args));
   }
-  log(...args) {
+  log(...args: Array<any>) {
     console.log(...args);
   }
-  success(...args) {
+  success(...args: Array<any>) {
     console.log(...stylize('[SUCCESS]', Styles.success, args));
   }
-  info(...args) {
+  info(...args: Array<any>) {
     console.info(...stylize('[INFO]', Styles.info, args));
   }
-  debug(...args) {
+  debug(...args: Array<any>) {
     console.debug(...stylize('[DEBUG]', Styles.log, args));
   }
-  group(...args) {
+  group(...args: Array<any>) {
     console.group(...args);
   }
-  groupEnd(...args) {
-    console.groupEnd(...args);
+  groupEnd() {
+    console.groupEnd();
   }
 }
 
 let currentLogger = new Logger();
 let currentLogLevel = LOG_LEVEL.ERROR;
 
-const setLogger = logger => {
+const setLogger = (logger: Logger) => {
   currentLogger = logger;
 };
 
-const setLogLevel = level => {
+const setLogLevel = (level: LOG_LEVEL) => {
   switch (level) {
     case LOG_LEVEL.DEBUG:
       currentLogLevel =
@@ -84,53 +78,47 @@ const setLogLevel = level => {
   }
 };
 
-const shouldLog = level => {
+const shouldLog = (level: LOG_LEVEL) => {
   return currentLogLevel & level;
 };
 
 const logger = {
-  error(...args) {
+  error(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.ERROR)) {
       currentLogger.error(...args);
     }
   },
-  warn(...args) {
+  warn(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.WARN)) {
       currentLogger.warn(...args);
     }
   },
-  log(...args) {
+  log(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.LOG)) {
       currentLogger.log(...args);
     }
   },
-  success(...args) {
+  success(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.LOG)) {
       currentLogger.success(...args);
     }
   },
-  info(...args) {
+  info(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.LOG)) {
       currentLogger.info(...args);
     }
   },
-  debug(...args) {
+  debug(...args: Array<any>) {
     if (shouldLog(LOG_LEVEL.DEBUG)) {
       currentLogger.debug(...args);
     }
   },
-  group(...args) {
+  group(...args: Array<any>) {
     currentLogger.group(...args);
   },
-  groupEnd(...args) {
-    currentLogger.groupEnd(...args);
+  groupEnd() {
+    currentLogger.groupEnd();
   },
 };
 
-module.exports = {
-  LOG_LEVEL,
-  Styles,
-  setLogger,
-  setLogLevel,
-  logger,
-};
+export { LOG_LEVEL, Styles, setLogger, setLogLevel, logger };

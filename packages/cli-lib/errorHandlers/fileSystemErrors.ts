@@ -1,9 +1,9 @@
-const { logger } = require('../logger');
-const {
+import { logger } from '../logger';
+import {
   ErrorContext,
   isSystemError,
   debugErrorAndContext,
-} = require('./standardErrors');
+} from './standardErrors';
 
 class FileSystemErrorContext extends ErrorContext {
   constructor(props = {}) {

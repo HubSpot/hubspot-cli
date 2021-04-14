@@ -1,25 +1,13 @@
 const { HubSpotAuthError } = require('../lib/models/Errors');
-const { logger } = require('../logger');
+import { logger } from '../logger';
+import { StatusCodeError, ErrorContext } from '../types';
 
-const isSystemError = err =>
+const isSystemError = (err: NodeJS.ErrnoException) =>
   err.errno != null && err.code != null && err.syscall != null;
-const isFatalError = err => err instanceof HubSpotAuthError;
+const isFatalError = (err: NodeJS.ErrnoException) =>
+  err instanceof HubSpotAuthError;
 
-// TODO: Make these TS interfaces
-class ErrorContext {
-  constructor(props = {}) {
-    /** @type {number} */
-    this.accountId = props.accountId;
-  }
-}
-
-/**
- * Logs (debug) the error and context objects.
- *
- * @param {SystemError}  error
- * @param {ErrorContext} context
- */
-function debugErrorAndContext(error, context) {
+function debugErrorAndContext(error: StatusCodeError, context: ErrorContext) {
   if (error.name === 'StatusCodeError') {
     const { statusCode, message, response } = error;
     logger.debug('Error: %o', {
@@ -36,25 +24,12 @@ function debugErrorAndContext(error, context) {
   logger.debug('Context: %o', context);
 }
 
-/**
- * Logs a SystemError
- * @see {@link https://nodejs.org/api/errors.html#errors_class_systemerror}
- *
- * @param {SystemError}  error
- * @param {ErrorContext} context
- */
-function logSystemError(error, context) {
+function logSystemError(error: StatusCodeError, context: ErrorContext) {
   logger.error(`A system error has occurred: ${error.message}`);
   debugErrorAndContext(error, context);
 }
 
-/**
- * Logs a message for an error instance of type not asserted.
- *
- * @param {Error|SystemError|Object} error
- * @param {ErrorContext}             context
- */
-function logErrorInstance(error, context) {
+function logErrorInstance(error: any, context: ErrorContext) {
   // SystemError
   if (isSystemError(error)) {
     logSystemError(error, context);
@@ -77,7 +52,7 @@ function logErrorInstance(error, context) {
   debugErrorAndContext(error, context);
 }
 
-module.exports = {
+export {
   debugErrorAndContext,
   ErrorContext,
   isFatalError,
