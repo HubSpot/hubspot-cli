@@ -1,12 +1,13 @@
-const moment = require('moment');
-const { HubSpotAuthError } = require('./lib/models/Errors');
-const {
+import moment from 'moment';
+import {
   getEnv,
   getAccountConfig,
   updateAccountConfig,
   updateDefaultAccount,
   writeConfig,
-} = require('./lib/config');
+} from './lib/config';
+import { Environment, Account } from './types';
+const { HubSpotAuthError } = require('./lib/models/Errors');
 const { getValidEnv } = require('./lib/environment');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -17,14 +18,17 @@ const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
 
 const refreshRequests = new Map();
 
-function getRefreshKey(personalAccessKey, expiration) {
+function getRefreshKey(
+  personalAccessKey: string = '',
+  expiration?: string | moment.Moment
+) {
   return `${personalAccessKey}-${expiration || 'fresh'}`;
 }
 
 async function getAccessToken(
-  personalAccessKey,
+  personalAccessKey?: string,
   env = ENVIRONMENTS.PROD,
-  accountId
+  accountId?: string
 ) {
   let response;
   try {
@@ -53,8 +57,8 @@ async function getAccessToken(
 }
 
 async function refreshAccessToken(
-  accountId,
-  personalAccessKey,
+  accountId?: string,
+  personalAccessKey?: string,
   env = ENVIRONMENTS.PROD
 ) {
   const { accessToken, expiresAt } = await getAccessToken(
@@ -77,7 +81,12 @@ async function refreshAccessToken(
   return accessToken;
 }
 
-async function getNewAccessToken(accountId, personalAccessKey, expiresAt, env) {
+async function getNewAccessToken(
+  accountId?: string,
+  personalAccessKey?: string,
+  expiresAt?: string | moment.Moment,
+  env?: Environment
+) {
   const key = getRefreshKey(personalAccessKey, expiresAt);
   if (refreshRequests.has(key)) {
     return refreshRequests.get(key);
@@ -102,26 +111,26 @@ async function getNewAccessToken(accountId, personalAccessKey, expiresAt, env) {
   return accessToken;
 }
 
-async function accessTokenForPersonalAccessKey(accountId) {
-  const { auth, personalAccessKey, env } = getAccountConfig(accountId);
+export async function accessTokenForPersonalAccessKey(accountId: string) {
+  const { auth, personalAccessKey, env } = getAccountConfig(accountId) || {};
   const authTokenInfo = auth && auth.tokenInfo;
-  const authDataExists = authTokenInfo && auth.tokenInfo.accessToken;
+  const authDataExists = authTokenInfo && auth?.tokenInfo?.accessToken;
 
   if (
     !authDataExists ||
     moment()
       .add(30, 'minutes')
-      .isAfter(moment(authTokenInfo.expiresAt))
+      .isAfter(moment(authTokenInfo?.expiresAt))
   ) {
     return getNewAccessToken(
       accountId,
-      personalAccessKey,
-      authTokenInfo && authTokenInfo.expiresAt,
+      personalAccessKey || '',
+      authTokenInfo?.expiresAt,
       env
     );
   }
 
-  return auth.tokenInfo.accessToken;
+  return auth?.tokenInfo?.accessToken;
 }
 
 /**
@@ -132,7 +141,10 @@ async function accessTokenForPersonalAccessKey(accountId) {
  * @param {string} configData.name Unique name to identify this config entry
  * @param {boolean} makeDefault option to make the account being added to the config the default account
  */
-const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
+export const updateConfigWithPersonalAccessKey = async (
+  configData: Account,
+  makeDefault: boolean
+) => {
   const { personalAccessKey, name, env } = configData;
   const accountEnv = env || getEnv(name);
 
@@ -162,7 +174,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   return updatedConfig;
 };
 
-module.exports = {
+export default {
   accessTokenForPersonalAccessKey,
   updateConfigWithPersonalAccessKey,
 };

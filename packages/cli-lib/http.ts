@@ -1,22 +1,22 @@
-const { getAccountConfig } = require('./lib/config');
-const { getRequestOptions } = require('./http/requestOptions');
-const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
+import { getAccountConfig } from './lib/config';
+import { getRequestOptions } from './http/requestOptions';
+import { accessTokenForPersonalAccessKey } from './personalAccessKey';
 const { getOauthManager } = require('./oauth');
 const {
   FileSystemErrorContext,
   logFileSystemErrorInstance,
 } = require('./errorHandlers/fileSystemErrors');
-import { AccountConfig, RequestOptions } from './types';
+import { Account, RequestOptions } from './types';
 import requestPN from 'request-promise-native';
 import fs from 'fs-extra';
 import request from 'request';
 import { logger } from './logger';
 
-const withOauth = async (
+export const withOauth = async (
   accountId: number,
-  accountConfig: AccountConfig,
-  requestOptions: RequestOptions
-) => {
+  requestOptions: RequestOptions,
+  accountConfig?: Account
+): Promise<RequestOptions> => {
   const { headers } = requestOptions;
   const oauth = getOauthManager(accountId, accountConfig);
   const accessToken = await oauth.accessToken();
@@ -29,11 +29,10 @@ const withOauth = async (
   };
 };
 
-const withPersonalAccessKey = async (
+export const withPersonalAccessKey = async (
   accountId: number,
-  accountConfig: AccountConfig,
   requestOptions: RequestOptions
-) => {
+): Promise<RequestOptions> => {
   const { headers } = requestOptions;
   const accessToken = await accessTokenForPersonalAccessKey(accountId);
   return {
@@ -45,32 +44,38 @@ const withPersonalAccessKey = async (
   };
 };
 
-const withPortalId = (portalId: number, requestOptions: RequestOptions) => {
+export const withPortalId = (
+  portalId: number,
+  requestOptions: RequestOptions
+): RequestOptions => {
   const { qs } = requestOptions;
 
   return {
     ...requestOptions,
     qs: {
-      ...qs,
+      ...(qs || {}),
       portalId,
     },
   };
 };
 
-const withAuth = async (accountId: number, options: RequestOptions) => {
+export const withAuth = async (
+  accountId: number,
+  options: RequestOptions
+): Promise<RequestOptions> => {
   const accountConfig = getAccountConfig(accountId);
-  const { env, authType, apiKey } = accountConfig;
+  const { env, authType, apiKey } = accountConfig || {};
   const requestOptions = withPortalId(
     accountId,
     getRequestOptions({ env }, options)
   );
 
   if (authType === 'personalaccesskey') {
-    return withPersonalAccessKey(accountId, accountConfig, requestOptions);
+    return withPersonalAccessKey(accountId, requestOptions);
   }
 
   if (authType === 'oauth2') {
-    return withOauth(accountId, accountConfig, requestOptions);
+    return withOauth(accountId, requestOptions, accountConfig);
   }
   const { qs } = requestOptions;
 
@@ -83,7 +88,10 @@ const withAuth = async (accountId: number, options: RequestOptions) => {
   };
 };
 
-const addQueryParams = (requestOptions: RequestOptions, params = {}) => {
+export const addQueryParams = (
+  requestOptions: RequestOptions,
+  params = {}
+): RequestOptions => {
   const { qs } = requestOptions;
   return {
     ...requestOptions,
@@ -94,33 +102,52 @@ const addQueryParams = (requestOptions: RequestOptions, params = {}) => {
   };
 };
 
-const getRequest = async (accountId: number, options: RequestOptions) => {
+export const getRequest = async (
+  accountId: number,
+  options: RequestOptions & { query: { [key: string]: any } }
+) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
   return requestPN.get(await withAuth(accountId, requestOptions));
 };
 
-const postRequest = async (accountId: number, options: RequestOptions) => {
+export const postRequest = async (
+  accountId: number,
+  options: RequestOptions
+) => {
   return requestPN.post(await withAuth(accountId, options));
 };
 
-const putRequest = async (accountId: number, options: RequestOptions) => {
+export const putRequest = async (
+  accountId: number,
+  options: RequestOptions
+) => {
   return requestPN.put(await withAuth(accountId, options));
 };
 
-const patchRequest = async (accountId: number, options: RequestOptions) => {
+export const patchRequest = async (
+  accountId: number,
+  options: RequestOptions
+) => {
   return requestPN.patch(await withAuth(accountId, options));
 };
 
-const deleteRequest = async (accountId: number, options: RequestOptions) => {
+export const deleteRequest = async (
+  accountId: number,
+  options: RequestOptions
+) => {
   return requestPN.del(await withAuth(accountId, options));
 };
 
-const createGetRequestStream = ({
+export const createGetRequestStream = ({
   contentType,
 }: {
   contentType: string;
-}) => async (accountId: number, options: RequestOptions, filepath: string) => {
+}) => async (
+  accountId: number,
+  options: RequestOptions & { query: { [key: string]: any } },
+  filepath: string
+) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
 
@@ -138,8 +165,6 @@ const createGetRequestStream = ({
   // Using `request` instead of `request-promise` per the docs so
   // the response can be piped.
   // https://github.com/request/request-promise#api-in-detail
-  //
-  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       const { headers, ...opts } = await withAuth(accountId, requestOptions);
@@ -183,17 +208,17 @@ const createGetRequestStream = ({
   });
 };
 
-const getOctetStream = createGetRequestStream({
+export const getOctetStream = createGetRequestStream({
   contentType: 'application/octet-stream',
 });
 
-export {
+export default {
   getRequestOptions,
-  requestPN as request,
-  getRequest as get,
-  postRequest as post,
-  putRequest as put,
-  patchRequest as patch,
-  deleteRequest as delete,
+  request: requestPN,
+  get: getRequest,
+  post: postRequest,
+  put: putRequest,
+  patch: patchRequest,
+  delete: deleteRequest,
   getOctetStream,
 };

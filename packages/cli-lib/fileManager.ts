@@ -1,5 +1,6 @@
-const fs = require('fs-extra');
-const path = require('path');
+import { FileManagerFile, FileManagerFolder } from './types';
+import fs from 'fs-extra';
+import path from 'path';
 
 const {
   uploadFile,
@@ -27,14 +28,13 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
-/**
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} options
- */
-async function uploadFolder(accountId, src, dest) {
+type FileManagerApiOptions = { includeArchived: boolean; overwrite?: boolean };
+
+async function uploadFolder(
+  accountId: number,
+  src: string,
+  dest: string
+): Promise<void> {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const files = await walk(src);
 
@@ -71,14 +71,10 @@ async function uploadFolder(accountId, src, dest) {
   }
 }
 
-/**
- * @private
- * @async
- * @param {boolean} input
- * @param {string} filepath
- * @returns {Promise<boolean}
- */
-async function skipExisting(overwrite, filepath) {
+async function skipExisting(
+  filepath: string,
+  overwrite?: boolean
+): Promise<boolean> {
   if (overwrite) {
     return false;
   }
@@ -89,18 +85,16 @@ async function skipExisting(overwrite, filepath) {
   return false;
 }
 
-/**
- *
- * @param {number} accountId
- * @param {object} file
- * @param {string} dest
- * @param {object} options
- */
-async function downloadFile(accountId, file, dest, options) {
+async function downloadFile(
+  accountId: number,
+  file: FileManagerFile,
+  dest: string,
+  options: FileManagerApiOptions
+): Promise<void> {
   const fileName = `${file.name}.${file.extension}`;
   const destPath = convertToLocalFileSystemPath(path.join(dest, fileName));
 
-  if (await skipExisting(options.overwrite, destPath)) {
+  if (await skipExisting(destPath, options.overwrite)) {
     return;
   }
   try {
@@ -117,14 +111,13 @@ async function downloadFile(accountId, file, dest, options) {
   }
 }
 
-/**
- *
- * @param {number} accountId
- * @param {string} folderPath
- */
-async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
+async function fetchAllPagedFiles(
+  accountId: number,
+  folderId: string,
+  { includeArchived }: FileManagerApiOptions
+): Promise<Array<FileManagerFile>> {
   let totalFiles = null;
-  let files = [];
+  let files: Array<FileManagerFile> = [];
   let count = 0;
   let offset = 0;
   while (totalFiles === null || count < totalFiles) {
@@ -141,17 +134,16 @@ async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
     offset += response.objects.length;
     files = files.concat(response.objects);
   }
+
   return files;
 }
 
-/**
- *
- * @param {number} accountId
- * @param {object} folder
- * @param {string} dest
- * @param {object} options
- */
-async function fetchFolderContents(accountId, folder, dest, options) {
+async function fetchFolderContents(
+  accountId: number,
+  folder: FileManagerFolder,
+  dest: string,
+  options: FileManagerApiOptions
+): Promise<void> {
   try {
     await fs.ensureDir(dest);
   } catch (err) {
@@ -176,16 +168,13 @@ async function fetchFolderContents(accountId, folder, dest, options) {
   }
 }
 
-/**
- * Download a folder and write to local file system.
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} folder
- * @param {object} options
- */
-async function downloadFolder(accountId, src, dest, folder, options) {
+async function downloadFolder(
+  accountId: number,
+  src: string,
+  dest: string,
+  folder: FileManagerFolder,
+  options: FileManagerApiOptions
+): Promise<void> {
   try {
     let absolutePath;
 
@@ -214,16 +203,13 @@ async function downloadFolder(accountId, src, dest, folder, options) {
   }
 }
 
-/**
- * Download a single file and write to local file system.
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} file
- * @param {object} options
- */
-async function downloadSingleFile(accountId, src, dest, file, options) {
+async function downloadSingleFile(
+  accountId: number,
+  src: string,
+  dest: string,
+  file: FileManagerFile,
+  options: FileManagerApiOptions
+): Promise<void> {
   if (!options.includeArchived && file.archived) {
     logger.error(
       '"%s" in the File Manager is an archived file. Try fetching again with the "--include-archived" flag.',
@@ -254,15 +240,12 @@ async function downloadSingleFile(accountId, src, dest, file, options) {
   }
 }
 
-/**
- * Lookup path in file manager and initiate download
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} options
- */
-async function downloadFileOrFolder(accountId, src, dest, options) {
+async function downloadFileOrFolder(
+  accountId: number,
+  src: string,
+  dest: string,
+  options: FileManagerApiOptions
+): Promise<void> {
   try {
     if (src == '/') {
       // Filemanager API treats 'None' as the root
@@ -287,7 +270,4 @@ async function downloadFileOrFolder(accountId, src, dest, options) {
   }
 }
 
-module.exports = {
-  uploadFolder,
-  downloadFileOrFolder,
-};
+export { uploadFile, downloadFileOrFolder };

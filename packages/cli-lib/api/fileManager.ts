@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const http = require('../http');
+import fs from 'fs';
+import path from 'path';
+import http from '../http';
 
 const FILE_MANAGER_V2_API_PATH = 'filemanager/api/v2';
 const FILE_MANAGER_V3_API_PATH = 'filemanager/api/v3';
 
-async function uploadFile(accountId, src, dest) {
+async function uploadFile(accountId: number, src: string, dest: string) {
   const directory = path.dirname(dest);
   const filename = path.basename(dest);
   const formData = {

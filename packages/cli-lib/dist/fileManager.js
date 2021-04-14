@@ -8,9 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const fs = require('fs-extra');
-const path = require('path');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.downloadFileOrFolder = exports.uploadFile = void 0;
+const fs_extra_1 = __importDefault(require("fs-extra"));
+const path_1 = __importDefault(require("path"));
 const { uploadFile, fetchStat, fetchFiles, fetchFolders, } = require('./api/fileManager');
+exports.uploadFile = uploadFile;
 const { walk } = require('./lib/walk');
 const { logger } = require('./logger');
 const { createIgnoreFilter } = require('./ignoreRules');
@@ -18,13 +24,6 @@ const http = require('./http');
 const escapeRegExp = require('./lib/escapeRegExp');
 const { getCwd, convertToUnixPath, convertToLocalFileSystemPath, } = require('./path');
 const { ApiErrorContext, logApiUploadErrorInstance, isFatalError, FileSystemErrorContext, logFileSystemErrorInstance, logApiErrorInstance, logErrorInstance, } = require('./errorHandlers');
-/**
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} options
- */
 function uploadFolder(accountId, src, dest) {
     return __awaiter(this, void 0, void 0, function* () {
         const regex = new RegExp(`^${escapeRegExp(src)}`);
@@ -34,7 +33,7 @@ function uploadFolder(accountId, src, dest) {
         for (let index = 0; index < len; index++) {
             const file = filesToUpload[index];
             const relativePath = file.replace(regex, '');
-            const destPath = convertToUnixPath(path.join(dest, relativePath));
+            const destPath = convertToUnixPath(path_1.default.join(dest, relativePath));
             logger.debug('Uploading files from "%s" to "%s" in the File Manager of account %s', file, destPath, accountId);
             try {
                 yield uploadFile(accountId, file, destPath);
@@ -54,37 +53,23 @@ function uploadFolder(accountId, src, dest) {
         }
     });
 }
-/**
- * @private
- * @async
- * @param {boolean} input
- * @param {string} filepath
- * @returns {Promise<boolean}
- */
-function skipExisting(overwrite, filepath) {
+function skipExisting(filepath, overwrite) {
     return __awaiter(this, void 0, void 0, function* () {
         if (overwrite) {
             return false;
         }
-        if (yield fs.pathExists(filepath)) {
+        if (yield fs_extra_1.default.pathExists(filepath)) {
             logger.log('Skipped existing "%s"', filepath);
             return true;
         }
         return false;
     });
 }
-/**
- *
- * @param {number} accountId
- * @param {object} file
- * @param {string} dest
- * @param {object} options
- */
 function downloadFile(accountId, file, dest, options) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileName = `${file.name}.${file.extension}`;
-        const destPath = convertToLocalFileSystemPath(path.join(dest, fileName));
-        if (yield skipExisting(options.overwrite, destPath)) {
+        const destPath = convertToLocalFileSystemPath(path_1.default.join(dest, fileName));
+        if (yield skipExisting(destPath, options.overwrite)) {
             return;
         }
         try {
@@ -98,11 +83,6 @@ function downloadFile(accountId, file, dest, options) {
         }
     });
 }
-/**
- *
- * @param {number} accountId
- * @param {string} folderPath
- */
 function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
     return __awaiter(this, void 0, void 0, function* () {
         let totalFiles = null;
@@ -124,17 +104,10 @@ function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
         return files;
     });
 }
-/**
- *
- * @param {number} accountId
- * @param {object} folder
- * @param {string} dest
- * @param {object} options
- */
 function fetchFolderContents(accountId, folder, dest, options) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield fs.ensureDir(dest);
+            yield fs_extra_1.default.ensureDir(dest);
         }
         catch (err) {
             logFileSystemErrorInstance(err, new FileSystemErrorContext({
@@ -149,29 +122,20 @@ function fetchFolderContents(accountId, folder, dest, options) {
         }
         const { objects: folders } = yield fetchFolders(accountId, folder.id);
         for (const folder of folders) {
-            const nestedFolder = path.join(dest, folder.name);
+            const nestedFolder = path_1.default.join(dest, folder.name);
             yield fetchFolderContents(accountId, folder, nestedFolder, options);
         }
     });
 }
-/**
- * Download a folder and write to local file system.
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} folder
- * @param {object} options
- */
 function downloadFolder(accountId, src, dest, folder, options) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let absolutePath;
             if (folder.name) {
-                absolutePath = convertToLocalFileSystemPath(path.resolve(getCwd(), dest, folder.name));
+                absolutePath = convertToLocalFileSystemPath(path_1.default.resolve(getCwd(), dest, folder.name));
             }
             else {
-                absolutePath = convertToLocalFileSystemPath(path.resolve(getCwd(), dest));
+                absolutePath = convertToLocalFileSystemPath(path_1.default.resolve(getCwd(), dest));
             }
             logger.log('Fetching folder from "%s" to "%s" in the File Manager of account %s', src, absolutePath, accountId);
             yield fetchFolderContents(accountId, folder, absolutePath, options);
@@ -182,15 +146,6 @@ function downloadFolder(accountId, src, dest, folder, options) {
         }
     });
 }
-/**
- * Download a single file and write to local file system.
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} file
- * @param {object} options
- */
 function downloadSingleFile(accountId, src, dest, file, options) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!options.includeArchived && file.archived) {
@@ -211,14 +166,6 @@ function downloadSingleFile(accountId, src, dest, file, options) {
         }
     });
 }
-/**
- * Lookup path in file manager and initiate download
- *
- * @param {number} accountId
- * @param {string} src
- * @param {string} dest
- * @param {object} options
- */
 function downloadFileOrFolder(accountId, src, dest, options) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -245,7 +192,4 @@ function downloadFileOrFolder(accountId, src, dest, options) {
         }
     });
 }
-module.exports = {
-    uploadFolder,
-    downloadFileOrFolder,
-};
+exports.downloadFileOrFolder = downloadFileOrFolder;

@@ -5,7 +5,8 @@
     "rootDir": "./",
     "outDir": "./dist",
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "lib": ["es2017"]
   },
   "typeRoots": ["./node_modules/@types", "./types", "../../node_modules/@types"]
 }
