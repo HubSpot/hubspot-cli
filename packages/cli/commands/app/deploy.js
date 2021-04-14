@@ -51,7 +51,7 @@ exports.handler = async options => {
   try {
     result = await deployAppSync(accountId, appPath);
   } catch (error) {
-    spinner.error();
+    spinner.fail();
     logApiErrorInstance(
       error,
       new ApiErrorContext({
