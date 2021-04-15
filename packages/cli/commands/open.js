@@ -25,7 +25,8 @@ const createListPrompt = async accountId =>
   ]);
 
 exports.command = 'open [shortcut]';
-exports.describe = 'Quickly open a page to HubSpot in your browser';
+exports.describe =
+  'Open a HubSpot page in your browser. Run ‘hs open list’ to see all available shortcuts.';
 
 exports.handler = async options => {
   const { shortcut, list } = options;
