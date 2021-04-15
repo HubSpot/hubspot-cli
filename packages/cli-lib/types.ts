@@ -72,7 +72,13 @@ export enum LOG_LEVEL {
 }
 
 export interface ErrorContext {
-  accountId: number;
+  accountId?: number;
+}
+
+export interface FileSystemErrorContextInterface extends ErrorContext {
+  filepath: string;
+  read: boolean;
+  write: boolean;
 }
 
 export type StatusCodeError = {

@@ -28,7 +28,7 @@ function getRefreshKey(
 async function getAccessToken(
   personalAccessKey?: string,
   env = ENVIRONMENTS.PROD,
-  accountId?: string
+  accountId?: number
 ) {
   let response;
   try {
@@ -57,7 +57,7 @@ async function getAccessToken(
 }
 
 async function refreshAccessToken(
-  accountId?: string,
+  accountId?: number,
   personalAccessKey?: string,
   env = ENVIRONMENTS.PROD
 ) {
@@ -82,7 +82,7 @@ async function refreshAccessToken(
 }
 
 async function getNewAccessToken(
-  accountId?: string,
+  accountId?: number,
   personalAccessKey?: string,
   expiresAt?: string | moment.Moment,
   env?: Environment
@@ -111,7 +111,7 @@ async function getNewAccessToken(
   return accessToken;
 }
 
-export async function accessTokenForPersonalAccessKey(accountId: string) {
+export async function accessTokenForPersonalAccessKey(accountId: number) {
   const { auth, personalAccessKey, env } = getAccountConfig(accountId) || {};
   const authTokenInfo = auth && auth.tokenInfo;
   const authDataExists = authTokenInfo && auth?.tokenInfo?.accessToken;
