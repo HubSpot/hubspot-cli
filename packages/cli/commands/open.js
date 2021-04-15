@@ -36,7 +36,7 @@ exports.handler = async options => {
   if (shortcut === undefined && !list) {
     const choice = await createListPrompt(accountId);
     openLink(accountId, choice.open);
-  } else if (list) {
+  } else if (list || shortcut === 'list') {
     logSiteLinks(accountId);
     return;
   } else {
