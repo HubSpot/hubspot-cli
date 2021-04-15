@@ -1,18 +1,12 @@
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
-
-## [3.0.4](https://github.com/HubSpot/hubspot-cms-tools/compare/v3.0.4-beta.1...v3.0.4) (2021-04-01)
-
-**Note:** Version bump only for package hubspot-cms-tools
-
-
-
-
-
 Change Log
 ==========
+
+## 3.0.5
+* Add undocumented commands for prototyping apps
+* Add `.graphql` as an allowed extension ([#470](https://github.com/HubSpot/hubspot-cli/pull/470))
+* Improve output when using the `hs create` command to create a project ([#457](https://github.com/HubSpot/hubspot-cli/pull/457))
+* Improve handling of `.env.template` when creating a project using `hs create` ([#458](https://github.com/HubSpot/hubspot-cli/pull/458))
+* Add messaging that outputs URL to personal access key screen ([#465](https://github.com/HubSpot/hubspot-cli/pull/465))
 
 ## 3.0.4
 * Fixed issue with oauth flow not working ([#460](https://github.com/HubSpot/hubspot-cli/pull/460))
