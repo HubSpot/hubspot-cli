@@ -2,6 +2,7 @@ const {
   setConfig,
   getAndLoadConfigIfNeeded,
   getConfig,
+  getConfigPath,
   getAccountConfig,
   getAccountId,
   updateDefaultAccount,
@@ -550,6 +551,20 @@ describe('lib/config', () => {
         ])
       ).toBe(true);
       readFileSyncSpy.mockReset();
+    });
+  });
+
+  describe('getConfigPath method', () => {
+    const nonStandardConfigPath = '/Some/non-standard.config.yml';
+
+    beforeEach(() => {
+      setConfigPath(nonStandardConfigPath);
+    });
+
+    it('returns a non-standard config path', () => {
+      const configPath = getConfigPath();
+
+      expect(configPath).toBe(nonStandardConfigPath);
     });
   });
 });
