@@ -34,14 +34,14 @@ exports.describe = 'Rename account in config';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { portalName, newName } = options;
+  const { accountName, newName } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('config-rename', {}, accountId);
 
-  await renameAccount(portalName, newName);
+  await renameAccount(accountName, newName);
 
-  return logger.log(`Account ${portalName} renamed to ${newName}`);
+  return logger.log(`Account ${accountName} renamed to ${newName}`);
 };
 
 exports.builder = yargs => {
