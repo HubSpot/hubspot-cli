@@ -19,6 +19,7 @@ const ALLOWED_EXTENSIONS = new Set([
   'ttf',
   'woff',
   'woff2',
+  'graphql',
 ]);
 const HUBL_EXTENSIONS = new Set(['css', 'html', 'js']);
 const MODULE_EXTENSION = 'module';

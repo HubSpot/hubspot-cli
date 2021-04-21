@@ -32,6 +32,7 @@ const TYPES = {
   'react-app': 'react-app',
   'vue-app': 'vue-app',
   'webpack-serverless': 'webpack-serverless',
+  app: 'app',
 };
 
 const ASSET_PATHS = {
@@ -68,10 +69,11 @@ const PROJECT_REPOSITORIES = {
   [TYPES['website-theme']]: 'cms-theme-boilerplate',
   [TYPES['webpack-serverless']]: 'cms-webpack-serverless-boilerplate',
   [TYPES['api-sample']]: 'sample-apps-list',
+  [TYPES['app']]: 'crm-card-weather-app',
 };
 
 const SUPPORTED_ASSET_TYPES = commaSeparatedValues(
-  Object.values(TYPES).filter(type => type !== 'api-sample')
+  Object.values(TYPES).filter(type => !['api-sample', 'app'].includes(type))
 );
 
 const createModule = (moduleDefinition, name, dest) => {
@@ -170,6 +172,7 @@ exports.handler = async options => {
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']:
+    case TYPES['app']:
       dest = name || assetType;
       break;
     default:
@@ -260,6 +263,9 @@ exports.handler = async options => {
         }
       );
       if (created) {
+        if (fs.existsSync(`${filePath}/.env.template`)) {
+          fs.copySync(`${filePath}/.env.template`, `${filePath}/.env`);
+        }
         logger.success(
           `Please, follow ${filePath}/README.md to find out how to run the sample`
         );
@@ -275,6 +281,7 @@ exports.handler = async options => {
         options
       );
       break;
+    case TYPES['app']:
     case TYPES['react-app']:
     case TYPES['vue-app']:
     case TYPES['webpack-serverless']: {

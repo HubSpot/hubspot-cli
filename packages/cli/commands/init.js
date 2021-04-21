@@ -108,7 +108,7 @@ exports.handler = async options => {
     const configPath = getConfigPath();
 
     logger.success(
-      `The config file "${configPath}" was created using your personal access key for account ${name ||
+      `The config file "${configPath}" was created using "${authType}" for account ${name ||
         accountId}.`
     );
 
