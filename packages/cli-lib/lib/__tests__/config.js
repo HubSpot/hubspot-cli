@@ -15,8 +15,10 @@ const {
 const { ENVIRONMENTS } = require('../constants');
 
 const CONFIG_PATHS = {
+  none: null,
   default: '/Users/fakeuser/hubspot.config.yml',
   nonStandard: '/Some/non-standard.config.yml',
+  // /Users/fakeuser/someproject/config/my.custom.name.yml
 };
 
 let mockedConfigPath = CONFIG_PATHS.default;
@@ -479,6 +481,11 @@ describe('lib/config', () => {
   describe('configFilenameIsIgnoredByGitignore method', () => {
     const fs = require('fs-extra');
 
+    afterAll(() => {
+      setConfigPath(CONFIG_PATHS.default);
+      mockedConfigPath = CONFIG_PATHS.default;
+    });
+
     it('returns false if the config file is not ignored', () => {
       const gitignoreContent = '';
       setConfigPath(`/Users/fakeuser/someproject/hubspot.config.yml`);
@@ -529,7 +536,7 @@ describe('lib/config', () => {
 
     it('identifies if a non-standard named config file is not ignored', () => {
       const gitignoreContent = 'hubspot.config.yml';
-      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      setConfigPath('/Users/fakeuser/someproject/config/my.custom.name.yml');
       const readFileSyncSpy = jest
         .spyOn(fs, 'readFileSync')
         .mockImplementation(() => {
@@ -546,7 +553,7 @@ describe('lib/config', () => {
 
     it('identifies if a non-standard named config file is ignored', () => {
       const gitignoreContent = 'my.custom.name.yml';
-      setConfigPath(`/Users/fakeuser/someproject/config/my.custom.name.yml`);
+      setConfigPath('/Users/fakeuser/someproject/config/my.custom.name.yml');
       const readFileSyncSpy = jest
         .spyOn(fs, 'readFileSync')
         .mockImplementation(() => {
@@ -563,19 +570,57 @@ describe('lib/config', () => {
   });
 
   describe('getConfigPath method', () => {
-    beforeEach(() => {
-      mockedConfigPath = CONFIG_PATHS.nonStandard;
-      setConfigPath(CONFIG_PATHS.nonStandard);
+    describe('when a standard config is present', () => {
+      it('returns the standard config path', () => {
+        const configPath = getConfigPath();
+
+        expect(configPath).toBe(CONFIG_PATHS.default);
+      });
     });
 
-    afterEach(() => {
-      mockedConfigPath = CONFIG_PATHS.default;
+    describe('when passed a path', () => {
+      it('returns the path', () => {
+        const randomConfigPath = '/some/random/path.config.yml';
+        const configPath = getConfigPath(randomConfigPath);
+
+        expect(configPath).toBe(randomConfigPath);
+      });
     });
 
-    it('returns a non-standard config path', () => {
-      const configPath = getConfigPath();
+    describe('when no config is present', () => {
+      beforeAll(() => {
+        setConfigPath(CONFIG_PATHS.none);
+        mockedConfigPath = CONFIG_PATHS.none;
+      });
 
-      expect(configPath).toBe(CONFIG_PATHS.nonStandard);
+      afterAll(() => {
+        setConfigPath(CONFIG_PATHS.default);
+        mockedConfigPath = CONFIG_PATHS.default;
+      });
+
+      it('returns null', () => {
+        const configPath = getConfigPath();
+
+        expect(configPath).toBe(CONFIG_PATHS.none);
+      });
+    });
+
+    describe('when a non-standard config is present', () => {
+      beforeAll(() => {
+        mockedConfigPath = CONFIG_PATHS.nonStandard;
+        setConfigPath(CONFIG_PATHS.nonStandard);
+      });
+
+      afterAll(() => {
+        setConfigPath(CONFIG_PATHS.default);
+        mockedConfigPath = CONFIG_PATHS.default;
+      });
+
+      it('returns the non-standard config path', () => {
+        const configPath = getConfigPath();
+
+        expect(configPath).toBe(CONFIG_PATHS.nonStandard);
+      });
     });
   });
 });
