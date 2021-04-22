@@ -351,6 +351,7 @@ const loadConfig = (
   } else {
     logger.debug(`Loaded config from ${path}`);
     loadConfigFromFile(path, options);
+    environmentVariableConfigLoaded = false;
   }
 };
 
