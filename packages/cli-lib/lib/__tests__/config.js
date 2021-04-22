@@ -1,3 +1,4 @@
+const fs = require('fs-extra');
 const {
   setConfig,
   getAndLoadConfigIfNeeded,
@@ -11,6 +12,7 @@ const {
   deleteEmptyConfigFile,
   configFilenameIsIgnoredByGitignore,
   setConfigPath,
+  createEmptyConfigFile,
 } = require('../config');
 const { ENVIRONMENTS } = require('../constants');
 
@@ -18,7 +20,7 @@ const CONFIG_PATHS = {
   none: null,
   default: '/Users/fakeuser/hubspot.config.yml',
   nonStandard: '/Some/non-standard.config.yml',
-  // /Users/fakeuser/someproject/config/my.custom.name.yml
+  cwd: `${process.cwd()}/hubspot.config.yml`,
 };
 
 let mockedConfigPath = CONFIG_PATHS.default;
@@ -26,6 +28,9 @@ let mockedConfigPath = CONFIG_PATHS.default;
 jest.mock('findup-sync', () => {
   return jest.fn(() => mockedConfigPath);
 });
+
+const fsReadFileSyncSpy = jest.spyOn(fs, 'readFileSync');
+const fsWriteFileSyncSpy = jest.spyOn(fs, 'writeFileSync');
 
 const API_KEY_CONFIG = {
   portalId: 1111,
@@ -390,10 +395,18 @@ describe('lib/config', () => {
         };
         getAndLoadConfigIfNeeded({ useEnv: true });
         portalConfig = getAccountConfig(portalId);
+        fsReadFileSyncSpy.mockReset();
+      });
+
+      afterEach(() => {
+        // Clean up environment variable config so subsequent tests don't break
+        process.env = {};
+        setConfig(null);
+        getAndLoadConfigIfNeeded();
       });
 
       it('does not load a config from file', () => {
-        expect(fs.readFileSync).not.toHaveBeenCalled();
+        expect(fsReadFileSyncSpy).not.toHaveBeenCalled();
       });
 
       it('creates a portal config', () => {
@@ -428,10 +441,18 @@ describe('lib/config', () => {
         };
         getAndLoadConfigIfNeeded({ useEnv: true });
         portalConfig = getAccountConfig(portalId);
+        fsReadFileSyncSpy.mockReset();
+      });
+
+      afterEach(() => {
+        // Clean up environment variable config so subsequent tests don't break
+        process.env = {};
+        setConfig(null);
+        getAndLoadConfigIfNeeded();
       });
 
       it('does not load a config from file', () => {
-        expect(fs.readFileSync).not.toHaveBeenCalled();
+        expect(fsReadFileSyncSpy).not.toHaveBeenCalled();
       });
 
       it('creates a portal config', () => {
@@ -458,10 +479,18 @@ describe('lib/config', () => {
         };
         getAndLoadConfigIfNeeded({ useEnv: true });
         portalConfig = getAccountConfig(portalId);
+        fsReadFileSyncSpy.mockReset();
+      });
+
+      afterEach(() => {
+        // Clean up environment variable config so subsequent tests don't break
+        process.env = {};
+        setConfig(null);
+        getAndLoadConfigIfNeeded();
       });
 
       it('does not load a config from file', () => {
-        expect(fs.readFileSync).not.toHaveBeenCalled();
+        expect(fsReadFileSyncSpy).not.toHaveBeenCalled();
       });
 
       it('creates a portal config', () => {
@@ -620,6 +649,79 @@ describe('lib/config', () => {
         const configPath = getConfigPath();
 
         expect(configPath).toBe(CONFIG_PATHS.nonStandard);
+      });
+    });
+  });
+
+  describe('createEmptyConfigFile method', () => {
+    describe('when no config is present', () => {
+      let fsExistsSyncSpy;
+
+      beforeEach(() => {
+        setConfigPath(CONFIG_PATHS.none);
+        mockedConfigPath = CONFIG_PATHS.none;
+        fsExistsSyncSpy = jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(() => {
+            return false;
+          });
+        fsWriteFileSyncSpy.mockClear();
+      });
+
+      afterAll(() => {
+        setConfigPath(CONFIG_PATHS.default);
+        mockedConfigPath = CONFIG_PATHS.default;
+        fsExistsSyncSpy.mockRestore();
+      });
+
+      it('writes a new config file', () => {
+        createEmptyConfigFile();
+
+        expect(fsWriteFileSyncSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('when a config is present', () => {
+      let fsExistsSyncAndReturnTrueSpy;
+
+      beforeAll(() => {
+        setConfigPath(CONFIG_PATHS.cwd);
+        mockedConfigPath = CONFIG_PATHS.cwd;
+        fsExistsSyncAndReturnTrueSpy = jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(pathToCheck => {
+            if (pathToCheck === CONFIG_PATHS.cwd) {
+              return true;
+            }
+
+            return false;
+          });
+        fsWriteFileSyncSpy.mockClear();
+      });
+
+      afterAll(() => {
+        fsExistsSyncAndReturnTrueSpy.mockRestore();
+      });
+
+      it('does nothing', () => {
+        createEmptyConfigFile();
+
+        expect(fsWriteFileSyncSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when passed a path', () => {
+      beforeAll(() => {
+        setConfigPath(CONFIG_PATHS.none);
+        mockedConfigPath = CONFIG_PATHS.none;
+        fsWriteFileSyncSpy.mockClear();
+      });
+
+      it('creates a config at the specified path', () => {
+        const specifiedPath = '/some/path/that/has/never/been/used.config.yml';
+        createEmptyConfigFile({ path: specifiedPath });
+
+        expect(fsWriteFileSyncSpy).not.toHaveBeenCalledWith(specifiedPath);
       });
     });
   });
