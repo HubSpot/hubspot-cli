@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs-extra');
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -6,6 +8,7 @@ const {
   writeConfig,
   updateAccountConfig,
 } = require('@hubspot/cli-lib/lib/config');
+const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
@@ -19,6 +22,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {
@@ -45,8 +49,7 @@ const personalAccessKeyConfigCreationFlow = async env => {
     name,
   };
 
-  await updateConfigWithPersonalAccessKey(accountConfig, true);
-  return accountConfig;
+  return updateConfigWithPersonalAccessKey(accountConfig, true);
 };
 
 const oauthConfigCreationFlow = async env => {
@@ -82,8 +85,8 @@ exports.command = 'init';
 exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot account`;
 
 exports.handler = async options => {
-  const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value } = options;
-  const configPath = getConfigPath();
+  const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value, c } = options;
+  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -91,7 +94,7 @@ exports.handler = async options => {
   });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if (configPath) {
+  if (fs.existsSync(configPath)) {
     logger.error(`The config file '${configPath}' already exists.`);
     logger.info(
       'To update an existing config file, use the "hs auth" command.'
@@ -100,16 +103,15 @@ exports.handler = async options => {
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-
-  createEmptyConfigFile();
+  createEmptyConfigFile({ path: configPath });
   handleExit(deleteEmptyConfigFile);
 
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](env);
-    const path = getConfigPath();
+    const configPath = getConfigPath();
 
     logger.success(
-      `The config file "${path}" was created using "${authType}" for account ${name ||
+      `The config file "${configPath}" was created using "${authType}" for account ${name ||
         accountId}.`
     );
 
@@ -134,6 +136,8 @@ exports.builder = yargs => {
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
   });
+
+  addConfigOptions(yargs, true);
   addTestingOptions(yargs, true);
 
   return yargs;
