@@ -557,7 +557,7 @@ const configFileIsBlank = () => {
   return _configPath && fs.readFileSync(_configPath).length === 0;
 };
 
-const createEmptyConfigFile = ({ path }) => {
+const createEmptyConfigFile = ({ path } = {}) => {
   if (!path) {
     setDefaultConfigPathIfUnset();
 
