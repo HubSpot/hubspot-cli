@@ -1,3 +1,4 @@
+const path = require('path');
 const fs = require('fs-extra');
 const {
   getConfigPath,
@@ -85,7 +86,7 @@ exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a Hu
 
 exports.handler = async options => {
   const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value, c } = options;
-  const configPath = (c && `${getCwd()}/${c}`) || getConfigPath();
+  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
