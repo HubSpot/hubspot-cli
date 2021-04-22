@@ -105,7 +105,12 @@ const GITHUB_RELEASE_TYPES = {
   REPOSITORY: 'repository',
 };
 
+const ConfigFlags = {
+  USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
+};
+
 module.exports = {
+  ConfigFlags,
   Mode,
   ENVIRONMENTS,
   ALLOWED_EXTENSIONS,
