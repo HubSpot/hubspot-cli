@@ -13,8 +13,16 @@ const {
   setConfigPath,
 } = require('../config');
 const { ENVIRONMENTS } = require('../constants');
+
+const CONFIG_PATHS = {
+  default: '/Users/fakeuser/hubspot.config.yml',
+  nonStandard: '/Some/non-standard.config.yml',
+};
+
+let mockedConfigPath = CONFIG_PATHS.default;
+
 jest.mock('findup-sync', () => {
-  return jest.fn(() => `/Users/fakeuser/hubspot.config.yml`);
+  return jest.fn(() => mockedConfigPath);
 });
 
 const API_KEY_CONFIG = {
@@ -555,16 +563,19 @@ describe('lib/config', () => {
   });
 
   describe('getConfigPath method', () => {
-    const nonStandardConfigPath = '/Some/non-standard.config.yml';
-
     beforeEach(() => {
-      setConfigPath(nonStandardConfigPath);
+      mockedConfigPath = CONFIG_PATHS.nonStandard;
+      setConfigPath(CONFIG_PATHS.nonStandard);
+    });
+
+    afterEach(() => {
+      mockedConfigPath = CONFIG_PATHS.default;
     });
 
     it('returns a non-standard config path', () => {
       const configPath = getConfigPath();
 
-      expect(configPath).toBe(nonStandardConfigPath);
+      expect(configPath).toBe(CONFIG_PATHS.nonStandard);
     });
   });
 });
