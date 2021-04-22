@@ -566,7 +566,7 @@ const createEmptyConfigFile = ({ path } = {}) => {
       return;
     }
   } else {
-    setConfigPath(`${getCwd()}/${path}`);
+    setConfigPath(path);
   }
 
   writeConfig({ source: EMPTY_CONFIG_FILE_CONTENTS, path });

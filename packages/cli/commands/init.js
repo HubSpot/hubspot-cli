@@ -1,3 +1,4 @@
+const fs = require('fs-extra');
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -20,6 +21,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const {
@@ -83,7 +85,7 @@ exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a Hu
 
 exports.handler = async options => {
   const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value, c } = options;
-  const configPath = getConfigPath();
+  const configPath = (c && `${getCwd()}/${c}`) || getConfigPath();
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -91,7 +93,7 @@ exports.handler = async options => {
   });
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
-  if ((!c && configPath) || (c && configPath === c)) {
+  if (fs.existsSync(configPath)) {
     logger.error(`The config file '${configPath}' already exists.`);
     logger.info(
       'To update an existing config file, use the "hs auth" command.'
@@ -100,7 +102,7 @@ exports.handler = async options => {
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: c });
+  createEmptyConfigFile({ path: configPath });
   handleExit(deleteEmptyConfigFile);
 
   try {
