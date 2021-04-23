@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const { VALIDATION_RESULT } = require('../constants');
+const { VALIDATION_RESULT } = require('../../constants');
 
 const VALIDATOR_NAME = 'ThemeConfigValidator';
 

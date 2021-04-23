@@ -1,6 +1,6 @@
 const { isTemplate } = require('@hubspot/cli-lib/templates');
 
-const { VALIDATION_RESULT } = require('../constants');
+const { VALIDATION_RESULT } = require('../../constants');
 
 const VALIDATOR_NAME = 'TemplateLimitValidator';
 const TEMPLATE_LIMIT = 50;
