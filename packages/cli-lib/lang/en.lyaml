@@ -1,0 +1,5 @@
+en:
+  cli:
+    commands:
+      init:
+        describe: "initialize {{ configName }} for a HubSpot account"

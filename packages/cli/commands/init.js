@@ -18,6 +18,7 @@ const {
   API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('@hubspot/cli-lib/lib/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
@@ -82,7 +83,9 @@ const CONFIG_CREATION_FLOWS = {
 };
 
 exports.command = 'init';
-exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot account`;
+exports.describe = i18n('en.cli.commands.init.describe', {
+  data: { configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME },
+});
 
 exports.handler = async options => {
   const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value, c } = options;
