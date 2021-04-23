@@ -29,6 +29,9 @@ function themeConfigValidator(absoluteThemePath, files) {
         validator: VALIDATOR_NAME,
         error: 'Invalid json in theme.json file',
         result: VALIDATION_RESULT.FATAL,
+        meta: {
+          file: themeJSONFile,
+        },
       });
     }
 
@@ -38,6 +41,9 @@ function themeConfigValidator(absoluteThemePath, files) {
           validator: VALIDATOR_NAME,
           error: 'The theme.json file must have a "label" field',
           result: VALIDATION_RESULT.FATAL,
+          meta: {
+            file: themeJSONFile,
+          },
         });
       }
     }

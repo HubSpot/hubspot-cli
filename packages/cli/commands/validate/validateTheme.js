@@ -23,7 +23,7 @@ const {
   logValidatorResults,
 } = require('../../lib/validators/logValidatorResults');
 const { applyValidators } = require('../../lib/validators/applyValidators');
-const themeValidators = require('../../lib/validators/marketplaceValidators');
+const validators = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 
 exports.command = 'theme <src>';
@@ -59,19 +59,21 @@ exports.handler = async options => {
   }
   trackCommandUsage('validate', {}, accountId);
 
-  const validators = options.marketplace
-    ? themeValidators.marketplaceValidators
-    : themeValidators.hubspotValidators;
+  const themeValidators = options.marketplace
+    ? validators.marketplaceValidators.theme
+    : validators.hubspotValidators.theme;
 
   const themeFiles = await walk(absoluteSrcPath);
 
-  applyValidators(validators, absoluteSrcPath, themeFiles).then(results => {
-    logValidatorResults(results, { logAsJson: options.json });
+  applyValidators(themeValidators, absoluteSrcPath, themeFiles).then(
+    results => {
+      logValidatorResults(results, { logAsJson: options.json });
 
-    if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
-      process.exit(1);
+      if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
+        process.exit(1);
+      }
     }
-  });
+  );
 };
 
 exports.builder = yargs => {
@@ -79,13 +81,13 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   yargs.options({
     marketplace: {
-      describe: 'validate asset for the marketplace',
+      describe: 'Validate theme for the marketplace',
       type: 'boolean',
     },
   });
   yargs.options({
     json: {
-      describe: 'output raw json data',
+      describe: 'Output raw json data',
       type: 'boolean',
     },
   });
