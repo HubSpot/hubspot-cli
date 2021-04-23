@@ -4,9 +4,11 @@ context
 coverage
 hubspot.config.yml
 hubspot.config.yaml
+acceptance-test.config.yml
 lerna-debug.log
 npm-debug.log
 npm-debug.log.*
 *.log
 .DS_Store
 coverage
+.env

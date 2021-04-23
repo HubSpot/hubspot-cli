@@ -5,11 +5,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - name: Build Failure Slack Report
+      if: ${{ github.ref == 'refs/heads/master' }}
+      uses: ravsamhq/notify-slack-action@master
+      with:
+        status: ${{ job.status }}
+        notify_when: 'failure'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+    - uses: actions/checkout@v2
     - name: Use Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v2
       with:
         node-version: 10.x
+    - name: Install Yarn
+      run: npm install -g yarn
     - name: Install deps
       run: |
           yarn install
@@ -25,9 +35,20 @@ jobs:
     - name: Lint
       run: |
           yarn lint
-    - name: Test
-      run: |
-          yarn test
     - name: Circular dependency check
       run: |
           yarn run madge --circular packages
+    - name: Test
+      run: |
+          yarn test
+    - name: Test-CLI
+      run: |
+          yarn test-cli
+      env:
+        PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
+        CLI_PATH: ${{ secrets.ACCEPTANCE_TEST_CLI_PATH }}
+        PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+        CLIENT_ID: ${{ secrets.ACCEPTANCE_TEST_CLIENT_ID }}
+        CLIENT_SECRET: ${{ secrets.ACCEPTANCE_TEST_CLIENT_SECRET }}
+
+
