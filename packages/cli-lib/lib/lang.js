@@ -19,7 +19,7 @@ const loadLanguageFromYaml = () => {
       util.inspect(languageObj, true, 999, true)
     );
   } catch (e) {
-    console.log(e);
+    logger.error('Error loading language data: ', e);
   }
 };
 
@@ -41,9 +41,8 @@ const getInterpolatedValue = (textValue, options) => {
 };
 
 const i18n = (lookupDotNotation, options = {}) => {
-  // TODO - Figure out how to get language and project accessors
-  // console.log('process: ', process);
   const textValue = getTextValue(lookupDotNotation);
+
   return getInterpolatedValue(textValue, options.data);
 };
 
