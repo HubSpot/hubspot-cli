@@ -1,6 +1,9 @@
+const path = require('path');
 const request = require('request');
 const requestPN = require('request-promise-native');
 const fs = require('fs-extra');
+const contentDisposition = require('content-disposition');
+
 const { getAccountConfig } = require('./lib/config');
 const { getRequestOptions } = require('./http/requestOptions');
 const { accessTokenForPersonalAccessKey } = require('./personalAccessKey');
@@ -114,7 +117,7 @@ const deleteRequest = async (accountId, options) => {
 const createGetRequestStream = ({ contentType }) => async (
   accountId,
   options,
-  filepath
+  destPath
 ) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
@@ -123,7 +126,7 @@ const createGetRequestStream = ({ contentType }) => async (
     logFileSystemErrorInstance(
       err,
       new FileSystemErrorContext({
-        filepath,
+        destPath,
         accountId,
         write: true,
       })
@@ -147,9 +150,20 @@ const createGetRequestStream = ({ contentType }) => async (
         },
         json: false,
       });
-      req.on('error', reject);
+      req.on('error', error => {
+        reject(error);
+      });
       req.on('response', res => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          let filepath = destPath;
+
+          const stat = fs.statSync(destPath);
+          if (stat.isDirectory) {
+            const { parameters } = contentDisposition.parse(
+              res.headers['content-disposition']
+            );
+            filepath = path.join(destPath, parameters.filename);
+          }
           try {
             fs.ensureFileSync(filepath);
           } catch (err) {

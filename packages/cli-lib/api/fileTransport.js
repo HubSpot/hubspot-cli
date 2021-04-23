@@ -23,7 +23,18 @@ async function updateSchema(accountId, filepath) {
   });
 }
 
+async function fetchSchema(accountId, objectName, path) {
+  return http.getOctetStream(
+    accountId,
+    {
+      uri: `${HUBFILES_API_PATH}/object-schemas/${objectName}`,
+    },
+    path
+  );
+}
+
 module.exports = {
   createSchema,
   updateSchema,
+  fetchSchema,
 };
