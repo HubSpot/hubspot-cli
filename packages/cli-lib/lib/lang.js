@@ -5,7 +5,7 @@ const handlebars = require('handlebars');
 const yaml = require('js-yaml');
 const { logger } = require('../logger');
 
-const MISSING_LANGUAGE_DATA_PREFIX = '[ Missing language data ]:';
+const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
 let languageObj;
 
@@ -27,7 +27,7 @@ const loadLanguageFromYaml = () => {
 
 const getTextValue = lookupDotNotation => {
   const lookupProps = lookupDotNotation.split('.');
-  const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX} ${lookupDotNotation}`;
+  const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupDotNotation}`;
   let textValue = languageObj;
 
   try {
@@ -46,10 +46,10 @@ const getTextValue = lookupDotNotation => {
   return textValue;
 };
 
-const getInterpolatedValue = (textValue, options) => {
+const getInterpolatedValue = (textValue, interpolationData) => {
   const template = handlebars.compile(textValue);
 
-  return template(options);
+  return template(interpolationData);
 };
 
 const i18n = (lookupDotNotation, options = {}) => {
