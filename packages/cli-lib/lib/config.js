@@ -257,7 +257,7 @@ const writeConfig = (options = {}) => {
     source =
       typeof options.source === 'string'
         ? options.source
-        : yaml.safeDump(
+        : yaml.dump(
             JSON.parse(JSON.stringify(getOrderedConfig(getConfig()), null, 2))
           );
   } catch (err) {
