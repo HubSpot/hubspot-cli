@@ -298,7 +298,7 @@ const parseConfig = configSource => {
     return { parsed, error };
   }
   try {
-    parsed = yaml.safeLoad(configSource);
+    parsed = yaml.load(configSource);
   } catch (err) {
     error = err;
     logger.error('Config file could not be parsed "%s"', _configPath);
