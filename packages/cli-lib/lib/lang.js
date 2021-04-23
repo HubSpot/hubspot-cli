@@ -53,6 +53,12 @@ const getInterpolatedValue = (textValue, interpolationData) => {
 };
 
 const i18n = (lookupDotNotation, options = {}) => {
+  if (typeof lookupDotNotation !== 'string') {
+    throw new Error(
+      `i18n must be passed a string value for lookupDotNotation, received ${typeof lookupDotNotation}`
+    );
+  }
+
   const textValue = getTextValue(lookupDotNotation);
   const shouldInterpolate =
     options.data && !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
