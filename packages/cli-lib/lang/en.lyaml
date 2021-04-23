@@ -2,4 +2,15 @@ en:
   cli:
     commands:
       init:
-        describe: "initialize {{ configName }} for a HubSpot account"
+        describe: "Initialize {{ configName }} for a HubSpot account"
+        options:
+          auth:
+            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
+            defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        success:
+          configFileCreated: "The config file \"{{ configPath }}\" was created using \"{{ authType }}\" for account {{ account }}."
+        info:
+          updateConfig: "To update an existing config file, use the \"hs auth\" command."
+        errors:
+          configFileExists: "The config file {{ configPath }} already exists."
+
