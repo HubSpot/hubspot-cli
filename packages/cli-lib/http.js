@@ -157,12 +157,14 @@ const createGetRequestStream = ({ contentType }) => async (
         if (res.statusCode >= 200 && res.statusCode < 300) {
           let filepath = destPath;
 
-          const stat = fs.statSync(destPath);
-          if (stat.isDirectory) {
-            const { parameters } = contentDisposition.parse(
-              res.headers['content-disposition']
-            );
-            filepath = path.join(destPath, parameters.filename);
+          if (fs.existsSync(destPath)) {
+            const stat = fs.statSync(destPath);
+            if (stat.isDirectory) {
+              const { parameters } = contentDisposition.parse(
+                res.headers['content-disposition']
+              );
+              filepath = path.join(destPath, parameters.filename);
+            }
           }
           try {
             fs.ensureFileSync(filepath);
