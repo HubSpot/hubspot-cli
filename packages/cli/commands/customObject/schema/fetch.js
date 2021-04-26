@@ -38,7 +38,7 @@ exports.handler = async options => {
   try {
     if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
       const fullpath = path.resolve(getCwd(), dest);
-      await fetchSchema(accountId, name, dest);
+      await fetchSchema(accountId, name, fullpath);
       logger.success(`The schema "${name}" has been saved to "${fullpath}"`);
     } else {
       await downloadSchema(accountId, name, dest);
