@@ -1,6 +1,6 @@
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const list = require('./config/list');
-const setDefault = require('./config/default');
+const set = require('./config/set');
 const rename = require('./config/rename');
 
 exports.command = 'config';
@@ -15,7 +15,7 @@ exports.builder = yargs => {
       ...list,
       aliases: 'ls',
     })
-    .command(setDefault)
+    .command(set)
     .command(rename)
     .demandCommand(1, '');
 
