@@ -6,7 +6,7 @@ const {
 const deploy = require('./projects/deploy');
 
 exports.command = 'projects';
-exports.describe = 'Commands for working with projects';
+exports.describe = false; //'Commands for working with projects';
 
 exports.builder = yargs => {
   addOverwriteOptions(yargs, true);
