@@ -14,7 +14,8 @@
     "prettier": "^1.19.1"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "acceptance-tests"
   ],
   "scripts": {
     "check-deps": "node bin/depcheck.js",
@@ -23,6 +24,7 @@
     "publish-release": "yarn lerna publish --conventional-graduate",
     "publish-prerelease": "yarn lerna publish prerelease --preid beta --dist-tag next",
     "test": "jest",
+    "test-cli": "lerna run run-tests --stream",
     "jest": "jest --watch",
     "circular-deps": "yarn madge --circular packages"
   },

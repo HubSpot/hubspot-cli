@@ -23,5 +23,12 @@ module.exports = {
         node: true,
       },
     },
+    {
+      files: ['acceptance-tests/tests/**/*.js'],
+      env: {
+        jasmine: true,
+        node: true,
+      },
+    },
   ],
 };

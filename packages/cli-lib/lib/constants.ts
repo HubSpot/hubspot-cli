@@ -19,6 +19,7 @@ export const ALLOWED_EXTENSIONS = new Set([
   'ttf',
   'woff',
   'woff2',
+  'graphql',
 ]);
 
 export const HUBL_EXTENSIONS = new Set(['css', 'html', 'js']);

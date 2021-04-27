@@ -9,18 +9,25 @@
   dependencies:
     "@babel/highlight" "^7.10.4"
 
+<<<<<<< HEAD
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13":
+=======
+"@babel/code-frame@^7.0.0":
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.13.tgz#dcfc826beef65e75c50e21d3837d7d95798dd658"
   integrity sha512-HV1Cm0Q3ZrpCR93tkWOYiuYIgLxZXZFVG2VgK+MBWjUqZTundupbfx2aXarXuw5Ko5aMcjtJgbSs4vUGBS5v6g==
   dependencies:
     "@babel/highlight" "^7.12.13"
 
+<<<<<<< HEAD
 "@babel/compat-data@^7.13.11", "@babel/compat-data@^7.13.12", "@babel/compat-data@^7.13.15", "@babel/compat-data@^7.13.8":
   version "7.13.15"
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.13.15.tgz#7e8eea42d0b64fda2b375b22d06c605222e848f4"
   integrity sha512-ltnibHKR1VnrU4ymHyQ/CXtNXI6yZC0oJThyW78Hft8XndANwi+9H+UIklBDraIjFEJzw8wmcM427oDd9KS5wA==
 
+=======
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
 "@babel/core@^7.1.0", "@babel/core@^7.7.5":
   version "7.12.10"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.12.10.tgz#b79a2e1b9f70ed3d84bbfb6d8c4ef825f606bccd"
@@ -1109,6 +1116,7 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+<<<<<<< HEAD
 "@dsherret/to-absolute-glob@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@dsherret/to-absolute-glob/-/to-absolute-glob-2.0.2.tgz#1f6475dc8bd974cea07a2daf3864b317b1dd332c"
@@ -1117,6 +1125,8 @@
     is-absolute "^1.0.0"
     is-negated-glob "^1.0.0"
 
+=======
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
 "@eslint/eslintrc@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-0.4.0.tgz#99cc0a0584d72f1df38b900fb062ba995f395547"
@@ -2667,6 +2677,11 @@ argparse@^1.0.7:
   integrity sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==
   dependencies:
     sprintf-js "~1.0.2"
+
+argparse@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
+  integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
 arr-diff@^4.0.0:
   version "4.0.0"
@@ -4483,7 +4498,11 @@ eslint@^6.5.1:
     text-table "^0.2.0"
     v8-compile-cache "^2.0.3"
 
+<<<<<<< HEAD
 eslint@^7.14.0:
+=======
+eslint@^7.23.0:
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
   version "7.24.0"
   resolved "https://registry.yarnpkg.com/eslint/-/eslint-7.24.0.tgz#2e44fa62d93892bfdb100521f17345ba54b8513a"
   integrity sha512-k9gaHeHiFmGCDQ2rEfvULlSLruz6tgfA8DEn+rY9/oYPFFTlz55mM/Q/Rij1b2Y42jwZiK3lXvNTw6w6TXzcKQ==
@@ -4544,7 +4563,11 @@ espree@^7.3.0, espree@^7.3.1:
     acorn-jsx "^5.3.1"
     eslint-visitor-keys "^1.3.0"
 
+<<<<<<< HEAD
 esprima@4.0.1, esprima@^4.0.0, esprima@^4.0.1, esprima@~4.0.0:
+=======
+esprima@4.0.1, esprima@^4.0.0, esprima@^4.0.1:
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/esprima/-/esprima-4.0.1.tgz#13b04cdb3e6c5d19df91ab6987a8695619b0aa71"
   integrity sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==
@@ -6370,6 +6393,27 @@ istanbul-reports@^3.0.2:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
 
+jasmine-core@~3.7.0:
+  version "3.7.1"
+  resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-3.7.1.tgz#0401327f6249eac993d47bbfa18d4e8efacfb561"
+  integrity sha512-DH3oYDS/AUvvr22+xUBW62m1Xoy7tUlY1tsxKEJvl5JeJ7q8zd1K5bUwiOxdH+erj6l2vAMM3hV25Xs9/WrmuQ==
+
+jasmine-terminal-reporter@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/jasmine-terminal-reporter/-/jasmine-terminal-reporter-1.0.3.tgz#896f1ec8fdf4bf6aecdd41c503eda7347f61526b"
+  integrity sha1-iW8eyP30v2rs3UHFA+2nNH9hUms=
+  dependencies:
+    indent-string "^2.1.0"
+    pluralize "^1.2.1"
+
+jasmine@^3.7.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/jasmine/-/jasmine-3.7.0.tgz#d36638c0c815e6ad5666676e386d79e2ccb70835"
+  integrity sha512-wlzGQ+cIFzMEsI+wDqmOwvnjTvolLFwlcpYLCqSPPH0prOQaW3P+IzMhHYn934l1imNvw07oCyX+vGUv3wmtSQ==
+  dependencies:
+    glob "^7.1.6"
+    jasmine-core "~3.7.0"
+
 jest-changed-files@^26.6.2:
   version "26.6.2"
   resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-26.6.2.tgz#f6198479e1cc66f22f9ae1e22acaa0b429c042d0"
@@ -6771,6 +6815,13 @@ js-yaml@^3.13.1, js-yaml@^3.14.0:
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
+
+js-yaml@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.0.0.tgz#f426bc0ff4b4051926cd588c71113183409a121f"
+  integrity sha512-pqon0s+4ScYUvX30wxQi3PogGFAlUyH0awepWvwkj4jD4v+ova3RiYw8bmA6x2rDrEaj8i/oWKoRxpVNW+Re8Q==
+  dependencies:
+    argparse "^2.0.1"
 
 jsbn@~0.1.0:
   version "0.1.1"
@@ -8624,6 +8675,11 @@ please-upgrade-node@^3.0.2, please-upgrade-node@^3.1.1, please-upgrade-node@^3.2
   dependencies:
     semver-compare "^1.0.0"
 
+pluralize@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-1.2.1.tgz#d1a21483fd22bb41e58a12fa3421823140897c45"
+  integrity sha1-0aIUg/0iu0HlihL6NCGCMUCJfEU=
+
 pluralize@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-8.0.0.tgz#1a6fa16a38d12a1901e0320fa017051c539ce3b1"
@@ -9149,6 +9205,7 @@ regexpp@^3.1.0:
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-3.1.0.tgz#206d0ad0a5648cffbdb8ae46438f3dc51c9f78e2"
   integrity sha512-ZOIzd8yVsQQA7j8GCSlPGXwg5PfmA1mrq0JP4nGhh54LaKN3xdai/vHUDu74pKwV8OxseMS65u2NImosQcSD0Q==
 
+<<<<<<< HEAD
 regexpu-core@^4.7.1:
   version "4.7.1"
   resolved "https://registry.yarnpkg.com/regexpu-core/-/regexpu-core-4.7.1.tgz#2dea5a9a07233298fbf0db91fa9abc4c6e0f8ad6"
@@ -9161,6 +9218,8 @@ regexpu-core@^4.7.1:
     unicode-match-property-ecmascript "^1.0.4"
     unicode-match-property-value-ecmascript "^1.2.0"
 
+=======
+>>>>>>> 0d6ffd8273799b2c7a27af59ed5e9b131a1d93e1
 registry-auth-token@^4.0.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/registry-auth-token/-/registry-auth-token-4.2.0.tgz#1d37dffda72bbecd0f581e4715540213a65eb7da"

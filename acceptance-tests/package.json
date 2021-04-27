@@ -1,0 +1,37 @@
+{
+  "name": "acceptance-tests",
+  "version": "0.1.0",
+  "description": "Acceptance tests for cli",
+  "private": true,
+  "author": "Mike Talley <mtalley@hubspot.com>",
+  "homepage": "https://github.com/HubSpot/hubspot-cli#readme",
+  "license": "ISC",
+  "main": "run-tests",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HubSpot/hubspot-cli.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "run-tests": "./run-tests"
+  },
+  "bugs": {
+    "url": "https://github.com/HubSpot/hubspot-cli/issues"
+  },
+  "devDependencies": {
+    "concat-stream": "^2.0.0",
+    "cross-spawn": "^7.0.3",
+    "dotenv": "^8.2.0",
+    "jasmine": "^3.7.0",
+    "jasmine-terminal-reporter": "^1.0.3",
+    "js-yaml": "^4.0.0",
+    "rimraf": "^3.0.2",
+    "yargs": "^16.2.0"
+  }
+}

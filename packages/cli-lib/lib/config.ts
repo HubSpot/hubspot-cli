@@ -364,8 +364,9 @@ export const loadConfig = (
     environmentVariableConfigLoaded = true;
     return;
   } else {
-    logger.debug(`Loaded config from ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+    logger.debug(`Loaded config from ${path}`);
     loadConfigFromFile(path, options);
+    environmentVariableConfigLoaded = false;
   }
 };
 
@@ -387,8 +388,8 @@ export const getAndLoadConfigIfNeeded = (options = {}): AccountConfig => {
   return _config || {};
 };
 
-export const getConfigPath = (path: string | null) => {
-  return path || findConfig(getCwd());
+const getConfigPath = (path: string | null) => {
+  return path || (configFileExists() && _configPath) || findConfig(getCwd());
 };
 
 export const findConfig = (directory: string) => {
@@ -565,14 +566,18 @@ export const configFileIsBlank = () => {
   return _configPath && fs.readFileSync(_configPath).length === 0;
 };
 
-export const createEmptyConfigFile = () => {
-  setDefaultConfigPathIfUnset();
+export const createEmptyConfigFile = ({ path }: { path?: string } = {}) => {
+  if (!path) {
+    setDefaultConfigPathIfUnset();
 
-  if (configFileExists()) {
-    return;
+    if (configFileExists()) {
+      return;
+    }
+  } else {
+    setConfigPath(path);
   }
 
-  writeConfig({ source: EMPTY_CONFIG_FILE_CONTENTS });
+  writeConfig({ source: EMPTY_CONFIG_FILE_CONTENTS, path });
 };
 
 export const deleteEmptyConfigFile = () => {

@@ -1,4 +1,6 @@
+const ora = require('ora');
 const {
+  getEnv,
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
@@ -7,8 +9,9 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { deployApp } = require('@hubspot/cli-lib/api/appPipeline');
+const { deployAppSync } = require('@hubspot/cli-lib/api/appPipeline');
 
 const {
   setLogLevel,
@@ -44,9 +47,11 @@ exports.handler = async options => {
 
   let result;
 
+  const spinner = ora(`Building "${appPath}" in account ${accountId}`).start();
   try {
-    result = await deployApp(accountId, appPath);
+    result = await deployAppSync(accountId, appPath);
   } catch (error) {
+    spinner.fail();
     logApiErrorInstance(
       error,
       new ApiErrorContext({
@@ -57,7 +62,12 @@ exports.handler = async options => {
     process.exit(1);
   }
 
-  logger.log(`Deploy task "${result.id}" has been started.`);
+  spinner.succeed();
+  logger.success(
+    `You app has been built and deployed. Go to ${getHubSpotWebsiteOrigin(
+      getEnv()
+    )}/private-apps/${accountId}/${result.appId} to see your app.`
+  );
 };
 
 exports.builder = yargs => {
