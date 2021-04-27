@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfig } = require('@hubspot/cli-lib/lib/config');
+const { getConfig, getConfigPath } = require('@hubspot/cli-lib/lib/config');
 const {
   loadConfig,
   validateConfig,
@@ -40,13 +40,16 @@ exports.handler = async options => {
   trackCommandUsage('config-list', {}, accountId);
 
   const config = getConfig();
+  const configPath = getConfigPath();
   const portalData = config.portals.map(portal => {
     return [portal.name, portal.portalId, portal.authType];
   });
   portalData.unshift(getTableHeader(['Name', 'Account ID', 'Auth Type']));
 
-  logger.log(getTableContents(portalData));
-  logger.log('Default Account: ', config.defaultPortal);
+  logger.log(`Config path: ${configPath}`);
+  logger.log('Default account: ', config.defaultPortal);
+  logger.log('Accounts:');
+  logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));
 };
 
 exports.builder = yargs => {
