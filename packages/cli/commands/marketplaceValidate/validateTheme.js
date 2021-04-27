@@ -23,7 +23,7 @@ const {
   logValidatorResults,
 } = require('../../lib/validators/logValidatorResults');
 const { applyValidators } = require('../../lib/validators/applyValidators');
-const validators = require('../../lib/validators');
+const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 
 exports.command = 'theme <src>';
@@ -59,32 +59,24 @@ exports.handler = async options => {
   }
   trackCommandUsage('validate', {}, accountId);
 
-  const themeValidators = options.marketplace
-    ? validators.marketplaceValidators.theme
-    : validators.hubspotValidators.theme;
-
   const themeFiles = await walk(absoluteSrcPath);
 
-  applyValidators(themeValidators, absoluteSrcPath, themeFiles).then(
-    results => {
-      logValidatorResults(results, { logAsJson: options.json });
+  applyValidators(
+    MARKETPLACE_VALIDATORS.theme,
+    absoluteSrcPath,
+    themeFiles
+  ).then(results => {
+    logValidatorResults(results, { logAsJson: options.json });
 
-      if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
-        process.exit(1);
-      }
+    if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
+      process.exit(1);
     }
-  );
+  });
 };
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
-  yargs.options({
-    marketplace: {
-      describe: 'Validate theme for the marketplace',
-      type: 'boolean',
-    },
-  });
   yargs.options({
     json: {
       describe: 'Output raw json data',
