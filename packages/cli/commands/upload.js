@@ -7,9 +7,7 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-const {
-  getFileMapperApiQueryFromMode,
-} = require('@hubspot/cli-lib/fileMapper');
+const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
@@ -104,9 +102,12 @@ exports.handler = async options => {
       return;
     }
 
-    upload(accountId, absoluteSrcPath, normalizedDest, {
-      qs: getFileMapperApiQueryFromMode(mode),
-    })
+    upload(
+      accountId,
+      absoluteSrcPath,
+      normalizedDest,
+      getFileMapperQueryValues({ mode, options })
+    )
       .then(() => {
         logger.success(
           'Uploaded file from "%s" to "%s" in the Design Manager of account %s',

@@ -2,7 +2,7 @@ const path = require('path');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
-const { getFileMapperApiQueryFromMode } = require('../fileMapper');
+const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
 const { walk } = require('./walk');
@@ -54,11 +54,8 @@ function getFilesByType(files) {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(accountId, src, dest, { mode }) {
+async function uploadFolder(accountId, src, dest, options) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
-  const apiOptions = {
-    qs: getFileMapperApiQueryFromMode(mode),
-  };
   const files = await walk(src);
 
   const allowedFiles = files
@@ -71,12 +68,14 @@ async function uploadFolder(accountId, src, dest, { mode }) {
     .filter(createIgnoreFilter());
 
   const filesByType = getFilesByType(allowedFiles);
+  const apiOptions = getFileMapperQueryValues(options);
 
   const failures = [];
 
   const uploadFile = file => {
     const relativePath = file.replace(regex, '');
     const destPath = convertToUnixPath(path.join(dest, relativePath));
+
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {

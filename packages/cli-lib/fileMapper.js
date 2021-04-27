@@ -91,11 +91,18 @@ function useApiBuffer(mode) {
 }
 
 /**
- * @param {Mode} mode
+ * Determines API param based on mode an options
+ *
+ * @typedef {Object} APIOptions
+ * @property {Mode} mode
+ * @property {Object} options
  */
-function getFileMapperApiQueryFromMode(mode) {
+function getFileMapperQueryValues({ mode, options = {} }) {
   return {
-    buffer: useApiBuffer(mode),
+    qs: {
+      buffer: useApiBuffer(mode),
+      environmentId: options.staging ? 2 : 1,
+    },
   };
 }
 
@@ -267,9 +274,12 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
   const { accountId } = input;
 
   try {
-    const node = await fetchFileStream(accountId, srcPath, filepath, {
-      qs: getFileMapperApiQueryFromMode(input.mode),
-    });
+    const node = await fetchFileStream(
+      accountId,
+      srcPath,
+      filepath,
+      getFileMapperQueryValues(input)
+    );
     await writeUtimes(input, filepath, node);
   } catch (err) {
     logApiErrorInstance(
@@ -390,17 +400,20 @@ async function downloadFile(input) {
  * @returns {Promise<FileMapperNode}
  */
 async function fetchFolderFromApi(input) {
-  const { accountId, src, mode } = input;
+  const { accountId, src } = input;
   const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
   }
   try {
     const srcPath = isRoot ? '@root' : src;
-    const qs = getFileMapperApiQueryFromMode(mode);
     const node = isHubspot
-      ? await downloadDefault(accountId, srcPath, { qs })
-      : await download(accountId, srcPath, { qs });
+      ? await downloadDefault(
+          accountId,
+          srcPath,
+          getFileMapperQueryValues(input)
+        )
+      : await download(accountId, srcPath, getFileMapperQueryValues(input));
     logger.log(
       'Fetched "%s" from account %d from the Design Manager successfully',
       src,
@@ -492,7 +505,7 @@ module.exports = {
   isPathToHubspot,
   downloadFileOrFolder,
   recurseFolder,
-  getFileMapperApiQueryFromMode,
+  getFileMapperQueryValues,
   fetchFolderFromApi,
   getTypeDataFromPath,
 };
