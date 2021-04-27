@@ -1,16 +1,44 @@
+// TODO - Find a way to replace this file with the use of @hubspot/cli-lib/lib/table
+// Currently, trying to remove this file results in a circular dependency
 const chalk = require('chalk');
-const { table, getBorderCharacters } = require('table');
+const { table } = require('table');
+const { mergeDeep } = require('@hubspot/cli-lib/lib/utils');
 
 const tableConfigDefaults = {
   singleLine: true,
-  border: getBorderCharacters(`void`),
+  border: {
+    topBody: '',
+    topJoin: '',
+    topLeft: '',
+    topRight: '',
+
+    bottomBody: '',
+    bottomJoin: '',
+    bottomLeft: '',
+    bottomRight: '',
+
+    bodyLeft: '',
+    bodyRight: '',
+    bodyJoin: '',
+
+    joinBody: '',
+    joinLeft: '',
+    joinRight: '',
+    joinJoin: '',
+  },
+  columnDefault: {
+    paddingLeft: 0,
+    paddingRight: 1,
+  },
+  drawHorizontalLine: () => {
+    return false;
+  },
 };
 
-const getTableContents = (
-  tableData = [],
-  tableConfig = tableConfigDefaults
-) => {
-  return table(tableData, tableConfig);
+const getTableContents = (tableData = [], tableConfig = {}) => {
+  const mergedConfig = mergeDeep({}, tableConfigDefaults, tableConfig);
+
+  return table(tableData, mergedConfig);
 };
 
 const getTableHeader = headerItems => {
