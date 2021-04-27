@@ -29,13 +29,17 @@ const getTextValue = lookupDotNotation => {
   const lookupProps = lookupDotNotation.split('.');
   const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupDotNotation}`;
   let textValue = languageObj;
+  let previouslyCheckedProp = lookupProps[0];
 
   try {
     lookupProps.forEach(prop => {
       textValue = textValue[prop];
+      previouslyCheckedProp = prop;
     });
   } catch (e) {
-    logger.error(`Unable to access language property: ${lookupDotNotation}`);
+    logger.error(
+      `Unable to access language property: ${lookupDotNotation}. Failed to access prop "${previouslyCheckedProp}".`
+    );
     return missingTextData;
   }
 
