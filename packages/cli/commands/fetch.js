@@ -84,7 +84,7 @@ exports.builder = yargs => {
 
   yargs.options({
     staging: {
-      describe: 'retrieve staged changes for project',
+      describe: 'Retrieve staged changes for project',
       type: 'boolean',
       default: false,
     },
