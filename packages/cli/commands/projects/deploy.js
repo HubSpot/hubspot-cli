@@ -50,6 +50,7 @@ exports.handler = async options => {
 
     if (deployResp.error) {
       logger.error(`Deploy error: ${deployResp.error.message}`);
+      return;
     }
 
     logger.success(
