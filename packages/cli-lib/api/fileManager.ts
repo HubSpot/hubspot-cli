@@ -1,14 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 import http from '../http';
+import { RequestOptions } from '../types';
 
 const FILE_MANAGER_V2_API_PATH = 'filemanager/api/v2';
 const FILE_MANAGER_V3_API_PATH = 'filemanager/api/v3';
 
+type FormData = {
+  file: fs.ReadStream;
+  fileName: string;
+  options: string;
+  folderPath?: string;
+};
+
 async function uploadFile(accountId: number, src: string, dest: string) {
   const directory = path.dirname(dest);
   const filename = path.basename(dest);
-  const formData = {
+  const formData: FormData = {
     file: fs.createReadStream(src),
     fileName: filename,
     options: JSON.stringify({
@@ -29,13 +37,17 @@ async function uploadFile(accountId: number, src: string, dest: string) {
   });
 }
 
-async function fetchStat(accountId, src) {
+async function fetchStat(accountId: number, src: string) {
   return http.get(accountId, {
     uri: `${FILE_MANAGER_V2_API_PATH}/files/stat/${src}`,
   });
 }
 
-async function fetchFiles(accountId, folderId, { offset, archived }) {
+async function fetchFiles(
+  accountId: number,
+  folderId: string,
+  { offset, archived }: { offset: number; archived: string }
+) {
   return http.get(accountId, {
     uri: `${FILE_MANAGER_V2_API_PATH}/files/`,
     qs: {
@@ -47,7 +59,7 @@ async function fetchFiles(accountId, folderId, { offset, archived }) {
   });
 }
 
-async function fetchFolders(accountId, folderId) {
+async function fetchFolders(accountId: number, folderId: string) {
   return http.get(accountId, {
     uri: `${FILE_MANAGER_V2_API_PATH}/folders/`,
     qs: {

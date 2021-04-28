@@ -104,7 +104,7 @@ export const addQueryParams = (
 
 export const getRequest = async (
   accountId: number,
-  options: RequestOptions & { query: { [key: string]: any } }
+  options: RequestOptions & { query?: { [key: string]: any } }
 ) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
