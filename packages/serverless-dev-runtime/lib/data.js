@@ -118,6 +118,8 @@ const getFunctionDataContext = async (
     },
     body: req.body,
     headers: getHeaders(req),
+    method: req.method,
+    endpoint: req.url,
     accountId: accountId || HUBSPOT_ACCOUNT_ID || MOCK_DATA.HUBSPOT_ACCOUNT_ID,
     contact:
       contact === 'true' || contact === true
