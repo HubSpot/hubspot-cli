@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getDotEnvData } = require('./secrets');
-const { MOCK_DATA, MAX_SECRETS } = require('./constants');
+const { MOCK_DATA, MAX_SECRETS, ROUTE_PATH_PREFIX } = require('./constants');
 
 const getValidatedFunctionData = path => {
   // Allow passing serverless folder path with and without .functions extension
@@ -118,6 +118,8 @@ const getFunctionDataContext = async (
     },
     body: req.body,
     headers: getHeaders(req),
+    method: req.method,
+    endpoint: req.url.replace(`/${ROUTE_PATH_PREFIX}`, ''),
     accountId: accountId || HUBSPOT_ACCOUNT_ID || MOCK_DATA.HUBSPOT_ACCOUNT_ID,
     contact:
       contact === 'true' || contact === true
