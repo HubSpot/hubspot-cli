@@ -10,6 +10,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const {
   addConfigOptions,
@@ -21,7 +25,6 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
-const { getTableContents, getTableHeader } = require('../../lib/table');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
