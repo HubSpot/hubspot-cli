@@ -31,6 +31,7 @@ const MOCK_DATA = {
 };
 const MAX_SECRETS = 50;
 const MAX_RUNTIME = 3000;
+const MAX_REQ_BODY_SIZE = '50mb';
 const ROUTE_PATH_PREFIX = '_hcms/api/';
 const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -38,6 +39,7 @@ module.exports = {
   ALLOWED_METHODS,
   AWS_RESERVED_VARS,
   AWS_RESERVED_VARS_INFO_URL,
+  MAX_REQ_BODY_SIZE,
   MAX_RUNTIME,
   MAX_SECRETS,
   MOCK_DATA,

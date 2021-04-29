@@ -12,7 +12,11 @@ const { getValidatedFunctionData } = require('./data');
 const { setupRoutes, updateRoutePaths } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
 const { getTableContents, getTableHeader } = require('./table');
-const { MOCK_DATA, ROUTE_PATH_PREFIX } = require('./constants');
+const {
+  MOCK_DATA,
+  ROUTE_PATH_PREFIX,
+  MAX_REQ_BODY_SIZE,
+} = require('./constants');
 const { watch: watchFolder } = require('./watch');
 
 let connections = [];
@@ -29,8 +33,8 @@ const setOptions = optionsData => {
 };
 
 const installMiddleware = app => {
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json({ limit: MAX_REQ_BODY_SIZE }));
+  app.use(bodyParser.urlencoded({ limit: MAX_REQ_BODY_SIZE, extended: true }));
   app.use(cors());
 };
 
