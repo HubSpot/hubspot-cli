@@ -17,10 +17,7 @@ const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
-const { getThemeJSONPath } = require('./files');
-const { getEnv } = require('./config');
-const { getHubSpotWebsiteOrigin } = require('./urls');
-const { ENVIRONMENTS } = require('./constants');
+const { getThemePreviewUrl } = require('./files');
 
 const queue = new PQueue({
   concurrency: 10,
@@ -28,20 +25,12 @@ const queue = new PQueue({
 
 const _notifyOfThemePreview = (filePath, accountId) => {
   if (queue.size > 0) return;
-
-  const themeJSONPath = getThemeJSONPath(filePath);
-  if (!themeJSONPath) return;
-  const pathParts = themeJSONPath.split('/');
-  if (pathParts.length < 2) return;
-  const themeFolder = pathParts[pathParts.length - 2];
-
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-  );
+  const previewUrl = getThemePreviewUrl(filePath, accountId);
+  if (!previewUrl) return;
 
   logger.log(`
   To preview this theme, visit:
-  ${baseUrl}/theme-previewer/${accountId}/edit/${themeFolder}
+  ${previewUrl}
   `);
 };
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
