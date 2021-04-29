@@ -58,7 +58,7 @@ const getConfigAccountId = config => {
 const validateConfig = () => {
   const config = getConfig();
   if (!config) {
-    logger.error('config is not defined');
+    logger.error('No config was found');
     return false;
   }
   const accounts = getConfigAccounts();
