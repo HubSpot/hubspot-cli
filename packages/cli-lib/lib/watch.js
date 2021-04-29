@@ -3,6 +3,7 @@ const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
+const debounce = require('debounce');
 const {
   ApiErrorContext,
   logApiErrorInstance,
@@ -16,10 +17,23 @@ const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
+const { getThemePreviewUrl } = require('./files');
 
 const queue = new PQueue({
   concurrency: 10,
 });
+
+const _notifyOfThemePreview = (filePath, accountId) => {
+  if (queue.size > 0) return;
+  const previewUrl = getThemePreviewUrl(filePath, accountId);
+  if (!previewUrl) return;
+
+  logger.log(`
+  To preview this theme, visit:
+  ${previewUrl}
+  `);
+};
+const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 function uploadFile(accountId, file, dest, options) {
   if (!isAllowedExtension(file)) {
@@ -33,10 +47,12 @@ function uploadFile(accountId, file, dest, options) {
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
+
   return queue.add(() => {
     return upload(accountId, file, dest, apiOptions)
       .then(() => {
         logger.log(`Uploaded file ${file} to ${dest}`);
+        notifyOfThemePreview(file, accountId);
       })
       .catch(() => {
         const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
@@ -68,6 +84,7 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
     return deleteFile(accountId, remoteFilePath)
       .then(() => {
         logger.log(`Deleted file ${remoteFilePath}`);
+        notifyOfThemePreview(filePath, accountId);
       })
       .catch(error => {
         logger.error(`Deleting file ${remoteFilePath} failed`);

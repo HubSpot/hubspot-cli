@@ -35,10 +35,22 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { validateAccount, validateMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
 
 exports.command = 'upload <src> <dest>';
 exports.describe =
   'Upload a folder or file from your computer to the HubSpot CMS';
+
+const logThemePreview = (filePath, accountId) => {
+  const previewUrl = getThemePreviewUrl(filePath, accountId);
+  // Only log if we are actually in a theme
+  if (previewUrl) {
+    logger.log(`
+      To preview this theme, visit:
+      ${previewUrl}
+      `);
+  }
+};
 
 exports.handler = async options => {
   const { src, dest, config: configPath } = options;
@@ -115,6 +127,7 @@ exports.handler = async options => {
           normalizedDest,
           accountId
         );
+        logThemePreview(src, accountId);
       })
       .catch(error => {
         logger.error('Uploading file "%s" to "%s" failed', src, normalizedDest);
@@ -138,6 +151,7 @@ exports.handler = async options => {
         logger.success(
           `Uploading files to "${dest}" in the Design Manager is complete`
         );
+        logThemePreview(src, accountId);
       })
       .catch(error => {
         logger.error('Uploading failed');
