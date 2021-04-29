@@ -5,7 +5,8 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { getFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');
-const { ROUTE_PATH_PREFIX } = require('./constants');
+const { ALLOWED_METHODS, ROUTE_PATH_PREFIX } = require('./constants');
+const { ALL } = require('dns');
 
 const outputTrackedLogs = trackedLogs => {
   trackedLogs.forEach(trackedLog => {
@@ -34,6 +35,11 @@ const addEndpointToApp = endpointData => {
 
   if (!method) {
     logger.error(`No method was specified for route "${route}"`);
+    process.exit();
+  } else if (ALLOWED_METHODS.indexOf(method) === -1) {
+    logger.error(
+      `Invalid method "${method}" for route "${route}". Allowed values are ${ALLOWED_METHODS}`
+    );
     process.exit();
   }
 
