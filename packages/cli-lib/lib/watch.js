@@ -3,6 +3,7 @@ const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
 const { logger } = require('../logger');
+const debounce = require('debounce');
 const {
   ApiErrorContext,
   logApiErrorInstance,
@@ -16,10 +17,32 @@ const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
+const { getThemeJSONPath } = require('./files');
+const { getEnv } = require('./config');
+const { getHubSpotWebsiteOrigin } = require('./urls');
+const { ENVIRONMENTS } = require('./constants');
 
 const queue = new PQueue({
   concurrency: 10,
 });
+
+const _notifyOfThemePreview = (filePath, accountId) => {
+  const themeJSONPath = getThemeJSONPath(filePath);
+  if (!themeJSONPath) return;
+  const pathParts = themeJSONPath.split('/');
+  if (pathParts.length < 2) return;
+  const themeFolder = pathParts[pathParts.length - 2];
+
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
+  logger.log(`
+  To preview this theme, visit:
+  ${baseUrl}/theme-previewer/${accountId}/edit/${themeFolder}
+  `);
+};
+const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 function uploadFile(accountId, file, dest, options) {
   if (!isAllowedExtension(file)) {
@@ -129,6 +152,7 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
       mode,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
+    notifyOfThemePreview(filePath, accountId);
   });
 
   if (remove) {
@@ -157,6 +181,7 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
             );
           });
         triggerNotify(notify, 'Removed', filePath, deletePromise);
+        notifyOfThemePreview(filePath, accountId);
         return deletePromise;
       });
     };
@@ -171,6 +196,7 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
       mode,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
+    notifyOfThemePreview(filePath, accountId);
   });
 
   return watcher;
