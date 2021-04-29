@@ -16,6 +16,7 @@ const {
   writeConfig,
   getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
+const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const {
   promptUser,
   personalAccessKeyPrompt,
@@ -30,7 +31,6 @@ const {
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { commaSeparatedValues } = require('../lib/text');
 const { authenticateWithOauth } = require('../lib/oauth');
 
 const ALLOWED_AUTH_METHODS = [
