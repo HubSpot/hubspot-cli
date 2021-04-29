@@ -312,10 +312,10 @@ async function writeFileMapperNode(input, node, filepath) {
   if (!node.folder) {
     try {
       await fetchAndWriteFileStream(input, node.path, filepath);
+      return;
     } catch (err) {
-      // Logging handled by handler
+      return false;
     }
-    return;
   }
   try {
     await fs.ensureDir(filepath);
@@ -329,6 +329,7 @@ async function writeFileMapperNode(input, node, filepath) {
         write: true,
       })
     );
+    return false;
   }
 }
 
@@ -453,19 +454,36 @@ async function downloadFolder(input) {
       dest === getCwd()
         ? convertToLocalFileSystemPath(path.resolve(dest, node.name))
         : dest;
+    let success = true;
     recurseFolder(
       node,
       (childNode, { filepath }) => {
-        queue.add(() => writeFileMapperNode(input, childNode, filepath));
+        queue.add(async () => {
+          const succeeded = await writeFileMapperNode(
+            input,
+            childNode,
+            filepath
+          );
+          if (succeeded === false) {
+            success = false;
+          }
+        });
       },
       rootPath
     );
     await queue.onIdle();
-    logger.success(
-      'Completed fetch of folder "%s" to "%s" from the Design Manager',
-      input.src,
-      input.dest
-    );
+
+    if (success) {
+      logger.success(
+        'Completed fetch of folder "%s" to "%s" from the Design Manager',
+        input.src,
+        input.dest
+      );
+    } else {
+      logger.error(
+        `Not all files in folder "${input.src}" were successfully fetched.  Re-run the last command to try again`
+      );
+    }
   } catch (err) {
     logger.error(
       'Failed fetch of folder "%s" to "%s" from the Design Manager',
