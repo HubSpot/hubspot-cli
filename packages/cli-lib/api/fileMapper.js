@@ -110,6 +110,7 @@ async function fetchFileStream(accountId, filePath, destination, options = {}) {
  * @returns {Promise<FileMapperNode>}
  */
 async function download(accountId, filepath, options = {}) {
+  console.log('download: ', accountId, filepath, options);
   return http.get(accountId, {
     uri: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
     ...options,
