@@ -27,6 +27,8 @@ const queue = new PQueue({
 });
 
 const _notifyOfThemePreview = (filePath, accountId) => {
+  if (queue.size > 0) return;
+
   const themeJSONPath = getThemeJSONPath(filePath);
   if (!themeJSONPath) return;
   const pathParts = themeJSONPath.split('/');
@@ -56,10 +58,12 @@ function uploadFile(accountId, file, dest, options) {
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
+
   return queue.add(() => {
     return upload(accountId, file, dest, apiOptions)
       .then(() => {
         logger.log(`Uploaded file ${file} to ${dest}`);
+        notifyOfThemePreview(file, accountId);
       })
       .catch(() => {
         const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
@@ -91,6 +95,7 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
     return deleteFile(accountId, remoteFilePath)
       .then(() => {
         logger.log(`Deleted file ${remoteFilePath}`);
+        notifyOfThemePreview(filePath, accountId);
       })
       .catch(error => {
         logger.error(`Deleting file ${remoteFilePath} failed`);
@@ -152,7 +157,6 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
       mode,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
-    notifyOfThemePreview(filePath, accountId);
   });
 
   if (remove) {
@@ -181,7 +185,6 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
             );
           });
         triggerNotify(notify, 'Removed', filePath, deletePromise);
-        notifyOfThemePreview(filePath, accountId);
         return deletePromise;
       });
     };
@@ -196,7 +199,6 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
       mode,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
-    notifyOfThemePreview(filePath, accountId);
   });
 
   return watcher;
