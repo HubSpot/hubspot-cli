@@ -2,11 +2,11 @@ const path = require('path');
 const util = require('util');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { getFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');
 const { ALLOWED_METHODS, ROUTE_PATH_PREFIX } = require('./constants');
-const { ALL } = require('dns');
 
 const outputTrackedLogs = trackedLogs => {
   trackedLogs.forEach(trackedLog => {
@@ -38,7 +38,9 @@ const addEndpointToApp = endpointData => {
     process.exit();
   } else if (ALLOWED_METHODS.indexOf(method) === -1) {
     logger.error(
-      `Invalid method "${method}" for route "${route}". Allowed values are ${ALLOWED_METHODS}`
+      `Invalid method "${method}" for route "${route}". Allowed values are ${commaSeparatedValues(
+        ALLOWED_METHODS
+      )}`
     );
     process.exit();
   }
