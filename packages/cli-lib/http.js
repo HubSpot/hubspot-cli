@@ -150,9 +150,7 @@ const createGetRequestStream = ({ contentType }) => async (
         },
         json: false,
       });
-      req.on('error', error => {
-        reject(error);
-      });
+      req.on('error', reject);
       req.on('response', res => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           let filepath = destPath;
