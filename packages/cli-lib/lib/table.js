@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const { table } = require('table');
-const { mergeDeep } = require('@hubspot/cli-lib/lib/utils');
+const { mergeDeep } = require('./utils');
 
 const tableConfigDefaults = {
   singleLine: true,
