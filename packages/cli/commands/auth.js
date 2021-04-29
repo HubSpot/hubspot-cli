@@ -1,8 +1,4 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
