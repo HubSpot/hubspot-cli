@@ -27,7 +27,6 @@ exports.describe =
 
 exports.handler = async options => {
   const { config: configPath, src, dest } = options;
-  console.log('src: ', src);
 
   setLogLevel(options);
   logDebugInfo(options);

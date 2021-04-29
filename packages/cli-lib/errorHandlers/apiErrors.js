@@ -111,7 +111,6 @@ const ApiMethodPrepositions = {
  * @param {ApiErrorContext} context
  */
 function logApiStatusCodeError(error, context) {
-  // console.log('error: ', error)
   const { statusCode } = error;
   const { method } = error.options || {};
   const isPutOrPost = method === 'PUT' || method === 'POST';

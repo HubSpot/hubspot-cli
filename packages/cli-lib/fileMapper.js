@@ -406,10 +406,8 @@ async function fetchFolderFromApi(input) {
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
   }
-  console.log('fetchFolderFromApi: ', input, isFolder);
   try {
     const srcPath = isRoot ? '@root' : src;
-    console.log('srcPath: ', srcPath);
     const node = isHubspot
       ? await downloadDefault(
           accountId,
