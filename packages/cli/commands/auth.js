@@ -1,8 +1,4 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -18,6 +14,7 @@ const {
   updateAccountConfig,
   accountNameExistsInConfig,
   writeConfig,
+  getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const {
   promptUser,
@@ -73,14 +70,16 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
 
+  if (!getConfigPath()) {
+    logger.error(
+      'No config file was found. To create a new config file, use the "hs init" command.'
+    );
+    process.exit(1);
+  }
+
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath);
   checkAndWarnGitInclusion();
-
-  if (!validateConfig()) {
-    logger.info('To create a new config file, use the "hs init" command.');
-    process.exit(1);
-  }
 
   trackCommandUsage('auth');
 
