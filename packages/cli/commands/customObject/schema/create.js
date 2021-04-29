@@ -13,10 +13,13 @@ const {
   setLogLevel,
   getAccountId,
 } = require('../../../lib/commonOpts');
-const { getEnv } = require('@hubspot/cli-lib/lib/config');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const { getEnv, isConfigFlagEnabled } = require('@hubspot/cli-lib/');
+const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cli-lib/api/schema');
+const {
+  createSchema: createSchemaFromHubFile,
+} = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 exports.command = 'create <definition>';
@@ -43,12 +46,17 @@ exports.handler = async options => {
   }
 
   try {
-    const res = await createSchema(accountId, filePath);
-    logger.success(
-      `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-        getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-      )}/contacts/${accountId}/objects/${res.objectTypeId}`
-    );
+    if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
+      await createSchemaFromHubFile(accountId, filePath);
+      logger.success(`Your schema has been created in acount "${accountId}"`);
+    } else {
+      const res = await createSchema(accountId, filePath);
+      logger.success(
+        `Schema can be viewed at ${getHubSpotWebsiteOrigin(
+          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+        )}/contacts/${accountId}/objects/${res.objectTypeId}`
+      );
+    }
   } catch (e) {
     logErrorInstance(e, { accountId });
     logger.error(`Schema creation from ${definition} failed`);

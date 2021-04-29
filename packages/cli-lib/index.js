@@ -6,11 +6,13 @@ const {
   getAccountId,
   getAccountConfig,
   getEnv,
+
   findConfig,
   loadConfig,
   loadConfigFromEnvironment,
   updateAccountConfig,
   validateConfig,
+  isConfigFlagEnabled,
   isTrackingAllowed,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
@@ -37,6 +39,7 @@ module.exports = {
   uploadFolder,
   validateConfig,
   isTrackingAllowed,
+  isConfigFlagEnabled,
   watch,
   walk,
 };
