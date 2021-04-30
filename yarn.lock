@@ -8641,6 +8641,7 @@ table@^5.2.3:
     string-width "^3.0.0"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 table@^6.0.3, table@^6.0.4:
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/table/-/table-6.7.0.tgz#26274751f0ee099c547f6cb91d3eff0d61d155b2"
@@ -8650,6 +8651,9 @@ table@^6.0.3, table@^6.0.4:
     lodash.clonedeep "^4.5.0"
 =======
 table@^6.0.4:
+=======
+table@^6.6.0:
+>>>>>>> updated table and schema logSchemas to handle not outputting 'undefined' as the new table version will do
   version "6.6.0"
   resolved "https://registry.yarnpkg.com/table/-/table-6.6.0.tgz#905654b79df98d9e9a973de1dd58682532c40e8e"
   integrity sha512-iZMtp5tUvcnAdtHpZTWLPF0M7AgiQsURR2DwmxnJwSy8I3+cY+ozzVvYha3BOLG2TB+L0CqjIz+91htuj6yCXg==
