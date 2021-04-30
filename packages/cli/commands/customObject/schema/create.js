@@ -48,7 +48,7 @@ exports.handler = async options => {
   try {
     if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
       await createSchemaFromHubFile(accountId, filePath);
-      logger.success(`Your schema has been created in acount "${accountId}"`);
+      logger.success(`Your schema has been created in account "${accountId}"`);
     } else {
       const res = await createSchema(accountId, filePath);
       logger.success(
