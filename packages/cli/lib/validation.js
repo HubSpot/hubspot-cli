@@ -50,7 +50,7 @@ async function validateAccount(options) {
       );
     } else {
       logger.error(
-        'An account needs to be supplied either via "--account" or through setting a "defaultAccount"'
+        'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
       );
     }
     return false;
