@@ -48,7 +48,7 @@ exports.handler = async options => {
   try {
     if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
       await updateSchemaFromHubFile(accountId, filePath);
-      logger.success(`Your schema has been updated in acount "${accountId}"`);
+      logger.success(`Your schema has been updated in account "${accountId}"`);
     } else {
       const res = await updateSchema(accountId, name, filePath);
       logger.success(
