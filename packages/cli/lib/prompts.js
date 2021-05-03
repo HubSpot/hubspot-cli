@@ -90,7 +90,7 @@ const ACCOUNT_NAME = {
 const ACCOUNT_API_KEY = {
   name: 'apiKey',
   message:
-    'Enter the API key for your account (found at https://app.hubspot.com/l/api-key):',
+    'Enter the API key for your account (found at https://app.hubspot.com/l/api-key ):',
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
       return 'You did not enter a valid API key. Please try again.';
