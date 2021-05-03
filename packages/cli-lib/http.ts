@@ -1,6 +1,8 @@
 import { getAccountConfig } from './lib/config';
 import { getRequestOptions } from './http/requestOptions';
 import { accessTokenForPersonalAccessKey } from './personalAccessKey';
+import path from 'path';
+const contentDisposition = require('content-disposition');
 const { getOauthManager } = require('./oauth');
 const {
   FileSystemErrorContext,
@@ -11,6 +13,7 @@ import requestPN from 'request-promise-native';
 import fs from 'fs-extra';
 import request from 'request';
 import { logger } from './logger';
+import { ServerResponse } from 'node:http';
 
 export const withOauth = async (
   accountId: number,
@@ -146,7 +149,7 @@ export const createGetRequestStream = ({
 }) => async (
   accountId: number,
   options: RequestOptions & { query: { [key: string]: any } },
-  filepath: string
+  destPath: string
 ) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
@@ -155,7 +158,7 @@ export const createGetRequestStream = ({
     logFileSystemErrorInstance(
       err,
       new FileSystemErrorContext({
-        filepath,
+        destPath,
         accountId,
         write: true,
       })
@@ -180,6 +183,17 @@ export const createGetRequestStream = ({
       req.on('error', reject);
       req.on('response', res => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          let filepath = destPath;
+
+          if (fs.existsSync(destPath)) {
+            const stat = fs.statSync(destPath);
+            if (stat.isDirectory()) {
+              const { parameters } = contentDisposition.parse(
+                res.headers['content-disposition']
+              );
+              filepath = path.join(destPath, parameters.filename);
+            }
+          }
           try {
             fs.ensureFileSync(filepath);
           } catch (err) {

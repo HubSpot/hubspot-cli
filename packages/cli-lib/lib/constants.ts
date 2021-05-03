@@ -101,3 +101,7 @@ export const GITHUB_RELEASE_TYPES = {
   RELEASE: 'release',
   REPOSITORY: 'repository',
 };
+
+export const ConfigFlags = {
+  USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
+};
