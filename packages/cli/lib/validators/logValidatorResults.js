@@ -8,9 +8,14 @@ function logResultsAsJson(results) {
       if (success && result.result !== VALIDATION_RESULT.SUCCESS) {
         success = false;
       }
-      acc[result.validator] = [];
+      acc[result.validatorKey] = [];
     }
-    acc[result.validator].push(result);
+    const {
+      validatorName: __omit1, // eslint-disable-line no-unused-vars
+      validatorKey: __omit2, // eslint-disable-line no-unused-vars
+      ...resultWithOmittedValues
+    } = result;
+    acc[result.validatorKey].push(resultWithOmittedValues);
     return acc;
   }, {});
   const result = {
@@ -24,8 +29,8 @@ function logValidatorResults(results, { logAsJson = false } = {}) {
   if (logAsJson) {
     return logResultsAsJson(results);
   }
-  results.forEach(({ error, validator, result }) => {
-    const message = `${validator}: ${error}`;
+  results.forEach(({ error, validatorName, result }) => {
+    const message = `${validatorName}: ${error}`;
     switch (result) {
       case VALIDATION_RESULT.WARNING:
         logger.warn(message);
@@ -34,7 +39,7 @@ function logValidatorResults(results, { logAsJson = false } = {}) {
         logger.error(message);
         break;
       case VALIDATION_RESULT.SUCCESS:
-        logger.success(validator);
+        logger.success(validatorName);
         break;
       default:
         logger.log(message);
