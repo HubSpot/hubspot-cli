@@ -157,7 +157,7 @@ const createGetRequestStream = ({ contentType }) => async (
 
           if (fs.existsSync(destPath)) {
             const stat = fs.statSync(destPath);
-            if (stat.isDirectory) {
+            if (stat.isDirectory()) {
               const { parameters } = contentDisposition.parse(
                 res.headers['content-disposition']
               );
