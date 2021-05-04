@@ -1,6 +1,6 @@
 const templates = require('@hubspot/cli-lib/templates');
 
-const templateLimitValidator = require('../marketplaceValidators/templateLimitValidator');
+const TemplateLimitValidator = require('../marketplaceValidators/theme/TemplateLimitValidator');
 const { VALIDATION_RESULT } = require('../constants');
 
 jest.mock('@hubspot/cli-lib/templates');
@@ -13,13 +13,13 @@ const makeFilesList = numFiles => {
   return files;
 };
 
-describe('validators/templateLimitValidator', () => {
+describe('validators/theme/templateLimitValidator', () => {
   beforeEach(() => {
     templates.isTemplate.mockReturnValue(true);
   });
 
   it('returns error if template limit is exceeded', async () => {
-    const validationErrors = templateLimitValidator.validate(
+    const validationErrors = TemplateLimitValidator.validate(
       'dirName',
       makeFilesList(51)
     );
@@ -28,7 +28,7 @@ describe('validators/templateLimitValidator', () => {
   });
 
   it('returns no errors if template limit is not exceeded', async () => {
-    const validationErrors = templateLimitValidator.validate(
+    const validationErrors = TemplateLimitValidator.validate(
       'dirName',
       makeFilesList(50)
     );

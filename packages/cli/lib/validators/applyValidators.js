@@ -1,12 +1,12 @@
-const { VALIDATION_RESULT } = require('./constants');
-
 async function applyValidators(validators, ...args) {
   return Promise.all(
-    validators.map(async validator => {
-      const validationResult = await validator.validate(...args);
-      return !validationResult.length
-        ? [{ validator: validator.name, result: VALIDATION_RESULT.SUCCESS }]
-        : validationResult;
+    validators.map(async Validator => {
+      const validationResult = await Validator.validate(...args);
+      if (!validationResult.length) {
+        // Return a success obj so we can log the success
+        return [Validator.getSuccess()];
+      }
+      return validationResult;
     })
   ).then(errorsGroupedByValidatorType => errorsGroupedByValidatorType.flat());
 }

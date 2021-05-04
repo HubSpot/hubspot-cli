@@ -1,29 +1,39 @@
 const { isTemplate } = require('@hubspot/cli-lib/templates');
 
-const { VALIDATION_RESULT } = require('../../constants');
+const BaseValidator = require('../BaseValidator');
 
-const VALIDATOR_NAME = 'TemplateLimitValidator';
 const TEMPLATE_LIMIT = 50;
-
-// Validate that the theme does not contain more than TEMPLATE_LIMIT templates
-function templateLimitValidator(absoluteThemePath, files) {
-  let validationResult = [];
-  const templates = files.filter(isTemplate);
-
-  const numTemplates = templates.length;
-
-  if (numTemplates > TEMPLATE_LIMIT) {
-    validationResult.push({
-      validator: VALIDATOR_NAME,
-      error: `Cannot exceed ${TEMPLATE_LIMIT} templates in your theme (found ${numTemplates})`,
-      result: VALIDATION_RESULT.FATAL,
-    });
+class TemplateLimitValidator extends BaseValidator {
+  constructor() {
+    super();
+    this.name = 'Template limit';
+    this.key = 'templateLimit';
+    this.errors = {
+      LIMIT_EXCEEDED: {
+        key: 'limitExceeded',
+        getCopy: ({ limit, total }) =>
+          `Cannot exceed ${limit} templates in your theme (found ${total})`,
+      },
+    };
   }
 
-  return validationResult;
+  // Validate that the theme does not contain more than TEMPLATE_LIMIT templates
+  validate(absoluteThemePath, files) {
+    let validationResult = [];
+    const templates = files.filter(isTemplate);
+    const numTemplates = templates.length;
+
+    if (numTemplates > TEMPLATE_LIMIT) {
+      validationResult.push(
+        this.getError(this.errors.LIMIT_EXCEEDED, {
+          limit: TEMPLATE_LIMIT,
+          total: numTemplates,
+        })
+      );
+    }
+
+    return validationResult;
+  }
 }
 
-module.exports = {
-  name: VALIDATOR_NAME,
-  validate: templateLimitValidator,
-};
+module.exports = new TemplateLimitValidator();
