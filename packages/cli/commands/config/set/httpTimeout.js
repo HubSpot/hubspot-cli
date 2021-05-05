@@ -24,7 +24,7 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'http-timeout [timeout]';
-exports.describe = 'Change default mode used in config';
+exports.describe = 'Change http timeout used in config';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
