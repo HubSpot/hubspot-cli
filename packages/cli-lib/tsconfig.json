@@ -1,12 +1,14 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "rootDir": "./",
-    "outDir": "./dist",
-    "esModuleInterop": true,
-    "strict": true,
-    "lib": ["es2017"]
+    "outDir": "./lib",
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
-  "typeRoots": ["./node_modules/@types", "./types", "../../node_modules/@types"]
+  "include": ["./src", "./package.json"],
+  "typeRoots": [
+    "./node_modules/@types",
+    "./src/types",
+    "../../node_modules/@types"
+  ]
 }

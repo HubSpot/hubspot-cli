@@ -84,8 +84,12 @@ export interface FileSystemErrorContextInterface extends ErrorContext {
 export type StatusCodeError = {
   statusCode: number;
   message: string;
-  response: request.FullResponse;
+  response?: request.FullResponse;
   name: 'StatusCodeError';
+  options?: {
+    method: 'PUT' | 'POST' | 'GET' | 'DELETE' | 'PATCH';
+  };
+  error?: Error & { category?: string };
 };
 
 export type FileManagerFile = {

@@ -5,30 +5,34 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('../lib/constants.js');
 const { fetchScopeData } = require('../api/localDevAuth/authenticated');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-  ErrorContext,
-} = require('./standardErrors');
+const { debugErrorAndContext, logErrorInstance } = require('./standardErrors');
+import { ErrorContext, StatusCodeError } from '../types';
 
-const isApiStatusCodeError = err =>
+const isApiStatusCodeError = (err: StatusCodeError) =>
   err.name === 'StatusCodeError' ||
   (err.statusCode >= 100 && err.statusCode < 600);
-const isApiUploadValidationError = err =>
+
+const isApiUploadValidationError = (err: StatusCodeError) =>
   !!(
     err.statusCode === 400 &&
     err.response &&
     err.response.body &&
     (err.response.body.message || err.response.body.errors)
   );
-const isMissingScopeError = err =>
+const isMissingScopeError = (err: StatusCodeError) =>
   err.name === 'StatusCodeError' &&
   err.statusCode === 403 &&
   err.error.category === 'MISSING_SCOPES';
+
 const contactSupportString =
   'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
-const parseValidationErrors = (responseBody = {}) => {
+const parseValidationErrors = (
+  responseBody: {
+    errors?: Array<Error & { errorTokens: { line: number } }>;
+    message?: string;
+  } = {}
+) => {
   const errorMessages = [];
 
   const { errors, message } = responseBody;
@@ -51,23 +55,23 @@ const parseValidationErrors = (responseBody = {}) => {
   return errorMessages;
 };
 
-class ApiErrorContext extends ErrorContext {
-  constructor(props = {}) {
-    super(props);
-    /** @type {string} */
+class ApiErrorContext implements ErrorContext {
+  request?: string;
+  payload?: string;
+  accountId?: number;
+
+  constructor(
+    props: { request?: string; payload?: string; accountId?: number } = {}
+  ) {
     this.request = props.request || '';
-    /** @type {string} */
     this.payload = props.payload || '';
+    this.accountId = props.accountId || undefined;
   }
 }
 
-/**
- * @param {Error}           error
- * @param {ApiErrorContext} context
- */
-function logValidationErrors(error, context) {
-  const { response = {} } = error;
-  const validationErrors = parseValidationErrors(response.body);
+function logValidationErrors(error: StatusCodeError, context: ApiErrorContext) {
+  const { response } = error;
+  const validationErrors = parseValidationErrors(response?.body);
   if (validationErrors.length) {
     validationErrors.forEach(err => {
       logger.error(err);
@@ -78,39 +82,35 @@ function logValidationErrors(error, context) {
 
 /**
  * Message segments for API messages.
- *
- * @enum {string}
  */
-const ApiMethodVerbs = {
-  DEFAULT: 'request',
-  DELETE: 'delete',
-  GET: 'request',
-  PATCH: 'update',
-  POST: 'post',
-  PUT: 'update',
-};
+enum ApiMethodVerbs {
+  DEFAULT = 'request',
+  DELETE = 'delete',
+  GET = 'request',
+  PATCH = 'update',
+  POST = 'post',
+  PUT = 'update',
+}
 
 /**
  * Message segments for API messages.
- *
- * @enum {string}
  */
-const ApiMethodPrepositions = {
-  DEFAULT: 'for',
-  DELETE: 'of',
-  GET: 'for',
-  PATCH: 'to',
-  POST: 'to',
-  PUT: 'to',
-};
+enum ApiMethodPrepositions {
+  DEFAULT = 'for',
+  DELETE = 'of',
+  GET = 'for',
+  PATCH = 'to',
+  POST = 'to',
+  PUT = 'to',
+}
 
 /**
  * Logs messages for an error instance resulting from API interaction.
- *
- * @param {StatusCodeError} error
- * @param {ApiErrorContext} context
  */
-function logApiStatusCodeError(error, context) {
+function logApiStatusCodeError(
+  error: StatusCodeError,
+  context: ApiErrorContext
+) {
   const { statusCode } = error;
   const { method } = error.options || {};
   const isPutOrPost = method === 'PUT' || method === 'POST';
@@ -173,12 +173,8 @@ function logApiStatusCodeError(error, context) {
 
 /**
  * Logs a message for an error instance resulting from API interaction.
- *
- * @param {Error|SystemError|Object} error
- * @param {ApiErrorContext}          context
  */
-function logApiErrorInstance(error, context) {
-  // StatusCodeError
+function logApiErrorInstance(error: StatusCodeError, context: ApiErrorContext) {
   if (isApiStatusCodeError(error)) {
     logApiStatusCodeError(error, context);
     return;
@@ -188,11 +184,11 @@ function logApiErrorInstance(error, context) {
 
 /**
  * Logs a message for an error instance resulting from filemapper API upload.
- *
- * @param {Error|SystemError|Object} error
- * @param {ApiErrorContext}          context
  */
-function logApiUploadErrorInstance(error, context) {
+function logApiUploadErrorInstance(
+  error: StatusCodeError,
+  context: ApiErrorContext
+) {
   if (isApiUploadValidationError(error)) {
     logValidationErrors(error, context);
     return;
@@ -200,7 +196,10 @@ function logApiUploadErrorInstance(error, context) {
   logApiErrorInstance(error, context);
 }
 
-async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
+async function verifyAccessKeyAndUserAccess(
+  accountId: number,
+  scopeGroup: string
+) {
   const accountConfig = getAccountConfig(accountId);
   const { authType } = accountConfig;
   if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
@@ -239,22 +238,17 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
 /**
  * Logs a message for an error instance resulting from API interaction
  * related to serverless function.
- *
- * @param {int} accountId
- * @param {Error|SystemError|Object} error
- * @param {ApiErrorContext}          context
  */
 async function logServerlessFunctionApiErrorInstance(
-  accountId,
-  error,
-  context
+  accountId: number,
+  error: StatusCodeError,
+  context: ApiErrorContext
 ) {
   if (isMissingScopeError(error)) {
     await verifyAccessKeyAndUserAccess(accountId, SCOPE_GROUPS.functions);
     return;
   }
 
-  // StatusCodeError
   if (isApiStatusCodeError(error)) {
     logApiStatusCodeError(error, context);
     return;
@@ -262,7 +256,7 @@ async function logServerlessFunctionApiErrorInstance(
   logErrorInstance(error, context);
 }
 
-module.exports = {
+export {
   ApiErrorContext,
   parseValidationErrors,
   logApiErrorInstance,

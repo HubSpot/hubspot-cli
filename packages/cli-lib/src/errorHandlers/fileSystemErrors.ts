@@ -1,11 +1,11 @@
 import { logger } from '../logger';
+import { isSystemError, debugErrorAndContext } from './standardErrors';
 import {
+  FileSystemErrorContextInterface,
+  StatusCodeError,
   ErrorContext,
-  isSystemError,
-  debugErrorAndContext,
-} from './standardErrors';
-import { FileSystemErrorContextInterface, StatusCodeError } from '../types';
-class FileSystemErrorContext implements FileSystemErrorContextInterface {
+} from '../types';
+export class FileSystemErrorContext implements FileSystemErrorContextInterface {
   filepath: string;
   read: boolean;
   write: boolean;
@@ -19,7 +19,7 @@ class FileSystemErrorContext implements FileSystemErrorContextInterface {
   }
 }
 
-function logFileSystemErrorInstance(
+export function logFileSystemErrorInstance(
   error: Error | StatusCodeError,
   context: FileSystemErrorContext
 ) {
@@ -42,8 +42,3 @@ function logFileSystemErrorInstance(
   logger.error(message.join(' '));
   debugErrorAndContext(error as StatusCodeError, context as ErrorContext);
 }
-
-module.exports = {
-  FileSystemErrorContext,
-  logFileSystemErrorInstance,
-};

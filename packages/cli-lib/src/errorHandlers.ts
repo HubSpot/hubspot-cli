@@ -1,22 +1,17 @@
-const {
-  ErrorContext,
-  isFatalError,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
-const {
+import { isFatalError, logErrorInstance } from './errorHandlers/standardErrors';
+import {
   FileSystemErrorContext,
   logFileSystemErrorInstance,
-} = require('./errorHandlers/fileSystemErrors');
-const {
+} from './errorHandlers/fileSystemErrors';
+import {
   ApiErrorContext,
   logApiErrorInstance,
   logApiUploadErrorInstance,
   logServerlessFunctionApiErrorInstance,
   parseValidationErrors,
-} = require('./errorHandlers/apiErrors');
+} from './errorHandlers/apiErrors';
 
-module.exports = {
-  ErrorContext,
+export default {
   ApiErrorContext,
   FileSystemErrorContext,
   isFatalError,

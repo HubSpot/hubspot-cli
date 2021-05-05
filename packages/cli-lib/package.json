@@ -3,14 +3,22 @@
   "version": "3.0.6-beta.1",
   "description": "Library for creating scripts for working with HubSpot",
   "license": "Apache-2.0",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
   "scripts": {
-    "build": "tsc --project ./",
-    "start": "tsc --watch --project ./"
+    "tsc": "tsc",
+    "start": "tsc --watch"
   },
   "dependencies": {
     "chalk": "^2.4.2",

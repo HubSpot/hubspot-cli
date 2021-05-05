@@ -65,6 +65,7 @@ export const getConfigAccountId = (account: Account) => {
   // so fix this either way
   const __config = account || getConfig();
   if (!__config) return;
+  // @ts-ignore
   return __config.portalId;
 };
 

@@ -52,10 +52,4 @@ function logErrorInstance(error: any, context: ErrorContext) {
   debugErrorAndContext(error, context);
 }
 
-export {
-  debugErrorAndContext,
-  ErrorContext,
-  isFatalError,
-  isSystemError,
-  logErrorInstance,
-};
+export { debugErrorAndContext, isFatalError, isSystemError, logErrorInstance };
