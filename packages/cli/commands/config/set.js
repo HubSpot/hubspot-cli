@@ -1,6 +1,6 @@
 const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
-const defaultAccount = require('./set/default-account');
-const defaultMode = require('./set/default-mode');
+const defaultAccount = require('./set/defaultAccount');
+const defaultMode = require('./set/defaultMode');
 
 exports.command = 'set';
 exports.describe = 'Commands for working with the config file';
