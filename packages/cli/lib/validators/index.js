@@ -1,8 +1,8 @@
-const themeConfigValidator = require('./marketplaceValidators/theme/themeConfigValidator');
-const templateLimitValidator = require('./marketplaceValidators/theme/templateLimitValidator');
+const ThemeConfigValidator = require('./marketplaceValidators/theme/ThemeConfigValidator');
+const TemplateLimitValidator = require('./marketplaceValidators/theme/TemplateLimitValidator');
 
 const MARKETPLACE_VALIDATORS = {
-  theme: [themeConfigValidator, templateLimitValidator],
+  theme: [ThemeConfigValidator, TemplateLimitValidator],
 };
 
 module.exports = MARKETPLACE_VALIDATORS;
