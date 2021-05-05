@@ -86,7 +86,10 @@ exports.builder = yargs => {
   });
 
   yargs.example([
-    ['$0 config set default-account', 'Select account to use as the default'],
+    [
+      '$0 config set default-account',
+      'Select account to use as the default from a list',
+    ],
     [
       '$0 config set default-account MyAccount',
       'Set the default account to the account in the config with name equal to "MyAccount"',

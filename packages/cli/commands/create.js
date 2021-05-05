@@ -10,6 +10,7 @@ const { createFunction } = require('@hubspot/cli-lib/functions');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
+const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');

@@ -9,6 +9,7 @@ const {
   logFileSystemErrorInstance,
 } = require('../errorHandlers/fileSystemErrors');
 const { logErrorInstance } = require('../errorHandlers/standardErrors');
+const { commaSeparatedValues } = require('./text');
 const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -23,6 +24,7 @@ const {
 } = require('./constants');
 const { getValidEnv } = require('./environment');
 
+const ALL_MODES = Object.values(Mode);
 let _config;
 let _configPath;
 let environmentVariableConfigLoaded = false;
@@ -547,6 +549,25 @@ const updateDefaultAccount = defaultAccount => {
 /**
  * @throws {Error}
  */
+const updateDefaultMode = defaultMode => {
+  if (!defaultMode || !ALL_MODES.find(m => m === defaultMode)) {
+    throw new Error(
+      `The mode ${defaultMode} is invalid. Valid values are ${commaSeparatedValues(
+        ALL_MODES
+      )}.`
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.defaultMode = defaultMode;
+
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
 const renameAccount = async (currentName, newName) => {
   const accountId = getAccountId(currentName);
   const accountConfigToRename = getAccountConfig(accountId);
@@ -752,6 +773,7 @@ module.exports = {
   getAccountId,
   updateAccountConfig,
   updateDefaultAccount,
+  updateDefaultMode,
   renameAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
