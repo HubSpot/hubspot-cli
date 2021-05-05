@@ -1,10 +1,14 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { renameAccount } = require('@hubspot/cli-lib/lib/config');
+const { getConfig, getConfigPath } = require('@hubspot/cli-lib/lib/config');
 const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const {
   addConfigOptions,
@@ -28,36 +32,34 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'rename <accountName> <newName>';
-exports.describe = 'Rename account in config';
+exports.command = 'list';
+exports.describe = 'List names of accounts defined in config';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { accountName, newName } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('config-rename', {}, accountId);
+  trackCommandUsage('accounts-list', {}, accountId);
 
-  await renameAccount(accountName, newName);
+  const config = getConfig();
+  const configPath = getConfigPath();
+  const portalData = config.portals.map(portal => {
+    return [portal.name, portal.portalId, portal.authType];
+  });
+  portalData.unshift(getTableHeader(['Name', 'Account ID', 'Auth Type']));
 
-  return logger.log(`Account ${accountName} renamed to ${newName}`);
+  logger.log(`Config path: ${configPath}`);
+  logger.log('Default account: ', config.defaultPortal);
+  logger.log('Accounts:');
+  logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));
 };
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
 
-  yargs.positional('accountName', {
-    describe: 'Name of account to be renamed.',
-    type: 'string',
-  });
-  yargs.positional('newName', {
-    describe: 'New name for account.',
-    type: 'string',
-  });
-
-  yargs.example([['$0 config rename myExistingPortalName myNewPortalName']]);
+  yargs.example([['$0 accounts list']]);
 
   return yargs;
 };

@@ -44,7 +44,7 @@ const selectAccountFromConfig = async config => {
   return selectedDefault;
 };
 
-exports.command = 'default [newDefault]';
+exports.command = 'default-account [newDefault]';
 exports.describe = 'Change default account used in config';
 
 exports.handler = async options => {
@@ -56,7 +56,7 @@ exports.handler = async options => {
   const { newDefault: specifiedNewDefault } = options;
   let newDefault;
 
-  trackCommandUsage('config-set-default', {}, accountId);
+  trackCommandUsage('config-set-default-account', {}, accountId);
 
   if (!specifiedNewDefault) {
     newDefault = await selectAccountFromConfig(config);
@@ -86,13 +86,13 @@ exports.builder = yargs => {
   });
 
   yargs.example([
-    ['$0 config set default', 'Select account to use as the default'],
+    ['$0 config set default-account', 'Select account to use as the default'],
     [
-      '$0 config set default MyAccount',
+      '$0 config set default-account MyAccount',
       'Set the default account to the account in the config with name equal to "MyAccount"',
     ],
     [
-      '$0 config set default 1234567',
+      '$0 config set default-account 1234567',
       'Set the default account to the account in the config with accountId equal to "1234567"',
     ],
   ]);
