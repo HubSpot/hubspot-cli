@@ -16,6 +16,7 @@ const ALLOWED_EXTENSIONS = new Set([
   'gif',
   'map',
   'svg',
+  'eot',
   'ttf',
   'woff',
   'woff2',
@@ -105,7 +106,12 @@ const GITHUB_RELEASE_TYPES = {
   REPOSITORY: 'repository',
 };
 
+const ConfigFlags = {
+  USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
+};
+
 module.exports = {
+  ConfigFlags,
   Mode,
   ENVIRONMENTS,
   ALLOWED_EXTENSIONS,

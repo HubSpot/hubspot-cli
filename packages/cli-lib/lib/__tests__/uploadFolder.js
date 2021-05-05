@@ -49,7 +49,7 @@ describe('uploadFolder', () => {
 
       uploadedFilesInOrder.forEach((file, index) => {
         expect(upload).nthCalledWith(index + 1, accountId, file, file, {
-          qs: { buffer: false },
+          qs: { buffer: false, environmentId: 1 },
         });
       });
     });

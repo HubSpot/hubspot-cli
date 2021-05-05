@@ -4,6 +4,13 @@ const {
   loadConfigFromEnvironment,
   Mode,
 } = require('@hubspot/cli-lib');
+const { getConfigPath } = require('@hubspot/cli-lib/lib/config');
+const {
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/cli-lib/lib/constants');
+const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
@@ -43,7 +50,7 @@ async function validateAccount(options) {
       );
     } else {
       logger.error(
-        'An account needs to be supplied either via "--account" or through setting a "defaultAccount"'
+        'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
       );
     }
     return false;
@@ -62,6 +69,18 @@ async function validateAccount(options) {
   }
 
   const { authType, auth, apiKey, personalAccessKey } = accountConfig;
+
+  if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
+    logger.error(
+      `Invalid "authType" value "${authType}" for account "${accountId}" in config file: ${getConfigPath()}. Valid values are ${commaSeparatedValues(
+        [
+          PERSONAL_ACCESS_KEY_AUTH_METHOD,
+          OAUTH_AUTH_METHOD,
+          API_KEY_AUTH_METHOD,
+        ].map(method => method.value)
+      )}.`
+    );
+  }
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {

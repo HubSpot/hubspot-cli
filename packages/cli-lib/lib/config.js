@@ -58,7 +58,7 @@ const getConfigAccountId = config => {
 const validateConfig = () => {
   const config = getConfig();
   if (!config) {
-    logger.error('config is not defined');
+    logger.error('No config was found');
     return false;
   }
   const accounts = getConfigAccounts();
@@ -133,7 +133,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultPortal,
     defaultMode,
     httpTimeout,
-    allowsUsageTracking,
+    allowUsageTracking,
     portals,
     ...rest
   } = unorderedConfig;
@@ -142,9 +142,9 @@ const getOrderedConfig = unorderedConfig => {
     ...(defaultPortal && { defaultPortal }),
     defaultMode,
     httpTimeout,
-    allowsUsageTracking,
-    portals: portals.map(getOrderedAccount),
+    allowUsageTracking,
     ...rest,
+    portals: portals.map(getOrderedAccount),
   };
 };
 
@@ -693,6 +693,16 @@ const loadEnvironmentVariableConfig = () => {
   return setConfig(envConfig);
 };
 
+const isConfigFlagEnabled = flag => {
+  if (!configFileExists() || configFileIsBlank()) {
+    return false;
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+
+  return config[flag] || false;
+};
+
 module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
@@ -704,6 +714,7 @@ module.exports = {
   getConfigPath,
   getOrderedAccount,
   getOrderedConfig,
+  isConfigFlagEnabled,
   setConfig,
   setConfigPath,
   loadConfig,

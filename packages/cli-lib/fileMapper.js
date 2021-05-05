@@ -91,11 +91,18 @@ function useApiBuffer(mode) {
 }
 
 /**
- * @param {Mode} mode
+ * Determines API param based on mode an options
+ *
+ * @typedef {Object} APIOptions
+ * @property {Mode} mode
+ * @property {Object} options
  */
-function getFileMapperApiQueryFromMode(mode) {
+function getFileMapperQueryValues({ mode, options = {} }) {
   return {
-    buffer: useApiBuffer(mode),
+    qs: {
+      buffer: useApiBuffer(mode),
+      environmentId: options.staging ? 2 : 1,
+    },
   };
 }
 
@@ -267,9 +274,12 @@ async function fetchAndWriteFileStream(input, srcPath, filepath) {
   const { accountId } = input;
 
   try {
-    const node = await fetchFileStream(accountId, srcPath, filepath, {
-      qs: getFileMapperApiQueryFromMode(input.mode),
-    });
+    const node = await fetchFileStream(
+      accountId,
+      srcPath,
+      filepath,
+      getFileMapperQueryValues(input)
+    );
     await writeUtimes(input, filepath, node);
   } catch (err) {
     logApiErrorInstance(
@@ -302,10 +312,10 @@ async function writeFileMapperNode(input, node, filepath) {
   if (!node.folder) {
     try {
       await fetchAndWriteFileStream(input, node.path, filepath);
+      return;
     } catch (err) {
-      // Logging handled by handler
+      return false;
     }
-    return;
   }
   try {
     await fs.ensureDir(filepath);
@@ -319,6 +329,7 @@ async function writeFileMapperNode(input, node, filepath) {
         write: true,
       })
     );
+    return false;
   }
 }
 
@@ -390,17 +401,20 @@ async function downloadFile(input) {
  * @returns {Promise<FileMapperNode}
  */
 async function fetchFolderFromApi(input) {
-  const { accountId, src, mode } = input;
+  const { accountId, src } = input;
   const { isRoot, isFolder, isHubspot } = getTypeDataFromPath(src);
   if (!isFolder) {
     throw new Error(`Invalid request for folder: "${src}"`);
   }
   try {
     const srcPath = isRoot ? '@root' : src;
-    const qs = getFileMapperApiQueryFromMode(mode);
     const node = isHubspot
-      ? await downloadDefault(accountId, srcPath, { qs })
-      : await download(accountId, srcPath, { qs });
+      ? await downloadDefault(
+          accountId,
+          srcPath,
+          getFileMapperQueryValues(input)
+        )
+      : await download(accountId, srcPath, getFileMapperQueryValues(input));
     logger.log(
       'Fetched "%s" from account %d from the Design Manager successfully',
       src,
@@ -440,19 +454,36 @@ async function downloadFolder(input) {
       dest === getCwd()
         ? convertToLocalFileSystemPath(path.resolve(dest, node.name))
         : dest;
+    let success = true;
     recurseFolder(
       node,
       (childNode, { filepath }) => {
-        queue.add(() => writeFileMapperNode(input, childNode, filepath));
+        queue.add(async () => {
+          const succeeded = await writeFileMapperNode(
+            input,
+            childNode,
+            filepath
+          );
+          if (succeeded === false) {
+            success = false;
+          }
+        });
       },
       rootPath
     );
     await queue.onIdle();
-    logger.success(
-      'Completed fetch of folder "%s" to "%s" from the Design Manager',
-      input.src,
-      input.dest
-    );
+
+    if (success) {
+      logger.success(
+        'Completed fetch of folder "%s" to "%s" from the Design Manager',
+        input.src,
+        input.dest
+      );
+    } else {
+      logger.error(
+        `Not all files in folder "${input.src}" were successfully fetched.  Re-run the last command to try again`
+      );
+    }
   } catch (err) {
     logger.error(
       'Failed fetch of folder "%s" to "%s" from the Design Manager',
@@ -492,7 +523,7 @@ module.exports = {
   isPathToHubspot,
   downloadFileOrFolder,
   recurseFolder,
-  getFileMapperApiQueryFromMode,
+  getFileMapperQueryValues,
   fetchFolderFromApi,
   getTypeDataFromPath,
 };
