@@ -21,6 +21,7 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
   ENVIRONMENT_VARIABLES,
+  MIN_HTTP_TIMEOUT,
 } = require('./constants');
 const { getValidEnv } = require('./environment');
 
@@ -568,6 +569,24 @@ const updateDefaultMode = defaultMode => {
 /**
  * @throws {Error}
  */
+const updateHttpTimeout = timeout => {
+  const parsedTimeout = parseInt(timeout);
+  if (isNaN(parsedTimeout) || parsedTimeout < MIN_HTTP_TIMEOUT) {
+    throw new Error(
+      `The value ${timeout} is invalid. The value must be a number greater than ${MIN_HTTP_TIMEOUT}.`
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.httpTimeout = parsedTimeout;
+
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
 const renameAccount = async (currentName, newName) => {
   const accountId = getAccountId(currentName);
   const accountConfigToRename = getAccountConfig(accountId);
@@ -774,6 +793,7 @@ module.exports = {
   updateAccountConfig,
   updateDefaultAccount,
   updateDefaultMode,
+  updateHttpTimeout,
   renameAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
