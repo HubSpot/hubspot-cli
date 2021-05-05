@@ -51,7 +51,6 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  const config = getConfig();
   const { newMode: specifiedNewDefault } = options;
   let newDefault;
 
@@ -70,7 +69,7 @@ exports.handler = async options => {
         ALL_MODES
       )}.`
     );
-    newDefault = await selectMode(config);
+    newDefault = await selectMode();
   }
 
   updateDefaultMode(newDefault);
