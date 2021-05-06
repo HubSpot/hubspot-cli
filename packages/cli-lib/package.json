@@ -17,7 +17,7 @@
     "lib"
   ],
   "scripts": {
-    "tsc": "tsc",
+    "tsc": "rm -rf lib && tsc && mv lib/src/* lib",
     "start": "tsc --watch"
   },
   "dependencies": {
