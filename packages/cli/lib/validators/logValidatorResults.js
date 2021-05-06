@@ -4,7 +4,7 @@ const { VALIDATION_RESULT } = require('./constants');
 function logResultsAsJson(results) {
   let success = true;
   const resultObj = results.reduce((acc, result) => {
-    if (!acc[result.validator]) {
+    if (!acc[result.validatorKey]) {
       if (success && result.result !== VALIDATION_RESULT.SUCCESS) {
         success = false;
       }
