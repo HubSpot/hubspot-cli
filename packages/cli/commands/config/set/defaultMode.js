@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfig, updateDefaultMode } = require('@hubspot/cli-lib/lib/config');
+const { updateDefaultMode } = require('@hubspot/cli-lib/lib/config');
 const inquirer = require('inquirer');
 const {
   Mode,
