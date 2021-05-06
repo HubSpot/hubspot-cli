@@ -3,7 +3,7 @@ async function applyValidators(validators, ...args) {
     validators.map(async Validator => {
       const validationResult = await Validator.validate(...args);
       if (!validationResult.length) {
-        // Return a success obj so we can log the success
+        // Return a success obj so we can log the successes
         return [Validator.getSuccess()];
       }
       return validationResult;

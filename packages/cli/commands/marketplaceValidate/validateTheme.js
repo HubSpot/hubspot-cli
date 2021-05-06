@@ -26,8 +26,8 @@ const { applyValidators } = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 
-exports.command = 'theme <src>';
-exports.describe = 'Validate a theme';
+exports.command = 'marketplace-validate <src>';
+exports.describe = 'Validate a theme for the marketplace';
 
 exports.handler = async options => {
   const { src, config: configPath } = options;

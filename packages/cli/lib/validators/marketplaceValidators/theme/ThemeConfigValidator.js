@@ -1,6 +1,6 @@
 const fs = require('fs');
-
 const BaseValidator = require('../BaseValidator');
+
 class ThemeConfigValidator extends BaseValidator {
   constructor() {
     super();
@@ -22,7 +22,10 @@ class ThemeConfigValidator extends BaseValidator {
     };
   }
 
-  // Validate that the theme contains a theme.json file
+  // Validates:
+  // - Theme contains a theme.json file at the theme root dir
+  // - theme.json file contains valid json
+  // - theme.json file has a "label" field
   validate(absoluteThemePath, files) {
     let validationErrors = [];
     const themeJSONFile = files.find(filePath => {
