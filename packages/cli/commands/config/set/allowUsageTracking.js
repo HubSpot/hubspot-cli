@@ -31,7 +31,7 @@ const enableOrDisableUsageTracking = async () => {
       look: false,
       name: 'isEnabled',
       pageSize: 20,
-      message: 'Choose to enable to disable usage tracking',
+      message: 'Choose to enable or disable usage tracking',
       choices: [
         {
           name: 'Enabled',
