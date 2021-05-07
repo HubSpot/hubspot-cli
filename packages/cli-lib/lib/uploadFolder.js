@@ -28,6 +28,7 @@ function getFilesByType(files) {
   const cssAndJsFiles = [];
   const otherFiles = [];
   const templateFiles = [];
+  const jsonFiles = [];
 
   files.forEach(file => {
     const parts = splitLocalPath(file);
@@ -40,12 +41,14 @@ function getFilesByType(files) {
       cssAndJsFiles.push(file);
     } else if (extension === 'html') {
       templateFiles.push(file);
+    } else if (extension === 'json') {
+      jsonFiles.push(file);
     } else {
       otherFiles.push(file);
     }
   });
 
-  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles];
+  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles];
 }
 /**
  *

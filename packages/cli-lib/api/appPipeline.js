@@ -13,6 +13,7 @@ async function deployApp(accountId, appFolderPath) {
 async function deployAppSync(accountId, appFolderPath) {
   return http.post(accountId, {
     uri: `${APP_PIPELINE_API_PATH}/deploy/sync`,
+    timeout: 60000,
     body: {
       appPath: appFolderPath,
     },

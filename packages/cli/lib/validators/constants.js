@@ -1,0 +1,7 @@
+const WARNING = 'WARNING';
+const FATAL = 'FATAL';
+const SUCCESS = 'SUCCESS';
+
+const VALIDATION_RESULT = { WARNING, FATAL, SUCCESS };
+
+module.exports = { VALIDATION_RESULT };
