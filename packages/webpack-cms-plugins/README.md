@@ -56,4 +56,5 @@ module.exports = ({ account, autoupload }) => ({
 });
 ```
 
-3. Run `webpack --watch --env.account 123 --env.autoupload` to compile your project and automatically upload assets.
+3. Run `webpack --watch --env.account 123 --env.autoupload` to compile your project and automatically upload assets. Replace `123` with your unique Hub ID.
+
