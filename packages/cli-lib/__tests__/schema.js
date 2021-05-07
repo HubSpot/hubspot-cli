@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const chalk = require('chalk');
 const { cleanSchema, writeSchemaToDisk, logSchemas } = require('../schema');
 const { logger } = require('../logger');
 const { getCwd } = require('../path');
@@ -8,9 +9,16 @@ const full = require('./fixtures/schema/full.json');
 const multiple = require('./fixtures/schema/multiple.json');
 
 describe('cli-lib/schema', () => {
+  const originalChalkLevel = chalk.level;
+  beforeEach(() => {
+    chalk.level = 0;
+  });
+  afterEach(() => {
+    chalk.level = originalChalkLevel;
+  });
   describe('cleanSchema()', () => {
     it('cleans a basic schema', () => {
-      expect(cleanSchema(basic)).toEqual(basic);
+      expect(cleanSchema(basic)).toMatchSnapshot();
     });
 
     it('cleans a full schema', () => {

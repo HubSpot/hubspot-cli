@@ -1,4 +1,3 @@
-const readline = require('readline');
 const ora = require('ora');
 const {
   addAccountOptions,
@@ -20,38 +19,17 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
-const { getFunctionByPath } = require('@hubspot/cli-lib/api/functions');
+const {
+  getFunctionByPath,
+  getAppFunctionLogs,
+  getLatestAppFunctionLogs,
+} = require('@hubspot/cli-lib/api/functions');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
-const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
 const { validateAccount } = require('../lib/validation');
-
-const TAIL_DELAY = 5000;
-
-const makeSpinner = (functionPath, accountId) => {
-  return ora(
-    `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
-  );
-};
-
-const makeTailCall = (accountId, functionId) => {
-  return async after => {
-    const latestLog = await getFunctionLogs(accountId, functionId, { after });
-    return latestLog;
-  };
-};
-
-const handleKeypressToExit = exit => {
-  readline.emitKeypressEvents(process.stdin);
-  process.stdin.setRawMode(true);
-  process.stdin.on('keypress', (str, key) => {
-    if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
-      exit();
-    }
-  });
-};
+const { tailLogs } = require('../lib/serverlessLogs');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -65,66 +43,8 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const tailLogs = async ({
-  functionId,
-  functionPath,
-  accountId,
-  accountName,
-  compact,
-}) => {
-  const tailCall = makeTailCall(accountId, functionId);
-  const spinner = makeSpinner(functionPath, accountName || accountId);
-  let initialAfter;
-
-  spinner.start();
-
-  try {
-    const latestLog = await getLatestFunctionLog(accountId, functionId);
-    initialAfter = base64EncodeString(latestLog.id);
-  } catch (e) {
-    // A 404 means no latest log exists(never executed)
-    if (e.statusCode !== 404) {
-      await logServerlessFunctionApiErrorInstance(
-        accountId,
-        e,
-        new ApiErrorContext({ accountId, functionPath })
-      );
-    }
-  }
-
-  const tail = async after => {
-    const latestLog = await tailCall(after);
-
-    if (latestLog.results.length) {
-      spinner.clear();
-      outputLogs(latestLog, {
-        compact,
-      });
-    }
-
-    setTimeout(() => {
-      tail(latestLog.paging.next.after);
-    }, TAIL_DELAY);
-  };
-
-  handleKeypressToExit(() => {
-    spinner.stop();
-    process.exit();
-  });
-  tail(initialAfter);
-};
-
-exports.command = 'logs <endpoint>';
-exports.describe = 'get logs for a function';
-
-exports.handler = async options => {
-  loadAndValidateOptions(options);
-
+const endpointLog = async (accountId, options) => {
   const { latest, follow, compact, endpoint: functionPath } = options;
-  let logsResp;
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('logs', { latest }, accountId);
 
   logger.debug(
     `Getting ${
@@ -142,16 +62,24 @@ exports.handler = async options => {
       process.exit();
     }
   );
+  const functionId = functionResp.id;
 
   logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
 
+  let logsResp;
+
   if (follow) {
+    const spinner = ora(
+      `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
+    );
+    const tailCall = after => getFunctionLogs(accountId, functionId, { after });
+    const fetchLatest = () => getLatestFunctionLog(accountId, functionId);
     await tailLogs({
-      functionId: functionResp.id,
-      functionPath,
       accountId,
-      accountName: options.portal,
       compact,
+      spinner,
+      tailCall,
+      fetchLatest,
     });
   } else if (latest) {
     logsResp = await getLatestFunctionLog(accountId, functionResp.id);
@@ -164,6 +92,57 @@ exports.handler = async options => {
   }
 };
 
+const appFunctionLog = async (accountId, options) => {
+  const { latest, follow, compact, functionName, appPath } = options;
+
+  let logsResp;
+
+  if (follow) {
+    const spinner = ora(
+      `Waiting for log entries for "${functionName}" on account "${accountId}".\n`
+    );
+    const tailCall = after =>
+      getAppFunctionLogs(accountId, functionName, appPath, { after });
+    const fetchLatest = () =>
+      getLatestAppFunctionLogs(accountId, functionName, appPath);
+
+    await tailLogs({
+      accountId,
+      compact,
+      spinner,
+      tailCall,
+      fetchLatest,
+    });
+  } else if (latest) {
+    logsResp = await getLatestAppFunctionLogs(accountId, functionName, appPath);
+  } else {
+    logsResp = await getAppFunctionLogs(accountId, functionName, appPath, {});
+  }
+
+  if (logsResp) {
+    return outputLogs(logsResp, options);
+  }
+};
+
+exports.command = 'logs [endpoint]';
+exports.describe = 'get logs for a function';
+
+exports.handler = async options => {
+  loadAndValidateOptions(options);
+
+  const { latest, functionName } = options;
+
+  const accountId = getAccountId(options);
+
+  trackCommandUsage('logs', { latest }, accountId);
+
+  if (functionName) {
+    appFunctionLog(accountId, options);
+  } else {
+    endpointLog(accountId, options);
+  }
+};
+
 exports.builder = yargs => {
   yargs.positional('endpoint', {
     describe: 'Serverless function endpoint',
@@ -171,6 +150,16 @@ exports.builder = yargs => {
   });
   yargs
     .options({
+      appPath: {
+        describe: 'path to the app',
+        type: 'string',
+        hidden: true,
+      },
+      functionName: {
+        describe: 'app function name',
+        type: 'string',
+        hidden: true,
+      },
       latest: {
         alias: 'l',
         describe: 'retrieve most recent log only',
@@ -191,7 +180,8 @@ exports.builder = yargs => {
         type: 'number',
       },
     })
-    .conflicts('follow', 'limit');
+    .conflicts('follow', 'limit')
+    .conflicts('functionName', 'endpoint');
 
   yargs.example([
     [
