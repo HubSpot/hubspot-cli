@@ -198,7 +198,7 @@ Array [
 
 exports[`cli-lib/schema logSchemas() logs schemas 1`] = `
 "╔════════╤════════╤══════════════╗
-║ [1mLabel[22m  │ [1mName[22m   │ [1mobjectTypeId[22m ║
+║ Label  │ Name   │ objectTypeId ║
 ║ Schema │ schema │ 2-123        ║
 ╚════════╧════════╧══════════════╝
 "
