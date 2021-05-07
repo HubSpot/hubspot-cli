@@ -21,6 +21,9 @@
     "update-notifier": "3.0.1",
     "yargs": "15.4.1"
   },
+  "devDependencies": {
+    "mock-stdin": "^1.0.0"
+  },
   "engines": {
     "node": ">=10"
   },
