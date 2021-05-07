@@ -4,6 +4,7 @@
   "requiredProperties": [],
   "searchableProperties": [],
   "primaryDisplayProperty": "name",
+  "objectTypeId": "2-123",
   "properties": [
     {
       "name": "name",

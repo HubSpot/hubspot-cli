@@ -10,7 +10,7 @@ const multiple = require('./fixtures/schema/multiple.json');
 describe('cli-lib/schema', () => {
   describe('cleanSchema()', () => {
     it('cleans a basic schema', () => {
-      expect(cleanSchema(basic)).toEqual(basic);
+      expect(cleanSchema(basic)).toMatchSnapshot();
     });
 
     it('cleans a full schema', () => {

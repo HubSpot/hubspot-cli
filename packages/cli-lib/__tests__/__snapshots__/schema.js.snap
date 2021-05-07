@@ -1,5 +1,28 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`cli-lib/schema cleanSchema() cleans a basic schema 1`] = `
+Object {
+  "associatedObjects": null,
+  "labels": Object {
+    "plural": "Schemas",
+    "singular": "Schema",
+  },
+  "name": "schema",
+  "primaryDisplayProperty": "name",
+  "properties": Array [
+    Object {
+      "description": "Name Field",
+      "fieldType": "text",
+      "label": "Name",
+      "name": "name",
+      "type": "string",
+    },
+  ],
+  "requiredProperties": Array [],
+  "searchableProperties": Array [],
+}
+`;
+
 exports[`cli-lib/schema cleanSchema() cleans a full schema 1`] = `
 Object {
   "associatedObjects": undefined,
@@ -175,8 +198,8 @@ Array [
 
 exports[`cli-lib/schema logSchemas() logs schemas 1`] = `
 "╔════════╤════════╤══════════════╗
-║ Label  │ Name   │ objectTypeId ║
-║ Schema │ schema │              ║
+║ [1mLabel[22m  │ [1mName[22m   │ [1mobjectTypeId[22m ║
+║ Schema │ schema │ 2-123        ║
 ╚════════╧════════╧══════════════╝
 "
 `;
