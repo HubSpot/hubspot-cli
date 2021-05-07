@@ -17,6 +17,7 @@ const {
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
+const { read } = require('./lib/read');
 const { walk } = require('./lib/walk');
 
 module.exports = {
@@ -42,4 +43,5 @@ module.exports = {
   isConfigFlagEnabled,
   watch,
   walk,
+  read,
 };
