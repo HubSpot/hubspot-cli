@@ -3,6 +3,7 @@ const readline = require('readline');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
@@ -45,9 +46,24 @@ const tailLogs = async ({
   }
 
   const tail = async after => {
-    const latestLog = await tailCall(after);
+    let latestLog;
+    let nextAfter;
+    try {
+      latestLog = await tailCall(after);
+      nextAfter = latestLog.paging.next.after;
+    } catch (e) {
+      spinner.clear();
+      if (e.statusCode !== 404) {
+        logApiErrorInstance(
+          e,
+          new ApiErrorContext({
+            accountId,
+          })
+        );
+      }
+    }
 
-    if (latestLog.results.length) {
+    if (latestLog && latestLog.results.length) {
       spinner.clear();
       outputLogs(latestLog, {
         compact,
@@ -55,7 +71,7 @@ const tailLogs = async ({
     }
 
     setTimeout(() => {
-      tail(latestLog.paging.next.after);
+      tail(nextAfter);
     }, TAIL_DELAY);
   };
 
