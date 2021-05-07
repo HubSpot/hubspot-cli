@@ -63,7 +63,7 @@ const tailLogs = async ({
     spinner.stop();
     process.exit();
   });
-  tail(initialAfter);
+  await tail(initialAfter);
 };
 
 module.exports = {
