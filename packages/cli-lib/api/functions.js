@@ -15,7 +15,10 @@ async function getRoutes(accountId) {
 
 async function buildPackage(portalId, folderPath) {
   return http.post(portalId, {
-    uri: `${FUNCTION_API_PATH}/build`,
+    uri: `${FUNCTION_API_PATH}/build/async`,
+    headers: {
+      Accept: 'text/plain',
+    },
     body: {
       folderPath,
     },
