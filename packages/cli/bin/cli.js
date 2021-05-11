@@ -88,6 +88,7 @@ const argv = yargs
   .recommendCommands()
   .demandCommand(1, '')
   .completion()
+  .wrap(yargs.terminalWidth() * 0.8)
   .strict().argv;
 
 if (argv.help) {
