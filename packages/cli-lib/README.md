@@ -1,6 +1,6 @@
-## Why?
+## What is CLI-lib for?
 
-HubSpot's cli-lib aims to provide useful functionality for interacting with HubSpot's public APIs.
+HubSpot's cli-lib aims to provide useful ways of interacting with HubSpot's public APIs.
 
 ## Framework-agnostic Integrations
 
