@@ -26,5 +26,5 @@ An example flow would be:
 3. You use GitHub Actions to run tests on your code
 4. If tests fail, abort. No upload happens
 5. If all tests pass, have the Github action invoke this script. The LOCAL_PROJECT_PATH would be set to the path it is accessed from on the Github action
-6. The folder at LOCAL_PROJECT_PATH ('MyProject' in this example), is uploaded to your HubSpot DesignManager. Because we specified publish rather than draft, our changes are immediately published and available in your live HubSpot instance.
+6. The folder at LOCAL_PROJECT_PATH, is uploaded to your HubSpot DesignManager. Because we specified publish rather than draft, our changes are immediately published and available in your live HubSpot instance.
 7. If the upload succeeds, we send an alert to Slack stating as much

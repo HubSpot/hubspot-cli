@@ -1,9 +1,8 @@
 require('dotenv').config();
-const { uploadFolder } = require('@hubspot/cli-lib/lib/uploadFolder');
+const { uploadFolder, Mode } = require('@hubspot/cli-lib');
 const axios = require('axios');
 
 const {
-  PROJECT_ID,
   LOCAL_PROJECT_PATH,
   REMOTE_PROJECT_PATH,
   SLACK_ENDPOINT,
@@ -11,7 +10,7 @@ const {
 } = process.env;
 
 (async function() {
-  const successMessage = `${PROJECT_ID} has been deployed to ${ACCOUNT_ID}`;
+  const successMessage = `${LOCAL_PROJECT_PATH} has been deployed to ${ACCOUNT_ID}`;
 
   try {
     // Upload the contents of LOCAL_PROJECT_PATH to REMOTE_PROJECT_PATH in Design Manager
@@ -20,11 +19,11 @@ const {
       parseInt(ACCOUNT_ID, 10),
       LOCAL_PROJECT_PATH,
       REMOTE_PROJECT_PATH,
-      'publish' // Valid options are 'draft' or 'publish'
+      Mode.publish
     );
   } catch (e) {
     return axios.post(SLACK_ENDPOINT, {
-      text: `${PROJECT_ID} encountered an error uploading ${LOCAL_PROJECT_PATH} to your ${ACCOUNT_ID} account\n${e.message}`,
+      text: `Encountered an error uploading ${LOCAL_PROJECT_PATH} to your ${ACCOUNT_ID} account\n${e.message}`,
     });
   }
 
