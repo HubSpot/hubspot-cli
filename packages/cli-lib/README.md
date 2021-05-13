@@ -15,7 +15,9 @@ The full scope of the cli-lib is quite large. It provides the ability to manage 
 ## Installation
 
 - Install Node.js. The [LTS version](https://nodejs.org/en/) is recommended, however the HubSpot CLI supports any version from 10 and up. Installation details can be found at [nodejs.org](https://nodejs.org/en/)
-- Install the following modules from NPM: `npm i --global @hubspot/cli` `npm i --save @hubspot/cli-lib`
+- Install the following modules from NPM:
+  - `npm i --global @hubspot/cli`
+  - `npm i --save @hubspot/cli-lib`
 
 ## Usage
 
