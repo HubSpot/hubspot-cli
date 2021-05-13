@@ -41,6 +41,9 @@ getDirectoryContentsByPath(accountId, '/').then(response => {
 });
 ```
 
+## Examples
+For more examples, view the `examples` folder
+
 ## Contributing
 
 ### Requirements
