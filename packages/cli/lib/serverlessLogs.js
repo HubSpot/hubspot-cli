@@ -92,7 +92,7 @@ const outputBuildLog = async buildLogUrl => {
     return;
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     try {
       https
         .get(buildLogUrl, response => {
@@ -109,9 +109,12 @@ const outputBuildLog = async buildLogUrl => {
             resolve(data);
           });
         })
-        .on('error', reject);
+        .on('error', () => {
+          logger.error('The build log could not be retrieved.');
+        });
     } catch (e) {
-      reject(e);
+      logger.error('The build log could not be retrieved.');
+      resolve('');
     }
   });
 };
