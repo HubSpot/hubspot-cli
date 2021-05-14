@@ -107,8 +107,7 @@ exports.handler = async options => {
     } else if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
-      const buildOutput = await outputBuildLog(e.cdnUrl);
-      logger.log(buildOutput);
+      await outputBuildLog(e.cdnUrl);
       logger.error(`Build error: ${e.errorReason}`);
     } else {
       logApiErrorInstance(
