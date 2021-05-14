@@ -39,11 +39,11 @@ const logServerlessBuildFailures = async errorDetails => {
   const folderPaths = errorDetails.context.folderPath;
   const buildLogUrls = errorDetails.context.serverlessBuildLogUrl;
   for (let i = 0; i < buildLogUrls.length; i++) {
-    logger.log(`Building serverless functions in "${folderPaths[i]}"`);
+    logger.log(`Building serverless functions in "${folderPaths[i]}":`);
     await outputBuildLog(buildLogUrls[i]);
   }
   logger.error(
-    'Your app failed to build and deploy due a problem building the serverless functions'
+    'Your app failed to build and deploy due to a problem building the serverless functions.'
   );
 };
 
