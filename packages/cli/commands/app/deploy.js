@@ -21,6 +21,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
+const { outputBuildLog } = require('../../lib/serverlessLogs');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -32,6 +33,18 @@ const loadAndValidateOptions = async options => {
   if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
+};
+
+const logServerlessBuildFailures = async errorDetails => {
+  const folderPaths = errorDetails.context.folderPath;
+  const buildLogUrls = errorDetails.context.serverlessBuildLogUrl;
+  for (let i = 0; i < buildLogUrls.length; i++) {
+    logger.log(`Building serverless functions in "${folderPaths[i]}"`);
+    await outputBuildLog(buildLogUrls[i]);
+  }
+  logger.error(
+    'Your app failed to build and deploy due a problem building the serverless functions'
+  );
 };
 
 exports.command = 'deploy <path>';
@@ -52,13 +65,32 @@ exports.handler = async options => {
     result = await deployAppSync(accountId, appPath);
   } catch (error) {
     spinner.fail();
-    logApiErrorInstance(
-      error,
-      new ApiErrorContext({
-        accountId,
-        request: appPath,
-      })
-    );
+    if (error.response && error.response.body) {
+      const errorDetails = error.response.body;
+      if (
+        errorDetails.subCategory === 'PipelineErrors.SERVERLESS_BUILD_ERROR' &&
+        errorDetails.context &&
+        Array.isArray(errorDetails.context.serverlessBuildLogUrl)
+      ) {
+        await logServerlessBuildFailures(errorDetails);
+      } else {
+        logApiErrorInstance(
+          error,
+          new ApiErrorContext({
+            accountId,
+            request: appPath,
+          })
+        );
+      }
+    } else {
+      logApiErrorInstance(
+        error,
+        new ApiErrorContext({
+          accountId,
+          request: appPath,
+        })
+      );
+    }
     process.exit(1);
   }
 
