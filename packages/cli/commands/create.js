@@ -152,7 +152,7 @@ exports.handler = async options => {
 
   if (assetType === 'global-partial') {
     logger.error(
-      `The asset type ${assetType} has been deprecated. Please choose the "template" asset and select "global partial".`
+      `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "hs create template" command instead. Then when prompted select "global partial".`
     );
     return;
   }
