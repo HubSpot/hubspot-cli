@@ -1,5 +1,7 @@
+const https = require('https');
 const readline = require('readline');
 
+const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   logServerlessFunctionApiErrorInstance,
@@ -82,6 +84,42 @@ const tailLogs = async ({
   await tail(initialAfter);
 };
 
+const outputBuildLog = async buildLogUrl => {
+  if (!buildLogUrl) {
+    logger.debug(
+      'Unable to display build output. No build log URL was provided.'
+    );
+    return;
+  }
+
+  return new Promise(resolve => {
+    try {
+      https
+        .get(buildLogUrl, response => {
+          if (response.statusCode === 404) {
+            resolve('');
+          }
+
+          let data = '';
+          response.on('data', chunk => {
+            data += chunk;
+          });
+          response.on('end', () => {
+            logger.log(data);
+            resolve(data);
+          });
+        })
+        .on('error', () => {
+          logger.error('The build log could not be retrieved.');
+        });
+    } catch (e) {
+      logger.error('The build log could not be retrieved.');
+      resolve('');
+    }
+  });
+};
+
 module.exports = {
+  outputBuildLog,
   tailLogs,
 };
