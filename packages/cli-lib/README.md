@@ -52,7 +52,7 @@ getDirectoryContentsByPath(accountId, '/').then(response => {
 
 ## Examples
 
-For more examples, view the `examples` folder
+For more examples, view the `examples` folder at the root of the repository
 
 ## Contributing
 
