@@ -1,11 +1,10 @@
 const fs = require('fs');
 const BaseValidator = require('../BaseValidator');
 
-class ThemeConfigValidator extends BaseValidator {
-  constructor() {
-    super();
-    this.name = 'Theme config';
-    this.key = 'themeConfig';
+class ThemeLabelValidator extends BaseValidator {
+  constructor(options) {
+    super(options);
+
     this.errors = {
       MISSING: {
         key: 'missing',
@@ -62,4 +61,7 @@ class ThemeConfigValidator extends BaseValidator {
   }
 }
 
-module.exports = new ThemeConfigValidator();
+module.exports = new ThemeLabelValidator({
+  name: 'Theme label',
+  key: 'themeLabel',
+});

@@ -2,11 +2,11 @@ const { isTemplate } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
 
 const TEMPLATE_LIMIT = 50;
-class TemplateLimitValidator extends BaseValidator {
-  constructor() {
-    super();
-    this.name = 'Template limit';
-    this.key = 'templateLimit';
+
+class TemplateCountValidator extends BaseValidator {
+  constructor(options) {
+    super(options);
+
     this.errors = {
       LIMIT_EXCEEDED: {
         key: 'limitExceeded',
@@ -36,4 +36,7 @@ class TemplateLimitValidator extends BaseValidator {
   }
 }
 
-module.exports = new TemplateLimitValidator();
+module.exports = new TemplateCountValidator({
+  name: 'Template count',
+  key: 'templateCount',
+});
