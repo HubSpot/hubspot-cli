@@ -27,21 +27,31 @@ It is possible to do this programmatically through APIs as well, however all of 
 
 ## Hello World
 
-Let's get started with a simple example. In this example, we are going to get the contents of the root directory in the Design Manager file system. One important note. For any of the cli-lib functionality to work, you must have your `hubspot.config.yml` configured and authenticated for whatever accountId you specify in the code below. See the usage section above for details.
+Let's get started with a simple example. In this example, we are going to get the contents of the root directory in the Design Manager file system. One important note. For any of the cli-lib functionality to work, you must have your `hubspot.config.yml` configured and authenticated for whatever account name you specify in the code below. See the usage section above for details.
 
 ```js
 const {
   getDirectoryContentsByPath,
+  getAccountId,
+  loadConfig,
 } = require('@hubspot/cli-lib/api/fileMapper');
 
-const accountId = YOUR_ACCOUNT_ID;
+// Loads the hubspot.config.yml file into memory for cli-lib usage
+loadConfig();
 
+/**
+ *  getAccountId will get the default accountId specified in your hubspot.config.yml file
+ *  You can alternatively pass in an account name if you don't want the default account
+ *  to be used.
+ */
+const accountId = getAccountId();
 getDirectoryContentsByPath(accountId, '/').then(response => {
   console.log(response);
 });
 ```
 
 ## Examples
+
 For more examples, view the `examples` folder
 
 ## Contributing
