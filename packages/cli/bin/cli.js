@@ -50,7 +50,6 @@ const getTerminalWidth = () => {
 };
 
 const argv = yargs
-
   .usage('Tools for working with HubSpot')
   .middleware([setLogLevel])
   .exitProcess(false)
