@@ -63,8 +63,9 @@ setArgsOverrides(
     const testRunner = new Jasmine();
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    testRunner.onComplete(function() {
+    testRunner.onComplete(function(passed) {
       rimraf.sync(CONFIG_FILE_PATH);
+      process.exit(passed ? 0 : 1);
     });
     const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
     const cli = cmd.create(cliPath, '.');
