@@ -42,6 +42,14 @@ notifier.notify({
   message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
 });
 
+const getTerminalWidth = () => {
+  const width = yargs.terminalWidth();
+
+  if (width >= 100) return width * 0.9;
+
+  return width;
+};
+
 const argv = yargs
   .usage('Tools for working with HubSpot')
   .middleware([setLogLevel])
@@ -90,6 +98,7 @@ const argv = yargs
   .recommendCommands()
   .demandCommand(1, '')
   .completion()
+  .wrap(getTerminalWidth())
   .strict().argv;
 
 if (argv.help) {
