@@ -1,4 +1,9 @@
+const ValidatorStore = require('./ValidatorStore');
+
 async function applyValidators(validators, ...args) {
+  // Clear global store
+  ValidatorStore.clear();
+
   return Promise.all(
     validators.map(async Validator => {
       const validationResult = await Validator.validate(...args);

@@ -1,10 +1,15 @@
 const fs = require('fs');
 const ModuleLabelValidator = require('../../validators/marketplaceValidators/theme/ModuleLabelValidator');
+const ValidatorStore = require('../ValidatorStore');
 const { VALIDATION_RESULT } = require('../../validators/constants');
 
 jest.mock('fs');
 
-describe('validators/theme/ModuleLabelValidator', () => {
+describe('validators/marketplaceValidators/theme/ModuleLabelValidator', () => {
+  beforeEach(() => {
+    ValidatorStore.clear();
+  });
+
   it('returns error if no module meta.json file exists', async () => {
     const validationErrors = ModuleLabelValidator.validate('dirName', [
       'module.module/module.html',

@@ -1,6 +1,6 @@
 const fs = require('fs');
-const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
 const BaseValidator = require('../BaseValidator');
+const ValidatorStore = require('../../ValidatorStore');
 
 class ModuleLabelValidator extends BaseValidator {
   constructor(options) {
@@ -25,37 +25,16 @@ class ModuleLabelValidator extends BaseValidator {
     };
   }
 
-  getUniqueModulesAndMetaJSONFiles(files) {
-    const uniqueModulesAndMetaJSONFiles = {};
-
-    files.forEach(file => {
-      if (isModuleFolderChild({ isLocal: true, path: file })) {
-        // Get unique module path by removing the file name
-        const modulePath = file.slice(0, file.lastIndexOf('/'));
-        if (typeof uniqueModulesAndMetaJSONFiles[modulePath] !== 'string') {
-          uniqueModulesAndMetaJSONFiles[modulePath] = null;
-        }
-        if (file.indexOf('meta.json') !== -1) {
-          uniqueModulesAndMetaJSONFiles[modulePath] = file;
-        }
-      }
-    });
-
-    return uniqueModulesAndMetaJSONFiles;
-  }
-
   // Validates:
   // - Each module folder contains a meta.json file
   // - Each module meta.json file contains valid json
   // - Each module meta.json file has a "label" field
   validate(absoluteThemePath, files) {
     let validationErrors = [];
-    const modulesAndMetaJSONFiles = this.getUniqueModulesAndMetaJSONFiles(
-      files
-    );
+    const uniqueModules = ValidatorStore.getUniqueModulesFromFiles(files);
 
-    Object.keys(modulesAndMetaJSONFiles).forEach(moduleName => {
-      const metaJSONFile = modulesAndMetaJSONFiles[moduleName];
+    Object.keys(uniqueModules).forEach(moduleName => {
+      const metaJSONFile = uniqueModules[moduleName]['meta.json'];
 
       if (!metaJSONFile) {
         validationErrors.push(

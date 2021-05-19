@@ -1,4 +1,5 @@
 const ModuleCountValidator = require('../marketplaceValidators/theme/ModuleCountValidator');
+const ValidatorStore = require('../ValidatorStore');
 const { VALIDATION_RESULT } = require('../constants');
 
 const makeFilesList = numFiles => {
@@ -13,7 +14,11 @@ const makeFilesList = numFiles => {
   return files;
 };
 
-describe('validators/theme/ModuleCountValidator', () => {
+describe('validators/marketplaceValidators/theme/ModuleCountValidator', () => {
+  beforeEach(() => {
+    ValidatorStore.clear();
+  });
+
   it('returns error if module limit is exceeded', async () => {
     const validationErrors = ModuleCountValidator.validate(
       'dirName',

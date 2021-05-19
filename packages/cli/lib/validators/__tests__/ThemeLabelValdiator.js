@@ -4,7 +4,7 @@ const { VALIDATION_RESULT } = require('../../validators/constants');
 
 jest.mock('fs');
 
-describe('validators/theme/ThemeLabelValidator', () => {
+describe('validators/marketplaceValidators/theme/ThemeLabelValidator', () => {
   it('returns error if no theme.json file exists', async () => {
     const validationErrors = ThemeLabelValidator.validate('dirName', [
       'someFile.html',

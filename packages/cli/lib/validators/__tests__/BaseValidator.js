@@ -1,4 +1,4 @@
-const BaseValidator = require('../marketplaceValidators/theme/BaseValidator');
+const BaseValidator = require('../marketplaceValidators/BaseValidator');
 const { VALIDATION_RESULT } = require('../constants');
 
 const Validator = new BaseValidator({
@@ -6,7 +6,7 @@ const Validator = new BaseValidator({
   key: 'validatorKey',
 });
 
-describe('validators/theme/BaseValidator', () => {
+describe('validators/marketplaceValidators/BaseValidator', () => {
   it('getSuccess returns expected object', async () => {
     const success = Validator.getSuccess();
 

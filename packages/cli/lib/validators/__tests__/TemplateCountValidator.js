@@ -13,7 +13,7 @@ const makeFilesList = numFiles => {
   return files;
 };
 
-describe('validators/theme/TemplateCountValidator', () => {
+describe('validators/marketplaceValidators/theme/TemplateCountValidator', () => {
   beforeEach(() => {
     templates.isTemplate.mockReturnValue(true);
   });
