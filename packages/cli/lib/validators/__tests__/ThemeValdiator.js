@@ -22,7 +22,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
   });
 
   it('returns error if theme.json file is missing a label field', async () => {
-    fs.readFileSync.mockReturnValue('{ "some": "field" }');
+    fs.readFileSync.mockReturnValue('{ "screenshot_path": "./relative/path" }');
 
     const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
     expect(validationErrors.length).toBe(1);
@@ -30,9 +30,8 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
   });
 
   it('returns error if theme.json has screenshot path that is non-relative', async () => {
-    // TODO branden fix this up
     fs.readFileSync.mockReturnValue(
-      '{ "label": "yay", "screenshot_path": "some/path" }'
+      '{ "label": "yay", "screenshot_path": "/absolute/path" }'
     );
 
     const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);

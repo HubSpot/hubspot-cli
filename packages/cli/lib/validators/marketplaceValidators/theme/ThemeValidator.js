@@ -1,5 +1,6 @@
 const fs = require('fs');
 const BaseValidator = require('../BaseValidator');
+const { isRelativePath } = require('@hubspot/cli-lib/path');
 
 class ThemeValidator extends BaseValidator {
   constructor(options) {
@@ -18,8 +19,13 @@ class ThemeValidator extends BaseValidator {
         key: 'missingLabel',
         getCopy: () => 'The theme.json file is missing a "label" field',
       },
-      INVALID_SCREENSHOT_PATH: {
-        key: 'invalidScreenshotPath',
+      MISSING_SCREENSHOT_PATH: {
+        key: 'missingScreenshotPath',
+        getCopy: () =>
+          'The theme.json file is missing a "screenshot_path" field',
+      },
+      ABSOLUTE_SCREENSHOT_PATH: {
+        key: 'absoluteScreenshotPath',
         getCopy: () =>
           'The path for "screenshot_path" in theme.json must be relative',
       },
@@ -61,9 +67,13 @@ class ThemeValidator extends BaseValidator {
           });
         }
         if (!themeJSON.screenshot_path) {
-          //TODO branden also check if path is relative before throwing error
           validationErrors.push({
-            ...this.getError(this.errors.INVALID_SCREENSHOT_PATH),
+            ...this.getError(this.errors.MISSING_SCREENSHOT_PATH),
+            meta: { file: themeJSONFile },
+          });
+        } else if (!isRelativePath(themeJSON.screenshot_path)) {
+          validationErrors.push({
+            ...this.getError(this.errors.ABSOLUTE_SCREENSHOT_PATH),
             meta: { file: themeJSONFile },
           });
         }
