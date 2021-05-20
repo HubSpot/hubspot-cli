@@ -1,15 +1,9 @@
 const ThemeLabelValidator = require('./marketplaceValidators/theme/ThemeLabelValidator');
 const TemplateCountValidator = require('./marketplaceValidators/theme/TemplateCountValidator');
-const ModuleCountValidator = require('./marketplaceValidators/theme/ModuleCountValidator');
-const ModuleLabelValidator = require('./marketplaceValidators/theme/ModuleLabelValidator');
+const ModuleValidator = require('./marketplaceValidators/theme/ModuleValidator');
 
 const MARKETPLACE_VALIDATORS = {
-  theme: [
-    ThemeLabelValidator,
-    TemplateCountValidator,
-    ModuleCountValidator,
-    ModuleLabelValidator,
-  ],
+  theme: [ThemeLabelValidator, TemplateCountValidator, ModuleValidator],
 };
 
 module.exports = MARKETPLACE_VALIDATORS;
