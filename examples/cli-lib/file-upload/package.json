@@ -1,0 +1,14 @@
+{
+  "name": "upload-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hubspot/cli-lib": "^3.0.5"
+  }
+}
