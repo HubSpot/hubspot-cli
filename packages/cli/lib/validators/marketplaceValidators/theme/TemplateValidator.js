@@ -3,7 +3,7 @@ const BaseValidator = require('../BaseValidator');
 
 const TEMPLATE_LIMIT = 50;
 
-class TemplateCountValidator extends BaseValidator {
+class TemplateValidator extends BaseValidator {
   constructor(options) {
     super(options);
 
@@ -36,7 +36,7 @@ class TemplateCountValidator extends BaseValidator {
   }
 }
 
-module.exports = new TemplateCountValidator({
-  name: 'Template count',
-  key: 'templateCount',
+module.exports = new TemplateValidator({
+  name: 'Template',
+  key: 'template',
 });
