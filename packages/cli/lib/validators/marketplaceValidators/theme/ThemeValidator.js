@@ -1,22 +1,27 @@
 const fs = require('fs');
 const BaseValidator = require('../BaseValidator');
 
-class ThemeLabelValidator extends BaseValidator {
+class ThemeValidator extends BaseValidator {
   constructor(options) {
     super(options);
 
     this.errors = {
-      MISSING: {
-        key: 'missing',
+      MISSING_THEME_JSON: {
+        key: 'missingThemeJSON',
         getCopy: () => 'Missing a theme.json file',
       },
-      INVALID: {
-        key: 'invalid',
+      INVALID_THEME_JSON: {
+        key: 'invalidThemeJSON',
         getCopy: () => 'Invalid json in theme.json file',
       },
       MISSING_LABEL: {
         key: 'missingLabel',
         getCopy: () => 'The theme.json file is missing a "label" field',
+      },
+      INVALID_SCREENSHOT_PATH: {
+        key: 'invalidScreenshotPath',
+        getCopy: () =>
+          'The path for "screenshot_path" in theme.json must be relative',
       },
     };
   }
@@ -25,6 +30,7 @@ class ThemeLabelValidator extends BaseValidator {
   // - Theme contains a theme.json file at the theme root dir
   // - theme.json file contains valid json
   // - theme.json file has a "label" field
+  // - theme.json file has a relative path for "screenshot" field
   validate(absoluteThemePath, files) {
     let validationErrors = [];
     const themeJSONFile = files.find(filePath => {
@@ -34,7 +40,7 @@ class ThemeLabelValidator extends BaseValidator {
     });
 
     if (!themeJSONFile) {
-      validationErrors.push(this.getError(this.errors.MISSING));
+      validationErrors.push(this.getError(this.errors.MISSING_THEME_JSON));
     } else {
       let themeJSON;
 
@@ -42,7 +48,7 @@ class ThemeLabelValidator extends BaseValidator {
         themeJSON = JSON.parse(fs.readFileSync(themeJSONFile));
       } catch (err) {
         validationErrors.push({
-          ...this.getError(this.errors.INVALID),
+          ...this.getError(this.errors.INVALID_THEME_JSON),
           meta: { file: themeJSONFile },
         });
       }
@@ -54,6 +60,13 @@ class ThemeLabelValidator extends BaseValidator {
             meta: { file: themeJSONFile },
           });
         }
+        if (!themeJSON.screenshot_path) {
+          //TODO branden also check if path is relative before throwing error
+          validationErrors.push({
+            ...this.getError(this.errors.INVALID_SCREENSHOT_PATH),
+            meta: { file: themeJSONFile },
+          });
+        }
       }
     }
 
@@ -61,7 +74,7 @@ class ThemeLabelValidator extends BaseValidator {
   }
 }
 
-module.exports = new ThemeLabelValidator({
-  name: 'Theme label',
-  key: 'themeLabel',
+module.exports = new ThemeValidator({
+  name: 'Theme',
+  key: 'theme',
 });
