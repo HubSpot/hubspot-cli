@@ -363,20 +363,6 @@ const isTrackingAllowed = () => {
   return allowUsageTracking !== false;
 };
 
-// Changing line number to do a permalink test
-/**
- *
- * @param {
- *
- *
- *
- *
- *
- *
- *
- * } options
- * @returns
- */
 const getAndLoadConfigIfNeeded = (options = {}) => {
   if (!_config) {
     loadConfig(null, {
