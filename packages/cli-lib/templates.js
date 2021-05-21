@@ -1,15 +1,17 @@
 const fs = require('fs');
+const { logger } = require('./logger');
 
 // Matches the .html file extension, excluding module.html
 const TEMPLATE_EXTENSION_REGEX = new RegExp(/(?<!module)\.html$/);
 // Matches the comment brackets that wrap annotations
 const ANNOTATIONS_REGEX = /<!--([\s\S]*?)-->/;
 // Matches an annotation value, ending at space, newline, or end of string
-const ANNOTATION_VALUE_REGEX = ':\\s?([\\S]*?)(\\s|\n|$)';
+const ANNOTATION_VALUE_REGEX = ':\\s?([\\S|\\s]*?)(\n|$)';
 
 const ANNOTATION_KEYS = {
   isAvailableForNewContent: 'isAvailableForNewContent',
   templateType: 'templateType',
+  label: 'label',
 };
 
 const getFileAnnotations = fileData => {
@@ -25,7 +27,18 @@ const getFileAnnotations = fileData => {
 const getAnnotationValue = (annotations, key) => {
   const valueRegex = new RegExp(`${key}${ANNOTATION_VALUE_REGEX}`);
   const match = annotations.match(valueRegex);
-  return match ? match[1] : null;
+  return match ? match[1].trim() : null;
+};
+
+const getAnnotationValueByFilePath = (path, key) => {
+  try {
+    const data = fs.readFileSync(path, 'utf8');
+    const annotations = getFileAnnotations(data);
+    return getAnnotationValue(annotations, key);
+  } catch (err) {
+    logger.debug(err);
+    return null;
+  }
 };
 
 /*
@@ -61,5 +74,7 @@ const isTemplate = filePath => {
 };
 
 module.exports = {
+  ANNOTATION_KEYS,
+  getAnnotationValueByFilePath,
   isTemplate,
 };
