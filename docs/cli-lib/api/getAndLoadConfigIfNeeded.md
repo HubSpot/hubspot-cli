@@ -13,7 +13,7 @@ Retrieves a user's `hubspot.config.yml` file, and returns it. If the file has no
 
 #### Returns
 
-(_Config_ or \*Object): If a configuration was found, it will be returned as a JS Object. If no config is found, an empty object will be returned instead
+(_Config_ or _Object_): If a configuration was found, it will be returned as a JS Object. If no config is found, an empty object will be returned instead
 
 #### Example
 
