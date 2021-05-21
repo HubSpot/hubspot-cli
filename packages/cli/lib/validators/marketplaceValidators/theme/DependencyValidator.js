@@ -8,6 +8,8 @@ const { getExt } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
 
+const MISSING_ASSET_CATEGORY_TYPES = ['MODULE_NOT_FOUND'];
+
 class DependencyValidator extends BaseValidator {
   constructor(options) {
     super(options);
@@ -24,6 +26,16 @@ class DependencyValidator extends BaseValidator {
     };
   }
 
+  // HACK We parse paths from rendering errors because the renderer won't
+  // include paths in the all_dependencies object if it can't locate the asset
+  getPathsFromRenderingErrors(validation) {
+    return validation.renderingErrors
+      .filter(renderingError =>
+        MISSING_ASSET_CATEGORY_TYPES.includes(renderingError.category)
+      )
+      .map(renderingError => renderingError.categoryErrors.path);
+  }
+
   async getAllDependencies(files, accountId) {
     return Promise.all(
       files
@@ -34,7 +46,11 @@ class DependencyValidator extends BaseValidator {
             return {};
           }
           const validation = await validateHubl(accountId, source);
-          return getDepsFromHublValidationObject(validation);
+          const deps = getDepsFromHublValidationObject(validation);
+          deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
+            validation
+          );
+          return deps;
         })
     );
   }
