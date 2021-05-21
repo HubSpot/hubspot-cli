@@ -4,6 +4,8 @@ const { VALIDATION_RESULT } = require('../constants');
 
 jest.mock('fs');
 
+const MODULE_LIMIT = 50;
+
 const makeFilesList = numFiles => {
   const files = [];
   for (let i = 0; i < numFiles; i++) {
@@ -23,7 +25,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns error if module limit is exceeded', async () => {
     const validationErrors = ModuleValidator.validate(
       'dirName',
-      makeFilesList(51)
+      makeFilesList(MODULE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).toBeDefined();
@@ -33,7 +35,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns no limit error if module limit is not exceeded', async () => {
     const validationErrors = ModuleValidator.validate(
       'dirName',
-      makeFilesList(50)
+      makeFilesList(MODULE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).not.toBeDefined();
