@@ -1,6 +1,6 @@
 ## `getAndLoadConfigIfNeeded(options)`
 
-[cli-lib/lib/config.js](https://github.com/HubSpot/hubspot-cli/blob/master/packages/cli-lib/lib/config.js#L366)
+[cli-lib/lib/config.js](https://github.com/HubSpot/hubspot-cli/blob/4d8dbedd2e69f1717ea23337b2efed7f8c37709e/packages/cli-lib/lib/config.js#L366)
 
 Retrieves a user's `hubspot.config.yml` file, and returns it. If the file has not yet been loaded into memory for system usage, it will also do that as a side effect. If no config is found, an empty object will be returned.
 
