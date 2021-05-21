@@ -31,6 +31,11 @@ class ThemeValidator extends BaseValidator {
         getCopy: () =>
           'The path for "screenshot_path" in theme.json must be relative',
       },
+      MISSING_SCREENSHOT: {
+        key: 'missingScreenshot',
+        getCopy: () =>
+          'The path for "screenshot_path" in theme.json is not resolving',
+      },
     };
   }
 
@@ -38,7 +43,7 @@ class ThemeValidator extends BaseValidator {
   // - Theme contains a theme.json file at the theme root dir
   // - theme.json file contains valid json
   // - theme.json file has a "label" field
-  // - theme.json file has a relative path for "screenshot" field
+  // - theme.json file has a relative path for "screenshot" field that resolves
   validate(absoluteThemePath, files) {
     let validationErrors = [];
     const themeJSONFile = files.find(filePath => {
@@ -78,6 +83,17 @@ class ThemeValidator extends BaseValidator {
             ...this.getError(this.errors.ABSOLUTE_SCREENSHOT_PATH),
             meta: { file: themeJSONFile },
           });
+        } else {
+          const absoluteScreenshotPath = path.resolve(
+            absoluteThemePath,
+            themeJSON.screenshot_path
+          );
+          if (!fs.existsSync(absoluteScreenshotPath)) {
+            validationErrors.push({
+              ...this.getError(this.errors.MISSING_SCREENSHOT),
+              meta: { file: themeJSONFile },
+            });
+          }
         }
       }
     }
