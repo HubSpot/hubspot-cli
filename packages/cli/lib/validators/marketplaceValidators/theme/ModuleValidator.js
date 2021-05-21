@@ -1,4 +1,6 @@
 const fs = require('fs');
+const path = require('path');
+
 const BaseValidator = require('../BaseValidator');
 const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
 
@@ -42,14 +44,11 @@ class ModuleValidator extends BaseValidator {
 
     files.forEach(file => {
       if (isModuleFolderChild({ isLocal: true, path: file })) {
-        // Get unique module path by removing the file name
-        const lastSlashIndex = file.lastIndexOf('/');
-        const modulePath = file.slice(0, lastSlashIndex);
-        if (!uniqueModules[modulePath]) {
-          uniqueModules[modulePath] = {};
+        const { base, dir } = path.parse(file);
+        if (!uniqueModules[dir]) {
+          uniqueModules[dir] = {};
         }
-        const fileName = file.slice(lastSlashIndex + 1, file.length);
-        uniqueModules[modulePath][fileName] = file;
+        uniqueModules[dir][base] = file;
       }
     });
     return uniqueModules;
@@ -77,7 +76,7 @@ class ModuleValidator extends BaseValidator {
 
     Object.keys(uniqueModules).forEach(modulePath => {
       const metaJSONFile = uniqueModules[modulePath]['meta.json'];
-      const relativePath = modulePath.replace(`${absoluteThemePath}/`, '');
+      const relativePath = path.relative(absoluteThemePath, modulePath);
 
       if (!metaJSONFile) {
         validationErrors.push(

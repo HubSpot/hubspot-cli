@@ -1,4 +1,6 @@
 const fs = require('fs');
+const path = require('path');
+
 const BaseValidator = require('../BaseValidator');
 const { isRelativePath } = require('@hubspot/cli-lib/path');
 
@@ -41,7 +43,7 @@ class ThemeValidator extends BaseValidator {
     let validationErrors = [];
     const themeJSONFile = files.find(filePath => {
       // Check for theme.json at the theme root
-      const fileName = filePath.replace(`${absoluteThemePath}/`, '');
+      const fileName = path.relative(absoluteThemePath, filePath);
       return fileName === 'theme.json';
     });
 
