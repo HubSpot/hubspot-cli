@@ -1,6 +1,9 @@
 const fs = require('fs-extra');
 const { HUBL_EXTENSIONS } = require('@hubspot/cli-lib/lib/constants');
 const { validateHubl } = require('@hubspot/cli-lib/api/validate');
+const {
+  getDepsFromHublValidationObject,
+} = require('@hubspot/cli-lib/validate');
 const { getExt } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
@@ -31,12 +34,8 @@ class DependencyValidator extends BaseValidator {
             return {};
           }
           const validation = await validateHubl(accountId, source);
-          if (validation && validation.meta.all_dependencies) {
-            return validation.meta.all_dependencies;
-          }
-          return {};
+          return getDepsFromHublValidationObject(validation);
         })
-        .flat()
     );
   }
 
