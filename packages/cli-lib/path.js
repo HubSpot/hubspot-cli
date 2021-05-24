@@ -96,6 +96,8 @@ const isAllowedExtension = filepath => {
 
 const getAbsoluteFilePath = _path => path.resolve(getCwd(), _path);
 
+const isRelativePath = _path => !path.isAbsolute(_path);
+
 module.exports = {
   convertToUnixPath,
   convertToWindowsPath,
@@ -105,6 +107,7 @@ module.exports = {
   getCwd,
   getExt,
   isAllowedExtension,
+  isRelativePath,
   splitHubSpotPath,
   splitLocalPath,
 };

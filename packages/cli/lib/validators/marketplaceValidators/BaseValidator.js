@@ -1,6 +1,11 @@
 const { VALIDATION_RESULT } = require('../constants');
 
 class BaseValidator {
+  constructor({ name, key }) {
+    this.name = name;
+    this.key = key;
+  }
+
   getSuccess() {
     return {
       validatorKey: this.key,
