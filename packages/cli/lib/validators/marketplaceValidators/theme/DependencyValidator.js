@@ -4,7 +4,7 @@ const { validateHubl } = require('@hubspot/cli-lib/api/validate');
 const {
   getDepsFromHublValidationObject,
 } = require('@hubspot/cli-lib/validate');
-const { getExt } = require('@hubspot/cli-lib/path');
+const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
 
@@ -17,11 +17,11 @@ class DependencyValidator extends BaseValidator {
     this.errors = {
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
-        getCopy: () => `NO EXTERNAL DEPENDENCIES YOU FOOL`,
+        getCopy: ({ path }) => `Path points to external dependency (${path})`,
       },
       ABSOLUTE_DEPENDENCY_PATH: {
         key: 'absoluteDependencyPath',
-        getCopy: () => `NO ABSOLUTE DEPENDENCY PATHS YOU FOOL`,
+        getCopy: ({ path }) => `Dependency paths must be relative (${path})`,
       },
     };
   }
@@ -55,6 +55,12 @@ class DependencyValidator extends BaseValidator {
     );
   }
 
+  // TODO branden
+  isExternalDep(absoluteThemePath, depPath) {
+    console.log(depPath);
+    return true;
+  }
+
   // Validates:
   // - Theme does not contain external dependencies
   // - All paths are either @hubspot or relative
@@ -63,8 +69,23 @@ class DependencyValidator extends BaseValidator {
 
     const dependencies = await this.getAllDependencies(files, accountId);
     console.log(dependencies);
-    //TODO branden parse these for external deps and non relative paths
 
+    // TODO branden parse this correctly
+    dependencies.forEach(dependency => {
+      if (!isRelativePath(dependency)) {
+        validationErrors.push({
+          ...this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, {
+            path: dependency,
+          }),
+        });
+      } else if (this.isExternalDep(absoluteThemePath, dependency)) {
+        validationErrors.push({
+          ...this.getError(this.errors.EXTERNAL_DEPENDENCY, {
+            path: dependency,
+          }),
+        });
+      }
+    });
     return validationErrors;
   }
 }

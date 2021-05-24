@@ -2,7 +2,8 @@ const path = require('path');
 
 const {
   ANNOTATION_KEYS,
-  getAnnotationValueByFilePath,
+  getAnnotationValue,
+  getFileAnnotations,
   isTemplate,
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
@@ -23,6 +24,11 @@ class TemplateValidator extends BaseValidator {
         key: 'missingLabel',
         getCopy: ({ templatePath }) =>
           `Missing a "label" annotation in ${templatePath}`,
+      },
+      MISSING_SCREENSHOT_PATH: {
+        key: 'missingScreenshotPath',
+        getCopy: ({ templatePath }) =>
+          `The screenshotPath is missing in ${templatePath}`,
       },
     };
   }
@@ -45,14 +51,23 @@ class TemplateValidator extends BaseValidator {
     }
 
     templates.forEach(templatePath => {
-      const label = getAnnotationValueByFilePath(
-        templatePath,
-        ANNOTATION_KEYS.label
+      const annotations = getFileAnnotations(templatePath);
+      const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
+      const sreenshotPath = getAnnotationValue(
+        annotations,
+        ANNOTATION_KEYS.screenshotPath
       );
 
       if (!label) {
         validationErrors.push(
           this.getError(this.errors.MISSING_LABEL, {
+            templatePath: path.relative(absoluteThemePath, templatePath),
+          })
+        );
+      }
+      if (!sreenshotPath) {
+        validationErrors.push(
+          this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
             templatePath: path.relative(absoluteThemePath, templatePath),
           })
         );

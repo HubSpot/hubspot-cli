@@ -12,14 +12,17 @@ const ANNOTATION_KEYS = {
   isAvailableForNewContent: 'isAvailableForNewContent',
   templateType: 'templateType',
   label: 'label',
+  screenshotPath: 'screenshotPath',
 };
 
-const getFileAnnotations = fileData => {
+const getFileAnnotations = filePath => {
   try {
-    const match = fileData.match(ANNOTATIONS_REGEX);
+    const data = fs.readFileSync(filePath, 'utf8');
+    const match = data.match(ANNOTATIONS_REGEX);
     const annotation = match ? match[1] : '';
     return annotation;
   } catch (err) {
+    logger.debug(err);
     return '';
   }
 };
@@ -30,17 +33,6 @@ const getAnnotationValue = (annotations, key) => {
   return match ? match[1].trim() : null;
 };
 
-const getAnnotationValueByFilePath = (path, key) => {
-  try {
-    const data = fs.readFileSync(path, 'utf8');
-    const annotations = getFileAnnotations(data);
-    return getAnnotationValue(annotations, key);
-  } catch (err) {
-    logger.debug(err);
-    return null;
-  }
-};
-
 /*
  * Returns true if:
  * .html extension (ignoring module.html)
@@ -49,32 +41,31 @@ const getAnnotationValueByFilePath = (path, key) => {
  */
 const isTemplate = filePath => {
   if (TEMPLATE_EXTENSION_REGEX.test(filePath)) {
-    try {
-      const data = fs.readFileSync(filePath, 'utf8');
-      const annotations = getFileAnnotations(data);
-      const templateType = getAnnotationValue(
-        annotations,
-        ANNOTATION_KEYS.templateType
-      );
-      const isAvailableForNewContent = getAnnotationValue(
-        annotations,
-        ANNOTATION_KEYS.isAvailableForNewContent
-      );
-
-      return (
-        isAvailableForNewContent !== 'false' &&
-        !['global_partial', 'none'].includes(templateType)
-      );
-    } catch (err) {
-      // Assume this isn't a template if we fail
+    const annotations = getFileAnnotations(filePath);
+    if (!annotations.length) {
       return false;
     }
+
+    const templateType = getAnnotationValue(
+      annotations,
+      ANNOTATION_KEYS.templateType
+    );
+    const isAvailableForNewContent = getAnnotationValue(
+      annotations,
+      ANNOTATION_KEYS.isAvailableForNewContent
+    );
+
+    return (
+      isAvailableForNewContent !== 'false' &&
+      !['global_partial', 'none'].includes(templateType)
+    );
   }
   return false;
 };
 
 module.exports = {
   ANNOTATION_KEYS,
-  getAnnotationValueByFilePath,
+  getAnnotationValue,
+  getFileAnnotations,
   isTemplate,
 };
