@@ -1,4 +1,6 @@
 const fs = require('fs-extra');
+const path = require('path');
+
 const { HUBL_EXTENSIONS } = require('@hubspot/cli-lib/lib/constants');
 const { validateHubl } = require('@hubspot/cli-lib/api/validate');
 const {
@@ -17,11 +19,13 @@ class DependencyValidator extends BaseValidator {
     this.errors = {
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
-        getCopy: ({ path }) => `Path points to external dependency (${path})`,
+        getCopy: ({ file, path }) =>
+          `${file} contains a path that points to an external dependency (${path})`,
       },
       ABSOLUTE_DEPENDENCY_PATH: {
         key: 'absoluteDependencyPath',
-        getCopy: ({ path }) => `Dependency paths must be relative (${path})`,
+        getCopy: ({ file, path }) =>
+          `${file} contains an absolute path (${path})`,
       },
     };
   }
@@ -36,29 +40,28 @@ class DependencyValidator extends BaseValidator {
       .map(renderingError => renderingError.categoryErrors.path);
   }
 
-  async getAllDependencies(files, accountId) {
+  async getAllDependenciesByFile(files, accountId) {
     return Promise.all(
       files
         .filter(file => HUBL_EXTENSIONS.has(getExt(file)))
         .map(async file => {
           const source = await fs.readFile(file, { encoding: 'utf8' });
           if (!(source && source.trim())) {
-            return {};
+            return { file, deps: {} };
           }
           const validation = await validateHubl(accountId, source);
           const deps = getDepsFromHublValidationObject(validation);
           deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
             validation
           );
-          return deps;
+          return { file, deps };
         })
     );
   }
 
-  // TODO branden
   isExternalDep(absoluteThemePath, depPath) {
-    console.log(depPath);
-    return true;
+    const relativePath = path.relative(absoluteThemePath, depPath);
+    return relativePath && !relativePath.startsWith('..');
   }
 
   // Validates:
@@ -67,24 +70,36 @@ class DependencyValidator extends BaseValidator {
   async validate(absoluteThemePath, files, accountId) {
     let validationErrors = [];
 
-    const dependencies = await this.getAllDependencies(files, accountId);
-    console.log(dependencies);
+    const dependencyGroups = await this.getAllDependenciesByFile(
+      files,
+      accountId
+    );
 
-    // TODO branden parse this correctly
-    dependencies.forEach(dependency => {
-      if (!isRelativePath(dependency)) {
-        validationErrors.push({
-          ...this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, {
-            path: dependency,
-          }),
+    dependencyGroups.forEach(depGroup => {
+      const { file, deps } = depGroup;
+      Object.keys(deps).forEach(key => {
+        const depList = deps[key];
+        depList.forEach(dependency => {
+          // The BE will return '0' when no deps are found
+          if (dependency !== '0') {
+            if (!isRelativePath(dependency)) {
+              validationErrors.push({
+                ...this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, {
+                  file: path.relative(absoluteThemePath, file),
+                  path: dependency,
+                }),
+              });
+            } else if (this.isExternalDep(absoluteThemePath, dependency)) {
+              validationErrors.push({
+                ...this.getError(this.errors.EXTERNAL_DEPENDENCY, {
+                  file: path.relative(absoluteThemePath, file),
+                  path: dependency,
+                }),
+              });
+            }
+          }
         });
-      } else if (this.isExternalDep(absoluteThemePath, dependency)) {
-        validationErrors.push({
-          ...this.getError(this.errors.EXTERNAL_DEPENDENCY, {
-            path: dependency,
-          }),
-        });
-      }
+      });
     });
     return validationErrors;
   }
