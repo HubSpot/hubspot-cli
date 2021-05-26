@@ -19,7 +19,7 @@ const getFileAnnotations = filePath => {
   try {
     const data = fs.readFileSync(filePath, 'utf8');
     const match = data.match(ANNOTATIONS_REGEX);
-    const annotation = match ? match[1] : '';
+    const annotation = match && match[1] ? match[1] : '';
     return annotation;
   } catch (err) {
     logger.debug(err);

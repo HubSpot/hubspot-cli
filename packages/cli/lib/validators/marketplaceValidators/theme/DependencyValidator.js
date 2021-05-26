@@ -59,9 +59,15 @@ class DependencyValidator extends BaseValidator {
     );
   }
 
-  isExternalDep(absoluteThemePath, depPath) {
-    const relativePath = path.relative(absoluteThemePath, depPath);
-    return relativePath && !relativePath.startsWith('..');
+  isExternalDep(absoluteThemePath, file, relativeDepPath) {
+    // Get dir of file that references the dep
+    const { dir } = path.parse(file);
+    // Use dir to get the dep's absolute path
+    const absoluteDepPath = path.resolve(dir, relativeDepPath);
+    // Get relative path from theme absolute path and dep absolute path
+    const relativePath = path.relative(absoluteThemePath, absoluteDepPath);
+    // Check that dep is within the theme
+    return relativePath && relativePath.startsWith('..');
   }
 
   // Validates:
@@ -89,7 +95,9 @@ class DependencyValidator extends BaseValidator {
                   path: dependency,
                 }),
               });
-            } else if (this.isExternalDep(absoluteThemePath, dependency)) {
+            } else if (
+              this.isExternalDep(absoluteThemePath, file, dependency)
+            ) {
               validationErrors.push({
                 ...this.getError(this.errors.EXTERNAL_DEPENDENCY, {
                   file: path.relative(absoluteThemePath, file),
