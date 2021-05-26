@@ -30,6 +30,8 @@ const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 const projectsCommand = require('../commands/projects');
 const themeCommand = require('../commands/theme');
+const configCommand = require('../commands/config');
+const accountsCommand = require('../commands/accounts');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
 
@@ -94,6 +96,8 @@ const argv = yargs
   .command(mvCommand)
   .command(projectsCommand)
   .command(themeCommand)
+  .command(configCommand)
+  .command(accountsCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
