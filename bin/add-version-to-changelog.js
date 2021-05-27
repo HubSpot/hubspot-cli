@@ -37,6 +37,6 @@ const commitChangelog = () => {
   exec('git push origin HEAD:master');
 };
 
-if (lernaJson.version.indexOf('beta') !== -1) return;
+if (lernaJson.version.indexOf('beta') !== 0) return;
 updateChangeLog(lernaJson.version);
 commitChangelog();
