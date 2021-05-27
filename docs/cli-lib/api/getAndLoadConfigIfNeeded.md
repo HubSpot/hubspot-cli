@@ -15,6 +15,10 @@ Retrieves a user's `hubspot.config.yml` file, and returns it. If the file has no
 
 (_Config_ or _Object_): If a configuration was found, it will be returned as a JS Object. If no config is found, an empty object will be returned instead
 
+#### Tips
+
+After loading the config, ensure it is valid by using the `validateConfig` function. If it doesn't return true, you don't have a valid config, and should handle it accordingly.
+
 #### Example
 
 ```js
@@ -29,7 +33,3 @@ if (validateConfig()) {
   );
 }
 ```
-
-#### Tips
-
-After loading the config, ensure it is valid by using the `validateConfig` function. If it doesn't return true, you don't have a valid config, and should handle it accordingly.
