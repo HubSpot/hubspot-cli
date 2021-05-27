@@ -1,0 +1,26 @@
+on:
+  pull_request:
+    branches:
+      - master
+    types: [closed]
+
+jobs:
+  updateChangelogWithPullRequestData:
+    runs-on: macos-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v2
+      - name: Update the changelog with merged pull request info
+        run: node ./bin/add-pull-request-to-changelog.js ${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }} ${{ github.event.pull_request.html_url }}
+      # - name: Switch from HTTPS to SSH
+      #   run: git remote set-url origin ${{ secrets.ssh }}
+      - name: Check for changes
+        run: git status
+      - name: Stage changed files
+        run: git add CHANGELOG.md
+      - name: Commit changed files
+        run: git commit -m "Auto adding Pull Request \#${{ github.event.pull_request.number }} to CHANGELOG.md"
+      - name: Fetch from master
+        run: git fetch origin master
+      - name: Push code to master
+        run: git push origin HEAD:master
