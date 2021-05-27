@@ -26,8 +26,7 @@
     "test": "jest",
     "test-cli": "lerna run run-tests --stream",
     "jest": "jest --watch",
-    "circular-deps": "yarn madge --circular packages",
-    "prepublishOnly": "node bin/add-version-to-changelog"
+    "circular-deps": "yarn madge --circular packages"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
