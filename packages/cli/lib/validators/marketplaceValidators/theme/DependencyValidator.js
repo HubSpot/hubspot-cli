@@ -10,7 +10,11 @@ const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
 
-const MISSING_ASSET_CATEGORY_TYPES = ['MODULE_NOT_FOUND'];
+const MISSING_ASSET_CATEGORY_TYPES = [
+  'MISSING_RESOURCE',
+  'MISSING_TEMPLATE',
+  'MODULE_NOT_FOUND',
+];
 
 class DependencyValidator extends BaseValidator {
   constructor(options) {
@@ -34,8 +38,10 @@ class DependencyValidator extends BaseValidator {
   // include paths in the all_dependencies object if it can't locate the asset
   getPathsFromRenderingErrors(validation) {
     return validation.renderingErrors
-      .filter(renderingError =>
-        MISSING_ASSET_CATEGORY_TYPES.includes(renderingError.category)
+      .filter(
+        renderingError =>
+          MISSING_ASSET_CATEGORY_TYPES.includes(renderingError.category) &&
+          renderingError.categoryErrors.path
       )
       .map(renderingError => renderingError.categoryErrors.path);
   }
@@ -87,7 +93,8 @@ class DependencyValidator extends BaseValidator {
         const depList = deps[key];
         depList.forEach(dependency => {
           // The BE will return '0' when no deps are found
-          if (dependency !== '0') {
+          // Ignore hubspot modules
+          if (dependency !== '0' && !dependency.startsWith('@')) {
             if (!isRelativePath(dependency)) {
               validationErrors.push({
                 ...this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, {
