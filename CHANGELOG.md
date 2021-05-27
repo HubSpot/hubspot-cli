@@ -1,5 +1,7 @@
 Change Log
 ==========
+* Update ([#515](changelog))
+
 ## 3.0.6
 * Init success message now outputs correct authType ([#461](https://github.com/HubSpot/hubspot-cli/pull/461))
 * Moving hubspot-cli-tests repo into hubspot-cli repo ([#466](https://github.com/HubSpot/hubspot-cli/pull/466))
