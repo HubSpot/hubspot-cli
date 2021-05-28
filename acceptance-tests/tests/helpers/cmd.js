@@ -54,9 +54,12 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
     inputs = [];
   }
 
-  if (global.config.qa) {
-    args.push('--qa');
-  }
+  // There is still an outstanding issue with this because we
+  // attempt to add the --qa flag to all hs commands, however it is not available for all commands.
+  // if (global.config.qa) {
+  //   args.push('--qa');
+  // }
+
   if (global.config.headless) {
     opts.env = { BROWSER: 'none' };
   }
