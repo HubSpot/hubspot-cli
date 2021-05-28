@@ -17,15 +17,26 @@ const makeFilesList = numFiles => {
   return files;
 };
 
+const mockGetAnnotationValue = (templateType, rest) => {
+  templates.getAnnotationValue.mockImplementation((x, key) => {
+    if (key === 'templateType') {
+      return templateType;
+    }
+    return rest;
+  });
+};
+
 const findError = (errors, errorKey) =>
   errors.find(error => error.key === `template.${errorKey}`);
 
 describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   beforeEach(() => {
-    templates.isTemplate.mockReturnValue(true);
+    templates.isCodedFile.mockReturnValue(true);
   });
 
   it('returns error if template limit is exceeded', async () => {
+    mockGetAnnotationValue('page');
+
     const validationErrors = TemplateValidator.validate(
       'dirName',
       makeFilesList(TEMPLATE_LIMIT + 1)
@@ -36,6 +47,8 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   });
 
   it('returns no errors if template limit is not exceeded', async () => {
+    mockGetAnnotationValue('page');
+
     const validationErrors = TemplateValidator.validate(
       'dirName',
       makeFilesList(TEMPLATE_LIMIT)
@@ -46,7 +59,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
 
   it('returns error if template annotation is missing label and screenshotPath', async () => {
     fs.readFileSync.mockReturnValue('mock');
-    templates.getAnnotationValue.mockReturnValue(null);
+    mockGetAnnotationValue('page');
 
     const validationErrors = TemplateValidator.validate('dirName', [
       'template.html',
@@ -55,13 +68,36 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
 
-  it('returns no error if template annotation has label and screenshotPath', async () => {
+  it('returns error if template type is not allowed', async () => {
     fs.readFileSync.mockReturnValue('mock');
-    templates.getAnnotationValue.mockReturnValue('some-value');
+    mockGetAnnotationValue('starter_landing_pages', 'value');
 
     const validationErrors = TemplateValidator.validate('dirName', [
       'template.html',
     ]);
+
+    expect(validationErrors.length).toBe(1);
+  });
+
+  it('returns no error if templateType is not found', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue(null, 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
+    expect(validationErrors.length).toBe(0);
+  });
+
+  it('returns no error if template annotation has label and screenshotPath', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue('page', 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
     expect(validationErrors.length).toBe(0);
   });
 });

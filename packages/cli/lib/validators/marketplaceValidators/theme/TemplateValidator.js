@@ -95,45 +95,54 @@ class TemplateValidator extends BaseValidator {
           annotations,
           ANNOTATION_KEYS.templateType
         );
-        const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
-        const sreenshotPath = getAnnotationValue(
-          annotations,
-          ANNOTATION_KEYS.screenshotPath
-        );
+        if (templateType) {
+          const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
+          const screenshotPath = getAnnotationValue(
+            annotations,
+            ANNOTATION_KEYS.screenshotPath
+          );
 
-        // Exclude global partials and templates with type of none in count
-        if (!['global_partial', 'none'].includes(templateType)) {
-          templateCount++;
-        }
-
-        const validations = VALIDATIONS_BY_TYPE[templateType];
-
-        if (validations) {
-          if (!validations.allowed) {
-            validationErrors.push(
-              this.getError(this.errors.INVALID_TEMPLATE_TYPE, {
-                templatePath: path.relative(absoluteThemePath, filePath),
-                templateType,
-              })
-            );
+          // Exclude global partials and templates with type of none in count
+          if (!['global_partial', 'none'].includes(templateType)) {
+            templateCount++;
           }
-          if (validations.label && !label) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_LABEL, {
-                templatePath: path.relative(absoluteThemePath, filePath),
-              })
-            );
-          }
-          if (validations.screenshot && !sreenshotPath) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
-                templatePath: path.relative(absoluteThemePath, filePath),
-              })
+
+          const validations = VALIDATIONS_BY_TYPE[templateType];
+
+          if (validations) {
+            if (!validations.allowed) {
+              validationErrors.push(
+                this.getError(this.errors.INVALID_TEMPLATE_TYPE, {
+                  templatePath: path.relative(absoluteThemePath, filePath),
+                  templateType,
+                })
+              );
+            }
+            if (validations.label && !label) {
+              validationErrors.push(
+                this.getError(this.errors.MISSING_LABEL, {
+                  templatePath: path.relative(absoluteThemePath, filePath),
+                })
+              );
+            }
+            if (validations.screenshot && !screenshotPath) {
+              validationErrors.push(
+                this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
+                  templatePath: path.relative(absoluteThemePath, filePath),
+                })
+              );
+            }
+          } else {
+            logger.debug(
+              `Unrecognized template type "${templateType}" in ${path.relative(
+                absoluteThemePath,
+                filePath
+              )}`
             );
           }
         } else {
           logger.debug(
-            `Unrecognized template type "${templateType}" in ${path.relative(
+            `No template type found for ${path.relative(
               absoluteThemePath,
               filePath
             )}`
