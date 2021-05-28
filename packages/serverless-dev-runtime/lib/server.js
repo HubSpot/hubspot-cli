@@ -6,12 +6,15 @@ const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
 const { setupRoutes, updateRoutePaths } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
-const { getTableContents, getTableHeader } = require('./table');
 const {
   MOCK_DATA,
   ROUTE_PATH_PREFIX,
