@@ -51,6 +51,11 @@ setArgsOverrides(
       default: false,
       description: 'Set this if you are using a app.hubspotqa.com site',
     })
+    .option('headless', {
+      type: 'boolean',
+      default: false,
+      description: 'Run the tests in headless mode',
+    })
     .option('debug', {
       type: 'boolean',
       default: false,

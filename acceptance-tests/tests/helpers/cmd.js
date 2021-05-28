@@ -54,11 +54,14 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
     inputs = [];
   }
 
-  // if (global.config.qa) {
-  //   args.push('--qa');
-  // }
+  if (global.config.qa) {
+    args.push('--qa');
+  }
+  if (global.config.headless) {
+    opts.env = { BROWSER: 'none' };
+  }
 
-  const { env = null, timeout = 500, maxTimeout = 10000 } = opts;
+  const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
   const childProcess = createProcess(processPath, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
@@ -127,7 +130,10 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
         clearTimeout(currentInputTimeout);
         inputs = [];
       }
-      reject(err.toString());
+
+      // For some reason, when we use 'ora', it is throwing this error,
+      // so for now we won't reject.
+      console.error(err.toString());
     });
 
     childProcess.on('error', reject);
