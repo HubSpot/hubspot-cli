@@ -37,28 +37,20 @@ const getAnnotationValue = (annotations, key) => {
  * Returns true if:
  * .html extension (ignoring module.html)
  * isAvailableForNewContent is null or true
- * templateType is NOT 'global_partial' or 'none'
  */
-const isTemplate = filePath => {
+const isCodedFile = filePath => {
   if (TEMPLATE_EXTENSION_REGEX.test(filePath)) {
     const annotations = getFileAnnotations(filePath);
     if (!annotations.length) {
       return false;
     }
 
-    const templateType = getAnnotationValue(
-      annotations,
-      ANNOTATION_KEYS.templateType
-    );
     const isAvailableForNewContent = getAnnotationValue(
       annotations,
       ANNOTATION_KEYS.isAvailableForNewContent
     );
 
-    return (
-      isAvailableForNewContent !== 'false' &&
-      !['global_partial', 'none'].includes(templateType)
-    );
+    return isAvailableForNewContent !== 'false';
   }
   return false;
 };
@@ -67,5 +59,5 @@ module.exports = {
   ANNOTATION_KEYS,
   getAnnotationValue,
   getFileAnnotations,
-  isTemplate,
+  isCodedFile,
 };
