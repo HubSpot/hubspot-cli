@@ -133,7 +133,18 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
 
       // For some reason, when we use 'ora', it is throwing this error,
       // so for now we won't reject.
-      console.error(err.toString());
+      const blacklistedStrings = ['Loading available API samples'];
+
+      const error = err.toString();
+      if (blacklistedStrings.some(s => error.includes(s))) {
+        if (global.config.debug) {
+          console.log('suppressed error:', error);
+        }
+
+        return;
+      }
+
+      reject(error);
     });
 
     childProcess.on('error', reject);
