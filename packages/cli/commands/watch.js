@@ -77,13 +77,16 @@ exports.handler = async options => {
     logger.info(
       'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
     );
-  } else if (!initialUpload) {
+  } else {
     logger.info(
       `The "watch" command no longer uploads the watched directory when started. The directory "${src}" was not uploaded.`
     );
-    logger.info(
-      'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
-    );
+
+    if (!initialUpload) {
+      logger.info(
+        'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
+      );
+    }
   }
 
   trackCommandUsage('watch', { mode }, accountId);
