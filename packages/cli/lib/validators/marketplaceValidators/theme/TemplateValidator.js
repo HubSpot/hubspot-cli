@@ -10,6 +10,7 @@ const BaseValidator = require('../BaseValidator');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const TEMPLATE_LIMIT = 50;
+const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
 const VALIDATIONS_BY_TYPE = {
   page: { allowed: true, label: true, screenshot: true },
   starter_landing_pages: { allowed: false },
@@ -102,8 +103,8 @@ class TemplateValidator extends BaseValidator {
             ANNOTATION_KEYS.screenshotPath
           );
 
-          // Exclude global partials and templates with type of none in count
-          if (!['global_partial', 'none'].includes(templateType)) {
+          // Ignore global partials and templates with type of none in count
+          if (!TEMPLATE_COUNT_IGNORE_LIST.includes(templateType)) {
             templateCount++;
           }
 
