@@ -81,9 +81,12 @@ exports.handler = async options => {
     logger.info(
       `The "watch" command no longer uploads the watched directory when started. The directory "${src}" was not uploaded.`
     );
-    logger.info(
-      'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
-    );
+
+    if (!initialUpload) {
+      logger.info(
+        'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
+      );
+    }
   }
 
   trackCommandUsage('watch', { mode }, accountId);
