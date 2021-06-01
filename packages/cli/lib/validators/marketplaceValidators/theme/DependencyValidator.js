@@ -70,9 +70,9 @@ class DependencyValidator extends BaseValidator {
     const { dir } = path.parse(file);
     // Use dir to get the dep's absolute path
     const absoluteDepPath = path.resolve(dir, relativeDepPath);
-    // Get relative path from theme absolute path and dep absolute path
+    // Get relative path to dep using theme absolute path and dep absolute path
     const relativePath = path.relative(absoluteThemePath, absoluteDepPath);
-    // Check that dep is within the theme
+    // Check that dep is not within the theme
     return relativePath && relativePath.startsWith('..');
   }
 
@@ -92,8 +92,9 @@ class DependencyValidator extends BaseValidator {
       Object.keys(deps).forEach(key => {
         const depList = deps[key];
         depList.forEach(dependency => {
-          // The BE will return '0' when no deps are found
-          // Ignore hubspot modules
+          // Ignore:
+          // '0' - The BE will return '0' when no deps are found
+          // '@' - Hubspot modules
           if (dependency !== '0' && !dependency.startsWith('@')) {
             if (!isRelativePath(dependency)) {
               validationErrors.push({
