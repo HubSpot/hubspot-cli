@@ -47,6 +47,9 @@ async function lint(accountId, filepath, callback) {
 const getErrorsFromHublValidationObject = validation =>
   (validation && validation.meta && validation.meta.template_errors) || [];
 
+const getDepsFromHublValidationObject = validation =>
+  (validation && validation.meta && validation.meta.all_dependencies) || {};
+
 function printHublValidationError(err) {
   const { severity, message, lineno, startPosition } = err;
   const method = severity === 'FATAL' ? 'error' : 'warn';
@@ -72,6 +75,7 @@ function printHublValidationResult({ file, validation }) {
 }
 
 module.exports = {
+  getDepsFromHublValidationObject,
   lint,
   printHublValidationResult,
 };

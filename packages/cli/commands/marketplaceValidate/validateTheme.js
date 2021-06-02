@@ -64,7 +64,8 @@ exports.handler = async options => {
   applyValidators(
     MARKETPLACE_VALIDATORS.theme,
     absoluteSrcPath,
-    themeFiles
+    themeFiles,
+    accountId
   ).then(results => {
     logValidatorResults(results, { logAsJson: options.json });
 
