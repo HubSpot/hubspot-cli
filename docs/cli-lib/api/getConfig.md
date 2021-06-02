@@ -14,7 +14,7 @@ No parameters
 
 #### Tips
 
-At some point in your application's lifecycle, ensure the config is valid via the `validateConfig` function. If it doesn't return true, you don't have a valid config, and should handle it accordingly.
+At some point in your application's lifecycle, ensure the config is valid via the [validateConfig](./validateConfig.md) function. If it doesn't return true, you don't have a valid config, and should handle it accordingly.
 
 #### Example
 
