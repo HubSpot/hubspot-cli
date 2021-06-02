@@ -8,7 +8,6 @@ For more information on using these tools, see [Local Development Tooling: Getti
 
 ### Installation
 
-
 ```bash
 npm install -g @hubspot/cli
 ```
@@ -22,7 +21,10 @@ cd ~
 hs init
 ```
 
+See [Api Documentation](../../docs/cli-lib/api) for further details on the `hubspot.config.yml` file.
+
 #### Auto Completion
+
 You can set up command autocompletion by running
 
 ```bash
@@ -32,6 +34,7 @@ hs completion
 and copying the output to either your `.bashrc` or `.zshrc`, and then sourcing that file `source ~/.bashrc` `source ~/.zshrc` or restarting your terminal.
 
 ## Commands
+
 A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cli).
 
 **Note:** When `@hubspot/cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
@@ -129,7 +132,6 @@ Delete a HubDB table
 ```bash
 hs hubdb delete <id or name>
 ```
-
 
 ## Authentication
 

@@ -2,7 +2,7 @@
 
 [cli-lib/lib/config.js](https://github.com/HubSpot/hubspot-cli/blob/master/packages/cli-lib/lib/config.js)
 
-Retrieves a user's `hubspot.config.yml` file, and returns it. If no config is found, `undefined` will be returned
+Retrieves a user's [hubspot.config.yml](../../HubspotConfigFile.md) file, and returns it. If no config is found, `undefined` will be returned
 
 #### Parameters
 

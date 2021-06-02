@@ -22,6 +22,10 @@ Internally, the HubSpot cli-lib is consumed by the HubSpot CLI, the official Hub
 
 The full scope of the cli-lib is quite large. It provides the ability to manage authentication, custom objects, the file manager, files within the Design Manager, serverless functions, HubDB, and more.
 
+## API
+
+See [Api Documentation](../../docs/cli-lib/api) for details.
+
 ## Installation
 
 - Install Node.js. The [LTS version](https://nodejs.org) is recommended, however the HubSpot CLI supports any version from 10 and up. Installation details can be found at [nodejs.org](https://nodejs.org)

@@ -2,7 +2,7 @@
 
 [cli-lib/lib/config.js](https://github.com/HubSpot/hubspot-cli/blob/master/packages/cli-lib/lib/config.js)
 
-From a given directory, `findConfig` will walk up the directory looking for a `hubspot.config.yml` file. If found, the absolute path to the file will be returned, otherwise `undefined` will be returned
+From a given directory, `findConfig` will walk up the directory looking for a [hubspot.config.yml](../../HubspotConfigFile.md) file. If found, the absolute path to the file will be returned, otherwise `undefined` will be returned
 
 #### Parameters
 
@@ -10,7 +10,7 @@ From a given directory, `findConfig` will walk up the directory looking for a `h
 
 #### Returns
 
-(_String_ or _undefined_): If found, the path to the `hubspot.config.yml` file will be returned. If not, `undefined` will be returned.
+(_String_ or _undefined_): If found, the path to the [hubspot.config.yml](../../HubspotConfigFile.md) file will be returned. If not, `undefined` will be returned.
 
 #### Tips
 

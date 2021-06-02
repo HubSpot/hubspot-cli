@@ -10,6 +10,8 @@ See the `@hubspot/cli` [README](./packages/cli/README.md).
 
 See the node.js `cli-lib` library [README](./packages/cli-lib/README.md);
 
+For information on the `hubspot.config.yml` file, see [HubspotConfigFile](./docs/HubspotConfigFile.md)
+
 ## Contributing
 
 For more information on developing, see the [Contributing Guide](CONTRIBUTING.md).

@@ -14,7 +14,7 @@ description
 
 #### Tips
 
-Passing in an account id to the `getAccountId` function is essentially checking to see if the account exists in the `hubspot.config.yml` file.
+Passing in an account id to the `getAccountId` function is essentially checking to see if the account exists in the [hubspot.config.yml](../../HubspotConfigFile.md) file.
 
 #### Example
 
