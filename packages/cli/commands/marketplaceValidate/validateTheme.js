@@ -13,6 +13,7 @@ const { walk } = require('@hubspot/cli-lib');
 const {
   addConfigOptions,
   addAccountOptions,
+  addUseEnvironmentOptions,
   setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
@@ -78,6 +79,8 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
+  addUseEnvironmentOptions(yargs, true);
+
   yargs.options({
     json: {
       describe: 'Output raw json data',
