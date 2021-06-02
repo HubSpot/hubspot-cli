@@ -74,7 +74,18 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     expect(validationErrors.length).toBe(1);
   });
 
-  it('returns no error if templateType is not found', async () => {
+  it('returns error if template type is unknown', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue('unknown-type', 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
+    expect(validationErrors.length).toBe(1);
+  });
+
+  it('returns error if template type is not found', async () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue(null, 'value');
 
@@ -82,7 +93,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
       'template.html',
     ]);
 
-    expect(validationErrors.length).toBe(0);
+    expect(validationErrors.length).toBe(1);
   });
 
   it('returns no error if template annotation has label and screenshotPath', async () => {

@@ -7,7 +7,6 @@ const {
   isCodedFile,
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
-const { logger } = require('@hubspot/cli-lib/logger');
 
 const TEMPLATE_LIMIT = 50;
 const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
@@ -19,7 +18,7 @@ const VALIDATIONS_BY_TYPE = {
   none: { allowed: true, label: false, screenshot: false },
   error_page: { allowed: true, label: true, screenshot: false },
   password_prompt_page: { allowed: true, label: true, screenshot: false },
-  email_subscriptions_preferences_page: {
+  email_subscription_preferences_page: {
     allowed: true,
     label: true,
     screenshot: false,
@@ -62,8 +61,18 @@ class TemplateValidator extends BaseValidator {
         getCopy: ({ limit, total }) =>
           `Cannot exceed ${limit} templates in your theme (found ${total})`,
       },
-      INVALID_TEMPLATE_TYPE: {
-        key: 'invalidTemplateType',
+      MISSING_TEMPLATE_TYPE: {
+        key: 'missingTemplateType',
+        getCopy: ({ templatePath }) =>
+          `Missing template type for ${templatePath}`,
+      },
+      UNKNOWN_TEMPLATE_TYPE: {
+        key: 'unknownTemplateType',
+        getCopy: ({ templatePath, templateType }) =>
+          `Unknown template type ${templateType} for ${templatePath}`,
+      },
+      RESTRICTED_TEMPLATE_TYPE: {
+        key: 'restrictedTemplateType',
         getCopy: ({ templatePath, templateType }) =>
           `Cannot have template type ${templateType} for ${templatePath}`,
       },
@@ -92,62 +101,71 @@ class TemplateValidator extends BaseValidator {
     files.forEach(filePath => {
       if (isCodedFile(filePath)) {
         const annotations = getFileAnnotations(filePath);
-        const templateType = getAnnotationValue(
+        const isAvailableForNewContent = getAnnotationValue(
           annotations,
-          ANNOTATION_KEYS.templateType
+          ANNOTATION_KEYS.isAvailableForNewContent
         );
-        if (templateType) {
-          const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
-          const screenshotPath = getAnnotationValue(
+
+        if (isAvailableForNewContent !== 'false') {
+          const templateType = getAnnotationValue(
             annotations,
-            ANNOTATION_KEYS.screenshotPath
+            ANNOTATION_KEYS.templateType
           );
+          if (templateType) {
+            const label = getAnnotationValue(
+              annotations,
+              ANNOTATION_KEYS.label
+            );
+            const screenshotPath = getAnnotationValue(
+              annotations,
+              ANNOTATION_KEYS.screenshotPath
+            );
 
-          // Ignore global partials and templates with type of none in count
-          if (!TEMPLATE_COUNT_IGNORE_LIST.includes(templateType)) {
-            templateCount++;
-          }
+            // Ignore global partials and templates with type of none in count
+            if (!TEMPLATE_COUNT_IGNORE_LIST.includes(templateType)) {
+              templateCount++;
+            }
 
-          const validations = VALIDATIONS_BY_TYPE[templateType];
+            const validations = VALIDATIONS_BY_TYPE[templateType];
 
-          if (validations) {
-            if (!validations.allowed) {
+            if (validations) {
+              if (!validations.allowed) {
+                validationErrors.push(
+                  this.getError(this.errors.RESTRICTED_TEMPLATE_TYPE, {
+                    templatePath: path.relative(absoluteThemePath, filePath),
+                    templateType,
+                  })
+                );
+              }
+              if (validations.label && !label) {
+                validationErrors.push(
+                  this.getError(this.errors.MISSING_LABEL, {
+                    templatePath: path.relative(absoluteThemePath, filePath),
+                  })
+                );
+              }
+              if (validations.screenshot && !screenshotPath) {
+                validationErrors.push(
+                  this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
+                    templatePath: path.relative(absoluteThemePath, filePath),
+                  })
+                );
+              }
+            } else {
               validationErrors.push(
-                this.getError(this.errors.INVALID_TEMPLATE_TYPE, {
+                this.getError(this.errors.UNKNOWN_TEMPLATE_TYPE, {
                   templatePath: path.relative(absoluteThemePath, filePath),
                   templateType,
                 })
               );
             }
-            if (validations.label && !label) {
-              validationErrors.push(
-                this.getError(this.errors.MISSING_LABEL, {
-                  templatePath: path.relative(absoluteThemePath, filePath),
-                })
-              );
-            }
-            if (validations.screenshot && !screenshotPath) {
-              validationErrors.push(
-                this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
-                  templatePath: path.relative(absoluteThemePath, filePath),
-                })
-              );
-            }
           } else {
-            logger.debug(
-              `Unrecognized template type "${templateType}" in ${path.relative(
-                absoluteThemePath,
-                filePath
-              )}`
+            validationErrors.push(
+              this.getError(this.errors.MISSING_TEMPLATE_TYPE, {
+                templatePath: path.relative(absoluteThemePath, filePath),
+              })
             );
           }
-        } else {
-          logger.debug(
-            `No template type found for ${path.relative(
-              absoluteThemePath,
-              filePath
-            )}`
-          );
         }
       }
     });

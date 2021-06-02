@@ -1,8 +1,4 @@
-const fs = require('fs');
-
-const { isCodedFile } = require('../templates');
-
-jest.mock('fs');
+const { getAnnotationValue, isCodedFile } = require('../templates');
 
 const makeAnnotation = (options = {}) => {
   let result = '<!--\n';
@@ -16,7 +12,7 @@ const makeAnnotation = (options = {}) => {
 
 describe('cli-lib/templates', () => {
   describe('isCodedFile()', () => {
-    it('should return falseinvalid input', () => {
+    it('should return false for invalid input', () => {
       expect(isCodedFile()).toBe(false);
       expect(isCodedFile(null)).toBe(false);
       expect(isCodedFile(1)).toBe(false);
@@ -25,20 +21,19 @@ describe('cli-lib/templates', () => {
       expect(isCodedFile('folder.module/module.html')).toBe(false);
     });
     it('should return true for templates', () => {
-      // Without isAvailableForNewContent
-      fs.readFileSync.mockReturnValue(makeAnnotation({ templateType: 'page' }));
+      expect(isCodedFile('folder/template.html')).toBe(true);
+    });
+  });
 
-      expect(isCodedFile('folder.module/template.html')).toBe(true);
+  describe('getAnnotationValue()', () => {
+    it('returns the annotation value', () => {
+      const annotations = makeAnnotation({
+        isAvailableForNewContent: 'true',
+        templateType: 'page',
+      });
 
-      // With isAvailableForNewContent
-      fs.readFileSync.mockReturnValue(
-        makeAnnotation({
-          isAvailableForNewContent: 'true',
-          templateType: 'page',
-        })
-      );
-
-      expect(isCodedFile('folder.module/template.html')).toBe(true);
+      const value = getAnnotationValue(annotations, 'templateType');
+      expect(value).toEqual('page');
     });
   });
 });

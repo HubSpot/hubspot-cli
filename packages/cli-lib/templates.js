@@ -36,24 +36,8 @@ const getAnnotationValue = (annotations, key) => {
 /*
  * Returns true if:
  * .html extension (ignoring module.html)
- * isAvailableForNewContent is null or true
  */
-const isCodedFile = filePath => {
-  if (TEMPLATE_EXTENSION_REGEX.test(filePath)) {
-    const annotations = getFileAnnotations(filePath);
-    if (!annotations.length) {
-      return false;
-    }
-
-    const isAvailableForNewContent = getAnnotationValue(
-      annotations,
-      ANNOTATION_KEYS.isAvailableForNewContent
-    );
-
-    return isAvailableForNewContent !== 'false';
-  }
-  return false;
-};
+const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
 module.exports = {
   ANNOTATION_KEYS,
