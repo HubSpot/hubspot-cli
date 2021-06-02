@@ -6,7 +6,7 @@ Gets the configuration for a specific account
 
 #### Parameters
 
-1. [`accountId`](_Number_): The id of the account you want to access.
+1. `accountId` (_Number_): The id of the account you want to access.
 
 #### Returns
 

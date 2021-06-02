@@ -6,7 +6,7 @@ Updates the configuration for a specific account and returns the result. Does no
 
 #### Parameters
 
-1. [`config`](_AccountConfig_): Object containing properties you want to update. Config must contain a `portalId` property. This should be equivalent to the `accountId` property.
+1. `config` (_AccountConfig_): Object containing properties you want to update. Config must contain a `portalId` property. This should be equivalent to the `accountId` property.
 
 #### Returns
 

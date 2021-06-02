@@ -6,15 +6,15 @@ Watch the given directory or file for changes, and upload them to the `dest` fol
 
 #### Parameters
 
-1. [`accountId`](_Number_): The id of the account you want to watch
-2. [`src`](_String_): Path to the directory or file you want to watch
-3. [`dest`](_String_): Path to the remote directory you want to upload to when changes are detected.
-4. [`options`](_Object_): Object containing a list of options for the watch
+1. `accountId` (_Number_): The id of the account you want to watch
+2. `src` (_String_): Path to the directory or file you want to watch
+3. `dest` (_String_): Path to the remote directory you want to upload to when changes are detected.
+4. `options` (_Object_): Object containing a list of options for the watch
 
-   - [`mode`](_Mode_): `draft` or `publish`. If `publish` is used, changes will be immediately published to the live site.
-   - [`remove`](_Boolean_): If set to true, when a file is removed from a local machine, the corresponding file will be removed from HubSpot's file system.
-   - [`disableInitial`](_Boolean_): If set to true, the watch command will not upload the directory specified by `src` upon invocation.
-   - [`notify`](_Boolean_): Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file
+   - `mode` (_Mode_): `draft` or `publish`. If `publish` is used, changes will be immediately published to the live site.
+   - `remove` (_Boolean_): If set to true, when a file is removed from a local machine, the corresponding file will be removed from HubSpot's file system.
+   - `disableInitial` (_Boolean_): If set to true, the watch command will not upload the directory specified by `src` upon invocation.
+   - `notify` (_Boolean_): Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file
 
 #### Returns
 

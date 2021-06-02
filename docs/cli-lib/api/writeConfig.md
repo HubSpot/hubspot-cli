@@ -6,10 +6,10 @@ Writes the config currently in memory to the [hubspot.config.yml](../../HubspotC
 
 #### Parameters
 
-1. [`options`](_Object_): Optional object containing options
+1. `options` (_Object_): Optional object containing options
 
-   - [`path`](_String_): Location you want the [hubspot.config.yml](../../HubspotConfigFile.md) file to be written to. If excluded, the default, or currently found location will be used.
-   - [`source`](_String_): Optional full config written as a string. If used, this value will be written to the `path` instead of using the current config in memory.
+   - `path` (_String_): Location you want the [hubspot.config.yml](../../HubspotConfigFile.md) file to be written to. If excluded, the default, or currently found location will be used.
+   - `source` (_String_): Optional full config written as a string. If used, this value will be written to the `path` instead of using the current config in memory.
 
 #### Returns
 

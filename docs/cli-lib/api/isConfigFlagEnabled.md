@@ -6,7 +6,7 @@ Check if a top level boolean flag within the hubspot.config.yml file is enabled
 
 #### Parameters
 
-1. [`flag`](_String_): Name of the flag you want to check for
+1. `flag` (_String_): Name of the flag you want to check for
 
 #### Returns
 

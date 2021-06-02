@@ -6,10 +6,10 @@ description
 
 #### Parameters
 
-1. [`accountId`](_Number_): The id of the account you want to update.
-2. [`src`](_String_): Local path to the folder you are uploading
-3. [`dest`](_String_): Remote path to the folder within HubSpot's Design Manager
-4. [`options`](_Object_=): Optional list of options to pass to the function. Not currently used publicly.
+1. `accountId` (_Number_): The id of the account you want to update.
+2. `src` (_String_): Local path to the folder you are uploading
+3. `dest` (_String_): Remote path to the folder within HubSpot's Design Manager
+4. `options` (_Object_=): Optional list of options to pass to the function. Not currently used publicly.
 
 #### Returns
 

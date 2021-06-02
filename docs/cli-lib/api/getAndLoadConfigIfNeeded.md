@@ -6,10 +6,10 @@ Retrieves a user's [hubspot.config.yml](../../HubspotConfigFile.md) file, and re
 
 #### Parameters
 
-1. [`options`](_Object_): An object containing a list of options to pass to the [loadConfig](./loadConfig.md) function. You may specify it to override certain settings. Options include
+1. `options` (_Object_): An object containing a list of options to pass to the [loadConfig](./loadConfig.md) function. You may specify it to override certain settings. Options include
 
-   - [`silenceErrors`](_Boolean_): If set to true, if a config file cannot be found, the error message will be downgraded from an error message to a debug message.
-   - [`useEnv`](_Boolean_): If set to true, and environment variables for the HubSpot configuration are set, it will load the settings from those rather than loading them from a [hubspot.config.yml](../../HubspotConfigFile.md) file.
+   - `silenceErrors` (_Boolean_): If set to true, if a config file cannot be found, the error message will be downgraded from an error message to a debug message.
+   - `useEnv` (_Boolean_): If set to true, and environment variables for the HubSpot configuration are set, it will load the settings from those rather than loading them from a [hubspot.config.yml](../../HubspotConfigFile.md) file.
 
 #### Returns
 

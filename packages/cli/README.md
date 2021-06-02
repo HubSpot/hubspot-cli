@@ -14,14 +14,12 @@ npm install -g @hubspot/cli
 
 ### Configuring
 
-Once the `@hubspot/cli` has been added to a project, a config file named `hubspot.config.yml` will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
+Once the `@hubspot/cli` has been added to a project, a config file named [hubspot.config.yml](../../docs/HubspotConfigFile.md) will also be needed. It is recommended that the config file is kept in your `$HOME` directory.
 
 ```bash
 cd ~
 hs init
 ```
-
-See [Api Documentation](../../docs/cli-lib/api) for further details on the `hubspot.config.yml` file.
 
 #### Auto Completion
 
@@ -152,7 +150,7 @@ _**Note:** The Account ID used should be the Test Account ID (not the developer 
 ### HubSpot API Key
 
 1. [Set up an API Key for the Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
-2. Edit the `hubspot.config.yml` file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
+2. Edit the [hubspot.config.yml](../../docs/HubspotConfigFile.md) file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
 
 ```yaml
 defaultPortal: DEV

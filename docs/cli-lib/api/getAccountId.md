@@ -6,7 +6,7 @@ description
 
 #### Parameters
 
-1. [`nameOrId`](_string_ or _number_ or _undefined_): The account name you want to retrieve. If no name or id is passed in, the default account id will be used instead.
+1. `nameOrId` (_string_ or _number_ or _undefined_): The account name you want to retrieve. If no name or id is passed in, the default account id will be used instead.
 
 #### Returns
 

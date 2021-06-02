@@ -6,7 +6,7 @@ From a given directory, `findConfig` will walk up the directory looking for a [h
 
 #### Parameters
 
-1. [`directory`](_String_): A directory that you want to start the search for. Usually this should be set to the current working directory. See [process.cwd()](https://nodejs.org/api/process.html#process_process_cwd) for details on retrieving the current working directory.
+1. `directory` (_String_): A directory that you want to start the search for. Usually this should be set to the current working directory. See [process.cwd()](https://nodejs.org/api/process.html#process_process_cwd) for details on retrieving the current working directory.
 
 #### Returns
 

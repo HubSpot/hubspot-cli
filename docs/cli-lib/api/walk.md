@@ -6,7 +6,7 @@ Walks down a directory, returning an array containing the paths of all files wit
 
 #### Parameters
 
-1. [`directory`](_String_): Local path to the directory to be walked
+1. `directory` (_String_): Local path to the directory to be walked
 
 #### Returns
 
