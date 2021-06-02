@@ -6,11 +6,11 @@ description
 
 #### Parameters
 
-1. [`path`] _(String)_: Path to the `hubspot.config.yml` file
-2. [`options`] _(Object)_: An object containing a list of options to pass to the `loadConfig` function. You may specify it to override certain settings. Options include
+1. [`path`](_String_): Path to the `hubspot.config.yml` file
+2. [`options`](_Object_): An object containing a list of options to pass to the `loadConfig` function. You may specify it to override certain settings. Options include
 
-   - [`silenceErrors`] _(Boolean)_: If set to true, if a config file cannot be found, the error message will be downgraded from an error message to a debug message.
-   - [`useEnv`] _(Boolean)_: If set to true, and environment variables for the HubSpot configuration are set, it will load the settings from those rather than loading them from a `hubspot.config.yml` file.
+   - [`silenceErrors`](_Boolean_): If set to true, if a config file cannot be found, the error message will be downgraded from an error message to a debug message.
+   - [`useEnv`](_Boolean_): If set to true, and environment variables for the HubSpot configuration are set, it will load the settings from those rather than loading them from a `hubspot.config.yml` file.
 
 #### Returns
 
