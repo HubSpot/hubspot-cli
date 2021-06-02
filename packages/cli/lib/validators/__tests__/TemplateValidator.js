@@ -3,32 +3,38 @@ const templates = require('@hubspot/cli-lib/templates');
 
 const TemplateValidator = require('../marketplaceValidators/theme/TemplateValidator');
 const { VALIDATION_RESULT } = require('../constants');
+const {
+  generateTemplatesList,
+  makeFindError,
+} = require('./validatorTestUtils');
 
 jest.mock('fs');
 jest.mock('@hubspot/cli-lib/templates');
 
 const TEMPLATE_LIMIT = 50;
 
-const makeFilesList = numFiles => {
-  const files = [];
-  for (let i = 0; i < numFiles; i++) {
-    files.push(`file-${i}.html`);
-  }
-  return files;
+const mockGetAnnotationValue = (templateType, rest) => {
+  templates.getAnnotationValue.mockImplementation((x, key) => {
+    if (key === 'templateType') {
+      return templateType;
+    }
+    return rest;
+  });
 };
 
-const findError = (errors, errorKey) =>
-  errors.find(error => error.key === `template.${errorKey}`);
+const findError = makeFindError('template');
 
 describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   beforeEach(() => {
-    templates.isTemplate.mockReturnValue(true);
+    templates.isCodedFile.mockReturnValue(true);
   });
 
   it('returns error if template limit is exceeded', async () => {
+    mockGetAnnotationValue('page');
+
     const validationErrors = TemplateValidator.validate(
       'dirName',
-      makeFilesList(TEMPLATE_LIMIT + 1)
+      generateTemplatesList(TEMPLATE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).toBeDefined();
@@ -36,9 +42,11 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   });
 
   it('returns no errors if template limit is not exceeded', async () => {
+    mockGetAnnotationValue('page');
+
     const validationErrors = TemplateValidator.validate(
       'dirName',
-      makeFilesList(TEMPLATE_LIMIT)
+      generateTemplatesList(TEMPLATE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).not.toBeDefined();
@@ -46,7 +54,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
 
   it('returns error if template annotation is missing label and screenshotPath', async () => {
     fs.readFileSync.mockReturnValue('mock');
-    templates.getAnnotationValue.mockReturnValue(null);
+    mockGetAnnotationValue('page');
 
     const validationErrors = TemplateValidator.validate('dirName', [
       'template.html',
@@ -55,13 +63,47 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
 
-  it('returns no error if template annotation has label and screenshotPath', async () => {
+  it('returns error if template type is not allowed', async () => {
     fs.readFileSync.mockReturnValue('mock');
-    templates.getAnnotationValue.mockReturnValue('some-value');
+    mockGetAnnotationValue('starter_landing_pages', 'value');
 
     const validationErrors = TemplateValidator.validate('dirName', [
       'template.html',
     ]);
+
+    expect(validationErrors.length).toBe(1);
+  });
+
+  it('returns error if template type is unknown', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue('unknown-type', 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
+    expect(validationErrors.length).toBe(1);
+  });
+
+  it('returns error if template type is not found', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue(null, 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
+    expect(validationErrors.length).toBe(1);
+  });
+
+  it('returns no error if template annotation has label and screenshotPath', async () => {
+    fs.readFileSync.mockReturnValue('mock');
+    mockGetAnnotationValue('page', 'value');
+
+    const validationErrors = TemplateValidator.validate('dirName', [
+      'template.html',
+    ]);
+
     expect(validationErrors.length).toBe(0);
   });
 });

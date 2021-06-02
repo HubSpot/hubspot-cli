@@ -1,8 +1,4 @@
-const fs = require('fs');
-
-const { isTemplate } = require('../templates');
-
-jest.mock('fs');
+const { getAnnotationValue, isCodedFile } = require('../templates');
 
 const makeAnnotation = (options = {}) => {
   let result = '<!--\n';
@@ -15,49 +11,29 @@ const makeAnnotation = (options = {}) => {
 };
 
 describe('cli-lib/templates', () => {
-  describe('isTemplate()', () => {
-    it('should return falseinvalid input', () => {
-      expect(isTemplate()).toBe(false);
-      expect(isTemplate(null)).toBe(false);
-      expect(isTemplate(1)).toBe(false);
+  describe('isCodedFile()', () => {
+    it('should return false for invalid input', () => {
+      expect(isCodedFile()).toBe(false);
+      expect(isCodedFile(null)).toBe(false);
+      expect(isCodedFile(1)).toBe(false);
     });
     it('should return false for modules', () => {
-      expect(isTemplate('folder.module/module.html')).toBe(false);
-    });
-    it('should return false for partials', () => {
-      // Standard partials
-      fs.readFileSync.mockReturnValue(
-        makeAnnotation({ isAvailableForNewContent: 'false' })
-      );
-      expect(isTemplate('folder.module/partial.html')).toBe(false);
-
-      // Global partials
-      fs.readFileSync.mockReturnValue(
-        makeAnnotation({ templateType: 'global_partial' })
-      );
-
-      expect(isTemplate('folder.module/partial.html')).toBe(false);
-    });
-    it('should return false for templateType none', () => {
-      fs.readFileSync.mockReturnValue(makeAnnotation({ templateType: 'none' }));
-
-      expect(isTemplate('folder.module/template.html')).toBe(false);
+      expect(isCodedFile('folder.module/module.html')).toBe(false);
     });
     it('should return true for templates', () => {
-      // Without isAvailableForNewContent
-      fs.readFileSync.mockReturnValue(makeAnnotation({ templateType: 'page' }));
+      expect(isCodedFile('folder/template.html')).toBe(true);
+    });
+  });
 
-      expect(isTemplate('folder.module/template.html')).toBe(true);
+  describe('getAnnotationValue()', () => {
+    it('returns the annotation value', () => {
+      const annotations = makeAnnotation({
+        isAvailableForNewContent: 'true',
+        templateType: 'page',
+      });
 
-      // With isAvailableForNewContent
-      fs.readFileSync.mockReturnValue(
-        makeAnnotation({
-          isAvailableForNewContent: 'true',
-          templateType: 'page',
-        })
-      );
-
-      expect(isTemplate('folder.module/template.html')).toBe(true);
+      const value = getAnnotationValue(annotations, 'templateType');
+      expect(value).toEqual('page');
     });
   });
 });
