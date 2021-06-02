@@ -1,31 +1,19 @@
 const fs = require('fs');
 const ModuleValidator = require('../marketplaceValidators/theme/ModuleValidator');
 const { VALIDATION_RESULT } = require('../constants');
+const { generateModulesList, makeFindError } = require('./validatorTestUtils');
 
 jest.mock('fs');
 
 const MODULE_LIMIT = 50;
 
-const makeFilesList = numFiles => {
-  const files = [];
-  for (let i = 0; i < numFiles; i++) {
-    const base = `module-${i}.module`;
-    files.push(`${base}/meta.json`);
-    files.push(`${base}/fields.json`);
-    files.push(`${base}/module.html`);
-    files.push(`${base}/module.js`);
-  }
-  return files;
-};
-
-const findError = (errors, errorKey) =>
-  errors.find(error => error.key === `module.${errorKey}`);
+const findError = makeFindError('module');
 
 describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns error if module limit is exceeded', async () => {
     const validationErrors = ModuleValidator.validate(
       'dirName',
-      makeFilesList(MODULE_LIMIT + 1)
+      generateModulesList(MODULE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).toBeDefined();
@@ -35,7 +23,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns no limit error if module limit is not exceeded', async () => {
     const validationErrors = ModuleValidator.validate(
       'dirName',
-      makeFilesList(MODULE_LIMIT)
+      generateModulesList(MODULE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).not.toBeDefined();

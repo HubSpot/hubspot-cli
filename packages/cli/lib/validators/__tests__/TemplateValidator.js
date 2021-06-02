@@ -3,19 +3,15 @@ const templates = require('@hubspot/cli-lib/templates');
 
 const TemplateValidator = require('../marketplaceValidators/theme/TemplateValidator');
 const { VALIDATION_RESULT } = require('../constants');
+const {
+  generateTemplatesList,
+  makeFindError,
+} = require('./validatorTestUtils');
 
 jest.mock('fs');
 jest.mock('@hubspot/cli-lib/templates');
 
 const TEMPLATE_LIMIT = 50;
-
-const makeFilesList = numFiles => {
-  const files = [];
-  for (let i = 0; i < numFiles; i++) {
-    files.push(`file-${i}.html`);
-  }
-  return files;
-};
 
 const mockGetAnnotationValue = (templateType, rest) => {
   templates.getAnnotationValue.mockImplementation((x, key) => {
@@ -26,8 +22,7 @@ const mockGetAnnotationValue = (templateType, rest) => {
   });
 };
 
-const findError = (errors, errorKey) =>
-  errors.find(error => error.key === `template.${errorKey}`);
+const findError = makeFindError('template');
 
 describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   beforeEach(() => {
@@ -39,7 +34,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
 
     const validationErrors = TemplateValidator.validate(
       'dirName',
-      makeFilesList(TEMPLATE_LIMIT + 1)
+      generateTemplatesList(TEMPLATE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).toBeDefined();
@@ -51,7 +46,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
 
     const validationErrors = TemplateValidator.validate(
       'dirName',
-      makeFilesList(TEMPLATE_LIMIT)
+      generateTemplatesList(TEMPLATE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
     expect(limitError).not.toBeDefined();
