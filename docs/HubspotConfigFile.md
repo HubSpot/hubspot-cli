@@ -63,7 +63,7 @@ description: Whether HubSpot will collect information on your CLI usage for the 
 
 default: `true`
 
-### useCustomObjectHubfile (BETA)
+### useCustomObjectHubfile (EXPERIMENTAL)
 
 type: _Boolean_ or _Undefined_
 
