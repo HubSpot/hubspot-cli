@@ -14,6 +14,7 @@ const {
   validateConfig,
   isConfigFlagEnabled,
   isTrackingAllowed,
+  writeConfig,
 } = require('./lib/config');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
@@ -43,5 +44,6 @@ module.exports = {
   isConfigFlagEnabled,
   watch,
   walk,
+  writeConfig,
   read,
 };
