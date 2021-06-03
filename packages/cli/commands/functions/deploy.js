@@ -1,5 +1,4 @@
 const ora = require('ora');
-const https = require('https');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -25,6 +24,7 @@ const {
   getBuildStatus,
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
+const { outputBuildLog } = require('../../lib/serverlessLogs');
 
 const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
@@ -59,41 +59,6 @@ const loadAndValidateOptions = async options => {
   if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
   }
-};
-
-const logBuildOutput = async resp => {
-  const { cdnUrl } = resp;
-
-  if (!cdnUrl) {
-    logger.debug(
-      'Unable to display build output. No build log URL was provided.'
-    );
-    return;
-  }
-
-  return new Promise((resolve, reject) => {
-    try {
-      https
-        .get(resp.cdnUrl, response => {
-          // If the cdnUrl is not found, just display success message
-          if (response.statusCode === 404) {
-            resolve('');
-          }
-
-          let data = '';
-          response.on('data', chunk => {
-            data += chunk;
-          });
-          response.on('end', () => {
-            logger.log(data);
-            resolve(data);
-          });
-        })
-        .on('error', reject);
-    } catch (e) {
-      reject(e);
-    }
-  });
 };
 
 exports.command = 'deploy <path>';
@@ -131,7 +96,7 @@ exports.handler = async options => {
     const successResp = await pollBuildStatus(accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
-    await logBuildOutput(successResp);
+    await outputBuildLog(successResp.cdnUrl);
     logger.success(
       `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
     );
@@ -142,8 +107,7 @@ exports.handler = async options => {
     } else if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
-      const buildOutput = await logBuildOutput(e);
-      logger.log(buildOutput);
+      await outputBuildLog(e.cdnUrl);
       logger.error(`Build error: ${e.errorReason}`);
     } else {
       logApiErrorInstance(

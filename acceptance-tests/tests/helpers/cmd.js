@@ -54,11 +54,17 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
     inputs = [];
   }
 
+  // There is still an outstanding issue with this because we
+  // attempt to add the --qa flag to all hs commands, however it is not available for all commands.
   // if (global.config.qa) {
   //   args.push('--qa');
   // }
 
-  const { env = null, timeout = 500, maxTimeout = 10000 } = opts;
+  if (global.config.headless) {
+    opts.env = { BROWSER: 'none' };
+  }
+
+  const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
   const childProcess = createProcess(processPath, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
@@ -127,7 +133,21 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
         clearTimeout(currentInputTimeout);
         inputs = [];
       }
-      reject(err.toString());
+
+      // For some reason, when we use 'ora', it is throwing this error,
+      // so for now we won't reject.
+      const blacklistedStrings = ['Loading available API samples'];
+
+      const error = err.toString();
+      if (blacklistedStrings.some(s => error.includes(s))) {
+        if (global.config.debug) {
+          console.log('suppressed error:', error);
+        }
+
+        return;
+      }
+
+      reject(error);
     });
 
     childProcess.on('error', reject);

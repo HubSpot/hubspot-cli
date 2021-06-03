@@ -1,5 +1,37 @@
 Change Log
 ==========
+## 3.0.6
+* Init success message now outputs correct authType ([#461](https://github.com/HubSpot/hubspot-cli/pull/461))
+* Moving hubspot-cli-tests repo into hubspot-cli repo ([#466](https://github.com/HubSpot/hubspot-cli/pull/466))
+* Adding initial support for project deploys ([#454](https://github.com/HubSpot/hubspot-cli/pull/454))
+* Ignore package-lock.json to simplify custom package function uploads ([#477](https://github.com/HubSpot/hubspot-cli/pull/477))
+* Added endpoint and method to function context to match production context ([#478](https://github.com/HubSpot/hubspot-cli/pull/478))
+* Added badges for official release and current version ([#480](https://github.com/HubSpot/hubspot-cli/pull/480))
+* Implement new approach for custom object schemas behind a flag ([#475](https://github.com/HubSpot/hubspot-cli/pull/475))
+* Add error messaging for if a file fails to download ([#481](https://github.com/HubSpot/hubspot-cli/pull/481))
+* Alert user of Theme Preview path after they’ve updated a file within a theme ([#483](https://github.com/HubSpot/hubspot-cli/pull/483))
+* Added validation error for non-lowercased authType values ([#482](https://github.com/HubSpot/hubspot-cli/pull/482))
+* Fixed prettier scripts on Windows ([#485](https://github.com/HubSpot/hubspot-cli/pull/485))
+* Improved error messaging when running hs auth with no config ([#486](https://github.com/HubSpot/hubspot-cli/pull/486))
+* Increased accepted body size for serverless dev runtime POSTs ([#487](https://github.com/HubSpot/hubspot-cli/pull/487))
+* Allow .EOT files ([#484](https://github.com/HubSpot/hubspot-cli/pull/484))
+* Fix typos ([#489](https://github.com/HubSpot/hubspot-cli/pull/489))
+* Change console error message to reflect correct property “defaultAccount” to “defaultPortal” ([#488](https://github.com/HubSpot/hubspot-cli/pull/488))
+* Fix typo in check ([#492](https://github.com/HubSpot/hubspot-cli/pull/492))
+* Upload .JSON files last ([#479](https://github.com/HubSpot/hubspot-cli/pull/479))
+* Clarify the purpose of 123 in the README ([#496](https://github.com/HubSpot/hubspot-cli/pull/496))
+* Bump the app deploy timeout since the build is synchronous ([#493](https://github.com/HubSpot/hubspot-cli/pull/493))
+* Bump lodash from 4.17.20 to 4.17.21 ([#498](https://github.com/HubSpot/hubspot-cli/pull/498))
+* Add marketplace asset validation ([#449](https://github.com/HubSpot/hubspot-cli/pull/449))
+* Add ability to retrieve and tail app function logs ([#490](https://github.com/HubSpot/hubspot-cli/pull/490))
+* Updated endpoint for deploying serverless functions ([#494](https://github.com/HubSpot/hubspot-cli/pull/494))
+* Provide more context when an app deploy fails ([#501](https://github.com/HubSpot/hubspot-cli/pull/501))
+* resolves #502 by providing better error messaging. ([#503](https://github.com/HubSpot/hubspot-cli/pull/503))
+* Fail jasmine ontest fail ([#505](https://github.com/HubSpot/hubspot-cli/pull/505))
+* add module icon theme validator ([#506](https://github.com/HubSpot/hubspot-cli/pull/506))
+* Initial README ([#500](https://github.com/HubSpot/hubspot-cli/pull/500))
+* Move wiki back into the repo ([#508](https://github.com/HubSpot/hubspot-cli/pull/508))
+* Adding module count, module label, and theme screenshot marketplace validators ([#504](https://github.com/HubSpot/hubspot-cli/pull/504))
 
 ## 3.0.5
 * Add undocumented commands for prototyping apps

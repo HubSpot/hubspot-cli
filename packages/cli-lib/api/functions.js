@@ -15,7 +15,10 @@ async function getRoutes(accountId) {
 
 async function buildPackage(portalId, folderPath) {
   return http.post(portalId, {
-    uri: `${FUNCTION_API_PATH}/build`,
+    uri: `${FUNCTION_API_PATH}/build/async`,
+    headers: {
+      Accept: 'text/plain',
+    },
     body: {
       folderPath,
     },
@@ -28,7 +31,30 @@ async function getBuildStatus(portalId, buildId) {
   });
 }
 
+async function getAppFunctionLogs(
+  accountId,
+  functionName,
+  appPath,
+  query = {}
+) {
+  const { limit = 5 } = query;
+
+  return http.get(accountId, {
+    uri: `${FUNCTION_API_PATH}/app-function/logs/${functionName}`,
+    query: { ...query, limit, appPath },
+  });
+}
+
+async function getLatestAppFunctionLogs(accountId, functionName, appPath) {
+  return http.get(accountId, {
+    uri: `${FUNCTION_API_PATH}/app-function/logs/${functionName}/latest`,
+    query: { appPath },
+  });
+}
+
 module.exports = {
+  getAppFunctionLogs,
+  getLatestAppFunctionLogs,
   buildPackage,
   getBuildStatus,
   getFunctionByPath,

@@ -9,6 +9,7 @@ const {
   logFileSystemErrorInstance,
 } = require('../errorHandlers/fileSystemErrors');
 const { logErrorInstance } = require('../errorHandlers/standardErrors');
+const { commaSeparatedValues } = require('./text');
 const { getCwd } = require('../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -20,9 +21,11 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
   ENVIRONMENT_VARIABLES,
+  MIN_HTTP_TIMEOUT,
 } = require('./constants');
 const { getValidEnv } = require('./environment');
 
+const ALL_MODES = Object.values(Mode);
 let _config;
 let _configPath;
 let environmentVariableConfigLoaded = false;
@@ -421,20 +424,24 @@ const getAccountId = nameOrId => {
   let accountId;
   let account;
 
+  const setNameOrAccountFromSuppliedValue = suppliedValue => {
+    if (typeof suppliedValue === 'number') {
+      accountId = suppliedValue;
+    } else if (/^\d+$/.test(suppliedValue)) {
+      accountId = parseInt(suppliedValue, 10);
+    } else {
+      name = suppliedValue;
+    }
+  };
+
   if (!nameOrId) {
     const defaultAccount = getConfigDefaultAccount(config);
 
     if (defaultAccount) {
-      name = defaultAccount;
+      setNameOrAccountFromSuppliedValue(defaultAccount);
     }
   } else {
-    if (typeof nameOrId === 'number') {
-      accountId = nameOrId;
-    } else if (/^\d+$/.test(nameOrId)) {
-      accountId = parseInt(nameOrId, 10);
-    } else {
-      name = nameOrId;
-    }
+    setNameOrAccountFromSuppliedValue(nameOrId);
   }
 
   const accounts = getConfigAccounts(config);
@@ -538,6 +545,84 @@ const updateDefaultAccount = defaultAccount => {
 
   setDefaultConfigPathIfUnset();
   writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
+const updateDefaultMode = defaultMode => {
+  if (!defaultMode || !ALL_MODES.find(m => m === defaultMode)) {
+    throw new Error(
+      `The mode ${defaultMode} is invalid. Valid values are ${commaSeparatedValues(
+        ALL_MODES
+      )}.`
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.defaultMode = defaultMode;
+
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
+const updateHttpTimeout = timeout => {
+  const parsedTimeout = parseInt(timeout);
+  if (isNaN(parsedTimeout) || parsedTimeout < MIN_HTTP_TIMEOUT) {
+    throw new Error(
+      `The value ${timeout} is invalid. The value must be a number greater than ${MIN_HTTP_TIMEOUT}.`
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.httpTimeout = parsedTimeout;
+
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
+const updateAllowUsageTracking = isEnabled => {
+  if (typeof isEnabled !== 'boolean') {
+    throw new Error(
+      `Unable to update allowUsageTracking. The value ${isEnabled} is invalid. The value must be a boolean.`
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.allowUsageTracking = isEnabled;
+
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+/**
+ * @throws {Error}
+ */
+const renameAccount = async (currentName, newName) => {
+  const accountId = getAccountId(currentName);
+  const accountConfigToRename = getAccountConfig(accountId);
+  const defaultAccount = getConfigDefaultAccount();
+
+  if (!accountConfigToRename) {
+    throw new Error(`Cannot find account with identifier ${currentName}`);
+  }
+
+  await updateAccountConfig({
+    ...accountConfigToRename,
+    name: newName,
+  });
+
+  if (accountConfigToRename.name === defaultAccount) {
+    updateDefaultAccount(newName);
+  }
+
+  return writeConfig();
 };
 
 const setDefaultConfigPathIfUnset = () => {
@@ -724,6 +809,10 @@ module.exports = {
   getAccountId,
   updateAccountConfig,
   updateDefaultAccount,
+  updateDefaultMode,
+  updateHttpTimeout,
+  updateAllowUsageTracking,
+  renameAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   isTrackingAllowed,

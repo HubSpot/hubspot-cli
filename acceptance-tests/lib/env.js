@@ -42,6 +42,7 @@ const setArgsOverrides = args => {
   args.clientSecret && (localOverrides.clientSecret = args.clientSecret);
   localOverrides.qa = args.qa;
   localOverrides.debug = args.debug;
+  localOverrides.headless = !!args.headless;
 };
 
 const envOverrides = getTruthyValuesOnly({

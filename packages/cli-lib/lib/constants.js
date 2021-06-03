@@ -110,6 +110,8 @@ const ConfigFlags = {
   USE_CUSTOM_OBJECT_HUBFILE: 'useCustomObjectHubfile',
 };
 
+const MIN_HTTP_TIMEOUT = 3000;
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -134,4 +136,5 @@ module.exports = {
   FOLDER_DOT_EXTENSIONS,
   POLLING_DELAY,
   GITHUB_RELEASE_TYPES,
+  MIN_HTTP_TIMEOUT,
 };

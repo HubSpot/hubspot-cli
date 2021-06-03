@@ -51,6 +51,11 @@ setArgsOverrides(
       default: false,
       description: 'Set this if you are using a app.hubspotqa.com site',
     })
+    .option('headless', {
+      type: 'boolean',
+      default: false,
+      description: 'Run the tests in headless mode',
+    })
     .option('debug', {
       type: 'boolean',
       default: false,
@@ -63,8 +68,9 @@ setArgsOverrides(
     const testRunner = new Jasmine();
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    testRunner.onComplete(function() {
+    testRunner.onComplete(function(passed) {
       rimraf.sync(CONFIG_FILE_PATH);
+      process.exit(passed ? 0 : 1);
     });
     const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
     const cli = cmd.create(cliPath, '.');
