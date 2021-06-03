@@ -29,6 +29,9 @@ const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 const projectsCommand = require('../commands/projects');
+const themeCommand = require('../commands/theme');
+const configCommand = require('../commands/config');
+const accountsCommand = require('../commands/accounts');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
 
@@ -40,6 +43,14 @@ notifier.notify({
   shouldNotifyInNpmScript: true,
   message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
 });
+
+const getTerminalWidth = () => {
+  const width = yargs.terminalWidth();
+
+  if (width >= 100) return width * 0.9;
+
+  return width;
+};
 
 const argv = yargs
   .usage('Tools for working with HubSpot')
@@ -84,10 +95,14 @@ const argv = yargs
   .command(openCommand)
   .command(mvCommand)
   .command(projectsCommand)
+  .command(themeCommand)
+  .command(configCommand)
+  .command(accountsCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
   .completion()
+  .wrap(getTerminalWidth())
   .strict().argv;
 
 if (argv.help) {

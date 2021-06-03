@@ -1,6 +1,6 @@
 {
   "name": "acceptance-tests",
-  "version": "3.0.6-beta.0",
+  "version": "3.0.7-beta.0",
   "description": "Acceptance tests for cli",
   "private": true,
   "author": "Mike Talley <mtalley@hubspot.com>",
@@ -18,7 +18,8 @@
     "url": "git+https://github.com/HubSpot/hubspot-cli.git"
   },
   "scripts": {
-    "test": "echo \"Error: run tests from root\" && exit 1",
+    "test": "./run-tests",
+    "test-headless": "./run-tests --headless",
     "run-tests": "./run-tests"
   },
   "bugs": {

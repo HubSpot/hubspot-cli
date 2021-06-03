@@ -9,7 +9,7 @@ const { table, getBorderCharacters } = require('table');
 
 const logSchemas = schemas => {
   const data = schemas
-    .map(r => [r.labels.singular, r.name, r.objectTypeId])
+    .map(r => [r.labels.singular, r.name, r.objectTypeId || ''])
     .sort((a, b) => (a[1] > b[1] ? 1 : -1));
   data.unshift([
     chalk.bold('Label'),

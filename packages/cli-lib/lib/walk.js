@@ -1,71 +1,38 @@
 const fs = require('fs');
-const path = require('path');
 
-const STAT_TYPES = {
-  FILE: 'file',
-  SYMBOLIC_LINK: 'symlink',
-  DIRECTORY: 'dir',
-};
+const { logger } = require('../logger');
+const {
+  getFileInfoAsync,
+  flattenAndRemoveSymlinks,
+  STAT_TYPES,
+} = require('./read');
 
-const generateFilePromise = (dir, file) => {
-  return new Promise((resolve, reject) => {
-    const filepath = path.join(dir, file);
-    fs.lstat(filepath, (error, stats) => {
-      if (error) {
-        reject(error);
-      }
-      if (stats.isSymbolicLink()) {
-        resolve({
-          filepath,
-          type: STAT_TYPES.SYMBOLIC_LINK,
+const generateRecursiveFilePromise = async (dir, file) => {
+  return getFileInfoAsync(dir, file).then(fileData => {
+    return new Promise(resolve => {
+      if (fileData.type === STAT_TYPES.DIRECTORY) {
+        walk(fileData.filepath).then(files => {
+          resolve({ ...fileData, files });
         });
-      }
-      if (stats.isDirectory()) {
-        walk(filepath).then(files => {
-          return resolve({
-            filepath,
-            type: STAT_TYPES.DIRECTORY,
-            files,
-          });
-        });
-      } else if (stats.isFile()) {
-        resolve({
-          filepath,
-          type: STAT_TYPES.FILE,
-        });
+      } else {
+        resolve(fileData);
       }
     });
   });
 };
 
-const filesDataReducer = (allFiles, fileData) => {
-  switch (fileData.type) {
-    case STAT_TYPES.FILE:
-      return allFiles.concat(fileData.filepath);
-    case STAT_TYPES.DIRECTORY:
-      return allFiles.concat(fileData.files);
-    case STAT_TYPES.SYMBOLIC_LINK:
-      // Skip symlinks
-      return allFiles;
-    default:
-      return allFiles;
-  }
-};
+async function walk(dir) {
+  const processFiles = files =>
+    Promise.all(files.map(file => generateRecursiveFilePromise(dir, file)));
 
-function walk(dir) {
-  const processFiles = files => {
-    return Promise.all(files.map(file => generateFilePromise(dir, file)));
-  };
-  return new Promise((resolve, reject) => {
-    fs.readdir(dir, (error, files) => {
-      if (error) {
-        reject(error);
-      }
-      processFiles(files).then(filesData => {
-        resolve(filesData.reduce(filesDataReducer, []));
-      });
+  return fs.promises
+    .readdir(dir)
+    .then(processFiles)
+    .then(flattenAndRemoveSymlinks)
+    .catch(err => {
+      logger.debug(err);
+      return [];
     });
-  });
 }
 
 module.exports = {
