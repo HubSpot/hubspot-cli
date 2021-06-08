@@ -21,6 +21,10 @@ class DependencyValidator extends BaseValidator {
     super(options);
 
     this.errors = {
+      FAILED_TO_FETCH_DEPS: {
+        key: 'failedDepFetch',
+        getCopy: ({ file }) => `Failed to fetch dependencies for ${file}`,
+      },
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
         getCopy: ({ file, path }) =>
@@ -46,20 +50,35 @@ class DependencyValidator extends BaseValidator {
       .map(renderingError => renderingError.categoryErrors.path);
   }
 
-  async getAllDependenciesByFile(files, accountId) {
+  async getAllDependenciesByFile(files, accountId, validationErrors) {
     return Promise.all(
       files
         .filter(file => HUBL_EXTENSIONS.has(getExt(file)))
         .map(async file => {
           const source = await fs.readFile(file, { encoding: 'utf8' });
+          let deps = {};
           if (!(source && source.trim())) {
-            return { file, deps: {} };
+            return { file, deps };
           }
-          const validation = await validateHubl(accountId, source);
-          const deps = getDepsFromHublValidationObject(validation);
-          deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
-            validation
+          const validation = await validateHubl(accountId, source).catch(
+            err => {
+              validationErrors.push({
+                ...this.getError(this.errors.FAILED_TO_FETCH_DEPS, {
+                  file,
+                }),
+                meta: {
+                  error: err && err.error ? err.error.policyName : 'unknown',
+                },
+              });
+              return null;
+            }
           );
+          if (validation) {
+            deps = getDepsFromHublValidationObject(validation);
+            deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
+              validation
+            );
+          }
           return { file, deps };
         })
     );
@@ -84,7 +103,8 @@ class DependencyValidator extends BaseValidator {
 
     const dependencyGroups = await this.getAllDependenciesByFile(
       files,
-      accountId
+      accountId,
+      validationErrors
     );
 
     dependencyGroups.forEach(depGroup => {

@@ -47,7 +47,7 @@ const isModuleFolder = pathInput => {
  * @returns {boolean}
  * @throws {TypeError}
  */
-const isModuleFolderChild = pathInput => {
+const isModuleFolderChild = (pathInput, ignoreLocales = false) => {
   throwInvalidPathInput(pathInput);
   let pathParts = [];
   if (pathInput.isLocal) {
@@ -58,6 +58,10 @@ const isModuleFolderChild = pathInput => {
   const { length } = pathParts;
   // Not a child path?
   if (length <= 1) return false;
+  // Check if we should ignore this file
+  if (ignoreLocales && pathParts.find(part => part === '_locales')) {
+    return false;
+  }
   // Check if any parent folders are module folders.
   return pathParts
     .slice(0, length - 1)

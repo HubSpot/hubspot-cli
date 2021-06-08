@@ -43,7 +43,7 @@ class ModuleValidator extends BaseValidator {
     const uniqueModules = {};
 
     files.forEach(file => {
-      if (isModuleFolderChild({ isLocal: true, path: file })) {
+      if (isModuleFolderChild({ isLocal: true, path: file }, true)) {
         const { base, dir } = path.parse(file);
         if (!uniqueModules[dir]) {
           uniqueModules[dir] = {};
