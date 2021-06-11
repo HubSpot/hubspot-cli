@@ -89,10 +89,13 @@ class DependencyValidator extends BaseValidator {
   isExternalDep(file, relativeDepPath) {
     // Get dir of file that references the dep
     const { dir } = path.parse(file);
+    console.log('1: ', dir);
     // Use dir to get the dep's absolute path
     const absoluteDepPath = path.resolve(dir, relativeDepPath);
+    console.log('2: ', absoluteDepPath);
     // Get relative path to dep using theme absolute path and dep absolute path
     const relativePath = this.getRelativePath(absoluteDepPath);
+    console.log('3: ', relativePath);
     // Check that dep is not within the theme
     return relativePath && relativePath.startsWith('..');
   }
