@@ -40,7 +40,6 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
     it('returns true if dep is external to the provided absolute path', () => {
       const absoluteFilePath = `${THEME_PATH}/file.js`;
       const relativeDepPath = '../external/dep/path/file2.js';
-      console.log('TESTER: ', DependencyValidator._absoluteThemePath);
       const isExternal = DependencyValidator.isExternalDep(
         absoluteFilePath,
         relativeDepPath
