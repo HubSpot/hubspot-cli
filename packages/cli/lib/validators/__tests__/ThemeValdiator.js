@@ -3,15 +3,18 @@ const path = require('path');
 
 const ThemeValidator = require('../../validators/marketplaceValidators/theme/ThemeValidator');
 const { VALIDATION_RESULT } = require('../../validators/constants');
+const { THEME_PATH } = require('./validatorTestUtils');
 
 jest.mock('fs');
 jest.mock('path');
 
 describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
+  beforeEach(() => {
+    ThemeValidator.setThemePath(THEME_PATH);
+  });
+
   it('returns error if no theme.json file exists', async () => {
-    const validationErrors = ThemeValidator.validate('dirName', [
-      'someFile.html',
-    ]);
+    const validationErrors = ThemeValidator.validate(['someFile.html']);
     expect(validationErrors.length).toBe(1);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -19,7 +22,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
   it('returns error if theme.json file has invalid json', async () => {
     fs.readFileSync.mockReturnValue('{} bad json }');
 
-    const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
+    const validationErrors = ThemeValidator.validate(['theme.json']);
     expect(validationErrors.length).toBe(1);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -27,7 +30,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
   it('returns error if theme.json file is missing a label field', async () => {
     fs.readFileSync.mockReturnValue('{ "screenshot_path": "./relative/path" }');
 
-    const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
+    const validationErrors = ThemeValidator.validate(['theme.json']);
     expect(validationErrors.length).toBe(1);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -37,7 +40,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
       '{ "label": "yay", "screenshot_path": "/absolute/path" }'
     );
 
-    const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
+    const validationErrors = ThemeValidator.validate(['theme.json']);
     expect(validationErrors.length).toBe(1);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -49,7 +52,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
     path.relative.mockReturnValue('theme.json');
     fs.existsSync.mockReturnValue(false);
 
-    const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
+    const validationErrors = ThemeValidator.validate(['theme.json']);
     expect(validationErrors.length).toBe(1);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -61,7 +64,7 @@ describe('validators/marketplaceValidators/theme/ThemeValidator', () => {
     path.relative.mockReturnValue('theme.json');
     fs.existsSync.mockReturnValue(true);
 
-    const validationErrors = ThemeValidator.validate('dirName', ['theme.json']);
+    const validationErrors = ThemeValidator.validate(['theme.json']);
     expect(validationErrors.length).toBe(0);
   });
 });

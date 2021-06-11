@@ -22,7 +22,8 @@ function logResultsAsJson(results) {
     success,
     results: resultObj,
   };
-  return logger.log(JSON.stringify(result));
+  // Use stdout here b/c console.log will truncate long strings
+  process.stdout.write(JSON.stringify(result) + '\n');
 }
 
 function logValidatorResults(results, { logAsJson = false } = {}) {

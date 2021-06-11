@@ -1,11 +1,12 @@
 const fs = require('fs-extra');
 const path = require('path');
 
-const { HUBL_EXTENSIONS } = require('@hubspot/cli-lib/lib/constants');
-const { validateHubl } = require('@hubspot/cli-lib/api/validate');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  getDepsFromHublValidationObject,
-} = require('@hubspot/cli-lib/validate');
+  HUBL_EXTENSIONS,
+  HUBSPOT_FOLDER,
+} = require('@hubspot/cli-lib/lib/constants');
+const { fetchDependencies } = require('@hubspot/cli-lib/api/marketplace');
 const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
@@ -21,6 +22,10 @@ class DependencyValidator extends BaseValidator {
     super(options);
 
     this.errors = {
+      FAILED_TO_FETCH_DEPS: {
+        key: 'failedDepFetch',
+        getCopy: ({ file }) => `Failed to fetch dependencies for ${file}`,
+      },
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
         getCopy: ({ file, path }) =>
@@ -34,10 +39,10 @@ class DependencyValidator extends BaseValidator {
     };
   }
 
-  // HACK We parse paths from rendering errors because the renderer won't
-  // include paths in the all_dependencies object if it can't locate the asset
-  getPathsFromRenderingErrors(validation) {
-    return validation.renderingErrors
+  // HACK We parse paths from rendering errors because the endpoint won't
+  // include paths in the allDependencies object if it can't locate the asset
+  getPathsFromRenderingErrors(renderingErrors = []) {
+    return renderingErrors
       .filter(
         renderingError =>
           MISSING_ASSET_CATEGORY_TYPES.includes(renderingError.category) &&
@@ -46,32 +51,48 @@ class DependencyValidator extends BaseValidator {
       .map(renderingError => renderingError.categoryErrors.path);
   }
 
-  async getAllDependenciesByFile(files, accountId) {
+  failedToFetchDependencies(err, file, validationErrors) {
+    logger.debug(`Failed to fetch dependencies for ${file}: `, err.error);
+
+    validationErrors.push(
+      this.getError(this.errors.FAILED_TO_FETCH_DEPS, file)
+    );
+  }
+
+  async getAllDependenciesByFile(files, accountId, validationErrors) {
     return Promise.all(
       files
         .filter(file => HUBL_EXTENSIONS.has(getExt(file)))
         .map(async file => {
           const source = await fs.readFile(file, { encoding: 'utf8' });
+          let deps = {};
           if (!(source && source.trim())) {
-            return { file, deps: {} };
+            return { file, deps };
           }
-          const validation = await validateHubl(accountId, source);
-          const deps = getDepsFromHublValidationObject(validation);
-          deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
-            validation
+          const file_deps = await fetchDependencies(accountId, source).catch(
+            err => {
+              this.failedToFetchDependencies(err, file, validationErrors);
+              return null;
+            }
           );
+          if (file_deps) {
+            deps = file_deps.allDependencies || {};
+            deps.RENDERING_ERROR_PATHS = this.getPathsFromRenderingErrors(
+              file_deps.renderingErrors
+            );
+          }
           return { file, deps };
         })
     );
   }
 
-  isExternalDep(absoluteThemePath, file, relativeDepPath) {
+  isExternalDep(file, relativeDepPath) {
     // Get dir of file that references the dep
     const { dir } = path.parse(file);
     // Use dir to get the dep's absolute path
     const absoluteDepPath = path.resolve(dir, relativeDepPath);
     // Get relative path to dep using theme absolute path and dep absolute path
-    const relativePath = path.relative(absoluteThemePath, absoluteDepPath);
+    const relativePath = this.getRelativePath(absoluteDepPath);
     // Check that dep is not within the theme
     return relativePath && relativePath.startsWith('..');
   }
@@ -79,12 +100,13 @@ class DependencyValidator extends BaseValidator {
   // Validates:
   // - Theme does not contain external dependencies
   // - All paths are either @hubspot or relative
-  async validate(absoluteThemePath, files, accountId) {
+  async validate(files, accountId) {
     let validationErrors = [];
 
     const dependencyGroups = await this.getAllDependenciesByFile(
       files,
-      accountId
+      accountId,
+      validationErrors
     );
 
     dependencyGroups.forEach(depGroup => {
@@ -93,30 +115,27 @@ class DependencyValidator extends BaseValidator {
         const depList = deps[key];
         depList.forEach(dependency => {
           // Ignore:
-          // '0' - The BE will return '0' when no deps are found
-          // '@' - Hubspot modules
-          if (dependency !== '0' && !dependency.startsWith('@')) {
+          // - The BE will return '0' when no deps are found
+          // - Hubspot modules
+          if (dependency !== '0' && !dependency.startsWith(HUBSPOT_FOLDER)) {
             if (!isRelativePath(dependency)) {
-              validationErrors.push({
-                ...this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, {
-                  file: path.relative(absoluteThemePath, file),
+              validationErrors.push(
+                this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, file, {
                   path: dependency,
-                }),
-              });
-            } else if (
-              this.isExternalDep(absoluteThemePath, file, dependency)
-            ) {
-              validationErrors.push({
-                ...this.getError(this.errors.EXTERNAL_DEPENDENCY, {
-                  file: path.relative(absoluteThemePath, file),
+                })
+              );
+            } else if (this.isExternalDep(file, dependency)) {
+              validationErrors.push(
+                this.getError(this.errors.EXTERNAL_DEPENDENCY, file, {
                   path: dependency,
-                }),
-              });
+                })
+              );
             }
           }
         });
       });
     });
+
     return validationErrors;
   }
 }
