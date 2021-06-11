@@ -1,6 +1,8 @@
 //HACK so we can keep this util file next to the tests that use it
 test.skip('skip', () => null);
 
+const THEME_PATH = '/path/to/a/theme';
+
 const makeFindError = baseKey => (errors, errorKey) =>
   errors.find(error => error.key === `${baseKey}.${errorKey}`);
 
@@ -28,4 +30,5 @@ module.exports = {
   generateModulesList,
   generateTemplatesList,
   makeFindError,
+  THEME_PATH,
 };

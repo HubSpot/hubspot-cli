@@ -1,5 +1,3 @@
-const path = require('path');
-
 const {
   ANNOTATION_KEYS,
   getAnnotationValue,
@@ -63,28 +61,25 @@ class TemplateValidator extends BaseValidator {
       },
       MISSING_TEMPLATE_TYPE: {
         key: 'missingTemplateType',
-        getCopy: ({ templatePath }) =>
-          `Missing template type for ${templatePath}`,
+        getCopy: ({ file }) => `Missing template type for ${file}`,
       },
       UNKNOWN_TEMPLATE_TYPE: {
         key: 'unknownTemplateType',
-        getCopy: ({ templatePath, templateType }) =>
-          `Unknown template type ${templateType} for ${templatePath}`,
+        getCopy: ({ file, templateType }) =>
+          `Unknown template type ${templateType} for ${file}`,
       },
       RESTRICTED_TEMPLATE_TYPE: {
         key: 'restrictedTemplateType',
-        getCopy: ({ templatePath, templateType }) =>
-          `Cannot have template type ${templateType} for ${templatePath}`,
+        getCopy: ({ file, templateType }) =>
+          `Cannot have template type ${templateType} for ${file}`,
       },
       MISSING_LABEL: {
         key: 'missingLabel',
-        getCopy: ({ templatePath }) =>
-          `Missing a "label" annotation in ${templatePath}`,
+        getCopy: ({ file }) => `Missing a "label" annotation in ${file}`,
       },
       MISSING_SCREENSHOT_PATH: {
         key: 'missingScreenshotPath',
-        getCopy: ({ templatePath }) =>
-          `The screenshotPath is missing in ${templatePath}`,
+        getCopy: ({ file }) => `The screenshotPath is missing in ${file}`,
       },
     };
   }
@@ -94,13 +89,13 @@ class TemplateValidator extends BaseValidator {
   // - All templates have valid template types
   // - All templates that require a label have a "label" annotation
   // - All templates that require a screenshot have a "screenshotPath" annotation
-  validate(absoluteThemePath, files) {
+  validate(files) {
     let validationErrors = [];
     let templateCount = 0;
 
-    files.forEach(filePath => {
-      if (isCodedFile(filePath)) {
-        const annotations = getFileAnnotations(filePath);
+    files.forEach(file => {
+      if (isCodedFile(file)) {
+        const annotations = getFileAnnotations(file);
         const isAvailableForNewContent = getAnnotationValue(
           annotations,
           ANNOTATION_KEYS.isAvailableForNewContent
@@ -131,39 +126,29 @@ class TemplateValidator extends BaseValidator {
             if (validations) {
               if (!validations.allowed) {
                 validationErrors.push(
-                  this.getError(this.errors.RESTRICTED_TEMPLATE_TYPE, {
-                    templatePath: path.relative(absoluteThemePath, filePath),
+                  this.getError(this.errors.RESTRICTED_TEMPLATE_TYPE, file, {
                     templateType,
                   })
                 );
               }
               if (validations.label && !label) {
                 validationErrors.push(
-                  this.getError(this.errors.MISSING_LABEL, {
-                    templatePath: path.relative(absoluteThemePath, filePath),
-                  })
+                  this.getError(this.errors.MISSING_LABEL, file)
                 );
               }
               if (validations.screenshot && !screenshotPath) {
                 validationErrors.push(
-                  this.getError(this.errors.MISSING_SCREENSHOT_PATH, {
-                    templatePath: path.relative(absoluteThemePath, filePath),
-                  })
+                  this.getError(this.errors.MISSING_SCREENSHOT_PATH, file)
                 );
               }
             } else {
               validationErrors.push(
-                this.getError(this.errors.UNKNOWN_TEMPLATE_TYPE, {
-                  templatePath: path.relative(absoluteThemePath, filePath),
-                  templateType,
-                })
+                this.getError(this.errors.UNKNOWN_TEMPLATE_TYPE, file)
               );
             }
           } else {
             validationErrors.push(
-              this.getError(this.errors.MISSING_TEMPLATE_TYPE, {
-                templatePath: path.relative(absoluteThemePath, filePath),
-              })
+              this.getError(this.errors.MISSING_TEMPLATE_TYPE, file)
             );
           }
         }
@@ -172,7 +157,7 @@ class TemplateValidator extends BaseValidator {
 
     if (templateCount > TEMPLATE_LIMIT) {
       validationErrors.push(
-        this.getError(this.errors.LIMIT_EXCEEDED, {
+        this.getError(this.errors.LIMIT_EXCEEDED, null, {
           limit: TEMPLATE_LIMIT,
           total: templateCount,
         })

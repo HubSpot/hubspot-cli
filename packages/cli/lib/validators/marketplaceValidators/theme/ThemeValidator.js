@@ -44,11 +44,11 @@ class ThemeValidator extends BaseValidator {
   // - theme.json file contains valid json
   // - theme.json file has a "label" field
   // - theme.json file has a relative path for "screenshot" field that resolves
-  validate(absoluteThemePath, files) {
+  validate(files) {
     let validationErrors = [];
     const themeJSONFile = files.find(filePath => {
       // Check for theme.json at the theme root
-      const fileName = path.relative(absoluteThemePath, filePath);
+      const fileName = this.getRelativePath(filePath);
       return fileName === 'theme.json';
     });
 
@@ -60,39 +60,34 @@ class ThemeValidator extends BaseValidator {
       try {
         themeJSON = JSON.parse(fs.readFileSync(themeJSONFile));
       } catch (err) {
-        validationErrors.push({
-          ...this.getError(this.errors.INVALID_THEME_JSON),
-          meta: { file: themeJSONFile },
-        });
+        validationErrors.push(
+          this.getError(this.errors.INVALID_THEME_JSON, themeJSONFile)
+        );
       }
 
       if (themeJSON) {
         if (!themeJSON.label) {
-          validationErrors.push({
-            ...this.getError(this.errors.MISSING_LABEL),
-            meta: { file: themeJSONFile },
-          });
+          validationErrors.push(
+            this.getError(this.errors.MISSING_LABEL, themeJSONFile)
+          );
         }
         if (!themeJSON.screenshot_path) {
-          validationErrors.push({
-            ...this.getError(this.errors.MISSING_SCREENSHOT_PATH),
-            meta: { file: themeJSONFile },
-          });
+          validationErrors.push(
+            this.getError(this.errors.MISSING_SCREENSHOT_PATH, themeJSONFile)
+          );
         } else if (!isRelativePath(themeJSON.screenshot_path)) {
-          validationErrors.push({
-            ...this.getError(this.errors.ABSOLUTE_SCREENSHOT_PATH),
-            meta: { file: themeJSONFile },
-          });
+          validationErrors.push(
+            this.getError(this.errors.ABSOLUTE_SCREENSHOT_PATH, themeJSONFile)
+          );
         } else {
           const absoluteScreenshotPath = path.resolve(
-            absoluteThemePath,
+            this._absoluteThemePath,
             themeJSON.screenshot_path
           );
           if (!fs.existsSync(absoluteScreenshotPath)) {
-            validationErrors.push({
-              ...this.getError(this.errors.MISSING_SCREENSHOT),
-              meta: { file: themeJSONFile },
-            });
+            validationErrors.push(
+              this.getError(this.errors.MISSING_SCREENSHOT, themeJSONFile)
+            );
           }
         }
       }

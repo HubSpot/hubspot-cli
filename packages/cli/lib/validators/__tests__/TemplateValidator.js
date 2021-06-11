@@ -6,6 +6,7 @@ const { VALIDATION_RESULT } = require('../constants');
 const {
   generateTemplatesList,
   makeFindError,
+  THEME_PATH,
 } = require('./validatorTestUtils');
 
 jest.mock('fs');
@@ -26,6 +27,7 @@ const findError = makeFindError('template');
 
 describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   beforeEach(() => {
+    TemplateValidator.setThemePath(THEME_PATH);
     templates.isCodedFile.mockReturnValue(true);
   });
 
@@ -33,7 +35,6 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     mockGetAnnotationValue('page');
 
     const validationErrors = TemplateValidator.validate(
-      'dirName',
       generateTemplatesList(TEMPLATE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
@@ -45,7 +46,6 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     mockGetAnnotationValue('page');
 
     const validationErrors = TemplateValidator.validate(
-      'dirName',
       generateTemplatesList(TEMPLATE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
@@ -56,9 +56,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue('page');
 
-    const validationErrors = TemplateValidator.validate('dirName', [
-      'template.html',
-    ]);
+    const validationErrors = TemplateValidator.validate(['template.html']);
     expect(validationErrors.length).toBe(2);
     expect(validationErrors[0].result).toBe(VALIDATION_RESULT.FATAL);
   });
@@ -67,9 +65,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue('starter_landing_pages', 'value');
 
-    const validationErrors = TemplateValidator.validate('dirName', [
-      'template.html',
-    ]);
+    const validationErrors = TemplateValidator.validate(['template.html']);
 
     expect(validationErrors.length).toBe(1);
   });
@@ -78,9 +74,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue('unknown-type', 'value');
 
-    const validationErrors = TemplateValidator.validate('dirName', [
-      'template.html',
-    ]);
+    const validationErrors = TemplateValidator.validate(['template.html']);
 
     expect(validationErrors.length).toBe(1);
   });
@@ -89,9 +83,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue(null, 'value');
 
-    const validationErrors = TemplateValidator.validate('dirName', [
-      'template.html',
-    ]);
+    const validationErrors = TemplateValidator.validate(['template.html']);
 
     expect(validationErrors.length).toBe(1);
   });
@@ -100,9 +92,7 @@ describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
     fs.readFileSync.mockReturnValue('mock');
     mockGetAnnotationValue('page', 'value');
 
-    const validationErrors = TemplateValidator.validate('dirName', [
-      'template.html',
-    ]);
+    const validationErrors = TemplateValidator.validate(['template.html']);
 
     expect(validationErrors.length).toBe(0);
   });
