@@ -133,7 +133,17 @@ const SCOPES = {
 const OAUTH_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, ACCOUNT_API_KEY];
 
+const folderOverwritePrompt = folderName => {
+  return promptUser({
+    type: 'confirm',
+    name: 'overwrite',
+    message: `The folder with name '${folderName}' already exists. Overwrite?`,
+    default: false,
+  });
+};
+
 module.exports = {
+  folderOverwritePrompt,
   promptUser,
   personalAccessKeyPrompt,
   CLIENT_ID,
