@@ -112,7 +112,11 @@ const ConfigFlags = {
 
 const MIN_HTTP_TIMEOUT = 3000;
 
-const PROJECT_TEMPLATE_TYPES = ['BLANK'];
+const PROJECT_TEMPLATE_TYPES = {
+  blank: {
+    files: {},
+  },
+};
 
 module.exports = {
   ConfigFlags,

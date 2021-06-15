@@ -8,8 +8,8 @@ const createProjectPrompt = (promptOptions = {}) => {
       type: 'list',
       name: 'template',
       message: 'Select a project template to use',
-      default: 'BLANK',
-      choices: PROJECT_TEMPLATE_TYPES,
+      default: PROJECT_TEMPLATE_TYPES.blank,
+      choices: Object.keys(PROJECT_TEMPLATE_TYPES),
     },
     {
       name: 'label',
