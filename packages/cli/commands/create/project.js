@@ -1,5 +1,6 @@
 const path = require('path');
 const { createProjectConfig } = require('@hubspot/cli-lib/projects');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { createProjectPrompt } = require('../../lib/prompts/projects');
 
 module.exports = {
@@ -17,5 +18,7 @@ module.exports = {
       label,
       description,
     });
+
+    logger.success(`Project created in ${dest}`);
   },
 };
