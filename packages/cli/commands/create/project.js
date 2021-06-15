@@ -7,14 +7,14 @@ module.exports = {
   dest: ({ name, dest }) => path.join(dest || './', name),
   execute: async ({ dest, name }) => {
     const {
-      name: projectName,
+      label,
       description,
       // TODO - Use `template` value to generate any additional files
       // template,
-    } = await createProjectPrompt({ name });
+    } = await createProjectPrompt({ label: name });
 
     createProjectConfig(dest, {
-      label: projectName,
+      label,
       description,
     });
   },

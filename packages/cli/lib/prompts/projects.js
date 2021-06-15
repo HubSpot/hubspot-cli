@@ -12,15 +12,15 @@ const createProjectPrompt = (promptOptions = {}) => {
       choices: PROJECT_TEMPLATE_TYPES,
     },
     {
-      name: 'name',
-      message: 'Enter a name for the project',
+      name: 'label',
+      message: 'Enter a label for the project',
       validate(val) {
         if (typeof val !== 'string') {
-          return 'You entered an invalid description. Please try again.';
+          return 'You entered an invalid label. Please try again.';
         }
         return true;
       },
-      default: promptOptions.name || 'New project',
+      default: promptOptions.label || 'New project',
     },
     {
       name: 'description',
