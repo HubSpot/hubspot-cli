@@ -191,8 +191,23 @@ async function createProject(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
+const createProjectConfig = (folderPath, configOptions = {}) => {
+  return fs.writeFileSync(
+    path.join(folderPath, 'hsproject.json'),
+    JSON.stringify(
+      {
+        label: configOptions.label || 'New project',
+        description: configOptions.description || '',
+      },
+      null,
+      2
+    )
+  );
+};
+
 module.exports = {
   createProject,
+  createProjectConfig,
   downloadProject,
   extractProjectZip,
   fetchReleaseData,

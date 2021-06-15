@@ -112,6 +112,8 @@ const ConfigFlags = {
 
 const MIN_HTTP_TIMEOUT = 3000;
 
+const PROJECT_TEMPLATE_TYPES = ['BLANK'];
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -136,5 +138,6 @@ module.exports = {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   POLLING_DELAY,
+  PROJECT_TEMPLATE_TYPES,
   SCOPE_GROUPS,
 };

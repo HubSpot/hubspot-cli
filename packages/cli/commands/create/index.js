@@ -3,6 +3,7 @@ module.exports = {
   app: require('./app'),
   function: require('./function'),
   module: require('./module'),
+  project: require('./project'),
   'react-app': require('./react-app'),
   template: require('./template'),
   'vue-app': require('./vue-app'),
