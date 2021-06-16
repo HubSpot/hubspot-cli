@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { VALIDATION_RESULT } = require('./constants');
 
@@ -33,7 +34,7 @@ function logValidatorResults(groupedResults, { logAsJson = false } = {}) {
     return logResultsAsJson(groupedResults);
   }
   groupedResults.forEach(results => {
-    logger.log(`${results[0].validatorName} validation results:`);
+    logger.log(chalk.bold(`${results[0].validatorName} validation results:`));
     logger.group();
     results.forEach(({ error, result }) => {
       switch (result) {
@@ -53,7 +54,6 @@ function logValidatorResults(groupedResults, { logAsJson = false } = {}) {
     logger.log('\n');
     logger.groupEnd();
   });
-  logger.log('\n');
 }
 
 module.exports = { logValidatorResults };
