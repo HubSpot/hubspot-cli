@@ -30,19 +30,19 @@ class BaseValidator {
     };
   }
 
-  getError(errorObj, file, extraCopyPlaceholders = {}) {
+  getError(errorObj, file, extraContext = {}) {
     const relativeFilePath = file ? this.getRelativePath(file) : null;
-    const copyPlaceholders = {
-      file: relativeFilePath,
-      ...extraCopyPlaceholders,
+    const context = {
+      filePath: relativeFilePath,
+      ...extraContext,
     };
     return {
       validatorKey: this.key,
       validatorName: this.name,
-      error: errorObj.getCopy(copyPlaceholders),
+      error: errorObj.getCopy(context),
       result: errorObj.severity || VALIDATION_RESULT.FATAL,
       key: `${this.key}.${errorObj.key}`,
-      file: relativeFilePath,
+      context,
     };
   }
 }

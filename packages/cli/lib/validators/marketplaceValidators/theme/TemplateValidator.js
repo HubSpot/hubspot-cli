@@ -57,29 +57,32 @@ class TemplateValidator extends BaseValidator {
       LIMIT_EXCEEDED: {
         key: 'limitExceeded',
         getCopy: ({ limit, total }) =>
-          `Cannot exceed ${limit} templates in your theme (found ${total})`,
+          `Template limit exceeded. Themes can only have ${limit} templates, but this theme has ${total}`,
       },
       MISSING_TEMPLATE_TYPE: {
         key: 'missingTemplateType',
-        getCopy: ({ file }) => `Missing template type for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Missing required field for ${filePath}. The template is missing the "templateType" field`,
       },
       UNKNOWN_TEMPLATE_TYPE: {
         key: 'unknownTemplateType',
-        getCopy: ({ file, templateType }) =>
-          `Unknown template type ${templateType} for ${file}`,
+        getCopy: ({ filePath, templateType }) =>
+          `Template ${filePath} has an unknown template type  of ${templateType}`,
       },
       RESTRICTED_TEMPLATE_TYPE: {
         key: 'restrictedTemplateType',
-        getCopy: ({ file, templateType }) =>
-          `Cannot have template type ${templateType} for ${file}`,
+        getCopy: ({ filePath, templateType }) =>
+          `Template ${filePath} has a restricted template type of ${templateType}`,
       },
       MISSING_LABEL: {
         key: 'missingLabel',
-        getCopy: ({ file }) => `Missing a "label" annotation in ${file}`,
+        getCopy: ({ filePath }) =>
+          `Missing required field for ${filePath}. The template is missing the "label" field`,
       },
       MISSING_SCREENSHOT_PATH: {
         key: 'missingScreenshotPath',
-        getCopy: ({ file }) => `The screenshotPath is missing in ${file}`,
+        getCopy: ({ filePath }) =>
+          `Missing required field for ${filePath}. The template is missing the "screenshotPath" field`,
       },
     };
   }

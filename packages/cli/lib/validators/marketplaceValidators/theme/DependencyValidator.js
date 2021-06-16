@@ -24,17 +24,18 @@ class DependencyValidator extends BaseValidator {
     this.errors = {
       FAILED_TO_FETCH_DEPS: {
         key: 'failedDepFetch',
-        getCopy: ({ file }) => `Failed to fetch dependencies for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Internal Error. Failed to fetch dependencies for ${filePath}. Please try again`,
       },
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
-        getCopy: ({ file, path }) =>
-          `${file} contains a path that points to an external dependency (${path})`,
+        getCopy: ({ filePath, referencedFilePath }) =>
+          `External dependency. ${filePath} references a file (${referencedFilePath}) that is outside of the theme`,
       },
       ABSOLUTE_DEPENDENCY_PATH: {
         key: 'absoluteDependencyPath',
-        getCopy: ({ file, path }) =>
-          `${file} contains an absolute path (${path})`,
+        getCopy: ({ filePath, referencedFilePath }) =>
+          `Relative path required. ${filePath} references a file (${referencedFilePath}) using an absolute path`,
       },
     };
   }
@@ -121,13 +122,13 @@ class DependencyValidator extends BaseValidator {
             if (!isRelativePath(dependency)) {
               validationErrors.push(
                 this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, file, {
-                  path: dependency,
+                  referencedFilePath: dependency,
                 })
               );
             } else if (this.isExternalDep(file, dependency)) {
               validationErrors.push(
                 this.getError(this.errors.EXTERNAL_DEPENDENCY, file, {
-                  path: dependency,
+                  referencedFilePath: dependency,
                 })
               );
             }
