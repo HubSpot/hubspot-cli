@@ -63,6 +63,7 @@ const tailLogs = async ({
           })
         );
       }
+      process.exit();
     }
 
     if (latestLog && latestLog.results.length) {
