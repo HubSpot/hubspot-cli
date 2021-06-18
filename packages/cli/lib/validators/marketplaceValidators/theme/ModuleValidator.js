@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const BaseValidator = require('../BaseValidator');
 const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
+const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 const MODULE_LIMIT = 50;
 
@@ -112,5 +113,5 @@ class ModuleValidator extends BaseValidator {
 
 module.exports = new ModuleValidator({
   name: 'Module',
-  key: 'module',
+  key: VALIDATOR_KEYS.module,
 });

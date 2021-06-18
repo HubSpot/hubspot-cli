@@ -10,6 +10,7 @@ const { fetchDependencies } = require('@hubspot/cli-lib/api/marketplace');
 const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 
 const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 const MISSING_ASSET_CATEGORY_TYPES = [
   'MISSING_RESOURCE',
@@ -143,5 +144,5 @@ class DependencyValidator extends BaseValidator {
 
 module.exports = new DependencyValidator({
   name: 'Dependency',
-  key: 'dependency',
+  key: VALIDATOR_KEYS.dependency,
 });

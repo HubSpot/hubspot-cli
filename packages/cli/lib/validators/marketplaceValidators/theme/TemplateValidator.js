@@ -5,6 +5,7 @@ const {
   isCodedFile,
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 const TEMPLATE_LIMIT = 50;
 const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
@@ -173,5 +174,5 @@ class TemplateValidator extends BaseValidator {
 
 module.exports = new TemplateValidator({
   name: 'Template',
-  key: 'template',
+  key: VALIDATOR_KEYS.template,
 });

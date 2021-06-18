@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const BaseValidator = require('../BaseValidator');
 const { isRelativePath } = require('@hubspot/cli-lib/path');
+const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 class ThemeValidator extends BaseValidator {
   constructor(options) {
@@ -101,5 +102,5 @@ class ThemeValidator extends BaseValidator {
 
 module.exports = new ThemeValidator({
   name: 'Theme config',
-  key: 'themeConfig',
+  key: VALIDATOR_KEYS.themeConfig,
 });
