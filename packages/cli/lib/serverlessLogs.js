@@ -54,6 +54,7 @@ const tailLogs = async ({
       latestLog = await tailCall(after);
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
+      logger.info('Stopped polling due to error.');
       spinner.clear();
       if (e.statusCode !== 404) {
         logApiErrorInstance(
