@@ -43,6 +43,12 @@ const loadAndValidateOptions = async options => {
   }
 };
 
+const handleLatestLogsError = e => {
+  if (e.statusCode === 404) {
+    logger.log('No logs found.');
+  }
+};
+
 const endpointLog = async (accountId, options) => {
   const { latest, follow, compact, endpoint: functionPath } = options;
 
@@ -73,7 +79,14 @@ const endpointLog = async (accountId, options) => {
       `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
     );
     const tailCall = after => getFunctionLogs(accountId, functionId, { after });
-    const fetchLatest = () => getLatestFunctionLog(accountId, functionId);
+    const fetchLatest = () => {
+      try {
+        getLatestFunctionLog(accountId, functionId);
+      } catch (e) {
+        handleLatestLogsError(e);
+      }
+    };
+
     await tailLogs({
       accountId,
       compact,
@@ -82,7 +95,11 @@ const endpointLog = async (accountId, options) => {
       fetchLatest,
     });
   } else if (latest) {
-    logsResp = await getLatestFunctionLog(accountId, functionResp.id);
+    try {
+      logsResp = await getLatestFunctionLog(accountId, functionResp.id);
+    } catch (e) {
+      handleLatestLogsError(e);
+    }
   } else {
     logsResp = await getFunctionLogs(accountId, functionResp.id, options);
   }
@@ -103,8 +120,13 @@ const appFunctionLog = async (accountId, options) => {
     );
     const tailCall = after =>
       getAppFunctionLogs(accountId, functionName, appPath, { after });
-    const fetchLatest = () =>
-      getLatestAppFunctionLogs(accountId, functionName, appPath);
+    const fetchLatest = () => {
+      try {
+        getLatestAppFunctionLogs(accountId, functionName, appPath);
+      } catch (e) {
+        handleLatestLogsError(e);
+      }
+    };
 
     await tailLogs({
       accountId,
@@ -114,7 +136,15 @@ const appFunctionLog = async (accountId, options) => {
       fetchLatest,
     });
   } else if (latest) {
-    logsResp = await getLatestAppFunctionLogs(accountId, functionName, appPath);
+    try {
+      logsResp = await getLatestAppFunctionLogs(
+        accountId,
+        functionName,
+        appPath
+      );
+    } catch (e) {
+      handleLatestLogsError(e);
+    }
   } else {
     logsResp = await getAppFunctionLogs(accountId, functionName, appPath, {});
   }
