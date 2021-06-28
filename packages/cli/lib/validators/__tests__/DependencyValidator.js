@@ -8,22 +8,10 @@ const { THEME_PATH } = require('./validatorTestUtils');
 jest.mock('fs-extra');
 jest.mock('@hubspot/cli-lib/api/marketplace');
 
-const getMockValidationResult = customPath => {
+const getMockDependencyResult = (customPaths = []) => {
   const result = {
-    renderingErrors: [
-      {
-        category: 'MODULE_NOT_FOUND',
-        categoryErrors: { path: './relative/file-1.js' },
-      },
-    ],
-    allDependencies: {
-      EXTERNAL_DEPENDENCIES: ['0'],
-      OTHER_DEPS: ['./relative/file-2.js'],
-    },
+    dependencies: ['./relative/file-2.js', ...customPaths],
   };
-  if (customPath) {
-    result.allDependencies.OTHER_DEPS.push(customPath);
-  }
   return Promise.resolve(result);
 };
 
@@ -65,7 +53,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
 
     it('returns error if any referenced path is absolute', async () => {
       marketplace.fetchDependencies.mockReturnValue(
-        getMockValidationResult('/absolute/file-3.js')
+        getMockDependencyResult(['/absolute/file-3.js'])
       );
       const validationErrors = await DependencyValidator.validate([
         `${THEME_PATH}/template.html`,
@@ -77,7 +65,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
 
     it('returns error if any referenced path is external to the theme', async () => {
       marketplace.fetchDependencies.mockReturnValue(
-        getMockValidationResult('../../external/file-3.js')
+        getMockDependencyResult(['../../external/file-3.js'])
       );
       const validationErrors = await DependencyValidator.validate([
         `${THEME_PATH}/template.html`,
@@ -88,7 +76,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
     });
 
     it('returns no errors if paths are relative and internal', async () => {
-      marketplace.fetchDependencies.mockReturnValue(getMockValidationResult());
+      marketplace.fetchDependencies.mockReturnValue(getMockDependencyResult());
       const validationErrors = await DependencyValidator.validate([
         `${THEME_PATH}/template.html`,
       ]);
