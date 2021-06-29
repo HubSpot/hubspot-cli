@@ -1,5 +1,5 @@
 const { createApiSamplePrompt } = require('../../lib/createApiSamplePrompt');
-const { folderOverwritePrompt } = require('../../lib/createApiSamplePrompt');
+const { folderOverwritePrompt } = require('../../lib/prompts');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
