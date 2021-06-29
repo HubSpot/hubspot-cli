@@ -12,7 +12,10 @@ const {
   logErrorInstance,
 } = require('./errorHandlers');
 
-const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
+const {
+  GITHUB_RELEASE_TYPES,
+  PROJECT_TEMPLATE_TYPES,
+} = require('./lib/constants');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 /**
@@ -191,8 +194,39 @@ async function createProject(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
+const createProjectConfig = (folderPath, configOptions = {}) => {
+  const configPath = path.join(folderPath, 'hsproject.json');
+
+  logger.debug(`Creating config file ${configPath}`);
+  return fs.writeFileSync(
+    configPath,
+    JSON.stringify(
+      {
+        label: configOptions.label || 'New project',
+        description: configOptions.description || '',
+      },
+      null,
+      2
+    )
+  );
+};
+
+const createProjectTemplateFiles = (projectPath, projectTemplate) => {
+  const templateData = PROJECT_TEMPLATE_TYPES[projectTemplate];
+  const files = templateData.files;
+
+  Object.keys(files).forEach(fileName => {
+    const filePath = path.join(projectPath, fileName);
+    const fileContent = files[fileName];
+    logger.debug(`Creating ${projectTemplate} template file ${filePath}`);
+    fs.writeFileSync(filePath, fileContent);
+  });
+};
+
 module.exports = {
   createProject,
+  createProjectConfig,
+  createProjectTemplateFiles,
   downloadProject,
   extractProjectZip,
   fetchReleaseData,

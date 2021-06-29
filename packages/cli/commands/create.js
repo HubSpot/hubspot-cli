@@ -32,9 +32,9 @@ const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
 
-const SUPPORTED_ASSET_TYPES = Object.keys(assets).filter(
-  t => !assets[t].hidden
-);
+const SUPPORTED_ASSET_TYPES = Object.keys(assets)
+  .filter(t => !assets[t].hidden)
+  .join(', ');
 
 exports.command = 'create <type> [name] [dest]';
 exports.describe = `Create HubSpot sample apps and CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;

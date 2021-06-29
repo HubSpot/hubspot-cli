@@ -1,7 +1,5 @@
-const {
-  createApiSamplePrompt,
-  overwriteSamplePrompt,
-} = require('../../lib/createApiSamplePrompt');
+const { createApiSamplePrompt } = require('../../lib/createApiSamplePrompt');
+const { folderOverwritePrompt } = require('../../lib/prompts');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
@@ -26,7 +24,7 @@ module.exports = {
   execute: async ({ dest, name, assetType, options }) => {
     const filePath = path.join(dest, name);
     if (fs.existsSync(filePath)) {
-      const { overwrite } = await overwriteSamplePrompt(filePath);
+      const { overwrite } = await folderOverwritePrompt(filePath);
       if (overwrite) {
         fs.rmdirSync(filePath, { recursive: true });
       } else {

@@ -58,16 +58,6 @@ const createApiSamplePrompt = async samplesConfig => {
   }
 };
 
-const overwriteSamplePrompt = folderName => {
-  return inquirer.prompt({
-    type: 'confirm',
-    name: 'overwrite',
-    message: `The folder with name '${folderName}' already exists. Overwrite?`,
-    default: false,
-  });
-};
-
 module.exports = {
   createApiSamplePrompt,
-  overwriteSamplePrompt,
 };
