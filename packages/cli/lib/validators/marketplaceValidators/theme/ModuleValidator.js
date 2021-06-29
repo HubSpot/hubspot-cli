@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const BaseValidator = require('../BaseValidator');
 const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
+const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 const MODULE_LIMIT = 50;
 
@@ -14,25 +15,27 @@ class ModuleValidator extends BaseValidator {
       LIMIT_EXCEEDED: {
         key: 'limitExceeded',
         getCopy: ({ limit, total }) =>
-          `Cannot exceed ${limit} modules in your theme (found ${total})`,
+          `Module limit exceeded. Themes can only have ${limit} modules, but this theme has ${total}`,
       },
       MISSING_META_JSON: {
         key: 'missingMetaJSON',
-        getCopy: ({ file }) => `Missing a meta.json file for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Module ${filePath} is missing the meta.json file`,
       },
       INVALID_META_JSON: {
         key: 'invalidMetaJSON',
-        getCopy: ({ file }) => `Invalid json in meta.json file for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Module ${filePath} has invalid json in the meta.json file`,
       },
       MISSING_LABEL: {
         key: 'missingLabel',
-        getCopy: ({ file }) =>
-          `The meta.json file is missing a "label" field for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Missing required field for ${filePath}. The meta.json file is missing the "label" field`,
       },
       MISSING_ICON: {
         key: 'missingIcon',
-        getCopy: ({ file }) =>
-          `The meta.json file is missing an "icon" field for ${file}`,
+        getCopy: ({ filePath }) =>
+          `Missing required field for ${filePath}. The meta.json file is missing the "icon" field`,
       },
     };
   }
@@ -110,5 +113,5 @@ class ModuleValidator extends BaseValidator {
 
 module.exports = new ModuleValidator({
   name: 'Module',
-  key: 'module',
+  key: VALIDATOR_KEYS.module,
 });

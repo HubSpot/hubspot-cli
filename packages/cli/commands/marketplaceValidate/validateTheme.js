@@ -67,10 +67,14 @@ exports.handler = async options => {
     absoluteSrcPath,
     themeFiles,
     accountId
-  ).then(results => {
-    logValidatorResults(results, { logAsJson: options.json });
+  ).then(groupedResults => {
+    logValidatorResults(groupedResults, { logAsJson: options.json });
 
-    if (results.some(result => result.result === VALIDATION_RESULT.FATAL)) {
+    if (
+      groupedResults
+        .flat()
+        .some(result => result.result === VALIDATION_RESULT.FATAL)
+    ) {
       process.exit(1);
     }
   });

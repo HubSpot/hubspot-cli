@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const BaseValidator = require('../BaseValidator');
 const { isRelativePath } = require('@hubspot/cli-lib/path');
+const BaseValidator = require('../BaseValidator');
+const { VALIDATOR_KEYS } = require('../../constants');
 
 class ThemeValidator extends BaseValidator {
   constructor(options) {
@@ -11,30 +12,32 @@ class ThemeValidator extends BaseValidator {
     this.errors = {
       MISSING_THEME_JSON: {
         key: 'missingThemeJSON',
-        getCopy: () => 'Missing a theme.json file',
+        getCopy: () =>
+          'Missing the theme.json file. This file is required in all themes',
       },
       INVALID_THEME_JSON: {
         key: 'invalidThemeJSON',
-        getCopy: () => 'Invalid json in theme.json file',
+        getCopy: ({ filePath }) => `Invalid json in the ${filePath} file`,
       },
       MISSING_LABEL: {
         key: 'missingLabel',
-        getCopy: () => 'The theme.json file is missing a "label" field',
+        getCopy: ({ filePath }) =>
+          `Missing required field in ${filePath}. The "label" field is required`,
       },
       MISSING_SCREENSHOT_PATH: {
         key: 'missingScreenshotPath',
-        getCopy: () =>
-          'The theme.json file is missing a "screenshot_path" field',
+        getCopy: ({ filePath }) =>
+          `Missing required field in ${filePath}. The "screenshot_path" field is required`,
       },
       ABSOLUTE_SCREENSHOT_PATH: {
         key: 'absoluteScreenshotPath',
-        getCopy: () =>
-          'The path for "screenshot_path" in theme.json must be relative',
+        getCopy: ({ fieldPath }) =>
+          `Relative path required. The path for "screenshot_path" in ${fieldPath} must be relative`,
       },
       MISSING_SCREENSHOT: {
         key: 'missingScreenshot',
-        getCopy: () =>
-          'The path for "screenshot_path" in theme.json is not resolving',
+        getCopy: ({ fieldPath }) =>
+          `File not found. No file exists for the provided "screenshot_path" in ${fieldPath}`,
       },
     };
   }
@@ -98,6 +101,6 @@ class ThemeValidator extends BaseValidator {
 }
 
 module.exports = new ThemeValidator({
-  name: 'Theme',
-  key: 'theme',
+  name: 'Theme config',
+  key: VALIDATOR_KEYS.themeConfig,
 });

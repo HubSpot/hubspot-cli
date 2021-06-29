@@ -11,7 +11,7 @@ async function applyValidators(validators, absoluteThemePath, ...args) {
       }
       return validationResult;
     })
-  ).then(errorsGroupedByValidatorType => errorsGroupedByValidatorType.flat());
+  );
 }
 
 module.exports = { applyValidators };
