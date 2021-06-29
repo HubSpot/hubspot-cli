@@ -1,6 +1,6 @@
 const http = require('../http');
 
-const MARKETPLACE_API_PATH = 'product/marketplace/v2/template/dependencies';
+const MARKETPLACE_API_PATH = 'product/marketplace/v2/template/render';
 
 /**
  * @async

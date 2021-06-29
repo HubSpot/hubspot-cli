@@ -30,12 +30,12 @@ class ModuleValidator extends BaseValidator {
       MISSING_LABEL: {
         key: 'missingLabel',
         getCopy: ({ filePath }) =>
-          `Missing required field for ${filePath}. The meta.json file is missing the "label" field`,
+          `Missing required property for ${filePath}. The meta.json file is missing the "label" property`,
       },
       MISSING_ICON: {
         key: 'missingIcon',
         getCopy: ({ filePath }) =>
-          `Missing required field for ${filePath}. The meta.json file is missing the "icon" field`,
+          `Missing required property for ${filePath}. The meta.json file is missing the "icon" property`,
       },
     };
   }

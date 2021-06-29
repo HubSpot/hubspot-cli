@@ -63,7 +63,7 @@ class TemplateValidator extends BaseValidator {
       MISSING_TEMPLATE_TYPE: {
         key: 'missingTemplateType',
         getCopy: ({ filePath }) =>
-          `Missing required field for ${filePath}. The template is missing the "templateType" field`,
+          `Missing required property for ${filePath}. The template is missing the "templateType" property`,
       },
       UNKNOWN_TEMPLATE_TYPE: {
         key: 'unknownTemplateType',
@@ -78,12 +78,12 @@ class TemplateValidator extends BaseValidator {
       MISSING_LABEL: {
         key: 'missingLabel',
         getCopy: ({ filePath }) =>
-          `Missing required field for ${filePath}. The template is missing the "label" field`,
+          `Missing required property for ${filePath}. The template is missing the "label" property`,
       },
       MISSING_SCREENSHOT_PATH: {
         key: 'missingScreenshotPath',
         getCopy: ({ filePath }) =>
-          `Missing required field for ${filePath}. The template is missing the "screenshotPath" field`,
+          `Missing required property for ${filePath}. The template is missing the "screenshotPath" property`,
       },
     };
   }
