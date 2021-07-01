@@ -32,7 +32,7 @@ class BaseValidator {
 
   getError(errorObj, file, extraContext = {}) {
     const context = {
-      filePath: filePath,
+      filePath: file,
       ...extraContext,
     };
     return {
