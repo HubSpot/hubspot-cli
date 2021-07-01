@@ -31,9 +31,8 @@ class BaseValidator {
   }
 
   getError(errorObj, file, extraContext = {}) {
-    const relativeFilePath = file ? this.getRelativePath(file) : null;
     const context = {
-      filePath: relativeFilePath,
+      filePath: filePath,
       ...extraContext,
     };
     return {
