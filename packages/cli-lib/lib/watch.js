@@ -8,6 +8,7 @@ const {
   ApiErrorContext,
   logApiErrorInstance,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
   logErrorInstance,
 } = require('../errorHandlers');
 const { uploadFolder } = require('./uploadFolder');
@@ -49,8 +50,15 @@ function uploadFile(accountId, file, dest, options) {
   const apiOptions = getFileMapperQueryValues(options);
 
   return queue.add(() => {
+    const errorContext = new ApiErrorContext({
+      accountId,
+      request: dest,
+      payload: file,
+    });
+
     return upload(accountId, file, dest, apiOptions)
-      .then(() => {
+      .then(resp => {
+        logApiUploadWarnings(resp, errorContext);
         logger.log(`Uploaded file ${file} to ${dest}`);
         notifyOfThemePreview(file, accountId);
       })
@@ -60,14 +68,7 @@ function uploadFile(accountId, file, dest, options) {
         logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
         return upload(accountId, file, dest, apiOptions).catch(error => {
           logger.error(uploadFailureMessage);
-          logApiUploadErrorInstance(
-            error,
-            new ApiErrorContext({
-              accountId,
-              request: dest,
-              payload: file,
-            })
-          );
+          logApiUploadErrorInstance(error, errorContext);
         });
       });
   });

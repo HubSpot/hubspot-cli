@@ -11,6 +11,7 @@ const {
   ApiErrorContext,
   logApiErrorInstance,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
   logServerlessFunctionApiErrorInstance,
   parseValidationErrors,
 } = require('./errorHandlers/apiErrors');
@@ -24,6 +25,7 @@ module.exports = {
   logErrorInstance,
   logApiErrorInstance,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
   logFileSystemErrorInstance,
   logServerlessFunctionApiErrorInstance,
 };

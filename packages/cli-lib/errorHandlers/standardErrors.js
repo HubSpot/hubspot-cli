@@ -30,10 +30,14 @@ function debugErrorAndContext(error, context) {
       response: response.body,
       headers: response.headers,
     });
+  } else if (error.severity === 'WARNING') {
+    logger.debug('WARNING: %o', error);
   } else {
     logger.debug('Error: %o', error);
   }
-  logger.debug('Context: %o', context);
+  if (context) {
+    logger.debug('Context: %o', context);
+  }
 }
 
 /**

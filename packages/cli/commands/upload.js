@@ -19,6 +19,7 @@ const {
   logErrorInstance,
   ApiErrorContext,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -114,13 +115,20 @@ exports.handler = async options => {
       return;
     }
 
+    const errorContext = new ApiErrorContext({
+      accountId,
+      request: normalizedDest,
+      payload: src,
+    });
+
     upload(
       accountId,
       absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues({ mode, options })
     )
-      .then(() => {
+      .then(resp => {
+        logApiUploadWarnings(resp, errorContext);
         logger.success(
           'Uploaded file from "%s" to "%s" in the Design Manager of account %s',
           src,
@@ -131,14 +139,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error('Uploading file "%s" to "%s" failed', src, normalizedDest);
-        logApiUploadErrorInstance(
-          error,
-          new ApiErrorContext({
-            accountId,
-            request: normalizedDest,
-            payload: src,
-          })
-        );
+        logApiUploadErrorInstance(error, errorContext);
       });
   } else {
     logger.log(

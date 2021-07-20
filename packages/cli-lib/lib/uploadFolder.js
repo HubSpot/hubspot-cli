@@ -16,6 +16,7 @@ const {
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
   isFatalError,
 } = require('../errorHandlers');
 
@@ -82,7 +83,9 @@ async function uploadFolder(accountId, src, dest, options) {
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
-        await upload(accountId, file, destPath, apiOptions);
+        await upload(accountId, file, destPath, apiOptions).then(resp => {
+          logApiUploadWarnings(resp);
+        });
         logger.log('Uploaded file "%s" to "%s"', file, destPath);
       } catch (error) {
         if (isFatalError(error)) {

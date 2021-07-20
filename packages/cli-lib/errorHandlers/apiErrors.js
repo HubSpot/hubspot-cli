@@ -200,6 +200,22 @@ function logApiUploadErrorInstance(error, context) {
   logApiErrorInstance(error, context);
 }
 
+/**
+ * Logs a message for a warning resulting from filemapper API upload.
+ *
+ * @param {Object} resp
+ */
+function logApiUploadWarnings(resp, context) {
+  if (resp && resp.warnings && resp.warnings.length) {
+    resp.warnings.forEach(warning => {
+      if (warning.message) {
+        logger.warn(warning.message);
+      }
+      debugErrorAndContext(warning, context);
+    });
+  }
+}
+
 async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
   const accountConfig = getAccountConfig(accountId);
   const { authType } = accountConfig;
@@ -267,5 +283,6 @@ module.exports = {
   parseValidationErrors,
   logApiErrorInstance,
   logApiUploadErrorInstance,
+  logApiUploadWarnings,
   logServerlessFunctionApiErrorInstance,
 };
