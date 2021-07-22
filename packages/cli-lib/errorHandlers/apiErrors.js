@@ -1,3 +1,4 @@
+const path = require('path');
 const { logger } = require('../logger');
 const { getAccountConfig } = require('../lib/config');
 const {
@@ -207,10 +208,9 @@ function logApiUploadErrorInstance(error, context) {
  */
 function logApiUploadWarnings(resp, context) {
   if (resp && resp.warnings && resp.warnings.length) {
+    const { base } = path.parse(resp.path);
     resp.warnings.forEach(warning => {
-      if (warning.message) {
-        logger.warn(warning.message);
-      }
+      logger.warn(`"${base}" - ${warning.message}`);
       debugErrorAndContext(warning, context);
     });
   }

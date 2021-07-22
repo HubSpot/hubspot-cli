@@ -84,7 +84,12 @@ async function uploadFolder(accountId, src, dest, options) {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
         await upload(accountId, file, destPath, apiOptions).then(resp => {
-          logApiUploadWarnings(resp);
+          const errorContext = new ApiErrorContext({
+            accountId,
+            request: destPath,
+            payload: src,
+          });
+          logApiUploadWarnings(resp, errorContext);
         });
         logger.log('Uploaded file "%s" to "%s"', file, destPath);
       } catch (error) {
