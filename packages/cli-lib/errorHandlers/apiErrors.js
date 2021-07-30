@@ -208,7 +208,7 @@ function logApiUploadErrorInstance(error, context) {
  */
 function logApiUploadWarnings(resp, context) {
   if (resp && resp.warnings && resp.warnings.length) {
-    const { base } = path.parse(resp.path);
+    const base = path.basename(resp.path);
     resp.warnings.forEach(warning => {
       logger.warn(`"${base}" - ${warning.message}`);
       debugErrorAndContext(warning, context);
