@@ -32,9 +32,13 @@ const getFileAnnotations = filePath => {
 };
 
 const getAnnotationsFromSource = source => {
-  const match = source.match(ANNOTATIONS_REGEX);
-  const annotation = match && match[1] ? match[1] : '';
-  return annotation;
+  try {
+    const match = source.match(ANNOTATIONS_REGEX);
+    const annotation = match && match[1] ? match[1] : '';
+    return annotation;
+  } catch (err) {
+    return '';
+  }
 };
 
 const getAnnotationValue = (annotations, key) => {

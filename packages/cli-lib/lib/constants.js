@@ -118,7 +118,7 @@ const PROJECT_TEMPLATE_TYPES = {
   },
 };
 
-const TEMPLATE_TYPE_ID = {
+const TEMPLATE_TYPES = {
   unmapped: 0,
   email_base_template: 1,
   email: 2,
@@ -187,5 +187,5 @@ module.exports = {
   POLLING_DELAY,
   PROJECT_TEMPLATE_TYPES,
   SCOPE_GROUPS,
-  TEMPLATE_TYPE_ID,
+  TEMPLATE_TYPES,
 };
