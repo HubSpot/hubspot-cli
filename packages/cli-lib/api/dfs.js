@@ -1,4 +1,5 @@
 const http = require('../http');
+const fs = require('fs');
 
 const DEVELOPER_FILE_SYSTEM_API_PATH = 'dfs/v1/projects';
 
@@ -32,6 +33,23 @@ async function createProject(portalId, name) {
 }
 
 /**
+ * Upload project
+ *
+ * @async
+ * @param {string} projectName
+ * @param {string} projectFile
+ * @returns {Promise}
+ */
+async function uploadProject(accountId, projectName, projectFile) {
+  return http.post(accountId, {
+    uri: `${DEVELOPER_FILE_SYSTEM_API_PATH}/upload/${projectName}`,
+    formData: {
+      file: fs.createReadStream(projectFile),
+    },
+  });
+}
+
+/**
  * Fetch project
  *
  * @async
@@ -60,6 +78,7 @@ async function deleteProject(portalId, name) {
 module.exports = {
   fetchProjects,
   createProject,
+  uploadProject,
   fetchProject,
   deleteProject,
 };
