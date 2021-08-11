@@ -5,7 +5,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+// const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const {
   loadConfig,
@@ -23,7 +23,7 @@ const { prompt } = require('inquirer');
 const fs = require('fs');
 const findup = require('findup-sync');
 const { getCwd } = require('../../../cli-lib/path');
-const path = require('path')
+const path = require('path');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -47,66 +47,60 @@ const getProjectConfig = p => {
   });
 
   if (!projectDirectory) {
-    return {}
+    return {};
   }
   try {
     const projectConfig = fs.readFileSync(projectDirectory);
     return JSON.parse(projectConfig);
   } catch (e) {
-    logger.error('Could not read from project config')
+    logger.error('Could not read from project config');
   }
-}
-const writeProjectConfig = async (configPath, config) => {
+};
+const writeProjectConfig = (configPath, config) => {
   try {
-    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.log(`Wrote project config at ${configPath}`);
   } catch (e) {
     logger.error(`Could not write project config at ${configPath}`);
   }
-}
+};
 
 exports.handler = async options => {
-
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name, description } = options;
+  const { path: projectPath, name, label, description } = options;
   const accountId = getAccountId(options);
 
-  const cwd = path ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = getProjectConfig(cwd)
-
-  if (name) {
-    projectConfig.name = name;
-  }
-  if (description) {
-    projectConfig.description = description;
-  }
-
+  // TODO:
   // trackCommandUsage('projects-init', { projectPath }, accountId);
 
-  // Todo, should we be prompting for these values if they aren't supplied and don't exist in a config?
-  // const promptIfEmpty = async requiredOptions => {
-  //   for (const option of requiredOptions) {
-  //     if (!options[option]) {
-  //       const answer = await prompt({ name: option });
-  //       options[option] = answer[option];
-  //     }
-  //   }
-  // };
-  // await promptIfEmpty(['name', 'description']);
+  const cwd = path ? path.resolve(getCwd(), projectPath) : getCwd();
+  const _projectConfig = getProjectConfig(cwd);
 
+  const projectConfig = {
+    name: name || _projectConfig.name,
+    label: label || _projectConfig.label,
+    description: description || _projectConfig.description,
+  };
+
+  if (!projectConfig.name) {
+    const { name } = await prompt({ name: 'name' });
+    projectConfig.name = name;
+  }
 
   logger.log(`Initializing project: ${projectConfig.name}`);
 
   try {
-    const project = await createProject(accountId, projectPath)
-    await writeProjectConfig(path.join(cwd, 'hsproject.json'), project);
+    //  TODO: API only supports name at the moment
+    const project = await createProject(accountId, projectConfig.name);
+
+    writeProjectConfig(path.join(cwd, 'hsproject.json'), project);
 
     logger.success(
       `Created project in ${projectPath} on account ${accountId}.`
     );
   } catch (e) {
-    if (e.statusCode === 400) {
+    if (e.statusCode === 409) {
       logger.error(e.error.message);
     } else {
       logApiErrorInstance(
@@ -127,6 +121,10 @@ exports.builder = yargs => {
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
+      type: 'string',
+    },
+    label: {
+      describe: 'Project label',
       type: 'string',
     },
     description: {

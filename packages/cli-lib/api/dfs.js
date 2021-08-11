@@ -13,7 +13,7 @@ async function fetchProjects(portalId) {
     uri: DEVELOPER_FILE_SYSTEM_API_PATH,
   });
 }
-// todo: paging?
+// TODO: paging?
 
 /**
  * Create project
@@ -25,7 +25,7 @@ async function fetchProjects(portalId) {
 async function createProject(portalId, name) {
   return http.post(portalId, {
     uri: DEVELOPER_FILE_SYSTEM_API_PATH,
-    data: {
+    body: {
       name,
     },
   });
@@ -62,4 +62,4 @@ module.exports = {
   createProject,
   fetchProject,
   deleteProject,
-}
+};
