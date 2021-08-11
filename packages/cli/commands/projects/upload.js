@@ -121,7 +121,7 @@ exports.builder = yargs => {
     type: 'string',
   });
 
-  yargs.example([['$0 projects upload myProjectFolder', 'Upload a project']]);
+  yargs.example([['$0 project upload myProjectFolder', 'Upload a project']]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);

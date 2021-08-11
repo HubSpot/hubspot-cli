@@ -135,7 +135,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 projects init myProjectFolder',
+      '$0 project init myProjectFolder',
       'Initialize a project within the myProjectFolder folder',
     ],
   ]);

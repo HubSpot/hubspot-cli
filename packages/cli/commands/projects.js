@@ -7,7 +7,7 @@ const deploy = require('./projects/deploy');
 const init = require('./projects/init');
 const upload = require('./projects/upload');
 
-exports.command = 'projects';
+exports.command = 'project';
 exports.describe = false; //'Commands for working with projects';
 
 exports.builder = yargs => {

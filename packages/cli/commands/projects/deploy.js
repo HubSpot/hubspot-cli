@@ -77,7 +77,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 projects deploy myProjectFolder',
+      '$0 project deploy myProjectFolder',
       'Deploy a project within the myProjectFolder folder',
     ],
   ]);
