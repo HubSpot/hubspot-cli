@@ -17,9 +17,14 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { deployProject } = require('@hubspot/cli-lib/api/fileMapper');
+const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const { prompt } = require('inquirer');
+const fs = require('fs');
+const findup = require('findup-sync');
+const { getCwd } = require('../../../cli-lib/path');
+const path = require('path')
+
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
   logDebugInfo(options);
@@ -35,39 +40,70 @@ const loadAndValidateOptions = async options => {
 exports.command = 'init [path]';
 exports.describe = false;
 
+const getProjectConfig = p => {
+  const projectDirectory = findup('hsproject.json', {
+    cwd: p,
+    nocase: true,
+  });
+
+  if (!projectDirectory) {
+    return {}
+  }
+  try {
+    const projectConfig = fs.readFileSync(projectDirectory);
+    return JSON.parse(projectConfig);
+  } catch (e) {
+    logger.error('Could not read from project config')
+  }
+}
+const writeProjectConfig = async (configPath, config) => {
+  try {
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+    logger.log(`Wrote project config at ${configPath}`);
+  } catch (e) {
+    logger.error(`Could not write project config at ${configPath}`);
+  }
+}
+
 exports.handler = async options => {
+
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { path: projectPath, name, description } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('projects-init', { projectPath }, accountId);
+  const cwd = path ? path.resolve(getCwd(), projectPath) : getCwd();
+  const projectConfig = getProjectConfig(cwd)
 
-  const promptIfEmpty = async requiredOptions => {
-    for (const option of requiredOptions) {
-      if (!options[option]) {
-        const answer = await prompt({ name: option });
-        options[option] = answer[option];
-      }
-    }
-  };
-  await promptIfEmpty(['label', 'description']);
+  if (name) {
+    projectConfig.name = name;
+  }
+  if (description) {
+    projectConfig.description = description;
+  }
 
-  logger.log('label', options.label);
-  logger.log('description', options.description);
+  // trackCommandUsage('projects-init', { projectPath }, accountId);
 
-  logger.debug(`Initializing project at path: ${projectPath}`);
+  // Todo, should we be prompting for these values if they aren't supplied and don't exist in a config?
+  // const promptIfEmpty = async requiredOptions => {
+  //   for (const option of requiredOptions) {
+  //     if (!options[option]) {
+  //       const answer = await prompt({ name: option });
+  //       options[option] = answer[option];
+  //     }
+  //   }
+  // };
+  // await promptIfEmpty(['name', 'description']);
+
+
+  logger.log(`Initializing project: ${projectConfig.name}`);
 
   try {
-    const deployResp = await deployProject(accountId, projectPath);
-
-    if (deployResp.error) {
-      logger.error(`Deploy error: ${deployResp.error.message}`);
-      return;
-    }
+    const project = await createProject(accountId, projectPath)
+    await writeProjectConfig(path.join(cwd, 'hsproject.json'), project);
 
     logger.success(
-      `Deployed project in ${projectPath} on account ${accountId}.`
+      `Created project in ${projectPath} on account ${accountId}.`
     );
   } catch (e) {
     if (e.statusCode === 400) {
@@ -89,8 +125,8 @@ exports.builder = yargs => {
   });
 
   yargs.options({
-    label: {
-      describe: 'Project label',
+    name: {
+      describe: 'Project name (cannot be changed)',
       type: 'string',
     },
     description: {
