@@ -74,7 +74,7 @@ exports.handler = async options => {
   // TODO:
   // trackCommandUsage('projects-init', { projectPath }, accountId);
 
-  const cwd = path ? path.resolve(getCwd(), projectPath) : getCwd();
+  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const _projectConfig = getProjectConfig(cwd);
 
   const projectConfig = {

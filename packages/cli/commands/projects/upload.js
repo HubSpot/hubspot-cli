@@ -12,10 +12,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-// const {
-//   logApiErrorInstance,
-//   ApiErrorContext,
-// } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
@@ -64,7 +64,17 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     const upload = await uploadProject(accountId, projectName, filePath);
     logger.log(`Project uploaded and build #${upload.buildId} created`);
   } catch (err) {
-    logger.error(err);
+    if (err.statusCode === 404) {
+      return logger.error(
+        `Project '${projectName}' does not exist. Try running 'hs project init' first.`
+      );
+    }
+    logApiErrorInstance(err, {
+      context: new ApiErrorContext({
+        accountId,
+        projectName,
+      }),
+    });
   }
 };
 
@@ -77,7 +87,7 @@ exports.handler = async options => {
   // TODO:
   // trackCommandUsage('projects-upload', { projectPath }, accountId);
 
-  const cwd = path ? path.resolve(getCwd(), projectPath) : getCwd();
+  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const { name: projectName } = await getProjectConfig(cwd);
 
   if (!projectName) {
