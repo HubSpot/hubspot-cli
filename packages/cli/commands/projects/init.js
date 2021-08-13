@@ -47,7 +47,7 @@ const getProjectConfig = p => {
   });
 
   if (!projectDirectory) {
-    return {};
+    return null;
   }
   try {
     const projectConfig = fs.readFileSync(projectDirectory);
@@ -75,29 +75,41 @@ exports.handler = async options => {
   // trackCommandUsage('projects-init', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const _projectConfig = getProjectConfig(cwd);
+  const projectConfigFile = getProjectConfig(cwd);
 
   const projectConfig = {
-    name: name || _projectConfig.name,
-    label: label || _projectConfig.label,
-    description: description || _projectConfig.description,
+    ...projectConfigFile.accounts[accountId],
+    ...(name && { name }),
+    ...(label && { label }),
+    ...(description && { description }),
   };
 
   if (!projectConfig.name) {
-    const { name } = await prompt({ name: 'name' });
+    const { name } = await prompt({
+      name: 'name',
+      message: 'Please provide a name:',
+      default: projectConfigFile.defaults.name,
+    });
     projectConfig.name = name;
   }
 
   logger.log(`Initializing project: ${projectConfig.name}`);
 
   try {
-    //  TODO: API only supports name at the moment
-    const project = await createProject(accountId, projectConfig.name);
+    // TODO: API only supports name at the moment
+    await createProject(accountId, projectConfig.name);
 
-    writeProjectConfig(path.join(cwd, 'hsproject.json'), project);
+    writeProjectConfig(path.join(cwd, 'hsproject.json'), {
+      ...projectConfigFile,
+      accounts: {
+        ...projectConfigFile.accounts,
+        [accountId]: { ...projectConfig },
+      },
+    });
 
     logger.success(
-      `Created project in ${projectPath} on account ${accountId}.`
+      `"${projectConfig.label ||
+        projectConfig.name}" creation succeeded in account ${accountId}.`
     );
   } catch (e) {
     if (e.statusCode === 409) {
