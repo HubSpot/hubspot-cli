@@ -37,18 +37,24 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'init [path]';
-exports.describe = false;
+const promptValue = async (value, message) => {
+  const prompted = await prompt({
+    name: value,
+    message: message,
+  });
+  return prompted[value];
+};
 
-const getProjectConfig = p => {
+const getProjectConfig = path => {
   const projectDirectory = findup('hsproject.json', {
-    cwd: p,
+    cwd: path,
     nocase: true,
   });
 
   if (!projectDirectory) {
     return null;
   }
+
   try {
     const projectConfig = fs.readFileSync(projectDirectory);
     return JSON.parse(projectConfig);
@@ -56,6 +62,7 @@ const getProjectConfig = p => {
     logger.error('Could not read from project config');
   }
 };
+
 const writeProjectConfig = (configPath, config) => {
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -65,10 +72,13 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
+exports.command = 'init [path]';
+exports.describe = false;
+
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name, label, description } = options;
+  const { path: projectPath, name, projectDir, label, description } = options;
   const accountId = getAccountId(options);
 
   // TODO:
@@ -78,20 +88,14 @@ exports.handler = async options => {
   const projectConfigFile = getProjectConfig(cwd);
 
   const projectConfig = {
-    ...projectConfigFile.accounts[accountId],
-    ...(name && { name }),
+    accountId,
+    name: name || (await promptValue('name', 'Please provide a project name:')),
+    projectDir:
+      projectDir ||
+      (await promptValue('projectDir', 'Please provide a project directory:')),
     ...(label && { label }),
     ...(description && { description }),
   };
-
-  if (!projectConfig.name) {
-    const { name } = await prompt({
-      name: 'name',
-      message: 'Please provide a name:',
-      default: projectConfigFile.defaults.name,
-    });
-    projectConfig.name = name;
-  }
 
   logger.log(`Initializing project: ${projectConfig.name}`);
 
@@ -101,10 +105,7 @@ exports.handler = async options => {
 
     writeProjectConfig(path.join(cwd, 'hsproject.json'), {
       ...projectConfigFile,
-      accounts: {
-        ...projectConfigFile.accounts,
-        [accountId]: { ...projectConfig },
-      },
+      projects: [...projectConfigFile.projects, projectConfig],
     });
 
     logger.success(
@@ -113,7 +114,16 @@ exports.handler = async options => {
     );
   } catch (e) {
     if (e.statusCode === 409) {
-      logger.error(e.error.message);
+      logger.log(
+        `Project ${projectConfig.name} already exists. Updating project config file...`
+      );
+      const filteredProjects = projectConfigFile.projects.filter(
+        project => project.name !== projectConfig.name
+      );
+      writeProjectConfig(path.join(cwd, 'hsproject.json'), {
+        ...projectConfigFile,
+        projects: [...filteredProjects, projectConfig],
+      });
     } else {
       logApiErrorInstance(
         accountId,
@@ -133,6 +143,10 @@ exports.builder = yargs => {
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
+      type: 'string',
+    },
+    projectDir: {
+      describe: 'Directory of project',
       type: 'string',
     },
     label: {
