@@ -5,6 +5,7 @@ module.exports = {
   module: require('./module'),
   project: require('./project'),
   'react-app': require('./react-app'),
+  sandbox: require('./sandbox'),
   template: require('./template'),
   'vue-app': require('./vue-app'),
   'webpack-serverless': require('./webpack-serverless'),
