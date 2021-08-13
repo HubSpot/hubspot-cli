@@ -114,6 +114,11 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+      if (!updatedConfig) {
+        process.exit();
+      }
+
       validName = await promptForAccountNameIfNotSet(updatedConfig);
 
       updateAccountConfig({
