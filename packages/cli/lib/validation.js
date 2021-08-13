@@ -3,6 +3,9 @@ const {
   getAccountConfig,
   loadConfigFromEnvironment,
   Mode,
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
 const { getConfigPath } = require('@hubspot/cli-lib/lib/config');
 const {
@@ -17,9 +20,22 @@ const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { getCwd, getExt } = require('@hubspot/cli-lib/path');
-const { getAccountId, getMode } = require('./commonOpts');
+const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
+const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
+
+async function loadAndValidateOptions(options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath, options);
+  checkAndWarnGitInclusion();
+
+  if (!(validateConfig() && (await validateAccount(options)))) {
+    process.exit(1);
+  }
+}
 
 /**
  * Validate that an account was passed to the command and that the account's configuration is valid
@@ -208,4 +224,5 @@ module.exports = {
   validateAccount,
   isFileValidJSON,
   fileExists,
+  loadAndValidateOptions,
 };
