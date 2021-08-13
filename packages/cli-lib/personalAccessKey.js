@@ -141,7 +141,6 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     token = await getAccessToken(personalAccessKey, accountEnv);
   } catch (err) {
     logErrorInstance(err);
-    return;
   }
   const { portalId, accessToken, expiresAt } = token;
 
@@ -158,6 +157,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   if (makeDefault) {
     updateDefaultAccount(name);
   }
+
+  console.log('updatedConfig: ', updatedConfig);
 
   return updatedConfig;
 };
