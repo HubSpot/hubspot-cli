@@ -43,6 +43,7 @@ async function createProject(portalId, name) {
 async function uploadProject(accountId, projectName, projectFile) {
   return http.post(accountId, {
     uri: `${DEVELOPER_FILE_SYSTEM_API_PATH}/upload/${projectName}`,
+    timeout: 60000,
     formData: {
       file: fs.createReadStream(projectFile),
     },
