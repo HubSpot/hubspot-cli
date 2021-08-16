@@ -52,7 +52,7 @@ const getProjectConfig = path => {
   });
 
   if (!projectDirectory) {
-    return null;
+    return {};
   }
 
   try {
@@ -105,7 +105,10 @@ exports.handler = async options => {
 
     writeProjectConfig(path.join(cwd, 'hsproject.json'), {
       ...projectConfigFile,
-      projects: [...projectConfigFile.projects, projectConfig],
+      projects: [
+        ...(projectConfig && projectConfigFile.projects),
+        projectConfig,
+      ],
     });
 
     logger.success(
@@ -117,9 +120,11 @@ exports.handler = async options => {
       logger.debug(
         `Project ${projectConfig.name} already exists. Updating project config file...`
       );
-      const filteredProjects = projectConfigFile.projects.filter(
-        project => project.name !== projectConfig.name
-      );
+      const filteredProjects = projectConfigFile.projects
+        ? projectConfigFile.projects.filter(
+            project => project.name !== projectConfig.name
+          )
+        : [];
       writeProjectConfig(path.join(cwd, 'hsproject.json'), {
         ...projectConfigFile,
         projects: [...filteredProjects, projectConfig],
