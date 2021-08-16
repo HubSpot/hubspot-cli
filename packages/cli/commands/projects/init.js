@@ -66,7 +66,7 @@ const getProjectConfig = path => {
 const writeProjectConfig = (configPath, config) => {
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    logger.log(`Wrote project config at ${configPath}`);
+    logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
     logger.error(`Could not write project config at ${configPath}`);
   }
@@ -110,11 +110,11 @@ exports.handler = async options => {
 
     logger.success(
       `"${projectConfig.label ||
-        projectConfig.name}" creation succeeded in account ${accountId}.`
+        projectConfig.name}" creation succeeded in account ${accountId}`
     );
   } catch (e) {
     if (e.statusCode === 409) {
-      logger.log(
+      logger.debug(
         `Project ${projectConfig.name} already exists. Updating project config file...`
       );
       const filteredProjects = projectConfigFile.projects.filter(

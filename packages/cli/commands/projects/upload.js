@@ -97,13 +97,13 @@ exports.handler = async options => {
 
   const tmpFile = tmp.fileSync({ postfix: '.zip' });
 
-  logger.log(`Compressing build files to '${tmpFile.name}'`);
+  logger.debug(`Compressing build files to '${tmpFile.name}'`);
 
   const output = fs.createWriteStream(tmpFile.name);
   const archive = archiver('zip');
 
   output.on('close', async function() {
-    logger.log(`Project files compressed: ${archive.pointer()} bytes`);
+    logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
     await uploadProjectFiles(accountId, projectName, tmpFile.name);
 
