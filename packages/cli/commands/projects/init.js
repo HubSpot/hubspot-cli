@@ -37,32 +37,6 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const promptValue = async (value, message) => {
-  const prompted = await prompt({
-    name: value,
-    message: message,
-  });
-  return prompted[value];
-};
-
-const getProjectConfig = path => {
-  const projectDirectory = findup('hsproject.json', {
-    cwd: path,
-    nocase: true,
-  });
-
-  if (!projectDirectory) {
-    return {};
-  }
-
-  try {
-    const projectConfig = fs.readFileSync(projectDirectory);
-    return JSON.parse(projectConfig);
-  } catch (e) {
-    logger.error('Could not read from project config');
-  }
-};
-
 const writeProjectConfig = (configPath, config) => {
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -72,71 +46,87 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
+const getOrCreateProjectConfig = async projectPath => {
+  const configPath = findup('hsproject.json', {
+    cwd: projectPath,
+    nocase: true,
+  });
+
+  if (!configPath) {
+    const { name, srcDir } = await prompt([
+      {
+        name: 'name',
+        message: 'name',
+      },
+      {
+        name: 'srcDir',
+        message: 'srcDir',
+      },
+    ]);
+    writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
+      name,
+      srcDir,
+    });
+    return { name, srcDir };
+  } else {
+    try {
+      const projectConfig = fs.readFileSync(configPath);
+      return JSON.parse(projectConfig);
+    } catch (e) {
+      logger.error('Could not read from project config');
+    }
+  }
+};
+
 exports.command = 'init [path]';
 exports.describe = false;
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name, projectDir, label, description } = options;
+  const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
   // TODO:
   // trackCommandUsage('projects-init', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfigFile = getProjectConfig(cwd);
-
-  const projectConfig = {
-    accountId,
-    name: name || (await promptValue('name', 'Please provide a project name:')),
-    projectDir:
-      projectDir ||
-      (await promptValue('projectDir', 'Please provide a project directory:')),
-    ...(label && { label }),
-    ...(description && { description }),
-  };
+  const projectConfig = await getOrCreateProjectConfig(cwd);
 
   logger.log(`Initializing project: ${projectConfig.name}`);
 
   try {
-    // TODO: API only supports name at the moment
     await createProject(accountId, projectConfig.name);
 
-    writeProjectConfig(path.join(cwd, 'hsproject.json'), {
-      ...projectConfigFile,
-      projects: [
-        ...(projectConfig && projectConfigFile.projects),
-        projectConfig,
-      ],
-    });
-
     logger.success(
-      `"${projectConfig.label ||
-        projectConfig.name}" creation succeeded in account ${accountId}`
+      `"${projectConfig.name}" creation succeeded in account ${accountId}`
     );
   } catch (e) {
     if (e.statusCode === 409) {
-      logger.debug(
-        `Project ${projectConfig.name} already exists. Updating project config file...`
+      logger.log(
+        `Project ${projectConfig.name} already exists in ${accountId}.`
       );
-      const filteredProjects = projectConfigFile.projects
-        ? projectConfigFile.projects.filter(
-            project => project.name !== projectConfig.name
-          )
-        : [];
-      writeProjectConfig(path.join(cwd, 'hsproject.json'), {
-        ...projectConfigFile,
-        projects: [...filteredProjects, projectConfig],
-      });
     } else {
-      logApiErrorInstance(
+      return logApiErrorInstance(
         accountId,
         e,
         new ApiErrorContext({ accountId, projectPath })
       );
     }
   }
+  logger.log('');
+  logger.log('> Welcome to HubSpot Developer Projects!');
+  logger.log('-------------------------------------------------------------');
+  logger.log('Getting Started');
+  logger.log('1. hs project upload');
+  logger.log(
+    '   Upload your project files to HubSpot. Upload action adds your files to a build.'
+  );
+  logger.log();
+  logger.log('2. View your changes on the preview build url');
+  logger.log();
+  logger.log('Use `hs project --help` to learn more about the command.');
+  logger.log('-------------------------------------------------------------');
 };
 
 exports.builder = yargs => {
@@ -150,16 +140,8 @@ exports.builder = yargs => {
       describe: 'Project name (cannot be changed)',
       type: 'string',
     },
-    projectDir: {
+    srcDir: {
       describe: 'Directory of project',
-      type: 'string',
-    },
-    label: {
-      describe: 'Project label',
-      type: 'string',
-    },
-    description: {
-      describe: 'Description of project',
       type: 'string',
     },
   });
