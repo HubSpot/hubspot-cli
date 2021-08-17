@@ -19,7 +19,7 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
-const { getCwd } = require('../../../cli-lib/path');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
 const { getOrCreateProjectConfig } = require('../../lib/projects');
 
