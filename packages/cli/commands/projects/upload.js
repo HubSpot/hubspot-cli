@@ -28,6 +28,7 @@ const {
   getProjectConfig,
   validateProjectConfig,
 } = require('../../lib/projects');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -104,10 +105,9 @@ exports.handler = async options => {
 
   archive.pipe(output);
 
-  archive.glob('**/*', {
-    cwd: path.resolve(cwd, projectConfig.srcDir),
-    ignore: ['.*'],
-  });
+  archive.directory(path.resolve(cwd, projectConfig.srcDir), false, file =>
+    shouldIgnoreFile(file.name) ? false : file
+  );
 
   archive.finalize();
 };
