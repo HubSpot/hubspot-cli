@@ -14,7 +14,6 @@ async function fetchProjects(portalId) {
     uri: DEVELOPER_FILE_SYSTEM_API_PATH,
   });
 }
-// TODO: paging?
 
 /**
  * Create project

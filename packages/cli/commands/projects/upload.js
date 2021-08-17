@@ -5,7 +5,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-// const { trackCommandUsage } = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const {
   loadConfig,
@@ -71,8 +71,7 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  // TODO:
-  // trackCommandUsage('projects-upload', { projectPath }, accountId);
+  trackCommandUsage('projects-upload', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const projectConfig = await getProjectConfig(cwd);

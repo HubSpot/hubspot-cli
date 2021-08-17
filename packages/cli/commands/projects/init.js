@@ -5,7 +5,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-// const { trackCommandUsage } = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const {
   loadConfig,
@@ -44,8 +44,7 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  // TODO:
-  // trackCommandUsage('projects-init', { projectPath }, accountId);
+  trackCommandUsage('projects-init', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const projectConfig = await getOrCreateProjectConfig(cwd);
@@ -91,7 +90,7 @@ exports.builder = yargs => {
     describe: 'Path to a project folder',
     type: 'string',
   });
-  // TODO:
+  // TODO: These are not currently used
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
