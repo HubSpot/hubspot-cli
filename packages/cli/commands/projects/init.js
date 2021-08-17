@@ -19,11 +19,9 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
-const { prompt } = require('inquirer');
-const fs = require('fs');
-const findup = require('findup-sync');
 const { getCwd } = require('../../../cli-lib/path');
 const path = require('path');
+const { getOrCreateProjectConfig } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -34,47 +32,6 @@ const loadAndValidateOptions = async options => {
 
   if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(1);
-  }
-};
-
-const writeProjectConfig = (configPath, config) => {
-  try {
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    logger.debug(`Wrote project config at ${configPath}`);
-  } catch (e) {
-    logger.error(`Could not write project config at ${configPath}`);
-  }
-};
-
-const getOrCreateProjectConfig = async projectPath => {
-  const configPath = findup('hsproject.json', {
-    cwd: projectPath,
-    nocase: true,
-  });
-
-  if (!configPath) {
-    const { name, srcDir } = await prompt([
-      {
-        name: 'name',
-        message: 'name',
-      },
-      {
-        name: 'srcDir',
-        message: 'srcDir',
-      },
-    ]);
-    writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
-      name,
-      srcDir,
-    });
-    return { name, srcDir };
-  } else {
-    try {
-      const projectConfig = fs.readFileSync(configPath);
-      return JSON.parse(projectConfig);
-    } catch (e) {
-      logger.error('Could not read from project config');
-    }
   }
 };
 
@@ -134,7 +91,7 @@ exports.builder = yargs => {
     describe: 'Path to a project folder',
     type: 'string',
   });
-
+  // TODO:
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',

@@ -20,12 +20,14 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const fs = require('fs');
-const findup = require('findup-sync');
 const { getCwd } = require('../../../cli-lib/path');
 const path = require('path');
 const archiver = require('archiver');
 const tmp = require('tmp');
-const { prompt } = require('inquirer');
+const {
+  getProjectConfig,
+  validateProjectConfig,
+} = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -41,23 +43,6 @@ const loadAndValidateOptions = async options => {
 
 exports.command = 'upload [path]';
 exports.describe = false;
-
-const getProjectConfig = p => {
-  const projectDirectory = findup('hsproject.json', {
-    cwd: p,
-    nocase: true,
-  });
-
-  if (!projectDirectory) {
-    return {};
-  }
-  try {
-    const projectConfig = fs.readFileSync(projectDirectory);
-    return JSON.parse(projectConfig);
-  } catch (e) {
-    logger.error('Could not read from project config');
-  }
-};
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   logger.log(`Uploading project '${projectName}'...`);
@@ -82,64 +67,32 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name } = options;
+  const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
   // TODO:
   // trackCommandUsage('projects-upload', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const { projects } = await getProjectConfig(cwd);
+  const projectConfig = await getProjectConfig(cwd);
 
-  if (!projects) {
-    return logger.error(
-      `No projects found in ${cwd}. Try running 'hs project init' first.`
-    );
-  }
+  validateProjectConfig(projectConfig);
 
-  const projectsForAccount = projects.filter(p => p.accountId === accountId);
+  const tempFile = tmp.fileSync({ postfix: '.zip' });
 
-  let currentProject;
-  if (name) {
-    currentProject = projectsForAccount.find(p => p.name === name);
+  logger.log(`Compressing build files to '${tempFile.name}'`);
 
-    if (!currentProject) {
-      return logger.error(
-        `Project '${name}' does not exist. Try running 'hs project init' first.`
-      );
-    }
-  }
-
-  if (projectsForAccount.length > 1) {
-    const projectNamePrompt = await prompt({
-      name: 'projectName',
-      message: 'Which project would you like to upload?',
-      type: 'list',
-      choices: projectsForAccount.map(p => p.name),
-    });
-    console.log('selectedName', projectNamePrompt.projectName);
-    currentProject = projectsForAccount.find(
-      p => p.name === projectNamePrompt.projectName
-    );
-  } else {
-    currentProject = projectsForAccount[0];
-  }
-
-  const tmpFile = tmp.fileSync({ postfix: '.zip' });
-
-  logger.log(`Compressing build files to '${tmpFile.name}'`);
-
-  const output = fs.createWriteStream(tmpFile.name);
+  const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
   output.on('close', async function() {
     logger.log(`Project files compressed: ${archive.pointer()} bytes`);
 
-    await uploadProjectFiles(accountId, currentProject.name, tmpFile.name);
+    await uploadProjectFiles(accountId, projectConfig.name, tempFile.name);
 
     try {
-      tmpFile.removeCallback();
-      logger.debug(`Cleaned up temporary file ${tmpFile.name}`);
+      tempFile.removeCallback();
+      logger.debug(`Cleaned up temporary file ${tempFile.name}`);
     } catch (e) {
       logger.error(e);
     }
@@ -150,13 +103,11 @@ exports.handler = async options => {
   });
 
   archive.pipe(output);
-  console.log(path.resolve(cwd, currentProject.projectDir));
 
   archive.glob('**/*', {
-    cwd: path.resolve(cwd, currentProject.projectDir),
+    cwd: path.resolve(cwd, projectConfig.srcDir),
     ignore: ['.*'],
   });
-  // archive.directory(path.resolve(cwd, currentProject.projectDir), false);
 
   archive.finalize();
 };
@@ -165,13 +116,6 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: 'Path to a project folder',
     type: 'string',
-  });
-
-  yargs.options({
-    name: {
-      describe: 'Project name',
-      type: 'string',
-    },
   });
 
   yargs.example([['$0 project upload myProjectFolder', 'Upload a project']]);
