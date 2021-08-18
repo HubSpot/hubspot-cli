@@ -21,7 +21,10 @@ const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const { getOrCreateProjectConfig } = require('../../lib/projects');
+const {
+  getOrCreateProjectConfig,
+  getProjectDetailUrl,
+} = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -70,8 +73,14 @@ exports.handler = async options => {
       );
     }
   }
+
+  const projectDetailUrl = getProjectDetailUrl(projectConfig.name, accountId);
   logger.log('');
   logger.log('> Welcome to HubSpot Developer Projects!');
+  logger.log('');
+  if (projectDetailUrl) {
+    logger.log(`View this project at: ${projectDetailUrl}`);
+  }
   logger.log('-------------------------------------------------------------');
   logger.log('Getting Started');
   logger.log('1. hs project upload');

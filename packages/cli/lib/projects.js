@@ -1,8 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
 const writeProjectConfig = (configPath, config) => {
   try {
@@ -71,9 +75,20 @@ const validateProjectConfig = projectConfig => {
   }
 };
 
+const getProjectDetailUrl = (projectName, accountId) => {
+  if (!projectName) return;
+
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
+  return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
   getOrCreateProjectConfig,
   validateProjectConfig,
+  getProjectDetailUrl,
 };
