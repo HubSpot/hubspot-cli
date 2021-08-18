@@ -19,9 +19,7 @@ const ANNOTATION_KEYS = {
 const getFileAnnotations = filePath => {
   try {
     const data = fs.readFileSync(filePath, 'utf8');
-    const match = data.match(ANNOTATIONS_REGEX);
-    const annotation = match && match[1] ? match[1] : '';
-    return annotation;
+    return getAnnotationsFromSource(data);
   } catch (err) {
     logger.debug(err);
     return '';
@@ -29,13 +27,9 @@ const getFileAnnotations = filePath => {
 };
 
 const getAnnotationsFromSource = source => {
-  try {
-    const match = source.match(ANNOTATIONS_REGEX);
-    const annotation = match && match[1] ? match[1] : '';
-    return annotation;
-  } catch (err) {
-    return '';
-  }
+  const match = source.match(ANNOTATIONS_REGEX);
+  const annotation = match && match[1] ? match[1] : '';
+  return annotation;
 };
 
 const getAnnotationValue = (annotations, key) => {
