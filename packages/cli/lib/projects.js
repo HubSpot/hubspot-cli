@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const chalk = require('chalk');
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -85,10 +86,37 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
 };
 
+const showWelcomeMessage = (projectName, accountId) => {
+  const projectDetailUrl = getProjectDetailUrl(projectName, accountId);
+
+  logger.log('');
+  logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
+  logger.log(
+    '\n-------------------------------------------------------------\n'
+  );
+  if (projectDetailUrl) {
+    logger.log(chalk.italic(`View this project at: ${projectDetailUrl}`));
+  }
+  logger.log('');
+  logger.log(chalk.bold('Getting Started'));
+  logger.log('');
+  logger.log('1. hs project upload');
+  logger.log(
+    '   Upload your project files to HubSpot. Upload action adds your files to a build.'
+  );
+  logger.log();
+  logger.log('2. View your changes on the preview build url');
+  logger.log();
+  logger.log('Use `hs project --help` to learn more about the command.');
+  logger.log(
+    '\n-------------------------------------------------------------\n'
+  );
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
   getOrCreateProjectConfig,
   validateProjectConfig,
-  getProjectDetailUrl,
+  showWelcomeMessage,
 };
