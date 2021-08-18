@@ -36,6 +36,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { validateAccount, validateMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
+const { FUNCTION_FOLDER_REGEX } = require('@hubspot/cli-lib/lib/regex');
 
 exports.command = 'upload <src> <dest>';
 exports.describe =
@@ -121,6 +122,13 @@ exports.handler = async options => {
       getFileMapperQueryValues({ mode, options })
     )
       .then(() => {
+        const functionFolderPath = absoluteSrcPath.match(FUNCTION_FOLDER_REGEX);
+        if (functionFolderPath.length) {
+          logger.warn(
+            `${functionFolderPath[0]} has not been deployed. Run 'hs functions deploy' to complete the deployment process.`
+          );
+        }
+
         logger.success(
           'Uploaded file from "%s" to "%s" in the Design Manager of account %s',
           src,

@@ -18,6 +18,7 @@ const {
   logApiUploadErrorInstance,
   isFatalError,
 } = require('../errorHandlers');
+const { FUNCTION_FOLDER_REGEX } = require('./regex');
 
 const queue = new PQueue({
   concurrency: 10,
@@ -60,6 +61,7 @@ function getFilesByType(files) {
 async function uploadFolder(accountId, src, dest, options) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const files = await walk(src);
+  let functionFolders = [];
 
   const allowedFiles = files
     .filter(file => {
@@ -78,6 +80,11 @@ async function uploadFolder(accountId, src, dest, options) {
   const uploadFile = file => {
     const relativePath = file.replace(regex, '');
     const destPath = convertToUnixPath(path.join(dest, relativePath));
+    const functionFolder = relativePath.match(FUNCTION_FOLDER_REGEX);
+
+    if (functionFolder && functionFolders.indexOf(functionFolder[0]) === -1) {
+      functionFolders.push(functionFolder[0]);
+    }
 
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
@@ -110,6 +117,18 @@ async function uploadFolder(accountId, src, dest, options) {
   for (let i = 0; i < filesByType.length; i++) {
     const filesToUpload = filesByType[i];
     await queue.addAll(filesToUpload.map(uploadFile));
+  }
+
+  if (functionFolders.length === 1) {
+    logger.warn(
+      `${functionFolders[0]} has not been deployed. Run 'hs functions deploy' to complete the deployment process.`
+    );
+  } else if (functionFolders.length > 1) {
+    logger.warn(
+      `${functionFolders.join(
+        ', '
+      )} have not been deployed. Run 'hs functions deploy' for each function folder to complete the deployment process.`
+    );
   }
 
   return queue.addAll(
