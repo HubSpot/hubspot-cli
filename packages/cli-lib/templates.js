@@ -1,6 +1,3 @@
-const fs = require('fs');
-const { logger } = require('./logger');
-
 // Matches the .html file extension, excluding module.html
 const TEMPLATE_EXTENSION_REGEX = new RegExp(/(?<!module)\.html$/);
 
@@ -16,26 +13,16 @@ const ANNOTATION_KEYS = {
   screenshotPath: 'screenshotPath',
 };
 
-const getFileAnnotations = filePath => {
-  try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    return getAnnotationsFromSource(data);
-  } catch (err) {
-    logger.debug(err);
-    return '';
-  }
-};
-
-const getAnnotationsFromSource = source => {
-  const match = source.match(ANNOTATIONS_REGEX);
-  const annotation = match && match[1] ? match[1] : '';
-  return annotation;
-};
-
 const getAnnotationValue = (annotations, key) => {
   const valueRegex = new RegExp(`${key}${ANNOTATION_VALUE_REGEX}`);
   const match = annotations.match(valueRegex);
   return match ? match[1].trim() : null;
+};
+
+const buildAnnotationValueGetter = source => {
+  const match = source.match(ANNOTATIONS_REGEX);
+  const annotation = match && match[1] ? match[1] : '';
+  return annotationKey => getAnnotationValue(annotation, annotationKey);
 };
 
 /*
@@ -47,7 +34,6 @@ const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 module.exports = {
   ANNOTATION_KEYS,
   getAnnotationValue,
-  getAnnotationsFromSource,
-  getFileAnnotations,
+  buildAnnotationValueGetter,
   isCodedFile,
 };

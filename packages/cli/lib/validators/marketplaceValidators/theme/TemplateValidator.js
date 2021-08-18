@@ -1,11 +1,12 @@
+const fs = require('fs');
 const {
   ANNOTATION_KEYS,
-  getAnnotationValue,
-  getFileAnnotations,
+  buildAnnotationValueGetter,
   isCodedFile,
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const TEMPLATE_LIMIT = 50;
 const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
@@ -99,24 +100,23 @@ class TemplateValidator extends BaseValidator {
 
     files.forEach(file => {
       if (isCodedFile(file)) {
-        const annotations = getFileAnnotations(file);
+        let data;
+        try {
+          data = fs.readFileSync(file, 'utf8');
+        } catch (e) {
+          logger.error(`Error reading file ${file}`);
+        }
+        const getAnnotationValue = buildAnnotationValueGetter(data);
+
         const isAvailableForNewContent = getAnnotationValue(
-          annotations,
           ANNOTATION_KEYS.isAvailableForNewContent
         );
 
         if (isAvailableForNewContent !== 'false') {
-          const templateType = getAnnotationValue(
-            annotations,
-            ANNOTATION_KEYS.templateType
-          );
+          const templateType = getAnnotationValue(ANNOTATION_KEYS.templateType);
           if (templateType) {
-            const label = getAnnotationValue(
-              annotations,
-              ANNOTATION_KEYS.label
-            );
+            const label = getAnnotationValue(ANNOTATION_KEYS.label);
             const screenshotPath = getAnnotationValue(
-              annotations,
               ANNOTATION_KEYS.screenshotPath
             );
 
