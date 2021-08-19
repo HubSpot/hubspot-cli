@@ -1,7 +1,8 @@
 const http = require('../http');
 const fs = require('fs');
 
-const DEVELOPER_FILE_SYSTEM_API_PATH = 'dfs/v1/projects';
+const PROJECTS_API_PATH = 'dfs/v1/projects';
+const BUILD_STATUS_PATH = 'dfs-status/v1/project';
 
 /**
  * Fetch projects
@@ -11,7 +12,7 @@ const DEVELOPER_FILE_SYSTEM_API_PATH = 'dfs/v1/projects';
  */
 async function fetchProjects(portalId) {
   return http.get(portalId, {
-    uri: DEVELOPER_FILE_SYSTEM_API_PATH,
+    uri: PROJECTS_API_PATH,
   });
 }
 
@@ -24,7 +25,7 @@ async function fetchProjects(portalId) {
  */
 async function createProject(portalId, name) {
   return http.post(portalId, {
-    uri: DEVELOPER_FILE_SYSTEM_API_PATH,
+    uri: PROJECTS_API_PATH,
     body: {
       name,
     },
@@ -41,7 +42,7 @@ async function createProject(portalId, name) {
  */
 async function uploadProject(accountId, projectName, projectFile) {
   return http.post(accountId, {
-    uri: `${DEVELOPER_FILE_SYSTEM_API_PATH}/upload/${projectName}`,
+    uri: `${PROJECTS_API_PATH}/upload/${projectName}`,
     timeout: 60000,
     formData: {
       file: fs.createReadStream(projectFile),
@@ -58,7 +59,7 @@ async function uploadProject(accountId, projectName, projectFile) {
  */
 async function fetchProject(portalId, name) {
   return http.get(portalId, {
-    uri: `${DEVELOPER_FILE_SYSTEM_API_PATH}/${name}`,
+    uri: `${PROJECTS_API_PATH}/${name}`,
   });
 }
 
@@ -71,7 +72,20 @@ async function fetchProject(portalId, name) {
  */
 async function deleteProject(portalId, name) {
   return http.delete(portalId, {
-    uri: `${DEVELOPER_FILE_SYSTEM_API_PATH}/${name}`,
+    uri: `${PROJECTS_API_PATH}/${name}`,
+  });
+}
+
+/**
+ * Get project build status
+ *
+ * @async
+ * @param {string} name
+ * @returns {Promise}
+ */
+async function getBuildStatus(portalId, name, buildId) {
+  return http.get(portalId, {
+    uri: `${BUILD_STATUS_PATH}/${name}/build/${buildId}`,
   });
 }
 
@@ -81,4 +95,5 @@ module.exports = {
   uploadProject,
   fetchProject,
   deleteProject,
+  getBuildStatus,
 };

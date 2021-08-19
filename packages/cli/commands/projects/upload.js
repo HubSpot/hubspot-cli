@@ -27,6 +27,7 @@ const tmp = require('tmp');
 const {
   getProjectConfig,
   validateProjectConfig,
+  pollBuildStatus,
 } = require('../../lib/projects');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
@@ -49,7 +50,11 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   logger.log(`Uploading project '${projectName}'...`);
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
-    logger.log(`Project uploaded and build #${upload.buildId} created`);
+
+    logger.log(
+      `Project "${projectName}" uploaded and build #${upload.buildId} created`
+    );
+    await pollBuildStatus(accountId, projectName, upload.buildId);
   } catch (err) {
     if (err.statusCode === 404) {
       return logger.error(

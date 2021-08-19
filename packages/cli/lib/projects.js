@@ -4,10 +4,15 @@ const path = require('path');
 const chalk = require('chalk');
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
+const ora = require('ora');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  ENVIRONMENTS,
+  POLLING_DELAY,
+} = require('@hubspot/cli-lib/lib/constants');
+const { getBuildStatus } = require('@hubspot/cli-lib/api/dfs');
 
 const writeProjectConfig = (configPath, config) => {
   try {
@@ -113,10 +118,29 @@ const showWelcomeMessage = (projectName, accountId) => {
   );
 };
 
+const pollBuildStatus = (accountId, name, buildId) => {
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      const spinner = ora(`Go\n`).start();
+      const pollResp = await getBuildStatus(accountId, name, buildId);
+      const { status } = pollResp;
+      spinner.stop();
+      if (status === 'SUCCESS') {
+        clearInterval(pollInterval);
+        resolve(pollResp);
+      } else if (status === 'ERROR') {
+        clearInterval(pollInterval);
+        reject(pollResp);
+      }
+    }, POLLING_DELAY);
+  });
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
   getOrCreateProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
+  pollBuildStatus,
 };
