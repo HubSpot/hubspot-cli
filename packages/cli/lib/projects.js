@@ -4,7 +4,7 @@ const path = require('path');
 const chalk = require('chalk');
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
-const ora = require('ora');
+const Spinnies = require('Spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
@@ -118,19 +118,53 @@ const showWelcomeMessage = (projectName, accountId) => {
   );
 };
 
-const pollBuildStatus = (accountId, name, buildId) => {
+const pollBuildStatus = async (accountId, name, buildId) => {
+  const buildStatus = await getBuildStatus(accountId, name, buildId);
+  const spinnies = new Spinnies();
+
+  logger.log('Project building...');
+  for (let subBuild of buildStatus.subbuildStatuses) {
+    spinnies.add(subBuild.buildName, {
+      text: `The build for "${subBuild.buildName}" has not started`,
+    });
+  }
+
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
-      const spinner = ora(`Go\n`).start();
-      const pollResp = await getBuildStatus(accountId, name, buildId);
-      const { status } = pollResp;
-      spinner.stop();
+      const { status, subbuildStatuses } = await getBuildStatus(
+        accountId,
+        name,
+        buildId
+      );
+
+      subbuildStatuses.forEach(subBuild => {
+        switch (subBuild.status) {
+          case 'SUCCESS':
+            spinnies.succeed(subBuild.buildName, {
+              text: `The build for "${subBuild.buildName}" has succeeded`,
+            });
+            break;
+          case 'FAILURE':
+            spinnies.fail(subBuild.buildName, {
+              text: `The build for "${subBuild.buildName}" has failed`,
+            });
+            break;
+          default:
+            spinnies.update(subBuild.buildName, {
+              text: `The build for "${subBuild.buildName}" is ${subBuild.status}`,
+            });
+            break;
+        }
+      });
+
       if (status === 'SUCCESS') {
+        logger.success('Build finished successfully');
         clearInterval(pollInterval);
-        resolve(pollResp);
+        resolve(buildStatus);
       } else if (status === 'ERROR') {
+        logger.error('Build failed');
         clearInterval(pollInterval);
-        reject(pollResp);
+        reject(buildStatus);
       }
     }, POLLING_DELAY);
   });
