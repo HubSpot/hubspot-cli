@@ -9,7 +9,7 @@ module.exports = {
     loadAndValidateOptions(options);
     const accountId = getAccountId(options);
     const promptValues = await prompt();
-    const sandbox = createSandbox(accountId, promptValues);
+    const sandbox = createSandbox(accountId, promptValues.name);
 
     return sandbox;
   },

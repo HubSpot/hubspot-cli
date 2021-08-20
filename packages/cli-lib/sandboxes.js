@@ -1,4 +1,5 @@
 const { createSandbox: _createSandbox } = require('./api/sandbox-hubs');
+const { logger } = require('./logger');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -6,7 +7,14 @@ const { createSandbox: _createSandbox } = require('./api/sandbox-hubs');
  * @returns {Object} A new Sandbox portal instance.
  */
 async function createSandbox(accountId, name) {
-  const resp = await _createSandbox(accountId, name);
+  let resp;
+
+  try {
+    resp = await _createSandbox(accountId, name);
+  } catch (err) {
+    logger.error(err.error.message);
+  }
+
   return {
     name,
     ...resp,
