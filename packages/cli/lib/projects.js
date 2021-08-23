@@ -14,6 +14,27 @@ const {
 } = require('@hubspot/cli-lib/lib/constants');
 const { getBuildStatus } = require('@hubspot/cli-lib/api/dfs');
 
+const BUILD_STATUS = {
+  BUILDING: 'BUILDING',
+  ENQUEUED: 'ENQUEUED',
+  FAILURE: 'FAILURE',
+  SUCCESS: 'SUCCESS',
+};
+
+const BUILD_STATUS_TEXT = {
+  [BUILD_STATUS.BUILDING]: 'is building',
+  [BUILD_STATUS.ENQUEUED]: 'is queued',
+  [BUILD_STATUS.FAILURE]: 'failed to build',
+  [BUILD_STATUS.SUCCESS]: 'built successfully',
+};
+
+const isBuildComplete = build => {
+  return (
+    build.status === BUILD_STATUS.SUCCESS ||
+    build.status === BUILD_STATUS.FAILURE
+  );
+};
+
 const writeProjectConfig = (configPath, config) => {
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -122,49 +143,64 @@ const pollBuildStatus = async (accountId, name, buildId) => {
   const buildStatus = await getBuildStatus(accountId, name, buildId);
   const spinnies = new Spinnies();
 
-  logger.log('Project building...');
+  logger.log(`Building project ${name}...`);
   for (let subBuild of buildStatus.subbuildStatuses) {
     spinnies.add(subBuild.buildName, {
-      text: `The build for "${subBuild.buildName}" has not started`,
+      text: `"${subBuild.buildName}" ${
+        BUILD_STATUS_TEXT[BUILD_STATUS.ENQUEUED]
+      }`,
     });
   }
 
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
-      const { status, subbuildStatuses } = await getBuildStatus(
-        accountId,
-        name,
-        buildId
+      const buildStatus = await getBuildStatus(accountId, name, buildId).catch(
+        reject
       );
+      const { status, subbuildStatuses } = buildStatus;
 
-      subbuildStatuses.forEach(subBuild => {
-        switch (subBuild.status) {
-          case 'SUCCESS':
-            spinnies.succeed(subBuild.buildName, {
-              text: `The build for "${subBuild.buildName}" has succeeded`,
-            });
-            break;
-          case 'FAILURE':
-            spinnies.fail(subBuild.buildName, {
-              text: `The build for "${subBuild.buildName}" has failed`,
-            });
-            break;
-          default:
-            spinnies.update(subBuild.buildName, {
-              text: `The build for "${subBuild.buildName}" is ${subBuild.status}`,
-            });
-            break;
+      if (Object.keys(spinnies.spinners).length) {
+        subbuildStatuses.forEach(subBuild => {
+          const updatedText = `"${subBuild.buildName}" ${
+            BUILD_STATUS_TEXT[subBuild.status]
+          }`;
+
+          switch (subBuild.status) {
+            case BUILD_STATUS.SUCCESS:
+              spinnies.succeed(subBuild.buildName, {
+                text: updatedText,
+              });
+              break;
+            case BUILD_STATUS.FAILURE:
+              spinnies.fail(subBuild.buildName, {
+                text: updatedText,
+              });
+              break;
+            default:
+              spinnies.update(subBuild.buildName, {
+                text: updatedText,
+              });
+              break;
+          }
+        });
+      }
+
+      if (isBuildComplete(buildStatus)) {
+        clearInterval(pollInterval);
+
+        if (status === BUILD_STATUS.SUCCESS) {
+          logger.success(`Your project ${name} ${BUILD_STATUS_TEXT[status]}.`);
+        } else if (status === BUILD_STATUS.FAILURE) {
+          logger.error(`Your project ${name} ${BUILD_STATUS_TEXT[status]}.`);
+          subbuildStatuses.forEach(subBuild => {
+            if (subBuild.status === BUILD_STATUS.FAILURE) {
+              logger.error(
+                `${subBuild.buildName} failed to build. ${subBuild.errorMessage}.`
+              );
+            }
+          });
         }
-      });
-
-      if (status === 'SUCCESS') {
-        logger.success('Build finished successfully');
-        clearInterval(pollInterval);
         resolve(buildStatus);
-      } else if (status === 'ERROR') {
-        logger.error('Build failed');
-        clearInterval(pollInterval);
-        reject(buildStatus);
       }
     }, POLLING_DELAY);
   });
