@@ -17,14 +17,8 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { createProject } = require('@hubspot/cli-lib/api/dfs');
+const { deployProject } = require('@hubspot/cli-lib/api/fileMapper');
 const { validateAccount } = require('../../lib/validation');
-const { getCwd } = require('@hubspot/cli-lib/path');
-const path = require('path');
-const {
-  getOrCreateProjectConfig,
-  showWelcomeMessage,
-} = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -38,7 +32,7 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'init [path]';
+exports.command = 'deploy <path>';
 exports.describe = false;
 
 exports.handler = async options => {
@@ -47,34 +41,32 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('projects-init', { projectPath }, accountId);
+  trackCommandUsage('project-deploy', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getOrCreateProjectConfig(cwd);
-
-  logger.log(`Initializing project: ${projectConfig.name}`);
+  logger.debug(`Deploying project at path: ${projectPath}`);
 
   try {
-    await createProject(accountId, projectConfig.name);
+    const deployResp = await deployProject(accountId, projectPath);
+
+    if (deployResp.error) {
+      logger.error(`Deploy error: ${deployResp.error.message}`);
+      return;
+    }
 
     logger.success(
-      `"${projectConfig.name}" creation succeeded in account ${accountId}`
+      `Deployed project in ${projectPath} on account ${accountId}.`
     );
   } catch (e) {
-    if (e.statusCode === 409) {
-      logger.log(
-        `Project ${projectConfig.name} already exists in ${accountId}.`
-      );
+    if (e.statusCode === 400) {
+      logger.error(e.error.message);
     } else {
-      return logApiErrorInstance(
+      logApiErrorInstance(
         accountId,
         e,
         new ApiErrorContext({ accountId, projectPath })
       );
     }
   }
-
-  showWelcomeMessage(projectConfig.name, accountId);
 };
 
 exports.builder = yargs => {
@@ -82,22 +74,11 @@ exports.builder = yargs => {
     describe: 'Path to a project folder',
     type: 'string',
   });
-  // TODO: These are not currently used
-  yargs.options({
-    name: {
-      describe: 'Project name (cannot be changed)',
-      type: 'string',
-    },
-    srcDir: {
-      describe: 'Directory of project',
-      type: 'string',
-    },
-  });
 
   yargs.example([
     [
-      '$0 project init myProjectFolder',
-      'Initialize a project within the myProjectFolder folder',
+      '$0 project deploy myProjectFolder',
+      'Deploy a project within the myProjectFolder folder',
     ],
   ]);
 

@@ -27,6 +27,7 @@ const tmp = require('tmp');
 const {
   getProjectConfig,
   validateProjectConfig,
+  pollBuildStatus,
 } = require('../../lib/projects');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
@@ -49,7 +50,11 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   logger.log(`Uploading project '${projectName}'...`);
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
-    logger.log(`Project uploaded and build #${upload.buildId} created`);
+
+    logger.log(
+      `Project "${projectName}" uploaded and build #${upload.buildId} created`
+    );
+    await pollBuildStatus(accountId, projectName, upload.buildId);
   } catch (err) {
     if (err.statusCode === 404) {
       return logger.error(
@@ -71,7 +76,7 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('projects-upload', { projectPath }, accountId);
+  trackCommandUsage('project-upload', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const projectConfig = await getProjectConfig(cwd);
@@ -80,13 +85,13 @@ exports.handler = async options => {
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
-  logger.log(`Compressing build files to '${tempFile.name}'`);
+  logger.debug(`Compressing build files to '${tempFile.name}'`);
 
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
   output.on('close', async function() {
-    logger.log(`Project files compressed: ${archive.pointer()} bytes`);
+    logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
     await uploadProjectFiles(accountId, projectConfig.name, tempFile.name);
 
