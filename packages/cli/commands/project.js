@@ -3,9 +3,9 @@ const {
   addAccountOptions,
   addOverwriteOptions,
 } = require('../lib/commonOpts');
-const deploy = require('./projects/deploy');
-const init = require('./projects/init');
-const upload = require('./projects/upload');
+const deploy = require('./project/deploy');
+const init = require('./project/init');
+const upload = require('./project/upload');
 
 exports.command = 'project';
 exports.describe = false; //'Commands for working with projects';
