@@ -120,11 +120,11 @@ async function uploadFolder(accountId, src, dest, options) {
   }
 
   if (functionFolders.length === 1) {
-    logger.warn(
+    logger.info(
       `${functionFolders[0]} has not been deployed. Run 'hs functions deploy' to complete the deployment process.`
     );
   } else if (functionFolders.length > 1) {
-    logger.warn(
+    logger.info(
       `${functionFolders.join(
         ', '
       )} have not been deployed. Run 'hs functions deploy' for each function folder to complete the deployment process.`

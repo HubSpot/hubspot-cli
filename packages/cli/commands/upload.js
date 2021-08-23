@@ -124,7 +124,7 @@ exports.handler = async options => {
       .then(() => {
         const functionFolderPath = absoluteSrcPath.match(FUNCTION_FOLDER_REGEX);
         if (functionFolderPath.length) {
-          logger.warn(
+          logger.info(
             `${functionFolderPath[0]} has not been deployed. Run 'hs functions deploy' to complete the deployment process.`
           );
         }
