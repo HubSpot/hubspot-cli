@@ -5,5 +5,5 @@
     "packages/*",
     "acceptance-tests"
   ],
-  "version": "3.0.7-beta.5"
+  "version": "3.0.7-beta.9"
 }

@@ -41,7 +41,7 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('projects-deploy', { projectPath }, accountId);
+  trackCommandUsage('project-deploy', { projectPath }, accountId);
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 
@@ -77,7 +77,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 projects deploy myProjectFolder',
+      '$0 project deploy myProjectFolder',
       'Deploy a project within the myProjectFolder folder',
     ],
   ]);
