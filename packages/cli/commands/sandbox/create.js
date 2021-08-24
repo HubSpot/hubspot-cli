@@ -29,15 +29,15 @@ exports.handler = async options => {
 
   const sandboxName = name || namePrompt.name;
 
-  logger.debug(`Creating sandbox "${sandboxName}"`);
+  logger.debug(`Creating sandbox '${sandboxName}'`);
 
   return createSandbox(accountId, sandboxName).then(
     ({ name, sandboxHubId }) => {
       logger.success(
-        `Sandbox "${name}" with portalId "${sandboxHubId}" created successfully.`
+        `Sandbox '${name}' with portalId '${sandboxHubId}' created successfully.`
       );
       logger.info(
-        `Run "hs auth" to authenticate with the new sandbox account.`
+        `Run 'hs auth' to authenticate with the new sandbox account.`
       );
     }
   );
