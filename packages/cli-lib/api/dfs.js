@@ -2,7 +2,6 @@ const http = require('../http');
 const fs = require('fs');
 
 const PROJECTS_API_PATH = 'dfs/v1/projects';
-const BUILD_STATUS_PATH = 'dfs-status/v1/project';
 
 /**
  * Fetch projects
@@ -83,9 +82,9 @@ async function deleteProject(portalId, name) {
  * @param {string} name
  * @returns {Promise}
  */
-async function getBuildStatus(portalId, name, buildId) {
+async function getBuildStatus(portalId, projectName, buildId) {
   return http.get(portalId, {
-    uri: `${BUILD_STATUS_PATH}/${name}/build/${buildId}`,
+    uri: `${PROJECTS_API_PATH}/${projectName}/builds/${buildId}/status`,
   });
 }
 
