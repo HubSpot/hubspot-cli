@@ -57,11 +57,23 @@ const getOrCreateProjectConfig = async projectPath => {
     const { name, srcDir } = await prompt([
       {
         name: 'name',
-        message: 'name',
+        message: 'Please enter a project name:',
+        validate: input => {
+          if (!input) {
+            return 'A project name is required';
+          }
+          return true;
+        },
       },
       {
         name: 'srcDir',
-        message: 'srcDir',
+        message: 'Which directory contains your project files?',
+        validate: input => {
+          if (!input) {
+            return 'A source directory is required';
+          }
+          return true;
+        },
       },
     ]);
     writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
