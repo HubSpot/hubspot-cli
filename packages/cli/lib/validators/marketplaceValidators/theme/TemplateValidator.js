@@ -3,12 +3,12 @@ const {
   getAnnotationValue,
   getFileAnnotations,
   isCodedFile,
-} = require('@hubspot/cli-lib/templates');
+} = require('@hubspot/cli-lib/assetValidationUtils');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
 const TEMPLATE_LIMIT = 50;
-const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
+const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'section', 'none'];
 const VALIDATIONS_BY_TYPE = {
   page: { allowed: true, label: true, screenshot: true },
   starter_landing_pages: { allowed: false },
@@ -48,6 +48,7 @@ const VALIDATIONS_BY_TYPE = {
   proposal: { allowed: false },
   blog_listing: { allowed: true, label: true, screenshot: true },
   blog_post: { allowed: true, label: true, screenshot: true },
+  section: { allowed: true, label: false, screenshot: false },
 };
 
 class TemplateValidator extends BaseValidator {
@@ -120,7 +121,7 @@ class TemplateValidator extends BaseValidator {
               ANNOTATION_KEYS.screenshotPath
             );
 
-            // Ignore global partials and templates with type of none in count
+            // Ignore global partials, sections, and templates with type of none in count
             if (!TEMPLATE_COUNT_IGNORE_LIST.includes(templateType)) {
               templateCount++;
             }
