@@ -211,7 +211,7 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
   try {
     scopesData = await fetchScopeData(accountId, scopeGroup);
   } catch (e) {
-    logger.debug('Error verifying access');
+    logger.debug(`Error verifying access of scopeGroup ${scopeGroup}: ${e}`);
     return;
   }
   const { portalScopesInGroup, userScopesInGroup } = scopesData;
