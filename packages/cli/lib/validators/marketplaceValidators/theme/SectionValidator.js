@@ -2,7 +2,7 @@ const {
   ANNOTATION_KEYS,
   getAnnotationValue,
   getFileAnnotations,
-} = require('@hubspot/cli-lib/assetValidationUtils');
+} = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
