@@ -6,7 +6,7 @@
 - Removed redundant messaging when passing `--initial-upload` to watch command ([#512](https://github.com/HubSpot/hubspot-cli/pull/512))
 - Improvements to marketplace validation command ([#510](https://github.com/HubSpot/hubspot-cli/pull/510), [#518](https://github.com/HubSpot/hubspot-cli/pull/518), ([#521](https://github.com/HubSpot/hubspot-cli/pull/521)), [#527](https://github.com/HubSpot/hubspot-cli/pull/527))
 - Bump ws from 7.4.5 to 7.4.6 ([#519](https://github.com/HubSpot/hubspot-cli/pull/519))
-- Refactor `create` command ([](https://github.com/HubSpot/hubspot-cli/pull/514))
+- Refactor `create` command ([#514](https://github.com/HubSpot/hubspot-cli/pull/514))
 - Fixed issue serverless log polling ([#528](https://github.com/HubSpot/hubspot-cli/pull/528))
 - Fixed issue when no serverless logs are available ([#524](https://github.com/HubSpot/hubspot-cli/pull/524))
 - Updated API endpoint for HubDB Publish ([#539](https://github.com/HubSpot/hubspot-cli/pull/539))
