@@ -1,5 +1,6 @@
 const http = require('../http');
 const fs = require('fs');
+const cliProgress = require('cli-progress');
 
 const PROJECTS_API_PATH = 'dfs/v1/projects';
 
@@ -40,11 +41,20 @@ async function createProject(portalId, name) {
  * @returns {Promise}
  */
 async function uploadProject(accountId, projectName, projectFile) {
+  const size = fs.lstatSync(projectFile).size;
+  const progressBar = new cliProgress.Bar();
+
+  let bytes = 0;
+
+  progressBar.start(size, 0);
+
   return http.post(accountId, {
     uri: `${PROJECTS_API_PATH}/upload/${projectName}`,
     timeout: 60000,
     formData: {
-      file: fs.createReadStream(projectFile),
+      file: fs.createReadStream(projectFile).on('data', chunk => {
+        progressBar.update((bytes += chunk.length));
+      }),
     },
   });
 }
