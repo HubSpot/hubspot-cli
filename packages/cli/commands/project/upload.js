@@ -19,6 +19,7 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
+const chalk = require('chalk');
 const fs = require('fs');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
@@ -47,11 +48,15 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  logger.log(`Uploading project '${projectName}'...`);
+  logger.log(
+    `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
+      accountId
+    )}`
+  );
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
 
-    logger.log(
+    logger.debug(
       `Project "${projectName}" uploaded and build #${upload.buildId} created`
     );
     await pollBuildStatus(accountId, projectName, upload.buildId);
