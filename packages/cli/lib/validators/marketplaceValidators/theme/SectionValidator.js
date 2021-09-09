@@ -53,42 +53,34 @@ class SectionValidator extends BaseValidator {
           annotations,
           ANNOTATION_KEYS.templateType
         );
-        const isAvailableForNewContent = getAnnotationValue(
-          annotations,
-          ANNOTATION_KEYS.isAvailableForNewContent
-        );
 
         if (templateType !== 'section') {
           return;
         }
         sectionCount++;
 
-        if (isAvailableForNewContent !== 'false') {
-          const description = getAnnotationValue(
-            annotations,
-            ANNOTATION_KEYS.description
-          );
-          const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
-          const screenshotPath = getAnnotationValue(
-            annotations,
-            ANNOTATION_KEYS.screenshotPath
-          );
+        const description = getAnnotationValue(
+          annotations,
+          ANNOTATION_KEYS.description
+        );
+        const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
+        const screenshotPath = getAnnotationValue(
+          annotations,
+          ANNOTATION_KEYS.screenshotPath
+        );
 
-          if (!description) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_DESCRIPTION, file)
-            );
-          }
-          if (!label) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_LABEL, file)
-            );
-          }
-          if (!screenshotPath) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_SCREENSHOT_PATH, file)
-            );
-          }
+        if (!description) {
+          validationErrors.push(
+            this.getError(this.errors.MISSING_DESCRIPTION, file)
+          );
+        }
+        if (!label) {
+          validationErrors.push(this.getError(this.errors.MISSING_LABEL, file));
+        }
+        if (!screenshotPath) {
+          validationErrors.push(
+            this.getError(this.errors.MISSING_SCREENSHOT_PATH, file)
+          );
         }
       }
     });
