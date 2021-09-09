@@ -1,4 +1,6 @@
 const path = require('path');
+const { https } = require('follow-redirects');
+const FormData = require('form-data');
 const request = require('request');
 const requestPN = require('request-promise-native');
 const fs = require('fs-extra');
@@ -102,6 +104,42 @@ const postRequest = async (accountId, options) => {
   return requestPN.post(await withAuth(accountId, options));
 };
 
+const postStream = async (accountId, options, filePath) => {
+  const { baseUrl, uri, headers } = await withAuth(accountId, options);
+
+  const form = new FormData();
+  form.append('file', fs.createReadStream(filePath));
+
+  const opts = {
+    method: 'POST',
+    headers: {
+      ...form.getHeaders(),
+      ...headers,
+    },
+  };
+
+  const fullUrl = baseUrl + '/' + uri;
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(fullUrl, opts);
+    req.on('response', res => {
+      resolve(res);
+    });
+
+    req.on('socket', s => {
+      s.on('drain', () => {
+        logger.log('drain event - socket bytes written:', s.bytesWritten);
+      });
+    });
+
+    req.on('error', error => {
+      reject(error);
+    });
+
+    form.pipe(req);
+  });
+};
+
 const putRequest = async (accountId, options) => {
   return requestPN.put(await withAuth(accountId, options));
 };
@@ -200,6 +238,7 @@ module.exports = {
     contentType: 'application/octet-stream',
   }),
   post: postRequest,
+  postStream: postStream,
   put: putRequest,
   patch: patchRequest,
   delete: deleteRequest,
