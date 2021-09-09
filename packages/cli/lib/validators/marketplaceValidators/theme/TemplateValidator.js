@@ -8,6 +8,7 @@ const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
 const TEMPLATE_LIMIT = 50;
+const TEMPLATE_IGNORE_LIST = ['section'];
 const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'section', 'none'];
 const VALIDATIONS_BY_TYPE = {
   page: { allowed: true, label: true, screenshot: true },
@@ -48,7 +49,6 @@ const VALIDATIONS_BY_TYPE = {
   proposal: { allowed: false },
   blog_listing: { allowed: true, label: true, screenshot: true },
   blog_post: { allowed: true, label: true, screenshot: true },
-  section: { allowed: true, label: false, screenshot: false },
 };
 
 class TemplateValidator extends BaseValidator {
@@ -111,6 +111,11 @@ class TemplateValidator extends BaseValidator {
             annotations,
             ANNOTATION_KEYS.templateType
           );
+
+          if (TEMPLATE_IGNORE_LIST.includes(templateType)) {
+            return;
+          }
+
           if (templateType) {
             const label = getAnnotationValue(
               annotations,

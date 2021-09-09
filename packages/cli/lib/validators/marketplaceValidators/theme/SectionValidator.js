@@ -37,7 +37,7 @@ class SectionValidator extends BaseValidator {
   }
 
   // Validates:
-  // - All sections have a 'description' annotation
+  // - All sections have a "description" annotation
   // - All sections have a "label" annotation
   // - All sections have a "screenshotPath" annotation
   // - Theme does not have more than SECTION_LIMIT sections
@@ -66,7 +66,7 @@ class SectionValidator extends BaseValidator {
         if (isAvailableForNewContent !== 'false') {
           const description = getAnnotationValue(
             annotations,
-            ANNOTATION_KEYS.descirption
+            ANNOTATION_KEYS.description
           );
           const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
           const screenshotPath = getAnnotationValue(
@@ -90,10 +90,6 @@ class SectionValidator extends BaseValidator {
             );
           }
         }
-      } else {
-        validationErrors.push(
-          this.getError(this.errors.MISSING_TEMPLATE_TYPE, file)
-        );
       }
     });
 
