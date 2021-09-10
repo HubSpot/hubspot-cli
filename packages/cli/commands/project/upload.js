@@ -1,3 +1,8 @@
+const chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
+const tmp = require('tmp');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -18,19 +23,14 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
-const { validateAccount } = require('../../lib/validation');
-const chalk = require('chalk');
-const fs = require('fs');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const path = require('path');
-const archiver = require('archiver');
-const tmp = require('tmp');
+const { validateAccount } = require('../../lib/validation');
 const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
 } = require('../../lib/projects');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
