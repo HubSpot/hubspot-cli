@@ -143,6 +143,7 @@ const pollBuildStatus = async (accountId, name, buildId) => {
   const buildStatus = await getBuildStatus(accountId, name, buildId);
   const spinnies = new Spinnies();
 
+  logger.log();
   logger.log(`Building ${chalk.bold(name)}`);
   logger.log();
   logger.log(`Found ${buildStatus.subbuildStatuses.length} deployables ...`);

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const tmp = require('tmp');
+const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -48,13 +49,22 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  logger.log(
-    `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
+  const spinnies = new Spinnies();
+
+  spinnies.add('upload', {
+    text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
       accountId
-    )}`
-  );
+    )}`,
+  });
+
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
+
+    spinnies.succeed('upload', {
+      text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
+        accountId
+      )}`,
+    });
 
     logger.debug(
       `Project "${projectName}" uploaded and build #${upload.buildId} created`
@@ -66,6 +76,13 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         `Project '${projectName}' does not exist. Try running 'hs project init' first.`
       );
     }
+
+    spinnies.fail('upload', {
+      text: `Failed to upload ${chalk.bold(
+        projectName
+      )} project files to ${chalk.bold(accountId)}`,
+    });
+
     logApiErrorInstance(err, {
       context: new ApiErrorContext({
         accountId,
