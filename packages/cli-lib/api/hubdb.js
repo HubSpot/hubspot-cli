@@ -29,7 +29,7 @@ async function updateTable(accountId, tableId, schema) {
 
 async function publishTable(accountId, tableId) {
   return http.post(accountId, {
-    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/push-live`,
+    uri: `${HUBDB_API_PATH}/tables/${tableId}/draft/publish`,
   });
 }
 

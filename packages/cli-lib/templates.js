@@ -11,6 +11,8 @@ const ANNOTATION_KEYS = {
   templateType: 'templateType',
   label: 'label',
   screenshotPath: 'screenshotPath',
+  // 'description' is specific to Sections
+  description: 'description',
 };
 
 const getAnnotationValue = (annotations, key) => {

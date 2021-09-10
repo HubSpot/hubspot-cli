@@ -6,6 +6,7 @@ const VALIDATION_RESULT = { WARNING, FATAL, SUCCESS };
 const VALIDATOR_KEYS = {
   dependency: 'dependency',
   module: 'module',
+  section: 'section',
   template: 'template',
   themeConfig: 'themeConfig',
 };

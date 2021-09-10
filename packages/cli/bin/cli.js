@@ -28,10 +28,11 @@ const functionsCommand = require('../commands/functions');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
-const projectsCommand = require('../commands/projects');
+const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
 const configCommand = require('../commands/config');
 const accountsCommand = require('../commands/accounts');
+const sandboxesCommand = require('../commands/sandbox');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
 
@@ -94,10 +95,11 @@ const argv = yargs
   })
   .command(openCommand)
   .command(mvCommand)
-  .command(projectsCommand)
+  .command(projectCommands)
   .command(themeCommand)
   .command(configCommand)
   .command(accountsCommand)
+  .command(sandboxesCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
