@@ -100,6 +100,13 @@ const validateProjectConfig = projectConfig => {
     );
     process.exit(1);
   }
+
+  if (!fs.existsSync(projectConfig.srcDir)) {
+    logger.error(
+      `Project source directory '${projectConfig.srcDir}' does not exist.`
+    );
+    process.exit(1);
+  }
 };
 
 const getProjectDetailUrl = (projectName, accountId) => {
