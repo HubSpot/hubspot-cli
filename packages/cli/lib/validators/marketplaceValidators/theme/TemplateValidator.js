@@ -8,7 +8,8 @@ const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
 const TEMPLATE_LIMIT = 50;
-const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'none'];
+const TEMPLATE_IGNORE_LIST = ['section'];
+const TEMPLATE_COUNT_IGNORE_LIST = ['global_partial', 'section', 'none'];
 const VALIDATIONS_BY_TYPE = {
   page: { allowed: true, label: true, screenshot: true },
   starter_landing_pages: { allowed: false },
@@ -110,6 +111,11 @@ class TemplateValidator extends BaseValidator {
             annotations,
             ANNOTATION_KEYS.templateType
           );
+
+          if (TEMPLATE_IGNORE_LIST.includes(templateType)) {
+            return;
+          }
+
           if (templateType) {
             const label = getAnnotationValue(
               annotations,
@@ -120,7 +126,7 @@ class TemplateValidator extends BaseValidator {
               ANNOTATION_KEYS.screenshotPath
             );
 
-            // Ignore global partials and templates with type of none in count
+            // Ignore global partials, sections, and templates with type of none in count
             if (!TEMPLATE_COUNT_IGNORE_LIST.includes(templateType)) {
               templateCount++;
             }
