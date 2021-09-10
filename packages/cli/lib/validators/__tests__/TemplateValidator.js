@@ -15,11 +15,13 @@ jest.mock('@hubspot/cli-lib/templates');
 const TEMPLATE_LIMIT = 50;
 
 const mockGetAnnotationValue = (templateType, rest) => {
-  templates.getAnnotationValue.mockImplementation((x, key) => {
-    if (key === 'templateType') {
-      return templateType;
-    }
-    return rest;
+  templates.buildAnnotationValueGetter.mockImplementation(() => {
+    return key => {
+      if (key === 'templateType') {
+        return templateType;
+      }
+      return rest;
+    };
   });
 };
 
