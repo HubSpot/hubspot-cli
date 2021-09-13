@@ -57,11 +57,23 @@ const getOrCreateProjectConfig = async projectPath => {
     const { name, srcDir } = await prompt([
       {
         name: 'name',
-        message: 'name',
+        message: 'Please enter a project name:',
+        validate: input => {
+          if (!input) {
+            return 'A project name is required';
+          }
+          return true;
+        },
       },
       {
         name: 'srcDir',
-        message: 'srcDir',
+        message: 'Which directory contains your project files?',
+        validate: input => {
+          if (!input) {
+            return 'A source directory is required';
+          }
+          return true;
+        },
       },
     ]);
     writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
@@ -85,6 +97,13 @@ const validateProjectConfig = projectConfig => {
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
       'Project config is missing required fields. Try running `hs project init`.'
+    );
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(projectConfig.srcDir)) {
+    logger.error(
+      `Project source directory '${projectConfig.srcDir}' does not exist.`
     );
     process.exit(1);
   }
@@ -131,10 +150,15 @@ const pollBuildStatus = async (accountId, name, buildId) => {
   const buildStatus = await getBuildStatus(accountId, name, buildId);
   const spinnies = new Spinnies();
 
-  logger.log(`Building project '${name}'...`);
+  logger.log();
+  logger.log(`Building ${chalk.bold(name)}`);
+  logger.log();
+  logger.log(`Found ${buildStatus.subbuildStatuses.length} deployables ...`);
+  logger.log();
+
   for (let subBuild of buildStatus.subbuildStatuses) {
     spinnies.add(subBuild.buildName, {
-      text: `'${subBuild.buildName}' ${
+      text: `${chalk.bold(subBuild.buildName)} #${buildId} ${
         PROJECT_BUILD_STATUS_TEXT[PROJECT_BUILD_STATUS.ENQUEUED]
       }`,
     });
@@ -149,7 +173,7 @@ const pollBuildStatus = async (accountId, name, buildId) => {
 
       if (Object.keys(spinnies.spinners).length) {
         subbuildStatuses.forEach(subBuild => {
-          const updatedText = `'${subBuild.buildName}' ${
+          const updatedText = `${chalk.bold(subBuild.buildName)} #${buildId} ${
             PROJECT_BUILD_STATUS_TEXT[subBuild.status]
           }`;
 
@@ -178,16 +202,22 @@ const pollBuildStatus = async (accountId, name, buildId) => {
 
         if (status === PROJECT_BUILD_STATUS.SUCCESS) {
           logger.success(
-            `Your project '${name}' ${PROJECT_BUILD_STATUS_TEXT[status]}.`
+            `Your project ${chalk.bold(name)} ${
+              PROJECT_BUILD_STATUS_TEXT[status]
+            }.`
           );
         } else if (status === PROJECT_BUILD_STATUS.FAILURE) {
           logger.error(
-            `Your project '${name}' ${PROJECT_BUILD_STATUS_TEXT[status]}.`
+            `Your project ${chalk.bold(name)} ${
+              PROJECT_BUILD_STATUS_TEXT[status]
+            }.`
           );
           subbuildStatuses.forEach(subBuild => {
             if (subBuild.status === PROJECT_BUILD_STATUS.FAILURE) {
               logger.error(
-                `${subBuild.buildName} failed to build. ${subBuild.errorMessage}.`
+                `${chalk.bold(subBuild.buildName)} failed to build. ${
+                  subBuild.errorMessage
+                }.`
               );
             }
           });

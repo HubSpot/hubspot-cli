@@ -1,3 +1,9 @@
+const chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
+const archiver = require('archiver');
+const tmp = require('tmp');
+const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -18,18 +24,14 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
-const { validateAccount } = require('../../lib/validation');
-const fs = require('fs');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const path = require('path');
-const archiver = require('archiver');
-const tmp = require('tmp');
+const { validateAccount } = require('../../lib/validation');
 const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
 } = require('../../lib/projects');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -47,11 +49,24 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  logger.log(`Uploading project '${projectName}'...`);
+  const spinnies = new Spinnies();
+
+  spinnies.add('upload', {
+    text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
+      accountId
+    )}`,
+  });
+
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
 
-    logger.log(
+    spinnies.succeed('upload', {
+      text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
+        accountId
+      )}`,
+    });
+
+    logger.debug(
       `Project "${projectName}" uploaded and build #${upload.buildId} created`
     );
     await pollBuildStatus(accountId, projectName, upload.buildId);
@@ -61,6 +76,13 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         `Project '${projectName}' does not exist. Try running 'hs project init' first.`
       );
     }
+
+    spinnies.fail('upload', {
+      text: `Failed to upload ${chalk.bold(
+        projectName
+      )} project files to ${chalk.bold(accountId)}`,
+    });
+
     logApiErrorInstance(err, {
       context: new ApiErrorContext({
         accountId,
