@@ -13,6 +13,9 @@
 - Updated Autoupload plugin README to support Webpack 5 ([#525](https://github.com/HubSpot/hubspot-cli/pull/525))
 - Bump tar from 4.4.13 to 4.4.15 ([#532](https://github.com/HubSpot/hubspot-cli/pull/532))
 - Bump path-parse from 1.0.6 to 1.0.7 ([#535](https://github.com/HubSpot/hubspot-cli/pull/535))
+- Add new template utilities ([#534](https://github.com/HubSpot/hubspot-cli/pull/534))
+- Add project related commands ([#537](https://github.com/HubSpot/hubspot-cli/pull/537), [#542](https://github.com/HubSpot/hubspot-cli/pull/542), [#548](https://github.com/HubSpot/hubspot-cli/pull/548))
+- Add `hs sandbox create` ([#536](https://github.com/HubSpot/hubspot-cli/pull/536))
 
 ## 3.0.6
 
