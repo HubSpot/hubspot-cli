@@ -110,7 +110,7 @@ async function accessTokenForPersonalAccessKey(accountId) {
   if (
     !authDataExists ||
     moment()
-      .add(30, 'minutes')
+      .add(5, 'minutes')
       .isAfter(moment(authTokenInfo.expiresAt))
   ) {
     return getNewAccessToken(
