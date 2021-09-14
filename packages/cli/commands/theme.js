@@ -2,7 +2,8 @@ const marketplaceValidate = require('./marketplaceValidate/validateTheme');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 
 exports.command = 'theme';
-exports.describe = false; // 'Commands for working with themes';
+exports.describe =
+  'Commands for working with themes, including marketplace validation with the marketplace-validate subcommand';
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
