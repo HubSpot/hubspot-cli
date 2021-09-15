@@ -173,6 +173,10 @@ const pollBuildStatus = async (accountId, name, buildId) => {
 
       if (Object.keys(spinnies.spinners).length) {
         subbuildStatuses.forEach(subBuild => {
+          if (!spinnies.pick(subBuild.buildName)) {
+            return;
+          }
+
           const updatedText = `${chalk.bold(subBuild.buildName)} #${buildId} ${
             PROJECT_BUILD_STATUS_TEXT[subBuild.status]
           }`;
