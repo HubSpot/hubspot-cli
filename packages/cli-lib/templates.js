@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('./logger');
 
 // Matches the .html file extension, excluding module.html
 const TEMPLATE_EXTENSION_REGEX = new RegExp(/(?<!module)\.html$/);
