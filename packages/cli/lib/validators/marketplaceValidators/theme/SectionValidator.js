@@ -1,7 +1,6 @@
 const {
   ANNOTATION_KEYS,
-  getAnnotationValue,
-  getFileAnnotations,
+  buildAnnotationValueGetter,
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
@@ -48,24 +47,17 @@ class SectionValidator extends BaseValidator {
 
     files.forEach(file => {
       if (file) {
-        const annotations = getFileAnnotations(file);
-        const templateType = getAnnotationValue(
-          annotations,
-          ANNOTATION_KEYS.templateType
-        );
+        const getAnnotationValue = buildAnnotationValueGetter(file);
+        const templateType = getAnnotationValue(ANNOTATION_KEYS.templateType);
 
         if (templateType !== 'section') {
           return;
         }
         sectionCount++;
 
-        const description = getAnnotationValue(
-          annotations,
-          ANNOTATION_KEYS.description
-        );
-        const label = getAnnotationValue(annotations, ANNOTATION_KEYS.label);
+        const description = getAnnotationValue(ANNOTATION_KEYS.description);
+        const label = getAnnotationValue(ANNOTATION_KEYS.label);
         const screenshotPath = getAnnotationValue(
-          annotations,
           ANNOTATION_KEYS.screenshotPath
         );
 
