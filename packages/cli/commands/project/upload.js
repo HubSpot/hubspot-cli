@@ -48,12 +48,16 @@ exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   logger.log(`Uploading project '${projectName}'...`);
+  logger.log('');
+
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
 
+    logger.log('\n');
     logger.log(
       `Project "${projectName}" uploaded and build #${upload.buildId} created`
     );
+    logger.log('');
     await pollBuildStatus(accountId, projectName, upload.buildId);
   } catch (err) {
     if (err.statusCode === 404) {

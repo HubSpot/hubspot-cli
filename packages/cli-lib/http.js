@@ -2,6 +2,7 @@ const path = require('path');
 const request = require('request');
 const requestPN = require('request-promise-native');
 const fs = require('fs-extra');
+const cliProgress = require('cli-progress');
 const contentDisposition = require('content-disposition');
 
 const { getAccountConfig } = require('./lib/config');
@@ -102,6 +103,57 @@ const postRequest = async (accountId, options) => {
   return requestPN.post(await withAuth(accountId, options));
 };
 
+const postStream = async (accountId, options, filePath) => {
+  const requestOptions = await withAuth(accountId, options);
+
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createReadStream(filePath);
+    const size = fs.lstatSync(filePath).size;
+    const progressBar = new cliProgress.SingleBar({
+      format: ' {bar} {percentage}%',
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+    });
+    let responseBody = '';
+
+    progressBar.start(size, 0);
+
+    const req = request.post({
+      ...requestOptions,
+      formData: {
+        file: fileStream,
+      },
+      json: false,
+    });
+
+    req.on('socket', s => {
+      s.on('drain', () => {
+        progressBar.update(s.bytesWritten);
+      });
+      s.on('ready', () => {
+        progressBar.update(s.bytesWritten);
+      });
+    });
+
+    req.on('data', chunk => {
+      responseBody += chunk;
+    });
+
+    req.on('end', () => {
+      try {
+        const responseBodyJSON = JSON.parse(responseBody);
+        resolve(responseBodyJSON);
+      } catch (e) {
+        reject(e);
+      }
+    });
+
+    req.on('error', error => {
+      reject(error);
+    });
+  });
+};
+
 const putRequest = async (accountId, options) => {
   return requestPN.put(await withAuth(accountId, options));
 };
@@ -200,6 +252,7 @@ module.exports = {
     contentType: 'application/octet-stream',
   }),
   post: postRequest,
+  postWithProgress: postStream,
   put: putRequest,
   patch: patchRequest,
   delete: deleteRequest,
