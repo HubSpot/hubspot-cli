@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.0.9
+
+- Fixed issue in theme marketplace-validate ([#556](https://github.com/HubSpot/hubspot-cli/pull/556))
+
 ## 3.0.8
 
 - Marketplace theme validation has been moved out of beta ([#553](https://github.com/HubSpot/hubspot-cli/pull/553))
