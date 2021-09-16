@@ -1,4 +1,3 @@
-const fs = require('fs');
 const {
   ANNOTATION_KEYS,
   buildAnnotationValueGetter,
@@ -6,7 +5,6 @@ const {
 } = require('@hubspot/cli-lib/templates');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
-const { logger } = require('@hubspot/cli-lib/logger');
 
 const TEMPLATE_LIMIT = 50;
 const TEMPLATE_IGNORE_LIST = ['section'];
@@ -101,14 +99,7 @@ class TemplateValidator extends BaseValidator {
 
     files.forEach(file => {
       if (isCodedFile(file)) {
-        let data;
-        try {
-          data = fs.readFileSync(file, 'utf8');
-        } catch (e) {
-          logger.error(`Error reading file ${file}`);
-        }
-        const getAnnotationValue = buildAnnotationValueGetter(data);
-
+        const getAnnotationValue = buildAnnotationValueGetter(file);
         const isAvailableForNewContent = getAnnotationValue(
           ANNOTATION_KEYS.isAvailableForNewContent
         );
