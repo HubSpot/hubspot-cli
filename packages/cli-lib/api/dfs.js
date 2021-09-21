@@ -2,6 +2,7 @@ const http = require('../http');
 const fs = require('fs');
 
 const PROJECTS_API_PATH = 'dfs/v1/projects';
+const PROJECTS_DEPLOY_API_PATH = 'dfs/deploy/v1';
 
 /**
  * Fetch projects
@@ -79,12 +80,45 @@ async function deleteProject(portalId, name) {
  * Get project build status
  *
  * @async
- * @param {string} name
+ * @param {string} projectName
+ * @param {number} buildId
  * @returns {Promise}
  */
 async function getBuildStatus(portalId, projectName, buildId) {
   return http.get(portalId, {
     uri: `${PROJECTS_API_PATH}/${projectName}/builds/${buildId}/status`,
+  });
+}
+
+/**
+ * Deploy project
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function deployProject(portalId, projectName, buildId) {
+  return http.post(portalId, {
+    uri: `${PROJECTS_DEPLOY_API_PATH}/deploys/queue/async`,
+    body: {
+      projectName,
+      buildId,
+    },
+  });
+}
+
+/**
+ * Get project deploy status
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} deployId
+ * @returns {Promise}
+ */
+async function getDeployStatus(portalId, projectName, deployId) {
+  return http.get(portalId, {
+    uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${projectName}/deploys/${deployId}`,
   });
 }
 
@@ -95,4 +129,6 @@ module.exports = {
   fetchProject,
   deleteProject,
   getBuildStatus,
+  deployProject,
+  getDeployStatus,
 };
