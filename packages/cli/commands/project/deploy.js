@@ -64,10 +64,12 @@ exports.handler = async options => {
   };
 
   try {
+    const deployedBuildId = buildId || (await getBuildId());
+
     const deployResp = await deployProject(
       accountId,
       projectConfig.name,
-      buildId || (await getBuildId())
+      deployedBuildId
     );
 
     if (deployResp.error) {
@@ -75,10 +77,11 @@ exports.handler = async options => {
       return;
     }
 
-    await pollDeployStatus(accountId, projectConfig.name, deployResp.id);
-
-    logger.success(
-      `Deployed project in ${projectPath} on account ${accountId}.`
+    await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployResp.id,
+      deployedBuildId
     );
   } catch (e) {
     if (e.statusCode === 400) {
