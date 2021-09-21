@@ -122,6 +122,19 @@ async function getDeployStatus(portalId, projectName, deployId) {
   });
 }
 
+/**
+ * Get project settings
+ *
+ * @async
+ * @param {string} projectName
+ * @returns {Promise}
+ */
+async function fetchProjectSettings(portalId, projectName) {
+  return http.get(portalId, {
+    uri: `${PROJECTS_API_PATH}/${projectName}/settings`,
+  });
+}
+
 module.exports = {
   fetchProjects,
   createProject,
@@ -131,4 +144,5 @@ module.exports = {
   getBuildStatus,
   deployProject,
   getDeployStatus,
+  fetchProjectSettings,
 };

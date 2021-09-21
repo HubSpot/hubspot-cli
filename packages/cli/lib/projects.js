@@ -14,7 +14,7 @@ const {
   PROJECT_BUILD_STATUS,
   PROJECT_BUILD_STATUS_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
-const { getBuildStatus } = require('@hubspot/cli-lib/api/dfs');
+const { getBuildStatus, getDeployStatus } = require('@hubspot/cli-lib/api/dfs');
 
 const isBuildComplete = build => {
   return (
@@ -232,6 +232,96 @@ const pollBuildStatus = async (accountId, name, buildId) => {
   });
 };
 
+const pollDeployStatus = async (accountId, name, deployId) => {
+  const buildStatus = await getDeployStatus(accountId, name, deployId);
+  const spinnies = new Spinnies();
+
+  logger.log();
+  logger.log(`Deploying ${chalk.bold(name)}`);
+  logger.log();
+  logger.log(
+    `Found ${buildStatus.subdeployStatuses.length} sub-build deploys ...`
+  );
+  logger.log();
+
+  for (let subdeploy of buildStatus.subdeployStatuses) {
+    spinnies.add(subdeploy.deployName, {
+      text: `${chalk.bold(subdeploy.deployName)} #${deployId} ${
+        PROJECT_BUILD_STATUS_TEXT[PROJECT_BUILD_STATUS.ENQUEUED]
+      }`,
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      const deployStatus = await getDeployStatus(
+        accountId,
+        name,
+        deployId
+      ).catch(reject);
+      const { status, subdeployStatuses } = deployStatus;
+
+      if (spinnies.hasActiveSpinners()) {
+        subdeployStatuses.forEach(subdeploy => {
+          if (!spinnies.pick(subdeploy.deployName)) {
+            return;
+          }
+
+          const updatedText = `${chalk.bold(
+            subdeploy.deployName
+          )} #${deployId} ${PROJECT_BUILD_STATUS_TEXT[subdeploy.status]}`;
+
+          switch (subdeploy.status) {
+            case PROJECT_BUILD_STATUS.SUCCESS:
+              spinnies.succeed(subdeploy.deployName, {
+                text: updatedText,
+              });
+              break;
+            case PROJECT_BUILD_STATUS.FAILURE:
+              spinnies.fail(subdeploy.deployName, {
+                text: updatedText,
+              });
+              break;
+            default:
+              spinnies.update(subdeploy.deployName, {
+                text: updatedText,
+              });
+              break;
+          }
+        });
+      }
+
+      if (isBuildComplete(buildStatus)) {
+        clearInterval(pollInterval);
+
+        if (status === PROJECT_BUILD_STATUS.SUCCESS) {
+          logger.success(
+            `Your project ${chalk.bold(name)} ${
+              PROJECT_BUILD_STATUS_TEXT[status]
+            }.`
+          );
+        } else if (status === PROJECT_BUILD_STATUS.FAILURE) {
+          logger.error(
+            `Your project ${chalk.bold(name)} ${
+              PROJECT_BUILD_STATUS_TEXT[status]
+            }.`
+          );
+          subdeployStatuses.forEach(subdeploy => {
+            if (subdeploy.status === PROJECT_BUILD_STATUS.FAILURE) {
+              logger.error(
+                `${chalk.bold(subdeploy.deployName)} failed to build. ${
+                  subdeploy.errorMessage
+                }.`
+              );
+            }
+          });
+        }
+        resolve(buildStatus);
+      }
+    }, POLLING_DELAY);
+  });
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -239,4 +329,5 @@ module.exports = {
   validateProjectConfig,
   showWelcomeMessage,
   pollBuildStatus,
+  pollDeployStatus,
 };
