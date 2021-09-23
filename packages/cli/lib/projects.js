@@ -16,7 +16,13 @@ const {
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
-const { getBuildStatus, getDeployStatus } = require('@hubspot/cli-lib/api/dfs');
+const {
+  getBuildStatus,
+  getDeployStatus,
+  fetchProject,
+  createProject,
+} = require('@hubspot/cli-lib/api/dfs');
+const { logApiErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const isBuildComplete = build => {
   return (
@@ -108,6 +114,37 @@ const validateProjectConfig = projectConfig => {
       `Project source directory '${projectConfig.srcDir}' does not exist.`
     );
     process.exit(1);
+  }
+};
+
+const ensureProject = async (accountId, projectName) => {
+  try {
+    await fetchProject(accountId, projectName);
+  } catch (err) {
+    if (err.statusCode === 404) {
+      const { shouldCreateProject } = await prompt([
+        {
+          name: 'shouldCreateProject',
+          message: `This project does not exist in: . Would you like to create it?`,
+          type: 'confirm',
+        },
+      ]);
+      if (shouldCreateProject) {
+        try {
+          await createProject(accountId, projectName);
+        } catch (err) {
+          logApiErrorInstance(err);
+        }
+      } else {
+        logger.log(
+          `Your project ${chalk.bold(
+            projectName
+          )} could not be found in ${chalk.bold(accountId)}.`
+        );
+        process.exit(1);
+      }
+    }
+    logApiErrorInstance(err);
   }
 };
 
@@ -335,4 +372,5 @@ module.exports = {
   showWelcomeMessage,
   pollBuildStatus,
   pollDeployStatus,
+  ensureProject,
 };
