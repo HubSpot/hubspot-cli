@@ -62,6 +62,11 @@ const getOrCreateProjectConfig = async projectPath => {
   const projectConfig = await getProjectConfig(projectPath);
 
   if (!projectConfig) {
+    logger.log('');
+    logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
+    logger.log(
+      '\n-------------------------------------------------------------\n'
+    );
     const { name, srcDir } = await prompt([
       {
         name: 'name',
@@ -117,7 +122,7 @@ const validateProjectConfig = projectConfig => {
   }
 };
 
-const ensureProject = async (accountId, projectName) => {
+const ensureProjectExists = async (accountId, projectName) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
@@ -125,23 +130,23 @@ const ensureProject = async (accountId, projectName) => {
       const { shouldCreateProject } = await prompt([
         {
           name: 'shouldCreateProject',
-          message: `This project does not exist in: . Would you like to create it?`,
+          message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
           type: 'confirm',
         },
       ]);
+
       if (shouldCreateProject) {
         try {
-          await createProject(accountId, projectName);
+          return createProject(accountId, projectName);
         } catch (err) {
-          logApiErrorInstance(err);
+          return logApiErrorInstance(err);
         }
       } else {
-        logger.log(
+        return logger.log(
           `Your project ${chalk.bold(
             projectName
           )} could not be found in ${chalk.bold(accountId)}.`
         );
-        process.exit(1);
       }
     }
     logApiErrorInstance(err);
@@ -372,5 +377,5 @@ module.exports = {
   showWelcomeMessage,
   pollBuildStatus,
   pollDeployStatus,
-  ensureProject,
+  ensureProjectExists,
 };

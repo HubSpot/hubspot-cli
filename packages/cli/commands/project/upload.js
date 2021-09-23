@@ -31,7 +31,7 @@ const {
   getOrCreateProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
-  ensureProject,
+  ensureProjectExists,
 } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
@@ -106,7 +106,7 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig);
 
-  await ensureProject(accountId, projectConfig.name);
+  await ensureProjectExists(accountId, projectConfig.name);
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
