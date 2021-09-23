@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs-extra');
+const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -116,6 +117,8 @@ exports.handler = async options => {
     );
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
+
+    checkAndWarnGitInclusion();
     process.exit();
   } catch (err) {
     logErrorInstance(err);
