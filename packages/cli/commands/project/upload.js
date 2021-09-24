@@ -28,7 +28,7 @@ const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const {
-  getOrCreateProjectConfig,
+  getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
   ensureProjectExists,
@@ -102,7 +102,7 @@ exports.handler = async options => {
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getOrCreateProjectConfig(cwd);
+  const projectConfig = await getProjectConfig(cwd);
 
   validateProjectConfig(projectConfig);
 
