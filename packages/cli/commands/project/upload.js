@@ -84,12 +84,13 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
       )} project files to ${chalk.bold(accountId)}`,
     });
 
-    logApiErrorInstance(err, {
-      context: new ApiErrorContext({
+    logApiErrorInstance(
+      err,
+      new ApiErrorContext({
         accountId,
         projectName,
-      }),
-    });
+      })
+    );
   }
 };
 

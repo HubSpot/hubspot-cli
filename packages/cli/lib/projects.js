@@ -22,7 +22,10 @@ const {
   fetchProject,
   createProject,
 } = require('@hubspot/cli-lib/api/dfs');
-const { logApiErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 
 const isBuildComplete = build => {
   return (
@@ -134,7 +137,7 @@ const ensureProjectExists = async (accountId, projectName) => {
         try {
           return createProject(accountId, projectName);
         } catch (err) {
-          return logApiErrorInstance(err);
+          return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
       } else {
         return logger.log(
@@ -144,7 +147,7 @@ const ensureProjectExists = async (accountId, projectName) => {
         );
       }
     }
-    logApiErrorInstance(err);
+    logApiErrorInstance(err, new ApiErrorContext({ accountId }));
   }
 };
 

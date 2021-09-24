@@ -87,11 +87,7 @@ exports.handler = async options => {
     if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else {
-      logApiErrorInstance(
-        accountId,
-        e,
-        new ApiErrorContext({ accountId, projectPath })
-      );
+      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
     }
   }
 };
