@@ -80,7 +80,7 @@ exports.handler = async options => {
     await pollDeployStatus(
       accountId,
       projectConfig.name,
-      deployResp.deployId,
+      deployResp.id,
       deployedBuildId
     );
   } catch (e) {
