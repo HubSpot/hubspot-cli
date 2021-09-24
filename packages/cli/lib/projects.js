@@ -62,11 +62,6 @@ const getOrCreateProjectConfig = async projectPath => {
   const projectConfig = await getProjectConfig(projectPath);
 
   if (!projectConfig) {
-    logger.log('');
-    logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
-    logger.log(
-      '\n-------------------------------------------------------------\n'
-    );
     const { name, srcDir } = await prompt([
       {
         name: 'name',
