@@ -101,10 +101,12 @@ exports.handler = async options => {
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getProjectConfig(cwd);
+  const projectDir = projectPath
+    ? path.resolve(getCwd(), projectPath)
+    : getCwd();
+  const projectConfig = await getProjectConfig(projectDir);
 
-  validateProjectConfig(projectConfig);
+  validateProjectConfig(projectConfig, projectDir);
 
   await ensureProjectExists(accountId, projectConfig.name);
 
@@ -134,8 +136,10 @@ exports.handler = async options => {
 
   archive.pipe(output);
 
-  archive.directory(path.resolve(cwd, projectConfig.srcDir), false, file =>
-    shouldIgnoreFile(file.name) ? false : file
+  archive.directory(
+    path.resolve(projectDir, projectConfig.srcDir),
+    false,
+    file => (shouldIgnoreFile(file.name) ? false : file)
   );
 
   archive.finalize();

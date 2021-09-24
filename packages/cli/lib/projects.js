@@ -94,7 +94,7 @@ const getOrCreateProjectConfig = async projectPath => {
   return projectConfig;
 };
 
-const validateProjectConfig = projectConfig => {
+const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
       `Project config not found. Try running 'hs project init' first.`
@@ -109,7 +109,7 @@ const validateProjectConfig = projectConfig => {
     process.exit(1);
   }
 
-  if (!fs.existsSync(projectConfig.srcDir)) {
+  if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' does not exist.`
     );
