@@ -62,22 +62,27 @@ exports.handler = async options => {
     logger.error('No latest build ID was found.');
     return;
   };
-  const deployedBuildId = buildId || (await getBuildId());
-  let deployId;
 
   try {
+    const deployedBuildId = buildId || (await getBuildId());
+
     const deployResp = await deployProject(
       accountId,
       projectConfig.name,
       deployedBuildId
     );
 
-    deployId = deployResp.deployId;
-
     if (deployResp.error) {
       logger.error(`Deploy error: ${deployResp.error.message}`);
       return;
     }
+
+    await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployResp.deployId,
+      deployedBuildId
+    );
   } catch (e) {
     if (e.statusCode === 400) {
       logger.error(e.error.message);
@@ -88,17 +93,6 @@ exports.handler = async options => {
         new ApiErrorContext({ accountId, projectPath })
       );
     }
-  }
-
-  try {
-    await pollDeployStatus(
-      accountId,
-      projectConfig.name,
-      deployId,
-      deployedBuildId
-    );
-  } catch (err) {
-    logger.error(err);
   }
 };
 
