@@ -42,7 +42,7 @@ async function createProject(portalId, name) {
  */
 async function uploadProject(accountId, projectName, projectFile) {
   return http.post(accountId, {
-    uri: `${PROJECTS_API_PATH}/upload/${projectName}`,
+    uri: `${PROJECTS_API_PATH}/upload/${encodeURIComponent(projectName)}`,
     timeout: 60000,
     formData: {
       file: fs.createReadStream(projectFile),
@@ -54,12 +54,12 @@ async function uploadProject(accountId, projectName, projectFile) {
  * Fetch project
  *
  * @async
- * @param {string} name
+ * @param {string} projectName
  * @returns {Promise}
  */
-async function fetchProject(portalId, name) {
+async function fetchProject(portalId, projectName) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${name}`,
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
 
@@ -67,12 +67,12 @@ async function fetchProject(portalId, name) {
  * Delete project
  *
  * @async
- * @param {string} name
+ * @param {string} projectName
  * @returns {Promise}
  */
-async function deleteProject(portalId, name) {
+async function deleteProject(portalId, projectName) {
   return http.delete(portalId, {
-    uri: `${PROJECTS_API_PATH}/${name}`,
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
 
@@ -86,7 +86,9 @@ async function deleteProject(portalId, name) {
  */
 async function getBuildStatus(portalId, projectName, buildId) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${projectName}/builds/${buildId}/status`,
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/${buildId}/status`,
   });
 }
 
@@ -118,7 +120,9 @@ async function deployProject(portalId, projectName, buildId) {
  */
 async function getDeployStatus(portalId, projectName, deployId) {
   return http.get(portalId, {
-    uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${projectName}/deploys/${deployId}`,
+    uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${encodeURIComponent(
+      projectName
+    )}/deploys/${deployId}`,
   });
 }
 
@@ -131,7 +135,7 @@ async function getDeployStatus(portalId, projectName, deployId) {
  */
 async function fetchProjectSettings(portalId, projectName) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${projectName}/settings`,
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/settings`,
   });
 }
 
