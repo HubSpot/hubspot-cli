@@ -1,3 +1,4 @@
+const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -17,8 +18,13 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { deployProject } = require('@hubspot/cli-lib/api/fileMapper');
+const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
+const {
+  getOrCreateProjectConfig,
+  pollDeployStatus,
+} = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -32,29 +38,50 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'deploy <path>';
+exports.command = 'deploy [path]';
 exports.describe = false;
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { path: projectPath, buildId } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-deploy', { projectPath }, accountId);
 
+  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
+  const projectConfig = await getOrCreateProjectConfig(cwd);
+
   logger.debug(`Deploying project at path: ${projectPath}`);
 
+  const getBuildId = async () => {
+    const { latestBuild } = await fetchProject(accountId, projectConfig.name);
+    if (latestBuild && latestBuild.buildId) {
+      return latestBuild.buildId;
+    }
+    logger.error('No latest build ID was found.');
+    return;
+  };
+
   try {
-    const deployResp = await deployProject(accountId, projectPath);
+    const deployedBuildId = buildId || (await getBuildId());
+
+    const deployResp = await deployProject(
+      accountId,
+      projectConfig.name,
+      deployedBuildId
+    );
 
     if (deployResp.error) {
       logger.error(`Deploy error: ${deployResp.error.message}`);
       return;
     }
 
-    logger.success(
-      `Deployed project in ${projectPath} on account ${accountId}.`
+    await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployResp.id,
+      deployedBuildId
     );
   } catch (e) {
     if (e.statusCode === 400) {
@@ -73,6 +100,13 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: 'Path to a project folder',
     type: 'string',
+  });
+
+  yargs.options({
+    buildId: {
+      describe: 'Project build ID to be deployed',
+      type: 'number',
+    },
   });
 
   yargs.example([
