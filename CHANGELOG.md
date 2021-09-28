@@ -3,6 +3,8 @@
 ## 3.0.9
 
 - Fixed issue in theme marketplace-validate ([#556](https://github.com/HubSpot/hubspot-cli/pull/556))
+- Encode project name in request URLs ([#566](https://github.com/HubSpot/hubspot-cli/pull/566))
+- Bump tmpl from 1.0.4 to 1.0.5 ([#560](https://github.com/HubSpot/hubspot-cli/pull/560))
 
 ## 3.0.8
 
