@@ -58,8 +58,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     )}`,
   });
 
+  let buildId;
+
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
+
+    buildId = upload.buildId;
 
     spinnies.succeed('upload', {
       text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
@@ -68,9 +72,8 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     });
 
     logger.debug(
-      `Project "${projectName}" uploaded and build #${upload.buildId} created`
+      `Project "${projectName}" uploaded and build #${buildId} created`
     );
-    await pollBuildStatus(accountId, projectName, upload.buildId);
   } catch (err) {
     if (err.statusCode === 404) {
       return logger.error(
@@ -91,6 +94,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
+  }
+
+  try {
+    await pollBuildStatus(accountId, projectName, buildId);
+  } catch (err) {
+    logger.log(err);
   }
 };
 
