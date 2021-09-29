@@ -38,7 +38,7 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'init [path]';
+exports.command = 'create [path]';
 exports.describe = false;
 
 exports.handler = async options => {
@@ -47,12 +47,12 @@ exports.handler = async options => {
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-init', { projectPath }, accountId);
+  trackCommandUsage('project-create', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const projectConfig = await getOrCreateProjectConfig(cwd);
 
-  logger.log(`Initializing project: ${projectConfig.name}`);
+  logger.log(`Creating project: ${projectConfig.name}`);
 
   try {
     await createProject(accountId, projectConfig.name);
@@ -95,8 +95,8 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project init myProjectFolder',
-      'Initialize a project within the myProjectFolder folder',
+      '$0 project create myProjectFolder',
+      'Create a project within the myProjectFolder folder',
     ],
   ]);
 
