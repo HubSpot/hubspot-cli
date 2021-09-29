@@ -6,6 +6,10 @@
 - Encode project name in request URLs ([#566](https://github.com/HubSpot/hubspot-cli/pull/566))
 - Bump tmpl from 1.0.4 to 1.0.5 ([#560](https://github.com/HubSpot/hubspot-cli/pull/560))
 - Support section validation in theme marketplace-validate ([#546](https://github.com/HubSpot/hubspot-cli/pull/546))
+- Fix project build status bug on build failure ([#562](https://github.com/HubSpot/hubspot-cli/pull/562))
+- Update project upload command to handle initialization ([#564](https://github.com/HubSpot/hubspot-cli/pull/564))
+- Fix template util bug ([#556](https://github.com/HubSpot/hubspot-cli/pull/556))
+- Update project deploy command ([#561](https://github.com/HubSpot/hubspot-cli/pull/561))
 
 ## 3.0.8
 
