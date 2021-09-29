@@ -16,7 +16,16 @@ const {
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
-const { getBuildStatus, getDeployStatus } = require('@hubspot/cli-lib/api/dfs');
+const {
+  getBuildStatus,
+  getDeployStatus,
+  fetchProject,
+  createProject,
+} = require('@hubspot/cli-lib/api/dfs');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 
 const isBuildComplete = build => {
   return (
@@ -88,7 +97,7 @@ const getOrCreateProjectConfig = async projectPath => {
   return projectConfig;
 };
 
-const validateProjectConfig = projectConfig => {
+const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
       `Project config not found. Try running 'hs project init' first.`
@@ -103,11 +112,42 @@ const validateProjectConfig = projectConfig => {
     process.exit(1);
   }
 
-  if (!fs.existsSync(projectConfig.srcDir)) {
+  if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' does not exist.`
     );
     process.exit(1);
+  }
+};
+
+const ensureProjectExists = async (accountId, projectName) => {
+  try {
+    await fetchProject(accountId, projectName);
+  } catch (err) {
+    if (err.statusCode === 404) {
+      const { shouldCreateProject } = await prompt([
+        {
+          name: 'shouldCreateProject',
+          message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+          type: 'confirm',
+        },
+      ]);
+
+      if (shouldCreateProject) {
+        try {
+          return createProject(accountId, projectName);
+        } catch (err) {
+          return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+        }
+      } else {
+        return logger.log(
+          `Your project ${chalk.bold(
+            projectName
+          )} could not be found in ${chalk.bold(accountId)}.`
+        );
+      }
+    }
+    logApiErrorInstance(err, new ApiErrorContext({ accountId }));
   }
 };
 
@@ -335,4 +375,5 @@ module.exports = {
   showWelcomeMessage,
   pollBuildStatus,
   pollDeployStatus,
+  ensureProjectExists,
 };

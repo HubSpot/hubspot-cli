@@ -31,6 +31,7 @@ const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
+  ensureProjectExists,
 } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
@@ -83,12 +84,13 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
       )} project files to ${chalk.bold(accountId)}`,
     });
 
-    logApiErrorInstance(err, {
-      context: new ApiErrorContext({
+    logApiErrorInstance(
+      err,
+      new ApiErrorContext({
         accountId,
         projectName,
-      }),
-    });
+      })
+    );
   }
 };
 
@@ -100,10 +102,14 @@ exports.handler = async options => {
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getProjectConfig(cwd);
+  const projectDir = projectPath
+    ? path.resolve(getCwd(), projectPath)
+    : getCwd();
+  const projectConfig = await getProjectConfig(projectDir);
 
-  validateProjectConfig(projectConfig);
+  validateProjectConfig(projectConfig, projectDir);
+
+  await ensureProjectExists(accountId, projectConfig.name);
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
@@ -131,8 +137,10 @@ exports.handler = async options => {
 
   archive.pipe(output);
 
-  archive.directory(path.resolve(cwd, projectConfig.srcDir), false, file =>
-    shouldIgnoreFile(file.name) ? false : file
+  archive.directory(
+    path.resolve(projectDir, projectConfig.srcDir),
+    false,
+    file => (shouldIgnoreFile(file.name) ? false : file)
   );
 
   archive.finalize();
