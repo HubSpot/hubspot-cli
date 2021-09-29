@@ -52,11 +52,14 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const getOrCreateProjectConfig = async projectPath => {
+const createProjectConfig = async projectPath => {
   const projectConfig = await getProjectConfig(projectPath);
 
-  if (!projectConfig) {
-    const { name, srcDir } = await prompt([
+  if (projectConfig) {
+    logger.log(`Project already exists in ${projectPath}`);
+  } else {
+    logger.log(`> Creating project in ${projectPath}`);
+    const { name, template, srcDir } = await prompt([
       {
         name: 'name',
         message: 'Please enter a project name:',
@@ -68,8 +71,24 @@ const getOrCreateProjectConfig = async projectPath => {
         },
       },
       {
+        name: 'template',
+        message: 'Start from a template?',
+        type: 'rawlist',
+        choices: [
+          {
+            name: 'No template',
+            value: 'none',
+          },
+          {
+            name: 'Basic',
+            value: 'basic',
+          },
+        ],
+      },
+      {
         name: 'srcDir',
         message: 'Which directory contains your project files?',
+        when: answers => answers.template === 'none',
         validate: input => {
           if (!input) {
             return 'A source directory is required';
@@ -78,10 +97,15 @@ const getOrCreateProjectConfig = async projectPath => {
         },
       },
     ]);
-    writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
-      name,
-      srcDir,
-    });
+
+    if (template) {
+      logger.log(`> Creating project from template ${template}`);
+    } else {
+      writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
+        name,
+        srcDir,
+      });
+    }
     return { name, srcDir };
   }
 
@@ -330,7 +354,7 @@ const pollDeployStatus = async (accountId, name, deployId, deployedBuildId) => {
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
-  getOrCreateProjectConfig,
+  createProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
   pollBuildStatus,

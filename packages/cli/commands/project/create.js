@@ -17,14 +17,10 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const {
-  getOrCreateProjectConfig,
-  showWelcomeMessage,
-} = require('../../lib/projects');
+const { createProjectConfig } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -50,21 +46,19 @@ exports.handler = async options => {
   trackCommandUsage('project-create', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getOrCreateProjectConfig(cwd);
 
-  logger.log(`Creating project: ${projectConfig.name}`);
-
+  await createProjectConfig(cwd);
   try {
-    await createProject(accountId, projectConfig.name);
-
-    logger.success(
-      `"${projectConfig.name}" creation succeeded in account ${accountId}`
-    );
+    logger
+      .success
+      // `"${projectConfig.name}" creation succeeded in account ${accountId}`
+      ();
   } catch (e) {
     if (e.statusCode === 409) {
-      logger.log(
-        `Project ${projectConfig.name} already exists in ${accountId}.`
-      );
+      logger
+        .log
+        // `Project ${projectConfig.name} already exists in ${accountId}.`
+        ();
     } else {
       return logApiErrorInstance(
         e,
@@ -73,7 +67,7 @@ exports.handler = async options => {
     }
   }
 
-  showWelcomeMessage(projectConfig.name, accountId);
+  // showWelcomeMessage(projectConfig.name, accountId);
 };
 
 exports.builder = yargs => {
