@@ -14,13 +14,8 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  logServerlessFunctionApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
-  getFunctionByPath,
   getAppFunctionLogs,
   getLatestAppFunctionLogs,
 } = require('@hubspot/cli-lib/api/functions');
@@ -58,30 +53,17 @@ const endpointLog = async (accountId, options) => {
     }logs for function with path: ${functionPath}`
   );
 
-  const functionResp = await getFunctionByPath(accountId, functionPath).catch(
-    async e => {
-      await logServerlessFunctionApiErrorInstance(
-        accountId,
-        e,
-        new ApiErrorContext({ accountId, functionPath })
-      );
-      process.exit();
-    }
-  );
-  const functionId = functionResp.id;
-
-  logger.debug(`Retrieving logs for functionId: ${functionResp.id}`);
-
   let logsResp;
 
   if (follow) {
     const spinner = ora(
       `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
     );
-    const tailCall = after => getFunctionLogs(accountId, functionId, { after });
+    const tailCall = after =>
+      getFunctionLogs(accountId, functionPath, { after });
     const fetchLatest = () => {
       try {
-        getLatestFunctionLog(accountId, functionId);
+        getLatestFunctionLog(accountId, functionPath);
       } catch (e) {
         handleLatestLogsError(e);
       }
@@ -96,12 +78,12 @@ const endpointLog = async (accountId, options) => {
     });
   } else if (latest) {
     try {
-      logsResp = await getLatestFunctionLog(accountId, functionResp.id);
+      logsResp = await getLatestFunctionLog(accountId, functionPath);
     } catch (e) {
       handleLatestLogsError(e);
     }
   } else {
-    logsResp = await getFunctionLogs(accountId, functionResp.id, options);
+    logsResp = await getFunctionLogs(accountId, functionPath, options);
   }
 
   if (logsResp) {

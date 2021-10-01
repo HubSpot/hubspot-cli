@@ -2,18 +2,18 @@ const http = require('../http');
 
 const RESULTS_API_PATH = 'cms/v3/functions/results';
 
-async function getFunctionLogs(accountId, functionId, query = {}) {
+async function getFunctionLogs(accountId, route, query = {}) {
   const { limit = 5 } = query;
 
   return http.get(accountId, {
-    uri: `${RESULTS_API_PATH}/${functionId}`,
+    uri: `${RESULTS_API_PATH}/${route}`,
     query: { ...query, limit },
   });
 }
 
-async function getLatestFunctionLog(accountId, functionId) {
+async function getLatestFunctionLog(accountId, route) {
   return http.get(accountId, {
-    uri: `${RESULTS_API_PATH}/${functionId}/latest`,
+    uri: `${RESULTS_API_PATH}/${route}/latest`,
   });
 }
 
