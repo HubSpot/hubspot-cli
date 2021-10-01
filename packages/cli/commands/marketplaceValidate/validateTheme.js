@@ -75,7 +75,7 @@ exports.handler = async options => {
         .flat()
         .some(result => result.result === VALIDATION_RESULT.FATAL)
     ) {
-      process.exit(1);
+      process.exit(2);
     }
   });
 };
