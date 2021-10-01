@@ -250,8 +250,6 @@ const pollBuildStatus = async (accountId, name, buildId) => {
       }
 
       if (isBuildComplete(buildStatus) && spinnies.hasActiveSpinners()) {
-        clearInterval(pollInterval);
-
         if (status === PROJECT_BUILD_STATUS.SUCCESS) {
           logger.success(
             `Your project ${chalk.bold(name)} ${
@@ -281,6 +279,7 @@ const pollBuildStatus = async (accountId, name, buildId) => {
       }
 
       if (autoDeployEnabled && deployStatusTaskLocator) {
+        clearInterval(pollInterval);
         resolve(buildStatus);
       }
     }, POLLING_DELAY);
