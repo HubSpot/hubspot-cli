@@ -32,6 +32,7 @@ const {
   validateProjectConfig,
   pollBuildStatus,
   ensureProjectExists,
+  pollDeployStatus,
 } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
@@ -96,11 +97,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     );
   }
 
-  try {
-    await pollBuildStatus(accountId, projectName, buildId);
-  } catch (err) {
-    logger.log(err);
-  }
+  return { buildId };
 };
 
 exports.handler = async options => {
@@ -130,7 +127,25 @@ exports.handler = async options => {
   output.on('close', async function() {
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
-    await uploadProjectFiles(accountId, projectConfig.name, tempFile.name);
+    const { buildId } = await uploadProjectFiles(
+      accountId,
+      projectConfig.name,
+      tempFile.name
+    );
+
+    const {
+      autoDeployEnabled,
+      deployStatusTaskLocator,
+    } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+
+    if (autoDeployEnabled && deployStatusTaskLocator.id) {
+      await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        deployStatusTaskLocator.id,
+        buildId
+      );
+    }
 
     try {
       tempFile.removeCallback();

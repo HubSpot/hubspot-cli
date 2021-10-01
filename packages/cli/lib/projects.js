@@ -211,7 +211,13 @@ const pollBuildStatus = async (accountId, name, buildId) => {
       const buildStatus = await getBuildStatus(accountId, name, buildId).catch(
         reject
       );
-      const { status, subbuildStatuses } = buildStatus;
+
+      const {
+        status,
+        subbuildStatuses,
+        autoDeployEnabled,
+        deployStatusTaskLocator,
+      } = buildStatus;
 
       if (spinnies.hasActiveSpinners()) {
         subbuildStatuses.forEach(subBuild => {
@@ -243,7 +249,7 @@ const pollBuildStatus = async (accountId, name, buildId) => {
         });
       }
 
-      if (isBuildComplete(buildStatus)) {
+      if (isBuildComplete(buildStatus) && spinnies.hasActiveSpinners()) {
         clearInterval(pollInterval);
 
         if (status === PROJECT_BUILD_STATUS.SUCCESS) {
@@ -268,6 +274,13 @@ const pollBuildStatus = async (accountId, name, buildId) => {
             }
           });
         }
+
+        if (!autoDeployEnabled) {
+          resolve(buildStatus);
+        }
+      }
+
+      if (autoDeployEnabled && deployStatusTaskLocator) {
         resolve(buildStatus);
       }
     }, POLLING_DELAY);
