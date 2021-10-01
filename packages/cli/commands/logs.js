@@ -93,6 +93,7 @@ const endpointLog = async (accountId, options) => {
 
 const appFunctionLog = async (accountId, options) => {
   const { latest, follow, compact, functionName, appPath } = options;
+  const projectName = appPath.split('/')[0];
 
   let logsResp;
 
@@ -101,10 +102,12 @@ const appFunctionLog = async (accountId, options) => {
       `Waiting for log entries for "${functionName}" on account "${accountId}".\n`
     );
     const tailCall = after =>
-      getAppFunctionLogs(accountId, functionName, appPath, { after });
+      getAppFunctionLogs(accountId, functionName, projectName, appPath, {
+        after,
+      });
     const fetchLatest = () => {
       try {
-        getLatestAppFunctionLogs(accountId, functionName, appPath);
+        getLatestAppFunctionLogs(accountId, functionName, projectName, appPath);
       } catch (e) {
         handleLatestLogsError(e);
       }
@@ -122,13 +125,20 @@ const appFunctionLog = async (accountId, options) => {
       logsResp = await getLatestAppFunctionLogs(
         accountId,
         functionName,
+        projectName,
         appPath
       );
     } catch (e) {
       handleLatestLogsError(e);
     }
   } else {
-    logsResp = await getAppFunctionLogs(accountId, functionName, appPath, {});
+    logsResp = await getAppFunctionLogs(
+      accountId,
+      functionName,
+      projectName,
+      appPath,
+      {}
+    );
   }
 
   if (logsResp) {
