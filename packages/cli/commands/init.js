@@ -34,6 +34,7 @@ const {
 } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
+const { exitWithWarning, exitWithSuccess } = require('../lib/exitCodes');
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -99,7 +100,7 @@ exports.handler = async options => {
     logger.info(
       'To update an existing config file, use the "hs auth" command.'
     );
-    process.exit(1);
+    exitWithWarning();
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
@@ -116,7 +117,7 @@ exports.handler = async options => {
     );
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
-    process.exit();
+    exitWithSuccess();
   } catch (err) {
     logErrorInstance(err);
     trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
