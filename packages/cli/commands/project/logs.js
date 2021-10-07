@@ -5,9 +5,9 @@ const {
   setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
-} = require('../lib/commonOpts');
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { logDebugInfo } = require('../lib/debugInfo');
+} = require('../../lib/commonOpts');
+const { trackCommandUsage } = require('../../lib/usageTracking');
+const { logDebugInfo } = require('../../lib/debugInfo');
 const {
   loadConfig,
   validateConfig,
@@ -16,11 +16,11 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
-  getFunctionLogs,
-  getLatestFunctionLog,
-} = require('@hubspot/cli-lib/api/results');
-const { validateAccount } = require('../lib/validation');
-const { tailLogs } = require('../lib/serverlessLogs');
+  getAppFunctionLogs,
+  getLatestAppFunctionLogs,
+} = require('@hubspot/cli-lib/api/functions');
+const { validateAccount } = require('../../lib/validation');
+const { tailLogs } = require('../../lib/serverlessLogs');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -40,26 +40,29 @@ const handleLatestLogsError = e => {
   }
 };
 
-const endpointLog = async (accountId, options) => {
-  const { latest, follow, compact, endpoint: functionPath } = options;
-
-  logger.debug(
-    `Getting ${
-      latest ? 'latest ' : ''
-    }logs for function with path: ${functionPath}`
-  );
+const appFunctionLog = async (accountId, options) => {
+  const {
+    latest,
+    follow,
+    compact,
+    appPath,
+    functionName,
+    projectName,
+  } = options;
 
   let logsResp;
 
   if (follow) {
     const spinner = ora(
-      `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`
+      `Waiting for log entries for "${functionName}" on account "${accountId}".\n`
     );
     const tailCall = after =>
-      getFunctionLogs(accountId, functionPath, { after });
+      getAppFunctionLogs(accountId, functionName, projectName, appPath, {
+        after,
+      });
     const fetchLatest = () => {
       try {
-        getLatestFunctionLog(accountId, functionPath);
+        getLatestAppFunctionLogs(accountId, functionName, projectName, appPath);
       } catch (e) {
         handleLatestLogsError(e);
       }
@@ -74,12 +77,23 @@ const endpointLog = async (accountId, options) => {
     });
   } else if (latest) {
     try {
-      logsResp = await getLatestFunctionLog(accountId, functionPath);
+      logsResp = await getLatestAppFunctionLogs(
+        accountId,
+        functionName,
+        projectName,
+        appPath
+      );
     } catch (e) {
       handleLatestLogsError(e);
     }
   } else {
-    logsResp = await getFunctionLogs(accountId, functionPath, options);
+    logsResp = await getAppFunctionLogs(
+      accountId,
+      functionName,
+      projectName,
+      appPath,
+      {}
+    );
   }
 
   if (logsResp) {
@@ -87,8 +101,8 @@ const endpointLog = async (accountId, options) => {
   }
 };
 
-exports.command = 'logs [endpoint]';
-exports.describe = 'get logs for a function';
+exports.command = 'logs [functionName]';
+exports.describe = 'get logs for a function within a project';
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -97,18 +111,28 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('logs', { latest }, accountId);
+  trackCommandUsage('project-logs', { latest }, accountId);
 
-  endpointLog(accountId, options);
+  appFunctionLog(accountId, options);
 };
 
 exports.builder = yargs => {
-  yargs.positional('endpoint', {
-    describe: 'Serverless function endpoint',
+  yargs.positional('functionName', {
+    describe: 'Serverless function name',
     type: 'string',
   });
   yargs
     .options({
+      appPath: {
+        describe: 'path to the app',
+        type: 'string',
+        hidden: true,
+      },
+      projectName: {
+        describe: 'name of the project',
+        type: 'string',
+        hidden: true,
+      },
       latest: {
         alias: 'l',
         describe: 'retrieve most recent log only',
@@ -129,25 +153,12 @@ exports.builder = yargs => {
         type: 'number',
       },
     })
-    .conflicts('follow', 'limit')
-    .conflicts('functionName', 'endpoint');
+    .conflicts('follow', 'limit');
 
   yargs.example([
     [
-      '$0 logs my-endpoint',
-      'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint',
-    ],
-    [
-      '$0 logs my-endpoint --limit=10',
-      'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
-    ],
-    [
-      '$0 logs my-endpoint --follow',
-      'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
-    ],
-    [
-      '$0 logs ',
-      'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
+      '$0 project logs my-function --appName="app" --projectName="my-project"',
+      'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"',
     ],
   ]);
 
