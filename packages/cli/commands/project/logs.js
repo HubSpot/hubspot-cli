@@ -107,7 +107,20 @@ exports.describe = 'get logs for a function within a project';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest } = options;
+  const { latest, functionName, projectName, appPath } = options;
+
+  if (!functionName) {
+    logger.error('You must pass a function name to retrieve logs for.');
+    process.exit(0);
+  } else if (!projectName) {
+    logger.error(
+      'You must specify a project name using the --projectName argument.'
+    );
+    process.exit(0);
+  } else if (!appPath) {
+    logger.error('You must specify an app path using the --appPath argument.');
+    process.exit(0);
+  }
 
   const accountId = getAccountId(options);
 
