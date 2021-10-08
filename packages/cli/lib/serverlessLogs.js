@@ -17,7 +17,7 @@ const handleKeypressToExit = exit => {
   process.stdin.setRawMode(true);
   process.stdin.on('keypress', (str, key) => {
     if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
-      exit();
+      exit(key.name === 'escape' ? 'esc' : 'ctrl+c');
     }
   });
 };
@@ -25,13 +25,11 @@ const handleKeypressToExit = exit => {
 const tailLogs = async ({
   accountId,
   compact,
-  spinner,
+  spinnies,
   fetchLatest,
   tailCall,
 }) => {
   let initialAfter;
-
-  spinner.start();
 
   try {
     const latestLog = await fetchLatest();
@@ -54,8 +52,7 @@ const tailLogs = async ({
       latestLog = await tailCall(after);
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
-      logger.info('Stopped polling due to error.');
-      spinner.clear();
+      spinnies.fail('tailLogs', { text: 'Stopped polling due to error.' });
       if (e.statusCode !== 404) {
         logApiErrorInstance(
           e,
@@ -68,7 +65,6 @@ const tailLogs = async ({
     }
 
     if (latestLog && latestLog.results.length) {
-      spinner.clear();
       outputLogs(latestLog, {
         compact,
       });
@@ -79,8 +75,10 @@ const tailLogs = async ({
     }, TAIL_DELAY);
   };
 
-  handleKeypressToExit(() => {
-    spinner.stop();
+  handleKeypressToExit(exitKey => {
+    spinnies.succeed('tailLogs', {
+      text: `Stopped polling because "${exitKey}" was pressed.`,
+    });
     process.exit();
   });
   await tail(initialAfter);

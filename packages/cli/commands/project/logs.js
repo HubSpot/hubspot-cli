@@ -1,4 +1,4 @@
-const ora = require('ora');
+const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -53,9 +53,11 @@ const appFunctionLog = async (accountId, options) => {
   let logsResp;
 
   if (follow) {
-    const spinner = ora(
-      `Waiting for log entries for "${functionName}" on account "${accountId}".\n`
-    );
+    const spinnies = new Spinnies();
+
+    spinnies.add('tailLogs', {
+      text: `Waiting for log entries for '${functionName}' on account '${accountId}'.\n`,
+    });
     const tailCall = after =>
       getAppFunctionLogs(accountId, functionName, projectName, appPath, {
         after,
@@ -71,7 +73,7 @@ const appFunctionLog = async (accountId, options) => {
     await tailLogs({
       accountId,
       compact,
-      spinner,
+      spinnies,
       tailCall,
       fetchLatest,
     });
