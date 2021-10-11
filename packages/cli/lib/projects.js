@@ -14,6 +14,7 @@ const {
   PROJECT_BUILD_STATUS,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
+const { PROJECTS } = require('./strings');
 const {
   getBuildStatus,
   getDeployStatus,
@@ -188,15 +189,17 @@ const showWelcomeMessage = (projectName, accountId) => {
 };
 
 const makeGetTaskStatus = taskType => {
-  let statusFn, statusText;
+  let statusFn, statusText, statusStrings;
   switch (taskType) {
     case 'build':
       statusFn = getBuildStatus;
       statusText = PROJECT_TEXT.BUILD;
+      statusStrings = PROJECTS.BUILD;
       break;
     case 'deploy':
       statusFn = getDeployStatus;
       statusText = PROJECT_TEXT.DEPLOY;
+      statusStrings = PROJECTS.DEPLOY;
       break;
     default:
       logger.error(`Cannot get status for task type ${taskType}`);
@@ -212,9 +215,10 @@ const makeGetTaskStatus = taskType => {
     const initialTaskStatus = await statusFn(accountId, taskName, taskId);
 
     spinnies.update('overallTaskStatus', {
-      text: `Building ${chalk.bold(taskName)}\n\nFound ${
+      text: statusStrings.INITIALIZE(
+        taskName,
         initialTaskStatus[statusText.SUBTASK_KEY].length
-      } components in this project ...\n`,
+      ),
     });
 
     for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
@@ -270,7 +274,7 @@ const makeGetTaskStatus = taskType => {
 
           if (status === statusText.STATES.SUCCESS) {
             spinnies.succeed('overallTaskStatus', {
-              text: `Built ${chalk.bold(taskName)}`,
+              text: statusStrings.SUCCESS(taskName),
             });
           } else if (status === statusText.STATES.FAILURE) {
             spinnies.fail('overallTaskStatus');
