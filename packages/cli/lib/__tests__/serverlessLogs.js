@@ -123,7 +123,6 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
         latestLogResponse,
         expect.objectContaining({ compact })
       );
-      expect(spinnies.succeed).toHaveBeenCalled();
       expect(tailCall).toHaveBeenCalledTimes(2);
     });
     it('handles no logs', async () => {
