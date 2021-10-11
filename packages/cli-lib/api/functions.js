@@ -31,7 +31,7 @@ async function getBuildStatus(portalId, buildId) {
   });
 }
 
-async function getAppFunctionLogs(
+async function getProjectAppFunctionLogs(
   accountId,
   functionName,
   projectName,
@@ -46,7 +46,7 @@ async function getAppFunctionLogs(
   });
 }
 
-async function getLatestAppFunctionLogs(
+async function getLatestProjectAppFunctionLog(
   accountId,
   functionName,
   projectName,
@@ -59,8 +59,8 @@ async function getLatestAppFunctionLogs(
 }
 
 module.exports = {
-  getAppFunctionLogs,
-  getLatestAppFunctionLogs,
+  getProjectAppFunctionLogs,
+  getLatestProjectAppFunctionLog,
   buildPackage,
   getBuildStatus,
   getFunctionByPath,

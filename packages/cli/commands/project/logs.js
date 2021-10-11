@@ -16,8 +16,8 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
-  getAppFunctionLogs,
-  getLatestAppFunctionLogs,
+  getProjectAppFunctionLogs,
+  getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
@@ -59,12 +59,17 @@ const appFunctionLog = async (accountId, options) => {
       text: `Waiting for log entries for '${functionName}' on account '${accountId}'.\n`,
     });
     const tailCall = after =>
-      getAppFunctionLogs(accountId, functionName, projectName, appPath, {
+      getProjectAppFunctionLogs(accountId, functionName, projectName, appPath, {
         after,
       });
     const fetchLatest = () => {
       try {
-        getLatestAppFunctionLogs(accountId, functionName, projectName, appPath);
+        return getLatestProjectAppFunctionLog(
+          accountId,
+          functionName,
+          projectName,
+          appPath
+        );
       } catch (e) {
         handleLatestLogsError(e);
       }
@@ -79,7 +84,7 @@ const appFunctionLog = async (accountId, options) => {
     });
   } else if (latest) {
     try {
-      logsResp = await getLatestAppFunctionLogs(
+      logsResp = await getLatestProjectAppFunctionLog(
         accountId,
         functionName,
         projectName,
@@ -89,7 +94,7 @@ const appFunctionLog = async (accountId, options) => {
       handleLatestLogsError(e);
     }
   } else {
-    logsResp = await getAppFunctionLogs(
+    logsResp = await getProjectAppFunctionLogs(
       accountId,
       functionName,
       projectName,
