@@ -191,6 +191,21 @@ const PROJECT_DEPLOY_STATUS_TEXT = {
   [PROJECT_DEPLOY_STATUS.SUCCESS]: 'deployed successfully',
 };
 
+const PROJECT_TEXT = {
+  BUILD: {
+    STATES: { ...PROJECT_BUILD_STATUS },
+    STATUS_TEXT: { ...PROJECT_BUILD_STATUS_TEXT },
+    SUBTASK_KEY: 'subbuildStatuses',
+    SUBTASK_NAME_KEY: 'buildName',
+  },
+  DEPLOY: {
+    STATES: { ...PROJECT_DEPLOY_STATUS },
+    STATUS_TEXT: { ...PROJECT_DEPLOY_STATUS_TEXT },
+    SUBTASK_KEY: 'subdeployStatuses',
+    SUBTASK_NAME_KEY: 'deployName',
+  },
+};
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -220,6 +235,7 @@ module.exports = {
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
   PROJECT_TEMPLATE_TYPES,
+  PROJECT_TEXT,
   SCOPE_GROUPS,
   TEMPLATE_TYPES,
 };

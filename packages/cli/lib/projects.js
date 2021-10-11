@@ -12,9 +12,7 @@ const {
   ENVIRONMENTS,
   POLLING_DELAY,
   PROJECT_BUILD_STATUS,
-  PROJECT_BUILD_STATUS_TEXT,
-  PROJECT_DEPLOY_STATUS,
-  PROJECT_DEPLOY_STATUS_TEXT,
+  PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   getBuildStatus,
@@ -27,10 +25,11 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 
-const isBuildComplete = build => {
+const isTaskComplete = task => {
   return (
-    build.status === PROJECT_BUILD_STATUS.SUCCESS ||
-    build.status === PROJECT_BUILD_STATUS.FAILURE
+    // Todo: rework these enum keys
+    task.status === PROJECT_BUILD_STATUS.SUCCESS ||
+    task.status === PROJECT_BUILD_STATUS.FAILURE
   );
 };
 
@@ -188,195 +187,106 @@ const showWelcomeMessage = (projectName, accountId) => {
   );
 };
 
-const pollBuildStatus = async (accountId, name, buildId) => {
-  const buildStatus = await getBuildStatus(accountId, name, buildId);
-  const spinnies = new Spinnies();
-
-  logger.log();
-  logger.log(`Building ${chalk.bold(name)}`);
-  logger.log();
-  logger.log(`Found ${buildStatus.subbuildStatuses.length} deployables ...`);
-  logger.log();
-
-  for (let subBuild of buildStatus.subbuildStatuses) {
-    spinnies.add(subBuild.buildName, {
-      text: `${chalk.bold(subBuild.buildName)} #${buildId} ${
-        PROJECT_BUILD_STATUS_TEXT[PROJECT_BUILD_STATUS.ENQUEUED]
-      }`,
-    });
+const makeGetTaskStatus = taskType => {
+  let statusFn, statusText;
+  switch (taskType) {
+    case 'build':
+      statusFn = getBuildStatus;
+      statusText = PROJECT_TEXT.BUILD;
+      break;
+    case 'deploy':
+      statusFn = getDeployStatus;
+      statusText = PROJECT_TEXT.DEPLOY;
+      break;
+    default:
+      logger.error(`Cannot get status for task type ${taskType}`);
   }
 
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const buildStatus = await getBuildStatus(accountId, name, buildId).catch(
-        reject
-      );
+  return async (accountId, taskName, taskId) => {
+    const spinnies = new Spinnies({
+      succeedColor: 'white',
+    });
 
-      const {
-        status,
-        subbuildStatuses,
-        autoDeployEnabled,
-        deployStatusTaskLocator,
-      } = buildStatus;
+    spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
-      if (spinnies.hasActiveSpinners()) {
-        subbuildStatuses.forEach(subBuild => {
-          if (!spinnies.pick(subBuild.buildName)) {
-            return;
-          }
+    const initialTaskStatus = await statusFn(accountId, taskName, taskId);
 
-          const updatedText = `${chalk.bold(subBuild.buildName)} #${buildId} ${
-            PROJECT_BUILD_STATUS_TEXT[subBuild.status]
-          }`;
+    spinnies.update('overallTaskStatus', {
+      text: `Building ${chalk.bold(taskName)}\n\nFound ${
+        initialTaskStatus[statusText.SUBTASK_KEY].length
+      } components in this project ...\n`,
+    });
 
-          switch (subBuild.status) {
-            case PROJECT_BUILD_STATUS.SUCCESS:
-              spinnies.succeed(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-            case PROJECT_BUILD_STATUS.FAILURE:
-              spinnies.fail(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-            default:
-              spinnies.update(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-          }
-        });
-      }
+    for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
+      spinnies.add(subTask[statusText.SUBTASK_NAME_KEY], {
+        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${taskId} ${
+          statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
+        }\n`,
+      });
+    }
 
-      if (isBuildComplete(buildStatus) && spinnies.hasActiveSpinners()) {
-        if (status === PROJECT_BUILD_STATUS.SUCCESS) {
-          logger.success(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_BUILD_STATUS_TEXT[status]
-            }.`
-          );
-        } else if (status === PROJECT_BUILD_STATUS.FAILURE) {
-          logger.error(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_BUILD_STATUS_TEXT[status]
-            }.`
-          );
-          subbuildStatuses.forEach(subBuild => {
-            if (subBuild.status === PROJECT_BUILD_STATUS.FAILURE) {
-              logger.error(
-                `${chalk.bold(subBuild.buildName)} failed to build. ${
-                  subBuild.errorMessage
-                }.`
-              );
+    return new Promise((resolve, reject) => {
+      const pollInterval = setInterval(async () => {
+        const taskStatus = await statusFn(accountId, taskName, taskId).catch(
+          reject
+        );
+
+        const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
+
+        if (spinnies.hasActiveSpinners()) {
+          subTaskStatus.forEach(subTask => {
+            if (!spinnies.pick(subTask[statusText.SUBTASK_NAME_KEY])) {
+              return;
+            }
+
+            const updatedText = `${chalk.bold(
+              subTask[statusText.SUBTASK_NAME_KEY]
+            )} #${taskId} ${statusText.STATUS_TEXT[subTask.status]}\n`;
+
+            switch (subTask.status) {
+              case statusText.STATES.SUCCESS:
+                spinnies.succeed(subTask[statusText.SUBTASK_NAME_KEY], {
+                  text: updatedText,
+                });
+                break;
+              case statusText.STATES.FAILURE:
+                spinnies.fail(subTask.buildName, {
+                  text: updatedText,
+                });
+                break;
+              default:
+                spinnies.update(subTask.buildName, {
+                  text: updatedText,
+                });
+                break;
             }
           });
         }
 
-        if (!autoDeployEnabled) {
-          resolve(buildStatus);
-        }
-      }
-
-      if (autoDeployEnabled && deployStatusTaskLocator) {
-        clearInterval(pollInterval);
-        resolve(buildStatus);
-      }
-    }, POLLING_DELAY);
-  });
-};
-
-const pollDeployStatus = async (accountId, name, deployId, deployedBuildId) => {
-  const deployStatus = await getDeployStatus(accountId, name, deployId);
-  const spinnies = new Spinnies();
-
-  logger.log();
-  logger.log(`Deploying ${chalk.bold(name)}`);
-  logger.log();
-  logger.log(
-    `Found ${deployStatus.subdeployStatuses.length} sub-build deploys ...`
-  );
-  logger.log();
-
-  for (let subdeploy of deployStatus.subdeployStatuses) {
-    spinnies.add(subdeploy.deployName, {
-      text: `${chalk.bold(subdeploy.deployName)} #${deployedBuildId} ${
-        PROJECT_DEPLOY_STATUS_TEXT[PROJECT_DEPLOY_STATUS.ENQUEUED]
-      }`,
-    });
-  }
-
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const deployStatus = await getDeployStatus(
-        accountId,
-        name,
-        deployId
-      ).catch(reject);
-
-      const { status, subdeployStatuses } = deployStatus;
-
-      if (spinnies.hasActiveSpinners()) {
-        subdeployStatuses.forEach(subdeploy => {
-          if (!spinnies.pick(subdeploy.deployName)) {
-            return;
-          }
-
-          const updatedText = `${chalk.bold(
-            subdeploy.deployName
-          )} #${deployedBuildId} ${
-            PROJECT_DEPLOY_STATUS_TEXT[subdeploy.status]
-          }`;
-
-          switch (subdeploy.status) {
-            case PROJECT_DEPLOY_STATUS.SUCCESS:
-              spinnies.succeed(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-            case PROJECT_DEPLOY_STATUS.FAILURE:
-              spinnies.fail(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-            default:
-              spinnies.update(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-          }
-        });
-      }
-
-      if (isBuildComplete(deployStatus)) {
-        clearInterval(pollInterval);
-
-        if (status === PROJECT_DEPLOY_STATUS.SUCCESS) {
-          logger.success(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_DEPLOY_STATUS_TEXT[status]
-            }.`
-          );
-        } else if (status === PROJECT_DEPLOY_STATUS.FAILURE) {
-          logger.error(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_DEPLOY_STATUS_TEXT[status]
-            }.`
-          );
-          subdeployStatuses.forEach(subdeploy => {
-            if (subdeploy.status === PROJECT_DEPLOY_STATUS.FAILURE) {
-              logger.error(
-                `${chalk.bold(subdeploy.deployName)} failed to build. ${
-                  subdeploy.errorMessage
-                }.`
-              );
-            }
+        if (isTaskComplete(taskStatus) && spinnies.hasActiveSpinners()) {
+          subTaskStatus.forEach(subBuild => {
+            spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
           });
+
+          if (status === statusText.STATES.SUCCESS) {
+            spinnies.succeed('overallTaskStatus', {
+              text: `Built ${chalk.bold(taskName)}`,
+            });
+          } else if (status === statusText.STATES.FAILURE) {
+            spinnies.fail('overallTaskStatus');
+            logger.error(
+              `Your project ${chalk.bold(taskName)} ${
+                statusText.STATES[status]
+              }.`
+            );
+          }
+
+          clearInterval(pollInterval);
+          resolve(taskStatus);
         }
-        resolve(deployStatus);
-      }
-    }, POLLING_DELAY);
-  });
+      }, POLLING_DELAY);
+    });
+  };
 };
 
 module.exports = {
@@ -385,7 +295,7 @@ module.exports = {
   getOrCreateProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
-  pollBuildStatus,
-  pollDeployStatus,
+  pollBuildStatus: makeGetTaskStatus('build'),
+  pollDeployStatus: makeGetTaskStatus('deploy'),
   ensureProjectExists,
 };

@@ -134,11 +134,11 @@ exports.handler = async options => {
     );
 
     const {
-      autoDeployEnabled,
+      isAutoDeployEnabled,
       deployStatusTaskLocator,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
-    if (autoDeployEnabled && deployStatusTaskLocator.id) {
+    if (isAutoDeployEnabled && deployStatusTaskLocator.id) {
       await pollDeployStatus(
         accountId,
         projectConfig.name,
