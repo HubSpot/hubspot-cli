@@ -12,15 +12,13 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
-const { logger } = require('@hubspot/cli-lib/logger');
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const { createProjectConfig } = require('../../lib/projects');
+const {
+  createProjectConfig,
+  showWelcomeMessage,
+} = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -47,27 +45,9 @@ exports.handler = async options => {
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
 
-  try {
-    await createProjectConfig(cwd);
-    logger
-      .success
-      // `"${projectConfig.name}" creation succeeded in account ${accountId}`
-      ();
-  } catch (e) {
-    if (e.statusCode === 409) {
-      logger
-        .log
-        // `Project ${projectConfig.name} already exists in ${accountId}.`
-        ();
-    } else {
-      return logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, projectPath })
-      );
-    }
-  }
+  const projectConfig = await createProjectConfig(cwd);
 
-  // showWelcomeMessage(projectConfig.name, accountId);
+  showWelcomeMessage(projectConfig.name, accountId);
 };
 
 exports.builder = yargs => {

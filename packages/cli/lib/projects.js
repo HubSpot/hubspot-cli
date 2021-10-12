@@ -56,7 +56,11 @@ const createProjectConfig = async projectPath => {
   const projectConfig = await getProjectConfig(projectPath);
 
   if (projectConfig) {
-    logger.log(`Project already exists in ${projectPath}`);
+    logger.log(
+      `Found an existing project config in this folder (${chalk.bold(
+        projectConfig.name
+      )})`
+    );
   } else {
     logger.log(
       `Creating project in ${projectPath ? projectPath : 'the current folder'}`
@@ -147,28 +151,23 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
 };
 
-const showWelcomeMessage = (projectName, accountId) => {
-  const projectDetailUrl = getProjectDetailUrl(projectName, accountId);
-
+const showWelcomeMessage = () => {
   logger.log('');
-  logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
+  logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
   logger.log(
     '\n-------------------------------------------------------------\n'
   );
-  if (projectDetailUrl) {
-    logger.log(chalk.italic(`View this project at: ${projectDetailUrl}`));
-  }
-  logger.log('');
-  logger.log(chalk.bold('Getting Started'));
-  logger.log('');
-  logger.log('1. hs project upload');
+  logger.log(chalk.bold("What's next?\n"));
+  logger.log('🎨 Add deployables to your project with `hs create`.\n');
   logger.log(
-    '   Upload your project files to HubSpot. Upload action adds your files to a build.'
+    `🏗 Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );
-  logger.log();
-  logger.log('2. View your changes on the preview build url');
-  logger.log();
-  logger.log('Use `hs project --help` to learn more about the command.');
+  logger.log(
+    `🚀 Ready to take your project live? Run \`hs project deploy\`.\n`
+  );
+  logger.log(
+    `🔗 Use \`hs project --help\` to learn more about available commands.\n`
+  );
   logger.log(
     '\n-------------------------------------------------------------\n'
   );
@@ -361,4 +360,5 @@ module.exports = {
   showWelcomeMessage,
   pollBuildStatus,
   pollDeployStatus,
+  getProjectDetailUrl,
 };
