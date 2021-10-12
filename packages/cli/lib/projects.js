@@ -58,7 +58,9 @@ const createProjectConfig = async projectPath => {
   if (projectConfig) {
     logger.log(`Project already exists in ${projectPath}`);
   } else {
-    logger.log(`> Creating project in ${projectPath}`);
+    logger.log(
+      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    );
     const { name, template, srcDir } = await prompt([
       {
         name: 'name',
@@ -77,7 +79,7 @@ const createProjectConfig = async projectPath => {
         choices: [
           {
             name: 'No template',
-            value: 'none',
+            value: false,
           },
           {
             name: 'Basic',
@@ -88,7 +90,7 @@ const createProjectConfig = async projectPath => {
       {
         name: 'srcDir',
         message: 'Which directory contains your project files?',
-        when: answers => answers.template === 'none',
+        when: answers => !answers.template,
         validate: input => {
           if (!input) {
             return 'A source directory is required';

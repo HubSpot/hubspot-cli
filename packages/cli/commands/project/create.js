@@ -47,8 +47,8 @@ exports.handler = async options => {
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
 
-  await createProjectConfig(cwd);
   try {
+    await createProjectConfig(cwd);
     logger
       .success
       // `"${projectConfig.name}" creation succeeded in account ${accountId}`
