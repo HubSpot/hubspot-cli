@@ -168,9 +168,7 @@ const showWelcomeMessage = () => {
   logger.log(
     `🔗 Use \`hs project --help\` to learn more about available commands.\n`
   );
-  logger.log(
-    '\n-------------------------------------------------------------\n'
-  );
+  logger.log('-------------------------------------------------------------');
 };
 
 const pollBuildStatus = async (accountId, name, buildId) => {
