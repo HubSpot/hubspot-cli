@@ -14,7 +14,6 @@ const {
   PROJECT_BUILD_STATUS,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
-const { PROJECTS } = require('./strings');
 const {
   getBuildStatus,
   getDeployStatus,
@@ -25,6 +24,23 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+
+const PROJECT_STRINGS = {
+  BUILD: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Building ${chalk.bold(
+        name
+      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+    SUCCESS: name => `Built ${chalk.bold(name)}`,
+  },
+  DEPLOY: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Deploying ${chalk.bold(
+        name
+      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
+  },
+};
 
 const isTaskComplete = task => {
   return (
@@ -194,12 +210,12 @@ const makeGetTaskStatus = taskType => {
     case 'build':
       statusFn = getBuildStatus;
       statusText = PROJECT_TEXT.BUILD;
-      statusStrings = PROJECTS.BUILD;
+      statusStrings = PROJECT_STRINGS.BUILD;
       break;
     case 'deploy':
       statusFn = getDeployStatus;
       statusText = PROJECT_TEXT.DEPLOY;
-      statusStrings = PROJECTS.DEPLOY;
+      statusStrings = PROJECT_STRINGS.DEPLOY;
       break;
     default:
       logger.error(`Cannot get status for task type ${taskType}`);

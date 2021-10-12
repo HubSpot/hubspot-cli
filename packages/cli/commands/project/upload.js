@@ -51,7 +51,9 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  const spinnies = new Spinnies();
+  const spinnies = new Spinnies({
+    succeedColor: 'white',
+  });
 
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
@@ -139,12 +141,23 @@ exports.handler = async options => {
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
     if (isAutoDeployEnabled && deployStatusTaskLocator.id) {
+      logger.log(
+        `Build #${buildId} succeeded. ${chalk.bold(
+          'Automatically deploying'
+        )} to ${accountId}`
+      );
       await pollDeployStatus(
         accountId,
         projectConfig.name,
         deployStatusTaskLocator.id,
         buildId
       );
+    } else {
+      logger.log('-'.repeat(50));
+      logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
+      logger.log('🚀 Ready to take your project live?');
+      logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
+      logger.log('-'.repeat(50));
     }
 
     try {
