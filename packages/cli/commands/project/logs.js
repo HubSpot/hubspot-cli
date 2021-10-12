@@ -34,9 +34,11 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-const handleLatestLogsError = e => {
+const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
-    logger.log('No logs found.');
+    logger.error(
+      `No logs were found for the function name '${functionName}' in the app path '${appPath}' within the project '${projectName}' in account ${accountId}.`
+    );
   }
 };
 
@@ -71,7 +73,7 @@ const appFunctionLog = async (accountId, options) => {
           appPath
         );
       } catch (e) {
-        handleLatestLogsError(e);
+        handleLogsError(e, accountId, projectName, appPath, functionName);
       }
     };
 
@@ -91,16 +93,20 @@ const appFunctionLog = async (accountId, options) => {
         appPath
       );
     } catch (e) {
-      handleLatestLogsError(e);
+      handleLogsError(e, accountId, projectName, appPath, functionName);
     }
   } else {
-    logsResp = await getProjectAppFunctionLogs(
-      accountId,
-      functionName,
-      projectName,
-      appPath,
-      {}
-    );
+    try {
+      logsResp = await getProjectAppFunctionLogs(
+        accountId,
+        functionName,
+        projectName,
+        appPath,
+        {}
+      );
+    } catch (e) {
+      handleLogsError(e, accountId, projectName, appPath, functionName);
+    }
   }
 
   if (logsResp) {
