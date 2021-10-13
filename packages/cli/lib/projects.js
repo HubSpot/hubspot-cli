@@ -32,6 +32,7 @@ const PROJECT_STRINGS = {
         name
       )}\n\nFound ${numOfComponents} components in this project ...\n`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
+    FAIL: name => `Failed to build ${chalk.bold(name)}`,
   },
   DEPLOY: {
     INITIALIZE: (name, numOfComponents) =>
@@ -39,6 +40,7 @@ const PROJECT_STRINGS = {
         name
       )}\n\nFound ${numOfComponents} components in this project ...\n`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
+    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
   },
 };
 
@@ -224,6 +226,10 @@ const makeGetTaskStatus = taskType => {
   return async (accountId, taskName, taskId) => {
     const spinnies = new Spinnies({
       succeedColor: 'white',
+      failColor: 'white',
+      // TODO: spacing is a bit off when customizing these
+      // successPrefix: '\u2714',
+      // failPrefix: '\u2757',
     });
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
@@ -292,12 +298,9 @@ const makeGetTaskStatus = taskType => {
                 text: statusStrings.SUCCESS(taskName),
               });
             } else if (status === statusText.STATES.FAILURE) {
-              spinnies.fail('overallTaskStatus');
-              logger.error(
-                `Your project ${chalk.bold(taskName)} ${
-                  statusText.STATES[status]
-                }.`
-              );
+              spinnies.fail('overallTaskStatus', {
+                text: statusStrings.FAIL(taskName),
+              });
             }
 
             clearInterval(pollInterval);
