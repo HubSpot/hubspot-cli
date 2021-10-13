@@ -11,15 +11,15 @@ const ACCOUNT_ID = 123;
 describe('@hubspot/cli/lib/serverlessLogs', () => {
   describe('tailLogs()', () => {
     let stdinMock;
-    let spinner;
+    let spinnies;
 
     beforeEach(() => {
       jest.spyOn(process, 'exit').mockImplementation(() => {});
       stdinMock = mockStdIn.stdin();
-      spinner = {
-        start: jest.fn(),
-        stop: jest.fn(),
-        clear: jest.fn(),
+      spinnies = {
+        succeed: jest.fn(),
+        fail: jest.fn(),
+        stopAll: jest.fn(),
       };
     });
 
@@ -56,7 +56,7 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
       await tailLogs({
         accountId: ACCOUNT_ID,
         compact,
-        spinner,
+        spinnies,
         fetchLatest,
         tailCall,
       });
@@ -114,7 +114,7 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
       await tailLogs({
         accountId: ACCOUNT_ID,
         compact,
-        spinner,
+        spinnies,
         fetchLatest,
         tailCall,
       });
@@ -123,7 +123,6 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
         latestLogResponse,
         expect.objectContaining({ compact })
       );
-      expect(spinner.clear).toHaveBeenCalled();
       expect(tailCall).toHaveBeenCalledTimes(2);
     });
     it('handles no logs', async () => {
@@ -147,7 +146,7 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
       await tailLogs({
         accountId: ACCOUNT_ID,
         compact,
-        spinner,
+        spinnies,
         fetchLatest,
         tailCall,
       });

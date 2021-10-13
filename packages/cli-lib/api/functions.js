@@ -31,30 +31,36 @@ async function getBuildStatus(portalId, buildId) {
   });
 }
 
-async function getAppFunctionLogs(
+async function getProjectAppFunctionLogs(
   accountId,
   functionName,
+  projectName,
   appPath,
   query = {}
 ) {
   const { limit = 5 } = query;
 
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/${functionName}`,
+    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}`,
     query: { ...query, limit, appPath },
   });
 }
 
-async function getLatestAppFunctionLogs(accountId, functionName, appPath) {
+async function getLatestProjectAppFunctionLog(
+  accountId,
+  functionName,
+  projectName,
+  appPath
+) {
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/${functionName}/latest`,
+    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}/latest`,
     query: { appPath },
   });
 }
 
 module.exports = {
-  getAppFunctionLogs,
-  getLatestAppFunctionLogs,
+  getProjectAppFunctionLogs,
+  getLatestProjectAppFunctionLog,
   buildPackage,
   getBuildStatus,
   getFunctionByPath,
