@@ -281,28 +281,28 @@ const makeGetTaskStatus = taskType => {
                 break;
             }
           });
-        }
 
-        if (isTaskComplete(taskStatus) && spinnies.hasActiveSpinners()) {
-          subTaskStatus.forEach(subBuild => {
-            spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
-          });
-
-          if (status === statusText.STATES.SUCCESS) {
-            spinnies.succeed('overallTaskStatus', {
-              text: statusStrings.SUCCESS(taskName),
+          if (isTaskComplete(taskStatus)) {
+            subTaskStatus.forEach(subBuild => {
+              spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
             });
-          } else if (status === statusText.STATES.FAILURE) {
-            spinnies.fail('overallTaskStatus');
-            logger.error(
-              `Your project ${chalk.bold(taskName)} ${
-                statusText.STATES[status]
-              }.`
-            );
-          }
 
-          clearInterval(pollInterval);
-          resolve(taskStatus);
+            if (status === statusText.STATES.SUCCESS) {
+              spinnies.succeed('overallTaskStatus', {
+                text: statusStrings.SUCCESS(taskName),
+              });
+            } else if (status === statusText.STATES.FAILURE) {
+              spinnies.fail('overallTaskStatus');
+              logger.error(
+                `Your project ${chalk.bold(taskName)} ${
+                  statusText.STATES[status]
+                }.`
+              );
+            }
+
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          }
         }
       }, POLLING_DELAY);
     });
