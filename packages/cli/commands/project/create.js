@@ -38,14 +38,14 @@ exports.describe = false;
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { path: projectPath, name } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-create', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
 
-  const projectConfig = await createProjectConfig(cwd);
+  const projectConfig = await createProjectConfig(cwd, name);
 
   showWelcomeMessage(projectConfig.name, accountId);
 };
@@ -55,14 +55,9 @@ exports.builder = yargs => {
     describe: 'Path to a project folder',
     type: 'string',
   });
-  // TODO: These are not currently used
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
-      type: 'string',
-    },
-    srcDir: {
-      describe: 'Directory of project',
       type: 'string',
     },
   });

@@ -55,7 +55,7 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const createProjectConfig = async projectPath => {
+const createProjectConfig = async (projectPath, projectName) => {
   const projectConfig = await getProjectConfig(projectPath);
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
@@ -73,6 +73,7 @@ const createProjectConfig = async projectPath => {
       {
         name: 'name',
         message: 'Please enter a project name:',
+        when: !projectName,
         validate: input => {
           if (!input) {
             return 'A project name is required';
@@ -95,35 +96,28 @@ const createProjectConfig = async projectPath => {
           },
         ],
       },
-      {
-        name: 'srcDir',
-        message: 'Which directory contains your project files?',
-        when: answers => !answers.template,
-        validate: input => {
-          if (!input) {
-            return 'A source directory is required';
-          }
-          return true;
-        },
-      },
     ]);
-    let _config;
 
-    if (template !== 'none') {
+    if (template === 'none') {
+      fs.ensureDirSync(path.join(projectPath, 'src'));
+
+      writeProjectConfig(projectConfigPath, {
+        name: projectName || name,
+        srcDir: 'src',
+      });
+    } else {
       await createProject(
         projectPath,
         'project',
         PROJECT_TEMPLATE_REPO[template],
         ''
       );
-      _config = JSON.parse(fs.readFileSync(projectConfigPath));
+      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+      writeProjectConfig(projectConfigPath, {
+        ..._config,
+        name: projectName || name,
+      });
     }
-
-    writeProjectConfig(projectConfigPath, {
-      ..._config,
-      name,
-      ...(srcDir && srcDir),
-    });
 
     return { name, srcDir };
   }
