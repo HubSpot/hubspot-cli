@@ -7,6 +7,7 @@ const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { createProject } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
@@ -15,6 +16,7 @@ const {
   PROJECT_BUILD_STATUS_TEXT,
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
+  PROJECT_TEMPLATE_REPO,
 } = require('@hubspot/cli-lib/lib/constants');
 const { getBuildStatus, getDeployStatus } = require('@hubspot/cli-lib/api/dfs');
 
@@ -54,6 +56,7 @@ const getProjectConfig = async projectPath => {
 
 const createProjectConfig = async projectPath => {
   const projectConfig = await getProjectConfig(projectPath);
+  const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
   if (projectConfig) {
     logger.log(
@@ -83,11 +86,11 @@ const createProjectConfig = async projectPath => {
         choices: [
           {
             name: 'No template',
-            value: false,
+            value: 'none',
           },
           {
-            name: 'Basic',
-            value: 'basic',
+            name: 'Getting Started Project',
+            value: 'getting-started',
           },
         ],
       },
@@ -103,15 +106,24 @@ const createProjectConfig = async projectPath => {
         },
       },
     ]);
+    let _config;
 
     if (template) {
-      logger.log(`> Creating project from template ${template}`);
-    } else {
-      writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
-        name,
-        srcDir,
-      });
+      await createProject(
+        projectPath,
+        'project',
+        PROJECT_TEMPLATE_REPO[template],
+        ''
+      );
+      _config = JSON.parse(fs.readFileSync(projectConfigPath));
     }
+
+    writeProjectConfig(projectConfigPath, {
+      ..._config,
+      name,
+      ...(srcDir && srcDir),
+    });
+
     return { name, srcDir };
   }
 
