@@ -11,7 +11,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
-  PROJECT_BUILD_STATUS,
+  PROJECT_OVERALL_STATUS,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -46,9 +46,8 @@ const PROJECT_STRINGS = {
 
 const isTaskComplete = task => {
   return (
-    // Todo: rework these enum keys
-    task.status === PROJECT_BUILD_STATUS.SUCCESS ||
-    task.status === PROJECT_BUILD_STATUS.FAILURE
+    task.status === PROJECT_OVERALL_STATUS.SUCCESS ||
+    task.status === PROJECT_OVERALL_STATUS.FAILURE
   );
 };
 
