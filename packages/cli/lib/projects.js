@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 
 const chalk = require('chalk');
@@ -29,6 +29,7 @@ const isBuildComplete = build => {
 
 const writeProjectConfig = (configPath, config) => {
   try {
+    fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
@@ -108,7 +109,7 @@ const createProjectConfig = async projectPath => {
     ]);
     let _config;
 
-    if (template) {
+    if (template !== 'none') {
       await createProject(
         projectPath,
         'project',
