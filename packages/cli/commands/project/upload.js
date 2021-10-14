@@ -32,6 +32,7 @@ const {
   validateProjectConfig,
   pollBuildStatus,
   ensureProjectExists,
+  pollDeployStatus,
 } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
@@ -50,7 +51,9 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  const spinnies = new Spinnies();
+  const spinnies = new Spinnies({
+    succeedColor: 'white',
+  });
 
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
@@ -96,11 +99,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     );
   }
 
-  try {
-    await pollBuildStatus(accountId, projectName, buildId);
-  } catch (err) {
-    logger.log(err);
-  }
+  return { buildId };
 };
 
 exports.handler = async options => {
@@ -130,7 +129,64 @@ exports.handler = async options => {
   output.on('close', async function() {
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
-    await uploadProjectFiles(accountId, projectConfig.name, tempFile.name);
+    const { buildId } = await uploadProjectFiles(
+      accountId,
+      projectConfig.name,
+      tempFile.name
+    );
+
+    const {
+      isAutoDeployEnabled,
+      deployStatusTaskLocator,
+      status,
+      subbuildStatuses,
+    } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+
+    if (status === 'FAILURE') {
+      const failedSubbuilds = subbuildStatuses.filter(
+        subbuild => subbuild.status === 'FAILURE'
+      );
+
+      logger.log('-'.repeat(50));
+      logger.log(
+        `Build #${buildId} failed because there was a problem\nbuilding ${
+          failedSubbuilds.length === 1
+            ? failedSubbuilds[0].buildName
+            : failedSubbuilds.length + ' components'
+        }\n`
+      );
+      logger.log('See below for a summary of errors.');
+      logger.log('-'.repeat(50));
+
+      failedSubbuilds.forEach(subbuild => {
+        logger.log(
+          `\n--- ${subbuild.buildName} failed to build with the following error ---`
+        );
+        logger.error(subbuild.errorMessage);
+      });
+
+      return;
+    }
+
+    if (isAutoDeployEnabled && deployStatusTaskLocator) {
+      logger.log(
+        `Build #${buildId} succeeded. ${chalk.bold(
+          'Automatically deploying'
+        )} to ${accountId}`
+      );
+      await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        deployStatusTaskLocator.id,
+        buildId
+      );
+    } else {
+      logger.log('-'.repeat(50));
+      logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
+      logger.log('🚀 Ready to take your project live?');
+      logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
+      logger.log('-'.repeat(50));
+    }
 
     try {
       tempFile.removeCallback();
