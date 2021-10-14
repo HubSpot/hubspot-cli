@@ -226,9 +226,6 @@ const makeGetTaskStatus = taskType => {
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
-      // TODO: spacing is a bit off when customizing these
-      // successPrefix: '\u2714',
-      // failPrefix: '\u2757',
     });
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
