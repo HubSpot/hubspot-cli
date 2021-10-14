@@ -1,3 +1,4 @@
+const supportsHyperlinks = require('supports-hyperlinks');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
@@ -120,9 +121,18 @@ const openLink = (accountId, shortcut) => {
   logger.success(`We opened ${match.url} in your browser`);
 };
 
+const link = (linkText, url) => {
+  if (supportsHyperlinks.stdout) {
+    return ['\u001B]8;;', url, '\u0007', linkText, '\u001B]8;;\u0007'].join('');
+  } else {
+    return `${linkText}: ${url}`;
+  }
+};
+
 module.exports = {
   getSiteLinks,
   getSiteLinksAsArray,
   logSiteLinks,
   openLink,
+  link,
 };

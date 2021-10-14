@@ -31,6 +31,8 @@ const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
+  ensureProjectExists,
+  pollDeployStatus,
 } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
@@ -49,7 +51,9 @@ exports.command = 'upload [path]';
 exports.describe = false;
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  const spinnies = new Spinnies();
+  const spinnies = new Spinnies({
+    succeedColor: 'white',
+  });
 
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
@@ -57,8 +61,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     )}`,
   });
 
+  let buildId;
+
   try {
     const upload = await uploadProject(accountId, projectName, filePath);
+
+    buildId = upload.buildId;
 
     spinnies.succeed('upload', {
       text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
@@ -67,9 +75,8 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     });
 
     logger.debug(
-      `Project "${projectName}" uploaded and build #${upload.buildId} created`
+      `Project "${projectName}" uploaded and build #${buildId} created`
     );
-    await pollBuildStatus(accountId, projectName, upload.buildId);
   } catch (err) {
     if (err.statusCode === 404) {
       return logger.error(
@@ -83,13 +90,16 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
       )} project files to ${chalk.bold(accountId)}`,
     });
 
-    logApiErrorInstance(err, {
-      context: new ApiErrorContext({
+    logApiErrorInstance(
+      err,
+      new ApiErrorContext({
         accountId,
         projectName,
-      }),
-    });
+      })
+    );
   }
+
+  return { buildId };
 };
 
 exports.handler = async options => {
@@ -100,10 +110,14 @@ exports.handler = async options => {
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getProjectConfig(cwd);
+  const projectDir = projectPath
+    ? path.resolve(getCwd(), projectPath)
+    : getCwd();
+  const projectConfig = await getProjectConfig(projectDir);
 
-  validateProjectConfig(projectConfig);
+  validateProjectConfig(projectConfig, projectDir);
+
+  await ensureProjectExists(accountId, projectConfig.name);
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
@@ -115,7 +129,64 @@ exports.handler = async options => {
   output.on('close', async function() {
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
-    await uploadProjectFiles(accountId, projectConfig.name, tempFile.name);
+    const { buildId } = await uploadProjectFiles(
+      accountId,
+      projectConfig.name,
+      tempFile.name
+    );
+
+    const {
+      isAutoDeployEnabled,
+      deployStatusTaskLocator,
+      status,
+      subbuildStatuses,
+    } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+
+    if (status === 'FAILURE') {
+      const failedSubbuilds = subbuildStatuses.filter(
+        subbuild => subbuild.status === 'FAILURE'
+      );
+
+      logger.log('-'.repeat(50));
+      logger.log(
+        `Build #${buildId} failed because there was a problem\nbuilding ${
+          failedSubbuilds.length === 1
+            ? failedSubbuilds[0].buildName
+            : failedSubbuilds.length + ' components'
+        }\n`
+      );
+      logger.log('See below for a summary of errors.');
+      logger.log('-'.repeat(50));
+
+      failedSubbuilds.forEach(subbuild => {
+        logger.log(
+          `\n--- ${subbuild.buildName} failed to build with the following error ---`
+        );
+        logger.error(subbuild.errorMessage);
+      });
+
+      return;
+    }
+
+    if (isAutoDeployEnabled && deployStatusTaskLocator) {
+      logger.log(
+        `Build #${buildId} succeeded. ${chalk.bold(
+          'Automatically deploying'
+        )} to ${accountId}`
+      );
+      await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        deployStatusTaskLocator.id,
+        buildId
+      );
+    } else {
+      logger.log('-'.repeat(50));
+      logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
+      logger.log('🚀 Ready to take your project live?');
+      logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
+      logger.log('-'.repeat(50));
+    }
 
     try {
       tempFile.removeCallback();
@@ -131,8 +202,10 @@ exports.handler = async options => {
 
   archive.pipe(output);
 
-  archive.directory(path.resolve(cwd, projectConfig.srcDir), false, file =>
-    shouldIgnoreFile(file.name) ? false : file
+  archive.directory(
+    path.resolve(projectDir, projectConfig.srcDir),
+    false,
+    file => (shouldIgnoreFile(file.name) ? false : file)
   );
 
   archive.finalize();
