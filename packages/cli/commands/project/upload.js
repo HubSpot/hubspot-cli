@@ -97,6 +97,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
+    process.exit(1);
   }
 
   return { buildId };
