@@ -7,8 +7,11 @@ const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
-const { createProject } = require('@hubspot/cli-lib/projects');
+const {
+  createProject: createProjectTemplate,
+} = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
@@ -17,6 +20,7 @@ const {
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
+  createProject,
   getBuildStatus,
   getDeployStatus,
   fetchProject,
@@ -131,7 +135,7 @@ const createProjectConfig = async (projectPath, projectName) => {
         srcDir: 'src',
       });
     } else {
-      await createProject(
+      await createProjectTemplate(
         projectPath,
         'project',
         PROJECT_TEMPLATE_REPO[template],
