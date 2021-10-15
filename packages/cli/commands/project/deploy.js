@@ -21,10 +21,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
-const {
-  getOrCreateProjectConfig,
-  pollDeployStatus,
-} = require('../../lib/projects');
+const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -50,7 +47,7 @@ exports.handler = async options => {
   trackCommandUsage('project-deploy', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getOrCreateProjectConfig(cwd);
+  const projectConfig = await getProjectConfig(cwd);
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 

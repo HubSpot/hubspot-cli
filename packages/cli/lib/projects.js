@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 
 const chalk = require('chalk');
@@ -7,10 +7,12 @@ const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { createProject } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
+  PROJECT_TEMPLATE_REPO,
   PROJECT_OVERALL_STATUS,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
@@ -18,7 +20,6 @@ const {
   getBuildStatus,
   getDeployStatus,
   fetchProject,
-  createProject,
 } = require('@hubspot/cli-lib/api/dfs');
 const {
   logApiErrorInstance,
@@ -53,6 +54,7 @@ const isTaskComplete = task => {
 
 const writeProjectConfig = (configPath, config) => {
   try {
+    fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
@@ -78,14 +80,25 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const getOrCreateProjectConfig = async projectPath => {
+const createProjectConfig = async (projectPath, projectName) => {
   const projectConfig = await getProjectConfig(projectPath);
+  const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
-  if (!projectConfig) {
-    const { name, srcDir } = await prompt([
+  if (projectConfig) {
+    logger.log(
+      `Found an existing project config in this folder (${chalk.bold(
+        projectConfig.name
+      )})`
+    );
+  } else {
+    logger.log(
+      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    );
+    const { name, template, srcDir } = await prompt([
       {
         name: 'name',
         message: 'Please enter a project name:',
+        when: !projectName,
         validate: input => {
           if (!input) {
             return 'A project name is required';
@@ -94,20 +107,43 @@ const getOrCreateProjectConfig = async projectPath => {
         },
       },
       {
-        name: 'srcDir',
-        message: 'Which directory contains your project files?',
-        validate: input => {
-          if (!input) {
-            return 'A source directory is required';
-          }
-          return true;
-        },
+        name: 'template',
+        message: 'Start from a template?',
+        type: 'rawlist',
+        choices: [
+          {
+            name: 'No template',
+            value: 'none',
+          },
+          {
+            name: 'Getting Started Project',
+            value: 'getting-started',
+          },
+        ],
       },
     ]);
-    writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
-      name,
-      srcDir,
-    });
+
+    if (template === 'none') {
+      fs.ensureDirSync(path.join(projectPath, 'src'));
+
+      writeProjectConfig(projectConfigPath, {
+        name: projectName || name,
+        srcDir: 'src',
+      });
+    } else {
+      await createProject(
+        projectPath,
+        'project',
+        PROJECT_TEMPLATE_REPO[template],
+        ''
+      );
+      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+      writeProjectConfig(projectConfigPath, {
+        ..._config,
+        name: projectName || name,
+      });
+    }
+
     return { name, srcDir };
   }
 
@@ -178,31 +214,24 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
 };
 
-const showWelcomeMessage = (projectName, accountId) => {
-  const projectDetailUrl = getProjectDetailUrl(projectName, accountId);
-
+const showWelcomeMessage = () => {
   logger.log('');
-  logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
+  logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
   logger.log(
     '\n-------------------------------------------------------------\n'
   );
-  if (projectDetailUrl) {
-    logger.log(chalk.italic(`View this project at: ${projectDetailUrl}`));
-  }
-  logger.log('');
-  logger.log(chalk.bold('Getting Started'));
-  logger.log('');
-  logger.log('1. hs project upload');
+  logger.log(chalk.bold("What's next?\n"));
+  logger.log('🎨 Add deployables to your project with `hs create`.\n');
   logger.log(
-    '   Upload your project files to HubSpot. Upload action adds your files to a build.'
+    `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );
-  logger.log();
-  logger.log('2. View your changes on the preview build url');
-  logger.log();
-  logger.log('Use `hs project --help` to learn more about the command.');
   logger.log(
-    '\n-------------------------------------------------------------\n'
+    `🚀 Ready to take your project live? Run \`hs project deploy\`.\n`
   );
+  logger.log(
+    `🔗 Use \`hs project --help\` to learn more about available commands.\n`
+  );
+  logger.log('-------------------------------------------------------------');
 };
 
 const makeGetTaskStatus = taskType => {
@@ -311,9 +340,10 @@ const makeGetTaskStatus = taskType => {
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
-  getOrCreateProjectConfig,
+  createProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
+  getProjectDetailUrl,
   pollBuildStatus: makeGetTaskStatus('build'),
   pollDeployStatus: makeGetTaskStatus('deploy'),
   ensureProjectExists,
