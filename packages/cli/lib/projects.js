@@ -249,18 +249,12 @@ const makeGetTaskStatus = taskType => {
 
   return async (accountId, taskName, taskId) => {
     const isTaskComplete = task => {
-      if (task.isAutoDeployEnabled) {
-        return (
-          (task.status === statusText.STATES.SUCCESS ||
-            task.status === statusText.STATES.FAILURE) &&
-          task.deployStatusTaskLocator
-        );
-      } else {
-        return (
-          task.status === statusText.STATES.SUCCESS ||
-          task.status === statusText.STATES.FAILURE
-        );
-      }
+      const isStatusComplete =
+        task.status === statusText.STATES.SUCCESS ||
+        task.status === statusText.STATES.FAILURE;
+      return task.isAutoDeployEnabled
+        ? isStatusComplete && task.deployStatusTaskLocator
+        : isStatusComplete;
     };
 
     const spinnies = new Spinnies({
