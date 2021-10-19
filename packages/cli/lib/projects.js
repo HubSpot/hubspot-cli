@@ -16,7 +16,6 @@ const {
   ENVIRONMENTS,
   POLLING_DELAY,
   PROJECT_TEMPLATE_REPO,
-  PROJECT_OVERALL_STATUS,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -47,13 +46,6 @@ const PROJECT_STRINGS = {
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
   },
-};
-
-const isTaskComplete = task => {
-  return (
-    task.status === PROJECT_OVERALL_STATUS.SUCCESS ||
-    task.status === PROJECT_OVERALL_STATUS.FAILURE
-  );
 };
 
 const writeProjectConfig = (configPath, config) => {
@@ -256,6 +248,15 @@ const makeGetTaskStatus = taskType => {
   }
 
   return async (accountId, taskName, taskId) => {
+    const isTaskComplete = task => {
+      const isStatusComplete =
+        task.status === statusText.STATES.SUCCESS ||
+        task.status === statusText.STATES.FAILURE;
+      return task.isAutoDeployEnabled
+        ? isStatusComplete && task.deployStatusTaskLocator
+        : isStatusComplete;
+    };
+
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
