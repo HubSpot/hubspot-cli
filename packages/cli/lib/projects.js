@@ -32,17 +32,17 @@ const {
 const PROJECT_STRINGS = {
   BUILD: {
     INITIALIZE: (name, numOfComponents) =>
-      `Building ${chalk.bold(
-        name
-      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
   },
   DEPLOY: {
     INITIALIZE: (name, numOfComponents) =>
-      `Deploying ${chalk.bold(
-        name
-      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
   },
