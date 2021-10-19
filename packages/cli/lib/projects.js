@@ -247,7 +247,7 @@ const makeGetTaskStatus = taskType => {
       logger.error(`Cannot get status for task type ${taskType}`);
   }
 
-  return async (accountId, taskName, taskId) => {
+  return async (accountId, taskName, taskId, buildId) => {
     const isTaskComplete = task => {
       const isStatusComplete =
         task.status === statusText.STATES.SUCCESS ||
@@ -275,9 +275,8 @@ const makeGetTaskStatus = taskType => {
 
     for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
       spinnies.add(subTask[statusText.SUBTASK_NAME_KEY], {
-        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${taskId} ${
-          statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
-        }\n`,
+        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${buildId ||
+          taskId} ${statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]}\n`,
       });
     }
 
