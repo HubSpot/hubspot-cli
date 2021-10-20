@@ -416,9 +416,9 @@ const getAccountConfig = accountId =>
   );
 
 /*
- * Returns a portalId from the config if it exists, else returns null
+ * Returns the account details from the config if it exists, else returns null
  */
-const getAccountId = nameOrId => {
+const getAccount = nameOrId => {
   const config = getAndLoadConfigIfNeeded();
   let name;
   let accountId;
@@ -452,9 +452,25 @@ const getAccountId = nameOrId => {
   }
 
   if (account) {
-    return account.portalId;
+    return {
+      accountId: account.portalId,
+      portalId: account.portalId,
+      accountName: account.name,
+    };
   }
 
+  return null;
+};
+
+/*
+ * Returns a portalId from the config if it exists, else returns null
+ */
+const getAccountId = nameOrId => {
+  const { portalId } = getAccount(nameOrId);
+
+  if (portalId) {
+    return portalId;
+  }
   return null;
 };
 
@@ -805,6 +821,7 @@ module.exports = {
   loadConfig,
   findConfig,
   loadConfigFromEnvironment,
+  getAccount,
   getAccountConfig,
   getAccountId,
   updateAccountConfig,

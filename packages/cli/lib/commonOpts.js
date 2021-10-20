@@ -1,6 +1,7 @@
 const Logger = require('@hubspot/cli-lib/logger');
 const {
   getAccountId: getAccountIdFromConfig,
+  getAccount: getAccountFromConfig,
   getAccountConfig,
   getAndLoadConfigIfNeeded,
   DEFAULT_MODE,
@@ -88,6 +89,19 @@ const getAccountId = (options = {}) => {
   return getAccountIdFromConfig(portal || account);
 };
 
+/**
+ * Obtains account name, portalId || accountId using supplied --account flag or from environment variables
+ */
+const getAccountDetails = (options = {}) => {
+  const { portal, account } = options;
+
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  }
+
+  return getAccountFromConfig(portal || account);
+};
+
 const getMode = (command = {}) => {
   // 1. --mode
   const { mode } = command;
@@ -117,6 +131,7 @@ module.exports = {
   addUseEnvironmentOptions,
   getCommandName,
   getMode,
+  getAccountDetails,
   getAccountId,
   setLogLevel,
 };

@@ -8,7 +8,7 @@ const {
   addAccountOptions,
   addConfigOptions,
   setLogLevel,
-  getAccountId,
+  getAccountDetails,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -50,14 +50,19 @@ const loadAndValidateOptions = async options => {
 exports.command = 'upload [path]';
 exports.describe = false;
 
-const uploadProjectFiles = async (accountId, projectName, filePath) => {
+const uploadProjectFiles = async (
+  accountId,
+  accountName,
+  projectName,
+  filePath
+) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
 
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
-      accountId
+      accountName || accountId
     )}`,
   });
 
@@ -70,7 +75,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
 
     spinnies.succeed('upload', {
       text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
-        accountId
+        accountName || accountId
       )}`,
     });
 
@@ -107,7 +112,7 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { path: projectPath } = options;
-  const accountId = getAccountId(options);
+  const { accountId, accountName } = getAccountDetails(options);
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
@@ -132,6 +137,7 @@ exports.handler = async options => {
 
     const { buildId } = await uploadProjectFiles(
       accountId,
+      accountName,
       projectConfig.name,
       tempFile.name
     );
@@ -173,7 +179,7 @@ exports.handler = async options => {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
-        )} to ${accountId}`
+        )} to ${accountName}`
       );
       await pollDeployStatus(
         accountId,
