@@ -78,12 +78,6 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
       `Project "${projectName}" uploaded and build #${buildId} created`
     );
   } catch (err) {
-    if (err.statusCode === 404) {
-      return logger.error(
-        `Project '${projectName}' does not exist. Try running 'hs project init' first.`
-      );
-    }
-
     spinnies.fail('upload', {
       text: `Failed to upload ${chalk.bold(
         projectName
@@ -106,7 +100,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { forceCreate, path: projectPath } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
@@ -118,7 +112,7 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name);
+  await ensureProjectExists(accountId, projectConfig.name, forceCreate);
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
@@ -216,6 +210,12 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: 'Path to a project folder',
     type: 'string',
+  });
+
+  yargs.option('forceCreate', {
+    describe: 'Automatically create project if it does not exist',
+    type: 'boolean',
+    default: false,
   });
 
   yargs.example([['$0 project upload myProjectFolder', 'Upload a project']]);
