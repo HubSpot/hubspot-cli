@@ -20,6 +20,9 @@ const ignoreList = [
   // # Linux
   '~', // Backup file
 
+  // # Emacs
+  '*~', // Backup file
+
   // # Windows
   'Thumbs.db', // Image file cache
   'ehthumbs.db', // Folder config file
