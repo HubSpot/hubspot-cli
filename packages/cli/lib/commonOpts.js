@@ -96,7 +96,8 @@ const getAccountDetails = (options = {}) => {
   const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    const portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    return { portalId, accountId: portalId };
   }
 
   return getAccountFromConfig(portal || account);
