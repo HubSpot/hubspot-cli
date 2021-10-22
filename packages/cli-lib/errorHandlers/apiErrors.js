@@ -167,6 +167,11 @@ function logApiStatusCodeError(error, context) {
   if (error.error && error.error.message) {
     errorMessage.push(error.error.message);
   }
+  if (error.error && error.error.errors) {
+    error.error.errors.forEach(err => {
+      errorMessage.push('\n- ' + err.message);
+    });
+  }
   logger.error(errorMessage.join(' '));
   debugErrorAndContext(error, context);
 }
