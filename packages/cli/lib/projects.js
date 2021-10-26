@@ -32,17 +32,17 @@ const {
 const PROJECT_STRINGS = {
   BUILD: {
     INITIALIZE: (name, numOfComponents) =>
-      `Building ${chalk.bold(
-        name
-      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
   },
   DEPLOY: {
     INITIALIZE: (name, numOfComponents) =>
-      `Deploying ${chalk.bold(
-        name
-      )}\n\nFound ${numOfComponents} components in this project ...\n`,
+      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
   },
@@ -169,18 +169,23 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
-const ensureProjectExists = async (accountId, projectName) => {
+const ensureProjectExists = async (accountId, projectName, forceCreate) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
     if (err.statusCode === 404) {
-      const { shouldCreateProject } = await prompt([
-        {
-          name: 'shouldCreateProject',
-          message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
-          type: 'confirm',
-        },
-      ]);
+      let shouldCreateProject = forceCreate;
+
+      if (!shouldCreateProject) {
+        const promptResult = await prompt([
+          {
+            name: 'shouldCreateProject',
+            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            type: 'confirm',
+          },
+        ]);
+        shouldCreateProject = promptResult.shouldCreateProject;
+      }
 
       if (shouldCreateProject) {
         try {
@@ -247,7 +252,7 @@ const makeGetTaskStatus = taskType => {
       logger.error(`Cannot get status for task type ${taskType}`);
   }
 
-  return async (accountId, taskName, taskId) => {
+  return async (accountId, taskName, taskId, buildId) => {
     const isTaskComplete = task => {
       const isStatusComplete =
         task.status === statusText.STATES.SUCCESS ||
@@ -275,9 +280,8 @@ const makeGetTaskStatus = taskType => {
 
     for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
       spinnies.add(subTask[statusText.SUBTASK_NAME_KEY], {
-        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${taskId} ${
-          statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
-        }\n`,
+        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${buildId ||
+          taskId} ${statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]}\n`,
       });
     }
 
