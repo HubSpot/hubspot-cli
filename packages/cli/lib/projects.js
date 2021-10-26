@@ -169,18 +169,23 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
-const ensureProjectExists = async (accountId, projectName) => {
+const ensureProjectExists = async (accountId, projectName, forceCreate) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
     if (err.statusCode === 404) {
-      const { shouldCreateProject } = await prompt([
-        {
-          name: 'shouldCreateProject',
-          message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
-          type: 'confirm',
-        },
-      ]);
+      let shouldCreateProject = forceCreate;
+
+      if (!shouldCreateProject) {
+        const promptResult = await prompt([
+          {
+            name: 'shouldCreateProject',
+            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            type: 'confirm',
+          },
+        ]);
+        shouldCreateProject = promptResult.shouldCreateProject;
+      }
 
       if (shouldCreateProject) {
         try {
