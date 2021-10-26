@@ -52,7 +52,7 @@ exports.describe = false;
 
 const uploadProjectFiles = async (
   accountId,
-  accountName,
+  accountDescription,
   projectName,
   filePath
 ) => {
@@ -62,7 +62,7 @@ const uploadProjectFiles = async (
 
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
-      accountName || accountId
+      accountDescription
     )}`,
   });
 
@@ -75,7 +75,7 @@ const uploadProjectFiles = async (
 
     spinnies.succeed('upload', {
       text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
-        accountName || accountId
+        accountDescription
       )}`,
     });
 
@@ -112,7 +112,7 @@ exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const { path: projectPath } = options;
-  const { accountId, accountName } = getAccountDetails(options);
+  const { accountId, accountDescription } = getAccountDetails(options);
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
@@ -137,7 +137,7 @@ exports.handler = async options => {
 
     const { buildId } = await uploadProjectFiles(
       accountId,
-      accountName,
+      accountDescription,
       projectConfig.name,
       tempFile.name
     );
@@ -179,7 +179,7 @@ exports.handler = async options => {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
-        )} to ${accountName}`
+        )} to ${accountDescription}`
       );
       await pollDeployStatus(
         accountId,

@@ -99,8 +99,16 @@ const getAccountDetails = (options = {}) => {
     const portalId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
     return { portalId, accountId: portalId };
   }
+  const config = getAccountFromConfig(portal || account);
 
-  return getAccountFromConfig(portal || account);
+  return config
+    ? {
+        accountDescription: config.accountName
+          ? `${config.accountName} (${config.accountId})`
+          : config.accountId,
+        ...config,
+      }
+    : null;
 };
 
 const getMode = (command = {}) => {
