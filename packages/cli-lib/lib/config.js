@@ -466,12 +466,9 @@ const getAccount = nameOrId => {
  * Returns a portalId from the config if it exists, else returns null
  */
 const getAccountId = nameOrId => {
-  const { portalId } = getAccount(nameOrId);
+  const account = getAccount(nameOrId);
 
-  if (portalId) {
-    return portalId;
-  }
-  return null;
+  return account ? account.portalId : null;
 };
 
 /**
