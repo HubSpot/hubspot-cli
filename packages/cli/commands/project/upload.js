@@ -105,10 +105,8 @@ exports.handler = async options => {
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
-  const projectDir = projectPath
-    ? path.resolve(getCwd(), projectPath)
-    : getCwd();
-  const { projectConfig } = await getProjectConfig(projectDir);
+  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
+  const { projectConfig, projectDir } = await getProjectConfig(cwd);
 
   validateProjectConfig(projectConfig, projectDir);
 

@@ -72,7 +72,7 @@ const getProjectConfig = async projectPath => {
     const config = fs.readFileSync(configPath);
     const projectConfig = JSON.parse(config);
     return {
-      configPath,
+      projectDir: path.dirname(configPath),
       projectConfig,
     };
   } catch (e) {
@@ -81,15 +81,11 @@ const getProjectConfig = async projectPath => {
 };
 
 const createProjectConfig = async (projectPath, projectName) => {
-  const { projectConfig, configPath } = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
   if (projectConfig) {
-    logger.log(
-      `Found an existing project config in this folder (${chalk.bold(
-        configPath
-      )})`
-    );
+    logger.log(`Found an existing project in (${chalk.bold(projectDir)})`);
   } else {
     logger.log(
       `Creating project in ${projectPath ? projectPath : 'the current folder'}`
@@ -167,7 +163,7 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 
   if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
-      `Project source directory '${projectConfig.srcDir}' does not exist.`
+      `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
     process.exit(1);
   }
