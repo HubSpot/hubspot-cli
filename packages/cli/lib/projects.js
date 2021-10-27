@@ -149,14 +149,14 @@ const createProjectConfig = async (projectPath, projectName) => {
 const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
-      `Project config not found. Try running 'hs project init' first.`
+      `Project config not found. Try running 'hs project create' first.`
     );
     process.exit(1);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
-      'Project config is missing required fields. Try running `hs project init`.'
+      'Project config is missing required fields. Try running `hs project create`.'
     );
     process.exit(1);
   }
