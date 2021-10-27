@@ -47,7 +47,7 @@ exports.handler = async options => {
   trackCommandUsage('project-deploy', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getProjectConfig(cwd);
+  const { projectConfig } = await getProjectConfig(cwd);
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 

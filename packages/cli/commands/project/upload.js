@@ -108,7 +108,7 @@ exports.handler = async options => {
   const projectDir = projectPath
     ? path.resolve(getCwd(), projectPath)
     : getCwd();
-  const projectConfig = await getProjectConfig(projectDir);
+  const { projectConfig } = await getProjectConfig(projectDir);
 
   validateProjectConfig(projectConfig, projectDir);
 

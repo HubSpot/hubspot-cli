@@ -65,25 +65,29 @@ const getProjectConfig = async projectPath => {
   });
 
   if (!configPath) {
-    return null;
+    return {};
   }
 
   try {
-    const projectConfig = fs.readFileSync(configPath);
-    return JSON.parse(projectConfig);
+    const config = fs.readFileSync(configPath);
+    const projectConfig = JSON.parse(config);
+    return {
+      configPath,
+      projectConfig,
+    };
   } catch (e) {
     logger.error('Could not read from project config');
   }
 };
 
 const createProjectConfig = async (projectPath, projectName) => {
-  const projectConfig = await getProjectConfig(projectPath);
+  const { projectConfig, configPath } = await getProjectConfig(projectPath);
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
   if (projectConfig) {
     logger.log(
       `Found an existing project config in this folder (${chalk.bold(
-        projectConfig.name
+        configPath
       )})`
     );
   } else {
