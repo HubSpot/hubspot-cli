@@ -1,4 +1,5 @@
 const path = require('path');
+
 const {
   addAccountOptions,
   addConfigOptions,
@@ -30,6 +31,7 @@ const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
 const chalk = require('chalk');
+const moment = require('moment');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -73,8 +75,8 @@ exports.handler = async options => {
             ? chalk.bold(`${build.buildId} *`)
             : build.buildId,
           build.status,
-          build.startedAt,
-          build.finishedAt,
+          moment(build.startedAt).format('MM/DD/YYYY hh:mm:ss A'),
+          moment(build.finishedAt).format('MM/DD/YYYY hh:mm:ss A'),
         ];
       });
       builds.unshift(
