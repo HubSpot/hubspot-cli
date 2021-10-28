@@ -83,9 +83,10 @@ async function deleteProject(portalId, projectName) {
  * @param {string} projectName
  * @returns {Promise}
  */
-async function fetchProjectBuilds(portalId, projectName) {
+async function fetchProjectBuilds(portalId, projectName, query) {
   return http.get(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/builds`,
+    query,
   });
 }
 

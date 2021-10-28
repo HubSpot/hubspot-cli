@@ -32,6 +32,7 @@ const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
 const chalk = require('chalk');
 const moment = require('moment');
+const inquirer = require('inquirer');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -61,10 +62,14 @@ exports.handler = async options => {
 
   logger.debug(`Fetching builds for project at path: ${projectPath}`);
 
-  try {
-    const project = await fetchProject(accountId, projectConfig.name);
-    const { results } = await fetchProjectBuilds(accountId, projectConfig.name);
+  const fetchAndDisplayBuilds = async (project, options) => {
+    const { results, paging } = await fetchProjectBuilds(
+      accountId,
+      projectConfig.name,
+      options
+    );
     const currentDeploy = project.deployedBuildId;
+
     if (results.length === 0) {
       logger.log('No builds found.');
     } else {
@@ -84,6 +89,19 @@ exports.handler = async options => {
       );
       logger.log(getTableContents(builds, { border: { bodyLeft: '  ' } }));
     }
+    if (paging.next && paging.next.after) {
+      await inquirer.prompt({
+        name: 'more',
+        message: 'Load more? <enter>',
+      });
+      await fetchAndDisplayBuilds(project, { after: paging.next.after });
+    }
+  };
+
+  try {
+    const project = await fetchProject(accountId, projectConfig.name);
+
+    await fetchAndDisplayBuilds(project);
   } catch (e) {
     logApiErrorInstance(e, new ApiErrorContext({ accountId }));
   }
