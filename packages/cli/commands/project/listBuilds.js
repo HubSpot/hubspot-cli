@@ -30,7 +30,6 @@ const {
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
-const chalk = require('chalk');
 const moment = require('moment');
 const { prompt } = require('inquirer');
 
@@ -75,24 +74,45 @@ exports.handler = async options => {
     } else {
       const builds = results.map(build => {
         const isCurrentlyDeployed = build.buildId === currentDeploy;
+
         return [
           isCurrentlyDeployed
-            ? chalk.bold(`${build.buildId} *`)
-            : build.buildId,
+            ? `#${build.buildId} [deployed]`
+            : `#${build.buildId}`,
           build.status,
-          moment(build.startedAt).format('MM/DD/YYYY hh:mm:ss A'),
           moment(build.finishedAt).format('MM/DD/YYYY hh:mm:ss A'),
+          Math.round(
+            moment
+              .duration(moment(build.finishedAt).diff(moment(build.enqueuedAt)))
+              .asSeconds()
+          ) + 's',
+          build.subbuildStatuses
+            .filter(subbuild => subbuild.status === 'FAILURE')
+            .map(subbuild => `${subbuild.buildName} failed`)
+            .join(','),
         ];
       });
       builds.unshift(
-        getTableHeader(['Build Id', 'Status', 'Started', 'Completed'])
+        getTableHeader([
+          'Build ID',
+          'Status',
+          'Completed',
+          'Duration',
+          'Details',
+        ])
       );
-      logger.log(getTableContents(builds, { border: { bodyLeft: '  ' } }));
+      logger.log(
+        getTableContents(builds, {
+          columnDefault: {
+            paddingLeft: 3,
+          },
+        })
+      );
     }
-    if (paging.next && paging.next.after) {
+    if (paging && paging.next.after) {
       await prompt({
         name: 'more',
-        message: 'Load more? <enter>',
+        message: 'Load more builds? <enter>',
       });
       await fetchAndDisplayBuilds(project, { limit, after: paging.next.after });
     }
