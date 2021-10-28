@@ -18,10 +18,18 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { fetchProjectBuilds } = require('@hubspot/cli-lib/api/dfs');
+const {
+  fetchProject,
+  fetchProjectBuilds,
+} = require('@hubspot/cli-lib/api/dfs');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
+const chalk = require('chalk');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -52,15 +60,30 @@ exports.handler = async options => {
   logger.debug(`Fetching builds for project at path: ${projectPath}`);
 
   try {
-    await fetchProjectBuilds(projectConfig, accountId);
+    const project = await fetchProject(accountId, projectConfig.name);
+    const { results } = await fetchProjectBuilds(accountId, projectConfig.name);
+    const currentDeploy = project.deployedBuildId;
+    if (results.length === 0) {
+      logger.log('No builds found.');
+    } else {
+      const builds = results.map(build => {
+        const isCurrentlyDeployed = build.buildId === currentDeploy;
+        return [
+          isCurrentlyDeployed
+            ? chalk.bold(`${build.buildId} *`)
+            : build.buildId,
+          build.status,
+          build.startedAt,
+          build.finishedAt,
+        ];
+      });
+      builds.unshift(
+        getTableHeader(['Build Id', 'Status', 'Started', 'Completed'])
+      );
+      logger.log(getTableContents(builds, { border: { bodyLeft: '  ' } }));
+    }
   } catch (e) {
-    logApiErrorInstance(
-      new ApiErrorContext({
-        projectPath: projectPath,
-        accountId,
-      }),
-      e
-    );
+    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
   }
 };
 
@@ -72,8 +95,8 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project deploy myProjectFolder',
-      'Deploy a project within the myProjectFolder folder',
+      '$0 project list-builds myProjectFolder',
+      'Fetch a list of builds for a project within the myProjectFolder folder',
     ],
   ]);
 
