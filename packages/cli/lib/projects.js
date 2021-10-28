@@ -87,6 +87,23 @@ const createProjectConfig = async (projectPath, projectName) => {
       )})`
     );
   } else {
+    if (fs.readdirSync(projectPath).length > 0) {
+      const { shouldCreateProject } = await prompt([
+        {
+          name: 'shouldCreateProject',
+          message: `(${chalk.bold(
+            projectPath
+          )}) is not empty. Would you like to create a project anyway?`,
+          type: 'confirm',
+        },
+      ]);
+
+      if (!shouldCreateProject) {
+        logger.debug('Exiting without creating a project');
+        process.exit(1);
+      }
+    }
+
     logger.log(
       `Creating project in ${projectPath ? projectPath : 'the current folder'}`
     );
