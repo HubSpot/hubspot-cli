@@ -11,6 +11,7 @@ const {
   createProject: createProjectTemplate,
 } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 
 const {
   ENVIRONMENTS,
@@ -87,7 +88,11 @@ const createProjectConfig = async (projectPath, projectName) => {
       )})`
     );
   } else {
-    if (fs.readdirSync(projectPath).length > 0) {
+    const dirContents = fs
+      .readdirSync(projectPath)
+      .filter(file => !shouldIgnoreFile(file));
+
+    if (dirContents.length > 0) {
       const { shouldCreateProject } = await prompt([
         {
           name: 'shouldCreateProject',
