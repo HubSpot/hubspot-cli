@@ -32,7 +32,7 @@ const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig } = require('../../lib/projects');
 const chalk = require('chalk');
 const moment = require('moment');
-const inquirer = require('inquirer');
+const { prompt } = require('inquirer');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -52,7 +52,7 @@ exports.describe = false;
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { path: projectPath, limit } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-list-builds', { projectPath }, accountId);
@@ -90,18 +90,18 @@ exports.handler = async options => {
       logger.log(getTableContents(builds, { border: { bodyLeft: '  ' } }));
     }
     if (paging.next && paging.next.after) {
-      await inquirer.prompt({
+      await prompt({
         name: 'more',
         message: 'Load more? <enter>',
       });
-      await fetchAndDisplayBuilds(project, { after: paging.next.after });
+      await fetchAndDisplayBuilds(project, { limit, after: paging.next.after });
     }
   };
 
   try {
     const project = await fetchProject(accountId, projectConfig.name);
 
-    await fetchAndDisplayBuilds(project);
+    await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
     logApiErrorInstance(e, new ApiErrorContext({ accountId }));
   }
@@ -111,6 +111,13 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: 'Path to a project folder',
     type: 'string',
+  });
+
+  yargs.options({
+    limit: {
+      describe: 'Max number of builds to load',
+      type: 'string',
+    },
   });
 
   yargs.example([
