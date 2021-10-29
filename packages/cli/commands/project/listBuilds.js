@@ -29,7 +29,7 @@ const {
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
-const { getProjectConfig } = require('../../lib/projects');
+const { getProjectConfig, getProjectDetailUrl } = require('../../lib/projects');
 const moment = require('moment');
 const { prompt } = require('inquirer');
 
@@ -86,10 +86,9 @@ exports.handler = async options => {
               .duration(moment(build.finishedAt).diff(moment(build.enqueuedAt)))
               .asSeconds()
           ) + 's',
-          build.subbuildStatuses
-            .filter(subbuild => subbuild.status === 'FAILURE')
-            .map(subbuild => `${subbuild.buildName} failed`)
-            .join(','),
+          `${getProjectDetailUrl(projectConfig.name, accountId)}/builds/${
+            build.buildId
+          }`,
         ];
       });
       builds.unshift(
