@@ -27,7 +27,7 @@ const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
-const { EXIT_CODES_V2 } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -37,7 +37,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    EXIT_CODES_V2.ERROR();
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -64,7 +64,7 @@ exports.handler = async options => {
       e,
       new ApiErrorContext({ accountId, directoryPath })
     );
-    EXIT_CODES_V2.SUCCESS();
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   if (contentsResp.children.length) {
