@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 
 const chalk = require('chalk');
@@ -7,35 +7,50 @@ const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const {
+  createProject: createProjectTemplate,
+} = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
-  PROJECT_BUILD_STATUS,
-  PROJECT_BUILD_STATUS_TEXT,
-  PROJECT_DEPLOY_STATUS,
-  PROJECT_DEPLOY_STATUS_TEXT,
+  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
+  createProject,
   getBuildStatus,
   getDeployStatus,
   fetchProject,
-  createProject,
 } = require('@hubspot/cli-lib/api/dfs');
 const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 
-const isBuildComplete = build => {
-  return (
-    build.status === PROJECT_BUILD_STATUS.SUCCESS ||
-    build.status === PROJECT_BUILD_STATUS.FAILURE
-  );
+const PROJECT_STRINGS = {
+  BUILD: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
+    SUCCESS: name => `Built ${chalk.bold(name)}`,
+    FAIL: name => `Failed to build ${chalk.bold(name)}`,
+  },
+  DEPLOY: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
+    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
+    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+  },
 };
 
 const writeProjectConfig = (configPath, config) => {
   try {
+    fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
@@ -61,14 +76,25 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const getOrCreateProjectConfig = async projectPath => {
+const createProjectConfig = async (projectPath, projectName) => {
   const projectConfig = await getProjectConfig(projectPath);
+  const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
-  if (!projectConfig) {
-    const { name, srcDir } = await prompt([
+  if (projectConfig) {
+    logger.log(
+      `Found an existing project config in this folder (${chalk.bold(
+        projectConfig.name
+      )})`
+    );
+  } else {
+    logger.log(
+      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    );
+    const { name, template, srcDir } = await prompt([
       {
         name: 'name',
         message: 'Please enter a project name:',
+        when: !projectName,
         validate: input => {
           if (!input) {
             return 'A project name is required';
@@ -77,20 +103,43 @@ const getOrCreateProjectConfig = async projectPath => {
         },
       },
       {
-        name: 'srcDir',
-        message: 'Which directory contains your project files?',
-        validate: input => {
-          if (!input) {
-            return 'A source directory is required';
-          }
-          return true;
-        },
+        name: 'template',
+        message: 'Start from a template?',
+        type: 'rawlist',
+        choices: [
+          {
+            name: 'No template',
+            value: 'none',
+          },
+          {
+            name: 'Getting Started Project',
+            value: 'getting-started',
+          },
+        ],
       },
     ]);
-    writeProjectConfig(path.join(projectPath, 'hsproject.json'), {
-      name,
-      srcDir,
-    });
+
+    if (template === 'none') {
+      fs.ensureDirSync(path.join(projectPath, 'src'));
+
+      writeProjectConfig(projectConfigPath, {
+        name: projectName || name,
+        srcDir: 'src',
+      });
+    } else {
+      await createProjectTemplate(
+        projectPath,
+        'project',
+        PROJECT_TEMPLATE_REPO[template],
+        ''
+      );
+      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+      writeProjectConfig(projectConfigPath, {
+        ..._config,
+        name: projectName || name,
+      });
+    }
+
     return { name, srcDir };
   }
 
@@ -120,18 +169,23 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
-const ensureProjectExists = async (accountId, projectName) => {
+const ensureProjectExists = async (accountId, projectName, forceCreate) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
     if (err.statusCode === 404) {
-      const { shouldCreateProject } = await prompt([
-        {
-          name: 'shouldCreateProject',
-          message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
-          type: 'confirm',
-        },
-      ]);
+      let shouldCreateProject = forceCreate;
+
+      if (!shouldCreateProject) {
+        const promptResult = await prompt([
+          {
+            name: 'shouldCreateProject',
+            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            type: 'confirm',
+          },
+        ]);
+        shouldCreateProject = promptResult.shouldCreateProject;
+      }
 
       if (shouldCreateProject) {
         try {
@@ -161,219 +215,145 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
 };
 
-const showWelcomeMessage = (projectName, accountId) => {
-  const projectDetailUrl = getProjectDetailUrl(projectName, accountId);
-
+const showWelcomeMessage = () => {
   logger.log('');
-  logger.log(chalk.bold('> Welcome to HubSpot Developer Projects!'));
+  logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
   logger.log(
     '\n-------------------------------------------------------------\n'
   );
-  if (projectDetailUrl) {
-    logger.log(chalk.italic(`View this project at: ${projectDetailUrl}`));
-  }
-  logger.log('');
-  logger.log(chalk.bold('Getting Started'));
-  logger.log('');
-  logger.log('1. hs project upload');
+  logger.log(chalk.bold("What's next?\n"));
+  logger.log('🎨 Add deployables to your project with `hs create`.\n');
   logger.log(
-    '   Upload your project files to HubSpot. Upload action adds your files to a build.'
+    `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );
-  logger.log();
-  logger.log('2. View your changes on the preview build url');
-  logger.log();
-  logger.log('Use `hs project --help` to learn more about the command.');
   logger.log(
-    '\n-------------------------------------------------------------\n'
+    `🚀 Ready to take your project live? Run \`hs project deploy\`.\n`
   );
+  logger.log(
+    `🔗 Use \`hs project --help\` to learn more about available commands.\n`
+  );
+  logger.log('-------------------------------------------------------------');
 };
 
-const pollBuildStatus = async (accountId, name, buildId) => {
-  const buildStatus = await getBuildStatus(accountId, name, buildId);
-  const spinnies = new Spinnies();
-
-  logger.log();
-  logger.log(`Building ${chalk.bold(name)}`);
-  logger.log();
-  logger.log(`Found ${buildStatus.subbuildStatuses.length} deployables ...`);
-  logger.log();
-
-  for (let subBuild of buildStatus.subbuildStatuses) {
-    spinnies.add(subBuild.buildName, {
-      text: `${chalk.bold(subBuild.buildName)} #${buildId} ${
-        PROJECT_BUILD_STATUS_TEXT[PROJECT_BUILD_STATUS.ENQUEUED]
-      }`,
-    });
+const makeGetTaskStatus = taskType => {
+  let statusFn, statusText, statusStrings;
+  switch (taskType) {
+    case 'build':
+      statusFn = getBuildStatus;
+      statusText = PROJECT_TEXT.BUILD;
+      statusStrings = PROJECT_STRINGS.BUILD;
+      break;
+    case 'deploy':
+      statusFn = getDeployStatus;
+      statusText = PROJECT_TEXT.DEPLOY;
+      statusStrings = PROJECT_STRINGS.DEPLOY;
+      break;
+    default:
+      logger.error(`Cannot get status for task type ${taskType}`);
   }
 
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const buildStatus = await getBuildStatus(accountId, name, buildId).catch(
-        reject
-      );
-      const { status, subbuildStatuses } = buildStatus;
+  return async (accountId, taskName, taskId, buildId) => {
+    const isTaskComplete = task => {
+      const isStatusComplete =
+        task.status === statusText.STATES.SUCCESS ||
+        task.status === statusText.STATES.FAILURE;
+      return task.isAutoDeployEnabled
+        ? isStatusComplete && task.deployStatusTaskLocator
+        : isStatusComplete;
+    };
 
-      if (spinnies.hasActiveSpinners()) {
-        subbuildStatuses.forEach(subBuild => {
-          if (!spinnies.pick(subBuild.buildName)) {
-            return;
-          }
-
-          const updatedText = `${chalk.bold(subBuild.buildName)} #${buildId} ${
-            PROJECT_BUILD_STATUS_TEXT[subBuild.status]
-          }`;
-
-          switch (subBuild.status) {
-            case PROJECT_BUILD_STATUS.SUCCESS:
-              spinnies.succeed(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-            case PROJECT_BUILD_STATUS.FAILURE:
-              spinnies.fail(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-            default:
-              spinnies.update(subBuild.buildName, {
-                text: updatedText,
-              });
-              break;
-          }
-        });
-      }
-
-      if (isBuildComplete(buildStatus)) {
-        clearInterval(pollInterval);
-
-        if (status === PROJECT_BUILD_STATUS.SUCCESS) {
-          logger.success(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_BUILD_STATUS_TEXT[status]
-            }.`
-          );
-        } else if (status === PROJECT_BUILD_STATUS.FAILURE) {
-          logger.error(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_BUILD_STATUS_TEXT[status]
-            }.`
-          );
-          subbuildStatuses.forEach(subBuild => {
-            if (subBuild.status === PROJECT_BUILD_STATUS.FAILURE) {
-              logger.error(
-                `${chalk.bold(subBuild.buildName)} failed to build. ${
-                  subBuild.errorMessage
-                }.`
-              );
-            }
-          });
-        }
-        resolve(buildStatus);
-      }
-    }, POLLING_DELAY);
-  });
-};
-
-const pollDeployStatus = async (accountId, name, deployId, deployedBuildId) => {
-  const deployStatus = await getDeployStatus(accountId, name, deployId);
-  const spinnies = new Spinnies();
-
-  logger.log();
-  logger.log(`Deploying ${chalk.bold(name)}`);
-  logger.log();
-  logger.log(
-    `Found ${deployStatus.subdeployStatuses.length} sub-build deploys ...`
-  );
-  logger.log();
-
-  for (let subdeploy of deployStatus.subdeployStatuses) {
-    spinnies.add(subdeploy.deployName, {
-      text: `${chalk.bold(subdeploy.deployName)} #${deployedBuildId} ${
-        PROJECT_DEPLOY_STATUS_TEXT[PROJECT_DEPLOY_STATUS.ENQUEUED]
-      }`,
+    const spinnies = new Spinnies({
+      succeedColor: 'white',
+      failColor: 'white',
     });
-  }
 
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const deployStatus = await getDeployStatus(
-        accountId,
-        name,
-        deployId
-      ).catch(reject);
+    spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
-      const { status, subdeployStatuses } = deployStatus;
+    const initialTaskStatus = await statusFn(accountId, taskName, taskId);
 
-      if (spinnies.hasActiveSpinners()) {
-        subdeployStatuses.forEach(subdeploy => {
-          if (!spinnies.pick(subdeploy.deployName)) {
-            return;
-          }
+    spinnies.update('overallTaskStatus', {
+      text: statusStrings.INITIALIZE(
+        taskName,
+        initialTaskStatus[statusText.SUBTASK_KEY].length
+      ),
+    });
 
-          const updatedText = `${chalk.bold(
-            subdeploy.deployName
-          )} #${deployedBuildId} ${
-            PROJECT_DEPLOY_STATUS_TEXT[subdeploy.status]
-          }`;
+    for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
+      spinnies.add(subTask[statusText.SUBTASK_NAME_KEY], {
+        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${buildId ||
+          taskId} ${statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]}\n`,
+      });
+    }
 
-          switch (subdeploy.status) {
-            case PROJECT_DEPLOY_STATUS.SUCCESS:
-              spinnies.succeed(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-            case PROJECT_DEPLOY_STATUS.FAILURE:
-              spinnies.fail(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-            default:
-              spinnies.update(subdeploy.deployName, {
-                text: updatedText,
-              });
-              break;
-          }
-        });
-      }
+    return new Promise((resolve, reject) => {
+      const pollInterval = setInterval(async () => {
+        const taskStatus = await statusFn(accountId, taskName, taskId).catch(
+          reject
+        );
 
-      if (isBuildComplete(deployStatus)) {
-        clearInterval(pollInterval);
+        const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
 
-        if (status === PROJECT_DEPLOY_STATUS.SUCCESS) {
-          logger.success(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_DEPLOY_STATUS_TEXT[status]
-            }.`
-          );
-        } else if (status === PROJECT_DEPLOY_STATUS.FAILURE) {
-          logger.error(
-            `Your project ${chalk.bold(name)} ${
-              PROJECT_DEPLOY_STATUS_TEXT[status]
-            }.`
-          );
-          subdeployStatuses.forEach(subdeploy => {
-            if (subdeploy.status === PROJECT_DEPLOY_STATUS.FAILURE) {
-              logger.error(
-                `${chalk.bold(subdeploy.deployName)} failed to build. ${
-                  subdeploy.errorMessage
-                }.`
-              );
+        if (spinnies.hasActiveSpinners()) {
+          subTaskStatus.forEach(subTask => {
+            if (!spinnies.pick(subTask[statusText.SUBTASK_NAME_KEY])) {
+              return;
+            }
+
+            const updatedText = `${chalk.bold(
+              subTask[statusText.SUBTASK_NAME_KEY]
+            )} #${taskId} ${statusText.STATUS_TEXT[subTask.status]}\n`;
+
+            switch (subTask.status) {
+              case statusText.STATES.SUCCESS:
+                spinnies.succeed(subTask[statusText.SUBTASK_NAME_KEY], {
+                  text: updatedText,
+                });
+                break;
+              case statusText.STATES.FAILURE:
+                spinnies.fail(subTask.buildName, {
+                  text: updatedText,
+                });
+                break;
+              default:
+                spinnies.update(subTask.buildName, {
+                  text: updatedText,
+                });
+                break;
             }
           });
+
+          if (isTaskComplete(taskStatus)) {
+            subTaskStatus.forEach(subBuild => {
+              spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
+            });
+
+            if (status === statusText.STATES.SUCCESS) {
+              spinnies.succeed('overallTaskStatus', {
+                text: statusStrings.SUCCESS(taskName),
+              });
+            } else if (status === statusText.STATES.FAILURE) {
+              spinnies.fail('overallTaskStatus', {
+                text: statusStrings.FAIL(taskName),
+              });
+            }
+
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          }
         }
-        resolve(deployStatus);
-      }
-    }, POLLING_DELAY);
-  });
+      }, POLLING_DELAY);
+    });
+  };
 };
 
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
-  getOrCreateProjectConfig,
+  createProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
-  pollBuildStatus,
-  pollDeployStatus,
+  getProjectDetailUrl,
+  pollBuildStatus: makeGetTaskStatus('build'),
+  pollDeployStatus: makeGetTaskStatus('deploy'),
   ensureProjectExists,
 };

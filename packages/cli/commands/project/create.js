@@ -12,17 +12,11 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
-const { logger } = require('@hubspot/cli-lib/logger');
-const { createProject } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
 const {
-  getOrCreateProjectConfig,
+  createProjectConfig,
   showWelcomeMessage,
 } = require('../../lib/projects');
 
@@ -38,40 +32,20 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'init [path]';
+exports.command = 'create [path]';
 exports.describe = false;
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { path: projectPath, name } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-init', { projectPath }, accountId);
+  trackCommandUsage('project-create', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getOrCreateProjectConfig(cwd);
 
-  logger.log(`Initializing project: ${projectConfig.name}`);
-
-  try {
-    await createProject(accountId, projectConfig.name);
-
-    logger.success(
-      `"${projectConfig.name}" creation succeeded in account ${accountId}`
-    );
-  } catch (e) {
-    if (e.statusCode === 409) {
-      logger.log(
-        `Project ${projectConfig.name} already exists in ${accountId}.`
-      );
-    } else {
-      return logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, projectPath })
-      );
-    }
-  }
+  const projectConfig = await createProjectConfig(cwd, name);
 
   showWelcomeMessage(projectConfig.name, accountId);
 };
@@ -81,22 +55,17 @@ exports.builder = yargs => {
     describe: 'Path to a project folder',
     type: 'string',
   });
-  // TODO: These are not currently used
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
-      type: 'string',
-    },
-    srcDir: {
-      describe: 'Directory of project',
       type: 'string',
     },
   });
 
   yargs.example([
     [
-      '$0 project init myProjectFolder',
-      'Initialize a project within the myProjectFolder folder',
+      '$0 project create myProjectFolder',
+      'Create a project within the myProjectFolder folder',
     ],
   ]);
 

@@ -18,10 +18,10 @@ const promptUser = async promptConfig => {
  * then opens their browser to the personal-access-key shortlink
  */
 const personalAccessKeyPrompt = async ({ env } = {}) => {
-  await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   const url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
+    await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
     open(url, { url: true });
   }
 
