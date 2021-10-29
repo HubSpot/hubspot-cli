@@ -309,12 +309,12 @@ const makeGetTaskStatus = taskType => {
                 });
                 break;
               case statusText.STATES.FAILURE:
-                spinnies.fail(subTask.buildName, {
+                spinnies.fail(subTask[statusText.SUBTASK_NAME_KEY], {
                   text: updatedText,
                 });
                 break;
               default:
-                spinnies.update(subTask.buildName, {
+                spinnies.update(subTask[statusText.SUBTASK_NAME_KEY], {
                   text: updatedText,
                 });
                 break;
@@ -322,8 +322,8 @@ const makeGetTaskStatus = taskType => {
           });
 
           if (isTaskComplete(taskStatus)) {
-            subTaskStatus.forEach(subBuild => {
-              spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
+            subTaskStatus.forEach(subTask => {
+              spinnies.remove(subTask[statusText.SUBTASK_NAME_KEY]);
             });
 
             if (status === statusText.STATES.SUCCESS) {
