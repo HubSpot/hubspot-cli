@@ -85,7 +85,11 @@ const createProjectConfig = async (projectPath, projectName) => {
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
   if (projectConfig) {
-    logger.log(`Found an existing project in (${chalk.bold(projectDir)})`);
+    logger.log(
+      `Projects cannot contain other projects. Found an existing project in (${chalk.bold(
+        projectDir
+      )})`
+    );
   } else {
     logger.log(
       `Creating project in ${projectPath ? projectPath : 'the current folder'}`
