@@ -21,6 +21,7 @@ const {
   updateSchema: updateSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { EXIT_CODES } = require('../../../lib/exitCodes');
 
 exports.command = 'update <name> <definition>';
 exports.describe = 'Update an existing custom object schema';
@@ -34,7 +35,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
 
@@ -42,7 +43,7 @@ exports.handler = async options => {
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {

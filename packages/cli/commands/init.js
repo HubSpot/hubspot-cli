@@ -100,7 +100,7 @@ exports.handler = async options => {
     logger.info(
       'To update an existing config file, use the "hs auth" command.'
     );
-    process.exit(EXIT_CODES.WARNING);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);

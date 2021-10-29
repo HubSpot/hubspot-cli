@@ -26,6 +26,7 @@ const {
 const { applyValidators } = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = 'Validate a theme for the marketplace';
@@ -38,7 +39,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -75,7 +76,7 @@ exports.handler = async options => {
         .flat()
         .some(result => result.result === VALIDATION_RESULT.FATAL)
     ) {
-      process.exit(2);
+      process.exit(EXIT_CODES.WARNING);
     }
   });
 };

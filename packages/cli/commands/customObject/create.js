@@ -11,6 +11,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'create <name> <definition>';
 exports.describe = 'Create custom object instances';
@@ -24,7 +25,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
 
@@ -32,7 +33,7 @@ exports.handler = async options => {
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {

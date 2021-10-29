@@ -22,6 +22,7 @@ const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -31,7 +32,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

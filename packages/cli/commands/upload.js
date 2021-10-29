@@ -36,6 +36,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { validateAccount, validateMode } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
+const { EXIT_CODES } = require('../lib/exitCodes');
 
 exports.command = 'upload <src> <dest>';
 exports.describe =
@@ -66,7 +67,7 @@ exports.handler = async options => {
       validateMode(options)
     )
   ) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -101,7 +102,7 @@ exports.handler = async options => {
 
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src)) {

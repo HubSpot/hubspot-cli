@@ -15,6 +15,7 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { validateAccount } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -24,7 +25,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

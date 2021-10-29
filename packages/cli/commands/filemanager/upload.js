@@ -28,6 +28,7 @@ const {
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'upload <src> <dest>';
 exports.describe =
@@ -42,7 +43,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!validateConfig() || !(await validateAccount(options))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -77,7 +78,7 @@ exports.handler = async options => {
   );
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (stats.isFile()) {

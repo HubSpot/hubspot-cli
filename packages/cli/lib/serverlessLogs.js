@@ -9,6 +9,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
+const { EXIT_CODES } = require('../lib/exitCodes');
 
 const TAIL_DELAY = 5000;
 
@@ -61,7 +62,7 @@ const tailLogs = async ({
           })
         );
       }
-      process.exit();
+      process.exit(EXIT_CODES.SUCCESS);
     }
 
     if (latestLog && latestLog.results.length) {
@@ -79,7 +80,7 @@ const tailLogs = async ({
     spinnies.succeed('tailLogs', {
       text: `Stopped polling because "${exitKey}" was pressed.`,
     });
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   });
   await tail(initialAfter);
 };

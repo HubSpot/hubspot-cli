@@ -25,6 +25,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -34,7 +35,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -53,7 +54,7 @@ exports.handler = async options => {
 
   const routesResp = await getRoutes(accountId).catch(async e => {
     await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   });
 
   if (!routesResp.objects.length) {

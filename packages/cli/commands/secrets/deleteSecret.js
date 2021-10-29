@@ -21,6 +21,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'delete <name>';
 exports.describe = 'Delete a HubSpot secret';
@@ -34,7 +35,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
   trackCommandUsage('secrets-delete', {}, accountId);

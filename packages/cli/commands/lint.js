@@ -20,6 +20,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { EXIT_CODES } = require('../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -29,7 +30,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -57,7 +58,7 @@ exports.handler = async options => {
   } catch (err) {
     logger.groupEnd(groupName);
     logErrorInstance(err, { accountId });
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);
   logger.log(`${count} issues found`);

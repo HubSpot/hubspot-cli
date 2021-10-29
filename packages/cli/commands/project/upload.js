@@ -27,6 +27,7 @@ const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 const {
   getProjectConfig,
   validateProjectConfig,
@@ -43,7 +44,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -91,7 +92,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return { buildId };

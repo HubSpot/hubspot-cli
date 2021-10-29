@@ -19,6 +19,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'create <src>';
 exports.describe = 'Create a HubDB table';
@@ -32,7 +33,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
 
@@ -41,7 +42,7 @@ exports.handler = async options => {
   try {
     const filePath = path.resolve(getCwd(), src);
     if (!isFileValidJSON(filePath)) {
-      process.exit(1);
+      process.exit(EXIT_CODES.ERROR);
     }
 
     const table = await createHubDbTable(

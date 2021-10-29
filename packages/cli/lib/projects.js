@@ -28,6 +28,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { EXIT_CODES } = require('./exitCodes');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -151,21 +152,21 @@ const validateProjectConfig = (projectConfig, projectDir) => {
     logger.error(
       `Project config not found. Try running 'hs project init' first.`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
       'Project config is missing required fields. Try running `hs project init`.'
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' does not exist.`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

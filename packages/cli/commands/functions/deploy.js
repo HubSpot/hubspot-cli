@@ -25,6 +25,7 @@ const {
 } = require('@hubspot/cli-lib/api/functions');
 const { validateAccount } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
@@ -57,7 +58,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

@@ -17,6 +17,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'delete <tableId>';
 exports.describe = 'delete a HubDB table';
@@ -30,7 +31,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
 

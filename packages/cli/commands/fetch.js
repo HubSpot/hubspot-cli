@@ -20,6 +20,7 @@ const { resolveLocalPath } = require('../lib/filesystem');
 const { validateAccount, validateMode } = require('../lib/validation');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { EXIT_CODES } = require('../lib/exitCodes');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe =
@@ -41,12 +42,12 @@ exports.handler = async options => {
       validateMode(options)
     )
   ) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (typeof src !== 'string') {
     logger.error('A source to fetch is required');
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);

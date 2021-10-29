@@ -11,6 +11,7 @@ const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { downloadSchemas, getResolvedPath } = require('@hubspot/cli-lib/schema');
+const { EXIT_CODES } = require('../../../lib/exitCodes');
 
 exports.command = 'fetch-all [dest]';
 exports.describe = 'Fetch all custom object schemas for an account';
@@ -22,7 +23,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const accountId = getAccountId(options);
 
