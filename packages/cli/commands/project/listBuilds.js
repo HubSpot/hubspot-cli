@@ -29,6 +29,7 @@ const {
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
+const { link } = require('../../lib/links');
 const { getProjectConfig, getProjectDetailUrl } = require('../../lib/projects');
 const moment = require('moment');
 const { prompt } = require('inquirer');
@@ -64,10 +65,17 @@ exports.handler = async options => {
   const fetchAndDisplayBuilds = async (project, options) => {
     const { results, paging } = await fetchProjectBuilds(
       accountId,
-      projectConfig.name,
+      project.name,
       options
     );
     const currentDeploy = project.deployedBuildId;
+    logger.log(
+      `Sowing the ${results.length} most recent builds for ${project.name}. ` +
+        link(
+          'View all builds in project details.',
+          getProjectDetailUrl(projectConfig.name, accountId)
+        )
+    );
 
     if (results.length === 0) {
       logger.log('No builds found.');
@@ -80,15 +88,16 @@ exports.handler = async options => {
             ? `#${build.buildId} [deployed]`
             : `#${build.buildId}`,
           build.status,
-          moment(build.finishedAt).format('MM/DD/YYYY hh:mm:ss A'),
+          moment(build.finishedAt).format('MM/DD/YY, hh:mm:ssa'),
           Math.round(
             moment
               .duration(moment(build.finishedAt).diff(moment(build.enqueuedAt)))
               .asSeconds()
           ) + 's',
-          `${getProjectDetailUrl(projectConfig.name, accountId)}/builds/${
-            build.buildId
-          }`,
+          build.subbuildStatuses
+            .filter(subbuild => subbuild.status === 'FAILURE')
+            .map(subbuild => `${subbuild.buildName} failed`)
+            .join(', '),
         ];
       });
       builds.unshift(
