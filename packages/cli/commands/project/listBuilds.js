@@ -69,13 +69,19 @@ exports.handler = async options => {
       options
     );
     const currentDeploy = project.deployedBuildId;
-    logger.log(
-      `Sowing the ${results.length} most recent builds for ${project.name}. ` +
-        link(
-          'View all builds in project details.',
-          getProjectDetailUrl(projectConfig.name, accountId)
-        )
-    );
+    if (options && options.after) {
+      logger.log(
+        `Showing the next ${results.length} builds for ${project.name}`
+      );
+    } else {
+      logger.log(
+        `Showing the ${results.length} most recent builds for ${project.name}. ` +
+          link(
+            'View all builds in project details.',
+            getProjectDetailUrl(project.name, accountId)
+          )
+      );
+    }
 
     if (results.length === 0) {
       logger.log('No builds found.');
@@ -117,10 +123,10 @@ exports.handler = async options => {
         })
       );
     }
-    if (paging && paging.next.after) {
+    if (paging && paging.next) {
       await prompt({
         name: 'more',
-        message: 'Load more builds? <enter>',
+        message: 'Press <enter> to load more, or ctrl+c to exit',
       });
       await fetchAndDisplayBuilds(project, { limit, after: paging.next.after });
     }
@@ -131,7 +137,11 @@ exports.handler = async options => {
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+    if (e.statusCode === 404) {
+      logger.error(`Project ${projectConfig.name} not found. `);
+    } else {
+      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+    }
   }
 };
 
