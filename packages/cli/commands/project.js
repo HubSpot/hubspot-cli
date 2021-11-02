@@ -1,8 +1,4 @@
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addOverwriteOptions,
-} = require('../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const deploy = require('./project/deploy');
 const create = require('./project/create');
 const upload = require('./project/upload');
@@ -12,7 +8,6 @@ exports.command = 'project';
 exports.describe = false; //'Commands for working with projects';
 
 exports.builder = yargs => {
-  addOverwriteOptions(yargs, true);
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
 
