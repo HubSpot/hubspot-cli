@@ -65,54 +65,69 @@ const getProjectConfig = async projectPath => {
   });
 
   if (!configPath) {
-    return null;
+    return { projectConfig: null, projectDir: null };
   }
 
   try {
-    const projectConfig = fs.readFileSync(configPath);
-    return JSON.parse(projectConfig);
+    const config = fs.readFileSync(configPath);
+    const projectConfig = JSON.parse(config);
+    return {
+      projectDir: path.dirname(configPath),
+      projectConfig,
+    };
   } catch (e) {
     logger.error('Could not read from project config');
   }
 };
 
 const createProjectConfig = async (projectPath, projectName, template) => {
-  const projectConfig = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+
+  if (projectDir === projectPath) {
+    logger.warn('A project already exists in that location.');
+    const { shouldOverwrite } = await prompt([
+      {
+        name: 'shouldOverwrite',
+        message:
+          'Do you want to overwrite the existing project definition with a new one?',
+        type: 'confirm',
+        default: false,
+      },
+    ]);
+    if (!shouldOverwrite) {
+      return;
+    }
+  } else if (projectDir) {
+    return logger.error(
+      `Found an existing project definition in ${projectDir}.`
+    );
+  }
+
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
-  if (projectConfig) {
-    logger.log(
-      `Found an existing project config in this folder (${chalk.bold(
-        projectConfig.name
-      )})`
-    );
+  logger.log(
+    `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+  );
+
+  if (template === 'none') {
+    fs.ensureDirSync(path.join(projectPath, 'src'));
+
+    writeProjectConfig(projectConfigPath, {
+      name: projectName,
+      srcDir: 'src',
+    });
   } else {
-    logger.log(
-      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    createProjectTemplate(
+      projectPath,
+      'project',
+      PROJECT_TEMPLATES.find(t => t.name === template).repo,
+      ''
     );
-
-    if (template === 'none') {
-      fs.ensureDirSync(path.join(projectPath, 'src'));
-
-      writeProjectConfig(projectConfigPath, {
-        name: projectName,
-        srcDir: 'src',
-      });
-    } else {
-      createProjectTemplate(
-        projectPath,
-        'project',
-        PROJECT_TEMPLATES.find(t => t.name === template).repo,
-        ''
-      );
-      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
-      writeProjectConfig(projectConfigPath, {
-        ..._config,
-        name: projectName,
-      });
-    }
-
-    return { projectName, projectPath };
+    const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+    writeProjectConfig(projectConfigPath, {
+      ..._config,
+      name: projectName,
+    });
   }
 
   return projectConfig;
