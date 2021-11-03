@@ -13,8 +13,9 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
 const { validateAccount } = require('../../lib/validation');
-const { getCwd } = require('@hubspot/cli-lib/path');
-const path = require('path');
+// const { getCwd } = require('@hubspot/cli-lib/path');
+// const path = require('path');
+const { prompt } = require('inquirer');
 const {
   createProjectConfig,
   showWelcomeMessage,
@@ -38,26 +39,73 @@ exports.describe = false;
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-create', { projectPath }, accountId);
+  // const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
+  const { name, template, location } = await prompt([
+    {
+      name: 'name',
+      message: '[--name] Give your project a name:',
+      when: !options.name,
+      validate: input => {
+        if (!input) {
+          return 'A project name is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'location',
+      message: '[--location] Where should the project be created?',
+      when: !options.location,
+      default: answers => {
+        return answers.name || options.name;
+      },
+      validate: input => {
+        if (!input) {
+          return 'A project location is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'template',
+      message: 'Start from a template?',
+      when: !options.template,
+      type: 'rawlist',
+      choices: [
+        {
+          name: 'No template',
+          value: 'none',
+        },
+        {
+          name: 'Getting Started Project',
+          value: 'getting-started',
+        },
+      ],
+    },
+  ]);
 
-  const projectConfig = await createProjectConfig(cwd, name);
+  trackCommandUsage('project-create', { projectName: name }, accountId);
 
-  showWelcomeMessage(projectConfig.name, accountId);
+  await createProjectConfig(location, name, template);
+
+  showWelcomeMessage(name, accountId);
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: 'Path to a project folder',
-    type: 'string',
-  });
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
+      type: 'string',
+    },
+    location: {
+      describe: 'Directory where project should be created',
+      type: 'string',
+    },
+    temlate: {
+      describe: 'Which template?',
       type: 'string',
     },
   });

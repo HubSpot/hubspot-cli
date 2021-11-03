@@ -76,7 +76,7 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const createProjectConfig = async (projectPath, projectName) => {
+const createProjectConfig = async (projectPath, projectName, template) => {
   const projectConfig = await getProjectConfig(projectPath);
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
@@ -90,44 +90,16 @@ const createProjectConfig = async (projectPath, projectName) => {
     logger.log(
       `Creating project in ${projectPath ? projectPath : 'the current folder'}`
     );
-    const { name, template, srcDir } = await prompt([
-      {
-        name: 'name',
-        message: 'Please enter a project name:',
-        when: !projectName,
-        validate: input => {
-          if (!input) {
-            return 'A project name is required';
-          }
-          return true;
-        },
-      },
-      {
-        name: 'template',
-        message: 'Start from a template?',
-        type: 'rawlist',
-        choices: [
-          {
-            name: 'No template',
-            value: 'none',
-          },
-          {
-            name: 'Getting Started Project',
-            value: 'getting-started',
-          },
-        ],
-      },
-    ]);
 
     if (template === 'none') {
       fs.ensureDirSync(path.join(projectPath, 'src'));
 
       writeProjectConfig(projectConfigPath, {
-        name: projectName || name,
+        name: projectName,
         srcDir: 'src',
       });
     } else {
-      await createProjectTemplate(
+      createProjectTemplate(
         projectPath,
         'project',
         PROJECT_TEMPLATE_REPO[template],
@@ -136,11 +108,11 @@ const createProjectConfig = async (projectPath, projectName) => {
       const _config = JSON.parse(fs.readFileSync(projectConfigPath));
       writeProjectConfig(projectConfigPath, {
         ..._config,
-        name: projectName || name,
+        name: projectName,
       });
     }
 
-    return { name, srcDir };
+    return { projectName, projectPath };
   }
 
   return projectConfig;
