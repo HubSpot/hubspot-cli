@@ -209,7 +209,7 @@ const showWelcomeMessage = () => {
     '\n-------------------------------------------------------------\n'
   );
   logger.log(chalk.bold("What's next?\n"));
-  logger.log('🎨 Add deployables to your project with `hs create`.\n');
+  logger.log('🎨 Add components to your project with `hs create`.\n');
   logger.log(
     `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );
