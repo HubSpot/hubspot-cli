@@ -15,7 +15,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
-  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEMPLATES,
   PROJECT_TEXT,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -102,7 +102,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
       createProjectTemplate(
         projectPath,
         'project',
-        PROJECT_TEMPLATE_REPO[template],
+        PROJECT_TEMPLATES.find(t => t.name === template).repo,
         ''
       );
       const _config = JSON.parse(fs.readFileSync(projectConfigPath));

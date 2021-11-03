@@ -20,6 +20,7 @@ const {
   createProjectConfig,
   showWelcomeMessage,
 } = require('../../lib/projects');
+const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -79,10 +80,12 @@ exports.handler = async options => {
           name: 'No template',
           value: 'none',
         },
-        {
-          name: 'Getting Started Project',
-          value: 'getting-started',
-        },
+        ...PROJECT_TEMPLATES.map(template => {
+          return {
+            name: template.label,
+            value: template.name,
+          };
+        }),
       ],
     },
   ]);

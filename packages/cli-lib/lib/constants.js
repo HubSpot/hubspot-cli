@@ -118,9 +118,13 @@ const PROJECT_TEMPLATE_TYPES = {
   },
 };
 
-const PROJECT_TEMPLATE_REPO = {
-  'getting-started': 'getting-started-project-template',
-};
+const PROJECT_TEMPLATES = [
+  {
+    name: 'getting-started',
+    label: 'Getting Started',
+    repo: 'getting-started-project-template',
+  },
+];
 
 const TEMPLATE_TYPES = {
   unmapped: 0,
@@ -238,7 +242,7 @@ module.exports = {
   PROJECT_BUILD_STATUS_TEXT,
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
-  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEMPLATES,
   PROJECT_TEMPLATE_TYPES,
   PROJECT_TEXT,
   SCOPE_GROUPS,
