@@ -13,13 +13,10 @@ const {
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
 const { validateAccount } = require('../../lib/validation');
-// const { getCwd } = require('@hubspot/cli-lib/path');
-// const path = require('path');
+const { getCwd } = require('@hubspot/cli-lib/path');
+const path = require('path');
 const { prompt } = require('inquirer');
-const {
-  createProjectConfig,
-  showWelcomeMessage,
-} = require('../../lib/projects');
+const { createProjectConfig } = require('../../lib/projects');
 const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 
 const loadAndValidateOptions = async options => {
@@ -34,15 +31,13 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'create [path]';
+exports.command = 'create';
 exports.describe = false;
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-
-  // const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
 
   const { name, template, location } = await prompt([
     {
@@ -61,7 +56,7 @@ exports.handler = async options => {
       message: '[--location] Where should the project be created?',
       when: !options.location,
       default: answers => {
-        return answers.name || options.name;
+        return path.resolve(getCwd(), answers.name || options.name);
       },
       validate: input => {
         if (!input) {
@@ -72,8 +67,15 @@ exports.handler = async options => {
     },
     {
       name: 'template',
-      message: 'Start from a template?',
-      when: !options.template,
+      message: () => {
+        return options.template &&
+          !PROJECT_TEMPLATES.find(t => t.name === options.template)
+          ? `[--template] Could not find template ${options.template}. Please choose an available template.`
+          : '[--template] Start from a template?';
+      },
+      when:
+        !options.template ||
+        !PROJECT_TEMPLATES.find(t => t.name === options.template),
       type: 'rawlist',
       choices: [
         {
@@ -92,9 +94,11 @@ exports.handler = async options => {
 
   trackCommandUsage('project-create', { projectName: name }, accountId);
 
-  await createProjectConfig(location, name, template);
-
-  showWelcomeMessage(name, accountId);
+  await createProjectConfig(
+    path.resolve(getCwd(), options.location || location),
+    options.name || name,
+    options.template || template
+  );
 };
 
 exports.builder = yargs => {
@@ -107,18 +111,13 @@ exports.builder = yargs => {
       describe: 'Directory where project should be created',
       type: 'string',
     },
-    temlate: {
+    template: {
       describe: 'Which template?',
       type: 'string',
     },
   });
 
-  yargs.example([
-    [
-      '$0 project create myProjectFolder',
-      'Create a project within the myProjectFolder folder',
-    ],
-  ]);
+  yargs.example([['$0 project create', 'Create a project']]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
