@@ -122,6 +122,7 @@ exports.handler = async options => {
   const archive = archiver('zip');
 
   output.on('close', async function() {
+    let exitCode = 0;
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
     const { buildId } = await uploadProjectFiles(
@@ -160,21 +161,22 @@ exports.handler = async options => {
         logger.error(subbuild.errorMessage);
       });
 
-      return;
-    }
-
-    if (isAutoDeployEnabled && deployStatusTaskLocator) {
+      exitCode = 1;
+    } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
         )} to ${accountId}`
       );
-      await pollDeployStatus(
+      const { status } = await pollDeployStatus(
         accountId,
         projectConfig.name,
         deployStatusTaskLocator.id,
         buildId
       );
+      if (status === 'FAILURE') {
+        exitCode = 1;
+      }
     } else {
       logger.log('-'.repeat(50));
       logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
@@ -189,6 +191,8 @@ exports.handler = async options => {
     } catch (e) {
       logger.error(e);
     }
+
+    process.exit(exitCode);
   });
 
   archive.on('error', function(err) {
