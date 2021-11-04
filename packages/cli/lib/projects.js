@@ -5,6 +5,7 @@ const chalk = require('chalk');
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
+const { walk } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const {
@@ -46,6 +47,11 @@ const PROJECT_STRINGS = {
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
   },
+};
+
+const containsNestedProject = async projectPath => {
+  const files = await walk(projectPath);
+  return files.find(file => path.basename(file) === 'hsproject.json');
 };
 
 const writeProjectConfig = (configPath, config) => {
@@ -101,6 +107,13 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     return logger.error(
       `Found an existing project definition in ${projectDir}.`
     );
+  } else if (fs.existsSync(projectPath)) {
+    const nestedProject = await containsNestedProject(projectPath);
+    if (nestedProject) {
+      return logger.error(
+        `Found an existing project definition in ${nestedProject}.`
+      );
+    }
   }
 
   const projectConfigPath = path.join(projectPath, 'hsproject.json');
