@@ -48,12 +48,15 @@ module.exports = ({ account, autoupload }) => ({
       src: 'dist',
       dest: 'my-project',
     }),
-    new CopyWebpackPlugin([
-      { from: 'src/images', to: 'images' },
-      { from: 'src/templates', to: 'templates' },
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'src/images', to: 'images' },
+        { from: 'src/templates', to: 'templates' },
+      ]
+    }),
   ],
 });
 ```
 
-3. Run `webpack --watch --env.account 123 --env.autoupload` to compile your project and automatically upload assets.
+3. Run `webpack --watch --env account 123 --env autoupload` to compile your project and automatically upload assets. Replace `123` with your unique Hub ID.
+

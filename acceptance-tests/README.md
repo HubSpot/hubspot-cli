@@ -64,3 +64,8 @@ The `.env` file does not get recognized when running [act](https://github.com/ne
 - Only add `--qa` flag when needed to `hs` commands
 - Bulk out test coverage
 - Sometimes the initial bootstrapping said the auth token is no longer valid, not too sure why this is. Investigate
+
+## Gotchas
+
+- Currently sometimes the personal-access-key test is flakey. Run the tests again and it should pass.
+- The tests seem to trip up on usages of the `ora` library. To get around this, we have a list of blacklisted strings. If your test is being picky about ora, add the error message to the blacklist in `cmd.js`

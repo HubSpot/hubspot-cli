@@ -41,7 +41,7 @@ class OAuth2Manager {
     if (
       !this.tokenInfo.accessToken ||
       moment()
-        .add(30, 'minutes')
+        .add(5, 'minutes')
         .isAfter(moment(this.tokenInfo.expiresAt))
     ) {
       await this.refreshAccessToken();

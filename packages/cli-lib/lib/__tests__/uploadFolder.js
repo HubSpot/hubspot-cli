@@ -14,6 +14,7 @@ describe('uploadFolder', () => {
         'folder/templates/blog.html',
         'folder/css/file.css',
         'folder/js/file.js',
+        'folder/fields.json',
         'folder/images/image.png',
         'folder/images/image.jpg',
         'folder/sample.module/module.css',
@@ -41,15 +42,16 @@ describe('uploadFolder', () => {
         'folder/js/file.js',
         'folder/templates/blog.html',
         'folder/templates/page.html',
+        'folder/fields.json',
       ];
 
       await uploadFolder(accountId, src, dest, { mode: 'publish' });
 
-      expect(upload).toReturnTimes(10);
+      expect(upload).toReturnTimes(11);
 
       uploadedFilesInOrder.forEach((file, index) => {
         expect(upload).nthCalledWith(index + 1, accountId, file, file, {
-          qs: { buffer: false },
+          qs: { buffer: false, environmentId: 1 },
         });
       });
     });

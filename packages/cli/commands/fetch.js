@@ -82,5 +82,14 @@ exports.builder = yargs => {
     type: 'string',
   });
 
+  yargs.options({
+    staging: {
+      describe: 'Retrieve staged changes for project',
+      type: 'boolean',
+      default: false,
+      hidden: true,
+    },
+  });
+
   return yargs;
 };

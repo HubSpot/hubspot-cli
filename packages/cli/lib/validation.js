@@ -3,16 +3,39 @@ const {
   getAccountConfig,
   loadConfigFromEnvironment,
   Mode,
+  loadConfig,
+  validateConfig,
+  checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
+const { getConfigPath } = require('@hubspot/cli-lib/lib/config');
+const {
+  API_KEY_AUTH_METHOD,
+  OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/cli-lib/lib/constants');
+const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { getCwd, getExt } = require('@hubspot/cli-lib/path');
-const { getAccountId, getMode } = require('./commonOpts');
+const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
+const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
+
+async function loadAndValidateOptions(options) {
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath, options);
+  checkAndWarnGitInclusion();
+
+  if (!(validateConfig() && (await validateAccount(options)))) {
+    process.exit(1);
+  }
+}
 
 /**
  * Validate that an account was passed to the command and that the account's configuration is valid
@@ -43,7 +66,7 @@ async function validateAccount(options) {
       );
     } else {
       logger.error(
-        'An account needs to be supplied either via "--account" or through setting a "defaultAccount"'
+        'An account needs to be supplied either via "--account" or through setting a "defaultPortal"'
       );
     }
     return false;
@@ -62,6 +85,18 @@ async function validateAccount(options) {
   }
 
   const { authType, auth, apiKey, personalAccessKey } = accountConfig;
+
+  if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
+    logger.error(
+      `Invalid "authType" value "${authType}" for account "${accountId}" in config file: ${getConfigPath()}. Valid values are ${commaSeparatedValues(
+        [
+          PERSONAL_ACCESS_KEY_AUTH_METHOD,
+          OAUTH_AUTH_METHOD,
+          API_KEY_AUTH_METHOD,
+        ].map(method => method.value)
+      )}.`
+    );
+  }
 
   if (authType === 'oauth2') {
     if (typeof auth !== 'object') {
@@ -189,4 +224,5 @@ module.exports = {
   validateAccount,
   isFileValidJSON,
   fileExists,
+  loadAndValidateOptions,
 };

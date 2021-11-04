@@ -1,10 +1,14 @@
+const supportsHyperlinks = require('supports-hyperlinks');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const open = require('open');
-const { getTableContents, getTableHeader } = require('./table');
 
 const logSiteLinks = accountId => {
   const linksAsArray = getSiteLinksAsArray(accountId).map(l => [
@@ -117,9 +121,18 @@ const openLink = (accountId, shortcut) => {
   logger.success(`We opened ${match.url} in your browser`);
 };
 
+const link = (linkText, url) => {
+  if (supportsHyperlinks.stdout) {
+    return ['\u001B]8;;', url, '\u0007', linkText, '\u001B]8;;\u0007'].join('');
+  } else {
+    return `${linkText}: ${url}`;
+  }
+};
+
 module.exports = {
   getSiteLinks,
   getSiteLinksAsArray,
   logSiteLinks,
   openLink,
+  link,
 };

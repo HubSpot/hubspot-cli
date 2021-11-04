@@ -18,10 +18,13 @@ const promptUser = async promptConfig => {
  * then opens their browser to the personal-access-key shortlink
  */
 const personalAccessKeyPrompt = async ({ env } = {}) => {
-  await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   const url = `${websiteOrigin}/l/personal-access-key`;
-  open(url, { url: true });
+  if (process.env.BROWSER !== 'none') {
+    await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
+    open(url, { url: true });
+  }
+
   logger.log(`Opening ${url} in your web browser`);
   const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
@@ -130,7 +133,17 @@ const SCOPES = {
 const OAUTH_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, ACCOUNT_API_KEY];
 
+const folderOverwritePrompt = folderName => {
+  return promptUser({
+    type: 'confirm',
+    name: 'overwrite',
+    message: `The folder with name '${folderName}' already exists. Overwrite?`,
+    default: false,
+  });
+};
+
 module.exports = {
+  folderOverwritePrompt,
   promptUser,
   personalAccessKeyPrompt,
   CLIENT_ID,

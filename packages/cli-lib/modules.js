@@ -4,6 +4,11 @@ const { getCwd, getExt, splitHubSpotPath, splitLocalPath } = require('./path');
 const { walk } = require('./lib/walk');
 const { MODULE_EXTENSION } = require('./lib/constants');
 
+// Matches files named module.html
+const MODULE_HTML_EXTENSION_REGEX = new RegExp(/\.module\/module\.html$/);
+// Matches files named module.css
+const MODULE_CSS_EXTENSION_REGEX = new RegExp(/\.module\/module\.css$/);
+
 const isBool = x => !!x === x;
 
 /**
@@ -47,7 +52,7 @@ const isModuleFolder = pathInput => {
  * @returns {boolean}
  * @throws {TypeError}
  */
-const isModuleFolderChild = pathInput => {
+const isModuleFolderChild = (pathInput, ignoreLocales = false) => {
   throwInvalidPathInput(pathInput);
   let pathParts = [];
   if (pathInput.isLocal) {
@@ -58,6 +63,10 @@ const isModuleFolderChild = pathInput => {
   const { length } = pathParts;
   // Not a child path?
   if (length <= 1) return false;
+  // Check if we should ignore this file
+  if (ignoreLocales && pathParts.find(part => part === '_locales')) {
+    return false;
+  }
   // Check if any parent folders are module folders.
   return pathParts
     .slice(0, length - 1)
@@ -146,9 +155,25 @@ async function validateSrcAndDestPaths(src, dest) {
   return results;
 }
 
+/**
+ * Checks if the given path points to an .html file within a .module folder
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+const isModuleHTMLFile = filePath => MODULE_HTML_EXTENSION_REGEX.test(filePath);
+
+/**
+ * Checks if the given path points to an .css file within a .module folder
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+const isModuleCSSFile = filePath => MODULE_CSS_EXTENSION_REGEX.test(filePath);
+
 module.exports = {
   isModuleFolder,
   isModuleFolderChild,
   validateSrcAndDestPaths,
   ValidationIds,
+  isModuleHTMLFile,
+  isModuleCSSFile,
 };
