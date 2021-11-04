@@ -130,7 +130,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
       srcDir: 'src',
     });
   } else {
-    createProjectTemplate(
+    await createProjectTemplate(
       projectPath,
       'project',
       PROJECT_TEMPLATES.find(t => t.name === template).repo,
