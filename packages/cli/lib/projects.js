@@ -5,7 +5,6 @@ const chalk = require('chalk');
 const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
-const { walk } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const {
@@ -49,11 +48,6 @@ const PROJECT_STRINGS = {
   },
 };
 
-const containsNestedProject = async projectPath => {
-  const files = await walk(projectPath);
-  return files.find(file => path.basename(file) === 'hsproject.json');
-};
-
 const writeProjectConfig = (configPath, config) => {
   try {
     fs.ensureFileSync(configPath);
@@ -89,30 +83,28 @@ const getProjectConfig = async projectPath => {
 const createProjectConfig = async (projectPath, projectName, template) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
-  if (projectDir === projectPath) {
-    logger.warn('A project already exists in that location.');
-    const { shouldOverwrite } = await prompt([
+  if (projectConfig) {
+    logger.warn(
+      projectPath === projectDir
+        ? 'A project already exists in that location.'
+        : `Found an existing project definition in ${projectDir}.`
+    );
+
+    const { shouldContinue } = await prompt([
       {
-        name: 'shouldOverwrite',
-        message:
-          'Do you want to overwrite the existing project definition with a new one?',
+        name: 'shouldContinue',
+        message: () => {
+          return projectPath === projectDir
+            ? 'Do you want to overwrite the existing project definition with a new one?'
+            : `Continue creating a new project in ${projectPath}?`;
+        },
         type: 'confirm',
         default: false,
       },
     ]);
-    if (!shouldOverwrite) {
+
+    if (!shouldContinue) {
       return;
-    }
-  } else if (projectDir) {
-    return logger.error(
-      `Found an existing project definition in ${projectDir}.`
-    );
-  } else if (fs.existsSync(projectPath)) {
-    const nestedProject = await containsNestedProject(projectPath);
-    if (nestedProject) {
-      return logger.error(
-        `Found an existing project definition in ${nestedProject}.`
-      );
     }
   }
 
