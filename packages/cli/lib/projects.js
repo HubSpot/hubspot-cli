@@ -17,6 +17,7 @@ const {
   POLLING_DELAY,
   PROJECT_TEMPLATES,
   PROJECT_TEXT,
+  PROJECT_CONFIG_FILE,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   createProject,
@@ -59,7 +60,7 @@ const writeProjectConfig = (configPath, config) => {
 };
 
 const getProjectConfig = async projectPath => {
-  const configPath = findup('hsproject.json', {
+  const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectPath,
     nocase: true,
   });
@@ -108,7 +109,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     }
   }
 
-  const projectConfigPath = path.join(projectPath, 'hsproject.json');
+  const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
 
   logger.log(
     `Creating project in ${projectPath ? projectPath : 'the current folder'}`
