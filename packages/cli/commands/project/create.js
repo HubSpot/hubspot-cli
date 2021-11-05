@@ -76,7 +76,7 @@ exports.handler = async options => {
       when:
         !options.template ||
         !PROJECT_TEMPLATES.find(t => t.name === options.template),
-      type: 'rawlist',
+      type: 'list',
       choices: [
         {
           name: 'No template',
