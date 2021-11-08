@@ -25,7 +25,6 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const {
   getProjectConfig,
@@ -105,8 +104,7 @@ exports.handler = async options => {
 
   trackCommandUsage('project-upload', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const { projectConfig, projectDir } = await getProjectConfig(cwd);
+  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
 

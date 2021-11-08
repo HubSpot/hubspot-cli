@@ -1,4 +1,3 @@
-const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -19,7 +18,6 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 
@@ -46,8 +44,7 @@ exports.handler = async options => {
 
   trackCommandUsage('project-deploy', { projectPath }, accountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const { projectConfig } = await getProjectConfig(cwd);
+  const { projectConfig } = await getProjectConfig(projectPath);
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 
