@@ -15,8 +15,9 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
-  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEMPLATES,
   PROJECT_TEXT,
+  PROJECT_CONFIG_FILE,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   createProject,
@@ -59,13 +60,13 @@ const writeProjectConfig = (configPath, config) => {
 };
 
 const getProjectConfig = async projectPath => {
-  const configPath = findup('hsproject.json', {
+  const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectPath,
     nocase: true,
   });
 
   if (!configPath) {
-    return {};
+    return { projectConfig: null, projectDir: null };
   }
 
   try {
@@ -80,71 +81,59 @@ const getProjectConfig = async projectPath => {
   }
 };
 
-const createProjectConfig = async (projectPath, projectName) => {
+const createProjectConfig = async (projectPath, projectName, template) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
-  const projectConfigPath = path.join(projectPath, 'hsproject.json');
 
   if (projectConfig) {
-    logger.log(
-      `Projects cannot contain other projects. Found an existing project in (${chalk.bold(
-        projectDir
-      )})`
+    logger.warn(
+      projectPath === projectDir
+        ? 'A project already exists in that location.'
+        : `Found an existing project definition in ${projectDir}.`
     );
-  } else {
-    logger.log(
-      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
-    );
-    const { name, template, srcDir } = await prompt([
+
+    const { shouldContinue } = await prompt([
       {
-        name: 'name',
-        message: 'Please enter a project name:',
-        when: !projectName,
-        validate: input => {
-          if (!input) {
-            return 'A project name is required';
-          }
-          return true;
+        name: 'shouldContinue',
+        message: () => {
+          return projectPath === projectDir
+            ? 'Do you want to overwrite the existing project definition with a new one?'
+            : `Continue creating a new project in ${projectPath}?`;
         },
-      },
-      {
-        name: 'template',
-        message: 'Start from a template?',
-        type: 'rawlist',
-        choices: [
-          {
-            name: 'No template',
-            value: 'none',
-          },
-          {
-            name: 'Getting Started Project',
-            value: 'getting-started',
-          },
-        ],
+        type: 'confirm',
+        default: false,
       },
     ]);
 
-    if (template === 'none') {
-      fs.ensureDirSync(path.join(projectPath, 'src'));
-
-      writeProjectConfig(projectConfigPath, {
-        name: projectName || name,
-        srcDir: 'src',
-      });
-    } else {
-      await createProjectTemplate(
-        projectPath,
-        'project',
-        PROJECT_TEMPLATE_REPO[template],
-        ''
-      );
-      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
-      writeProjectConfig(projectConfigPath, {
-        ..._config,
-        name: projectName || name,
-      });
+    if (!shouldContinue) {
+      return;
     }
+  }
 
-    return { name, srcDir };
+  const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
+
+  logger.log(
+    `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+  );
+
+  if (template === 'none') {
+    fs.ensureDirSync(path.join(projectPath, 'src'));
+
+    writeProjectConfig(projectConfigPath, {
+      name: projectName,
+      srcDir: 'src',
+    });
+  } else {
+    await createProjectTemplate(
+      projectPath,
+      'project',
+      PROJECT_TEMPLATES.find(t => t.name === template).repo,
+      ''
+    );
+    const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+    writeProjectConfig(projectConfigPath, {
+      ..._config,
+      name: projectName,
+    });
   }
 
   return projectConfig;
@@ -226,7 +215,7 @@ const showWelcomeMessage = () => {
     '\n-------------------------------------------------------------\n'
   );
   logger.log(chalk.bold("What's next?\n"));
-  logger.log('🎨 Add deployables to your project with `hs create`.\n');
+  logger.log('🎨 Add components to your project with `hs create`.\n');
   logger.log(
     `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );
@@ -258,12 +247,11 @@ const makeGetTaskStatus = taskType => {
 
   return async (accountId, taskName, taskId, buildId) => {
     const isTaskComplete = task => {
-      const isStatusComplete =
-        task.status === statusText.STATES.SUCCESS ||
-        task.status === statusText.STATES.FAILURE;
-      return task.isAutoDeployEnabled
-        ? isStatusComplete && task.deployStatusTaskLocator
-        : isStatusComplete;
+      if (task.status === statusText.STATES.FAILURE) {
+        return true;
+      } else if (task.status === statusText.STATES.SUCCESS) {
+        return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
+      }
     };
 
     const spinnies = new Spinnies({
@@ -314,12 +302,12 @@ const makeGetTaskStatus = taskType => {
                 });
                 break;
               case statusText.STATES.FAILURE:
-                spinnies.fail(subTask.buildName, {
+                spinnies.fail(subTask[statusText.SUBTASK_NAME_KEY], {
                   text: updatedText,
                 });
                 break;
               default:
-                spinnies.update(subTask.buildName, {
+                spinnies.update(subTask[statusText.SUBTASK_NAME_KEY], {
                   text: updatedText,
                 });
                 break;
@@ -327,8 +315,8 @@ const makeGetTaskStatus = taskType => {
           });
 
           if (isTaskComplete(taskStatus)) {
-            subTaskStatus.forEach(subBuild => {
-              spinnies.remove(subBuild[statusText.SUBTASK_NAME_KEY]);
+            subTaskStatus.forEach(subTask => {
+              spinnies.remove(subTask[statusText.SUBTASK_NAME_KEY]);
             });
 
             if (status === statusText.STATES.SUCCESS) {

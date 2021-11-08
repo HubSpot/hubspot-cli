@@ -33,7 +33,7 @@ const tailLogs = async ({
 
   try {
     const latestLog = await fetchLatest();
-    initialAfter = base64EncodeString(latestLog.id);
+    initialAfter = latestLog && base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (e.statusCode !== 404) {

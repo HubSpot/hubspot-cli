@@ -14,6 +14,7 @@ const {
 
 const {
   GITHUB_RELEASE_TYPES,
+  PROJECT_CONFIG_FILE,
   PROJECT_TEMPLATE_TYPES,
 } = require('./lib/constants');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
@@ -195,7 +196,7 @@ async function createProject(dest, type, repoName, sourceDir, options = {}) {
 }
 
 const createProjectConfig = (folderPath, configOptions = {}) => {
-  const configPath = path.join(folderPath, 'hsproject.json');
+  const configPath = path.join(folderPath, PROJECT_CONFIG_FILE);
 
   logger.debug(`Creating config file ${configPath}`);
   return fs.writeFileSync(
