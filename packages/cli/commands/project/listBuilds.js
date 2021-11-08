@@ -30,7 +30,11 @@ const {
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { link } = require('../../lib/links');
-const { getProjectConfig, getProjectDetailUrl } = require('../../lib/projects');
+const {
+  getProjectConfig,
+  getProjectDetailUrl,
+  validateProjectConfig,
+} = require('../../lib/projects');
 const moment = require('moment');
 const { prompt } = require('inquirer');
 
@@ -58,7 +62,9 @@ exports.handler = async options => {
   trackCommandUsage('project-list-builds', { projectPath }, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const projectConfig = await getProjectConfig(cwd);
+  const { projectConfig, projectDir } = await getProjectConfig(cwd);
+
+  validateProjectConfig(projectConfig, projectDir);
 
   logger.debug(`Fetching builds for project at path: ${projectPath}`);
 
