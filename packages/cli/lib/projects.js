@@ -29,6 +29,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getCwd } = require('@hubspot/cli-lib/path');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -59,9 +60,11 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
-const getProjectConfig = async projectPath => {
+const getProjectConfig = async _dir => {
+  const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
+
   const configPath = findup(PROJECT_CONFIG_FILE, {
-    cwd: projectPath,
+    cwd: projectDir,
     nocase: true,
   });
 
@@ -142,21 +145,21 @@ const createProjectConfig = async (projectPath, projectName, template) => {
 const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
-      `Project config not found. Try running 'hs project init' first.`
+      `Project config not found. Try running 'hs project create' first.`
     );
     process.exit(1);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
-      'Project config is missing required fields. Try running `hs project init`.'
+      'Project config is missing required fields. Try running `hs project create`.'
     );
     process.exit(1);
   }
 
   if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
-      `Project source directory '${projectConfig.srcDir}' does not exist.`
+      `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
     process.exit(1);
   }
