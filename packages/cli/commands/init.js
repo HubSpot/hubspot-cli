@@ -83,7 +83,7 @@ const CONFIG_CREATION_FLOWS = {
 };
 
 exports.command = 'init';
-exports.describe = i18n('en.cli.commands.init.describe', {
+exports.describe = i18n('cli.commands.init.describe', {
   data: { configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME },
 });
 
@@ -99,11 +99,11 @@ exports.handler = async options => {
 
   if (fs.existsSync(configPath)) {
     logger.error(
-      i18n('en.cli.commands.init.errors.configFileExists', {
+      i18n('cli.commands.init.errors.configFileExists', {
         data: { configPath },
       })
     );
-    logger.info(i18n('en.cli.commands.init.info.updateConfig'));
+    logger.info(i18n('cli.commands.init.info.updateConfig'));
     process.exit(1);
   }
 
@@ -116,7 +116,7 @@ exports.handler = async options => {
     const configPath = getConfigPath();
 
     logger.success(
-      i18n('en.cli.commands.init.success.configFileCreated', {
+      i18n('cli.commands.init.success.configFileCreated', {
         data: { configPath, authType, account: name || accountId },
       })
     );
@@ -131,7 +131,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.option('auth', {
-    describe: i18n('en.cli.commands.init.options.auth.describe'),
+    describe: i18n('cli.commands.init.options.auth.describe'),
     type: 'string',
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -140,7 +140,7 @@ exports.builder = yargs => {
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: i18n(
-      'en.cli.commands.init.options.auth.defaultDescription',
+      'cli.commands.init.options.auth.defaultDescription',
       {
         data: { defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value },
       }

@@ -7,15 +7,28 @@ const { logger } = require('../logger');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
+let locale;
 let languageObj;
 
 const loadLanguageFromYaml = () => {
   if (languageObj) return;
 
   try {
-    languageObj = yaml.load(
-      fs.readFileSync(path.join(__dirname, '../lang/en.lyaml'), 'utf8')
+    const nodeLocale = Intl.DateTimeFormat()
+      .resolvedOptions()
+      .locale.split('-')[0];
+    const languageFilePath = path.join(
+      __dirname,
+      `../lang/${nodeLocale}.lyaml`
     );
+    const languageFileExists = fs.existsSync(languageFilePath);
+
+    // Fall back to using the default language file
+    locale = languageFileExists ? nodeLocale : 'en';
+    languageObj = yaml.load(
+      fs.readFileSync(path.join(__dirname, `../lang/${locale}.lyaml`), 'utf8')
+    );
+
     logger.debug(
       'Loaded language data: ',
       util.inspect(languageObj, true, 999, true)
@@ -26,7 +39,7 @@ const loadLanguageFromYaml = () => {
 };
 
 const getTextValue = lookupDotNotation => {
-  const lookupProps = lookupDotNotation.split('.');
+  const lookupProps = [locale, ...lookupDotNotation.split('.')];
   const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupDotNotation}`;
   let textValue = languageObj;
   let previouslyCheckedProp = lookupProps[0];

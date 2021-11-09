@@ -13,4 +13,3 @@ en:
           updateConfig: "To update an existing config file, use the \"hs auth\" command."
         errors:
           configFileExists: "The config file {{ configPath }} already exists."
-
