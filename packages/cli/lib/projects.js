@@ -6,7 +6,10 @@ const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const {
+  getEnv,
+  getAccountDescription,
+} = require('@hubspot/cli-lib/lib/config');
 const {
   createProject: createProjectTemplate,
 } = require('@hubspot/cli-lib/projects');
@@ -176,7 +179,9 @@ const ensureProjectExists = async (accountId, projectName, forceCreate) => {
         const promptResult = await prompt([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            message: `The project ${projectName} does not exist in ${getAccountDescription(
+              accountId
+            )}. Would you like to create it?`,
             type: 'confirm',
           },
         ]);
