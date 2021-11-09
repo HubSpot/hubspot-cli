@@ -36,6 +36,8 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 
+const i18nKey = 'cli.commands.init';
+
 const TRACKING_STATUS = {
   STARTED: 'started',
   ERROR: 'error',
@@ -83,7 +85,7 @@ const CONFIG_CREATION_FLOWS = {
 };
 
 exports.command = 'init';
-exports.describe = i18n('cli.commands.init.describe', {
+exports.describe = i18n(`${i18nKey}.describe`, {
   data: { configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME },
 });
 
@@ -99,11 +101,11 @@ exports.handler = async options => {
 
   if (fs.existsSync(configPath)) {
     logger.error(
-      i18n('cli.commands.init.errors.configFileExists', {
+      i18n(`${i18nKey}.errors.configFileExists`, {
         data: { configPath },
       })
     );
-    logger.info(i18n('cli.commands.init.info.updateConfig'));
+    logger.info(i18n(`${i18nKey}.info.updateConfig`));
     process.exit(1);
   }
 
@@ -116,7 +118,7 @@ exports.handler = async options => {
     const configPath = getConfigPath();
 
     logger.success(
-      i18n('cli.commands.init.success.configFileCreated', {
+      i18n(`${i18nKey}.success.configFileCreated`, {
         data: { configPath, authType, account: name || accountId },
       })
     );
@@ -131,7 +133,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.option('auth', {
-    describe: i18n('cli.commands.init.options.auth.describe'),
+    describe: i18n(`${i18nKey}.options.auth.describe`),
     type: 'string',
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -139,12 +141,9 @@ exports.builder = yargs => {
       `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: i18n(
-      'cli.commands.init.options.auth.defaultDescription',
-      {
-        data: { defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value },
-      }
-    ),
+    defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
+      data: { defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value },
+    }),
   });
 
   addConfigOptions(yargs, true);
