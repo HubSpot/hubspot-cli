@@ -20,6 +20,10 @@ const {
   getProjectAppFunctionLogs,
   getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
+const {
+  getFunctionLogs,
+  getLatestFunctionLog,
+} = require('@hubspot/cli-lib/api/results');
 const { getProjectConfig } = require('../../lib/projects');
 const { validateAccount } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
@@ -44,7 +48,7 @@ const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   }
 };
 
-const appFunctionLog = async (accountId, options) => {
+const functionLog = async (accountId, options) => {
   const {
     latest,
     follow,
@@ -56,18 +60,33 @@ const appFunctionLog = async (accountId, options) => {
 
   let logsResp;
 
-  const tailCall = after =>
-    getProjectAppFunctionLogs(accountId, functionName, projectName, appPath, {
-      after,
-    });
-  const fetchLatest = () => {
+  const tailCall = async after => {
     try {
-      return getLatestProjectAppFunctionLog(
-        accountId,
-        functionName,
-        projectName,
-        appPath
-      );
+      return appPath
+        ? getProjectAppFunctionLogs(
+            accountId,
+            functionName,
+            projectName,
+            appPath,
+            {
+              after,
+            }
+          )
+        : getFunctionLogs(accountId, functionName, { after });
+    } catch (e) {
+      handleLogsError(e, accountId, projectName, appPath, functionName);
+    }
+  };
+  const fetchLatest = async () => {
+    try {
+      return appPath
+        ? getLatestProjectAppFunctionLog(
+            accountId,
+            functionName,
+            projectName,
+            appPath
+          )
+        : getLatestFunctionLog(accountId, projectName);
     } catch (e) {
       handleLogsError(e, accountId, projectName, appPath, functionName);
     }
@@ -98,7 +117,7 @@ const appFunctionLog = async (accountId, options) => {
   }
 };
 
-exports.command = 'logs [functionName]';
+exports.command = 'logs';
 exports.describe = 'get logs for a function within a project';
 
 exports.handler = async options => {
@@ -111,7 +130,7 @@ exports.handler = async options => {
     logger.error('You must pass a function name to retrieve logs for.');
     process.exit(1);
   } else if (!projectName) {
-    const projectConfig = await getProjectConfig(getCwd());
+    const { projectConfig } = await getProjectConfig(getCwd());
     if (projectConfig.name) {
       projectName = projectConfig.name;
     } else {
@@ -129,21 +148,20 @@ exports.handler = async options => {
 
   trackCommandUsage('project-logs', { latest }, accountId);
 
-  appFunctionLog(accountId, { ...options, projectName });
+  functionLog(accountId, { ...options, projectName });
 };
 
 exports.builder = yargs => {
-  yargs.positional('functionName', {
-    describe: 'Serverless app function name',
-    type: 'string',
-    demandOption: true,
-  });
   yargs
     .options({
+      functionName: {
+        describe: 'Serverless function name',
+        type: 'string',
+        demandOption: true,
+      },
       appPath: {
         describe: 'path to the app',
         type: 'string',
-        demandOption: true,
       },
       projectName: {
         describe: 'name of the project',
