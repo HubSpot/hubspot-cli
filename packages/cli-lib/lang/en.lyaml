@@ -17,6 +17,19 @@ en:
           configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
       config:
         describe: "Commands for working with the config file"
+      create:
+        describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
+        errors:
+          deprecatedAssetType: "The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the \"{{ newCommand }}\" command instead. Then when prompted select \"{{ type }}\"."
+          unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
+          unusablePath: "The \"{{ path }}\" is not a usable path to a directory."
+        positionals:
+          dest:
+            describe: "Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory."
+          name:
+            describe: "Name of new asset"
+          type:
+            describe: "Type of asset"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account"
         options:
