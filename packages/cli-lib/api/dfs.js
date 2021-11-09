@@ -77,6 +77,20 @@ async function deleteProject(portalId, projectName) {
 }
 
 /**
+ * Fetch list of project builds
+ *
+ * @async
+ * @param {string} projectName
+ * @returns {Promise}
+ */
+async function fetchProjectBuilds(portalId, projectName, query) {
+  return http.get(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/builds`,
+    query,
+  });
+}
+
+/**
  * Get project build status
  *
  * @async
@@ -145,6 +159,7 @@ module.exports = {
   uploadProject,
   fetchProject,
   deleteProject,
+  fetchProjectBuilds,
   getBuildStatus,
   deployProject,
   getDeployStatus,
