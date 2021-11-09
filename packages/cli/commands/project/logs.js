@@ -56,28 +56,29 @@ const appFunctionLog = async (accountId, options) => {
 
   let logsResp;
 
+  const tailCall = after =>
+    getProjectAppFunctionLogs(accountId, functionName, projectName, appPath, {
+      after,
+    });
+  const fetchLatest = () => {
+    try {
+      return getLatestProjectAppFunctionLog(
+        accountId,
+        functionName,
+        projectName,
+        appPath
+      );
+    } catch (e) {
+      handleLogsError(e, accountId, projectName, appPath, functionName);
+    }
+  };
+
   if (follow) {
     const spinnies = new Spinnies();
 
     spinnies.add('tailLogs', {
       text: `Waiting for log entries for '${functionName}' on account '${accountId}'.\n`,
     });
-    const tailCall = after =>
-      getProjectAppFunctionLogs(accountId, functionName, projectName, appPath, {
-        after,
-      });
-    const fetchLatest = () => {
-      try {
-        return getLatestProjectAppFunctionLog(
-          accountId,
-          functionName,
-          projectName,
-          appPath
-        );
-      } catch (e) {
-        handleLogsError(e, accountId, projectName, appPath, functionName);
-      }
-    };
 
     await tailLogs({
       accountId,
@@ -87,28 +88,9 @@ const appFunctionLog = async (accountId, options) => {
       fetchLatest,
     });
   } else if (latest) {
-    try {
-      logsResp = await getLatestProjectAppFunctionLog(
-        accountId,
-        functionName,
-        projectName,
-        appPath
-      );
-    } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
-    }
+    logsResp = await fetchLatest();
   } else {
-    try {
-      logsResp = await getProjectAppFunctionLogs(
-        accountId,
-        functionName,
-        projectName,
-        appPath,
-        {}
-      );
-    } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
-    }
+    logsResp = await tailCall();
   }
 
   if (logsResp) {
