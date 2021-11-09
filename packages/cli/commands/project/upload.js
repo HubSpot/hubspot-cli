@@ -85,7 +85,7 @@ const uploadProjectFiles = async (
     spinnies.fail('upload', {
       text: `Failed to upload ${chalk.bold(
         projectName
-      )} project files to ${chalk.bold(accountId)}`,
+      )} project files to ${chalk.bold(accountDescription)}`,
     });
 
     logApiErrorInstance(
@@ -113,7 +113,12 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, forceCreate);
+  await ensureProjectExists(
+    accountId,
+    projectConfig.name,
+    forceCreate,
+    accountDescription
+  );
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
