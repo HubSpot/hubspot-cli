@@ -114,5 +114,13 @@ en:
           shortcut:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
+      remove:
+        describe: "Delete a file or folder from HubSpot."
+        deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
+        errors:
+          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
+        positionals:
+          path:
+            describe: "Remote hubspot path"
 
 
