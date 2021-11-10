@@ -2,9 +2,9 @@ en:
   cli:
     commands:
       accounts:
-        describe: "Commands for working with accounts"
+        describe: "Commands for working with accounts."
       auth:
-        describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}"
+        describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
           accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
@@ -16,9 +16,9 @@ en:
         success:
           configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
       config:
-        describe: "Commands for working with the config file"
+        describe: "Commands for working with the config file."
       create:
-        describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}"
+        describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
           deprecatedAssetType: "The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the \"{{ newCommand }}\" command instead. Then when prompted select \"{{ type }}\"."
           unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
@@ -32,11 +32,11 @@ en:
             describe: "Type of asset"
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
-        describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change"
+        describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
         seeMoreLink: "See {{ link }} to find out more."
         warning: "WARNING"
       fetch:
-        describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer"
+        describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
         errors:
           sourceRequired: "A source to fetch is required."
         options:
@@ -48,13 +48,13 @@ en:
           src:
             describe: "Path in HubSpot Design Tools"
       filemanager:
-        describe: "Commands for working with the File Manager"
+        describe: "Commands for working with the File Manager."
       functions:
-        describe: "Commands for working with functions"
+        describe: "Commands for working with functions."
       hubdb:
-        describe: "Manage HubDB tables"
+        describe: "Manage HubDB tables."
       init:
-        describe: "Initialize {{ configName }} for a HubSpot account"
+        describe: "Initialize {{ configName }} for a HubSpot account."
         options:
           auth:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
@@ -72,14 +72,14 @@ en:
           path:
             describe: "Local folder to lint"
       list:
-        describe: "list remote contents of a directory"
+        describe: "List remote contents of a directory."
         gettingPathContents: "Getting contents of {{ path }}."
         noFilesFoundAtPath: "No files found in {{ path }}."
         positionals:
           path:
             describe: "Remote directory to list contents"
       logs:
-        describe: "get logs for a function"
+        describe: "Get logs for a function."
         errors:
           noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
         examples:
@@ -99,4 +99,10 @@ en:
         positionals:
           endpoint: "Serverless function endpoint"
         tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+      mv:
+        describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
+        errors:
+          sourcePathExists: "The folder \"{{ srcPath }}\" already exists in \"{{ destPath }}\"."
+          moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
+        move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
 
