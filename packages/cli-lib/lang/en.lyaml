@@ -22,6 +22,17 @@ en:
                 describe: "New name for account."
             success:
               renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
+      app:
+        subcommands:
+          deploy:
+            building: "Building \"{{ appPath }}\" in account {{ accountId }}"
+            examples:
+              default: "Build and deploy app"
+            positionals:
+              path:
+                describe: "Path to app folder"
+            success:
+              deployed: "Your app has been built and deployed. Go to {{ appUrl }} to see your app."
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:

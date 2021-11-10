@@ -22,6 +22,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.app.subcommands.deploy';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -60,7 +63,12 @@ exports.handler = async options => {
 
   let result;
 
-  const spinner = ora(`Building "${appPath}" in account ${accountId}`).start();
+  const spinner = ora(
+    i18n(`${i18nKey}.building`, {
+      accountId,
+      appPath,
+    })
+  ).start();
   try {
     result = await deployAppSync(accountId, appPath);
   } catch (error) {
@@ -96,19 +104,23 @@ exports.handler = async options => {
 
   spinner.succeed();
   logger.success(
-    `You app has been built and deployed. Go to ${getHubSpotWebsiteOrigin(
-      getEnv()
-    )}/private-apps/${accountId}/${result.appId} to see your app.`
+    i18n(`${i18nKey}.success.deployed`, {
+      appUrl: `${getHubSpotWebsiteOrigin(getEnv())}/private-apps/${accountId}/${
+        result.appId
+      }`,
+    })
   );
 };
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to app folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 
-  yargs.example([['$0 app deploy /example-app', 'Build and deploy app']]);
+  yargs.example([
+    ['$0 app deploy /example-app', i18n(`${i18nKey}.examples.default`)],
+  ]);
 
   addUseEnvironmentOptions(yargs, true);
 
