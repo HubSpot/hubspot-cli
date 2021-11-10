@@ -15,9 +15,8 @@ const {
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const { prompt } = require('inquirer');
+const { createProjectPrompt } = require('../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
-const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -39,58 +38,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const { name, template, location } = await prompt([
-    {
-      name: 'name',
-      message: '[--name] Give your project a name:',
-      when: !options.name,
-      validate: input => {
-        if (!input) {
-          return 'A project name is required';
-        }
-        return true;
-      },
-    },
-    {
-      name: 'location',
-      message: '[--location] Where should the project be created?',
-      when: !options.location,
-      default: answers => {
-        return path.resolve(getCwd(), answers.name || options.name);
-      },
-      validate: input => {
-        if (!input) {
-          return 'A project location is required';
-        }
-        return true;
-      },
-    },
-    {
-      name: 'template',
-      message: () => {
-        return options.template &&
-          !PROJECT_TEMPLATES.find(t => t.name === options.template)
-          ? `[--template] Could not find template ${options.template}. Please choose an available template.`
-          : '[--template] Start from a template?';
-      },
-      when:
-        !options.template ||
-        !PROJECT_TEMPLATES.find(t => t.name === options.template),
-      type: 'list',
-      choices: [
-        {
-          name: 'No template',
-          value: 'none',
-        },
-        ...PROJECT_TEMPLATES.map(template => {
-          return {
-            name: template.label,
-            value: template.name,
-          };
-        }),
-      ],
-    },
-  ]);
+  const { name, template, location } = await createProjectPrompt(options);
 
   trackCommandUsage('project-create', { projectName: name }, accountId);
 

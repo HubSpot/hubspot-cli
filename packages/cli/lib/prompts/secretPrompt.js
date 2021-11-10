@@ -1,4 +1,4 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
 const SECRET_VALUE_PROMPT = {
   name: 'secretValue',
@@ -14,9 +14,9 @@ const SECRET_VALUE_PROMPT = {
 };
 
 function secretValuePrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([SECRET_VALUE_PROMPT]);
+  return promptUser([SECRET_VALUE_PROMPT]);
 }
+
 module.exports = {
   secretValuePrompt,
 };

@@ -1,5 +1,5 @@
 const path = require('path');
-const { createModulePrompt } = require('../../lib/createModulePrompt');
+const { createModulePrompt } = require('../../lib/prompt/createModulePrompt');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 

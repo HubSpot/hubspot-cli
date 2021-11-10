@@ -1,4 +1,6 @@
-const { createTemplatePrompt } = require('../../lib/createTemplatePrompt');
+const {
+  createTemplatePrompt,
+} = require('../../lib/prompt/createTemplatePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');

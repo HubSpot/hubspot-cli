@@ -1,4 +1,3 @@
-const inquirer = require('inquirer');
 const open = require('open');
 const {
   OAUTH_SCOPES,
@@ -7,11 +6,7 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
-
-const promptUser = async promptConfig => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
-};
+const { promptUser } = require('./promptUtils');
 
 /**
  * Displays notification to user that we are about to open the browser,
@@ -133,18 +128,7 @@ const SCOPES = {
 const OAUTH_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
 const API_KEY_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, ACCOUNT_API_KEY];
 
-const folderOverwritePrompt = folderName => {
-  return promptUser({
-    type: 'confirm',
-    name: 'overwrite',
-    message: `The folder with name '${folderName}' already exists. Overwrite?`,
-    default: false,
-  });
-};
-
 module.exports = {
-  folderOverwritePrompt,
-  promptUser,
   personalAccessKeyPrompt,
   CLIENT_ID,
   CLIENT_SECRET,

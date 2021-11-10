@@ -1,4 +1,4 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
 const getSampleTypesPrompt = choices => ({
   type: 'rawlist',
@@ -39,16 +39,12 @@ const getLanguagesPrompt = choices => ({
 const createApiSamplePrompt = async samplesConfig => {
   try {
     const { samples } = samplesConfig;
-    const sampleTypeAnswer = await inquirer.prompt(
-      getSampleTypesPrompt(samples)
-    );
+    const sampleTypeAnswer = await promptUser(getSampleTypesPrompt(samples));
     const chosenSample = samples.find(
       sample => sample.id === sampleTypeAnswer.sampleType
     );
     const { languages } = chosenSample;
-    const languagesAnswer = await inquirer.prompt(
-      getLanguagesPrompt(languages)
-    );
+    const languagesAnswer = await promptUser(getLanguagesPrompt(languages));
     return {
       ...sampleTypeAnswer,
       ...languagesAnswer,

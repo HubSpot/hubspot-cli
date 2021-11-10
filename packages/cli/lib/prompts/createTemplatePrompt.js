@@ -1,4 +1,4 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
 const TEMPLATE_TYPE_PROMPT = {
   type: 'list',
@@ -17,9 +17,9 @@ const TEMPLATE_TYPE_PROMPT = {
 };
 
 function createTemplatePrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([TEMPLATE_TYPE_PROMPT]);
+  return promptUser([TEMPLATE_TYPE_PROMPT]);
 }
+
 module.exports = {
   createTemplatePrompt,
 };

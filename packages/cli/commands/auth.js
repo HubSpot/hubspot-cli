@@ -17,13 +17,13 @@ const {
   getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
-  promptUser,
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   API_KEY_FLOW,
   ACCOUNT_NAME,
-} = require('../lib/prompts');
+} = require('../lib/prompts/personalAccessKeyPrompt');
 const {
   addConfigOptions,
   setLogLevel,

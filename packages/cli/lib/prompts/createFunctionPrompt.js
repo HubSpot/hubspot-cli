@@ -1,6 +1,6 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
-const { STRING_WITH_NO_SPACES_REGEX } = require('./regex');
+const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 
 const FUNCTIONS_FOLDER_PROMPT = {
   name: 'functionsFolder',
@@ -53,14 +53,14 @@ const FUNCTION_FILENAME_PROMPT = {
 };
 
 function createFunctionPrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([
+  return promptUser([
     FUNCTIONS_FOLDER_PROMPT,
     FUNCTION_FILENAME_PROMPT,
     ENDPOINT_METHOD_PROMPT,
     ENDPOINT_PATH_PROMPT,
   ]);
 }
+
 module.exports = {
   createFunctionPrompt,
 };

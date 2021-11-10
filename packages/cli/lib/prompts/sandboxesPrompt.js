@@ -1,8 +1,7 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
-const createSandbox = () => {
-  const prompt = inquirer.createPromptModule();
-  return prompt([
+const createSandboxPrompt = () => {
+  return promptUser([
     {
       name: 'name',
       message: 'Enter a name to use for the sandbox: ',
@@ -18,5 +17,5 @@ const createSandbox = () => {
 };
 
 module.exports = {
-  createSandbox,
+  createSandboxPrompt,
 };

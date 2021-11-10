@@ -25,13 +25,13 @@ const {
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   ACCOUNT_NAME,
   personalAccessKeyPrompt,
-  promptUser,
-} = require('../lib/prompts');
+} = require('../lib/prompts/personalAccessKeyPrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 

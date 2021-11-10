@@ -1,4 +1,4 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 
 const MODULE_LABEL_PROMPT = {
   name: 'moduleLabel',
@@ -41,9 +41,9 @@ const GLOBAL_PROMPT = {
 };
 
 function createModulePrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
+  return promptUser([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
 }
+
 module.exports = {
   createModulePrompt,
 };

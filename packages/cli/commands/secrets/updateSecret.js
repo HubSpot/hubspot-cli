@@ -21,7 +21,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { secretValuePrompt } = require('../../lib/secretPrompt');
+const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 
 exports.command = 'update <name>';
 exports.describe = 'Update an existing HubSpot secret';

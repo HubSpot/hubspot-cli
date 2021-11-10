@@ -1,5 +1,7 @@
 const { createFunction } = require('@hubspot/cli-lib/functions');
-const { createFunctionPrompt } = require('../../lib/createFunctionPrompt');
+const {
+  createFunctionPrompt,
+} = require('../../lib/prompts/createFunctionPrompt');
 
 module.exports = {
   dest: ({ name }) => name,
