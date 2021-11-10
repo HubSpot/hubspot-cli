@@ -58,7 +58,7 @@ exports.handler = async options => {
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {
-      data: { path: directoryPath },
+      path: directoryPath,
     })
   );
 
@@ -107,7 +107,7 @@ exports.handler = async options => {
   } else {
     logger.info(
       i18n(`${i18nKey}.noFilesFoundInPath`, {
-        data: { path: directoryPath },
+        path: directoryPath,
       })
     );
   }

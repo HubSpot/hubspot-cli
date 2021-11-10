@@ -48,7 +48,7 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const localPath = resolveLocalPath(lintPath);
   const groupName = i18n(`${i18nKey}.groupName`, {
-    data: { path: localPath },
+    path: localPath,
   });
 
   trackCommandUsage('lint', {}, accountId);
@@ -67,7 +67,7 @@ exports.handler = async options => {
   logger.groupEnd(groupName);
   logger.log(
     i18n(`${i18nKey}.issuesFound`, {
-      data: { count },
+      count,
     })
   );
 };

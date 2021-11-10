@@ -29,10 +29,7 @@ exports.builder = yargs => {
   console.warn(
     chalk.reset.yellow(
       i18n(`${i18nKey}.seeMoreLink`, {
-        data: {
-          link:
-            'https://developers.hubspot.com/docs/api/crm/crm-custom-objects',
-        },
+        link: 'https://developers.hubspot.com/docs/api/crm/crm-custom-objects',
       })
     )
   );

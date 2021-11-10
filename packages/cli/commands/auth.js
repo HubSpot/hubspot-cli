@@ -56,7 +56,7 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
       } else {
         logger.log(
           i18n(`${i18nKey}.errors.accountNameExists`, {
-            data: { name: promptAnswer.name },
+            name: promptAnswer.name,
           })
         );
       }
@@ -67,7 +67,7 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
 
 exports.command = 'auth [type]';
 exports.describe = i18n(`${i18nKey}.describe`, {
-  data: { supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT },
+  supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
 
 exports.handler = async options => {
@@ -106,10 +106,8 @@ exports.handler = async options => {
 
       logger.success(
         i18n(`${i18nKey}.success.configFileUpdated`, {
-          data: {
-            configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-            authMethod: API_KEY_AUTH_METHOD.name,
-          },
+          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+          authMethod: API_KEY_AUTH_METHOD.name,
         })
       );
 
@@ -141,20 +139,16 @@ exports.handler = async options => {
 
       logger.success(
         i18n(`${i18nKey}.success.configFileUpdated`, {
-          data: {
-            configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-            authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-          },
+          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
         })
       );
       break;
     default:
       logger.error(
         i18n(`${i18nKey}.errors.unsupportedAuthType`, {
-          data: {
-            supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
-            type,
-          },
+          supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
+          type,
         })
       );
       break;
@@ -173,9 +167,7 @@ exports.builder = yargs => {
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
-      data: {
-        authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      },
+      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     }),
   });
 

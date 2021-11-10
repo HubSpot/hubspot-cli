@@ -69,7 +69,7 @@ const getInterpolatedValue = (textValue, interpolationData) => {
   return template(interpolationData);
 };
 
-const i18n = (lookupDotNotation, options = {}) => {
+const i18n = (lookupDotNotation, options) => {
   if (typeof lookupDotNotation !== 'string') {
     throw new Error(
       `i18n must be passed a string value for lookupDotNotation, received ${typeof lookupDotNotation}`
@@ -78,10 +78,10 @@ const i18n = (lookupDotNotation, options = {}) => {
 
   const textValue = getTextValue(lookupDotNotation);
   const shouldInterpolate =
-    options.data && !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
+    options && !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
   return shouldInterpolate
-    ? getInterpolatedValue(textValue, options.data)
+    ? getInterpolatedValue(textValue, options)
     : textValue;
 };
 

@@ -86,7 +86,7 @@ const CONFIG_CREATION_FLOWS = {
 
 exports.command = 'init';
 exports.describe = i18n(`${i18nKey}.describe`, {
-  data: { configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME },
+  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
 exports.handler = async options => {
@@ -102,7 +102,7 @@ exports.handler = async options => {
   if (fs.existsSync(configPath)) {
     logger.error(
       i18n(`${i18nKey}.errors.configFileExists`, {
-        data: { configPath },
+        configPath,
       })
     );
     logger.info(i18n(`${i18nKey}.info.updateConfig`));
@@ -119,7 +119,9 @@ exports.handler = async options => {
 
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        data: { configPath, authType, account: name || accountId },
+        configPath,
+        authType,
+        account: name || accountId,
       })
     );
 
@@ -142,7 +144,7 @@ exports.builder = yargs => {
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-      data: { defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value },
+      defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     }),
   });
 

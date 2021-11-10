@@ -41,7 +41,7 @@ const SUPPORTED_ASSET_TYPES = Object.keys(assets)
 
 exports.command = 'create <type> [name] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`, {
-  data: { supportedAssetTypes: SUPPORTED_ASSET_TYPES },
+  supportedAssetTypes: SUPPORTED_ASSET_TYPES,
 });
 
 exports.handler = async options => {
@@ -54,11 +54,9 @@ exports.handler = async options => {
   if (assetType === 'global-partial') {
     logger.error(
       i18n(`${i18nKey}.errors.deprecatedAssetType`, {
-        data: {
-          assetType,
-          newCommand: 'hs create template',
-          type: 'global partial',
-        },
+        assetType,
+        newCommand: 'hs create template',
+        type: 'global partial',
       })
     );
     return;
@@ -67,10 +65,8 @@ exports.handler = async options => {
   if (!assetType || !assets[assetType]) {
     logger.error(
       i18n(`${i18nKey}.errors.unsupportedAssetType`, {
-        data: {
-          assetType,
-          supportedAssetTypes: SUPPORTED_ASSET_TYPES,
-        },
+        assetType,
+        supportedAssetTypes: SUPPORTED_ASSET_TYPES,
       })
     );
     return;
@@ -85,9 +81,7 @@ exports.handler = async options => {
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.unusablePath`, {
-        data: {
-          path: dest,
-        },
+        path: dest,
       })
     );
     logFileSystemErrorInstance(e, {

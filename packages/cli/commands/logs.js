@@ -41,7 +41,8 @@ const handleLogsError = (e, accountId, functionPath) => {
   if (e.statusCode === 404) {
     logger.error(
       i18n(`${i18nKey}.errors.noLogsFound`, {
-        data: { accountId, functionPath },
+        accountId,
+        functionPath,
       })
     );
   }
@@ -52,7 +53,8 @@ const endpointLog = async (accountId, options) => {
 
   logger.debug(
     i18n(`${i18nKey}.gettingLogs`, {
-      data: { latest, functionPath },
+      latest,
+      functionPath,
     })
   );
 
