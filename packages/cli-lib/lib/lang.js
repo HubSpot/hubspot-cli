@@ -40,7 +40,9 @@ const loadLanguageFromYaml = () => {
 
 const getTextValue = lookupDotNotation => {
   const lookupProps = [locale, ...lookupDotNotation.split('.')];
-  const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupDotNotation}`;
+  const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupProps.join(
+    '.'
+  )}`;
   let textValue = languageObj;
   let previouslyCheckedProp = lookupProps[0];
 
@@ -51,7 +53,9 @@ const getTextValue = lookupDotNotation => {
     });
   } catch (e) {
     logger.error(
-      `Unable to access language property: ${lookupDotNotation}. Failed to access prop "${previouslyCheckedProp}".`
+      `Unable to access language property: ${lookupProps.join(
+        '.'
+      )}. Failed to access prop "${previouslyCheckedProp}".`
     );
     return missingTextData;
   }
