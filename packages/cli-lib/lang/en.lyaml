@@ -71,4 +71,11 @@ en:
         positionals:
           path:
             describe: "Local folder to lint."
+      list:
+        describe: "list remote contents of a directory."
+        gettingPathContents: "Getting contents of {{ path }}."
+        noFilesFoundAtPath: "No files found in {{ path }}."
+        positionals:
+          path:
+            describe: "Remote directory to list contents."
 
