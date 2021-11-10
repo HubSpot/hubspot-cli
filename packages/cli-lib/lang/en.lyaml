@@ -76,6 +76,19 @@ en:
                 success:
                   defaultAccountUpdated: "Default account updated to: \"{{ accountName }}\"."
               defaultMode:
+                describe: "Change default mode used in config."
+                errors:
+                  invalidMode: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+                examples:
+                  default: "Select mode to use as the default from a list"
+                  draft: "Set the default mode in the config to \"draft\""
+                  publish: "Set the default mode in the config to \"publish\""
+                positionals:
+                  newMode:
+                    describe: "Mode to use as the default"
+                promptMessage: "Select a mode to use as the default"
+                success:
+                  modeUpdated: "Default mode updated to: {{ mode }}"
               httpTimeout:
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
