@@ -19,6 +19,9 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.accounts.subcommands.list';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -33,7 +36,7 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'list';
-exports.describe = 'List names of accounts defined in config';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -47,11 +50,19 @@ exports.handler = async options => {
   const portalData = config.portals.map(portal => {
     return [portal.name, portal.portalId, portal.authType];
   });
-  portalData.unshift(getTableHeader(['Name', 'Account ID', 'Auth Type']));
+  portalData.unshift(
+    getTableHeader([
+      i18n(`${i18nKey}.labels.name`),
+      i18n(`${i18nKey}.labels.accountId`),
+      i18n(`${i18nKey}.labels.authType`),
+    ])
+  );
 
-  logger.log(`Config path: ${configPath}`);
-  logger.log('Default account: ', config.defaultPortal);
-  logger.log('Accounts:');
+  logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
+  logger.log(
+    i18n(`${i18nKey}.defaultAccount`, { account: config.defaultPortal })
+  );
+  logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));
 };
 
