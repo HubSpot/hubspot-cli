@@ -13,6 +13,15 @@ en:
               accountId: "Account ID"
               authType: "Auth Type"
               name: "Name"
+          rename:
+            describe: "Rename account in config."
+            positionals:
+              accountName:
+                describe: "Name of account to be renamed."
+              newName:
+                describe: "New name for account."
+            success:
+              renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:

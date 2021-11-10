@@ -15,6 +15,9 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.accounts.subcommands.rename';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -29,9 +32,10 @@ const loadAndValidateOptions = async options => {
 };
 
 exports.command = 'rename <accountName> <newName>';
-exports.describe = 'Rename account in config';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
+  console.log('options: ', options);
   loadAndValidateOptions(options);
 
   const { accountName, newName } = options;
@@ -41,7 +45,12 @@ exports.handler = async options => {
 
   await renameAccount(accountName, newName);
 
-  return logger.log(`Account ${accountName} renamed to ${newName}`);
+  return logger.log(
+    i18n(`${i18nKey}.success.renamed`, {
+      name: accountName,
+      newName,
+    })
+  );
 };
 
 exports.builder = yargs => {
@@ -49,11 +58,11 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
 
   yargs.positional('accountName', {
-    describe: 'Name of account to be renamed.',
+    describe: i18n(`${i18nKey}.positionals.accountName.describe`),
     type: 'string',
   });
   yargs.positional('newName', {
-    describe: 'New name for account.',
+    describe: i18n(`${i18nKey}.positionals.newName.describe`),
     type: 'string',
   });
 
