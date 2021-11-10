@@ -15,10 +15,9 @@ const {
 const { validateAccount } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const {
-  createProjectConfig,
-  showWelcomeMessage,
-} = require('../../lib/projects');
+const { prompt } = require('inquirer');
+const { createProjectConfig } = require('../../lib/projects');
+const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const loadAndValidateOptions = async options => {
@@ -33,42 +32,93 @@ const loadAndValidateOptions = async options => {
   }
 };
 
-exports.command = 'create [path]';
+exports.command = 'create';
 exports.describe = false;
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { path: projectPath, name } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-create', { projectPath }, accountId);
+  const { name, template, location } = await prompt([
+    {
+      name: 'name',
+      message: '[--name] Give your project a name:',
+      when: !options.name,
+      validate: input => {
+        if (!input) {
+          return 'A project name is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'location',
+      message: '[--location] Where should the project be created?',
+      when: !options.location,
+      default: answers => {
+        return path.resolve(getCwd(), answers.name || options.name);
+      },
+      validate: input => {
+        if (!input) {
+          return 'A project location is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'template',
+      message: () => {
+        return options.template &&
+          !PROJECT_TEMPLATES.find(t => t.name === options.template)
+          ? `[--template] Could not find template ${options.template}. Please choose an available template.`
+          : '[--template] Start from a template?';
+      },
+      when:
+        !options.template ||
+        !PROJECT_TEMPLATES.find(t => t.name === options.template),
+      type: 'list',
+      choices: [
+        {
+          name: 'No template',
+          value: 'none',
+        },
+        ...PROJECT_TEMPLATES.map(template => {
+          return {
+            name: template.label,
+            value: template.name,
+          };
+        }),
+      ],
+    },
+  ]);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
+  trackCommandUsage('project-create', { projectName: name }, accountId);
 
-  const projectConfig = await createProjectConfig(cwd, name);
-
-  showWelcomeMessage(projectConfig.name, accountId);
+  await createProjectConfig(
+    path.resolve(getCwd(), options.location || location),
+    options.name || name,
+    options.template || template
+  );
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: 'Path to a project folder',
-    type: 'string',
-  });
   yargs.options({
     name: {
       describe: 'Project name (cannot be changed)',
       type: 'string',
     },
+    location: {
+      describe: 'Directory where project should be created',
+      type: 'string',
+    },
+    template: {
+      describe: 'Which template?',
+      type: 'string',
+    },
   });
 
-  yargs.example([
-    [
-      '$0 project create myProjectFolder',
-      'Create a project within the myProjectFolder folder',
-    ],
-  ]);
+  yargs.example([['$0 project create', 'Create a project']]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);

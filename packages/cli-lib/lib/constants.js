@@ -118,9 +118,13 @@ const PROJECT_TEMPLATE_TYPES = {
   },
 };
 
-const PROJECT_TEMPLATE_REPO = {
-  'getting-started': 'getting-started-project-template',
-};
+const PROJECT_TEMPLATES = [
+  {
+    name: 'getting-started',
+    label: 'Getting Started',
+    repo: 'getting-started-project-template',
+  },
+];
 
 const TEMPLATE_TYPES = {
   unmapped: 0,
@@ -181,6 +185,8 @@ const PROJECT_BUILD_STATUS_TEXT = {
   [PROJECT_BUILD_STATUS.SUCCESS]: 'built successfully',
 };
 
+const PROJECT_CONFIG_FILE = 'hsproject.json';
+
 const PROJECT_DEPLOY_STATUS = {
   DEPLOYING: 'DEPLOYING',
   FAILURE: 'FAILURE',
@@ -236,9 +242,10 @@ module.exports = {
   POLLING_DELAY,
   PROJECT_BUILD_STATUS,
   PROJECT_BUILD_STATUS_TEXT,
+  PROJECT_CONFIG_FILE,
   PROJECT_DEPLOY_STATUS,
   PROJECT_DEPLOY_STATUS_TEXT,
-  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEMPLATES,
   PROJECT_TEMPLATE_TYPES,
   PROJECT_TEXT,
   SCOPE_GROUPS,

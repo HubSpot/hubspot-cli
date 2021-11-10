@@ -64,7 +64,7 @@ const endpointLog = async (accountId, options) => {
       getFunctionLogs(accountId, functionPath, { after });
     const fetchLatest = () => {
       try {
-        getLatestFunctionLog(accountId, functionPath);
+        return getLatestFunctionLog(accountId, functionPath);
       } catch (e) {
         handleLogsError(e, accountId, functionPath);
       }

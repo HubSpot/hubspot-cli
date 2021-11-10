@@ -1,4 +1,5 @@
 const Spinnies = require('spinnies');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -19,6 +20,7 @@ const {
   getProjectAppFunctionLogs,
   getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
+const { getProjectConfig } = require('../../lib/projects');
 const { validateAccount } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
 const { EXIT_CODES } = require('../../lib/exitCodes');
@@ -121,44 +123,50 @@ exports.describe = 'get logs for a function within a project';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest, functionName, projectName, appPath } = options;
+  const { latest, functionName, appPath } = options;
+  let projectName = options.projectName;
 
   if (!functionName) {
     logger.error('You must pass a function name to retrieve logs for.');
-    process.exit(0);
+    process.exit(1);
   } else if (!projectName) {
-    logger.error(
-      'You must specify a project name using the --projectName argument.'
-    );
-    process.exit(0);
+    const projectConfig = await getProjectConfig(getCwd());
+    if (projectConfig.name) {
+      projectName = projectConfig.name;
+    } else {
+      logger.error(
+        'You must specify a project name using the --projectName argument.'
+      );
+      process.exit(1);
+    }
   } else if (!appPath) {
     logger.error('You must specify an app path using the --appPath argument.');
-    process.exit(0);
+    process.exit(1);
   }
 
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-logs', { latest }, accountId);
 
-  appFunctionLog(accountId, options);
+  appFunctionLog(accountId, { ...options, projectName });
 };
 
 exports.builder = yargs => {
   yargs.positional('functionName', {
-    describe: 'Serverless function name',
+    describe: 'Serverless app function name',
     type: 'string',
+    demandOption: true,
   });
   yargs
     .options({
       appPath: {
         describe: 'path to the app',
         type: 'string',
-        hidden: true,
+        demandOption: true,
       },
       projectName: {
         describe: 'name of the project',
         type: 'string',
-        hidden: true,
       },
       latest: {
         alias: 'l',

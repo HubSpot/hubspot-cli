@@ -121,11 +121,11 @@ const openLink = (accountId, shortcut) => {
   logger.success(`We opened ${match.url} in your browser`);
 };
 
-const link = (linkText, url) => {
+const link = (linkText, url, options = {}) => {
   if (supportsHyperlinks.stdout) {
     return ['\u001B]8;;', url, '\u0007', linkText, '\u001B]8;;\u0007'].join('');
   } else {
-    return `${linkText}: ${url}`;
+    return options.fallback ? `${linkText}: ${url}` : linkText;
   }
 };
 
