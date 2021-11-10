@@ -51,6 +51,8 @@ en:
         describe: "Commands for working with the File Manager."
       functions:
         describe: "Commands for working with functions."
+      hubdb:
+        describe: "Manage HubDB tables."
       init:
         describe: "Initialize {{ configName }} for a HubSpot account"
         options:
@@ -63,4 +65,10 @@ en:
           updateConfig: "To update an existing config file, use the \"hs auth\" command."
         errors:
           configFileExists: "The config file {{ configPath }} already exists."
+      lint:
+        issuesFound: "{{ count }} issues found."
+        groupName: "Linting {{ path }}"
+        positionals:
+          path:
+            describe: "Local folder to lint."
 

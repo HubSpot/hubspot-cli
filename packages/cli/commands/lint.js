@@ -20,6 +20,9 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.lint';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -44,7 +47,9 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const localPath = resolveLocalPath(lintPath);
-  const groupName = `Linting "${localPath}"`;
+  const groupName = i18n(`${i18nKey}.groupName`, {
+    data: { path: localPath },
+  });
 
   trackCommandUsage('lint', {}, accountId);
 
@@ -60,14 +65,18 @@ exports.handler = async options => {
     process.exit(1);
   }
   logger.groupEnd(groupName);
-  logger.log(`${count} issues found`);
+  logger.log(
+    i18n(`${i18nKey}.issuesFound`, {
+      data: { count },
+    })
+  );
 };
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
   yargs.positional('path', {
-    describe: 'Local folder to lint',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   return yargs;
