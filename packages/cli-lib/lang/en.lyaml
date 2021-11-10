@@ -124,5 +124,10 @@ en:
             describe: "Remote hubspot path"
       secrets:
         describe: "Manage HubSpot secrets."
+      server:
+        description: "Run the CMS HubL server"
+        fetching: "Fetching account data for {{ accountId }} to update context"
+        runningServer: "Running: {{ cmd }}"
+        startingServer: "Starting HubSpot CMS HubL server"
 
 
