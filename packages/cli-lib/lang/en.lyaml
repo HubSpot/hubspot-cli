@@ -122,5 +122,7 @@ en:
         positionals:
           path:
             describe: "Remote hubspot path"
+      secrets:
+        describe: "Manage HubSpot secrets."
 
 
