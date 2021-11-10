@@ -1,3 +1,5 @@
+const chokidar = require('chokidar');
+const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -17,7 +19,8 @@ const {
 //   ApiErrorContext,
 // } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-// const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { provisionBuild } = require('@hubspot/cli-lib/api/dfs');
 const { validateAccount } = require('../../lib/validation');
 const {
   getProjectConfig,
@@ -51,7 +54,37 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  logger.debug(`Watching project at path: ${projectPath}`);
+  let buildId;
+  try {
+    buildId = await provisionBuild(accountId, projectConfig.name);
+  } catch (err) {
+    if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
+      logger.error(`Project ${projectConfig.name} is locked.`);
+    } else if (err.error.subCategory === 'PipelineErrors.MISSING_PROJECT') {
+      logger.error(`Project ${projectConfig.name} does not exist.`);
+    } else {
+      logger.error(err.error);
+    }
+    process.exit(1);
+  }
+  console.log(buildId);
+  const watcher = chokidar.watch(path.join(projectDir, projectConfig.srcDir), {
+    ignoreInitial: true,
+    ignored: file => shouldIgnoreFile(file),
+  });
+
+  watcher.on('ready', () => {
+    logger.log(
+      `Watcher is ready and watching ${projectDir}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system.`
+    );
+  });
+
+  watcher.on('add', filePath => {
+    logger.log('add', filePath);
+  });
+  watcher.on('change', filePath => {
+    logger.log('change', filePath);
+  });
 };
 
 exports.builder = yargs => {

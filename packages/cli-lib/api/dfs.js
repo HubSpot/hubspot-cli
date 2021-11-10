@@ -153,6 +153,37 @@ async function fetchProjectSettings(portalId, projectName) {
   });
 }
 
+/**
+ * Provision new project build
+ *
+ * @async
+ * @param {string} projectName
+ * @returns {Promise}
+ */
+async function provisionBuild(portalId, projectName) {
+  return http.post(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/provision-build`,
+  });
+}
+
+/**
+ * Queue build
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function queueBuild(portalId, projectName, buildId) {
+  return http.post(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/${buildId}/queue`,
+  });
+}
+
 module.exports = {
   fetchProjects,
   createProject,
@@ -164,4 +195,6 @@ module.exports = {
   deployProject,
   getDeployStatus,
   fetchProjectSettings,
+  provisionBuild,
+  queueBuild,
 };
