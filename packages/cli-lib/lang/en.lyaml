@@ -49,6 +49,8 @@ en:
             describe: "Path in HubSpot Design Tools."
       filemanager:
         describe: "Commands for working with the File Manager."
+      functions:
+        describe: "Commands for working with functions."
       init:
         describe: "Initialize {{ configName }} for a HubSpot account"
         options:
