@@ -149,5 +149,24 @@ en:
           fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+      watch:
+        describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
+        errors:
+          destinationRequired: "A destination directory needs to be passed"
+          invalidPath: "The \"{{ path }}\" is not a path to a directory"
+        options:
+          disableInitial: "Disable the initial upload when watching a directory (default)"
+          initialUpload: "Upload directory before watching for updates"
+          notify: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+          remove: "Will cause watch to delete files in your HubSpot account that are not found locally."
+        positionals:
+          src:
+            describe: "Path to the local directory your files are in, relative to your current working directory"
+          dest:
+            describe: "Path in HubSpot Design Tools. Can be a net new path"
+        warnings:
+          disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
+          initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
+          notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
 
 
