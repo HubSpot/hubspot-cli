@@ -125,11 +125,29 @@ en:
       secrets:
         describe: "Manage HubSpot secrets."
       server:
-        description: "Run the CMS HubL server"
+        description: "Run the CMS HubL server."
         fetching: "Fetching account data for {{ accountId }} to update context"
         runningServer: "Running: {{ cmd }}"
         startingServer: "Starting HubSpot CMS HubL server"
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
+      upload:
+        describe: "Upload a folder or file from your computer to the HubSpot CMS."
+        errors:
+          destinationRequired: "A destination path needs to be passed"
+          fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+          invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
+          invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+          uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+        positionals:
+          src:
+            describe: "Path to the local file, relative to your current working directory."
+          dest:
+            describe: "Path in HubSpot Design Tools, can be a net new path."
+        previewUrl: "To preview this theme, visit: {{ previewUrl }}"
+        success:
+          fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+          uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
+        uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
 
 
