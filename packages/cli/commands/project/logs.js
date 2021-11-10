@@ -43,7 +43,9 @@ const loadAndValidateOptions = async options => {
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
     logger.error(
-      `No logs were found for the function name '${functionName}' in the app path '${appPath}' within the project '${projectName}' in account ${accountId}.`
+      appPath
+        ? `No logs were found for the function name '${functionName}' in the app path '${appPath}' within the project '${projectName}' in account ${accountId}.`
+        : `No logs were found for the function name '${functionName}' within the project '${projectName}' in account ${accountId}.`
     );
   }
 };
