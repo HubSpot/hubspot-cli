@@ -105,4 +105,14 @@ en:
           sourcePathExists: "The folder \"{{ srcPath }}\" already exists in \"{{ destPath }}\"."
           moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
         move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
+      open:
+        describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
+        options:
+          list:
+            describe: "List all supported shortcuts"
+        positionals:
+          shortcut:
+            describe: "Shortcut of the link you'd like to open"
+        selectLink: "Select a link to open"
+
 
