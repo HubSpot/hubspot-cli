@@ -62,6 +62,19 @@ en:
                   disabled: "Disabled"
                 promptMessage: "Choose to enable or disable usage tracking"
               defaultAccount:
+                describe: "Change default account used in config."
+                errors:
+                  accountNotFound: "The account \"{{ specifiedAccount }}\" was not found in {{ configPath }}."
+                examples:
+                  default: "Select account to use as the default from a list"
+                  idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
+                  nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
+                positionals:
+                  newDefault:
+                    describe: "Account name or id to use as the default"
+                promptMessage: "Select an account to use as the default"
+                success:
+                  defaultAccountUpdated: "Default account updated to: \"{{ accountName }}\"."
               defaultMode:
               httpTimeout:
       create:

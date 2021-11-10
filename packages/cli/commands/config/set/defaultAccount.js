@@ -15,6 +15,10 @@ const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { validateAccount } = require('../../../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey =
+  'cli.commands.config.subcommands.set.subcommands.defaultAccount';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -35,7 +39,7 @@ const selectAccountFromConfig = async config => {
       look: false,
       name: 'default',
       pageSize: 20,
-      message: 'Select an account to use as the default',
+      message: i18n(`${i18nKey}.promptMessage`),
       choices: config.portals.map(p => p.name || p.portalId),
       default: config.defaultPortal,
     },
@@ -45,7 +49,7 @@ const selectAccountFromConfig = async config => {
 };
 
 exports.command = 'default-account [newDefault]';
-exports.describe = 'Change default account used in config';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -68,35 +72,39 @@ exports.handler = async options => {
   ) {
     newDefault = specifiedNewDefault;
   } else {
-    logger.info(
-      `The account ${specifiedNewDefault} was not found in ${configPath}.`
+    logger.error(
+      i18n(`${i18nKey}.errors.accountNotFound`, {
+        specifiedAccount: specifiedNewDefault,
+        configPath,
+      })
     );
     newDefault = await selectAccountFromConfig(config);
   }
 
   updateDefaultAccount(newDefault);
 
-  return logger.log(`Default account updated to: ${newDefault}`);
+  return logger.success(
+    i18n(`${i18nKey}.success.defaultAccountUpdated`, {
+      accountName: newDefault,
+    })
+  );
 };
 
 exports.builder = yargs => {
   yargs.positional('newDefault', {
-    describe: 'Account name or id to use as the default',
+    describe: i18n(`${i18nKey}.positionals.newDefault.describe`),
     type: 'string',
   });
 
   yargs.example([
-    [
-      '$0 config set default-account',
-      'Select account to use as the default from a list',
-    ],
+    ['$0 config set default-account', i18n(`${i18nKey}.examples.default`)],
     [
       '$0 config set default-account MyAccount',
-      'Set the default account to the account in the config with name equal to "MyAccount"',
+      i18n(`${i18nKey}.examples.nameBased`),
     ],
     [
       '$0 config set default-account 1234567',
-      'Set the default account to the account in the config with accountId equal to "1234567"',
+      i18n(`${i18nKey}.examples.idBased`),
     ],
   ]);
 
