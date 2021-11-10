@@ -129,5 +129,7 @@ en:
         fetching: "Fetching account data for {{ accountId }} to update context"
         runningServer: "Running: {{ cmd }}"
         startingServer: "Starting HubSpot CMS HubL server"
+      theme:
+        describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
 
 

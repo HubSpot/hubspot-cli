@@ -1,9 +1,11 @@
 const marketplaceValidate = require('./marketplaceValidate/validateTheme');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.theme';
 
 exports.command = 'theme';
-exports.describe =
-  'Commands for working with themes, including marketplace validation with the marketplace-validate subcommand';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
