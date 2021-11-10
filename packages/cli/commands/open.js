@@ -6,11 +6,11 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
-const inquirer = require('inquirer');
+const { promptUser } = require('../lib/prompts/promptUtils');
 
 const separator = ' => ';
 const createListPrompt = async accountId =>
-  inquirer.prompt([
+  promptUser([
     {
       type: 'rawlist',
       look: false,

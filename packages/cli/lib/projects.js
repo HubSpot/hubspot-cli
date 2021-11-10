@@ -3,7 +3,6 @@ const path = require('path');
 
 const chalk = require('chalk');
 const findup = require('findup-sync');
-const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
@@ -30,6 +29,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
+const { promptUser } = require('./prompts/promptUtils');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -94,7 +94,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
         : `Found an existing project definition in ${projectDir}.`
     );
 
-    const { shouldContinue } = await prompt([
+    const { shouldContinue } = await promptUser([
       {
         name: 'shouldContinue',
         message: () => {
@@ -173,7 +173,7 @@ const ensureProjectExists = async (accountId, projectName, forceCreate) => {
       let shouldCreateProject = forceCreate;
 
       if (!shouldCreateProject) {
-        const promptResult = await prompt([
+        const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
             message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,

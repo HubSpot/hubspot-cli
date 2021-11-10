@@ -1,6 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateDefaultMode } = require('@hubspot/cli-lib/lib/config');
-const inquirer = require('inquirer');
 const {
   Mode,
   loadConfig,
@@ -13,6 +12,7 @@ const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { validateAccount } = require('../../../lib/validation');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 
 const ALL_MODES = Object.values(Mode);
 
@@ -29,7 +29,7 @@ const loadAndValidateOptions = async options => {
 };
 
 const selectMode = async () => {
-  const { mode } = await inquirer.prompt([
+  const { mode } = await promptUser([
     {
       type: 'list',
       look: false,

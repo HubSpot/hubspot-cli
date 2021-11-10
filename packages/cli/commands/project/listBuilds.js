@@ -36,7 +36,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const moment = require('moment');
-const { prompt } = require('inquirer');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -130,7 +130,7 @@ exports.handler = async options => {
       );
     }
     if (paging && paging.next) {
-      await prompt({
+      await promptUser({
         name: 'more',
         message: 'Press <enter> to load more, or ctrl+c to exit',
       });

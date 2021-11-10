@@ -1,6 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/cli-lib/lib/config');
-const inquirer = require('inquirer');
 const {
   loadConfig,
   validateConfig,
@@ -11,6 +10,7 @@ const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { validateAccount } = require('../../../lib/validation');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -25,7 +25,7 @@ const loadAndValidateOptions = async options => {
 };
 
 const enableOrDisableUsageTracking = async () => {
-  const { isEnabled } = await inquirer.prompt([
+  const { isEnabled } = await promptUser([
     {
       type: 'list',
       look: false,

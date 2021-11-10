@@ -4,7 +4,6 @@ const {
   getConfigPath,
   updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
-const inquirer = require('inquirer');
 const {
   loadConfig,
   validateConfig,
@@ -15,6 +14,7 @@ const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { validateAccount } = require('../../../lib/validation');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -29,7 +29,7 @@ const loadAndValidateOptions = async options => {
 };
 
 const selectAccountFromConfig = async config => {
-  const { default: selectedDefault } = await inquirer.prompt([
+  const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
       look: false,
