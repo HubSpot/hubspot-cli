@@ -1,11 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/cli-lib');
@@ -14,11 +9,9 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   logValidatorResults,
@@ -31,15 +24,9 @@ exports.command = 'marketplace-validate <src>';
 exports.describe = 'Validate a theme for the marketplace';
 
 exports.handler = async options => {
-  const { src, config: configPath } = options;
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  const { src } = options;
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
