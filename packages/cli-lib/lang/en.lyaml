@@ -30,6 +30,11 @@ en:
             describe: "Name of new asset"
           type:
             describe: "Type of asset"
+      customObject:
+        betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
+        describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+        seeMoreLink: "See {{ link }} to find out more."
+        warning: "WARNING"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account"
         options:
