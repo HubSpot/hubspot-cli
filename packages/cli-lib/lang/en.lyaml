@@ -47,6 +47,23 @@ en:
           configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
       config:
         describe: "Commands for working with the config file."
+        subcommands:
+          set:
+            describe: "Commands for working with the config file."
+            subcommands:
+              allowUsageTracking:
+                describe: "Enable or disable usage tracking."
+                disabled: "Usage tracking is now disabled."
+                enabled: "Usage tracking is now enabled."
+                examples:
+                  default: "Select to enable or disable usage tracking from a list"
+                labels:
+                  enabled: "Enabled"
+                  disabled: "Disabled"
+                promptMessage: "Choose to enable or disable usage tracking"
+              defaultAccount:
+              defaultMode:
+              httpTimeout:
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
