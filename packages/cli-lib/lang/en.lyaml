@@ -237,6 +237,19 @@ en:
             describe: "Path in HubSpot Design Tools"
       filemanager:
         describe: "Commands for working with the File Manager."
+        subcommands:
+          fetch:
+            describe: "Download a folder or file from the HubSpot File Manager to your computer"
+            errors:
+              sourceRequired: "A source to fetch is required."
+            options:
+              includeArchived:
+                describe: "Include files that have been marked as \"archived\""
+            positionals:
+              dest:
+                describe: "Path in HubSpot Design Tools"
+              src:
+                describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
       functions:
         describe: "Commands for working with functions."
       hubdb:

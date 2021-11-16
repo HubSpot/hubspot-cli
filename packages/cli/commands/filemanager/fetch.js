@@ -17,10 +17,12 @@ const {
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { validateAccount } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.filemanager.subcommands.fetch';
 
 exports.command = 'fetch <src> [dest]';
-exports.describe =
-  'Download a folder or file from the HubSpot File Manager to your computer';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   let { config: configPath, src, dest } = options;
@@ -35,7 +37,7 @@ exports.handler = async options => {
   }
 
   if (typeof src !== 'string') {
-    logger.error('A source to fetch is required');
+    logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
     process.exit(1);
   }
 
@@ -55,17 +57,16 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe: 'Path in HubSpot Design Tools',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe:
-      'Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
   yargs.option('include-archived', {
     alias: ['i'],
-    describe: 'Include files that have been marked as "archived"',
+    describe: i18n(`${i18nKey}.options.includeArchived.describe`),
     type: 'boolean',
   });
 };
