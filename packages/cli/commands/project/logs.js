@@ -133,7 +133,7 @@ exports.describe = 'get logs for a function within a project';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest, functionName, appPath } = options;
+  const { latest, function: functionName, appPath } = options;
   let projectName = options.projectName;
 
   if (!functionName) {
@@ -164,13 +164,13 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      functionName: {
-        describe: 'Serverless function name',
+      function: {
+        describe: 'Serverless app function name or endpoint route',
         type: 'string',
         demandOption: true,
       },
       appPath: {
-        describe: 'path to the app',
+        describe: 'path to the app (required for app functions)',
         type: 'string',
       },
       projectName: {
@@ -201,7 +201,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project logs my-function --appName="app" --projectName="my-project"',
+      '$0 project logs --function=my-function --appName="app" --projectName="my-project"',
       'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"',
     ],
   ]);
