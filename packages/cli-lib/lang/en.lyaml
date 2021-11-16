@@ -179,6 +179,18 @@ en:
                     describe: "Name of the target schema"
                 success:
                   delete: "Successfully initiated deletion of {{ name }}"
+              fetchAll:
+                describe: "Fetch all custom object schemas for an account"
+                errors:
+                  fetch: "Unable to fetch schemas"
+                examples:
+                  default: "Fetch all schemas for an account and put them in the current working directory"
+                  specifyPath: "Fetch all schemas for an account and put them in a directory named my/folder"
+                positionals:
+                  dest:
+                    describe: "Local folder where schemas will be written"
+                success:
+                  fetch: "Saved schemas to {{ path }}"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."

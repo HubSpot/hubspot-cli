@@ -11,9 +11,13 @@ const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
 const { downloadSchemas, getResolvedPath } = require('@hubspot/cli-lib/schema');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey =
+  'cli.commands.customObject.subcommands.schema.subcommands.fetchAll';
 
 exports.command = 'fetch-all [dest]';
-exports.describe = 'Fetch all custom object schemas for an account';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   setLogLevel(options);
@@ -30,27 +34,28 @@ exports.handler = async options => {
 
   try {
     await downloadSchemas(accountId, options.dest);
-    logger.success(`Saved schemas to ${getResolvedPath(options.dest)}`);
+    logger.success(
+      i18n(`${i18nKey}.success.fetch`, {
+        path: getResolvedPath(options.dest),
+      })
+    );
   } catch (e) {
     logErrorInstance(e);
-    logger.error('Unable to fetch schemas');
+    logger.error(i18n(`${i18nKey}.errors.fetch`));
   }
 };
 
 exports.builder = yargs => {
   yargs.example([
-    [
-      '$0 custom-object schema fetch-all',
-      'Fetch all schemas for an account and put them in the current working directory',
-    ],
+    ['$0 custom-object schema fetch-all', i18n(`${i18nKey}.examples.default`)],
     [
       '$0 custom-object schema fetch-all my/folder',
-      'Fetch all schemas for an account and put them in a directory named my/folder',
+      i18n(`${i18nKey}.examples.specifyPath`),
     ],
   ]);
 
   yargs.positional('dest', {
-    describe: 'Local folder where schemas will be written',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 };
