@@ -168,6 +168,17 @@ en:
                 success:
                   schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
                   schemaViewable: "Schema can be viewed at {{ url }}"
+              delete:
+                describe: "Delete a custom object schema"
+                error:
+                  delete: "Unable to delete {{ name }}"
+                examples:
+                  default: "Delete \"schemaName\" schema"
+                positionals:
+                  name:
+                    describe: "Name of the target schema"
+                success:
+                  delete: "Successfully initiated deletion of {{ name }}"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
