@@ -157,6 +157,17 @@ en:
               objectsCreated: "Objects created"
           schema:
             describe: "Manage custom object schemas"
+            subcommands:
+              create:
+                describe: "Create a custom object schema"
+                errors:
+                  creationFailed: "Schema creation from {{ definition }} failed"
+                positionals:
+                  definition:
+                    describe: "Local path to the JSON file containing the schema definition"
+                success:
+                  schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
+                  schemaViewable: "Schema can be viewed at {{ url }}"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
