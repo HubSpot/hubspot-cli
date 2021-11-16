@@ -13,6 +13,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logDebugInfo } = require('../../lib/debugInfo');
+
 const {
   loadConfig,
   validateConfig,
@@ -22,6 +23,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getAccountDescription } = require('@hubspot/cli-lib/lib/config');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -55,9 +57,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   });
 
   spinnies.add('upload', {
-    text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
-      accountId
-    )}`,
+    text: `Uploading ${chalk.bold(
+      projectName
+    )} project files to ${getAccountDescription(accountId)}`,
   });
 
   let buildId;
@@ -68,9 +70,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     buildId = upload.buildId;
 
     spinnies.succeed('upload', {
-      text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
-        accountId
-      )}`,
+      text: `Uploaded ${chalk.bold(
+        projectName
+      )} project files to ${getAccountDescription(accountId)}`,
     });
 
     logger.debug(
@@ -80,7 +82,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     spinnies.fail('upload', {
       text: `Failed to upload ${chalk.bold(
         projectName
-      )} project files to ${chalk.bold(accountId)}`,
+      )} project files to ${getAccountDescription(accountId)}`,
     });
 
     logApiErrorInstance(
@@ -162,7 +164,7 @@ exports.handler = async options => {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
-        )} to ${accountId}`
+        )} to ${getAccountDescription(accountId)}`
       );
       const { status } = await pollDeployStatus(
         accountId,
