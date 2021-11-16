@@ -128,6 +128,9 @@ en:
             errors:
               pathExists: "The {{ path }} path already exists"
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
+          project:
+            success:
+              projectCreated: "Project created in {{ path }}"
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."

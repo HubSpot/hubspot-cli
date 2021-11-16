@@ -5,6 +5,9 @@ const {
 } = require('@hubspot/cli-lib/projects');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { createProjectPrompt } = require('../../lib/prompts/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.create.subcommands.project';
 
 module.exports = {
   hidden: true,
@@ -20,6 +23,10 @@ module.exports = {
     });
     createProjectTemplateFiles(dest, template);
 
-    logger.success(`Project created in ${dest}`);
+    logger.success(
+      i18n(`${i18nKey}.success.projectCreated`, {
+        path: dest,
+      })
+    );
   },
 };
