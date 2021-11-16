@@ -206,6 +206,10 @@ en:
                 success:
                   save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                   savedToPath: "Saved schema to {{ path }}"
+              list:
+                describe: "List schemas available on your account"
+                errors:
+                  list: "Unable to list schemas"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
