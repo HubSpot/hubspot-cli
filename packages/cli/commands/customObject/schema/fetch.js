@@ -16,9 +16,13 @@ const { validateAccount } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
 const { logDebugInfo } = require('../../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey =
+  'cli.commands.customObject.subcommands.schema.subcommands.fetch';
 
 exports.command = 'fetch <name> [dest]';
-exports.describe = 'Fetch a custom object schema';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   let { name, dest } = options;
@@ -39,14 +43,27 @@ exports.handler = async options => {
     if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
       const fullpath = path.resolve(getCwd(), dest);
       await fetchSchema(accountId, name, fullpath);
-      logger.success(`The schema "${name}" has been saved to "${fullpath}"`);
+      logger.success(
+        i18n(`${i18nKey}.success.save`, {
+          name,
+          path: fullpath,
+        })
+      );
     } else {
       await downloadSchema(accountId, name, dest);
-      logger.success(`Saved schema to ${getResolvedPath(dest, name)}`);
+      logger.success(
+        i18n(`${i18nKey}.success.savedToPath`, {
+          path: getResolvedPath(dest, name),
+        })
+      );
     }
   } catch (e) {
     logErrorInstance(e);
-    logger.error(`Unable to fetch ${name}`);
+    logger.error(
+      i18n(`${i18nKey}.errors.fetch`, {
+        name,
+      })
+    );
   }
 };
 
@@ -54,21 +71,21 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 custom-object schema fetch schemaName',
-      'Fetch `schemaId` schema and put it in the current working directory',
+      i18n(`${i18nKey}.examples.default`),
     ],
     [
       '$0 custom-object schema fetch schemaName my/folder',
-      'Fetch `schemaId` schema and put it in a directory named my/folder',
+      i18n(`${i18nKey}.examples.specifyPath`),
     ],
   ]);
 
   yargs.positional('name', {
-    describe: 'Name of the target schema',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe: 'Local folder where schema will be written',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 };

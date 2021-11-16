@@ -191,6 +191,21 @@ en:
                     describe: "Local folder where schemas will be written"
                 success:
                   fetch: "Saved schemas to {{ path }}"
+              fetch:
+                describe: "Fetch a custom object schema"
+                errors:
+                  fetch: "Unable to fetch {{ name }}"
+                examples:
+                  default: "Fetch \"schemaId\" schema and put it in the current working directory"
+                  specifyPath: "Fetch \"schemaId\" schema and put it in a directory named my/folder"
+                positionals:
+                  dest:
+                    describe: "Local folder where schema will be written"
+                  name:
+                    describe: "Name of the target schema"
+                success:
+                  save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
+                  savedToPath: "Saved schema to {{ path }}"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
