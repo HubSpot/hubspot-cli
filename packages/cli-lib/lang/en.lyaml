@@ -250,6 +250,24 @@ en:
                 describe: "Path in HubSpot Design Tools"
               src:
                 describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
+          upload:
+            describe: "Upload a folder or file from your computer to the HubSpot File Manager"
+            errors:
+              destinationRequired: "A destination path needs to be passed"
+              fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+              invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+              upload: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+              uploadingFailed: "Uploading failed"
+            logs:
+              uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+            positionals:
+              dest:
+                describe: "Path in HubSpot Design Tools, can be a net new path"
+              src:
+                describe: "Path to the local file, relative to your current working directory"
+            success:
+              upload: "Uploaded file from "\{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+              uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
       functions:
         describe: "Commands for working with functions."
       hubdb:
