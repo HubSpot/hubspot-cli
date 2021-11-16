@@ -6,15 +6,11 @@ const findup = require('findup-sync');
 const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  getEnv,
-  getAccountDescription,
-} = require('@hubspot/cli-lib/lib/config');
+const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const {
   createProject: createProjectTemplate,
 } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
@@ -33,6 +29,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
+const { getAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {
   BUILD: {

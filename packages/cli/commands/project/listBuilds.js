@@ -29,7 +29,7 @@ const {
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
-const { link } = require('../../lib/links');
+const { link } = require('../../lib/ui');
 const {
   getProjectConfig,
   getProjectDetailUrl,
