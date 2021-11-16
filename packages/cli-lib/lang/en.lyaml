@@ -122,6 +122,12 @@ en:
               apiSamples: "Loading available API samples"
             success:
               sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
+          module:
+            creatingModule: "Creating module at {{ path }}"
+            creatingPath: "Creating {{ path }}"
+            errors:
+              pathExists: "The {{ path }} path already exists"
+              nameRequired: "The \"name\" argument is required when creating a Custom Module."
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
