@@ -21,9 +21,13 @@ const {
   updateSchema: updateSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey =
+  'cli.commands.customObject.subcommands.schema.subcommands.update';
 
 exports.command = 'update <name> <definition>';
-exports.describe = 'Update an existing custom object schema';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { definition, name } = options;
@@ -48,18 +52,28 @@ exports.handler = async options => {
   try {
     if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
       await updateSchemaFromHubFile(accountId, filePath);
-      logger.success(`Your schema has been updated in account "${accountId}"`);
+      logger.success(
+        i18n(`${i18nKey}.success.update`, {
+          accountId,
+        })
+      );
     } else {
       const res = await updateSchema(accountId, name, filePath);
       logger.success(
-        `Schema can be viewed at ${getHubSpotWebsiteOrigin(
-          getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        )}/contacts/${accountId}/objects/${res.objectTypeId}`
+        i18n(`${i18nKey}.success.viewAtUrl`, {
+          url: `${getHubSpotWebsiteOrigin(
+            getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+          )}/contacts/${accountId}/objects/${res.objectTypeId}`,
+        })
       );
     }
   } catch (e) {
     logErrorInstance(e, { accountId });
-    logger.error(`Schema update from ${definition} failed`);
+    logger.error(
+      i18n(`${i18nKey}.errors.update`, {
+        definition,
+      })
+    );
   }
 };
 
@@ -67,12 +81,12 @@ exports.builder = yargs => {
   addTestingOptions(yargs, true);
 
   yargs.positional('name', {
-    describe: 'Name of the target schema',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
 
   yargs.positional('definition', {
-    describe: 'Local path to the JSON file containing the schema definition',
+    describe: i18n(`${i18nKey}.positionals.definition.describe`),
     type: 'string',
   });
 };

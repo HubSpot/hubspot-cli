@@ -210,6 +210,18 @@ en:
                 describe: "List schemas available on your account"
                 errors:
                   list: "Unable to list schemas"
+              update:
+                describe: "Update an existing custom object schema"
+                errors:
+                  update: "Schema update from {{ definition }} failed"
+                positionals:
+                  definition:
+                    describe: "Local path to the JSON file containing the schema definition"
+                  name:
+                    describe: "Name of the target schema"
+                success:
+                  update: "Your schema has been updated in account \"{{ accountId }}\""
+                  viewAtUrl: "Schema can be viewed at {{ url }}"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
