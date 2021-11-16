@@ -415,16 +415,6 @@ const getAccountConfig = accountId =>
     account => account.portalId === accountId
   );
 
-/**
- * Obtains formatted account description from config
- */
-const getAccountDescription = accountId => {
-  const account = getAccountConfig(accountId);
-  return account.name
-    ? `${account.name} (${account.portalId})`
-    : account.portalId;
-};
-
 /*
  * Returns a portalId from the config if it exists, else returns null
  */
@@ -816,7 +806,6 @@ module.exports = {
   findConfig,
   loadConfigFromEnvironment,
   getAccountConfig,
-  getAccountDescription,
   getAccountId,
   updateAccountConfig,
   updateDefaultAccount,
