@@ -31,7 +31,7 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
 
-  loadConfig(configPath);
+  loadConfig(configPath, options);
   checkAndWarnGitInclusion();
 
   if (
