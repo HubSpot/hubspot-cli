@@ -143,6 +143,18 @@ en:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
         seeMoreLink: "See {{ link }} to find out more."
+        subcommands:
+          create:
+            describe: "Create custom object instances"
+            errors:
+              creationFailed: "Object creation from {{ definition }} failed"
+            positionals:
+              definition:
+                describe: "Local path to the JSON file containing an array of object definitions"
+              name:
+                describe: "Schema name to add the object instance to"
+            success:
+              objectsCreated: "Objects created"
         warning: "WARNING"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."

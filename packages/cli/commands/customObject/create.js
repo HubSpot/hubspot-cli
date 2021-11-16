@@ -11,9 +11,12 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { setLogLevel, getAccountId } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.customObject.subcommands.create';
 
 exports.command = 'create <name> <definition>';
-exports.describe = 'Create custom object instances';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { definition, name } = options;
@@ -37,22 +40,25 @@ exports.handler = async options => {
 
   try {
     await batchCreateObjects(accountId, name, filePath);
-    logger.success(`Objects created`);
+    logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
     logErrorInstance(e, { accountId });
-    logger.error(`Object creation from ${definition} failed`);
+    logger.error(
+      i18n(`${i18nKey}.errors.creationFailed`, {
+        definition,
+      })
+    );
   }
 };
 
 exports.builder = yargs => {
   yargs.positional('name', {
-    describe: 'Schema name to add the object instance to',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
 
   yargs.positional('definition', {
-    describe:
-      'Local path to the JSON file containing an array of object definitions',
+    describe: i18n(`${i18nKey}.positionals.definition.describe`),
     type: 'string',
   });
 };
