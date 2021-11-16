@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const supportsHyperlinks = require('supports-hyperlinks');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 
@@ -25,9 +26,9 @@ const link = (linkText, url, options = {}) => {
  */
 const getAccountDescription = accountId => {
   const account = getAccountConfig(accountId);
-  return account.name
-    ? `${account.name} (${account.portalId})`
-    : account.portalId;
+  return chalk.bold(
+    account.name ? `${account.name} (${account.portalId})` : account.portalId
+  );
 };
 
 module.exports = {
