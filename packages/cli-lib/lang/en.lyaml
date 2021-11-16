@@ -111,6 +111,17 @@ en:
             describe: "Name of new asset"
           type:
             describe: "Type of asset"
+        subcommands:
+          apiSample:
+            errors:
+              nameRequired: "The \"name\" argument is required when creating an API Sample."
+              noSamples: "Currently there are no samples available, please, try again later."
+            info:
+              sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
+            loading:
+              apiSamples: "Loading available API samples"
+            success:
+              sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
