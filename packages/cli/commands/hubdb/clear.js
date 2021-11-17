@@ -19,9 +19,12 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.hubdb.subcommands.clear';
 
 exports.command = 'clear <tableId>';
-exports.describe = 'clear all rows in a HubDB table';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { config: configPath, tableId } = options;
@@ -41,11 +44,25 @@ exports.handler = async options => {
   try {
     const { deletedRowCount } = await clearHubDbTableRows(accountId, tableId);
     if (deletedRowCount > 0) {
-      logger.log(`Removed ${deletedRowCount} rows from HubDB table ${tableId}`);
+      logger.log(
+        i18n(`${i18nKey}.logs.removedRows`, {
+          deletedRowCount,
+          tableId,
+        })
+      );
       const { rowCount } = await publishTable(accountId, tableId);
-      logger.log(`HubDB table ${tableId} now contains ${rowCount} rows`);
+      logger.log(
+        i18n(`${i18nKey}.logs.rowCount`, {
+          rowCount,
+          tableId,
+        })
+      );
     } else {
-      logger.log(`HubDB table ${tableId} is already empty`);
+      logger.log(
+        i18n(`${i18nKey}.logs.emptyTable`, {
+          tableId,
+        })
+      );
     }
   } catch (e) {
     logErrorInstance(e);
@@ -58,7 +75,7 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
-    describe: 'HubDB Table ID',
+    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
     type: 'string',
   });
 };

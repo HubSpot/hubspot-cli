@@ -314,6 +314,16 @@ en:
                 describe: "Path to local .functions folder"
       hubdb:
         describe: "Manage HubDB tables."
+        subcommands:
+          clear:
+            describe: "Clear all rows in a HubDB table"
+            logs:
+              removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
+              rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
+              tableEmpty: "HubDB table {{ tableId }} is already empty"
+            positionals:
+              tableId:
+                describe: "HubDB Table ID"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:
