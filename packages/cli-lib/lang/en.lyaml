@@ -266,7 +266,7 @@ en:
               src:
                 describe: "Path to the local file, relative to your current working directory"
             success:
-              upload: "Uploaded file from "\{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+              upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
               uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
       functions:
         describe: "Commands for working with functions."
