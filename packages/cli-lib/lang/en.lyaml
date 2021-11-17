@@ -270,6 +270,22 @@ en:
               uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
       functions:
         describe: "Commands for working with functions."
+        subcommands:
+          deploy:
+            debug:
+              startingBuildAndDeploy: "Starting build and deploy for .functions folder with path: {{ functionPath }}"
+            errors:
+              buildError: "Build error: {{ details }}"
+              noPackageJson: "Unable to find package.json for function {{ functionPath }}."
+              notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
+            examples:
+              default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
+            loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+            positionals:
+              path:
+                describe: "Path to .functions folder"
+            success:
+              deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
       hubdb:
         describe: "Manage HubDB tables."
       init:
