@@ -15,6 +15,9 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { validateAccount } = require('../../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.functions.subcommands.server';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -40,7 +43,9 @@ exports.handler = async options => {
   trackCommandUsage('functions-server', { functionPath }, accountId);
 
   logger.debug(
-    `Starting local test server for .functions folder with path: ${functionPath}`
+    i18n(`${i18nKey}.debug.startingServer`, {
+      functionPath,
+    })
   );
 
   startTestServer({
@@ -51,28 +56,26 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to local .functions folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   yargs.option('port', {
-    describe: 'port to run the test server on',
+    describe: i18n(`${i18nKey}.options.port.describe`),
     type: 'string',
     default: 5432,
   });
   yargs.option('contact', {
-    describe: 'pass contact data to the test function',
+    describe: i18n(`${i18nKey}.options.contact.describe`),
     type: 'boolean',
     default: true,
   });
   yargs.option('watch', {
-    describe:
-      'watch the specified .functions folder for changes and restart the server',
+    describe: i18n(`${i18nKey}.options.watch.describe`),
     type: 'boolean',
     default: true,
   });
   yargs.option('log-output', {
-    describe:
-      'output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)',
+    describe: i18n(`${i18nKey}.options.logOutput.describe`),
     type: 'boolean',
     default: false,
   });
@@ -80,7 +83,7 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 functions server ./tmp/myFunctionFolder.functions',
-      'Run a local function test server.',
+      i18n(`${i18nKey}.examples.default`),
     ],
   ]);
 

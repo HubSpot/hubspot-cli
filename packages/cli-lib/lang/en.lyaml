@@ -295,6 +295,23 @@ en:
             options:
               json:
                 describe: "output raw json data"
+          server:
+            debug:
+              startingServer: "Starting local test server for .functions folder with path: {{ functionPath }}"
+            examples:
+              default: "Run a local function test server."
+            options:
+              contact:
+                describe: "Pass contact data to the test function"
+              logOutput:
+                describe: "Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)"
+              port:
+                describe: "Port to run the test server on"
+              watch:
+                describe: "Watch the specified .functions folder for changes and restart the server"
+            positionals:
+              path:
+                describe: "Path to local .functions folder"
       hubdb:
         describe: "Manage HubDB tables."
       init:
