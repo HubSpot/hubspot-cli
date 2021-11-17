@@ -286,6 +286,15 @@ en:
                 describe: "Path to .functions folder"
             success:
               deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
+          list:
+            debug:
+              gettingFunctions: "Getting currently deployed functions"
+            describe: "List currently deployed functions"
+            info:
+              noFunctions: "No functions found"
+            options:
+              json:
+                describe: "output raw json data"
       hubdb:
         describe: "Manage HubDB tables."
       init:
