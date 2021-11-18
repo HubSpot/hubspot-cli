@@ -26,9 +26,12 @@ const {
 const { applyValidators } = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
 
 exports.command = 'marketplace-validate <src>';
-exports.describe = 'Validate a theme for the marketplace';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { src, config: configPath } = options;
@@ -47,16 +50,28 @@ exports.handler = async options => {
   try {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isDirectory()) {
-      logger.error(`The path "${src}" is not a path to a folder`);
+      logger.error(
+        i18n(`${i18nKey}.errors.invalidPath`, {
+          path: src,
+        })
+      );
       return;
     }
   } catch (e) {
-    logger.error(`The path "${src}" is not a path to a folder`);
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: src,
+      })
+    );
     return;
   }
 
   if (!options.json) {
-    logger.log(`Validating theme "${src}" \n`);
+    logger.log(
+      i18n(`${i18nKey}.logs.validatingTheme`, {
+        path: src,
+      })
+    );
   }
   trackCommandUsage('validate', {}, accountId);
 
@@ -87,13 +102,12 @@ exports.builder = yargs => {
 
   yargs.options({
     json: {
-      describe: 'Output raw json data',
+      describe: i18n(`${i18nKey}.options.json.describe`),
       type: 'boolean',
     },
   });
   yargs.positional('src', {
-    describe:
-      'Path to the local theme, relative to your current working directory.',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
   return yargs;

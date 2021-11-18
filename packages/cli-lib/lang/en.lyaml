@@ -429,6 +429,19 @@ en:
         startingServer: "Starting HubSpot CMS HubL server"
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
+        subcommands:
+          marketplaceValidate:
+            describe: "Validate a theme for the marketplace"
+            errors:
+              invalidPath: "The path \"{{ path }}\" is not a path to a folder"
+            logs:
+              validatingTheme: "Validating theme \"{{ path }}\" \n"
+            options:
+              json:
+                describe: "Output raw json data"
+            positionals:
+              src:
+                describe: "Path to the local theme, relative to your current working directory."
       upload:
         describe: "Upload a folder or file from your computer to the HubSpot CMS."
         errors:

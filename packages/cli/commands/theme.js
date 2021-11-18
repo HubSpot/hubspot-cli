@@ -1,4 +1,4 @@
-const marketplaceValidate = require('./marketplaceValidate/validateTheme');
+const marketplaceValidate = require('./theme/marketplace-validate');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
