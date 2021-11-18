@@ -1,9 +1,4 @@
 const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileMapper');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
@@ -14,11 +9,9 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
   getMode,
-  setLogLevel,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validateAccount, validateMode } = require('../lib/validation');
-const { logDebugInfo } = require('../lib/debugInfo');
+const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 exports.command = 'fetch <src> [dest]';
@@ -26,21 +19,11 @@ exports.describe =
   'Fetch a file, directory or module from HubSpot and write to a path on your computer';
 
 exports.handler = async options => {
-  const { config: configPath, src, dest } = options;
+  const { src, dest } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
+  await loadAndValidateOptions(options);
 
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
+  if (!validateMode(options)) {
     process.exit(1);
   }
 
