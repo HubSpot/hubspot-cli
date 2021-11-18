@@ -52,7 +52,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
