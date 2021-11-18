@@ -333,6 +333,15 @@ en:
                 describe: "Local path to file used for import"
             success:
               create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
+          delete:
+            describe: "Delete a HubDB table"
+            errors:
+              delete: "Deleting the table {{ tableId }} failed"
+            positionals:
+              tableId:
+                describe: "HubDB Table ID"
+            success:
+              delete: "The table {{ tableId }} was deleted from {{ accountId }}"
 
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
