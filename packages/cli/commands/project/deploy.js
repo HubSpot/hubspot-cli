@@ -62,7 +62,7 @@ exports.handler = async options => {
     logger.error('No latest build ID was found.');
     return;
   };
-
+  let exitCode = 0;
   try {
     const deployedBuildId = buildId || (await getBuildId());
 
@@ -77,19 +77,47 @@ exports.handler = async options => {
       return;
     }
 
-    await pollDeployStatus(
+    const { status, subdeployStatuses } = await pollDeployStatus(
       accountId,
       projectConfig.name,
       deployResp.id,
       deployedBuildId
     );
+
+    if (status === 'FAILURE') {
+      const failedSubdeploys = subdeployStatuses.filter(
+        subdeploy => subdeploy.status === 'FAILURE'
+      );
+
+      logger.log('-'.repeat(50));
+      logger.log(
+        `Deploy for build #${buildId} failed because there was a problem\ndeploying ${
+          failedSubdeploys.length === 1
+            ? failedSubdeploys[0].buildName
+            : failedSubdeploys.length + ' components'
+        }\n`
+      );
+      logger.log('See below for a summary of errors.');
+      logger.log('-'.repeat(50));
+
+      failedSubdeploys.forEach(subbuild => {
+        logger.log(
+          `\n--- ${subbuild.buildName} failed to deploy with the following error ---`
+        );
+        logger.error(subbuild.errorMessage);
+      });
+
+      exitCode = 1;
+    }
   } catch (e) {
     if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
     }
+    exitCode = 1;
   }
+  process.exit(exitCode);
 };
 
 exports.builder = yargs => {
