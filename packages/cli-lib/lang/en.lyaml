@@ -611,4 +611,11 @@ en:
           enterDescription: "Enter a description for the project"
           enterLabel: "Enter a label for the project"
           selectTemplate: "Select a project template to use"
+          errors:
+            invalidDescription: "You entered an invalid description. Please try again."
+            invalidLabel: "You entered an invalid label. Please try again."
+        sandboxes:
+          enterName: "Enter a name to use for the sandbox: "
+          errors:
+            invalidName: "You entered an invalid name. Please try again."
 
