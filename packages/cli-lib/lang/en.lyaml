@@ -491,7 +491,6 @@ en:
             positionals:
               path:
                 describe: "Path to a project folder"
-
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -500,6 +499,20 @@ en:
         positionals:
           path:
             describe: "Remote hubspot path"
+      sandbox:
+        subcommands:
+          create:
+            debug:
+              creating: "Creating sandbox \"{{ name }}\""
+            examples:
+              default "Create a sandbox account named MySandboxAccount."
+            info:
+              auth: "Run \"hs auth\" to authenticate with the new sandbox account."
+            positionals:
+              name:
+                describe: "Name to use for created sandbox"
+            success:
+              create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
       secrets:
         describe: "Manage HubSpot secrets."
       server:
