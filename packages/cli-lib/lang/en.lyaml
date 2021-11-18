@@ -324,6 +324,16 @@ en:
             positionals:
               tableId:
                 describe: "HubDB Table ID"
+          create:
+            describe: "Create a HubDB table"
+            errors:
+              create: "Creating the table at \"{{ src }}\" failed"
+            positionals:
+              src:
+                describe: "Local path to file used for import"
+            success:
+              create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
+
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:

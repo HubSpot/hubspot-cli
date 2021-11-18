@@ -19,9 +19,12 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.hubdb.subcommands.create';
 
 exports.command = 'create <src>';
-exports.describe = 'Create a HubDB table';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { config: configPath, src } = options;
@@ -48,11 +51,19 @@ exports.handler = async options => {
       accountId,
       path.resolve(getCwd(), src)
     );
-    logger.log(
-      `The table ${table.tableId} was created in ${accountId} with ${table.rowCount} rows`
+    logger.success(
+      i18n(`${i18nKey}.success.create`, {
+        accountId,
+        rowCount: table.rowCount,
+        tableId: table.tableId,
+      })
     );
   } catch (e) {
-    logger.error(`Creating the table at "${src}" failed`);
+    logger.error(
+      i18n(`${i18nKey}.errors.create`, {
+        src,
+      })
+    );
     logErrorInstance(e);
   }
 };
@@ -63,7 +74,7 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe: 'local path to file used for import',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
 };
