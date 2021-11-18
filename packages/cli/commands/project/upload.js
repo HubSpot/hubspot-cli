@@ -130,9 +130,13 @@ exports.handler = async options => {
     const {
       isAutoDeployEnabled,
       deployStatusTaskLocator,
+      status,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
-    if (isAutoDeployEnabled && deployStatusTaskLocator) {
+    if (status === 'FAILURE') {
+      exitCode = 1;
+      return;
+    } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
