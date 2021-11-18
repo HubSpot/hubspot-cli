@@ -342,7 +342,15 @@ en:
                 describe: "HubDB Table ID"
             success:
               delete: "The table {{ tableId }} was deleted from {{ accountId }}"
-
+          fetch:
+            describe: "Fetch a HubDB table"
+            positionals:
+              dest:
+                describe: "Local destination folder to fetch table to"
+              tableId:
+                describe: "HubDB Table ID"
+            success:
+              fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:
