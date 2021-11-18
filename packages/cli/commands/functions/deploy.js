@@ -2,17 +2,10 @@ const ora = require('ora');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -23,9 +16,8 @@ const {
   buildPackage,
   getBuildStatus,
 } = require('@hubspot/cli-lib/api/functions');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
-const { EXIT_CODES } = require('../../lib/exitCodes');
 
 const makeSpinner = (actionText, functionPath, accountIdentifier) => {
   return ora(
@@ -50,23 +42,11 @@ const pollBuildStatus = (accountId, buildId) => {
   });
 };
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-};
-
 exports.command = 'deploy <path>';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { path: functionPath } = options;
   const accountId = getAccountId(options);

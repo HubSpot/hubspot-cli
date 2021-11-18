@@ -1,17 +1,10 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
-const { validateAccount } = require('../../../lib/validation');
+const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { setLogLevel, getAccountId } = require('../../../lib/commonOpts');
-const { logDebugInfo } = require('../../../lib/debugInfo');
+const { getAccountId } = require('../../../lib/commonOpts');
 const { deleteSchema } = require('@hubspot/cli-lib/api/schema');
-const { EXIT_CODES } = require('../../../lib/exitCodes');
 
 exports.command = 'delete <name>';
 exports.describe = 'Delete a custom object schema';
@@ -19,14 +12,8 @@ exports.describe = 'Delete a custom object schema';
 exports.handler = async options => {
   let { name } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(options.config);
-  checkAndWarnGitInclusion();
+  await loadAndValidateOptions(options);
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
   const accountId = getAccountId(options);
 
   trackCommandUsage('custom-object-schema-delete', null, accountId);

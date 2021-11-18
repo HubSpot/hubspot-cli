@@ -1,8 +1,3 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
@@ -10,33 +5,24 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cli-lib/api/secrets');
 
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { EXIT_CODES } = require('../../lib/exitCodes');
 
 exports.command = 'delete <name>';
 exports.describe = 'Delete a HubSpot secret';
 
 exports.handler = async options => {
-  const { config: configPath, name: secretName } = options;
+  const { name: secretName } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  await loadAndValidateOptions(options);
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
   const accountId = getAccountId(options);
   trackCommandUsage('secrets-delete', {}, accountId);
 

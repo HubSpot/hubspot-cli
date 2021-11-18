@@ -1,11 +1,6 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getConfig, getConfigPath } = require('@hubspot/cli-lib/lib/config');
 const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
-const {
   getTableContents,
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
@@ -14,30 +9,15 @@ const {
   addConfigOptions,
   addAccountOptions,
   getAccountId,
-  setLogLevel,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
-const { EXIT_CODES } = require('../../lib/exitCodes');
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-};
+const { loadAndValidateOptions } = require('../../lib/validation');
 
 exports.command = 'list';
 exports.describe = 'List names of accounts defined in config';
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
 

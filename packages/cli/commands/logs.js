@@ -2,38 +2,18 @@ const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
-const { validateAccount } = require('../lib/validation');
 const { tailLogs } = require('../lib/serverlessLogs');
-const { EXIT_CODES } = require('../lib/exitCodes');
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-};
+const { loadAndValidateOptions } = require('../lib/validation');
 
 const handleLogsError = (e, accountId, functionPath) => {
   if (e.statusCode === 404) {
@@ -100,7 +80,7 @@ exports.command = 'logs [endpoint]';
 exports.describe = 'get logs for a function';
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { latest } = options;
 

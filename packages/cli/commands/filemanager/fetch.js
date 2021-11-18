@@ -1,8 +1,3 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileManager');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { resolveLocalPath } = require('../../lib/filesystem');
@@ -11,11 +6,9 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { EXIT_CODES } = require('../../lib/exitCodes');
 
@@ -24,16 +17,9 @@ exports.describe =
   'Download a folder or file from the HubSpot File Manager to your computer';
 
 exports.handler = async options => {
-  let { config: configPath, src, dest } = options;
+  let { src, dest } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!validateConfig() || !(await validateAccount(options))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
+  await loadAndValidateOptions(options);
 
   if (typeof src !== 'string') {
     logger.error('A source to fetch is required');
