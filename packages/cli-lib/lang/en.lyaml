@@ -412,6 +412,86 @@ en:
           shortcut:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
+      project:
+        subcommands:
+          create:
+            examples:
+              default: "Create a project within the myProjectFolder folder"
+            options:
+              name:
+                describe: "Project name (cannot be changed)"
+            positionals:
+              path:
+                describe: "Path to a project folder"
+          deploy:
+            debug:
+              deploying: "Deploying project at path: {{ path }}"
+            errors:
+              deploy: "Deploy error: {{ details }}"
+              noBuildId: "No latest build ID was found."
+            examples:
+              default: "Deploy a project within the myProjectFolder folder"
+            options:
+              buildId:
+                describe: "Project build ID to be deployed"
+            positionals:
+              path:
+                describe: "Path to a project folder"
+          logs:
+            describe: "Get logs for a function within a project"
+            errors:
+              appPathRequired: "You must specify an app path using the --appPath argument."
+              functionNameRequired: "You must pass a function name to retrieve logs for."
+              logs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
+              projectNameRequired: "You must specify a project name using the --projectName argument."
+            examples:
+              default: "Get 5 most recent logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
+            loading: "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
+            options:
+              appPath:
+                describe: "Path to the app"
+              compact:
+                describe: "Output compact logs"
+              follow:
+                describe: "Follow logs"
+              latest:
+                describe: "Retrieve most recent log only"
+              limit:
+                describe: "Limit the number of logs to output"
+              projectName:
+                describe: "Project name to retrieve logs for"
+            positionals:
+              functionName:
+                describe: "Serverless app function name"
+          upload:
+            debug:
+              buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
+              cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+              compressed: "Project files compressed: {{ byteCount }} bytes"
+              compressing: "Compressing build files to \"{{ path }}\""
+            describe: "Upload a project."
+            examples:
+              default: "Upload a project"
+            loading:
+              upload:
+                add: "Uploading {{ projectName }} project files to {{ accountId }}"
+                fail: "Failed to upload {{ projectName }} project files to {{ accountId }}"
+                succeed: "Uploaded {{ projectName }} project files to {{ accountId }}"
+            logs:
+              buildFailed: "Build #{{ buildId }} failed because there was a problem\nbuilding {{ buildErrorCulprit }} \n"
+              buildSucceeded: "Build #{{ buildId }} succeeded\n"
+              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. Automatically deploying to {{ accountId }}"
+              readyToGoLive: "🚀 Ready to take your project live?"
+              runCommand: "Run `{{ command }}`"
+              seeErrorsBelow: "See below for a summary of errors."
+              subbuildFailed: "\n--- {{ subbuild }} failed to build with the following error ---"
+            options:
+              forceCreate:
+                describe: "Automatically create project if it does not exist"
+            positionals:
+              path:
+                describe: "Path to a project folder"
+
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"

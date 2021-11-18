@@ -34,6 +34,9 @@ const {
   ensureProjectExists,
   pollDeployStatus,
 } = require('../../lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.upload';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -54,11 +57,14 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
+  const boldProjectName = chalk.bold(projectName);
+  const boldAccountId = chalk.bold(accountId);
 
   spinnies.add('upload', {
-    text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
-      accountId
-    )}`,
+    text: i18n(`${i18nKey}.loading.upload.add`, {
+      accountId: boldAccountId,
+      projectName: boldProjectName,
+    }),
   });
 
   let buildId;
@@ -69,9 +75,10 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     buildId = upload.buildId;
 
     spinnies.succeed('upload', {
-      text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
-        accountId
-      )}`,
+      text: i18n(`${i18nKey}.loading.upload.succeed`, {
+        accountId: boldAccountId,
+        projectName: boldProjectName,
+      }),
     });
 
     logger.debug(
@@ -79,9 +86,10 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     );
   } catch (err) {
     spinnies.fail('upload', {
-      text: `Failed to upload ${chalk.bold(
-        projectName
-      )} project files to ${chalk.bold(accountId)}`,
+      text: i18n(`${i18nKey}.loading.upload.fail`, {
+        accountId: boldAccountId,
+        projectName: boldProjectName,
+      }),
     });
 
     logApiErrorInstance(
@@ -116,14 +124,22 @@ exports.handler = async options => {
 
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
-  logger.debug(`Compressing build files to '${tempFile.name}'`);
+  logger.debug(
+    i18n(`${i18nKey}.debug.compressing`, {
+      path: tempFile.name,
+    })
+  );
 
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
   output.on('close', async function() {
     let exitCode = 0;
-    logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
+    logger.debug(
+      i18n(`${i18nKey}.debug.compressed`, {
+        byteCount: archive.pointer(),
+      })
+    );
 
     const { buildId } = await uploadProjectFiles(
       accountId,
@@ -145,28 +161,34 @@ exports.handler = async options => {
 
       logger.log('-'.repeat(50));
       logger.log(
-        `Build #${buildId} failed because there was a problem\nbuilding ${
-          failedSubbuilds.length === 1
-            ? failedSubbuilds[0].buildName
-            : failedSubbuilds.length + ' components'
-        }\n`
+        i18n(`${i18nKey}.logs.buildFailed`, {
+          buildErrorCulprit:
+            failedSubbuilds.length === 1
+              ? failedSubbuilds[0].buildName
+              : failedSubbuilds.length + ' components',
+          buildId,
+        })
       );
-      logger.log('See below for a summary of errors.');
+      logger.log(i18n(`${i18nKey}.logs.seeErrorsBelow`));
       logger.log('-'.repeat(50));
 
       failedSubbuilds.forEach(subbuild => {
         logger.log(
-          `\n--- ${subbuild.buildName} failed to build with the following error ---`
+          i18n(`${i18nKey}.logs.subbuildFailed`, {
+            subbuild: subbuild.buildName,
+          })
         );
         logger.error(subbuild.errorMessage);
       });
 
       exitCode = 1;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
+      // TODO - Get "Automatically deploying" to be bold
       logger.log(
-        `Build #${buildId} succeeded. ${chalk.bold(
-          'Automatically deploying'
-        )} to ${accountId}`
+        i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
+          accountId,
+          buildId,
+        })
       );
       const { status } = await pollDeployStatus(
         accountId,
@@ -179,15 +201,29 @@ exports.handler = async options => {
       }
     } else {
       logger.log('-'.repeat(50));
-      logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
-      logger.log('🚀 Ready to take your project live?');
-      logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
+      logger.log(
+        chalk.bold(
+          i18n(`${i18nKey}.logs.buildSucceeded`, {
+            buildId,
+          })
+        )
+      );
+      logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
+      logger.log(
+        i18n(`${i18nKey}.logs.runCommand`, {
+          command: chalk.hex('f5c26b')('hs project deploy'),
+        })
+      );
       logger.log('-'.repeat(50));
     }
 
     try {
       tempFile.removeCallback();
-      logger.debug(`Cleaned up temporary file ${tempFile.name}`);
+      logger.debug(
+        i18n(`${i18nKey}.debug.cleanedUpTempFile`, {
+          path: tempFile.name,
+        })
+      );
     } catch (e) {
       logger.error(e);
     }
@@ -212,17 +248,19 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to a project folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 
   yargs.option('forceCreate', {
-    describe: 'Automatically create project if it does not exist',
+    describe: i18n(`${i18nKey}.options.forceCreate.describe`),
     type: 'boolean',
     default: false,
   });
 
-  yargs.example([['$0 project upload myProjectFolder', 'Upload a project']]);
+  yargs.example([
+    ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
+  ]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);

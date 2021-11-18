@@ -22,6 +22,9 @@ const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { validateAccount } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.deploy';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -49,14 +52,18 @@ exports.handler = async options => {
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const projectConfig = await getProjectConfig(cwd);
 
-  logger.debug(`Deploying project at path: ${projectPath}`);
+  logger.debug(
+    i18n(`${i18nKey}.debug.deploying`, {
+      path: projectPath,
+    })
+  );
 
   const getBuildId = async () => {
     const { latestBuild } = await fetchProject(accountId, projectConfig.name);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
-    logger.error('No latest build ID was found.');
+    logger.error(i18n(`${i18nKey}.errors.noBuildId`));
     return;
   };
 
@@ -70,7 +77,11 @@ exports.handler = async options => {
     );
 
     if (deployResp.error) {
-      logger.error(`Deploy error: ${deployResp.error.message}`);
+      logger.error(
+        i18n(`${i18nKey}.errors.deploy`, {
+          details: deployResp.error.message,
+        })
+      );
       return;
     }
 
@@ -91,22 +102,19 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to a project folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 
   yargs.options({
     buildId: {
-      describe: 'Project build ID to be deployed',
+      describe: i18n(`${i18nKey}.options.buildId.describe`),
       type: 'number',
     },
   });
 
   yargs.example([
-    [
-      '$0 project deploy myProjectFolder',
-      'Deploy a project within the myProjectFolder folder',
-    ],
+    ['$0 project deploy myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);

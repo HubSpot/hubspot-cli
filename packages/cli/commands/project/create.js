@@ -19,6 +19,9 @@ const {
   createProjectConfig,
   showWelcomeMessage,
 } = require('../../lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.create';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -52,21 +55,18 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to a project folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   yargs.options({
     name: {
-      describe: 'Project name (cannot be changed)',
+      describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
   });
 
   yargs.example([
-    [
-      '$0 project create myProjectFolder',
-      'Create a project within the myProjectFolder folder',
-    ],
+    ['$0 project create myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);
