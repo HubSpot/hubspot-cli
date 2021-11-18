@@ -515,6 +515,39 @@ en:
               create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
       secrets:
         describe: "Manage HubSpot secrets."
+        subcommands:
+          add:
+            describe: "Add a HubSpot secret"
+            errors:
+              add: "The secret \"{{ secretName }}\" was not added"
+            positionals:
+              name:
+                describe: "Name of the secret"
+            success:
+              add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountId }}"
+          delete:
+            describe: "Delete a HubSpot secret"
+            errors:
+              delete: "The secret \"{{ secretName }}\" was not deleted"
+            positionals:
+              name:
+                describe: "Name of the secret"
+            success:
+              delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountId }}"
+          list:
+            describe: "List all HubSpot secrets"
+            errors:
+              list: "The secrets could not be listed"
+            groupLabel: "Secrets for account {{ accountId }}:"
+          update:
+            describe: "Update an existing HubSpot secret"
+            errors:
+              update: "The secret \"{{ secretName }}\" was not updated"
+            positionals:
+              name:
+                describe: "Name of the secret to be updated"
+            success:
+              update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
       server:
         description: "Run the CMS HubL server."
         fetching: "Fetching account data for {{ accountId }} to update context"

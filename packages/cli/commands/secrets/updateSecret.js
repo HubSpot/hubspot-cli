@@ -22,9 +22,12 @@ const {
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
 const { secretValuePrompt } = require('../../lib/secretPrompt');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.secrets.subcommands.update';
 
 exports.command = 'update <name>';
-exports.describe = 'Update an existing HubSpot secret';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { name: secretName, config: configPath } = options;
@@ -44,11 +47,18 @@ exports.handler = async options => {
     const { secretValue } = await secretValuePrompt();
 
     await updateSecret(accountId, secretName, secretValue);
-    logger.log(
-      `The secret "${secretName}" was updated in the HubSpot account: ${accountId}`
+    logger.success(
+      i18n(`${i18nKey}.success.update`, {
+        accountId,
+        secretName,
+      })
     );
   } catch (e) {
-    logger.error(`The secret "${secretName}" was not updated`);
+    logger.error(
+      i18n(`${i18nKey}.errors.update`, {
+        secretName,
+      })
+    );
     await logServerlessFunctionApiErrorInstance(
       accountId,
       e,
@@ -65,7 +75,7 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
-    describe: 'Name of the secret to be updated',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
   return yargs;

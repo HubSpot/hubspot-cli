@@ -21,9 +21,12 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.secrets.subcommands.list';
 
 exports.command = 'list';
-exports.describe = 'List all HubSpot secrets';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   setLogLevel(options);
@@ -40,12 +43,14 @@ exports.handler = async options => {
 
   try {
     const { results } = await fetchSecrets(accountId);
-    const groupLabel = `Secrets for account ${accountId}:`;
+    const groupLabel = i18n(`${i18nKey}.groupLabel`, {
+      accountId,
+    });
     logger.group(groupLabel);
     results.forEach(secret => logger.log(secret));
     logger.groupEnd(groupLabel);
   } catch (e) {
-    logger.error('The secrets could not be listed');
+    logger.error(i18n(`${i18nKey}.errors.list`));
     await logServerlessFunctionApiErrorInstance(
       accountId,
       e,

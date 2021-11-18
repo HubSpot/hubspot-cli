@@ -21,9 +21,12 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logDebugInfo } = require('../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.secrets.subcommands.delete';
 
 exports.command = 'delete <name>';
-exports.describe = 'Delete a HubSpot secret';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { config: configPath, name: secretName } = options;
@@ -41,11 +44,18 @@ exports.handler = async options => {
 
   try {
     await deleteSecret(accountId, secretName);
-    logger.log(
-      `The secret "${secretName}" was deleted from the HubSpot account: ${accountId}`
+    logger.success(
+      i18n(`${i18nKey}.success.delete`, {
+        accountId,
+        secretName,
+      })
     );
   } catch (e) {
-    logger.error(`The secret "${secretName}" was not deleted`);
+    logger.error(
+      i18n(`${i18nKey}.errors.delete`, {
+        secretName,
+      })
+    );
     await logServerlessFunctionApiErrorInstance(
       accountId,
       e,
@@ -62,7 +72,7 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
-    describe: 'Name of the secret',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
   return yargs;
