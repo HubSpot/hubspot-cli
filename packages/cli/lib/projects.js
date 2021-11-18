@@ -330,6 +330,30 @@ const makeGetTaskStatus = taskType => {
               spinnies.fail('overallTaskStatus', {
                 text: statusStrings.FAIL(taskName),
               });
+
+              const failedSubtask = subTaskStatus.filter(
+                subtask => subtask.status === 'FAILURE'
+              );
+
+              logger.log('-'.repeat(50));
+              logger.log(
+                `Task for build #${buildId} failed because there was a problem\ndeploying ${
+                  failedSubtask.length === 1
+                    ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtask.length + ' components'
+                }\n`
+              );
+              logger.log('See below for a summary of errors.');
+              logger.log('-'.repeat(50));
+
+              failedSubtask.forEach(subtask => {
+                logger.log(
+                  `\n--- ${
+                    subtask[statusText.SUBTASK_NAME_KEY]
+                  } failed to deploy with the following error ---`
+                );
+                logger.error(subtask.errorMessage);
+              });
             }
 
             clearInterval(pollInterval);
