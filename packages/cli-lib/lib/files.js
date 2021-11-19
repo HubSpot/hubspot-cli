@@ -25,7 +25,9 @@ const getThemePreviewUrl = (filePath, accountId) => {
     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
-  return `${baseUrl}/theme-previewer/${accountId}/edit/${themeName}`;
+  return `${baseUrl}/theme-previewer/${accountId}/edit/${encodeURIComponent(
+    themeName
+  )}`;
 };
 
 module.exports = { getThemeJSONPath, getThemeNameFromPath, getThemePreviewUrl };

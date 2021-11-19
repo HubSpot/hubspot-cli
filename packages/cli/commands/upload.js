@@ -1,12 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  loadConfig,
-  uploadFolder,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { uploadFolder } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
@@ -28,12 +23,10 @@ const {
   addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validateAccount, validateMode } = require('../lib/validation');
+const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
 
@@ -53,19 +46,11 @@ const logThemePreview = (filePath, accountId) => {
 };
 
 exports.handler = async options => {
-  const { src, dest, config: configPath } = options;
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  const { src, dest } = options;
 
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
+  await loadAndValidateOptions(options);
+
+  if (!validateMode(options)) {
     process.exit(1);
   }
 

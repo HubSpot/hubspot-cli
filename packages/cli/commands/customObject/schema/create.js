@@ -1,21 +1,14 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
-const { validateAccount, isFileValidJSON } = require('../../../lib/validation');
-const { trackCommandUsage } = require('../../../lib/usageTracking');
 const {
-  addTestingOptions,
-  setLogLevel,
-  getAccountId,
-} = require('../../../lib/commonOpts');
+  isFileValidJSON,
+  loadAndValidateOptions,
+} = require('../../../lib/validation');
+const { trackCommandUsage } = require('../../../lib/usageTracking');
+const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
 const { getEnv, isConfigFlagEnabled } = require('@hubspot/cli-lib/');
 const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
-const { logDebugInfo } = require('../../../lib/debugInfo');
 const { createSchema } = require('@hubspot/cli-lib/api/schema');
 const {
   createSchema: createSchemaFromHubFile,
@@ -27,15 +20,9 @@ exports.describe = 'Create a custom object schema';
 
 exports.handler = async options => {
   const { definition } = options;
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath);
-  checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
+  await loadAndValidateOptions(options);
+
   const accountId = getAccountId(options);
 
   trackCommandUsage('custom-object-schema-create', null, accountId);

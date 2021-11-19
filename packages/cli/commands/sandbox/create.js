@@ -15,7 +15,7 @@ exports.command = 'create [name]';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { name } = options;
   const accountId = getAccountId(options);

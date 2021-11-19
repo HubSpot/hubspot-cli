@@ -1,15 +1,12 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
-const { validateAccount, isFileValidJSON } = require('../../lib/validation');
+const {
+  isFileValidJSON,
+  loadAndValidateOptions,
+} = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { setLogLevel, getAccountId } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
+const { getAccountId } = require('../../lib/commonOpts');
 const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
 
 exports.command = 'create <name> <definition>';
@@ -17,15 +14,9 @@ exports.describe = 'Create custom object instances';
 
 exports.handler = async options => {
   const { definition, name } = options;
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath);
-  checkAndWarnGitInclusion();
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
+  await loadAndValidateOptions(options);
+
   const accountId = getAccountId(options);
 
   trackCommandUsage('custom-object-batch-create', null, accountId);

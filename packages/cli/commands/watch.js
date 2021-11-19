@@ -1,12 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  watch,
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { watch } = require('@hubspot/cli-lib');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -15,12 +10,10 @@ const {
   addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validateAccount, validateMode } = require('../lib/validation');
+const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 
 exports.command = 'watch <src> <dest>';
@@ -28,28 +21,11 @@ exports.describe =
   'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
 
 exports.handler = async options => {
-  const {
-    src,
-    dest,
-    config: configPath,
-    remove,
-    initialUpload,
-    disableInitial,
-    notify,
-  } = options;
+  const { src, dest, remove, initialUpload, disableInitial, notify } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  await loadAndValidateOptions(options);
 
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
+  if (!validateMode(options)) {
     process.exit(1);
   }
 
