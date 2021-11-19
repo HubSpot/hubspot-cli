@@ -34,7 +34,8 @@
   },
   "bin": {
     "hs": "./bin/hs",
-    "hscms": "./bin/hscms"
+    "hscms": "./bin/hscms",
+    "hubspot": "./bin/hubspot"
   },
   "publishConfig": {
     "access": "public"
