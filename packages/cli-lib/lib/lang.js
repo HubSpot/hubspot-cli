@@ -3,9 +3,14 @@ const path = require('path');
 const fs = require('fs-extra');
 const handlebars = require('handlebars');
 const yaml = require('js-yaml');
+const chalk = require('chalk');
 const { logger } = require('../logger');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
+
+handlebars.registerHelper('bold', function(options) {
+  return chalk.bold(options.fn(this));
+});
 
 let locale;
 let languageObj;
@@ -73,7 +78,7 @@ const getInterpolatedValue = (textValue, interpolationData) => {
   return template(interpolationData);
 };
 
-const i18n = (lookupDotNotation, options) => {
+const i18n = (lookupDotNotation, options = {}) => {
   if (typeof lookupDotNotation !== 'string') {
     throw new Error(
       `i18n must be passed a string value for lookupDotNotation, received ${typeof lookupDotNotation}`
@@ -81,8 +86,7 @@ const i18n = (lookupDotNotation, options) => {
   }
 
   const textValue = getTextValue(lookupDotNotation);
-  const shouldInterpolate =
-    options && !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
+  const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
   return shouldInterpolate
     ? getInterpolatedValue(textValue, options)

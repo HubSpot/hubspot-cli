@@ -160,7 +160,6 @@ exports.handler = async options => {
 
       exitCode = 1;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
-      // TODO - Get "Automatically deploying" to be bold
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
           accountId,

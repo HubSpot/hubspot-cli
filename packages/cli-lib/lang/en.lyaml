@@ -481,7 +481,7 @@ en:
             logs:
               buildFailed: "Build #{{ buildId }} failed because there was a problem\nbuilding {{ buildErrorCulprit }} \n"
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
-              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. Automatically deploying to {{ accountId }}"
+              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountId }}"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
               seeErrorsBelow: "See below for a summary of errors."
