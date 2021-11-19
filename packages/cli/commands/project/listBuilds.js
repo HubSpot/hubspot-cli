@@ -21,8 +21,8 @@ const {
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
+const { link } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { link } = require('../../lib/links');
 const {
   getProjectConfig,
   getProjectDetailUrl,
