@@ -1,9 +1,4 @@
 const { moveFile } = require('@hubspot/cli-lib/api/fileMapper');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
@@ -14,25 +9,11 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
+const { loadAndValidateOptions } = require('../lib/validation');
 
 const getCorrectedDestPath = (srcPath, destPath) => {
   if (!isPathFolder(srcPath)) {
@@ -48,7 +29,7 @@ exports.describe =
   'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change';
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { srcPath, destPath } = options;
   const accountId = getAccountId(options);
