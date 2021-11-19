@@ -11,7 +11,6 @@ const {
   createProject: createProjectTemplate,
 } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
@@ -31,6 +30,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { EXIT_CODES } = require('./exitCodes');
+const { getAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -177,7 +177,9 @@ const ensureProjectExists = async (accountId, projectName, forceCreate) => {
         const promptResult = await prompt([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            message: `The project ${projectName} does not exist in ${getAccountDescription(
+              accountId
+            )}. Would you like to create it?`,
             type: 'confirm',
           },
         ]);
