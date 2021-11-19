@@ -96,11 +96,7 @@ const functionLog = async (accountId, options) => {
     spinnies.add('tailLogs', {
       text: `Waiting for log entries for '${functionName}' on account '${accountId}'.\n`,
     });
-    try {
-      await fetchLatest();
-    } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
-    }
+
     await tailLogs({
       accountId,
       compact,
@@ -133,7 +129,7 @@ exports.describe = 'get logs for a function within a project';
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { latest, function: functionName, appPath } = options;
+  const { latest, functionName, appPath } = options;
   let projectName = options.projectName;
 
   if (!functionName) {
@@ -164,13 +160,14 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      function: {
+      functionName: {
+        alias: 'function',
         describe: 'Serverless app function name or endpoint route',
         type: 'string',
         demandOption: true,
       },
       appPath: {
-        describe: 'path to the app (required for app functions)',
+        describe: 'Path to app folder, relative to project',
         type: 'string',
       },
       projectName: {
@@ -201,7 +198,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project logs --function=my-function --appName="app" --projectName="my-project"',
+      '$0 project logs --function=my-function --appPath="app" --projectName="my-project"',
       'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"',
     ],
   ]);
