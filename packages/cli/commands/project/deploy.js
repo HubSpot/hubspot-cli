@@ -74,6 +74,7 @@ exports.handler = async options => {
 
     if (deployResp.error) {
       logger.error(`Deploy error: ${deployResp.error.message}`);
+      exitCode = 1;
       return;
     }
 
