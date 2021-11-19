@@ -29,7 +29,7 @@ const {
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'upload <src> <dest>';
 exports.describe =

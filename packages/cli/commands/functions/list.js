@@ -18,7 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'list';
 exports.describe = 'List currently deployed functions';

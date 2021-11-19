@@ -21,7 +21,7 @@ const {
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'list [path]';
 exports.describe = 'list remote contents of a directory';

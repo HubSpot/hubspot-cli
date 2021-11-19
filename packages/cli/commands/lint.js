@@ -13,7 +13,7 @@ const {
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';
 // Hiding since this command is still experimental

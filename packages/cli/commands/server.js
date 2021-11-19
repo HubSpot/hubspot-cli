@@ -21,7 +21,7 @@ const {
   getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 function configureServerCommand(program) {
   program

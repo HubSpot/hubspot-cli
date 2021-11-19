@@ -14,7 +14,7 @@ const {
   updateSchema: updateSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { EXIT_CODES } = require('../../../lib/exitCodes');
+const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
 exports.command = 'update <name> <definition>';
 exports.describe = 'Update an existing custom object schema';

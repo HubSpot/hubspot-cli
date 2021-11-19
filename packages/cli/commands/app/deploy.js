@@ -15,7 +15,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const logServerlessBuildFailures = async errorDetails => {
   const folderPaths = errorDetails.context.folderPath;

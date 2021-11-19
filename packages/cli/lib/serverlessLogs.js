@@ -9,7 +9,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const TAIL_DELAY = 5000;
 

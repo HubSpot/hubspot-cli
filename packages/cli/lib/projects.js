@@ -29,7 +29,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const { EXIT_CODES } = require('./exitCodes');
+const { EXIT_CODES } = require('./enums/exitCodes');
 const { getAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {

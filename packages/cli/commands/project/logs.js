@@ -16,7 +16,7 @@ const {
 const { getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {

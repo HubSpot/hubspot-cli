@@ -32,7 +32,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,

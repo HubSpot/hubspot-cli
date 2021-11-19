@@ -24,7 +24,7 @@ const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
-const { EXIT_CODES } = require('./exitCodes');
+const { EXIT_CODES } = require('./enums/exitCodes');
 
 async function loadAndValidateOptions(options) {
   setLogLevel(options);

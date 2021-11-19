@@ -16,7 +16,7 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <src>';
 exports.describe = 'Create a HubDB table';

@@ -34,7 +34,7 @@ const {
 } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
-const { EXIT_CODES } = require('../lib/exitCodes');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const TRACKING_STATUS = {
   STARTED: 'started',

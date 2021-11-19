@@ -10,7 +10,7 @@ const {
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe =

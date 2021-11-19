@@ -27,7 +27,7 @@ const {
   ensureProjectExists,
   pollDeployStatus,
 } = require('../../lib/projects');
-const { EXIT_CODES } = require('../../lib/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
 exports.describe = false;
