@@ -40,6 +40,10 @@ const PROJECT_STRINGS = {
       } in this project ...\n`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Build #${taskId} failed because there was a problem\nbuilding ${chalk.bold(
+        name
+      )}`,
   },
   DEPLOY: {
     INITIALIZE: (name, numOfComponents) =>
@@ -48,6 +52,10 @@ const PROJECT_STRINGS = {
       } in this project ...\n`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Deploy for build #${taskId} failed because there was a\nproblem deploying ${chalk.bold(
+        name
+      )}`,
   },
 };
 
@@ -332,6 +340,31 @@ const makeGetTaskStatus = taskType => {
             } else if (status === statusText.STATES.FAILURE) {
               spinnies.fail('overallTaskStatus', {
                 text: statusStrings.FAIL(taskName),
+              });
+
+              const failedSubtask = subTaskStatus.filter(
+                subtask => subtask.status === 'FAILURE'
+              );
+
+              logger.log('-'.repeat(50));
+              logger.log(
+                `${statusStrings.SUBTASK_FAIL(
+                  buildId || taskId,
+                  failedSubtask.length === 1
+                    ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtask.length + ' components'
+                )}\n`
+              );
+              logger.log('See below for a summary of errors.');
+              logger.log('-'.repeat(50));
+
+              failedSubtask.forEach(subTask => {
+                logger.log(
+                  `\n--- ${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} ${
+                    statusText.STATUS_TEXT[subTask.status]
+                  } with the following error ---`
+                );
+                logger.error(subTask.errorMessage);
               });
             }
 

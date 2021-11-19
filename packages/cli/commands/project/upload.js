@@ -114,33 +114,11 @@ exports.handler = async options => {
       isAutoDeployEnabled,
       deployStatusTaskLocator,
       status,
-      subbuildStatuses,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
     if (status === 'FAILURE') {
-      const failedSubbuilds = subbuildStatuses.filter(
-        subbuild => subbuild.status === 'FAILURE'
-      );
-
-      logger.log('-'.repeat(50));
-      logger.log(
-        `Build #${buildId} failed because there was a problem\nbuilding ${
-          failedSubbuilds.length === 1
-            ? failedSubbuilds[0].buildName
-            : failedSubbuilds.length + ' components'
-        }\n`
-      );
-      logger.log('See below for a summary of errors.');
-      logger.log('-'.repeat(50));
-
-      failedSubbuilds.forEach(subbuild => {
-        logger.log(
-          `\n--- ${subbuild.buildName} failed to build with the following error ---`
-        );
-        logger.error(subbuild.errorMessage);
-      });
-
       exitCode = EXIT_CODES.ERROR;
+      return;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(

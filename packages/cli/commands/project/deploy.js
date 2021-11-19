@@ -35,12 +35,15 @@ exports.handler = async options => {
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 
+  let exitCode = 0;
+
   const getBuildId = async () => {
     const { latestBuild } = await fetchProject(accountId, projectConfig.name);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
     logger.error('No latest build ID was found.');
+    exitCode = 1;
     return;
   };
 
@@ -55,6 +58,7 @@ exports.handler = async options => {
 
     if (deployResp.error) {
       logger.error(`Deploy error: ${deployResp.error.message}`);
+      exitCode = 1;
       return;
     }
 
@@ -70,7 +74,9 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
     }
+    exitCode = 1;
   }
+  process.exit(exitCode);
 };
 
 exports.builder = yargs => {
