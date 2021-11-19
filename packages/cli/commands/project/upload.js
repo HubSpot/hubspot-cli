@@ -15,6 +15,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -38,11 +39,11 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     succeedColor: 'white',
   });
   const boldProjectName = chalk.bold(projectName);
-  const boldAccountId = chalk.bold(accountId);
+  const accountIdentifier = getAccountDescription(accountId);
 
   spinnies.add('upload', {
     text: i18n(`${i18nKey}.loading.upload.add`, {
-      accountId: boldAccountId,
+      accountIdentifier,
       projectName: boldProjectName,
     }),
   });
@@ -56,7 +57,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
 
     spinnies.succeed('upload', {
       text: i18n(`${i18nKey}.loading.upload.succeed`, {
-        accountId: boldAccountId,
+        accountIdentifier,
         projectName: boldProjectName,
       }),
     });
@@ -67,7 +68,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   } catch (err) {
     spinnies.fail('upload', {
       text: i18n(`${i18nKey}.loading.upload.fail`, {
-        accountId: boldAccountId,
+        accountIdentifier,
         projectName: boldProjectName,
       }),
     });
@@ -162,7 +163,7 @@ exports.handler = async options => {
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
-          accountId,
+          accountIdentifier: getAccountDescription(accountId),
           buildId,
         })
       );
