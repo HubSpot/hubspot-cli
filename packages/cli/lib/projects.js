@@ -30,7 +30,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getAccountDescription } = require('../lib/ui');
+const { horizontalLine, getAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -346,7 +346,7 @@ const makeGetTaskStatus = taskType => {
                 subtask => subtask.status === 'FAILURE'
               );
 
-              logger.log('-'.repeat(50));
+              horizontalLine();
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
                   buildId || taskId,
@@ -356,7 +356,7 @@ const makeGetTaskStatus = taskType => {
                 )}\n`
               );
               logger.log('See below for a summary of errors.');
-              logger.log('-'.repeat(50));
+              horizontalLine();
 
               failedSubtask.forEach(subTask => {
                 logger.log(

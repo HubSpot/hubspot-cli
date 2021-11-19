@@ -15,7 +15,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { getAccountDescription } = require('../../lib/ui');
+const { horizontalLine, getAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -135,11 +135,11 @@ exports.handler = async options => {
         exitCode = EXIT_CODES.ERROR;
       }
     } else {
-      logger.log('-'.repeat(50));
+      horizontalLine();
       logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
       logger.log('🚀 Ready to take your project live?');
       logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
-      logger.log('-'.repeat(50));
+      horizontalLine();
     }
 
     try {
