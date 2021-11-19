@@ -6,48 +6,51 @@ const {
   DEFAULT_MODE,
   Mode,
 } = require('@hubspot/cli-lib');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.commonOpts';
 const { LOG_LEVEL } = Logger;
 
 const addAccountOptions = program =>
   program.option('portal', {
     alias: ['p', 'account', 'a'],
-    describe: 'HubSpot portal id or name from config',
+    describe: i18n(`${i18nKey}.options.portal.describe`),
     type: 'string',
   });
 
 const addConfigOptions = yargs =>
   yargs.option('config', {
     alias: 'c',
-    describe: 'path to a config file',
+    describe: i18n(`${i18nKey}.options.config.describe`),
     type: 'string',
   });
 
 const addOverwriteOptions = yargs =>
   yargs.option('overwrite', {
     alias: 'o',
-    describe: 'overwrite existing files',
+    describe: i18n(`${i18nKey}.options.overwrite.describe`),
     type: 'boolean',
     default: false,
   });
 
 const addModeOptions = (yargs, { read, write }) => {
   const modes = `<${Object.values(Mode).join(' | ')}>`;
-  const help = read
-    ? `read from ${modes}`
-    : write
-    ? `write to ${modes}`
-    : `${modes}`;
 
   return yargs.option('mode', {
     alias: 'm',
-    describe: help,
+    describe: i18n(
+      `${i18nKey}.options.modes.describe${
+        read ? 'read' : write ? 'write' : 'default'
+      }`,
+      { modes }
+    ),
     type: 'string',
   });
 };
 
 const addTestingOptions = yargs =>
   yargs.option('qa', {
-    describe: 'run command in qa mode',
+    describe: i18n(`${i18nKey}.options.qa.describe`),
     type: 'boolean',
     default: false,
     hidden: true,
@@ -55,7 +58,7 @@ const addTestingOptions = yargs =>
 
 const addUseEnvironmentOptions = yargs =>
   yargs.option('use-env', {
-    describe: 'use environment variable config',
+    describe: i18n(`${i18nKey}.options.useEnv.describe`),
     type: 'boolean',
     default: false,
   });

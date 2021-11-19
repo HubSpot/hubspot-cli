@@ -606,6 +606,23 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     lib:
+      commonOpts:
+        options:
+          portal:
+            describe: "HubSpot portal id or name from config"
+          config:
+            describe: "Path to a config file"
+          overwrite:
+            describe: "Overwrite existing files"
+          mode:
+            describe:
+              default: "{{ modes }}"
+              read: "Read from {{ modes }}"
+              write: "Write to {{ modes }}"
+          qa:
+            describe: "Run command in QA mode"
+          useEnv:
+            describe: "Use environment variable config"
       prompts:
         accountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):"
         accountName: "Enter a unique name to reference your account:"
