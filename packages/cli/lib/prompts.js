@@ -10,7 +10,6 @@ const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.lib.prompts';
-i18n(`${i18nKey}.describe`);
 
 const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
