@@ -16,7 +16,6 @@ exports.command = 'rename <accountName> <newName>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  console.log('options: ', options);
   loadAndValidateOptions(options);
 
   const { accountName, newName } = options;
