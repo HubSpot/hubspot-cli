@@ -1,35 +1,17 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateDefaultMode } = require('@hubspot/cli-lib/lib/config');
 const inquirer = require('inquirer');
-const {
-  Mode,
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { Mode } = require('@hubspot/cli-lib');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 
-const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
+const { getAccountId } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { logDebugInfo } = require('../../../lib/debugInfo');
-const { validateAccount } = require('../../../lib/validation');
+const { loadAndValidateOptions } = require('../../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.config.subcommands.set.subcommands.defaultMode';
 
 const ALL_MODES = Object.values(Mode);
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
 
 const selectMode = async () => {
   const { mode } = await inquirer.prompt([
@@ -51,7 +33,7 @@ exports.command = 'default-mode [newDefault]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const { newMode: specifiedNewDefault } = options;

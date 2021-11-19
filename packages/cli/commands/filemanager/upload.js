@@ -1,11 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
 const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cli-lib/path');
@@ -22,11 +17,9 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -36,16 +29,9 @@ exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { config: configPath, src, dest } = options;
+  const { src, dest } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!validateConfig() || !(await validateAccount(options))) {
-    process.exit(1);
-  }
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);

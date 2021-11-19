@@ -15,8 +15,9 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
-  PROJECT_TEMPLATE_REPO,
+  PROJECT_TEMPLATES,
   PROJECT_TEXT,
+  PROJECT_CONFIG_FILE,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   createProject,
@@ -28,6 +29,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getCwd } = require('@hubspot/cli-lib/path');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -58,89 +60,83 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
-const getProjectConfig = async projectPath => {
-  const configPath = findup('hsproject.json', {
-    cwd: projectPath,
+const getProjectConfig = async _dir => {
+  const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
+
+  const configPath = findup(PROJECT_CONFIG_FILE, {
+    cwd: projectDir,
     nocase: true,
   });
 
   if (!configPath) {
-    return null;
+    return { projectConfig: null, projectDir: null };
   }
 
   try {
-    const projectConfig = fs.readFileSync(configPath);
-    return JSON.parse(projectConfig);
+    const config = fs.readFileSync(configPath);
+    const projectConfig = JSON.parse(config);
+    return {
+      projectDir: path.dirname(configPath),
+      projectConfig,
+    };
   } catch (e) {
     logger.error('Could not read from project config');
   }
 };
 
-const createProjectConfig = async (projectPath, projectName) => {
-  const projectConfig = await getProjectConfig(projectPath);
-  const projectConfigPath = path.join(projectPath, 'hsproject.json');
+const createProjectConfig = async (projectPath, projectName, template) => {
+  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   if (projectConfig) {
-    logger.log(
-      `Found an existing project config in this folder (${chalk.bold(
-        projectConfig.name
-      )})`
+    logger.warn(
+      projectPath === projectDir
+        ? 'A project already exists in that location.'
+        : `Found an existing project definition in ${projectDir}.`
     );
-  } else {
-    logger.log(
-      `Creating project in ${projectPath ? projectPath : 'the current folder'}`
-    );
-    const { name, template, srcDir } = await prompt([
+
+    const { shouldContinue } = await prompt([
       {
-        name: 'name',
-        message: 'Please enter a project name:',
-        when: !projectName,
-        validate: input => {
-          if (!input) {
-            return 'A project name is required';
-          }
-          return true;
+        name: 'shouldContinue',
+        message: () => {
+          return projectPath === projectDir
+            ? 'Do you want to overwrite the existing project definition with a new one?'
+            : `Continue creating a new project in ${projectPath}?`;
         },
-      },
-      {
-        name: 'template',
-        message: 'Start from a template?',
-        type: 'rawlist',
-        choices: [
-          {
-            name: 'No template',
-            value: 'none',
-          },
-          {
-            name: 'Getting Started Project',
-            value: 'getting-started',
-          },
-        ],
+        type: 'confirm',
+        default: false,
       },
     ]);
 
-    if (template === 'none') {
-      fs.ensureDirSync(path.join(projectPath, 'src'));
-
-      writeProjectConfig(projectConfigPath, {
-        name: projectName || name,
-        srcDir: 'src',
-      });
-    } else {
-      await createProjectTemplate(
-        projectPath,
-        'project',
-        PROJECT_TEMPLATE_REPO[template],
-        ''
-      );
-      const _config = JSON.parse(fs.readFileSync(projectConfigPath));
-      writeProjectConfig(projectConfigPath, {
-        ..._config,
-        name: projectName || name,
-      });
+    if (!shouldContinue) {
+      return;
     }
+  }
 
-    return { name, srcDir };
+  const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
+
+  logger.log(
+    `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+  );
+
+  if (template === 'none') {
+    fs.ensureDirSync(path.join(projectPath, 'src'));
+
+    writeProjectConfig(projectConfigPath, {
+      name: projectName,
+      srcDir: 'src',
+    });
+  } else {
+    await createProjectTemplate(
+      projectPath,
+      'project',
+      PROJECT_TEMPLATES.find(t => t.name === template).repo,
+      ''
+    );
+    const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+    writeProjectConfig(projectConfigPath, {
+      ..._config,
+      name: projectName,
+    });
   }
 
   return projectConfig;
@@ -149,21 +145,21 @@ const createProjectConfig = async (projectPath, projectName) => {
 const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
-      `Project config not found. Try running 'hs project init' first.`
+      `Project config not found. Try running 'hs project create' first.`
     );
     process.exit(1);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
-      'Project config is missing required fields. Try running `hs project init`.'
+      'Project config is missing required fields. Try running `hs project create`.'
     );
     process.exit(1);
   }
 
   if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
-      `Project source directory '${projectConfig.srcDir}' does not exist.`
+      `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
     process.exit(1);
   }
@@ -222,7 +218,7 @@ const showWelcomeMessage = () => {
     '\n-------------------------------------------------------------\n'
   );
   logger.log(chalk.bold("What's next?\n"));
-  logger.log('🎨 Add deployables to your project with `hs create`.\n');
+  logger.log('🎨 Add components to your project with `hs create`.\n');
   logger.log(
     `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
   );

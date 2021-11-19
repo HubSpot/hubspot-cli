@@ -1,10 +1,5 @@
 const ora = require('ora');
-const {
-  getEnv,
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { getEnv } = require('@hubspot/cli-lib');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -14,29 +9,15 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { deployAppSync } = require('@hubspot/cli-lib/api/appPipeline');
 
 const {
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.app.subcommands.deploy';
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
 
 const logServerlessBuildFailures = async errorDetails => {
   const folderPaths = errorDetails.context.folderPath;
@@ -54,7 +35,7 @@ exports.command = 'deploy <path>';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { path: appPath } = options;
   const accountId = getAccountId(options);

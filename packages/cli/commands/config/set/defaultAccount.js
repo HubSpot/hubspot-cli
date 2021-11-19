@@ -5,32 +5,14 @@ const {
   updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const inquirer = require('inquirer');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { loadAndValidateOptions } = require('../../../lib/validation');
 
-const { getAccountId, setLogLevel } = require('../../../lib/commonOpts');
+const { getAccountId } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { logDebugInfo } = require('../../../lib/debugInfo');
-const { validateAccount } = require('../../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey =
   'cli.commands.config.subcommands.set.subcommands.defaultAccount';
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
 
 const selectAccountFromConfig = async config => {
   const { default: selectedDefault } = await inquirer.prompt([
@@ -52,7 +34,7 @@ exports.command = 'default-account [newDefault]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const config = getConfig();

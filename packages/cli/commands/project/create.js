@@ -1,73 +1,107 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const {
-  createProjectConfig,
-  showWelcomeMessage,
-} = require('../../lib/projects');
+const { prompt } = require('inquirer');
+const { createProjectConfig } = require('../../lib/projects');
+const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
-
-exports.command = 'create [path]';
+exports.command = 'create';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
-  const { path: projectPath, name } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-create', { projectPath }, accountId);
+  const { name, template, location } = await prompt([
+    {
+      name: 'name',
+      message: '[--name] Give your project a name:',
+      when: !options.name,
+      validate: input => {
+        if (!input) {
+          return 'A project name is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'location',
+      message: '[--location] Where should the project be created?',
+      when: !options.location,
+      default: answers => {
+        return path.resolve(getCwd(), answers.name || options.name);
+      },
+      validate: input => {
+        if (!input) {
+          return 'A project location is required';
+        }
+        return true;
+      },
+    },
+    {
+      name: 'template',
+      message: () => {
+        return options.template &&
+          !PROJECT_TEMPLATES.find(t => t.name === options.template)
+          ? `[--template] Could not find template ${options.template}. Please choose an available template.`
+          : '[--template] Start from a template?';
+      },
+      when:
+        !options.template ||
+        !PROJECT_TEMPLATES.find(t => t.name === options.template),
+      type: 'list',
+      choices: [
+        {
+          name: 'No template',
+          value: 'none',
+        },
+        ...PROJECT_TEMPLATES.map(template => {
+          return {
+            name: template.label,
+            value: template.name,
+          };
+        }),
+      ],
+    },
+  ]);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
+  trackCommandUsage('project-create', { projectName: name }, accountId);
 
-  const projectConfig = await createProjectConfig(cwd, name);
-
-  showWelcomeMessage(projectConfig.name, accountId);
+  await createProjectConfig(
+    path.resolve(getCwd(), options.location || location),
+    options.name || name,
+    options.template || template
+  );
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
   yargs.options({
     name: {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
+    location: {
+      describe: i18n(`${i18nKey}.options.location.describe`),
+      type: 'string',
+    },
+    template: {
+      describe: i18n(`${i18nKey}.options.template.describe`),
+      type: 'string',
+    },
   });
 
-  yargs.example([
-    ['$0 project create myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);

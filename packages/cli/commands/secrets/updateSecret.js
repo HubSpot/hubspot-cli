@@ -1,8 +1,3 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
@@ -10,17 +5,15 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
 
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
 const { secretValuePrompt } = require('../../lib/secretPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -30,16 +23,10 @@ exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName, config: configPath } = options;
+  const { name: secretName } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  await loadAndValidateOptions(options);
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
   const accountId = getAccountId(options);
   trackCommandUsage('secrets-update', {}, accountId);
 

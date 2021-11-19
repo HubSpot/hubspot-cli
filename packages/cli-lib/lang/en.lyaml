@@ -416,13 +416,14 @@ en:
         subcommands:
           create:
             examples:
-              default: "Create a project within the myProjectFolder folder"
+              default: "Create a project"
             options:
+              location:
+                describe: "Directory where project should be created"
               name:
                 describe: "Project name (cannot be changed)"
-            positionals:
-              path:
-                describe: "Path to a project folder"
+              template:
+                describe: "Which template?"
           deploy:
             debug:
               deploying: "Deploying project at path: {{ path }}"
