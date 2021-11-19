@@ -35,15 +35,18 @@ exports.handler = async options => {
 
   logger.debug(`Deploying project at path: ${projectPath}`);
 
+  let exitCode = 0;
+
   const getBuildId = async () => {
     const { latestBuild } = await fetchProject(accountId, projectConfig.name);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
     logger.error('No latest build ID was found.');
+    exitCode = 1;
     return;
   };
-  let exitCode = 0;
+
   try {
     const deployedBuildId = buildId || (await getBuildId());
 
