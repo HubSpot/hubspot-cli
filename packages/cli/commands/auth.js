@@ -32,6 +32,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
@@ -74,7 +75,7 @@ exports.handler = async options => {
     logger.error(
       'No config file was found. To create a new config file, use the "hs init" command.'
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
@@ -116,7 +117,7 @@ exports.handler = async options => {
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
-        process.exit();
+        process.exit(EXIT_CODES.SUCCESS);
       }
 
       validName = await promptForAccountNameIfNotSet(updatedConfig);
@@ -139,7 +140,7 @@ exports.handler = async options => {
       );
       break;
   }
-  process.exit();
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

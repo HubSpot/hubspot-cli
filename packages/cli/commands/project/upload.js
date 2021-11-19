@@ -15,6 +15,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
+const { getAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -26,6 +27,7 @@ const {
   ensureProjectExists,
   pollDeployStatus,
 } = require('../../lib/projects');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
 exports.describe = false;
@@ -36,9 +38,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   });
 
   spinnies.add('upload', {
-    text: `Uploading ${chalk.bold(projectName)} project files to ${chalk.bold(
-      accountId
-    )}`,
+    text: `Uploading ${chalk.bold(
+      projectName
+    )} project files to ${getAccountDescription(accountId)}`,
   });
 
   let buildId;
@@ -49,9 +51,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     buildId = upload.buildId;
 
     spinnies.succeed('upload', {
-      text: `Uploaded ${chalk.bold(projectName)} project files to ${chalk.bold(
-        accountId
-      )}`,
+      text: `Uploaded ${chalk.bold(
+        projectName
+      )} project files to ${getAccountDescription(accountId)}`,
     });
 
     logger.debug(
@@ -61,7 +63,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     spinnies.fail('upload', {
       text: `Failed to upload ${chalk.bold(
         projectName
-      )} project files to ${chalk.bold(accountId)}`,
+      )} project files to ${getAccountDescription(accountId)}`,
     });
 
     logApiErrorInstance(
@@ -71,7 +73,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return { buildId };
@@ -99,7 +101,7 @@ exports.handler = async options => {
   const archive = archiver('zip');
 
   output.on('close', async function() {
-    let exitCode = 0;
+    let exitCode = EXIT_CODES.SUCCESS;
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
     const { buildId } = await uploadProjectFiles(
@@ -115,13 +117,13 @@ exports.handler = async options => {
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
     if (status === 'FAILURE') {
-      exitCode = 1;
+      exitCode = EXIT_CODES.ERROR;
       return;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
-        )} to ${accountId}`
+        )} to ${getAccountDescription(accountId)}`
       );
       const { status } = await pollDeployStatus(
         accountId,
@@ -130,7 +132,7 @@ exports.handler = async options => {
         buildId
       );
       if (status === 'FAILURE') {
-        exitCode = 1;
+        exitCode = EXIT_CODES.ERROR;
       }
     } else {
       logger.log('-'.repeat(50));

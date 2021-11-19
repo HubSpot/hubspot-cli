@@ -14,6 +14,7 @@ const {
   createSchema: createSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
 exports.command = 'create <definition>';
 exports.describe = 'Create a custom object schema';
@@ -29,7 +30,7 @@ exports.handler = async options => {
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {
