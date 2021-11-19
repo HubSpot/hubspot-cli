@@ -18,6 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'list';
 exports.describe = 'List currently deployed functions';
@@ -34,7 +35,7 @@ exports.handler = async options => {
 
   const routesResp = await getRoutes(accountId).catch(async e => {
     await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   });
 
   if (!routesResp.objects.length) {

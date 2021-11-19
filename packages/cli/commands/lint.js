@@ -13,6 +13,7 @@ const {
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';
 // Hiding since this command is still experimental
@@ -38,7 +39,7 @@ exports.handler = async options => {
   } catch (err) {
     logger.groupEnd(groupName);
     logErrorInstance(err, { accountId });
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);
   logger.log(`${count} issues found`);

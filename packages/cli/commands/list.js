@@ -21,6 +21,7 @@ const {
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'list [path]';
 exports.describe = 'list remote contents of a directory';
@@ -45,7 +46,7 @@ exports.handler = async options => {
       e,
       new ApiErrorContext({ accountId, directoryPath })
     );
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   if (contentsResp.children.length) {

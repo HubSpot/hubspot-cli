@@ -8,6 +8,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getAccountId } = require('../../lib/commonOpts');
 const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <name> <definition>';
 exports.describe = 'Create custom object instances';
@@ -23,7 +24,7 @@ exports.handler = async options => {
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {

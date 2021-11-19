@@ -16,6 +16,7 @@ const {
 const { getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
@@ -108,7 +109,7 @@ exports.handler = async options => {
 
   if (!functionName) {
     logger.error('You must pass a function name to retrieve logs for.');
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   } else if (!projectName) {
     const projectConfig = await getProjectConfig(getCwd());
     if (projectConfig.name) {
@@ -117,11 +118,11 @@ exports.handler = async options => {
       logger.error(
         'You must specify a project name using the --projectName argument.'
       );
-      process.exit(1);
+      process.exit(EXIT_CODES.ERROR);
     }
   } else if (!appPath) {
     logger.error('You must specify an app path using the --appPath argument.');
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);

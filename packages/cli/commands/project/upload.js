@@ -27,6 +27,7 @@ const {
   ensureProjectExists,
   pollDeployStatus,
 } = require('../../lib/projects');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
 exports.describe = false;
@@ -72,7 +73,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return { buildId };
@@ -100,7 +101,7 @@ exports.handler = async options => {
   const archive = archiver('zip');
 
   output.on('close', async function() {
-    let exitCode = 0;
+    let exitCode = EXIT_CODES.SUCCESS;
     logger.debug(`Project files compressed: ${archive.pointer()} bytes`);
 
     const { buildId } = await uploadProjectFiles(
@@ -139,7 +140,7 @@ exports.handler = async options => {
         logger.error(subbuild.errorMessage);
       });
 
-      exitCode = 1;
+      exitCode = EXIT_CODES.ERROR;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
@@ -153,7 +154,7 @@ exports.handler = async options => {
         buildId
       );
       if (status === 'FAILURE') {
-        exitCode = 1;
+        exitCode = EXIT_CODES.ERROR;
       }
     } else {
       logger.log('-'.repeat(50));

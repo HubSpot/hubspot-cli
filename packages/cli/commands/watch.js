@@ -15,6 +15,7 @@ const {
 } = require('../lib/commonOpts');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch <src> <dest>';
 exports.describe =
@@ -26,7 +27,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);

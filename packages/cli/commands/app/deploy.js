@@ -15,6 +15,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const logServerlessBuildFailures = async errorDetails => {
   const folderPaths = errorDetails.context.folderPath;
@@ -72,7 +73,7 @@ exports.handler = async options => {
         })
       );
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   spinner.succeed();
