@@ -1,6 +1,16 @@
 const chalk = require('chalk');
 const supportsHyperlinks = require('supports-hyperlinks');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { logger } = require('@hubspot/cli-lib/logger');
+
+/**
+ * Outputs horizontal line
+ *
+ * @returns
+ */
+const horizontalLine = () => {
+  logger.log('-'.repeat(50));
+};
 
 /**
  * Returns a hyperlink or link and description
@@ -32,6 +42,7 @@ const getAccountDescription = accountId => {
 };
 
 module.exports = {
+  horizontalLine,
   link,
   getAccountDescription,
 };
