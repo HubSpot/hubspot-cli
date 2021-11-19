@@ -3,17 +3,10 @@ const { getCwd } = require('@hubspot/cli-lib/path');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
@@ -21,20 +14,8 @@ const {
   getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
 const { getProjectConfig } = require('../../lib/projects');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
 
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
@@ -120,7 +101,7 @@ exports.command = 'logs [functionName]';
 exports.describe = 'get logs for a function within a project';
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { latest, functionName, appPath } = options;
   let projectName = options.projectName;

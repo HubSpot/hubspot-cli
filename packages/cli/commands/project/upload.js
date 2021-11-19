@@ -7,18 +7,10 @@ const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -27,7 +19,7 @@ const { getAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   getProjectConfig,
   validateProjectConfig,
@@ -35,18 +27,6 @@ const {
   ensureProjectExists,
   pollDeployStatus,
 } = require('../../lib/projects');
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
 
 exports.command = 'upload [path]';
 exports.describe = false;
@@ -99,7 +79,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
 };
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { forceCreate, path: projectPath } = options;
   const accountId = getAccountId(options);
