@@ -39,7 +39,7 @@ const addModeOptions = (yargs, { read, write }) => {
   return yargs.option('mode', {
     alias: 'm',
     describe: i18n(
-      `${i18nKey}.options.modes.describe${
+      `${i18nKey}.options.modes.describe.${
         read ? 'read' : write ? 'write' : 'default'
       }`,
       { modes }
