@@ -3,17 +3,14 @@ const path = require('path');
 const fs = require('fs-extra');
 const handlebars = require('handlebars');
 const yaml = require('js-yaml');
-const chalk = require('chalk');
 const { logger } = require('../logger');
+const { loadHandlebarsCustomHelpers } = require('./handlebarsCustomHelpers');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
-handlebars.registerHelper('bold', function(options) {
-  return chalk.bold(options.fn(this));
-});
-
 let locale;
 let languageObj;
+loadHandlebarsCustomHelpers();
 
 const loadLanguageFromYaml = () => {
   if (languageObj) return;

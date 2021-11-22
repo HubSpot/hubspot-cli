@@ -140,9 +140,9 @@ en:
             log:
               creatingFile: "Creating file at {{ path }}"
       customObject:
-        betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
+        betaMessage: "{{#yellow}}The Custom Object CLI is currently in beta and is subject to change.{{/yellow}}"
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "See {{ link }} to find out more."
+        seeMoreLink: "{{#yellow}}See {{ link }} to find out more.{{/yellow}}"
         subcommands:
           create:
             describe: "Create custom object instances"
@@ -222,7 +222,7 @@ en:
                 success:
                   update: "Your schema has been updated in account \"{{ accountId }}\""
                   viewAtUrl: "Schema can be viewed at {{ url }}"
-        warning: "WARNING"
+        warning: "{{#yellow}}***************************** WARNING WARNING WARNING ****************************{{/yellow}}"
       fetch:
         describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
         errors:
