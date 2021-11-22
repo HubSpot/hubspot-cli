@@ -612,7 +612,7 @@ en:
             describe: "Path to a config file"
           overwrite:
             describe: "Overwrite existing files"
-          mode:
+          modes:
             describe:
               default: "{{ modes }}"
               read: "Read from {{ modes }}"
