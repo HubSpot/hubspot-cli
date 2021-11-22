@@ -19,6 +19,7 @@ const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.logs';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
@@ -116,18 +117,18 @@ exports.handler = async options => {
 
   if (!functionName) {
     logger.error(i18n(`${i18nKey}.errors.functionNameRequired`));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   } else if (!projectName) {
     const projectConfig = await getProjectConfig(getCwd());
     if (projectConfig && projectConfig.name) {
       projectName = projectConfig.name;
     } else {
       logger.error(i18n(`${i18nKey}.errors.projectNameRequired`));
-      process.exit(1);
+      process.exit(EXIT_CODES.ERROR);
     }
   } else if (!appPath) {
     logger.error(i18n(`${i18nKey}.errors.appPathRequired`));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);

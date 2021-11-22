@@ -33,6 +33,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -79,7 +80,7 @@ exports.handler = async options => {
 
   if (!getConfigPath()) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
@@ -124,7 +125,7 @@ exports.handler = async options => {
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
-        process.exit();
+        process.exit(EXIT_CODES.SUCCESS);
       }
 
       validName = await promptForAccountNameIfNotSet(updatedConfig);
@@ -153,7 +154,7 @@ exports.handler = async options => {
       );
       break;
   }
-  process.exit();
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

@@ -11,6 +11,7 @@ const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.customObject.subcommands.create';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <name> <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -26,7 +27,7 @@ exports.handler = async options => {
 
   const filePath = getAbsoluteFilePath(definition);
   if (!isFileValidJSON(filePath)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   try {

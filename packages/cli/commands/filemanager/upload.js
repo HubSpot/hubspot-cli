@@ -24,6 +24,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.filemanager.subcommands.upload';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -73,7 +74,7 @@ exports.handler = async options => {
   );
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (stats.isFile()) {

@@ -30,6 +30,7 @@ const {
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
 exports.describe = false;
@@ -38,13 +39,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
-  const boldProjectName = chalk.bold(projectName);
   const accountIdentifier = getAccountDescription(accountId);
 
   spinnies.add('upload', {
     text: i18n(`${i18nKey}.loading.upload.add`, {
       accountIdentifier,
-      projectName: boldProjectName,
+      projectName,
     }),
   });
 
@@ -58,18 +58,21 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     spinnies.succeed('upload', {
       text: i18n(`${i18nKey}.loading.upload.succeed`, {
         accountIdentifier,
-        projectName: boldProjectName,
+        projectName,
       }),
     });
 
     logger.debug(
-      `Project "${projectName}" uploaded and build #${buildId} created`
+      i18n(`${i18nKey}.debug.buildCreated`, {
+        buildId,
+        projectName,
+      })
     );
   } catch (err) {
     spinnies.fail('upload', {
       text: i18n(`${i18nKey}.loading.upload.fail`, {
         accountIdentifier,
-        projectName: boldProjectName,
+        projectName,
       }),
     });
 
@@ -80,7 +83,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return { buildId };
@@ -112,7 +115,7 @@ exports.handler = async options => {
   const archive = archiver('zip');
 
   output.on('close', async function() {
-    let exitCode = 0;
+    let exitCode = EXIT_CODES.SUCCESS;
     logger.debug(
       i18n(`${i18nKey}.debug.compressed`, {
         byteCount: archive.pointer(),
@@ -129,37 +132,11 @@ exports.handler = async options => {
       isAutoDeployEnabled,
       deployStatusTaskLocator,
       status,
-      subbuildStatuses,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
     if (status === 'FAILURE') {
-      const failedSubbuilds = subbuildStatuses.filter(
-        subbuild => subbuild.status === 'FAILURE'
-      );
-
-      logger.log('-'.repeat(50));
-      logger.log(
-        i18n(`${i18nKey}.logs.buildFailed`, {
-          buildErrorCulprit:
-            failedSubbuilds.length === 1
-              ? failedSubbuilds[0].buildName
-              : failedSubbuilds.length + ' components',
-          buildId,
-        })
-      );
-      logger.log(i18n(`${i18nKey}.logs.seeErrorsBelow`));
-      logger.log('-'.repeat(50));
-
-      failedSubbuilds.forEach(subbuild => {
-        logger.log(
-          i18n(`${i18nKey}.logs.subbuildFailed`, {
-            subbuild: subbuild.buildName,
-          })
-        );
-        logger.error(subbuild.errorMessage);
-      });
-
-      exitCode = 1;
+      exitCode = EXIT_CODES.ERROR;
+      return;
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
@@ -174,7 +151,7 @@ exports.handler = async options => {
         buildId
       );
       if (status === 'FAILURE') {
-        exitCode = 1;
+        exitCode = EXIT_CODES.ERROR;
       }
     } else {
       logger.log('-'.repeat(50));

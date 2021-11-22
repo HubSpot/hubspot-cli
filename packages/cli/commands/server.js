@@ -24,6 +24,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.server';
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 function configureServerCommand(program) {
   program
@@ -40,7 +41,7 @@ function configureServerCommand(program) {
       checkAndWarnGitInclusion();
 
       if (!validateConfig()) {
-        process.exit(1);
+        process.exit(EXIT_CODES.ERROR);
       }
 
       const accountId = getAccountId(options);

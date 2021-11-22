@@ -22,6 +22,7 @@ const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -77,7 +78,7 @@ exports.handler = async options => {
         .flat()
         .some(result => result.result === VALIDATION_RESULT.FATAL)
     ) {
-      process.exit(2);
+      process.exit(EXIT_CODES.WARNING);
     }
   });
 };

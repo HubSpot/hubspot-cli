@@ -16,6 +16,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.fetch';
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -26,12 +27,12 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (typeof src !== 'string') {
     logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);

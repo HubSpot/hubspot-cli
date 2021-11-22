@@ -35,6 +35,7 @@ const {
 } = require('../lib/prompts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.init';
 
@@ -106,7 +107,7 @@ exports.handler = async options => {
       })
     );
     logger.info(i18n(`${i18nKey}.info.updateConfig`));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
@@ -126,7 +127,7 @@ exports.handler = async options => {
     );
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
     trackAuthAction('init', authType, TRACKING_STATUS.ERROR);

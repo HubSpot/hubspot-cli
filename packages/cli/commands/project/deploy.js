@@ -20,6 +20,7 @@ const {
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'deploy [path]';
 exports.describe = false;
@@ -42,12 +43,15 @@ exports.handler = async options => {
     })
   );
 
+  let exitCode = EXIT_CODES.SUCCESS;
+
   const getBuildId = async () => {
     const { latestBuild } = await fetchProject(accountId, projectConfig.name);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
     logger.error(i18n(`${i18nKey}.errors.noBuildId`));
+    exitCode = EXIT_CODES.ERROR;
     return;
   };
 
@@ -66,6 +70,7 @@ exports.handler = async options => {
           details: deployResp.error.message,
         })
       );
+      exitCode = EXIT_CODES.ERROR;
       return;
     }
 
@@ -81,7 +86,9 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
     }
+    exitCode = 1;
   }
+  process.exit(exitCode);
 };
 
 exports.builder = yargs => {

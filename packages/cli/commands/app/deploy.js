@@ -18,6 +18,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.app.subcommands.deploy';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const logServerlessBuildFailures = async errorDetails => {
   const folderPaths = errorDetails.context.folderPath;
@@ -80,7 +81,7 @@ exports.handler = async options => {
         })
       );
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   spinner.succeed();

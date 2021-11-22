@@ -160,3 +160,9 @@ portals:
     authType: apikey
     apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 ```
+### Exit Codes
+
+The CLI will exit with one of the following exit codes:
+- `0`: A successful run
+- `1`: There was a config problem or an internal error
+- `2`: There are warnings or validation issues

@@ -475,17 +475,14 @@ en:
               default: "Upload a project"
             loading:
               upload:
-                add: "Uploading {{ projectName }} project files to {{ accountIdentifier }}"
-                fail: "Failed to upload {{ projectName }} project files to {{ accountIdentifier }}"
-                succeed: "Uploaded {{ projectName }} project files to {{ accountIdentifier }}"
+                add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+                fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+                succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
             logs:
-              buildFailed: "Build #{{ buildId }} failed because there was a problem\nbuilding {{ buildErrorCulprit }} \n"
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
-              seeErrorsBelow: "See below for a summary of errors."
-              subbuildFailed: "\n--- {{ subbuild }} failed to build with the following error ---"
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"

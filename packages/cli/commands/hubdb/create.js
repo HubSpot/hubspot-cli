@@ -19,6 +19,7 @@ const {
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.hubdb.subcommands.create';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -35,7 +36,7 @@ exports.handler = async options => {
   try {
     const filePath = path.resolve(getCwd(), src);
     if (!isFileValidJSON(filePath)) {
-      process.exit(1);
+      process.exit(EXIT_CODES.ERROR);
     }
 
     const table = await createHubDbTable(
