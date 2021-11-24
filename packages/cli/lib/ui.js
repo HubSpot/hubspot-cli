@@ -8,7 +8,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
  *
  * @returns
  */
-const horizontalLine = () => {
+const uiLine = () => {
   logger.log('-'.repeat(50));
 };
 
@@ -20,7 +20,7 @@ const horizontalLine = () => {
  * @param {object} options
  * @returns {string}
  */
-const link = (linkText, url, options = {}) => {
+const uiLink = (linkText, url, options = {}) => {
   if (supportsHyperlinks.stdout) {
     return ['\u001B]8;;', url, '\u0007', linkText, '\u001B]8;;\u0007'].join('');
   } else {
@@ -34,7 +34,7 @@ const link = (linkText, url, options = {}) => {
  * @param {number} accountId
  * @returns {string}
  */
-const getAccountDescription = accountId => {
+const uiAccountDescription = accountId => {
   const account = getAccountConfig(accountId);
   return chalk.bold(
     account.name ? `${account.name} (${account.portalId})` : account.portalId
@@ -42,7 +42,7 @@ const getAccountDescription = accountId => {
 };
 
 module.exports = {
-  horizontalLine,
-  link,
-  getAccountDescription,
+  uiLine,
+  uiLink,
+  uiAccountDescription,
 };
