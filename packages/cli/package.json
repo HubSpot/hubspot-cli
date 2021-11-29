@@ -23,7 +23,7 @@
     "spinnies": "^0.5.1",
     "supports-hyperlinks": "^2.2.0",
     "tmp": "^0.2.1",
-    "update-notifier": "3.0.1",
+    "update-notifier": "^5.1.0",
     "yargs": "15.4.1"
   },
   "devDependencies": {
