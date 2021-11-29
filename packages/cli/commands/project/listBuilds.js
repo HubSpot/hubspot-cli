@@ -21,7 +21,7 @@ const {
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const { link } = require('../../lib/ui');
+const { uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   getProjectConfig,
@@ -63,7 +63,7 @@ exports.handler = async options => {
     } else {
       logger.log(
         `Showing the ${results.length} most recent builds for ${project.name}. ` +
-          link(
+          uiLink(
             'View all builds in project details.',
             getProjectDetailUrl(project.name, accountId)
           )

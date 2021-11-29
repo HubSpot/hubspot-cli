@@ -15,7 +15,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { getAccountDescription } = require('../../lib/ui');
+const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -40,7 +40,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   spinnies.add('upload', {
     text: `Uploading ${chalk.bold(
       projectName
-    )} project files to ${getAccountDescription(accountId)}`,
+    )} project files to ${uiAccountDescription(accountId)}`,
   });
 
   let buildId;
@@ -53,7 +53,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     spinnies.succeed('upload', {
       text: `Uploaded ${chalk.bold(
         projectName
-      )} project files to ${getAccountDescription(accountId)}`,
+      )} project files to ${uiAccountDescription(accountId)}`,
     });
 
     logger.debug(
@@ -63,7 +63,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
     spinnies.fail('upload', {
       text: `Failed to upload ${chalk.bold(
         projectName
-      )} project files to ${getAccountDescription(accountId)}`,
+      )} project files to ${uiAccountDescription(accountId)}`,
     });
 
     logApiErrorInstance(
@@ -123,7 +123,7 @@ exports.handler = async options => {
       logger.log(
         `Build #${buildId} succeeded. ${chalk.bold(
           'Automatically deploying'
-        )} to ${getAccountDescription(accountId)}`
+        )} to ${uiAccountDescription(accountId)}`
       );
       const { status } = await pollDeployStatus(
         accountId,
@@ -135,11 +135,11 @@ exports.handler = async options => {
         exitCode = EXIT_CODES.ERROR;
       }
     } else {
-      logger.log('-'.repeat(50));
+      uiLine();
       logger.log(chalk.bold(`Build #${buildId} succeeded\n`));
       logger.log('🚀 Ready to take your project live?');
       logger.log(`Run \`${chalk.hex('f5c26b')('hs project deploy')}\``);
-      logger.log('-'.repeat(50));
+      uiLine();
     }
 
     try {
