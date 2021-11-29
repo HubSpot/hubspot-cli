@@ -20,7 +20,7 @@
     "open": "^7.0.3",
     "ora": "^4.0.3",
     "shelljs": "0.8.3",
-    "spinnies": "^0.5.1",
+    "spinnies": "^0.3.2",
     "supports-hyperlinks": "^2.2.0",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
