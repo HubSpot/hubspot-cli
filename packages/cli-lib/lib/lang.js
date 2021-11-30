@@ -125,17 +125,7 @@ const interpolate = (stringValue, interpolationData) => {
   return compiledString;
 };
 
-const getInterpolatedValue = (
-  // lookupDotNotation,
-  textValue,
-  interpolationData
-) => {
-  // TODO
-  // √ Create regex to check for {{<identifier>}} and replace identifier with interpolationData.identifier
-  // Create regex that checks for {{#<helperidentifier>}}...{{/<helperidentifier>}} with optional spaces within delimiters
-  // Run helper method on "..." within helper delimiters
-  // Add custom helpers previously used in handlebarsCustomHelpers.js
-
+const getInterpolatedValue = (textValue, interpolationData) => {
   const interpolatedString = interpolate(textValue, interpolationData);
   console.log('interpolatedString: ', interpolatedString);
 
@@ -153,7 +143,7 @@ const i18n = (lookupDotNotation, options = {}) => {
   const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
   return shouldInterpolate
-    ? getInterpolatedValue(lookupDotNotation, textValue, options)
+    ? getInterpolatedValue(textValue, options)
     : textValue;
 };
 
