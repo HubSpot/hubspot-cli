@@ -189,7 +189,7 @@ const writeConfig = (options = {}) => {
 };
 
 const readConfigFile = () => {
-  isConfigPathInGitRepo();
+  isConfigPathInGitRepo(_configPath);
   let source;
   let error;
   if (!_configPath) {

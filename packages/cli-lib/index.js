@@ -1,12 +1,10 @@
 const { ALLOWED_EXTENSIONS, Mode, DEFAULT_MODE } = require('./lib/constants');
 const {
-  checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
   getAccountId,
   getAccountConfig,
   getEnv,
-
   findConfig,
   loadConfig,
   loadConfigFromEnvironment,
@@ -16,6 +14,7 @@ const {
   isTrackingAllowed,
   writeConfig,
 } = require('./lib/config');
+const { checkAndWarnGitInclusion } = require('./lib/git');
 const { uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
 const { read } = require('./lib/read');
