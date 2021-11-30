@@ -1,16 +1,24 @@
 const util = require('util');
 const path = require('path');
 const fs = require('fs-extra');
-const handlebars = require('handlebars');
 const yaml = require('js-yaml');
 const { logger } = require('../logger');
-const { loadHandlebarsCustomHelpers } = require('./handlebarsCustomHelpers');
+// const { loadHandlebarsCustomHelpers } = require('./handlebarsCustomHelpers');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
+const DELIMITERS = {
+  interpolate: {
+    start: '{{',
+    end: '}}',
+  },
+  helpers: {
+    start: '#',
+    end: '/',
+  },
+};
 
 let locale;
 let languageObj;
-loadHandlebarsCustomHelpers();
 
 const loadLanguageFromYaml = () => {
   if (languageObj) return;
@@ -69,10 +77,69 @@ const getTextValue = lookupDotNotation => {
   return textValue;
 };
 
-const getInterpolatedValue = (textValue, interpolationData) => {
-  const template = handlebars.compile(textValue);
+const isHelperIdentifier = identifier => {
+  return (
+    identifier.startsWith(DELIMITERS.helpers.start) ||
+    identifier.startsWith(DELIMITERS.helpers.end)
+  );
+};
 
-  return template(interpolationData);
+const interpolate = (stringValue, interpolationData) => {
+  console.log('interpolationData: ', interpolationData);
+  const interpolationIdentifierRegEx = new RegExp(
+    `${DELIMITERS.interpolate.start}(.*?)${DELIMITERS.interpolate.end}`,
+    'g'
+  );
+  const replaceQueue = [];
+  let match;
+
+  while ((match = interpolationIdentifierRegEx.exec(stringValue)) != null) {
+    const { 0: matchedText, 1: rawIdentifier, index } = match;
+    const identifier = rawIdentifier.trim();
+
+    if (identifier && !isHelperIdentifier(identifier)) {
+      console.log({
+        identifier,
+        matchedText,
+        index,
+        helper: isHelperIdentifier(identifier),
+        replaceWith: interpolationData[identifier],
+      });
+      replaceQueue.unshift(theString => {
+        console.log('theString: ', theString);
+        const newString = `${theString.slice(0, index)}${interpolationData[
+          identifier
+        ] || ''}${theString.slice(index + matchedText.length)}`;
+        console.log('newString: ', newString);
+        return newString;
+      });
+    }
+  }
+
+  const compiledString = replaceQueue.reduce(
+    (currentValue, replaceFn) => replaceFn(currentValue),
+    stringValue
+  );
+  console.log('compiledString: ', compiledString);
+
+  return compiledString;
+};
+
+const getInterpolatedValue = (
+  // lookupDotNotation,
+  textValue,
+  interpolationData
+) => {
+  // TODO
+  // √ Create regex to check for {{<identifier>}} and replace identifier with interpolationData.identifier
+  // Create regex that checks for {{#<helperidentifier>}}...{{/<helperidentifier>}} with optional spaces within delimiters
+  // Run helper method on "..." within helper delimiters
+  // Add custom helpers previously used in handlebarsCustomHelpers.js
+
+  const interpolatedString = interpolate(textValue, interpolationData);
+  console.log('interpolatedString: ', interpolatedString);
+
+  return interpolatedString;
 };
 
 const i18n = (lookupDotNotation, options = {}) => {
@@ -86,7 +153,7 @@ const i18n = (lookupDotNotation, options = {}) => {
   const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
   return shouldInterpolate
-    ? getInterpolatedValue(textValue, options)
+    ? getInterpolatedValue(lookupDotNotation, textValue, options)
     : textValue;
 };
 
