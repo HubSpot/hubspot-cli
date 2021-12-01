@@ -49,7 +49,7 @@ const interpolation = (stringValue, interpolationData) => {
 
 const compileHelper = (stringValue, helperIdentifier, helperFn) => {
   const helperIdentifierRegEx = new RegExp(
-    `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
+    `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*?)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
     'g'
   );
   const replaceQueue = [];
