@@ -17,6 +17,14 @@ const isHelperIdentifier = identifier => {
   );
 };
 
+const generateReplaceFn = (matchedText, startIndex, replacementString) => {
+  return theString => {
+    const newString = `${theString.slice(0, startIndex)}${replacementString ||
+      ''}${theString.slice(startIndex + matchedText.length)}`;
+    return newString;
+  };
+};
+
 const interpolation = (stringValue, interpolationData) => {
   const interpolationIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(.*?)${delimiters.interpolation.end}`,
@@ -30,12 +38,9 @@ const interpolation = (stringValue, interpolationData) => {
     const identifier = rawIdentifier.trim();
 
     if (identifier && !isHelperIdentifier(identifier)) {
-      replaceQueue.unshift(theString => {
-        const newString = `${theString.slice(0, index)}${interpolationData[
-          identifier
-        ] || ''}${theString.slice(index + matchedText.length)}`;
-        return newString;
-      });
+      replaceQueue.unshift(
+        generateReplaceFn(matchedText, index, interpolationData[identifier])
+      );
     }
   }
 
@@ -65,15 +70,11 @@ const compileHelper = (stringValue, helperIdentifier, helperFn) => {
     const identifier = rawHelperIdentifierStart
       .replace(delimiters.helpers.start, '')
       .trim();
-    let replacementText = innerText;
 
     if (identifier && helperFn) {
-      replaceQueue.unshift(theString => {
-        const newString = `${theString.slice(0, index)}${helperFn(
-          replacementText
-        ) || ''}${theString.slice(index + matchedText.length)}`;
-        return newString;
-      });
+      replaceQueue.unshift(
+        generateReplaceFn(matchedText, index, helperFn(innerText))
+      );
     }
   }
 
