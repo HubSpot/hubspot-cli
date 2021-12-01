@@ -126,7 +126,7 @@ const compileHelpers = stringValue => {
  * @returns {string} - The interpolated and helper-compiled string
  * @example
  * interpolateAndCompile('Some {{#bold}}{{text}}{{/bold}} text', { text: 'awesomely bold' })
- * // 'Some awssomely bold text' (with the words 'awesomely bold' in bold)
+ * // 'Some awsomely bold text' (with the words 'awesomely bold' in bold)
  */
 const interpolate = (stringValue, interpolationData) => {
   const interpolatedString = interpolation(stringValue, interpolationData);
