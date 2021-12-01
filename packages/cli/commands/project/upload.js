@@ -214,14 +214,6 @@ exports.builder = yargs => {
 
   yargs.example([
     ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-    [
-      'TEST: ',
-      i18n(`${i18nKey}.examples.test`, {
-        known: 'known',
-        nospaces: 'nospaces',
-        // unknown: 'unknown',
-      }),
-    ],
   ]);
 
   addConfigOptions(yargs, true);
