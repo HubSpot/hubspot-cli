@@ -1,4 +1,4 @@
-const helpers = require('./interpolationHelpers');
+const { helpers } = require('./text');
 const delimiters = {
   interpolation: {
     start: '{{',
