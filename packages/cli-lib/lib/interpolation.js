@@ -1,3 +1,4 @@
+const helpers = require('./interpolationHelpers');
 const delimiters = {
   interpolation: {
     start: '{{',
@@ -16,8 +17,7 @@ const isHelperIdentifier = identifier => {
   );
 };
 
-const interpolate = (stringValue, interpolationData) => {
-  console.log('interpolationData: ', interpolationData);
+const interpolation = (stringValue, interpolationData) => {
   const interpolationIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(.*?)${delimiters.interpolation.end}`,
     'g'
@@ -38,11 +38,11 @@ const interpolate = (stringValue, interpolationData) => {
         replaceWith: interpolationData[identifier],
       });
       replaceQueue.unshift(theString => {
-        console.log('theString: ', theString);
+        // console.log('theString: ', theString);
         const newString = `${theString.slice(0, index)}${interpolationData[
           identifier
         ] || ''}${theString.slice(index + matchedText.length)}`;
-        console.log('newString: ', newString);
+        // console.log('newString: ', newString);
         return newString;
       });
     }
@@ -52,9 +52,25 @@ const interpolate = (stringValue, interpolationData) => {
     (currentValue, replaceFn) => replaceFn(currentValue),
     stringValue
   );
-  console.log('compiledString: ', compiledString);
+  // console.log('compiledString: ', compiledString);
 
   return compiledString;
+};
+
+const compileHelpers = (stringValue /* interpolationData */) => {
+  return stringValue;
+};
+
+const interpolate = (stringValue, interpolationData) => {
+  console.log('BEFORE: ', stringValue, interpolationData);
+  const interpolatedString = interpolation(stringValue, interpolationData);
+  console.log('interpolatedString: ', interpolatedString);
+  const helperCompiledString = compileHelpers(
+    interpolatedString,
+    interpolationData
+  );
+  console.log('helperCompiledString: ', helperCompiledString, helpers);
+  return helperCompiledString;
 };
 
 module.exports = {
