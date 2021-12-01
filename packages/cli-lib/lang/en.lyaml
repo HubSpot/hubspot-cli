@@ -473,7 +473,7 @@ en:
             describe: "Upload a project."
             examples:
               default: "Upload a project"
-              test: "{{#yellow}}The Custom {{ known }} Object {{#bold}}CLI is currently in beta{{/bold}} and is subject to change.{{/yellow}} {{ unknown }} {{ known }} {{nospaces}}"
+              test: "Text before -- {{#yellow}}The Custom {{ known }} Object {{#bold}}CLI is currently in beta{{/bold}} and is subject to change.{{/yellow}} {{ unknown }} {{ known }} {{#blue}}Please make this text blue!{{/blue}} {{nospaces}}"
             loading:
               upload:
                 add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

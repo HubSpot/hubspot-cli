@@ -30,19 +30,10 @@ const interpolation = (stringValue, interpolationData) => {
     const identifier = rawIdentifier.trim();
 
     if (identifier && !isHelperIdentifier(identifier)) {
-      console.log({
-        identifier,
-        matchedText,
-        index,
-        helper: isHelperIdentifier(identifier),
-        replaceWith: interpolationData[identifier],
-      });
       replaceQueue.unshift(theString => {
-        // console.log('theString: ', theString);
         const newString = `${theString.slice(0, index)}${interpolationData[
           identifier
         ] || ''}${theString.slice(index + matchedText.length)}`;
-        // console.log('newString: ', newString);
         return newString;
       });
     }
@@ -52,24 +43,61 @@ const interpolation = (stringValue, interpolationData) => {
     (currentValue, replaceFn) => replaceFn(currentValue),
     stringValue
   );
-  // console.log('compiledString: ', compiledString);
 
   return compiledString;
 };
 
-const compileHelpers = (stringValue /* interpolationData */) => {
-  return stringValue;
+const compileHelper = (stringValue, helperIdentifier, helperFn) => {
+  const helperIdentifierRegEx = new RegExp(
+    `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
+    'g'
+  );
+  const replaceQueue = [];
+  let match;
+
+  while ((match = helperIdentifierRegEx.exec(stringValue)) != null) {
+    const {
+      0: matchedText,
+      1: rawHelperIdentifierStart,
+      2: innerText,
+      index,
+    } = match;
+    const identifier = rawHelperIdentifierStart
+      .replace(delimiters.helpers.start, '')
+      .trim();
+    let replacementText = innerText;
+
+    if (identifier && helperFn) {
+      replaceQueue.unshift(theString => {
+        const newString = `${theString.slice(0, index)}${helperFn(
+          replacementText
+        ) || ''}${theString.slice(index + matchedText.length)}`;
+        return newString;
+      });
+    }
+  }
+
+  const compiledString = replaceQueue.reduce(
+    (currentValue, replaceFn) => replaceFn(currentValue),
+    stringValue
+  );
+
+  return compiledString;
+};
+
+const compileHelpers = stringValue => {
+  return Object.keys(helpers).reduce((currentStringValue, helperIdentifier) => {
+    return compileHelper(
+      currentStringValue,
+      helperIdentifier,
+      helpers[helperIdentifier]
+    );
+  }, stringValue);
 };
 
 const interpolate = (stringValue, interpolationData) => {
-  console.log('BEFORE: ', stringValue, interpolationData);
   const interpolatedString = interpolation(stringValue, interpolationData);
-  console.log('interpolatedString: ', interpolatedString);
-  const helperCompiledString = compileHelpers(
-    interpolatedString,
-    interpolationData
-  );
-  console.log('helperCompiledString: ', helperCompiledString, helpers);
+  const helperCompiledString = compileHelpers(interpolatedString);
   return helperCompiledString;
 };
 

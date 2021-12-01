@@ -67,13 +67,6 @@ const getTextValue = lookupDotNotation => {
   return textValue;
 };
 
-const getInterpolatedValue = (textValue, interpolationData) => {
-  const interpolatedString = interpolate(textValue, interpolationData);
-  console.log('interpolatedString: ', interpolatedString);
-
-  return interpolatedString;
-};
-
 const i18n = (lookupDotNotation, options = {}) => {
   if (typeof lookupDotNotation !== 'string') {
     throw new Error(
@@ -84,9 +77,7 @@ const i18n = (lookupDotNotation, options = {}) => {
   const textValue = getTextValue(lookupDotNotation);
   const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
-  return shouldInterpolate
-    ? getInterpolatedValue(textValue, options)
-    : textValue;
+  return shouldInterpolate ? interpolate(textValue, options) : textValue;
 };
 
 loadLanguageFromYaml();
