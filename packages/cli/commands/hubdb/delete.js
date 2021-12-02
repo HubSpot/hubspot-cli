@@ -10,9 +10,12 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.hubdb.subcommands.delete';
 
 exports.command = 'delete <tableId>';
-exports.describe = 'delete a HubDB table';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { tableId } = options;
@@ -25,9 +28,18 @@ exports.handler = async options => {
 
   try {
     await deleteTable(accountId, tableId);
-    logger.log(`The table ${tableId} was deleted from ${accountId}`);
+    logger.success(
+      i18n(`${i18nKey}.success.delete`, {
+        accountId,
+        tableId,
+      })
+    );
   } catch (e) {
-    logger.error(`Deleting the table ${tableId} failed`);
+    logger.error(
+      i18n(`${i18nKey}.errors.delete`, {
+        tableId,
+      })
+    );
     logErrorInstance(e);
   }
 };
@@ -38,7 +50,7 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('tableId', {
-    describe: 'HubDB Table ID',
+    describe: i18n(`${i18nKey}.positionals.tableId.describe`),
     type: 'string',
   });
 };

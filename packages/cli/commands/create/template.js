@@ -2,6 +2,9 @@ const { createTemplatePrompt } = require('../../lib/createTemplatePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.create.subcommands.template';
 
 const ASSET_PATHS = {
   'page-template': path.resolve(__dirname, '../../defaults/page-template.html'),
@@ -33,12 +36,24 @@ const createTemplate = (name, dest, type = 'page-template') => {
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
   if (fs.existsSync(filePath)) {
-    logger.error(`The ${filePath} path already exists`);
+    logger.error(
+      i18n(`${i18nKey}.errors.pathExists`, {
+        path: filePath,
+      })
+    );
     return;
   }
-  logger.debug(`Making ${dest} if needed`);
+  logger.debug(
+    i18n(`${i18nKey}.debug.creatingPath`, {
+      path: dest,
+    })
+  );
   fs.mkdirp(dest);
-  logger.log(`Creating file at ${filePath}`);
+  logger.log(
+    i18n(`${i18nKey}.log.creatingFile`, {
+      path: filePath,
+    })
+  );
   fs.copySync(assetPath, filePath);
 };
 
@@ -46,7 +61,7 @@ module.exports = {
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error("The 'name' argument is required when creating a Template.");
+      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
       return false;
     }
 

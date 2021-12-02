@@ -21,12 +21,15 @@ const {
   getAccountId,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.server';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 function configureServerCommand(program) {
   program
     .version(version)
-    .description('Run the CMS HubL server')
+    .description(i18n(`${i18nKey}.description`))
     .option('--serverConfig <serverConfig>')
     .option('--contextDir [contextDir]')
     .arguments('<src>')
@@ -44,7 +47,7 @@ function configureServerCommand(program) {
       const accountId = getAccountId(options);
 
       // TODO: add flag to bypass
-      logger.log(`Fetching account data for ${accountId} to update context`);
+      logger.log(i18n(`${i18nKey}.fetching`, { accountId }));
       await updateServerContext(accountId, path.join(getCwd(), contextDir));
 
       const cwd = getCwd();
@@ -56,8 +59,12 @@ function configureServerCommand(program) {
     hubspot/local-cms-server
   `;
 
-      logger.log('Starting HubSpot CMS HubL server');
-      logger.debug(`Running: ${cmd}`);
+      logger.log(i18n(`${i18nKey}.startingServer`));
+      logger.debug(
+        i18n(`${i18nKey}.runningServer`, {
+          cmd,
+        })
+      );
       shell.exec(cmd, { async: true });
     });
 

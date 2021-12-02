@@ -13,11 +13,13 @@ const {
 const { resolveLocalPath } = require('../lib/filesystem');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'fetch <src> [dest]';
-exports.describe =
-  'Fetch a file, directory or module from HubSpot and write to a path on your computer';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { src, dest } = options;
@@ -29,7 +31,7 @@ exports.handler = async options => {
   }
 
   if (typeof src !== 'string') {
-    logger.error('A source to fetch is required');
+    logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -56,19 +58,18 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe: 'Path in HubSpot Design Tools',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe:
-      'Local directory you would like the files to be placed in, relative to your current working directory',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 
   yargs.options({
     staging: {
-      describe: 'Retrieve staged changes for project',
+      describe: i18n(`${i18nKey}.options.staging.describe`),
       type: 'boolean',
       default: false,
       hidden: true,

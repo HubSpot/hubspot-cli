@@ -31,13 +31,18 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.create';
 
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
 exports.command = 'create <type> [name] [dest]';
-exports.describe = `Create HubSpot sample apps and CMS assets. Supported assets are ${SUPPORTED_ASSET_TYPES}.`;
+exports.describe = i18n(`${i18nKey}.describe`, {
+  supportedAssetTypes: SUPPORTED_ASSET_TYPES,
+});
 
 exports.handler = async options => {
   let { type: assetType, name, dest } = options;
@@ -48,14 +53,21 @@ exports.handler = async options => {
 
   if (assetType === 'global-partial') {
     logger.error(
-      `The CLI command for asset type ${assetType} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "hs create template" command instead. Then when prompted select "global partial".`
+      i18n(`${i18nKey}.errors.deprecatedAssetType`, {
+        assetType,
+        newCommand: 'hs create template',
+        type: 'global partial',
+      })
     );
     return;
   }
 
   if (!assetType || !assets[assetType]) {
     logger.error(
-      `The asset type ${assetType} is not supported. Supported asset types are ${SUPPORTED_ASSET_TYPES}.`
+      i18n(`${i18nKey}.errors.unsupportedAssetType`, {
+        assetType,
+        supportedAssetTypes: SUPPORTED_ASSET_TYPES,
+      })
     );
     return;
   }
@@ -67,7 +79,11 @@ exports.handler = async options => {
   try {
     await fs.ensureDir(dest);
   } catch (e) {
-    logger.error(`The "${dest}" is not a usable path to a directory`);
+    logger.error(
+      i18n(`${i18nKey}.errors.unusablePath`, {
+        path: dest,
+      })
+    );
     logFileSystemErrorInstance(e, {
       filepath: dest,
       write: true,
@@ -88,16 +104,15 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('type', {
-    describe: 'Type of asset',
+    describe: i18n(`${i18nKey}.positionals.type.describe`),
     type: 'string',
   });
   yargs.positional('name', {
-    describe: 'Name of new asset',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe:
-      'Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory.',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 
