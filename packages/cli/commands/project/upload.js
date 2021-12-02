@@ -15,7 +15,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { getAccountDescription } = require('../../lib/ui');
+const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -39,7 +39,7 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
-  const accountIdentifier = getAccountDescription(accountId);
+  const accountIdentifier = uiAccountDescription(accountId);
 
   spinnies.add('upload', {
     text: i18n(`${i18nKey}.loading.upload.add`, {
@@ -140,7 +140,7 @@ exports.handler = async options => {
     } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
-          accountIdentifier: getAccountDescription(accountId),
+          accountIdentifier: uiAccountDescription(accountId),
           buildId,
         })
       );
@@ -154,7 +154,7 @@ exports.handler = async options => {
         exitCode = EXIT_CODES.ERROR;
       }
     } else {
-      logger.log('-'.repeat(50));
+      uiLine();
       logger.log(
         chalk.bold(
           i18n(`${i18nKey}.logs.buildSucceeded`, {
@@ -168,7 +168,7 @@ exports.handler = async options => {
           command: chalk.hex('f5c26b')('hs project deploy'),
         })
       );
-      logger.log('-'.repeat(50));
+      uiLine();
     }
 
     try {
