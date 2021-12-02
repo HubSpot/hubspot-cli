@@ -1,16 +1,14 @@
 const util = require('util');
 const path = require('path');
 const fs = require('fs-extra');
-const handlebars = require('handlebars');
 const yaml = require('js-yaml');
 const { logger } = require('../logger');
-const { loadHandlebarsCustomHelpers } = require('./handlebarsCustomHelpers');
+const { interpolate } = require('./interpolation');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
 let locale;
 let languageObj;
-loadHandlebarsCustomHelpers();
 
 const loadLanguageFromYaml = () => {
   if (languageObj) return;
@@ -69,12 +67,6 @@ const getTextValue = lookupDotNotation => {
   return textValue;
 };
 
-const getInterpolatedValue = (textValue, interpolationData) => {
-  const template = handlebars.compile(textValue);
-
-  return template(interpolationData);
-};
-
 const i18n = (lookupDotNotation, options = {}) => {
   if (typeof lookupDotNotation !== 'string') {
     throw new Error(
@@ -85,9 +77,7 @@ const i18n = (lookupDotNotation, options = {}) => {
   const textValue = getTextValue(lookupDotNotation);
   const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
-  return shouldInterpolate
-    ? getInterpolatedValue(textValue, options)
-    : textValue;
+  return shouldInterpolate ? interpolate(textValue, options) : textValue;
 };
 
 loadLanguageFromYaml();
