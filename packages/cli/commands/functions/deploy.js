@@ -1,4 +1,4 @@
-const ora = require('ora');
+const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -18,12 +18,6 @@ const {
 } = require('@hubspot/cli-lib/api/functions');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
-
-const makeSpinner = (actionText, functionPath, accountIdentifier) => {
-  return ora(
-    `${actionText} bundle for '${functionPath}' on account '${accountIdentifier}'.\n`
-  );
-};
 
 const pollBuildStatus = (accountId, buildId) => {
   return new Promise((resolve, reject) => {
@@ -51,7 +45,7 @@ exports.handler = async options => {
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
   const splitFunctionPath = functionPath.split('.');
-  let spinner;
+  let spinnies;
 
   trackCommandUsage('functions-deploy', { functionPath }, accountId);
 
@@ -68,21 +62,22 @@ exports.handler = async options => {
   );
 
   try {
-    spinner = makeSpinner(
-      'Building and deploying',
-      functionPath,
-      accountId
-    ).start();
+    spinnies = new Spinnies();
+    spinnies.add('buildAndDeployStatus', {
+      text: `Building and deploying bundle for '${functionPath}' on account '${accountId}'.\n`,
+    });
     const buildId = await buildPackage(accountId, functionPath);
     const successResp = await pollBuildStatus(accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
-    spinner.stop();
+    spinnies.remove('buildAndDeployStatus');
+    spinnies.stopAll();
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
       `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
     );
   } catch (e) {
-    spinner && spinner.stop && spinner.stop();
+    spinnies && spinnies.remove && spinnies.remove('buildAndDeployStatus');
+    spinnies && spinnies.stopAll && spinnies.stopAll();
     if (e.statusCode === 404) {
       logger.error(`Unable to find package.json for function ${functionPath}.`);
     } else if (e.statusCode === 400) {

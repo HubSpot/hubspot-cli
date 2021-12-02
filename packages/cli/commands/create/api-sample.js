@@ -3,7 +3,7 @@ const { folderOverwritePrompt } = require('../../lib/prompts');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
-const ora = require('ora');
+const Spinnies = require('spinnies');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { createProject } = require('@hubspot/cli-lib/projects');
@@ -31,13 +31,17 @@ module.exports = {
         return;
       }
     }
-    const downloadSpinner = ora('Loading available API samples');
-    downloadSpinner.start();
+    const spinnies = new Spinnies();
+    spinnies.add('fetchingSampleAppsStatus', {
+      text: 'Loading available API samples',
+    });
     const samplesConfig = await fetchJsonFromRepository(
       'sample-apps-list',
       'main/samples.json'
     );
-    downloadSpinner.stop();
+    spinnies.remove('fetchingSampleAppsStatus');
+    spinnies.stopAll();
+
     if (!samplesConfig) {
       logger.error(
         `Currently there are no samples available, please, try again later.`
