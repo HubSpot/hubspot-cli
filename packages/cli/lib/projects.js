@@ -30,7 +30,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getAccountDescription } = require('../lib/ui');
+const { uiLine, uiAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -185,7 +185,7 @@ const ensureProjectExists = async (accountId, projectName, forceCreate) => {
         const promptResult = await prompt([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${getAccountDescription(
+            message: `The project ${projectName} does not exist in ${uiAccountDescription(
               accountId
             )}. Would you like to create it?`,
             type: 'confirm',
@@ -346,7 +346,7 @@ const makeGetTaskStatus = taskType => {
                 subtask => subtask.status === 'FAILURE'
               );
 
-              logger.log('-'.repeat(50));
+              uiLine();
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
                   buildId || taskId,
@@ -356,7 +356,7 @@ const makeGetTaskStatus = taskType => {
                 )}\n`
               );
               logger.log('See below for a summary of errors.');
-              logger.log('-'.repeat(50));
+              uiLine();
 
               failedSubtask.forEach(subTask => {
                 logger.log(
