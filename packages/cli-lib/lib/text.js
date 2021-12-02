@@ -12,7 +12,7 @@ const commaSeparatedValues = (arr, conjunction = 'and', ifempty = '') => {
 
 /**
  * These helper methods are used to modify text output within the CLI. They
- * should all take in a string value and output a modified string value.a
+ * should all take in a string value and output a modified string value.
  */
 const helpers = {
   bold: function(stringValue) {
