@@ -77,7 +77,7 @@ const endpointLog = async (accountId, options) => {
 };
 
 exports.command = 'logs [endpoint]';
-exports.describe = 'get logs for a function within a project';
+exports.describe = 'get logs for a function';
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
