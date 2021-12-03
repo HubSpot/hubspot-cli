@@ -260,7 +260,7 @@ const writeConfig = (options = {}) => {
     source =
       typeof options.source === 'string'
         ? options.source
-        : yaml.safeDump(
+        : yaml.dump(
             JSON.parse(JSON.stringify(getOrderedConfig(getConfig()), null, 2))
           );
   } catch (err) {
@@ -301,7 +301,7 @@ const parseConfig = configSource => {
     return { parsed, error };
   }
   try {
-    parsed = yaml.safeLoad(configSource);
+    parsed = yaml.load(configSource);
   } catch (err) {
     error = err;
     logger.error('Config file could not be parsed "%s"', _configPath);

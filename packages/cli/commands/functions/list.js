@@ -18,9 +18,13 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.functions.subcommands.list';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'list';
-exports.describe = 'List currently deployed functions';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   loadAndValidateOptions(options);
@@ -30,15 +34,15 @@ exports.handler = async options => {
 
   trackCommandUsage('functions-list', { json, compact }, accountId);
 
-  logger.debug('Getting currently deployed functions');
+  logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
   const routesResp = await getRoutes(accountId).catch(async e => {
     await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
-    process.exit();
+    process.exit(EXIT_CODES.SUCCESS);
   });
 
   if (!routesResp.objects.length) {
-    return logger.info('No functions found.');
+    return logger.info(i18n(`${i18nKey}.info.noFunctions`));
   }
 
   if (options.json) {
@@ -59,7 +63,7 @@ exports.builder = yargs => {
 
   yargs.options({
     json: {
-      describe: 'output raw json data',
+      describe: i18n(`${i18nKey}.options.json.describe`),
       type: 'boolean',
     },
   });

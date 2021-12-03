@@ -24,6 +24,7 @@ const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
+const { EXIT_CODES } = require('./enums/exitCodes');
 
 async function loadAndValidateOptions(options) {
   setLogLevel(options);
@@ -33,7 +34,7 @@ async function loadAndValidateOptions(options) {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 

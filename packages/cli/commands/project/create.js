@@ -11,6 +11,9 @@ const path = require('path');
 const { prompt } = require('inquirer');
 const { createProjectConfig } = require('../../lib/projects');
 const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.create';
 
 exports.command = 'create';
 exports.describe = false;
@@ -85,20 +88,20 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs.options({
     name: {
-      describe: 'Project name (cannot be changed)',
+      describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
     location: {
-      describe: 'Directory where project should be created',
+      describe: i18n(`${i18nKey}.options.location.describe`),
       type: 'string',
     },
     template: {
-      describe: 'Which template?',
+      describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
     },
   });
 
-  yargs.example([['$0 project create', 'Create a project']]);
+  yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);

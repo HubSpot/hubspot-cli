@@ -17,6 +17,10 @@ const {
   pollDeployStatus,
   validateProjectConfig,
 } = require('../../lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.deploy';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'deploy [path]';
 exports.describe = false;
@@ -33,14 +37,21 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  logger.debug(`Deploying project at path: ${projectPath}`);
+  logger.debug(
+    i18n(`${i18nKey}.debug.deploying`, {
+      path: projectPath,
+    })
+  );
+
+  let exitCode = EXIT_CODES.SUCCESS;
 
   const getBuildId = async () => {
     const { latestBuild } = await fetchProject(accountId, projectConfig.name);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
-    logger.error('No latest build ID was found.');
+    logger.error(i18n(`${i18nKey}.errors.noBuildId`));
+    exitCode = EXIT_CODES.ERROR;
     return;
   };
 
@@ -54,7 +65,12 @@ exports.handler = async options => {
     );
 
     if (deployResp.error) {
-      logger.error(`Deploy error: ${deployResp.error.message}`);
+      logger.error(
+        i18n(`${i18nKey}.errors.deploy`, {
+          details: deployResp.error.message,
+        })
+      );
+      exitCode = EXIT_CODES.ERROR;
       return;
     }
 
@@ -70,27 +86,26 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
     }
+    exitCode = 1;
   }
+  process.exit(exitCode);
 };
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to a project folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 
   yargs.options({
     buildId: {
-      describe: 'Project build ID to be deployed',
+      describe: i18n(`${i18nKey}.options.buildId.describe`),
       type: 'number',
     },
   });
 
   yargs.example([
-    [
-      '$0 project deploy myProjectFolder',
-      'Deploy a project within the myProjectFolder folder',
-    ],
+    ['$0 project deploy myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);

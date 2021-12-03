@@ -13,6 +13,10 @@ const {
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.lint';
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';
 // Hiding since this command is still experimental
@@ -25,7 +29,9 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const localPath = resolveLocalPath(lintPath);
-  const groupName = `Linting "${localPath}"`;
+  const groupName = i18n(`${i18nKey}.groupName`, {
+    path: localPath,
+  });
 
   trackCommandUsage('lint', {}, accountId);
 
@@ -38,17 +44,21 @@ exports.handler = async options => {
   } catch (err) {
     logger.groupEnd(groupName);
     logErrorInstance(err, { accountId });
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);
-  logger.log(`${count} issues found`);
+  logger.log(
+    i18n(`${i18nKey}.issuesFound`, {
+      count,
+    })
+  );
 };
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);
   addAccountOptions(yargs, true);
   yargs.positional('path', {
-    describe: 'Local folder to lint',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   return yargs;
