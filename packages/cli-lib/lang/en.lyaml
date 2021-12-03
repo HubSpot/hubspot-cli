@@ -657,6 +657,7 @@ en:
             contentTypeRequired: "Please select at least one content type for this module."
         createFunctionPrompt:
           enterFolder: "Name of the folder where your function will be created: "
+          enterFilename: "Name of the JavaScript file for your function: "
           enterEndpointPath: "Path portion of the URL created for the function: "
           selectEndpointMethod: "Select the HTTP method for the endpoint"
           errors:

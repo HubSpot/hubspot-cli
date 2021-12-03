@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
+const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 

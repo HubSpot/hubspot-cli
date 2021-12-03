@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.lib.prompts.selectTemplatePrompt';
+const i18nKey = 'cli.lib.prompts.createTemplatePrompt';
 
 const TEMPLATE_TYPE_PROMPT = {
   type: 'list',

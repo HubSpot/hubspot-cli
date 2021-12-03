@@ -19,9 +19,10 @@ const FUNCTIONS_FOLDER_PROMPT = {
     return true;
   },
 };
-const ENDPOINT_PATH_PROMPT = {
-  name: 'endpointPath',
-  message: i18n(`${i18nKey}.enterEndpointPath`),
+
+const FUNCTION_FILENAME_PROMPT = {
+  name: 'filename',
+  message: i18n(`${i18nKey}.enterFilename`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
@@ -33,16 +34,18 @@ const ENDPOINT_PATH_PROMPT = {
     return true;
   },
 };
+
 const ENDPOINT_METHOD_PROMPT = {
   type: 'list',
   name: 'endpointMethod',
-  message: 'Select the HTTP method for the endpoint',
+  message: i18n(`${i18nKey}.selectEndpointMethod`),
   default: 'GET',
   choices: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
 };
-const FUNCTION_FILENAME_PROMPT = {
-  name: 'filename',
-  message: i18n(`${i18nKey}.selectEndpointMethod`),
+
+const ENDPOINT_PATH_PROMPT = {
+  name: 'endpointPath',
+  message: i18n(`${i18nKey}.enterEndpointPath`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);

@@ -8,7 +8,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
-const { createProjectPrompt } = require('../lib/prompts/createProjectPrompt');
+const {
+  createProjectPrompt,
+} = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
