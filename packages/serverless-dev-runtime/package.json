@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/serverless-dev-runtime",
-  "version": "3.0.10-beta.10",
+  "version": "3.0.10-beta.11",
   "description": "A tool for testing HubSpot CMS serverless functions locally",
   "main": "index.js",
   "repository": "https://github.com/HubSpot/hubspot-cli",
