@@ -110,7 +110,7 @@ exports.describe = 'get logs for a function within a project';
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { latest, functionName, appPath } = options;
+  const { latest, functionName } = options;
   let projectName = options.projectName;
 
   if (!functionName) {
@@ -118,7 +118,7 @@ exports.handler = async options => {
     process.exit(1);
   } else if (!projectName) {
     const { projectConfig } = await getProjectConfig(getCwd());
-    if (projectConfig.name) {
+    if (projectConfig && projectConfig.name) {
       projectName = projectConfig.name;
     } else {
       logger.error(
@@ -126,9 +126,6 @@ exports.handler = async options => {
       );
       process.exit(1);
     }
-  } else if (!appPath) {
-    logger.error('You must specify an app path using the --appPath argument.');
-    process.exit(1);
   }
 
   const accountId = getAccountId(options);
