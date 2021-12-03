@@ -441,9 +441,9 @@ en:
           logs:
             describe: "Get logs for a function within a project"
             errors:
-              appPathRequired: "You must specify an app path using the --appPath argument."
               functionNameRequired: "You must pass a function name to retrieve logs for."
-              logs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
+              noAppFunctionLogs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
+              noEndpointLogs: "No logs were found for the function name \"{{ functionName }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
               projectNameRequired: "You must specify a project name using the --projectName argument."
             examples:
               default: "Get 5 most recent logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""

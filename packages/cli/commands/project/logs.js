@@ -28,12 +28,18 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
     logger.error(
-      i18n(`${i18nKey}.errors.logs`, {
-        accountId,
-        appPath,
-        functionName,
-        projectName,
-      })
+      appPath
+        ? i18n(`${i18nKey}.errors.noAppFunctionLogs`, {
+            accountId,
+            appPath,
+            functionName,
+            projectName,
+          })
+        : i18n(`${i18nKey}.errors.noEndpointLogs`, {
+            accountId,
+            functionName,
+            projectName,
+          })
     );
   }
 };
