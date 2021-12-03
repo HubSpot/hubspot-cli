@@ -9,7 +9,7 @@ const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('./regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.lib.prompts';
+const i18nKey = 'cli.lib.prompts.personalAccessKeyPrompt';
 
 /**
  * Displays notification to user that we are about to open the browser,
@@ -34,7 +34,7 @@ const personalAccessKeyPrompt = async ({ env } = {}) => {
 
 const ACCOUNT_ID = {
   name: 'accountId',
-  message: i18n(`${i18nKey}.accountId`),
+  message: i18n(`${i18nKey}.enterAccountId`),
   type: 'number',
   validate(val) {
     if (!Number.isNaN(val) && val > 0) {
@@ -46,7 +46,7 @@ const ACCOUNT_ID = {
 
 const CLIENT_ID = {
   name: 'clientId',
-  message: i18n(`${i18nKey}.clientId`),
+  message: i18n(`${i18nKey}.enterClientId`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidOauthClientId`);
@@ -59,7 +59,7 @@ const CLIENT_ID = {
 
 const CLIENT_SECRET = {
   name: 'clientSecret',
-  message: i18n(`${i18nKey}.clientSecret`),
+  message: i18n(`${i18nKey}.enterClientSecret`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidOauthClientSecret`);
@@ -74,7 +74,7 @@ const CLIENT_SECRET = {
 
 const ACCOUNT_NAME = {
   name: 'name',
-  message: i18n(`${i18nKey}.accountName`),
+  message: i18n(`${i18nKey}.enterAccountName`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidName`);
@@ -89,7 +89,7 @@ const ACCOUNT_NAME = {
 
 const ACCOUNT_API_KEY = {
   name: 'apiKey',
-  message: i18n(`${i18nKey}.apiKey`),
+  message: i18n(`${i18nKey}.enterApiKey`),
   validate(val) {
     if (!API_KEY_REGEX.test(val)) {
       return i18n(`${i18nKey}.errors.invalidAPIKey`);
@@ -105,7 +105,7 @@ const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
-  message: i18n(`${i18nKey}.personalAccessKey`),
+  message: i18n(`${i18nKey}.enterPersonalAccessKey`),
   validate(val) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidPersonalAccessKey`);

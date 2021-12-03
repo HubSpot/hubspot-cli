@@ -1,31 +1,34 @@
 const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 
+const i18nKey = 'cli.lib.prompts.createFunctionPrompt';
+
 const FUNCTIONS_FOLDER_PROMPT = {
   name: 'functionsFolder',
-  message: 'Name of the folder where your function will be created',
+  message: i18n(`${i18nKey}.enterFolder`),
   validate(val) {
     if (typeof val !== 'string') {
-      return 'You entered an invalid name. Please try again.';
+      return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
-      return 'The name may not be blank. Please try again.';
+      return i18n(`${i18nKey}.errors.blank`);
     } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-      return 'The name may not contain spaces. Please try again.';
+      return i18n(`${i18nKey}.errors.space`);
     }
     return true;
   },
 };
 const ENDPOINT_PATH_PROMPT = {
   name: 'endpointPath',
-  message: 'Path portion of the URL created for the function',
+  message: i18n(`${i18nKey}.enterEndpointPath`),
   validate(val) {
     if (typeof val !== 'string') {
-      return 'You entered an invalid name. Please try again.';
+      return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
-      return 'The name may not be blank. Please try again.';
+      return i18n(`${i18nKey}.errors.blank`);
     } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-      return 'The name may not contain spaces. Please try again.';
+      return i18n(`${i18nKey}.errors.space`);
     }
     return true;
   },
@@ -39,14 +42,14 @@ const ENDPOINT_METHOD_PROMPT = {
 };
 const FUNCTION_FILENAME_PROMPT = {
   name: 'filename',
-  message: 'Name of the JavaScript file for your function',
+  message: i18n(`${i18nKey}.selectEndpointMethod`),
   validate(val) {
     if (typeof val !== 'string') {
-      return 'You entered an invalid name. Please try again.';
+      return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
-      return 'The name may not be blank. Please try again.';
+      return i18n(`${i18nKey}.errors.blank`);
     } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-      return 'The name may not contain spaces. Please try again.';
+      return i18n(`${i18nKey}.errors.space`);
     }
     return true;
   },

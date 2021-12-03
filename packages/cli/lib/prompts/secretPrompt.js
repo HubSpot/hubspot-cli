@@ -1,13 +1,16 @@
 const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.secretPrompt';
 
 const SECRET_VALUE_PROMPT = {
   name: 'secretValue',
   type: 'password',
   mask: '*',
-  message: 'Enter a value for your secret',
+  message: i18n(`${i18nKey}.enterValue`),
   validate(val) {
     if (typeof val !== 'string') {
-      return 'You entered an invalid value. Please try again.';
+      return i18n(`${i18nKey}.errors.invalidValue`);
     }
     return true;
   },

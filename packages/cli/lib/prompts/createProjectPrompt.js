@@ -2,30 +2,33 @@ const path = require('path');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.createProjectPrompt';
 
 const createProjectPrompt = (promptOptions = {}) => {
   return promptUser([
     {
       name: 'name',
-      message: '[--name] Give your project a name:',
+      message: i18n(`${i18nKey}.enterName`),
       when: !promptOptions.name,
       validate: input => {
         if (!input) {
-          return 'A project name is required';
+          return i18n(`${i18nKey}.errors.nameRequired`);
         }
         return true;
       },
     },
     {
       name: 'location',
-      message: '[--location] Where should the project be created?',
+      message: i18n(`${i18nKey}.enterLocation`),
       when: !promptOptions.location,
       default: answers => {
         return path.resolve(getCwd(), answers.name || promptOptions.name);
       },
       validate: input => {
         if (!input) {
-          return 'A project location is required';
+          return i18n(`${i18nKey}.errors.locationRequired`);
         }
         return true;
       },
@@ -35,8 +38,10 @@ const createProjectPrompt = (promptOptions = {}) => {
       message: () => {
         return promptOptions.template &&
           !PROJECT_TEMPLATES.find(t => t.name === promptOptions.template)
-          ? `[--template] Could not find template ${promptOptions.template}. Please choose an available template.`
-          : '[--template] Start from a template?';
+          ? i18n(`${i18nKey}.errors.invalidTemplate`, {
+              template: promptOptions.template,
+            })
+          : i18n(`${i18nKey}.selectTemplate`);
       },
       when:
         !promptOptions.template ||
@@ -44,7 +49,7 @@ const createProjectPrompt = (promptOptions = {}) => {
       type: 'list',
       choices: [
         {
-          name: 'No template',
+          name: i18n(`${i18nKey}.templateOptions.noTemplate`),
           value: 'none',
         },
         ...PROJECT_TEMPLATES.map(template => {
