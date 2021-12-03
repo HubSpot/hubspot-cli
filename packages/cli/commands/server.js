@@ -5,6 +5,7 @@ const {
   loadConfig,
   validateConfig,
   checkAndWarnGitInclusion,
+  getConfigPath,
 } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getCwd } = require('@hubspot/cli-lib/path');
@@ -38,7 +39,7 @@ function configureServerCommand(program) {
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;
       loadConfig(configPath, options);
-      checkAndWarnGitInclusion(configPath);
+      checkAndWarnGitInclusion(getConfigPath());
 
       if (!validateConfig()) {
         process.exit(EXIT_CODES.ERROR);

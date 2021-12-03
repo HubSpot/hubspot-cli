@@ -2,6 +2,7 @@ const { ALLOWED_EXTENSIONS, Mode, DEFAULT_MODE } = require('./lib/constants');
 const {
   getAndLoadConfigIfNeeded,
   getConfig,
+  getConfigPath,
   getAccountId,
   getAccountConfig,
   getEnv,
@@ -27,6 +28,7 @@ module.exports = {
   checkAndWarnGitInclusion,
   getAndLoadConfigIfNeeded,
   getConfig,
+  getConfigPath,
   findConfig,
   loadConfig,
   loadConfigFromEnvironment,

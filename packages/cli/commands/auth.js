@@ -85,7 +85,7 @@ exports.handler = async options => {
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath);
-  checkAndWarnGitInclusion(configPath);
+  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
 
