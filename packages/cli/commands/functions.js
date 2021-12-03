@@ -2,9 +2,12 @@ const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const list = require('./functions/list');
 const deploy = require('./functions/deploy');
 const server = require('./functions/server');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.functions';
 
 exports.command = 'functions';
-exports.describe = 'Commands for working with functions';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);

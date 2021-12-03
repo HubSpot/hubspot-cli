@@ -1,9 +1,4 @@
 const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileMapper');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
@@ -14,39 +9,30 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
   getMode,
-  setLogLevel,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validateAccount, validateMode } = require('../lib/validation');
-const { logDebugInfo } = require('../lib/debugInfo');
+const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.fetch';
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'fetch <src> [dest]';
-exports.describe =
-  'Fetch a file, directory or module from HubSpot and write to a path on your computer';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { config: configPath, src, dest } = options;
+  const { src, dest } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
+  await loadAndValidateOptions(options);
 
-  loadConfig(configPath);
-  checkAndWarnGitInclusion();
-
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
-    process.exit(1);
+  if (!validateMode(options)) {
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (typeof src !== 'string') {
-    logger.error('A source to fetch is required');
-    process.exit(1);
+    logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -72,19 +58,18 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe: 'Path in HubSpot Design Tools',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
 
   yargs.positional('dest', {
-    describe:
-      'Local directory you would like the files to be placed in, relative to your current working directory',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 
   yargs.options({
     staging: {
-      describe: 'Retrieve staged changes for project',
+      describe: i18n(`${i18nKey}.options.staging.describe`),
       type: 'boolean',
       default: false,
       hidden: true,

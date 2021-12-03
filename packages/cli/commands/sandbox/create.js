@@ -10,12 +10,15 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
 exports.command = 'create [name]';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { name } = options;
   const accountId = getAccountId(options);
@@ -29,31 +32,33 @@ exports.handler = async options => {
 
   const sandboxName = name || namePrompt.name;
 
-  logger.debug(`Creating sandbox '${sandboxName}'`);
+  logger.debug(
+    i18n(`${i18nKey}.debug.creating`, {
+      name: sandboxName,
+    })
+  );
 
   return createSandbox(accountId, sandboxName).then(
     ({ name, sandboxHubId }) => {
       logger.success(
-        `Sandbox '${name}' with portalId '${sandboxHubId}' created successfully.`
+        i18n(`${i18nKey}.describe`, {
+          name,
+          sandboxHubId,
+        })
       );
-      logger.info(
-        `Run 'hs auth' to authenticate with the new sandbox account.`
-      );
+      logger.info(i18n(`${i18nKey}.info.auth`));
     }
   );
 };
 
 exports.builder = yargs => {
   yargs.positional('name', {
-    describe: 'Name to use for created sandbox',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
 
   yargs.example([
-    [
-      '$0 sandbox create MySandboxAccount',
-      'Create a sandbox account named MySandboxAccount.',
-    ],
+    ['$0 sandbox create MySandboxAccount', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);

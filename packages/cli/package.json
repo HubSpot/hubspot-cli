@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "3.0.10-beta.8",
+  "version": "3.0.10-beta.12",
   "description": "CLI for working with HubSpot",
   "license": "Apache-2.0",
   "repository": {
@@ -8,14 +8,14 @@
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "dependencies": {
-    "@hubspot/cli-lib": "^3.0.10-beta.8",
-    "@hubspot/serverless-dev-runtime": "^3.0.10-beta.8",
+    "@hubspot/cli-lib": "^3.0.10-beta.10",
+    "@hubspot/serverless-dev-runtime": "^3.0.10-beta.11",
     "archiver": "^5.3.0",
-    "chalk": "^4.1.0",
+    "chalk": "^4.1.2",
     "express": "^4.17.1",
     "findup-sync": "^4.0.0",
     "fs-extra": "^8.1.0",
-    "inquirer": "^6.3.1",
+    "inquirer": "^8.2.0",
     "moment": "^2.29.1",
     "open": "^7.0.3",
     "ora": "^4.0.3",
@@ -23,7 +23,7 @@
     "spinnies": "^0.5.1",
     "supports-hyperlinks": "^2.2.0",
     "tmp": "^0.2.1",
-    "update-notifier": "3.0.1",
+    "update-notifier": "^5.1.0",
     "yargs": "15.4.1"
   },
   "devDependencies": {

@@ -3,17 +3,10 @@ const { getCwd } = require('@hubspot/cli-lib/path');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
@@ -21,25 +14,22 @@ const {
   getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
 const { getProjectConfig } = require('../../lib/projects');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
+const i18nKey = 'cli.commands.project.subcommands.logs';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
   if (e.statusCode === 404) {
     logger.error(
-      `No logs were found for the function name '${functionName}' in the app path '${appPath}' within the project '${projectName}' in account ${accountId}.`
+      i18n(`${i18nKey}.errors.logs`, {
+        accountId,
+        appPath,
+        functionName,
+        projectName,
+      })
     );
   }
 };
@@ -60,7 +50,7 @@ const appFunctionLog = async (accountId, options) => {
     const spinnies = new Spinnies();
 
     spinnies.add('tailLogs', {
-      text: `Waiting for log entries for '${functionName}' on account '${accountId}'.\n`,
+      text: i18n(`${i18nKey}.loading`),
     });
     const tailCall = after =>
       getProjectAppFunctionLogs(accountId, functionName, projectName, appPath, {
@@ -117,30 +107,28 @@ const appFunctionLog = async (accountId, options) => {
 };
 
 exports.command = 'logs [functionName]';
-exports.describe = 'get logs for a function within a project';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { latest, functionName, appPath } = options;
   let projectName = options.projectName;
 
   if (!functionName) {
-    logger.error('You must pass a function name to retrieve logs for.');
-    process.exit(1);
+    logger.error(i18n(`${i18nKey}.errors.functionNameRequired`));
+    process.exit(EXIT_CODES.ERROR);
   } else if (!projectName) {
     const projectConfig = await getProjectConfig(getCwd());
-    if (projectConfig.name) {
+    if (projectConfig && projectConfig.name) {
       projectName = projectConfig.name;
     } else {
-      logger.error(
-        'You must specify a project name using the --projectName argument.'
-      );
-      process.exit(1);
+      logger.error(i18n(`${i18nKey}.errors.projectNameRequired`));
+      process.exit(EXIT_CODES.ERROR);
     }
   } else if (!appPath) {
-    logger.error('You must specify an app path using the --appPath argument.');
-    process.exit(1);
+    logger.error(i18n(`${i18nKey}.errors.appPathRequired`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -152,38 +140,38 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('functionName', {
-    describe: 'Serverless app function name',
+    describe: i18n(`${i18nKey}.positionals.functionName.describe`),
     type: 'string',
     demandOption: true,
   });
   yargs
     .options({
       appPath: {
-        describe: 'path to the app',
+        describe: i18n(`${i18nKey}.options.appPath.describe`),
         type: 'string',
         demandOption: true,
       },
       projectName: {
-        describe: 'name of the project',
+        describe: i18n(`${i18nKey}.options.projectName.describe`),
         type: 'string',
       },
       latest: {
         alias: 'l',
-        describe: 'retrieve most recent log only',
+        describe: i18n(`${i18nKey}.options.latest.describe`),
         type: 'boolean',
       },
       compact: {
-        describe: 'output compact logs',
+        describe: i18n(`${i18nKey}.options.compact.describe`),
         type: 'boolean',
       },
       follow: {
         alias: ['t', 'tail', 'f'],
-        describe: 'follow logs',
+        describe: i18n(`${i18nKey}.options.follow.describe`),
         type: 'boolean',
       },
       limit: {
         alias: ['limit', 'n', 'max-count'],
-        describe: 'limit the number of logs to output',
+        describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
       },
     })
@@ -192,7 +180,7 @@ exports.builder = yargs => {
   yargs.example([
     [
       '$0 project logs my-function --appName="app" --projectName="my-project"',
-      'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"',
+      i18n(`${i18nKey}.examples.default`),
     ],
   ]);
 
