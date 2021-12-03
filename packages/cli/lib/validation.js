@@ -31,7 +31,7 @@ async function loadAndValidateOptions(options) {
   logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  checkAndWarnGitInclusion(configPath);
 
   if (!(validateConfig() && (await validateAccount(options)))) {
     process.exit(EXIT_CODES.ERROR);

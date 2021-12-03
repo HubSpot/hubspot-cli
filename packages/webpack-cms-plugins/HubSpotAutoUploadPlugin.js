@@ -1,6 +1,7 @@
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   loadConfig,
+  getConfigPath,
   getAccountId,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
@@ -17,7 +18,7 @@ const {
 const path = require('path');
 setLogLevel(LOG_LEVEL.LOG);
 loadConfig();
-checkAndWarnGitInclusion();
+checkAndWarnGitInclusion(getConfigPath());
 
 const pluginName = 'HubSpotAutoUploadPlugin';
 

@@ -38,7 +38,7 @@ function configureServerCommand(program) {
       logDebugInfo(options);
       const { config: configPath, serverConfig, contextDir } = options;
       loadConfig(configPath, options);
-      checkAndWarnGitInclusion();
+      checkAndWarnGitInclusion(configPath);
 
       if (!validateConfig()) {
         process.exit(EXIT_CODES.ERROR);
