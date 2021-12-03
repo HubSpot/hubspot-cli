@@ -105,7 +105,7 @@ const runTestServer = async callback => {
             .map(envVar => {
               return envVarsForMockedData.indexOf(envVar) === -1
                 ? envVar
-                : chalk.keyword('orange')(envVar);
+                : chalk.hex('#FFA500')(envVar);
             })
             .join(', ')) ||
         [];

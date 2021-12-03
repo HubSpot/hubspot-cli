@@ -1,5 +1,8 @@
 const inquirer = require('inquirer');
 const { PROJECT_TEMPLATE_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.projects';
 
 const createProjectPrompt = (promptOptions = {}) => {
   const prompt = inquirer.createPromptModule();
@@ -7,16 +10,16 @@ const createProjectPrompt = (promptOptions = {}) => {
     {
       type: 'list',
       name: 'template',
-      message: 'Select a project template to use',
+      message: i18n(`${i18nKey}.selectTemplate`),
       default: PROJECT_TEMPLATE_TYPES.blank,
       choices: Object.keys(PROJECT_TEMPLATE_TYPES),
     },
     {
       name: 'label',
-      message: 'Enter a label for the project',
+      message: i18n(`${i18nKey}.enterLabel`),
       validate(val) {
         if (typeof val !== 'string') {
-          return 'You entered an invalid label. Please try again.';
+          return i18n(`${i18nKey}.errors.invalidLabel`);
         }
         return true;
       },
@@ -24,10 +27,10 @@ const createProjectPrompt = (promptOptions = {}) => {
     },
     {
       name: 'description',
-      message: 'Enter a description for the project',
+      message: i18n(`${i18nKey}.enterDescription`),
       validate(val) {
         if (typeof val !== 'string') {
-          return 'You entered an invalid description. Please try again.';
+          return i18n(`${i18nKey}.errors.invalidDescription`);
         }
         return true;
       },

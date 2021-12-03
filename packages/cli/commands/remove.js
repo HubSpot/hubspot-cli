@@ -13,9 +13,12 @@ const {
 } = require('../lib/commonOpts');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.remove';
 
 exports.command = 'remove <path>';
-exports.describe = 'Delete a file or folder from HubSpot';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { path: hsPath } = options;
@@ -28,9 +31,11 @@ exports.handler = async options => {
 
   try {
     await deleteFile(accountId, hsPath);
-    logger.log(`Deleted "${hsPath}" from account ${accountId}`);
+    logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
   } catch (error) {
-    logger.error(`Deleting "${hsPath}" from account ${accountId} failed`);
+    logger.error(
+      i18n(`${i18nKey}.errors.deleteFailed`, { accountId, path: hsPath })
+    );
     logApiErrorInstance(
       error,
       new ApiErrorContext({
@@ -46,7 +51,7 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('path', {
-    describe: 'Remote hubspot path',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   return yargs;

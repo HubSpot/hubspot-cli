@@ -21,10 +21,13 @@ const {
   MARKETPLACE_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.list';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'list [path]';
-exports.describe = 'list remote contents of a directory';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -36,7 +39,11 @@ exports.handler = async options => {
 
   trackCommandUsage('list', {}, accountId);
 
-  logger.debug(`Getting contents of ${directoryPath}`);
+  logger.debug(
+    i18n(`${i18nKey}.gettingPathContents`, {
+      path: directoryPath,
+    })
+  );
 
   try {
     contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
@@ -81,13 +88,17 @@ exports.handler = async options => {
 
     logger.log(folderContentsOutput);
   } else {
-    logger.info(`No files found in ${directoryPath}`);
+    logger.info(
+      i18n(`${i18nKey}.noFilesFoundInPath`, {
+        path: directoryPath,
+      })
+    );
   }
 };
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Remote directory to list contents',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
