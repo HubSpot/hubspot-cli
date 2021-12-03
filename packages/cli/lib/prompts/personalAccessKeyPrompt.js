@@ -119,7 +119,7 @@ const PERSONAL_ACCESS_KEY = {
 const SCOPES = {
   type: 'checkbox',
   name: 'scopes',
-  message: i18n(`${i18nKey}.scopes`),
+  message: i18n(`${i18nKey}.selectScopes`),
   default: DEFAULT_OAUTH_SCOPES,
   choices: OAUTH_SCOPES,
 };

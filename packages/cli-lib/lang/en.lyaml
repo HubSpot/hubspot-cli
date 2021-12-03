@@ -626,6 +626,7 @@ en:
           enterAccountName: "Enter a unique name to reference your account: "
           enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
+          selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
           personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
           logs:
             openingWebBrowser: "Opening {{ url }} in your web browser"
@@ -686,5 +687,3 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
-        scopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
-
