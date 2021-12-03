@@ -271,6 +271,7 @@ const makeGetTaskStatus = taskType => {
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
+      failPrefix: chalk.bold('!'),
     });
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
