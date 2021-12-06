@@ -1,4 +1,4 @@
-const request = require('request-promise-native');
+const axios = require('axios');
 const { logger } = require('./logger');
 const { logErrorInstance } = require('./errorHandlers');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
@@ -13,7 +13,7 @@ async function fetchJsonFromRepository(repoName, filePath) {
     const URI = `https://raw.githubusercontent.com/HubSpot/${repoName}/${filePath}`;
     logger.debug(`Fetching ${URI}...`);
 
-    return request.get(URI, {
+    return axios.get(URI, {
       json: true,
       headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });

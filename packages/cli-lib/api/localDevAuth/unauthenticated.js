@@ -1,4 +1,4 @@
-const request = require('request-promise-native');
+const axios = require('axios');
 const { getRequestOptions } = require('../../http/requestOptions');
 const { ENVIRONMENTS } = require('../../lib/constants');
 
@@ -21,7 +21,7 @@ async function fetchAccessToken(
     }
   );
 
-  return request.post(requestOptions);
+  return axios.post(requestOptions);
 }
 
 module.exports = {

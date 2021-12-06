@@ -1,4 +1,4 @@
-const request = require('request-promise-native');
+const axios = require('axios');
 const moment = require('moment');
 
 const { HubSpotAuthError } = require('./Errors');
@@ -54,7 +54,7 @@ class OAuth2Manager {
       `Fetching access token for accountId ${this.accountId} for clientId ${this.clientId}`
     );
     try {
-      this.refreshTokenRequest = request.post(
+      this.refreshTokenRequest = axios.post(
         `${getHubSpotApiOrigin(this.env)}/oauth/v1/token`,
         {
           form: exchangeProof,

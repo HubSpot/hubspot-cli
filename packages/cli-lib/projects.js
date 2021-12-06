@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const { promisify } = require('util');
 
-const request = require('request-promise-native');
+const axios = require('axios');
 const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
@@ -33,7 +33,7 @@ async function fetchReleaseData(repoName, tag = '') {
     ? `https://api.github.com/repos/HubSpot/${repoName}/releases/tags/${tag}`
     : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
-    return await request.get(URI, {
+    return await axios.get(URI, {
       headers: { ...DEFAULT_USER_AGENT_HEADERS },
       json: true,
     });
@@ -71,7 +71,7 @@ async function downloadProject(
       const { name } = releaseData;
       logger.log(`Fetching ${name}...`);
     }
-    const zip = await request.get(zipUrl, {
+    const zip = await axios.get(zipUrl, {
       encoding: null,
       headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });
