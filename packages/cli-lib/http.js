@@ -1,6 +1,5 @@
 const path = require('path');
-const request = require('request');
-const requestPN = require('request-promise-native');
+const axios = require('axios');
 const fs = require('fs-extra');
 const contentDisposition = require('content-disposition');
 
@@ -95,23 +94,23 @@ const addQueryParams = (requestOptions, params = {}) => {
 const getRequest = async (accountId, options) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
-  return requestPN.get(await withAuth(accountId, requestOptions));
+  return axios.get(await withAuth(accountId, requestOptions));
 };
 
 const postRequest = async (accountId, options) => {
-  return requestPN.post(await withAuth(accountId, options));
+  return axios.post(await withAuth(accountId, options));
 };
 
 const putRequest = async (accountId, options) => {
-  return requestPN.put(await withAuth(accountId, options));
+  return axios.put(await withAuth(accountId, options));
 };
 
 const patchRequest = async (accountId, options) => {
-  return requestPN.patch(await withAuth(accountId, options));
+  return axios.patch(await withAuth(accountId, options));
 };
 
 const deleteRequest = async (accountId, options) => {
-  return requestPN.del(await withAuth(accountId, options));
+  return axios.del(await withAuth(accountId, options));
 };
 
 const createGetRequestStream = ({ contentType }) => async (
@@ -141,7 +140,7 @@ const createGetRequestStream = ({ contentType }) => async (
   return new Promise(async (resolve, reject) => {
     try {
       const { headers, ...opts } = await withAuth(accountId, requestOptions);
-      const req = request.get({
+      const req = axios.get({
         ...opts,
         headers: {
           ...headers,
@@ -194,7 +193,6 @@ const createGetRequestStream = ({ contentType }) => async (
 
 module.exports = {
   getRequestOptions,
-  request: requestPN,
   get: getRequest,
   getOctetStream: createGetRequestStream({
     contentType: 'application/octet-stream',

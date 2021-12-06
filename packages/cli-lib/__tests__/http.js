@@ -1,5 +1,4 @@
-const requestPN = require('request-promise-native');
-const request = require('request');
+const axios = require('axios');
 const fs = require('fs-extra');
 const moment = require('moment');
 const { getAndLoadConfigIfNeeded, getAccountConfig } = require('../lib/config');
@@ -7,12 +6,7 @@ const { ENVIRONMENTS } = require('../lib/constants');
 const http = require('../http');
 const { version } = require('../package.json');
 
-jest.mock('request-promise-native', () => ({
-  get: jest.fn().mockReturnValue(Promise.resolve()),
-  post: jest.fn().mockReturnValue(Promise.resolve()),
-}));
-
-jest.mock('request');
+jest.mock('axios');
 jest.mock('../lib/config');
 jest.mock('../logger');
 
@@ -39,7 +33,7 @@ describe('http', () => {
       });
     });
     it('makes a get request', async () => {
-      request.get.mockReturnValue({
+      axios.get.mockReturnValue({
         on: jest.fn((event, callback) => {
           if (event === 'response') {
             callback({ statusCode: 200 });
@@ -55,12 +49,12 @@ describe('http', () => {
         'path/to/local/file'
       );
 
-      expect(request.get).toHaveBeenCalledWith(
+      expect(axios.get).toHaveBeenCalledWith(
         expect.objectContaining({ uri: 'some/endpoint/path' })
       );
     });
     it('fetches a file and attempts to write it', async () => {
-      request.get.mockReturnValue({
+      axios.get.mockReturnValue({
         on: jest.fn((event, callback) => {
           if (event === 'response') {
             callback({ statusCode: 200 });
@@ -81,7 +75,7 @@ describe('http', () => {
       });
     });
     it('fails to fetch a file and does not attempt to write to disk', async () => {
-      request.get.mockReturnValue({
+      axios.get.mockReturnValue({
         on: jest.fn((event, callback) => {
           if (event === 'response') {
             callback({ statusCode: 404 });
@@ -155,7 +149,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(requestPN.get).toBeCalledWith({
+      expect(axios.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -193,7 +187,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(requestPN.get).toBeCalledWith({
+      expect(axios.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {
@@ -228,7 +222,7 @@ describe('http', () => {
         uri: 'some/endpoint/path',
       });
 
-      expect(requestPN.get).toBeCalledWith({
+      expect(axios.get).toBeCalledWith({
         baseUrl: `https://api.hubapi.com`,
         uri: 'some/endpoint/path',
         headers: {

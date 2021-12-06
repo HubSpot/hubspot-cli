@@ -224,7 +224,7 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
     }
   );
   logger.debug('Sending usage event to unauthenticated endpoint');
-  return http.request.post(requestOptions);
+  return http.post(requestOptions);
 }
 
 /**

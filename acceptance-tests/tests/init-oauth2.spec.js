@@ -31,7 +31,7 @@ describe('hs init using oauth2', () => {
         cmd.ENTER,
         cmd.ENTER,
         () => {
-          const req = http.request({
+          const req = http.get({
             hostname: 'localhost',
             port: 3000,
             path: `/oauth-callback?code=${config.refreshToken}`,
