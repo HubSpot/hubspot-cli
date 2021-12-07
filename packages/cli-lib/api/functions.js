@@ -41,7 +41,9 @@ async function getProjectAppFunctionLogs(
   const { limit = 5 } = query;
 
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}`,
+    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${encodeURIComponent(
+      projectName
+    )}/function/${encodeURIComponent(functionName)}`,
     query: { ...query, limit, appPath },
   });
 }
@@ -53,7 +55,9 @@ async function getLatestProjectAppFunctionLog(
   appPath
 ) {
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}/latest`,
+    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${encodeURIComponent(
+      projectName
+    )}/function/${encodeURIComponent(functionName)}/latest`,
     query: { appPath },
   });
 }
