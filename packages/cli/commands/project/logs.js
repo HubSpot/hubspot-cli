@@ -20,6 +20,7 @@ const {
 const { getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { tailLogs } = require('../../lib/serverlessLogs');
+const { uiAccountDescription } = require('../../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.logs';
@@ -88,7 +89,10 @@ const functionLog = async (accountId, options) => {
     const spinnies = new Spinnies();
 
     spinnies.add('tailLogs', {
-      text: i18n(`${i18nKey}.loading`),
+      text: i18n(`${i18nKey}.loading`, {
+        functionName,
+        accountId: uiAccountDescription(accountId),
+      }),
     });
 
     await tailLogs({
