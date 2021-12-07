@@ -1,13 +1,16 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.createModulePrompt';
 
 const MODULE_LABEL_PROMPT = {
   name: 'moduleLabel',
-  message: 'What should the module label be?',
+  message: i18n(`${i18nKey}.enterLabel`),
   validate(val) {
     if (typeof val !== 'string') {
-      return 'You entered an invalid name. Please try again.';
+      return i18n(`${i18nKey}.errors.invalidLabel`);
     } else if (!val.length) {
-      return 'The name may not be blank. Please try again.';
+      return i18n(`${i18nKey}.errors.labelRequired`);
     }
     return true;
   },
@@ -15,7 +18,7 @@ const MODULE_LABEL_PROMPT = {
 const CONTENT_TYPES_PROMPT = {
   type: 'checkbox',
   name: 'contentTypes',
-  message: 'What types of content will this module be used in?',
+  message: i18n(`${i18nKey}.selectContentType`),
   default: ['PAGE'],
   choices: [
     { name: 'Page', value: 'PAGE' },
@@ -28,7 +31,7 @@ const CONTENT_TYPES_PROMPT = {
       if (input.length > 0) {
         resolve(true);
       }
-      reject('Please select at least one content type for this module.');
+      reject(i18n(`${i18nKey}.errors.contentTypeRequired`));
     });
   },
 };
@@ -36,14 +39,14 @@ const CONTENT_TYPES_PROMPT = {
 const GLOBAL_PROMPT = {
   type: 'confirm',
   name: 'global',
-  message: 'Is this a global module?',
+  message: i18n(`${i18nKey}.confirmGlobal`),
   default: false,
 };
 
 function createModulePrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
+  return promptUser([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
 }
+
 module.exports = {
   createModulePrompt,
 };

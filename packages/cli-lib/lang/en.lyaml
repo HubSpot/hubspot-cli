@@ -128,9 +128,6 @@ en:
             errors:
               pathExists: "The {{ path }} path already exists"
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
-          project:
-            success:
-              projectCreated: "Project created in {{ path }}"
           template:
             debug:
               creatingPath: "Making {{ path }} if needed"
@@ -622,39 +619,72 @@ en:
           useEnv:
             describe: "Use environment variable config"
       prompts:
-        accountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ):"
-        accountName: "Enter a unique name to reference your account:"
-        apiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key):"
-        clientId: "Enter your OAuth2 client ID:"
-        clientSecret: "Enter your OAuth2 client secret:"
-        errors:
-          invalidAccountId: "You did not enter a valid account ID. Please try again."
-          invalidAPIKey: "You did not enter a valid API key. Please try again"
-          invalidName: "You entered an invalid name. Please try again."
-          invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
-          invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
-          invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
-          invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
-          invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
-          invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
-          invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
-          nameRequired: "The name may not be blank. Please try again."
-          spacesInName: "The name may not contain spaces. Please try again."
-        folderOverwrite: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
-        logs:
-          openingWebBrowser: "Opening {{ url }} in your web browser"
-        personalAccessKey: "Enter your personal access key:"
-        personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
-        projects:
-          enterDescription: "Enter a description for the project"
-          enterLabel: "Enter a label for the project"
-          selectTemplate: "Select a project template to use"
+        personalAccessKeyPrompt:
+          enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
+          enterClientId: "Enter your OAuth2 client ID: "
+          enterClientSecret: "Enter your OAuth2 client secret: "
+          enterAccountName: "Enter a unique name to reference your account: "
+          enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
+          enterPersonalAccessKey: "Enter your personal access key: "
+          selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
+          personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
+          logs:
+            openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:
-            invalidDescription: "You entered an invalid description. Please try again."
-            invalidLabel: "You entered an invalid label. Please try again."
-        sandboxes:
+            invalidAccountId: "You did not enter a valid account ID. Please try again."
+            invalidAPIKey: "You did not enter a valid API key. Please try again"
+            invalidName: "You entered an invalid name. Please try again."
+            invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
+            invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
+            invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
+            invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
+            invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
+            invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
+            invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
+            nameRequired: "The name may not be blank. Please try again."
+            spacesInName: "The name may not contain spaces. Please try again."
+        folderOverwritePrompt:
+          overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
+        createTemplatePrompt:
+          selectTemplate: "Select the type of template to create"
+        createModulePrompt:
+          enterLabel: "What should the module label be?"
+          selectContentType: "What types of content will this module be used in?"
+          confirmGlobal: "Is this a global module?"
+          errors:
+            invalidLabel: "You entered an invalid name. Please try again."
+            labelRequired: "The name may not be blank. Please try again."
+            contentTypeRequired: "Please select at least one content type for this module."
+        createFunctionPrompt:
+          enterFolder: "Name of the folder where your function will be created: "
+          enterFilename: "Name of the JavaScript file for your function: "
+          enterEndpointPath: "Path portion of the URL created for the function: "
+          selectEndpointMethod: "Select the HTTP method for the endpoint"
+          errors:
+            invalid: "You entered an invalid name. Please try again."
+            blank: "The name may not be blank. Please try again."
+            space: "The name may not contain spaces. Please try again."
+        createApiSamplePrompt:
+          selectApiSampleApp: "Please, select API sample app"
+          selectLanguage: "Please, select sample app's language"
+          errors:
+            apiSampleAppRequired: "Please select API sample app"
+            languageRequired: "Please select API sample app's language"
+        createProjectPrompt:
+          enterName: "[--name] Give your project a name: "
+          enterLocation: "[--location] Where should the project be created?"
+          selectTemplate: "[--template] Start from a template?"
+          templateOptions:
+            noTemplate: "No template"
+          errors:
+            nameRequired: "A project name is required"
+            locationRequired: "A project location is required"
+            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+        secretPrompt:
+          enterValue: "Enter a value for your secret: "
+          errors:
+            invalidValue: "You entered an invalid value. Please try again."
+        sandboxesPrompt:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
-        scopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
-

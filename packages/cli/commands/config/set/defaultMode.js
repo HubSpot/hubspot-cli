@@ -1,11 +1,11 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateDefaultMode } = require('@hubspot/cli-lib/lib/config');
-const inquirer = require('inquirer');
 const { Mode } = require('@hubspot/cli-lib');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 
 const { getAccountId } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -14,7 +14,7 @@ const i18nKey = 'cli.commands.config.subcommands.set.subcommands.defaultMode';
 const ALL_MODES = Object.values(Mode);
 
 const selectMode = async () => {
-  const { mode } = await inquirer.prompt([
+  const { mode } = await promptUser([
     {
       type: 'list',
       look: false,

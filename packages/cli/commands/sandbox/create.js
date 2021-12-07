@@ -9,7 +9,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { createSandbox: prompt } = require('../../lib/prompts/sandboxes');
+const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
@@ -27,7 +27,7 @@ exports.handler = async options => {
   trackCommandUsage('sandbox-create', {}, accountId);
 
   if (!name) {
-    namePrompt = await prompt();
+    namePrompt = await createSandboxPrompt();
   }
 
   const sandboxName = name || namePrompt.name;
