@@ -184,6 +184,32 @@ async function queueBuild(portalId, projectName, buildId) {
   });
 }
 
+/**
+ * Upload file to staged build (watch)
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function uploadFileToBuild(
+  portalId,
+  projectName,
+  buildId,
+  filePath,
+  path
+) {
+  // return;
+  return http.post(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/staged/${buildId}/upload/${encodeURIComponent(path)}`,
+    formData: {
+      file: fs.createReadStream(filePath),
+    },
+  });
+}
+
 module.exports = {
   fetchProjects,
   createProject,
@@ -197,4 +223,5 @@ module.exports = {
   fetchProjectSettings,
   provisionBuild,
   queueBuild,
+  uploadFileToBuild,
 };
