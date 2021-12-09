@@ -199,7 +199,6 @@ async function uploadFileToBuild(
   filePath,
   path
 ) {
-  // return;
   return http.post(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
@@ -207,6 +206,22 @@ async function uploadFileToBuild(
     formData: {
       file: fs.createReadStream(filePath),
     },
+  });
+}
+
+/**
+ * Cancel staged build
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function cancelStagedBuild(portalId, projectName) {
+  return http.post(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/staged/cancel`,
   });
 }
 
@@ -224,4 +239,5 @@ module.exports = {
   provisionBuild,
   queueBuild,
   uploadFileToBuild,
+  cancelStagedBuild,
 };

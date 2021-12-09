@@ -89,7 +89,7 @@ const createNewBuild = async (accountId, projectName) => {
     currentBuildId = buildId;
   } catch (err) {
     if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
-      logger.error(`Project ${projectName} is locked.`);
+      logger.error('Project is locked, cannot create new build');
     } else if (err.error.subCategory === 'PipelineErrors.MISSING_PROJECT') {
       logger.error(`Project ${projectName} does not exist.`);
     } else {
@@ -163,7 +163,6 @@ exports.handler = async options => {
     logger.log(
       `Watcher is ready and watching ${projectDir}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system.`
     );
-    refreshTimeout();
   });
 
   watcher.on('add', filePath => {
