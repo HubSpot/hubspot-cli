@@ -151,6 +151,7 @@ exports.handler = async options => {
           createNewBuild(accountId, projectConfig.name);
           buildInProgress = false;
           queue.start();
+          logger.log('Resuming watcher...');
         } else {
           logger.log('Build failed.');
           process.exit(1);
