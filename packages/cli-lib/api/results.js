@@ -6,14 +6,14 @@ async function getFunctionLogs(accountId, route, query = {}) {
   const { limit = 5 } = query;
 
   return http.get(accountId, {
-    uri: `${RESULTS_API_PATH}/by-route/${route}`,
-    query: { ...query, limit },
+    url: `${RESULTS_API_PATH}/by-route/${route}`,
+    params: { ...query, limit },
   });
 }
 
 async function getLatestFunctionLog(accountId, route) {
   return http.get(accountId, {
-    uri: `${RESULTS_API_PATH}/by-route/${route}/latest`,
+    url: `${RESULTS_API_PATH}/by-route/${route}/latest`,
   });
 }
 

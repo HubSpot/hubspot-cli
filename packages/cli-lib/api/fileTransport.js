@@ -7,7 +7,7 @@ const HUBFILES_API_PATH = '/file-transport/v1/hubfiles';
 
 async function createSchema(accountId, filepath) {
   return http.post(accountId, {
-    uri: `${HUBFILES_API_PATH}/object-schemas`,
+    url: `${HUBFILES_API_PATH}/object-schemas`,
     formData: {
       file: fs.createReadStream(path.resolve(getCwd(), filepath)),
     },
@@ -16,7 +16,7 @@ async function createSchema(accountId, filepath) {
 
 async function updateSchema(accountId, filepath) {
   return http.put(accountId, {
-    uri: `${HUBFILES_API_PATH}/object-schemas`,
+    url: `${HUBFILES_API_PATH}/object-schemas`,
     formData: {
       file: fs.createReadStream(path.resolve(getCwd(), filepath)),
     },
@@ -27,7 +27,7 @@ async function fetchSchema(accountId, objectName, path) {
   return http.getOctetStream(
     accountId,
     {
-      uri: `${HUBFILES_API_PATH}/object-schemas/${objectName}`,
+      url: `${HUBFILES_API_PATH}/object-schemas/${objectName}`,
     },
     path
   );

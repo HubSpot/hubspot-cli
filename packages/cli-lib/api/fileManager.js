@@ -24,20 +24,20 @@ async function uploadFile(accountId, src, dest) {
   }
 
   return http.post(accountId, {
-    uri: `${FILE_MANAGER_V3_API_PATH}/files/upload`,
+    url: `${FILE_MANAGER_V3_API_PATH}/files/upload`,
     formData,
   });
 }
 
 async function fetchStat(accountId, src) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_V2_API_PATH}/files/stat/${src}`,
+    url: `${FILE_MANAGER_V2_API_PATH}/files/stat/${src}`,
   });
 }
 
 async function fetchFiles(accountId, folderId, { offset, archived }) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_V2_API_PATH}/files/`,
+    url: `${FILE_MANAGER_V2_API_PATH}/files/`,
     qs: {
       hidden: 0,
       offset: offset,
@@ -49,7 +49,7 @@ async function fetchFiles(accountId, folderId, { offset, archived }) {
 
 async function fetchFolders(accountId, folderId) {
   return http.get(accountId, {
-    uri: `${FILE_MANAGER_V2_API_PATH}/folders/`,
+    url: `${FILE_MANAGER_V2_API_PATH}/folders/`,
     qs: {
       hidden: 0,
       parent_folder_id: folderId,

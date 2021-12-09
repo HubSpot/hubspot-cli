@@ -3,23 +3,23 @@ const FUNCTION_API_PATH = 'cms/v3/functions';
 
 async function getFunctionByPath(accountId, functionPath) {
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/function/by-path/${functionPath}`,
+    url: `${FUNCTION_API_PATH}/function/by-path/${functionPath}`,
   });
 }
 
 async function getRoutes(accountId) {
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/routes`,
+    url: `${FUNCTION_API_PATH}/routes`,
   });
 }
 
 async function buildPackage(portalId, folderPath) {
   return http.post(portalId, {
-    uri: `${FUNCTION_API_PATH}/build/async`,
+    url: `${FUNCTION_API_PATH}/build/async`,
     headers: {
       Accept: 'text/plain',
     },
-    body: {
+    data: {
       folderPath,
     },
   });
@@ -27,7 +27,7 @@ async function buildPackage(portalId, folderPath) {
 
 async function getBuildStatus(portalId, buildId) {
   return http.get(portalId, {
-    uri: `${FUNCTION_API_PATH}/build/${buildId}/poll`,
+    url: `${FUNCTION_API_PATH}/build/${buildId}/poll`,
   });
 }
 
@@ -41,8 +41,8 @@ async function getProjectAppFunctionLogs(
   const { limit = 5 } = query;
 
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}`,
-    query: { ...query, limit, appPath },
+    url: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}`,
+    params: { ...query, limit, appPath },
   });
 }
 
@@ -53,8 +53,8 @@ async function getLatestProjectAppFunctionLog(
   appPath
 ) {
   return http.get(accountId, {
-    uri: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}/latest`,
-    query: { appPath },
+    url: `${FUNCTION_API_PATH}/app-function/logs/project/${projectName}/function/${functionName}/latest`,
+    params: { appPath },
   });
 }
 

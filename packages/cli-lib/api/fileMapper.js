@@ -54,7 +54,7 @@ function createFileMapperNodeFromStreamResponse(filePath, response) {
  */
 async function upload(accountId, src, dest, options = {}) {
   return http.post(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/upload/${encodeURIComponent(dest)}`,
+    url: `${FILE_MAPPER_API_PATH}/upload/${encodeURIComponent(dest)}`,
     formData: {
       file: fs.createReadStream(path.resolve(getCwd(), src)),
     },
@@ -73,7 +73,7 @@ async function upload(accountId, src, dest, options = {}) {
  */
 async function fetchModule(accountId, moduleId, options = {}) {
   return http.get(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/modules/${moduleId}`,
+    url: `${FILE_MAPPER_API_PATH}/modules/${moduleId}`,
     ...options,
   });
 }
@@ -92,7 +92,7 @@ async function fetchFileStream(accountId, filePath, destination, options = {}) {
   const response = await http.getOctetStream(
     accountId,
     {
-      uri: `${FILE_MAPPER_API_PATH}/stream/${encodeURIComponent(filePath)}`,
+      url: `${FILE_MAPPER_API_PATH}/stream/${encodeURIComponent(filePath)}`,
       ...options,
     },
     destination
@@ -111,7 +111,7 @@ async function fetchFileStream(accountId, filePath, destination, options = {}) {
  */
 async function download(accountId, filepath, options = {}) {
   return http.get(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
+    url: `${FILE_MAPPER_API_PATH}/download/${encodeURIComponent(filepath)}`,
     ...options,
   });
 }
@@ -127,7 +127,7 @@ async function download(accountId, filepath, options = {}) {
  */
 async function downloadDefault(accountId, filepath, options = {}) {
   return http.get(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/download-default/${filepath}`,
+    url: `${FILE_MAPPER_API_PATH}/download-default/${filepath}`,
     ...options,
   });
 }
@@ -143,7 +143,7 @@ async function downloadDefault(accountId, filepath, options = {}) {
  */
 async function deleteFile(accountId, filePath, options = {}) {
   return http.delete(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/delete/${encodeURIComponent(filePath)}`,
+    url: `${FILE_MAPPER_API_PATH}/delete/${encodeURIComponent(filePath)}`,
     ...options,
   });
 }
@@ -163,7 +163,7 @@ async function deleteFolder(accountId, folderPath, options = {}) {
     '`cli-lib/api/fileMapper#deleteFolder()` is deprecated. Use `cli-lib/api/fileMapper#deleteFile()` instead.'
   );
   return http.delete(accountId, {
-    uri: `${FILE_MAPPER_API_PATH}/delete/folder/${folderPath}`,
+    url: `${FILE_MAPPER_API_PATH}/delete/folder/${folderPath}`,
     ...options,
   });
 }
@@ -208,8 +208,8 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
   if (accountConfig && accountConfig.authType === 'personalaccesskey') {
     logger.debug('Sending usage event to authenticated endpoint');
     return http.post(accountId, {
-      uri: `${path}/authenticated`,
-      body: usageEvent,
+      url: `${path}/authenticated`,
+      data: usageEvent,
       resolveWithFullResponse: true,
     });
   }
@@ -218,8 +218,8 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
   const requestOptions = http.getRequestOptions(
     { env },
     {
-      uri: path,
-      body: usageEvent,
+      url: path,
+      data: usageEvent,
       resolveWithFullResponse: true,
     }
   );
@@ -238,7 +238,7 @@ async function trackUsage(eventName, eventClass, meta = {}, accountId) {
  */
 async function moveFile(portalId, srcPath, destPath) {
   return http.put(portalId, {
-    uri: `${FILE_MAPPER_API_PATH}/rename/${srcPath}?path=${destPath}`,
+    url: `${FILE_MAPPER_API_PATH}/rename/${srcPath}?path=${destPath}`,
   });
 }
 
@@ -251,7 +251,7 @@ async function moveFile(portalId, srcPath, destPath) {
  */
 async function getDirectoryContentsByPath(portalId, path) {
   return http.get(portalId, {
-    uri: `${FILE_MAPPER_API_PATH}/meta/${path}`,
+    url: `${FILE_MAPPER_API_PATH}/meta/${path}`,
   });
 }
 

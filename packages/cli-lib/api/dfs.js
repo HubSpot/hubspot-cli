@@ -12,7 +12,7 @@ const PROJECTS_DEPLOY_API_PATH = 'dfs/deploy/v1';
  */
 async function fetchProjects(portalId) {
   return http.get(portalId, {
-    uri: PROJECTS_API_PATH,
+    url: PROJECTS_API_PATH,
   });
 }
 
@@ -25,8 +25,8 @@ async function fetchProjects(portalId) {
  */
 async function createProject(portalId, name) {
   return http.post(portalId, {
-    uri: PROJECTS_API_PATH,
-    body: {
+    url: PROJECTS_API_PATH,
+    data: {
       name,
     },
   });
@@ -42,7 +42,7 @@ async function createProject(portalId, name) {
  */
 async function uploadProject(accountId, projectName, projectFile) {
   return http.post(accountId, {
-    uri: `${PROJECTS_API_PATH}/upload/${encodeURIComponent(projectName)}`,
+    url: `${PROJECTS_API_PATH}/upload/${encodeURIComponent(projectName)}`,
     timeout: 60000,
     formData: {
       file: fs.createReadStream(projectFile),
@@ -59,7 +59,7 @@ async function uploadProject(accountId, projectName, projectFile) {
  */
 async function fetchProject(portalId, projectName) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
+    url: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
 
@@ -72,7 +72,7 @@ async function fetchProject(portalId, projectName) {
  */
 async function deleteProject(portalId, projectName) {
   return http.delete(portalId, {
-    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
+    url: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
 
@@ -85,7 +85,7 @@ async function deleteProject(portalId, projectName) {
  */
 async function fetchProjectBuilds(portalId, projectName, query) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/builds`,
+    url: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/builds`,
     query,
   });
 }
@@ -100,7 +100,7 @@ async function fetchProjectBuilds(portalId, projectName, query) {
  */
 async function getBuildStatus(portalId, projectName, buildId) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+    url: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/${buildId}/status`,
   });
@@ -116,8 +116,8 @@ async function getBuildStatus(portalId, projectName, buildId) {
  */
 async function deployProject(portalId, projectName, buildId) {
   return http.post(portalId, {
-    uri: `${PROJECTS_DEPLOY_API_PATH}/deploys/queue/async`,
-    body: {
+    url: `${PROJECTS_DEPLOY_API_PATH}/deploys/queue/async`,
+    data: {
       projectName,
       buildId,
     },
@@ -134,7 +134,7 @@ async function deployProject(portalId, projectName, buildId) {
  */
 async function getDeployStatus(portalId, projectName, deployId) {
   return http.get(portalId, {
-    uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${encodeURIComponent(
+    url: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${encodeURIComponent(
       projectName
     )}/deploys/${deployId}`,
   });
@@ -149,7 +149,7 @@ async function getDeployStatus(portalId, projectName, deployId) {
  */
 async function fetchProjectSettings(portalId, projectName) {
   return http.get(portalId, {
-    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/settings`,
+    url: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/settings`,
   });
 }
 

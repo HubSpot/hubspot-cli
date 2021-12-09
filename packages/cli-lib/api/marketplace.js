@@ -11,8 +11,8 @@ const MARKETPLACE_API_PATH = 'product/marketplace/v2/template/render';
  */
 async function fetchDependencies(accountId, sourceCode) {
   return http.post(accountId, {
-    uri: MARKETPLACE_API_PATH,
-    body: { template_source: sourceCode },
+    url: MARKETPLACE_API_PATH,
+    data: { template_source: sourceCode },
   });
 }
 

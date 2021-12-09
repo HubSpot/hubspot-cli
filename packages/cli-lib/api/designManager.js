@@ -9,7 +9,7 @@ const DESIGN_MANAGER_API_PATH = 'designmanager/v1';
  */
 async function fetchMenus(accountId, query = {}) {
   return http.get(accountId, {
-    uri: `${DESIGN_MANAGER_API_PATH}/menus`,
+    url: `${DESIGN_MANAGER_API_PATH}/menus`,
     query,
   });
 }
@@ -21,13 +21,13 @@ async function fetchMenus(accountId, query = {}) {
  */
 async function fetchBuiltinMapping(accountId) {
   return http.get(accountId, {
-    uri: `${DESIGN_MANAGER_API_PATH}/widgets/builtin-mapping`,
+    url: `${DESIGN_MANAGER_API_PATH}/widgets/builtin-mapping`,
   });
 }
 
 async function fetchRawAssetByPath(accountId, path) {
   return http.get(accountId, {
-    uri: `${DESIGN_MANAGER_API_PATH}/raw-assets/by-path/${path}?portalId=${accountId}`,
+    url: `${DESIGN_MANAGER_API_PATH}/raw-assets/by-path/${path}?portalId=${accountId}`,
   });
 }
 

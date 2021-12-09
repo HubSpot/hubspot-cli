@@ -4,8 +4,8 @@ const SECRETS_API_PATH = 'cms/v3/functions/secrets';
 
 async function addSecret(accountId, key, value) {
   return http.post(accountId, {
-    uri: SECRETS_API_PATH,
-    body: {
+    url: SECRETS_API_PATH,
+    data: {
       key,
       secret: value,
     },
@@ -14,8 +14,8 @@ async function addSecret(accountId, key, value) {
 
 async function updateSecret(accountId, key, value) {
   return http.put(accountId, {
-    uri: SECRETS_API_PATH,
-    body: {
+    url: SECRETS_API_PATH,
+    data: {
       key,
       secret: value,
     },
@@ -24,13 +24,13 @@ async function updateSecret(accountId, key, value) {
 
 async function deleteSecret(accountId, key) {
   return http.delete(accountId, {
-    uri: `${SECRETS_API_PATH}/${key}`,
+    url: `${SECRETS_API_PATH}/${key}`,
   });
 }
 
 async function fetchSecrets(accountId) {
   return http.get(accountId, {
-    uri: `${SECRETS_API_PATH}`,
+    url: `${SECRETS_API_PATH}`,
   });
 }
 
