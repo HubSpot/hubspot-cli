@@ -28,7 +28,8 @@ async function getAccessToken(
 ) {
   let response;
   try {
-    response = await fetchAccessToken(personalAccessKey, env, accountId);
+    const { data } = await fetchAccessToken(personalAccessKey, env, accountId);
+    response = data;
   } catch (e) {
     if (e.response) {
       const errorOutput = `Error while retrieving new access token: ${e.response.body.message}.`;

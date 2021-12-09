@@ -10,7 +10,7 @@ const getRequestOptions = (options = {}, requestOptions = {}) => {
   const { env } = options;
   const { httpTimeout, httpUseLocalhost } = getAndLoadConfigIfNeeded();
   return {
-    baseUrl: getHubSpotApiOrigin(env, httpUseLocalhost),
+    baseURL: getHubSpotApiOrigin(env, httpUseLocalhost),
     headers: {
       ...DEFAULT_USER_AGENT_HEADERS,
     },

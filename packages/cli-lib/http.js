@@ -43,12 +43,12 @@ const withPersonalAccessKey = async (
 };
 
 const withPortalId = (portalId, requestOptions) => {
-  const { qs } = requestOptions;
+  const { params } = requestOptions;
 
   return {
     ...requestOptions,
-    qs: {
-      ...qs,
+    params: {
+      ...params,
       portalId,
     },
   };
@@ -69,24 +69,24 @@ const withAuth = async (accountId, options) => {
   if (authType === 'oauth2') {
     return withOauth(accountId, accountConfig, requestOptions);
   }
-  const { qs } = requestOptions;
+  const { params } = requestOptions;
 
   return {
     ...requestOptions,
-    qs: {
-      ...qs,
+    params: {
+      ...params,
       hapikey: apiKey,
     },
   };
 };
 
-const addQueryParams = (requestOptions, params = {}) => {
-  const { qs } = requestOptions;
+const addQueryParams = (requestOptions, additionalParams = {}) => {
+  const { params } = requestOptions;
   return {
     ...requestOptions,
-    qs: {
-      ...qs,
+    params: {
       ...params,
+      ...additionalParams,
     },
   };
 };
@@ -94,23 +94,26 @@ const addQueryParams = (requestOptions, params = {}) => {
 const getRequest = async (accountId, options) => {
   const { query, ...rest } = options;
   const requestOptions = addQueryParams(rest, query);
-  return axios.get(await withAuth(accountId, requestOptions));
+  return axios({
+    method: 'get',
+    ...(await withAuth(accountId, requestOptions)),
+  });
 };
 
 const postRequest = async (accountId, options) => {
-  return axios.post(await withAuth(accountId, options));
+  return axios({ method: 'post', ...(await withAuth(accountId, options)) });
 };
 
 const putRequest = async (accountId, options) => {
-  return axios.put(await withAuth(accountId, options));
+  return axios({ method: 'put', ...(await withAuth(accountId, options)) });
 };
 
 const patchRequest = async (accountId, options) => {
-  return axios.patch(await withAuth(accountId, options));
+  return axios({ method: 'patch', ...(await withAuth(accountId, options)) });
 };
 
 const deleteRequest = async (accountId, options) => {
-  return axios.del(await withAuth(accountId, options));
+  return axios({ method: 'delete', ...(await withAuth(accountId, options)) });
 };
 
 const createGetRequestStream = ({ contentType }) => async (
@@ -140,7 +143,8 @@ const createGetRequestStream = ({ contentType }) => async (
   return new Promise(async (resolve, reject) => {
     try {
       const { headers, ...opts } = await withAuth(accountId, requestOptions);
-      const req = axios.get({
+      const req = axios({
+        method: 'get',
         ...opts,
         headers: {
           ...headers,

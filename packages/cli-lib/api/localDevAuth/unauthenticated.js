@@ -9,19 +9,19 @@ async function fetchAccessToken(
   env = ENVIRONMENTS.PROD,
   portalId
 ) {
-  const query = portalId ? { portalId } : {};
+  const params = portalId ? { portalId } : {};
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `${LOCALDEVAUTH_API_AUTH_PATH}/refresh`,
-      body: {
+      url: `${LOCALDEVAUTH_API_AUTH_PATH}/refresh`,
+      data: {
         encodedOAuthRefreshToken: personalAccessKey,
       },
-      qs: query,
+      params,
     }
   );
 
-  return axios.post(requestOptions);
+  return axios({ method: 'post', ...requestOptions });
 }
 
 module.exports = {
