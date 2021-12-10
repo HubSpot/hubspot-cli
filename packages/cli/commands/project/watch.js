@@ -51,9 +51,48 @@ const queue = new PQueue({
 });
 
 let buildInProgress = false;
-let currentBuildId;
+let currentBuildId = null;
+let timer;
 
-function queueFileUpload(accountId, projectName, buildId, filePath, srcDir) {
+const refreshTimeout = (accountId, projectName) => {
+  if (timer) {
+    clearTimeout(timer);
+  }
+
+  timer = setTimeout(() => {
+    queue.onIdle().then(async () => {
+      logger.debug('Pausing watcher, attempting to queue build');
+      queue.pause();
+
+      try {
+        await queueBuild(accountId, projectName, currentBuildId);
+        buildInProgress = true;
+        logger.log('Build queued.');
+      } catch (err) {
+        logger.error(err);
+        process.exit(1);
+      }
+
+      const { status } = await pollBuildStatus(
+        accountId,
+        projectName,
+        currentBuildId
+      );
+      if (status === 'SUCCESS') {
+        logger.debug('Build succeeded, resuming watcher');
+        currentBuildId = null;
+        buildInProgress = false;
+        queue.start();
+        logger.log('Resuming watcher...');
+      } else {
+        logger.log('Build failed.');
+        process.exit(1);
+      }
+    });
+  }, 5000);
+};
+
+const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
   if (!isAllowedExtension(filePath)) {
     logger.debug(`Skipping ${filePath} due to unsupported extension`);
     return;
@@ -62,6 +101,13 @@ function queueFileUpload(accountId, projectName, buildId, filePath, srcDir) {
     logger.debug(`Skipping ${filePath} due to an ignore rule`);
     return;
   }
+  if (!currentBuildId) {
+    await createNewBuild(accountId, projectName);
+  }
+  if (!buildInProgress) {
+    refreshTimeout(accountId, projectName);
+  }
+
   const remotePath = path.relative(srcDir, filePath);
 
   logger.debug('Attempting to upload file "%s" to "%s"', filePath, remotePath);
@@ -81,12 +127,14 @@ function queueFileUpload(accountId, projectName, buildId, filePath, srcDir) {
         logger.log(`Failed to upload file ${filePath} to ${remotePath}`);
       });
   });
-}
+};
 
 const createNewBuild = async (accountId, projectName) => {
   try {
+    logger.debug('Attempting to create a new build');
     const { buildId } = await provisionBuild(accountId, projectName);
     currentBuildId = buildId;
+    return;
   } catch (err) {
     if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
       logger.error('Project is locked, cannot create new build');
@@ -114,80 +162,28 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  createNewBuild(accountId, projectConfig.name);
-
   const watcher = chokidar.watch(path.join(projectDir, projectConfig.srcDir), {
     ignoreInitial: true,
     ignored: file => shouldIgnoreFile(file),
   });
-  let timer;
-
-  const refreshTimeout = () => {
-    if (timer) {
-      clearTimeout(timer);
-    }
-
-    timer = setTimeout(() => {
-      queue.onIdle().then(async () => {
-        logger.debug('Pausing watcher, attempting to queue build');
-        queue.pause();
-
-        try {
-          await queueBuild(accountId, projectConfig.name, currentBuildId);
-          buildInProgress = true;
-          logger.log('Build queued.');
-        } catch (err) {
-          logger.error(err);
-          process.exit(1);
-        }
-
-        const { status } = await pollBuildStatus(
-          accountId,
-          projectConfig.name,
-          currentBuildId
-        );
-        if (status === 'SUCCESS') {
-          logger.debug('Build succeeded, resuming watcher');
-          createNewBuild(accountId, projectConfig.name);
-          buildInProgress = false;
-          queue.start();
-          logger.log('Resuming watcher...');
-        } else {
-          logger.log('Build failed.');
-          process.exit(1);
-        }
-      });
-    }, 5000);
-  };
 
   watcher.on('ready', () => {
     logger.log(
       `Watcher is ready and watching ${projectDir}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system.`
     );
   });
-
-  watcher.on('add', filePath => {
-    if (!buildInProgress) {
-      refreshTimeout();
-    }
-
-    queueFileUpload(
+  watcher.on('add', async filePath => {
+    await queueFileUpload(
       accountId,
       projectConfig.name,
-      currentBuildId,
       filePath,
       path.join(projectDir, projectConfig.srcDir)
     );
   });
-  watcher.on('change', filePath => {
-    if (!buildInProgress) {
-      refreshTimeout();
-    }
-
-    queueFileUpload(
+  watcher.on('change', async filePath => {
+    await queueFileUpload(
       accountId,
       projectConfig.name,
-      currentBuildId,
       filePath,
       path.join(projectDir, projectConfig.srcDir)
     );
