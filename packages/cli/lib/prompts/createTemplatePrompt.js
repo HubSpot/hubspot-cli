@@ -1,9 +1,12 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.createTemplatePrompt';
 
 const TEMPLATE_TYPE_PROMPT = {
   type: 'list',
   name: 'templateType',
-  message: 'Select the type of template to create',
+  message: i18n(`${i18nKey}.selectTemplate`),
   default: 'page',
   choices: [
     { name: 'page', value: 'page-template' },
@@ -17,9 +20,9 @@ const TEMPLATE_TYPE_PROMPT = {
 };
 
 function createTemplatePrompt() {
-  const prompt = inquirer.createPromptModule();
-  return prompt([TEMPLATE_TYPE_PROMPT]);
+  return promptUser([TEMPLATE_TYPE_PROMPT]);
 }
+
 module.exports = {
   createTemplatePrompt,
 };

@@ -1,11 +1,10 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.lib.prompts.sandboxes';
+const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
-const createSandbox = () => {
-  const prompt = inquirer.createPromptModule();
-  return prompt([
+const createSandboxPrompt = () => {
+  return promptUser([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -21,5 +20,5 @@ const createSandbox = () => {
 };
 
 module.exports = {
-  createSandbox,
+  createSandboxPrompt,
 };

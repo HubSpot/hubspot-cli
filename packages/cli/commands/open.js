@@ -6,14 +6,14 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
-const inquirer = require('inquirer');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.open';
 
 const separator = ' => ';
 const createListPrompt = async accountId =>
-  inquirer.prompt([
+  promptUser([
     {
       type: 'rawlist',
       look: false,

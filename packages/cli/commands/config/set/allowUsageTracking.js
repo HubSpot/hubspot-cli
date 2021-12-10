@@ -1,9 +1,9 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/cli-lib/lib/config');
-const inquirer = require('inquirer');
 
 const { getAccountId } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -11,7 +11,7 @@ const i18nKey =
   'cli.commands.config.subcommands.set.subcommands.allowUsageTracking';
 
 const enableOrDisableUsageTracking = async () => {
-  const { isEnabled } = await inquirer.prompt([
+  const { isEnabled } = await promptUser([
     {
       type: 'list',
       look: false,
