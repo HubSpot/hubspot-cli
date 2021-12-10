@@ -15,10 +15,10 @@ const {
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-// const {
-//   logApiErrorInstance,
-//   ApiErrorContext,
-// } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
@@ -69,7 +69,7 @@ const refreshTimeout = (accountId, projectName) => {
         buildInProgress = true;
         logger.log('Build queued.');
       } catch (err) {
-        logger.error(err);
+        logApiErrorInstance(err, new ApiErrorContext({ projectName }));
         process.exit(1);
       }
 
@@ -141,7 +141,7 @@ const createNewBuild = async (accountId, projectName) => {
     } else if (err.error.subCategory === 'PipelineErrors.MISSING_PROJECT') {
       logger.error(`Project ${projectName} does not exist.`);
     } else {
-      logger.error(err.error);
+      logApiErrorInstance(err, new ApiErrorContext({ projectName }));
     }
     process.exit(1);
   }
