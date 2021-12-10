@@ -1,9 +1,12 @@
-const inquirer = require('inquirer');
+const { promptUser } = require('./promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.lib.prompts.createApiSamplePrompt';
 
 const getSampleTypesPrompt = choices => ({
   type: 'rawlist',
   name: 'sampleType',
-  message: 'Please, select API sample app',
+  message: i18n(`${i18nKey}.selectApiSampleApp`),
   choices: choices.map(choice => ({
     name: `${choice.name} - ${choice.description}`,
     value: choice.id,
@@ -13,7 +16,7 @@ const getSampleTypesPrompt = choices => ({
       if (input.length > 0) {
         resolve(true);
       }
-      reject('Please select API sample app');
+      reject(i18n(`${i18nKey}.errors.apiSampleAppRequired`));
     });
   },
 });
@@ -21,7 +24,7 @@ const getSampleTypesPrompt = choices => ({
 const getLanguagesPrompt = choices => ({
   type: 'rawlist',
   name: 'sampleLanguage',
-  message: "Please, select sample app's language",
+  message: i18n(`${i18nKey}.selectLanguage`),
   choices: choices.map(choice => ({
     name: choice,
     value: choice,
@@ -31,7 +34,7 @@ const getLanguagesPrompt = choices => ({
       if (input.length > 0) {
         resolve(true);
       }
-      reject("Please select API sample app's language");
+      reject(i18n(`${i18nKey}.errors.languageRequired`));
     });
   },
 });
@@ -39,16 +42,12 @@ const getLanguagesPrompt = choices => ({
 const createApiSamplePrompt = async samplesConfig => {
   try {
     const { samples } = samplesConfig;
-    const sampleTypeAnswer = await inquirer.prompt(
-      getSampleTypesPrompt(samples)
-    );
+    const sampleTypeAnswer = await promptUser(getSampleTypesPrompt(samples));
     const chosenSample = samples.find(
       sample => sample.id === sampleTypeAnswer.sampleType
     );
     const { languages } = chosenSample;
-    const languagesAnswer = await inquirer.prompt(
-      getLanguagesPrompt(languages)
-    );
+    const languagesAnswer = await promptUser(getLanguagesPrompt(languages));
     return {
       ...sampleTypeAnswer,
       ...languagesAnswer,

@@ -1,9 +1,4 @@
 const { moveFile } = require('@hubspot/cli-lib/api/fileMapper');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
@@ -14,25 +9,14 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validateAccount } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
+const { loadAndValidateOptions } = require('../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
+const i18nKey = 'cli.commands.mv';
 
 const getCorrectedDestPath = (srcPath, destPath) => {
   if (!isPathFolder(srcPath)) {
@@ -44,11 +28,10 @@ const getCorrectedDestPath = (srcPath, destPath) => {
 };
 
 exports.command = 'mv <srcPath> <destPath>';
-exports.describe =
-  'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { srcPath, destPath } = options;
   const accountId = getAccountId(options);
@@ -58,14 +41,27 @@ exports.handler = async options => {
   try {
     await moveFile(accountId, srcPath, getCorrectedDestPath(srcPath, destPath));
     logger.success(
-      `Moved "${srcPath}" to "${destPath}" in account ${accountId}`
+      i18n(`${i18nKey}.move`, {
+        accountId,
+        destPath,
+        srcPath,
+      })
     );
   } catch (error) {
     logger.error(
-      `Moving "${srcPath}" to "${destPath}" in account ${accountId} failed`
+      i18n(`${i18nKey}.errors.moveFailed`, {
+        accountId,
+        destPath,
+        srcPath,
+      })
     );
     if (error.statusCode === 409) {
-      logger.error(`The folder "${srcPath}" already exists in "${destPath}".`);
+      logger.error(
+        i18n(`${i18nKey}.errors.sourcePathExists`, {
+          destPath,
+          srcPath,
+        })
+      );
     } else {
       logApiErrorInstance(
         error,

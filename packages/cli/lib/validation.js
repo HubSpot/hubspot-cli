@@ -4,10 +4,10 @@ const {
   loadConfigFromEnvironment,
   Mode,
   loadConfig,
+  getConfigPath,
   validateConfig,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-const { getConfigPath } = require('@hubspot/cli-lib/lib/config');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
@@ -24,16 +24,17 @@ const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
+const { EXIT_CODES } = require('./enums/exitCodes');
 
 async function loadAndValidateOptions(options) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  checkAndWarnGitInclusion(getConfigPath());
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 }
 

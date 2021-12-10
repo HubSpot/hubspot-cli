@@ -3,7 +3,6 @@ const path = require('path');
 
 const chalk = require('chalk');
 const findup = require('findup-sync');
-const { prompt } = require('inquirer');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
@@ -11,7 +10,6 @@ const {
   createProject: createProjectTemplate,
 } = require('@hubspot/cli-lib/projects');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
@@ -30,6 +28,9 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getCwd } = require('@hubspot/cli-lib/path');
+const { promptUser } = require('./prompts/promptUtils');
+const { EXIT_CODES } = require('./enums/exitCodes');
+const { uiLine, uiAccountDescription } = require('../lib/ui');
 
 const PROJECT_STRINGS = {
   BUILD: {
@@ -39,6 +40,10 @@ const PROJECT_STRINGS = {
       } in this project ...\n`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Build #${taskId} failed because there was a problem\nbuilding ${chalk.bold(
+        name
+      )}`,
   },
   DEPLOY: {
     INITIALIZE: (name, numOfComponents) =>
@@ -47,6 +52,10 @@ const PROJECT_STRINGS = {
       } in this project ...\n`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Deploy for build #${taskId} failed because there was a\nproblem deploying ${chalk.bold(
+        name
+      )}`,
   },
 };
 
@@ -94,7 +103,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
         : `Found an existing project definition in ${projectDir}.`
     );
 
-    const { shouldContinue } = await prompt([
+    const { shouldContinue } = await promptUser([
       {
         name: 'shouldContinue',
         message: () => {
@@ -147,21 +156,21 @@ const validateProjectConfig = (projectConfig, projectDir) => {
     logger.error(
       `Project config not found. Try running 'hs project create' first.`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
       'Project config is missing required fields. Try running `hs project create`.'
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -173,10 +182,12 @@ const ensureProjectExists = async (accountId, projectName, forceCreate) => {
       let shouldCreateProject = forceCreate;
 
       if (!shouldCreateProject) {
-        const promptResult = await prompt([
+        const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${accountId}. Would you like to create it?`,
+            message: `The project ${projectName} does not exist in ${uiAccountDescription(
+              accountId
+            )}. Would you like to create it?`,
             type: 'confirm',
           },
         ]);
@@ -260,6 +271,7 @@ const makeGetTaskStatus = taskType => {
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
+      failPrefix: chalk.bold('!'),
     });
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
@@ -329,6 +341,31 @@ const makeGetTaskStatus = taskType => {
             } else if (status === statusText.STATES.FAILURE) {
               spinnies.fail('overallTaskStatus', {
                 text: statusStrings.FAIL(taskName),
+              });
+
+              const failedSubtask = subTaskStatus.filter(
+                subtask => subtask.status === 'FAILURE'
+              );
+
+              uiLine();
+              logger.log(
+                `${statusStrings.SUBTASK_FAIL(
+                  buildId || taskId,
+                  failedSubtask.length === 1
+                    ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtask.length + ' components'
+                )}\n`
+              );
+              logger.log('See below for a summary of errors.');
+              uiLine();
+
+              failedSubtask.forEach(subTask => {
+                logger.log(
+                  `\n--- ${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} ${
+                    statusText.STATUS_TEXT[subTask.status]
+                  } with the following error ---`
+                );
+                logger.error(subTask.errorMessage);
               });
             }
 

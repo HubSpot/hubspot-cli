@@ -1,11 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
 const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/cli-lib/path');
@@ -22,28 +17,22 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.filemanager.subcommands.upload';
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload <src> <dest>';
-exports.describe =
-  'Upload a folder or file from your computer to the HubSpot File Manager';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { config: configPath, src, dest } = options;
+  const { src, dest } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!validateConfig() || !(await validateAccount(options))) {
-    process.exit(1);
-  }
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
@@ -52,16 +41,24 @@ exports.handler = async options => {
   try {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
-      logger.error(`The path "${src}" is not a path to a file or folder`);
+      logger.error(
+        i18n(`${i18nKey}.errors.invalidPath`, {
+          path: src,
+        })
+      );
       return;
     }
   } catch (e) {
-    logger.error(`The path "${src}" is not a path to a file or folder`);
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: src,
+      })
+    );
     return;
   }
 
   if (!dest) {
-    logger.error('A destination path needs to be passed');
+    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
     return;
   }
   const normalizedDest = convertToUnixPath(dest);
@@ -77,26 +74,36 @@ exports.handler = async options => {
   );
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (stats.isFile()) {
     if (shouldIgnoreFile(absoluteSrcPath)) {
-      logger.error(`The file "${src}" is being ignored via an .hsignore rule`);
+      logger.error(
+        i18n(`${i18nKey}.errors.fileIgnored`, {
+          path: src,
+        })
+      );
       return;
     }
 
     uploadFile(accountId, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
-          'Uploaded file from "%s" to "%s" in the File Manager of account %s',
-          src,
-          normalizedDest,
-          accountId
+          i18n(`${i18nKey}.success.upload`, {
+            accountId,
+            dest: normalizedDest,
+            src,
+          })
         );
       })
       .catch(error => {
-        logger.error('Uploading file "%s" to "%s" failed', src, normalizedDest);
+        logger.error(
+          i18n(`${i18nKey}.errors.upload`, {
+            dest: normalizedDest,
+            src,
+          })
+        );
         logApiUploadErrorInstance(
           error,
           new ApiErrorContext({
@@ -108,16 +115,22 @@ exports.handler = async options => {
       });
   } else {
     logger.log(
-      `Uploading files from "${src}" to "${dest}" in the File Manager of account ${accountId}`
+      i18n(`${i18nKey}.logs.uploading`, {
+        accountId,
+        dest,
+        src,
+      })
     );
     uploadFolder(accountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
-          `Uploading files to "${dest}" in the File Manager is complete`
+          i18n(`${i18nKey}.success.uploadComplete`, {
+            dest,
+          })
         );
       })
       .catch(error => {
-        logger.error('Uploading failed');
+        logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
         logErrorInstance(error, {
           accountId,
         });
@@ -131,12 +144,11 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe:
-      'Path to the local file, relative to your current working directory',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: 'Path in HubSpot Design Tools, can be a net new path',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
 };

@@ -1,8 +1,3 @@
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
@@ -10,42 +5,44 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSecret } = require('@hubspot/cli-lib/api/secrets');
 
-const { validateAccount } = require('../../lib/validation');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logDebugInfo } = require('../../lib/debugInfo');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.secrets.subcommands.delete';
 
 exports.command = 'delete <name>';
-exports.describe = 'Delete a HubSpot secret';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { config: configPath, name: secretName } = options;
+  const { name: secretName } = options;
 
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  await loadAndValidateOptions(options);
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
   const accountId = getAccountId(options);
   trackCommandUsage('secrets-delete', {}, accountId);
 
   try {
     await deleteSecret(accountId, secretName);
-    logger.log(
-      `The secret "${secretName}" was deleted from the HubSpot account: ${accountId}`
+    logger.success(
+      i18n(`${i18nKey}.success.delete`, {
+        accountId,
+        secretName,
+      })
     );
   } catch (e) {
-    logger.error(`The secret "${secretName}" was not deleted`);
+    logger.error(
+      i18n(`${i18nKey}.errors.delete`, {
+        secretName,
+      })
+    );
     await logServerlessFunctionApiErrorInstance(
       accountId,
       e,
@@ -62,7 +59,7 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   yargs.positional('name', {
-    describe: 'Name of the secret',
+    describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
   });
   return yargs;

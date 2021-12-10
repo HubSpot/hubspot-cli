@@ -2,42 +2,29 @@ const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
-  setLogLevel,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
-const { validateAccount } = require('../lib/validation');
 const { tailLogs } = require('../lib/serverlessLogs');
+const { loadAndValidateOptions } = require('../lib/validation');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
-  }
-};
+const i18nKey = 'cli.commands.logs';
 
 const handleLogsError = (e, accountId, functionPath) => {
   if (e.statusCode === 404) {
     logger.error(
-      `No logs were found for the function path '${functionPath}' in account ${accountId}.`
+      i18n(`${i18nKey}.errors.noLogsFound`, {
+        accountId,
+        functionPath,
+      })
     );
   }
 };
@@ -46,9 +33,10 @@ const endpointLog = async (accountId, options) => {
   const { latest, follow, compact, endpoint: functionPath } = options;
 
   logger.debug(
-    `Getting ${
-      latest ? 'latest ' : ''
-    }logs for function with path: ${functionPath}`
+    i18n(`${i18nKey}.gettingLogs`, {
+      latest,
+      functionPath,
+    })
   );
 
   let logsResp;
@@ -57,7 +45,7 @@ const endpointLog = async (accountId, options) => {
     const spinnies = new Spinnies();
 
     spinnies.add('tailLogs', {
-      text: `Waiting for log entries for '${functionPath}' on account '${accountId}'.\n`,
+      text: i18n(`${i18nKey}.tailLogs`),
     });
     const tailCall = after =>
       getFunctionLogs(accountId, functionPath, { after });
@@ -96,10 +84,10 @@ const endpointLog = async (accountId, options) => {
 };
 
 exports.command = 'logs [endpoint]';
-exports.describe = 'get logs for a function';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { latest } = options;
 
@@ -112,28 +100,28 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('endpoint', {
-    describe: 'Serverless function endpoint',
+    describe: i18n(`${i18nKey}.positionals.endpoint.describe`),
     type: 'string',
   });
   yargs
     .options({
       latest: {
         alias: 'l',
-        describe: 'retrieve most recent log only',
+        describe: i18n(`${i18nKey}.options.latest.describe`),
         type: 'boolean',
       },
       compact: {
-        describe: 'output compact logs',
+        describe: i18n(`${i18nKey}.options.compact.describe`),
         type: 'boolean',
       },
       follow: {
         alias: ['t', 'tail', 'f'],
-        describe: 'follow logs',
+        describe: i18n(`${i18nKey}.options.follow.describe`),
         type: 'boolean',
       },
       limit: {
         alias: ['limit', 'n', 'max-count'],
-        describe: 'limit the number of logs to output',
+        describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
       },
     })
@@ -141,18 +129,9 @@ exports.builder = yargs => {
     .conflicts('functionName', 'endpoint');
 
   yargs.example([
-    [
-      '$0 logs my-endpoint',
-      'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint',
-    ],
-    [
-      '$0 logs my-endpoint --limit=10',
-      'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint',
-    ],
-    [
-      '$0 logs my-endpoint --follow',
-      'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution',
-    ],
+    ['$0 logs my-endpoint', i18n(`${i18nKey}.examples.default`)],
+    ['$0 logs my-endpoint --limit=10', i18n(`${i18nKey}.examples.limit`)],
+    ['$0 logs my-endpoint --follow', i18n(`${i18nKey}.examples.follow`)],
   ]);
 
   addConfigOptions(yargs, true);

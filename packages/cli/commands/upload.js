@@ -1,12 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  loadConfig,
-  uploadFolder,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { uploadFolder } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
@@ -28,45 +23,39 @@ const {
   addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  setLogLevel,
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
-const { validateAccount, validateMode } = require('../lib/validation');
+const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.upload';
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'upload <src> <dest>';
-exports.describe =
-  'Upload a folder or file from your computer to the HubSpot CMS';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
   const previewUrl = getThemePreviewUrl(filePath, accountId);
   // Only log if we are actually in a theme
   if (previewUrl) {
-    logger.log(`
-      To preview this theme, visit:
-      ${previewUrl}
-      `);
+    logger.log(
+      i18n(`${i18nKey}.previewUrl`, {
+        previewUrl,
+      })
+    );
   }
 };
 
 exports.handler = async options => {
-  const { src, dest, config: configPath } = options;
-  setLogLevel(options);
-  logDebugInfo(options);
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
+  const { src, dest } = options;
 
-  if (
-    !(
-      validateConfig() &&
-      (await validateAccount(options)) &&
-      validateMode(options)
-    )
-  ) {
-    process.exit(1);
+  await loadAndValidateOptions(options);
+
+  if (!validateMode(options)) {
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
@@ -76,16 +65,24 @@ exports.handler = async options => {
   try {
     stats = fs.statSync(absoluteSrcPath);
     if (!stats.isFile() && !stats.isDirectory()) {
-      logger.error(`The path "${src}" is not a path to a file or folder`);
+      logger.error(
+        i18n(`${i18nKey}.errors.invalidPath`, {
+          path: src,
+        })
+      );
       return;
     }
   } catch (e) {
-    logger.error(`The path "${src}" is not a path to a file or folder`);
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: src,
+      })
+    );
     return;
   }
 
   if (!dest) {
-    logger.error('A destination path needs to be passed');
+    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
     return;
   }
   const normalizedDest = convertToUnixPath(dest);
@@ -101,16 +98,24 @@ exports.handler = async options => {
 
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src)) {
-      logger.error(`The file "${src}" does not have a valid extension`);
+      logger.error(
+        i18n(`${i18nKey}.errors.invalidPath`, {
+          path: src,
+        })
+      );
       return;
     }
 
     if (shouldIgnoreFile(absoluteSrcPath)) {
-      logger.error(`The file "${src}" is being ignored via an .hsignore rule`);
+      logger.error(
+        i18n(`${i18nKey}.errors.fileIgnored`, {
+          path: src,
+        })
+      );
       return;
     }
 
@@ -122,15 +127,21 @@ exports.handler = async options => {
     )
       .then(() => {
         logger.success(
-          'Uploaded file from "%s" to "%s" in the Design Manager of account %s',
-          src,
-          normalizedDest,
-          accountId
+          i18n(`${i18nKey}.success.fileUploaded`, {
+            accountId,
+            dest: normalizedDest,
+            src,
+          })
         );
         logThemePreview(src, accountId);
       })
       .catch(error => {
-        logger.error('Uploading file "%s" to "%s" failed', src, normalizedDest);
+        logger.error(
+          i18n(`${i18nKey}.errors.uploadFailed`, {
+            dest: normalizedDest,
+            src,
+          })
+        );
         logApiUploadErrorInstance(
           error,
           new ApiErrorContext({
@@ -142,19 +153,30 @@ exports.handler = async options => {
       });
   } else {
     logger.log(
-      `Uploading files from "${src}" to "${dest}" in the Design Manager of account ${accountId}`
+      i18n(`${i18nKey}.uploading`, {
+        accountId,
+        dest,
+        src,
+      })
     );
     uploadFolder(accountId, absoluteSrcPath, dest, {
       mode,
     })
       .then(() => {
         logger.success(
-          `Uploading files to "${dest}" in the Design Manager is complete`
+          i18n(`${i18nKey}.success.uploadComplete`, {
+            dest,
+          })
         );
         logThemePreview(src, accountId);
       })
       .catch(error => {
-        logger.error('Uploading failed');
+        logger.error(
+          i18n(`${i18nKey}.errors.uploadFailed`, {
+            dest,
+            src,
+          })
+        );
         logErrorInstance(error, {
           accountId,
         });
@@ -169,12 +191,11 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe:
-      'Path to the local file, relative to your current working directory.',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: 'Path in HubSpot Design Tools, can be a net new path.',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
   return yargs;

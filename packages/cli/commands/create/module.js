@@ -1,7 +1,10 @@
 const path = require('path');
-const { createModulePrompt } = require('../../lib/createModulePrompt');
+const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.create.subcommands.module';
 
 const createModule = (moduleDefinition, name, dest) => {
   const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
@@ -44,12 +47,24 @@ const createModule = (moduleDefinition, name, dest) => {
   const folderName = name.endsWith('.module') ? name : `${name}.module`;
   const destPath = path.join(dest, folderName);
   if (fs.existsSync(destPath)) {
-    logger.error(`The ${destPath} path already exists`);
+    logger.error(
+      i18n(`${i18nKey}.errors.pathExists`, {
+        path: destPath,
+      })
+    );
     return;
   }
-  logger.log(`Creating ${destPath}`);
+  logger.log(
+    i18n(`${i18nKey}.creatingPath`, {
+      path: destPath,
+    })
+  );
   fs.mkdirp(destPath);
-  logger.log(`Creating module at ${destPath}`);
+  logger.log(
+    i18n(`${i18nKey}.creatingModule`, {
+      path: destPath,
+    })
+  );
   fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
 };
 
@@ -57,9 +72,7 @@ module.exports = {
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(
-        "The 'name' argument is required when creating a Custom Module."
-      );
+      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
       return false;
     }
 
