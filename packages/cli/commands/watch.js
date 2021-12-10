@@ -15,11 +15,13 @@ const {
 } = require('../lib/commonOpts');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch <src> <dest>';
-exports.describe =
-  'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { src, dest, remove, initialUpload, disableInitial, notify } = options;
@@ -37,32 +39,34 @@ exports.handler = async options => {
   try {
     const stats = fs.statSync(absoluteSrcPath);
     if (!stats.isDirectory()) {
-      logger.log(`The "${src}" is not a path to a directory`);
+      logger.log(
+        i18n(`${i18nKey}.errors.invalidPath`, {
+          path: src,
+        })
+      );
       return;
     }
   } catch (e) {
-    logger.log(`The "${src}" is not a path to a directory`);
+    logger.log(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: src,
+      })
+    );
     return;
   }
 
   if (!dest) {
-    logger.log('A destination directory needs to be passed');
+    logger.log(i18n(`${i18nKey}.errors.destinationRequired`));
     return;
   }
 
   if (disableInitial) {
-    logger.info(
-      'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
-    );
+    logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
   } else {
-    logger.info(
-      `The "watch" command no longer uploads the watched directory when started. The directory "${src}" was not uploaded.`
-    );
+    logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
 
     if (!initialUpload) {
-      logger.info(
-        'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
-      );
+      logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
     }
   }
 
@@ -82,35 +86,32 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('src', {
-    describe:
-      'Path to the local directory your files are in, relative to your current working directory',
+    describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
   yargs.positional('dest', {
-    describe: 'Path in HubSpot Design Tools. Can be a net new path',
+    describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
   yargs.option('remove', {
     alias: 'r',
-    describe:
-      'Will cause watch to delete files in your HubSpot account that are not found locally.',
+    describe: i18n(`${i18nKey}.options.remove.describe`),
     type: 'boolean',
   });
   yargs.option('initial-upload', {
     alias: 'i',
-    describe: 'Upload directory before watching for updates',
+    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
   yargs.option('disable-initial', {
     alias: 'd',
-    describe: 'Disable the initial upload when watching a directory (default)',
+    describe: i18n(`${i18nKey}.options.disableInitial.describe`),
     type: 'boolean',
     hidden: true,
   });
   yargs.option('notify', {
     alias: 'n',
-    describe:
-      'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file',
+    describe: i18n(`${i18nKey}.options.notify.describe`),
     type: 'string',
     requiresArg: true,
   });

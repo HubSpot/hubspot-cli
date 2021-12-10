@@ -1,5 +1,9 @@
-const { createApiSamplePrompt } = require('../../lib/createApiSamplePrompt');
-const { folderOverwritePrompt } = require('../../lib/prompts');
+const {
+  createApiSamplePrompt,
+} = require('../../lib/prompts/createApiSamplePrompt');
+const {
+  folderOverwritePrompt,
+} = require('../../lib/prompts/folderOverwritePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
@@ -7,15 +11,16 @@ const Spinnies = require('spinnies');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { createProject } = require('@hubspot/cli-lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.create.subcommands.apiSample';
 
 module.exports = {
   hidden: true,
   dest: ({ dest }) => dest,
   validate: ({ name }) => {
     if (!name) {
-      logger.error(
-        "The 'name' argument is required when creating an API Sample."
-      );
+      logger.error(i18n(`${i18nKey}.errors.nameRequired`));
       return false;
     }
 
@@ -33,7 +38,7 @@ module.exports = {
     }
     const spinnies = new Spinnies();
     spinnies.add('fetchingSampleAppsStatus', {
-      text: 'Loading available API samples',
+      text: i18n(`${i18nKey}.loading.apiSamples`),
     });
     const samplesConfig = await fetchJsonFromRepository(
       'sample-apps-list',
@@ -43,22 +48,21 @@ module.exports = {
     spinnies.stopAll();
 
     if (!samplesConfig) {
-      logger.error(
-        `Currently there are no samples available, please, try again later.`
-      );
+      logger.error(i18n(`${i18nKey}.errors.noSamples`));
       return;
     }
     const { sampleType, sampleLanguage } = await createApiSamplePrompt(
       samplesConfig
     );
     if (!sampleType || !sampleLanguage) {
-      logger.error(
-        `Currently there are no samples available, please, try again later.`
-      );
+      logger.error(i18n(`${i18nKey}.errors.noSamples`));
       return;
     }
     logger.info(
-      `You've chosen ${sampleType} sample written on ${sampleLanguage} language`
+      i18n(`${i18nKey}.info.sampleChosen`, {
+        sampleType,
+        sampleLanguage,
+      })
     );
     const created = await createProject(
       filePath,
@@ -75,7 +79,9 @@ module.exports = {
         fs.copySync(`${filePath}/.env.template`, `${filePath}/.env`);
       }
       logger.success(
-        `Please, follow ${filePath}/README.md to find out how to run the sample`
+        i18n(`${i18nKey}.success.sampleCreated`, {
+          filePath,
+        })
       );
     }
   },

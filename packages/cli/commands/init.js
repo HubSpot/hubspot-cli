@@ -18,6 +18,7 @@ const {
   API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('@hubspot/cli-lib/lib/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
@@ -25,16 +26,18 @@ const {
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
   API_KEY_FLOW,
   ACCOUNT_NAME,
   personalAccessKeyPrompt,
-  promptUser,
-} = require('../lib/prompts');
+} = require('../lib/prompts/personalAccessKeyPrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+
+const i18nKey = 'cli.commands.init';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -83,7 +86,9 @@ const CONFIG_CREATION_FLOWS = {
 };
 
 exports.command = 'init';
-exports.describe = `initialize ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} for a HubSpot account`;
+exports.describe = i18n(`${i18nKey}.describe`, {
+  configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+});
 
 exports.handler = async options => {
   const { auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value, c } = options;
@@ -96,10 +101,12 @@ exports.handler = async options => {
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (fs.existsSync(configPath)) {
-    logger.error(`The config file '${configPath}' already exists.`);
-    logger.info(
-      'To update an existing config file, use the "hs auth" command.'
+    logger.error(
+      i18n(`${i18nKey}.errors.configFileExists`, {
+        configPath,
+      })
     );
+    logger.info(i18n(`${i18nKey}.info.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -112,8 +119,11 @@ exports.handler = async options => {
     const configPath = getConfigPath();
 
     logger.success(
-      `The config file "${configPath}" was created using "${authType}" for account ${name ||
-        accountId}.`
+      i18n(`${i18nKey}.success.configFileCreated`, {
+        configPath,
+        authType,
+        account: name || accountId,
+      })
     );
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
@@ -126,8 +136,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.option('auth', {
-    describe:
-      'specify auth method to use ["personalaccesskey", "oauth2", "apikey"]',
+    describe: i18n(`${i18nKey}.options.auth.describe`),
     type: 'string',
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -135,7 +144,9 @@ exports.builder = yargs => {
       `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
+    defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
+      defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    }),
   });
 
   addConfigOptions(yargs, true);

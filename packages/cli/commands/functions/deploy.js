@@ -18,6 +18,9 @@ const {
 } = require('@hubspot/cli-lib/api/functions');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.functions.subcommands.deploy';
 
 const pollBuildStatus = (accountId, buildId) => {
   return new Promise((resolve, reject) => {
@@ -47,7 +50,10 @@ exports.handler = async options => {
   const splitFunctionPath = functionPath.split('.');
   const spinnies = new Spinnies();
   spinnies.add('buildAndDeployStatus', {
-    text: `Building and deploying bundle for '${functionPath}' on account '${accountId}'.\n`,
+    text: i18n(`${i18nKey}.loading`, {
+      accountId,
+      functionPath,
+    }),
   });
 
   trackCommandUsage('functions-deploy', { functionPath }, accountId);
@@ -56,12 +62,18 @@ exports.handler = async options => {
     !splitFunctionPath.length ||
     splitFunctionPath[splitFunctionPath.length - 1] !== 'functions'
   ) {
-    logger.error(`Specified path ${functionPath} is not a .functions folder.`);
+    logger.error(
+      i18n(`${i18nKey}.errors.notFunctionsFolder`, {
+        functionPath,
+      })
+    );
     return;
   }
 
   logger.debug(
-    `Starting build and deploy for .functions folder with path: ${functionPath}`
+    i18n(`${i18nKey}.debug.startingBuildAndDeploy`, {
+      functionPath,
+    })
   );
 
   try {
@@ -72,18 +84,30 @@ exports.handler = async options => {
     spinnies.stopAll();
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
-      `Built and deployed bundle from package.json for ${functionPath} on account ${accountId} in ${buildTimeSeconds}s.`
+      i18n(`${i18nKey}.success.deployed`, {
+        accountId,
+        buildTimeSeconds,
+        functionPath,
+      })
     );
   } catch (e) {
     spinnies.remove('buildAndDeployStatus');
     spinnies.stopAll();
     if (e.statusCode === 404) {
-      logger.error(`Unable to find package.json for function ${functionPath}.`);
+      logger.error(
+        i18n(`${i18nKey}.errors.noPackageJson`, {
+          functionPath,
+        })
+      );
     } else if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
-      logger.error(`Build error: ${e.errorReason}`);
+      logger.error(
+        i18n(`${i18nKey}.errors.buildError`, {
+          details: e.errorReason,
+        })
+      );
     } else {
       logApiErrorInstance(
         accountId,
@@ -96,14 +120,14 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to .functions folder',
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 
   yargs.example([
     [
       '$0 functions deploy myFunctionFolder.functions',
-      'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder',
+      i18n(`${i18nKey}.examples.default`),
     ],
   ]);
 

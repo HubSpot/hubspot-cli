@@ -6,17 +6,20 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
-const inquirer = require('inquirer');
+const { promptUser } = require('../lib/prompts/promptUtils');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.open';
 
 const separator = ' => ';
 const createListPrompt = async accountId =>
-  inquirer.prompt([
+  promptUser([
     {
       type: 'rawlist',
       look: false,
       name: 'open',
       pageSize: 20,
-      message: 'Select a link to open',
+      message: i18n(`${i18nKey}.selectLink`),
       choices: getSiteLinksAsArray(accountId).map(
         l => `${l.shortcut}${separator}${l.url}`
       ),
@@ -25,8 +28,7 @@ const createListPrompt = async accountId =>
   ]);
 
 exports.command = 'open [shortcut]';
-exports.describe =
-  'Open a HubSpot page in your browser. Run ‘hs open list’ to see all available shortcuts.';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { shortcut, list } = options;
@@ -47,13 +49,13 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('[shortcut]', {
-    describe: "Shortcut of the link you'd like to open",
+    describe: i18n(`${i18nKey}.positionals.shortcut.describe`),
     type: 'string',
   });
 
   yargs.option('list', {
     alias: 'l',
-    describe: 'List all supported shortcuts',
+    describe: i18n(`${i18nKey}.options.list.describe`),
     type: 'boolean',
   });
 

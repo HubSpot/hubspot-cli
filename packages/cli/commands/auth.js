@@ -7,6 +7,7 @@ const {
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cli-lib/lib/constants');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
@@ -17,13 +18,13 @@ const {
   getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
-  promptUser,
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   API_KEY_FLOW,
   ACCOUNT_NAME,
-} = require('../lib/prompts');
+} = require('../lib/prompts/personalAccessKeyPrompt');
 const {
   addConfigOptions,
   setLogLevel,
@@ -33,6 +34,8 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+
+const i18nKey = 'cli.commands.auth';
 
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
@@ -53,7 +56,9 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
         validName = promptAnswer.name;
       } else {
         logger.log(
-          `Account name "${promptAnswer.name}" already exists, please enter a different name.`
+          i18n(`${i18nKey}.errors.accountNameExists`, {
+            name: promptAnswer.name,
+          })
         );
       }
     }
@@ -62,7 +67,9 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
 };
 
 exports.command = 'auth [type]';
-exports.describe = `Configure authentication for a HubSpot account. Supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`;
+exports.describe = i18n(`${i18nKey}.describe`, {
+  supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
+});
 
 exports.handler = async options => {
   const { type, config: configPath, qa } = options;
@@ -72,15 +79,13 @@ exports.handler = async options => {
   logDebugInfo(options);
 
   if (!getConfigPath()) {
-    logger.error(
-      'No config file was found. To create a new config file, use the "hs init" command.'
-    );
+    logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   loadConfig(configPath);
-  checkAndWarnGitInclusion();
+  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
 
@@ -101,7 +106,10 @@ exports.handler = async options => {
       writeConfig();
 
       logger.success(
-        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} updated with ${API_KEY_AUTH_METHOD.name}.`
+        i18n(`${i18nKey}.success.configFileUpdated`, {
+          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+          authMethod: API_KEY_AUTH_METHOD.name,
+        })
       );
 
       break;
@@ -131,12 +139,18 @@ exports.handler = async options => {
       writeConfig();
 
       logger.success(
-        `${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} updated with ${PERSONAL_ACCESS_KEY_AUTH_METHOD.name}.`
+        i18n(`${i18nKey}.success.configFileUpdated`, {
+          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+        })
       );
       break;
     default:
       logger.error(
-        `Unsupported auth type: ${type}. The only supported authentication protocols are ${SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT}.`
+        i18n(`${i18nKey}.errors.unsupportedAuthType`, {
+          supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
+          type,
+        })
       );
       break;
   }
@@ -145,7 +159,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('type', {
-    describe: 'Authentication mechanism',
+    describe: i18n(`${i18nKey}.positionals.type.describe`),
     type: 'string',
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
@@ -153,7 +167,9 @@ exports.builder = yargs => {
       `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: `"${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.`,
+    defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
+      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    }),
   });
 
   addConfigOptions(yargs, true);
