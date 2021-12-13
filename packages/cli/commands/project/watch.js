@@ -98,6 +98,7 @@ const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
     return;
   }
   if (!currentBuildId) {
+    logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
     await createNewBuild(accountId, projectName);
   }
   if (!buildInProgress) {

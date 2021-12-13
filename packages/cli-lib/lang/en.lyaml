@@ -494,6 +494,7 @@ en:
               watching: "Watcher is ready and watching {{ projectDir }}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system."
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file {{ filePath }} to {{ remotePath }}"
+              createNewBuild: "Creating a new staging build..."
             debug:
               uploadFailed: "Failed to upload file {{ filePath }} to {{ remotePath }}"
               uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
