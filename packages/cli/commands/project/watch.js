@@ -33,6 +33,9 @@ const {
   validateProjectConfig,
   pollBuildStatus,
 } = require('../../lib/projects');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+
+const i18nKey = 'cli.commands.project.subcommands.watch';
 
 const loadAndValidateOptions = async options => {
   setLogLevel(options);
@@ -61,44 +64,37 @@ const refreshTimeout = (accountId, projectName) => {
 
   timer = setTimeout(() => {
     queue.onIdle().then(async () => {
-      logger.debug('Pausing watcher, attempting to queue build');
+      logger.debug(i18n(`${i18nKey}.debug.pause`, { projectName }));
       queue.pause();
 
       try {
         await queueBuild(accountId, projectName, currentBuildId);
         buildInProgress = true;
-        logger.log('Build queued.');
+        logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
       } catch (err) {
-        logApiErrorInstance(err, new ApiErrorContext({ projectName }));
-        process.exit(1);
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({ accountId, projectName })
+        );
+        return;
       }
 
-      const { status } = await pollBuildStatus(
-        accountId,
-        projectName,
-        currentBuildId
-      );
-      if (status === 'SUCCESS') {
-        logger.debug('Build succeeded, resuming watcher');
-        currentBuildId = null;
-        buildInProgress = false;
-        queue.start();
-        logger.log('Resuming watcher...');
-      } else {
-        logger.log('Build failed.');
-        process.exit(1);
-      }
+      await pollBuildStatus(accountId, projectName, currentBuildId);
+      currentBuildId = null;
+      buildInProgress = false;
+      queue.start();
+      logger.log(i18n(`${i18nKey}.logs.resuming`));
     });
   }, 5000);
 };
 
 const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
   if (!isAllowedExtension(filePath)) {
-    logger.debug(`Skipping ${filePath} due to unsupported extension`);
+    logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
   }
   if (shouldIgnoreFile(filePath)) {
-    logger.debug(`Skipping ${filePath} due to an ignore rule`);
+    logger.debug(i18n(`${i18nKey}.debug.ignored`, { filePath }));
     return;
   }
   if (!currentBuildId) {
@@ -110,7 +106,7 @@ const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
 
   const remotePath = path.relative(srcDir, filePath);
 
-  logger.debug('Attempting to upload file "%s" to "%s"', filePath, remotePath);
+  logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
 
   return queue.add(() => {
     return uploadFileToBuild(
@@ -121,10 +117,12 @@ const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
       remotePath
     )
       .then(() => {
-        logger.log(`Uploaded file ${filePath} to ${remotePath}`);
+        logger.log(i18n(`${i18nKey}.logs.uploadSucceeded`, { remotePath }));
       })
       .catch(() => {
-        logger.log(`Failed to upload file ${filePath} to ${remotePath}`);
+        logger.debug(
+          i18n(`${i18nKey}.debug.uploadFailed`, { filePath, remotePath })
+        );
       });
   });
 };
@@ -141,7 +139,7 @@ const createNewBuild = async (accountId, projectName) => {
     } else if (err.error.subCategory === 'PipelineErrors.MISSING_PROJECT') {
       logger.error(`Project ${projectName} does not exist.`);
     } else {
-      logApiErrorInstance(err, new ApiErrorContext({ projectName }));
+      logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     }
     process.exit(1);
   }
@@ -168,9 +166,7 @@ exports.handler = async options => {
   });
 
   watcher.on('ready', () => {
-    logger.log(
-      `Watcher is ready and watching ${projectDir}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system.`
-    );
+    logger.log(i18n(`${i18nKey}.logs.watching`, { projectPath }));
   });
   watcher.on('add', async filePath => {
     await queueFileUpload(
@@ -192,15 +188,12 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.positional('path', {
-    describe: 'Path to a project folder',
+    describe: i18n(`${i18nKey}.describe`),
     type: 'string',
   });
 
   yargs.example([
-    [
-      '$0 project wwatch myProjectFolder',
-      'Watch a project within the myProjectFolder folder',
-    ],
+    ['$0 project wwatch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);

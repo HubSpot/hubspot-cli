@@ -486,7 +486,22 @@ en:
             positionals:
               path:
                 describe: "Path to a project folder"
-      remove:
+          watch:
+            describe: "Path to a project folder"
+            examples:
+              default: "Watch a project within the myProjectFolder folder"
+            logs: 
+              watching: "Watcher is ready and watching {{ projectDir }}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system."
+              resuming: "Resuming watcher..."
+              uploadSucceeded: "Uploaded file {{ filePath }} to {{ remotePath }}"
+            debug:
+              uploadFailed: "Failed to upload file {{ filePath }} to {{ remotePath }}"
+              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              extensionNotAllowed: "Skipping {{ filePath }} due to unsupported extension"
+              ignored: "Skipping {{ filePath }} due to an ignore rule"
+              pause: "Pausing watcher, attempting to queue build"
+              buildStarted: "Build queued."
+      remove: 
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
         errors:
