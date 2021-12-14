@@ -52,43 +52,99 @@ const loadAndValidateOptions = async options => {
 const queue = new PQueue({
   concurrency: 10,
 });
-
-let buildInProgress = false;
-let currentBuildId = null;
+const standbyeQueue = [];
 let timer;
 
-const refreshTimeout = (accountId, projectName) => {
+const processStandByQueue = async (accountId, projectName) => {
+  await currentBuild.update(accountId, projectName);
+  queue.addAll(
+    standbyeQueue.map(({ filePath, remotePath }) => {
+      return async () => {
+        try {
+          await uploadFileToBuild(
+            accountId,
+            projectName,
+            currentBuild.get(),
+            filePath,
+            remotePath
+          );
+          logger.log(
+            i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
+          );
+        } catch (err) {
+          logger.debug(
+            i18n(`${i18nKey}.debug.uploadFailed`, {
+              filePath,
+              remotePath,
+            })
+          );
+        }
+      };
+    })
+  );
+  standbyeQueue.length = 0;
+  debounceQueueBuild(accountId, projectName);
+};
+
+const currentBuild = {
+  id: null,
+  isFetchingNewBuildId: false,
+  get: () => {
+    return this.id;
+  },
+  update: async (accountId, projectName) => {
+    if (this.id) {
+      return this.id;
+    }
+    if (this.isFetchingNewBuildId) {
+      return;
+    }
+    logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
+    this.isFetchingNewBuildId = true;
+    this.id = await createNewBuild(accountId, projectName);
+    this.isFetchingNewBuildId = false;
+  },
+  clear: () => {
+    this.id = null;
+  },
+};
+
+const debounceQueueBuild = (accountId, projectName) => {
   if (timer) {
     clearTimeout(timer);
   }
 
-  timer = setTimeout(() => {
-    queue.onIdle().then(async () => {
-      logger.debug(i18n(`${i18nKey}.debug.pause`, { projectName }));
-      queue.pause();
+  timer = setTimeout(async () => {
+    logger.debug(i18n(`${i18nKey}.debug.pause`, { projectName }));
+    queue.pause();
+    await queue.onIdle();
 
-      try {
-        await queueBuild(accountId, projectName, currentBuildId);
-        buildInProgress = true;
-        logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
-      } catch (err) {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName })
-        );
-        return;
-      }
+    try {
+      await queueBuild(accountId, projectName, currentBuild.get());
+      logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
+    } catch (err) {
+      logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+      return;
+    }
 
-      await pollBuildStatus(accountId, projectName, currentBuildId);
-      currentBuildId = null;
-      buildInProgress = false;
-      queue.start();
-      logger.log(i18n(`${i18nKey}.logs.resuming`));
-    });
+    await pollBuildStatus(accountId, projectName, currentBuild.get());
+    currentBuild.clear();
+
+    if (standbyeQueue.length > 0) {
+      await processStandByQueue(accountId, projectName);
+    }
+
+    queue.start();
+    logger.log(i18n(`${i18nKey}.logs.resuming`));
   }, 5000);
 };
 
-const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
+const queueFileUpload = async (
+  accountId,
+  projectName,
+  filePath,
+  remotePath
+) => {
   if (!isAllowedExtension(filePath)) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
@@ -97,34 +153,30 @@ const queueFileUpload = async (accountId, projectName, filePath, srcDir) => {
     logger.debug(i18n(`${i18nKey}.debug.ignored`, { filePath }));
     return;
   }
-  if (!currentBuildId) {
-    logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
-    await createNewBuild(accountId, projectName);
+  if (!queue.isPaused) {
+    debounceQueueBuild(accountId, projectName);
   }
-  if (!buildInProgress) {
-    refreshTimeout(accountId, projectName);
-  }
-
-  const remotePath = path.relative(srcDir, filePath);
 
   logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
 
-  return queue.add(() => {
-    return uploadFileToBuild(
-      accountId,
-      projectName,
-      currentBuildId,
-      filePath,
-      remotePath
-    )
-      .then(() => {
-        logger.log(i18n(`${i18nKey}.logs.uploadSucceeded`, { remotePath }));
-      })
-      .catch(() => {
-        logger.debug(
-          i18n(`${i18nKey}.debug.uploadFailed`, { filePath, remotePath })
-        );
-      });
+  return queue.add(async () => {
+    await currentBuild.update(accountId, projectName);
+    try {
+      await uploadFileToBuild(
+        accountId,
+        projectName,
+        currentBuild.get(),
+        filePath,
+        remotePath
+      );
+      logger.log(
+        i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
+      );
+    } catch (err) {
+      logger.debug(
+        i18n(`${i18nKey}.debug.uploadFailed`, { filePath, remotePath })
+      );
+    }
   });
 };
 
@@ -132,8 +184,7 @@ const createNewBuild = async (accountId, projectName) => {
   try {
     logger.debug('Attempting to create a new build');
     const { buildId } = await provisionBuild(accountId, projectName);
-    currentBuildId = buildId;
-    return;
+    return buildId;
   } catch (err) {
     if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
       logger.error('Project is locked, cannot create new build');
@@ -170,20 +221,32 @@ exports.handler = async options => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectPath }));
   });
   watcher.on('add', async filePath => {
-    await queueFileUpload(
-      accountId,
-      projectConfig.name,
-      filePath,
-      path.join(projectDir, projectConfig.srcDir)
+    const remotePath = path.relative(
+      path.join(projectDir, projectConfig.srcDir),
+      filePath
     );
+    if (queue.isPaused) {
+      standbyeQueue.push({
+        filePath,
+        remotePath,
+      });
+      return;
+    }
+    await queueFileUpload(accountId, projectConfig.name, filePath, remotePath);
   });
   watcher.on('change', async filePath => {
-    await queueFileUpload(
-      accountId,
-      projectConfig.name,
-      filePath,
-      path.join(projectDir, projectConfig.srcDir)
+    const remotePath = path.relative(
+      path.join(projectDir, projectConfig.srcDir),
+      filePath
     );
+    if (queue.isPaused) {
+      standbyeQueue.push({
+        filePath,
+        remotePath,
+      });
+      return;
+    }
+    await queueFileUpload(accountId, projectConfig.name, filePath, remotePath);
   });
 };
 
