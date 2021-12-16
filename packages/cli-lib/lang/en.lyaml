@@ -495,6 +495,7 @@ en:
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file {{ filePath }} to {{ remotePath }}"
               createNewBuild: "Creating a new staging build..."
+              buildCancelled: "Staging build has been cancelled. Exiting..."
             debug:
               uploadFailed: "Failed to upload file {{ filePath }} to {{ remotePath }}"
               uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""

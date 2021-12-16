@@ -23,6 +23,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
+  cancelStagedBuild,
   provisionBuild,
   uploadFileToBuild,
   queueBuild,
@@ -54,6 +55,10 @@ const queue = new PQueue({
   concurrency: 10,
 });
 const standbyeQueue = [];
+const currentBuild = {
+  id: null,
+  isFetchingNewBuildId: false,
+};
 let timer;
 
 const processStandByQueue = async (accountId, projectName) => {
@@ -64,7 +69,7 @@ const processStandByQueue = async (accountId, projectName) => {
           await uploadFileToBuild(
             accountId,
             projectName,
-            currentBuild.get(),
+            currentBuild.id,
             filePath,
             remotePath
           );
@@ -86,27 +91,14 @@ const processStandByQueue = async (accountId, projectName) => {
   debounceQueueBuild(accountId, projectName);
 };
 
-const currentBuild = {
-  id: null,
-  isFetchingNewBuildId: false,
-  get: () => {
-    return this.id;
-  },
-  update: async (accountId, projectName) => {
-    if (this.id) {
-      return this.id;
-    }
-    if (this.isFetchingNewBuildId) {
-      return;
-    }
-    logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
-    this.isFetchingNewBuildId = true;
-    this.id = await createNewBuild(accountId, projectName);
-    this.isFetchingNewBuildId = false;
-  },
-  clear: () => {
-    this.id = null;
-  },
+const createNewStagingBuild = async (accountId, projectName) => {
+  if (currentBuild.isFetchingNewBuildId) {
+    return;
+  }
+  logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
+  currentBuild.isFetchingNewBuildId = true;
+  currentBuild.id = await createNewBuild(accountId, projectName);
+  currentBuild.isFetchingNewBuildId = false;
 };
 
 const debounceQueueBuild = (accountId, projectName) => {
@@ -120,7 +112,7 @@ const debounceQueueBuild = (accountId, projectName) => {
     await queue.onIdle();
 
     try {
-      await queueBuild(accountId, projectName, currentBuild.get());
+      await queueBuild(accountId, projectName, currentBuild.id);
       logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
     } catch (err) {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
@@ -129,18 +121,18 @@ const debounceQueueBuild = (accountId, projectName) => {
     const {
       isAutoDeployEnabled,
       deployStatusTaskLocator,
-    } = await pollBuildStatus(accountId, projectName, currentBuild.get());
+    } = await pollBuildStatus(accountId, projectName, currentBuild.id);
 
     if (isAutoDeployEnabled && deployStatusTaskLocator) {
       await pollDeployStatus(
         accountId,
         projectName,
         deployStatusTaskLocator.id,
-        currentBuild.get()
+        currentBuild.id
       );
     }
-    currentBuild.clear();
-    await currentBuild.update(accountId, projectName);
+    currentBuild.id = null;
+    await createNewStagingBuild(accountId, projectName);
 
     if (standbyeQueue.length > 0) {
       await processStandByQueue(accountId, projectName);
@@ -176,7 +168,7 @@ const queueFileUpload = async (
       await uploadFileToBuild(
         accountId,
         projectName,
-        currentBuild.get(),
+        currentBuild.id,
         filePath,
         remotePath
       );
@@ -231,7 +223,8 @@ exports.handler = async options => {
   watcher.on('ready', () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectPath }));
   });
-  await currentBuild.update(accountId, projectConfig.name);
+
+  await createNewStagingBuild(accountId, projectConfig.name);
 
   watcher.on('add', async filePath => {
     const remotePath = path.relative(
@@ -261,6 +254,25 @@ exports.handler = async options => {
     }
     await queueFileUpload(accountId, projectConfig.name, filePath, remotePath);
   });
+
+  process.on('SIGINT', () => {
+    if (currentBuild.id) {
+      cancelStagedBuild(accountId, projectConfig.name)
+        .then(() => {
+          logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
+          process.exit(0);
+        })
+        .catch(err => {
+          logApiErrorInstance(
+            err,
+            new ApiErrorContext({ accountId, projectName: projectConfig.name })
+          );
+          process.exit(1);
+        });
+    } else {
+      process.exit(0);
+    }
+  });
 };
 
 exports.builder = yargs => {
@@ -270,7 +282,7 @@ exports.builder = yargs => {
   });
 
   yargs.example([
-    ['$0 project wwatch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
+    ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs, true);
