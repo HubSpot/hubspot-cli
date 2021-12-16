@@ -32,6 +32,7 @@ const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
+  pollDeployStatus,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -56,7 +57,6 @@ const standbyeQueue = [];
 let timer;
 
 const processStandByQueue = async (accountId, projectName) => {
-  await currentBuild.update(accountId, projectName);
   queue.addAll(
     standbyeQueue.map(({ filePath, remotePath }) => {
       return async () => {
@@ -126,9 +126,21 @@ const debounceQueueBuild = (accountId, projectName) => {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
       return;
     }
+    const {
+      isAutoDeployEnabled,
+      deployStatusTaskLocator,
+    } = await pollBuildStatus(accountId, projectName, currentBuild.get());
 
-    await pollBuildStatus(accountId, projectName, currentBuild.get());
+    if (isAutoDeployEnabled && deployStatusTaskLocator) {
+      await pollDeployStatus(
+        accountId,
+        projectName,
+        deployStatusTaskLocator.id,
+        currentBuild.get()
+      );
+    }
     currentBuild.clear();
+    await currentBuild.update(accountId, projectName);
 
     if (standbyeQueue.length > 0) {
       await processStandByQueue(accountId, projectName);
@@ -160,7 +172,6 @@ const queueFileUpload = async (
   logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
 
   return queue.add(async () => {
-    await currentBuild.update(accountId, projectName);
     try {
       await uploadFileToBuild(
         accountId,
@@ -220,6 +231,8 @@ exports.handler = async options => {
   watcher.on('ready', () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectPath }));
   });
+  await currentBuild.update(accountId, projectConfig.name);
+
   watcher.on('add', async filePath => {
     const remotePath = path.relative(
       path.join(projectDir, projectConfig.srcDir),
