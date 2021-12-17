@@ -36,6 +36,7 @@ const {
   pollDeployStatus,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -47,7 +48,7 @@ const loadAndValidateOptions = async options => {
   checkAndWarnGitInclusion();
 
   if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -196,7 +197,7 @@ const createNewBuild = async (accountId, projectName) => {
     } else {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -260,16 +261,16 @@ exports.handler = async options => {
       try {
         await cancelStagedBuild(accountId, projectConfig.name);
         logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
-        process.exit(0);
+        process.exit(EXIT_CODES.SUCCESS);
       } catch (err) {
         logApiErrorInstance(
           err,
           new ApiErrorContext({ accountId, projectName: projectConfig.name })
         );
-        process.exit(1);
+        process.exit(EXIT_CODES.ERROR);
       }
     } else {
-      process.exit(0);
+      process.exit(EXIT_CODES.SUCCESS);
     }
   });
 };
