@@ -495,7 +495,7 @@ en:
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file {{ filePath }} to {{ remotePath }}"
               createNewBuild: "Staging a new build..."
-              buildCancelled: "Staging build has been cancelled. Exiting..."
+              buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
             debug:
               uploadFailed: "Failed to upload file {{ filePath }} to {{ remotePath }}"
               uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
@@ -503,6 +503,9 @@ en:
               ignored: "Skipping {{ filePath }} due to an ignore rule"
               pause: "Pausing watcher, attempting to queue build"
               buildStarted: "Build queued."
+              buildCancelled: "The current staging build has been cancelled. Exiting..."
+            errors:
+              projectLocked: "The previous staging build is still in progress"
       remove: 
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"

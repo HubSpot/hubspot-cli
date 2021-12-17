@@ -2,55 +2,36 @@ const chokidar = require('chokidar');
 const path = require('path');
 const { default: PQueue } = require('p-queue');
 const {
-  addAccountOptions,
-  addConfigOptions,
-  setLogLevel,
-  getAccountId,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logDebugInfo } = require('../../lib/debugInfo');
-const {
-  loadConfig,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
-const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const {
   cancelStagedBuild,
   provisionBuild,
   uploadFileToBuild,
   queueBuild,
 } = require('@hubspot/cli-lib/api/dfs');
-const { validateAccount } = require('../../lib/validation');
+const {
+  addAccountOptions,
+  addConfigOptions,
+  getAccountId,
+  addUseEnvironmentOptions,
+} = require('../../lib/commonOpts');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   getProjectConfig,
   validateProjectConfig,
   pollBuildStatus,
   pollDeployStatus,
 } = require('../../lib/projects');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { loadAndValidateOptions } = require('../../lib/validation');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
-
-const loadAndValidateOptions = async options => {
-  setLogLevel(options);
-  logDebugInfo(options);
-  const { config: configPath } = options;
-  loadConfig(configPath, options);
-  checkAndWarnGitInclusion();
-
-  if (!(validateConfig() && (await validateAccount(options)))) {
-    process.exit(EXIT_CODES.ERROR);
-  }
-};
 
 const queue = new PQueue({
   concurrency: 10,
@@ -66,25 +47,7 @@ const processStandByQueue = async (accountId, projectName) => {
   queue.addAll(
     standbyeQueue.map(({ filePath, remotePath }) => {
       return async () => {
-        try {
-          await uploadFileToBuild(
-            accountId,
-            projectName,
-            currentBuild.id,
-            filePath,
-            remotePath
-          );
-          logger.log(
-            i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
-          );
-        } catch (err) {
-          logger.debug(
-            i18n(`${i18nKey}.debug.uploadFailed`, {
-              filePath,
-              remotePath,
-            })
-          );
-        }
+        queueFileUpload(accountId, projectName, filePath, remotePath);
       };
     })
   );
@@ -191,12 +154,12 @@ const createNewBuild = async (accountId, projectName) => {
     return buildId;
   } catch (err) {
     if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
-      logger.error('Project is locked, cannot create new build');
-    } else if (err.error.subCategory === 'PipelineErrors.MISSING_PROJECT') {
-      logger.error(`Project ${projectName} does not exist.`);
+      logger.error(i18n(`${i18nKey}.errors.projectLocked`));
     } else {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     }
+    await cancelStagedBuild(accountId, projectName);
+    logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -205,7 +168,7 @@ exports.command = 'watch [path]';
 exports.describe = false;
 
 exports.handler = async options => {
-  loadAndValidateOptions(options);
+  await loadAndValidateOptions(options);
 
   const { path: projectPath } = options;
   const accountId = getAccountId(options);
@@ -221,11 +184,10 @@ exports.handler = async options => {
     ignored: file => shouldIgnoreFile(file),
   });
 
-  watcher.on('ready', () => {
-    logger.log(i18n(`${i18nKey}.logs.watching`, { projectPath }));
+  watcher.on('ready', async () => {
+    logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
+    await createNewStagingBuild(accountId, projectConfig.name);
   });
-
-  await createNewStagingBuild(accountId, projectConfig.name);
 
   watcher.on('add', async filePath => {
     const remotePath = path.relative(
@@ -260,7 +222,7 @@ exports.handler = async options => {
     if (currentBuild.id) {
       try {
         await cancelStagedBuild(accountId, projectConfig.name);
-        logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
+        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
         process.exit(EXIT_CODES.SUCCESS);
       } catch (err) {
         logApiErrorInstance(
