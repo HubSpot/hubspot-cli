@@ -165,6 +165,7 @@ async function provisionBuild(portalId, projectName) {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/provision-build`,
+    timeout: 50000,
   });
 }
 
