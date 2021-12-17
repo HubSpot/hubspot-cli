@@ -491,10 +491,10 @@ en:
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs: 
-              watching: "Watcher is ready and watching {{ projectDir }}. Any changes detected will be automatically uploaded and overwrite the current version in the developer file system."
+              watching: "Watcher is ready and watching {{ projectDir }}. Any changes detected will be automatically uploaded and added to the current staging build."
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file {{ filePath }} to {{ remotePath }}"
-              createNewBuild: "Creating a new staging build..."
+              createNewBuild: "Staging a new build..."
               buildCancelled: "Staging build has been cancelled. Exiting..."
             debug:
               uploadFailed: "Failed to upload file {{ filePath }} to {{ remotePath }}"
