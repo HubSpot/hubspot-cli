@@ -95,10 +95,10 @@ const createNewStagingBuild = async (accountId, projectName) => {
   if (currentBuild.isFetchingNewBuildId) {
     return;
   }
-  logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
   currentBuild.isFetchingNewBuildId = true;
   currentBuild.id = await createNewBuild(accountId, projectName);
   currentBuild.isFetchingNewBuildId = false;
+  logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
 };
 
 const debounceQueueBuild = (accountId, projectName) => {
@@ -140,7 +140,7 @@ const debounceQueueBuild = (accountId, projectName) => {
 
     queue.start();
     logger.log(i18n(`${i18nKey}.logs.resuming`));
-  }, 5000);
+  }, 2000);
 };
 
 const queueFileUpload = async (
@@ -255,20 +255,19 @@ exports.handler = async options => {
     await queueFileUpload(accountId, projectConfig.name, filePath, remotePath);
   });
 
-  process.on('SIGINT', () => {
+  process.on('SIGINT', async () => {
     if (currentBuild.id) {
-      cancelStagedBuild(accountId, projectConfig.name)
-        .then(() => {
-          logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
-          process.exit(0);
-        })
-        .catch(err => {
-          logApiErrorInstance(
-            err,
-            new ApiErrorContext({ accountId, projectName: projectConfig.name })
-          );
-          process.exit(1);
-        });
+      try {
+        await cancelStagedBuild(accountId, projectConfig.name);
+        logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
+        process.exit(0);
+      } catch (err) {
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({ accountId, projectName: projectConfig.name })
+        );
+        process.exit(1);
+      }
     } else {
       process.exit(0);
     }
