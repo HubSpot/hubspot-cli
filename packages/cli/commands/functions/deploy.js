@@ -83,7 +83,7 @@ exports.handler = async options => {
     spinner.stop();
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
-      i18n(`${i18nKey}.success.deploy`, {
+      i18n(`${i18nKey}.success.deployed`, {
         accountId,
         buildTimeSeconds,
         functionPath,
