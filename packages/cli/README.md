@@ -1,6 +1,6 @@
 # @hubspot/cli
 
-Provides an `hs` command for interacting with the HubSpot. [Learn more about building on HubSpot](https://developers.hubspot.com).
+Provides an `hs` command for interacting with HubSpot. [Learn more about building on HubSpot](https://developers.hubspot.com).
 
 ## Getting started
 
