@@ -23,6 +23,27 @@ let currentBuildId = null;
 let handleBuildStatus;
 let timer;
 
+const bindSigIntHandler = (accountId, projectName) => {
+  process.removeAllListeners('SIGINT');
+  process.on('SIGINT', async () => {
+    if (currentBuildId) {
+      try {
+        await cancelStagedBuild(accountId, projectName);
+        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
+        process.exit(0);
+      } catch (err) {
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({ accountId, projectName: projectName })
+        );
+        process.exit(1);
+      }
+    } else {
+      process.exit(0);
+    }
+  });
+};
+
 const processStandByQueue = async (accountId, projectName) => {
   queue.addAll(
     standbyeQueue.map(({ filePath, remotePath }) => {
@@ -38,6 +59,8 @@ const processStandByQueue = async (accountId, projectName) => {
 const createNewStagingBuild = async (accountId, projectName) => {
   currentBuildId = await createNewBuild(accountId, projectName);
   logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
+
+  bindSigIntHandler(accountId, projectName);
 };
 
 const debounceQueueBuild = (accountId, projectName) => {
@@ -57,8 +80,9 @@ const debounceQueueBuild = (accountId, projectName) => {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
       return;
     }
+
     await handleBuildStatus(accountId, projectName, currentBuildId);
-    currentBuildId = null;
+
     await createNewStagingBuild(accountId, projectName);
 
     if (standbyeQueue.length > 0) {
@@ -155,6 +179,7 @@ const createWatcher = async (
     ignoreInitial: true,
     ignored: file => shouldIgnoreFile(file),
   });
+
   watcher.on('ready', async () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
     await createNewStagingBuild(accountId, projectConfig.name);
@@ -164,24 +189,6 @@ const createWatcher = async (
   });
   watcher.on('change', async filePath => {
     addFile(accountId, projectConfig.name, projectSourceDir, filePath);
-  });
-
-  process.on('SIGINT', async () => {
-    if (currentBuildId) {
-      try {
-        await cancelStagedBuild(accountId, projectConfig.name);
-        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
-        process.exit(0);
-      } catch (err) {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName: projectConfig.name })
-        );
-        process.exit(1);
-      }
-    } else {
-      process.exit(0);
-    }
   });
 };
 
