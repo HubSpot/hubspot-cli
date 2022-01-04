@@ -58,7 +58,9 @@ const processStandByQueue = async (accountId, projectName) => {
 
 const createNewStagingBuild = async (accountId, projectName) => {
   currentBuildId = await createNewBuild(accountId, projectName);
-  logger.log(i18n(`${i18nKey}.logs.createNewBuild`));
+  logger.log(
+    i18n(`${i18nKey}.logs.createNewBuild`, { buildId: currentBuildId })
+  );
 
   bindSigIntHandler(accountId, projectName);
 };
@@ -136,7 +138,7 @@ const queueFileUpload = async (
 
 const createNewBuild = async (accountId, projectName) => {
   try {
-    logger.debug('Attempting to create a new build');
+    logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
     const { buildId } = await provisionBuild(accountId, projectName);
     return buildId;
   } catch (err) {
