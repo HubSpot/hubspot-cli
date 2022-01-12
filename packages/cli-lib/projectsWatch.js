@@ -158,14 +158,14 @@ const createWatcher = async (
   handleBuildStatus = handleBuildStatusFn;
   handleSigInt = handleSigIntFn;
 
+  await createNewStagingBuild(accountId, projectConfig.name);
+
   const watcher = chokidar.watch(projectSourceDir, {
     ignoreInitial: true,
     ignored: file => shouldIgnoreFile(file),
   });
-
   watcher.on('ready', async () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
-    await createNewStagingBuild(accountId, projectConfig.name);
   });
   watcher.on('add', async filePath => {
     addFile(accountId, projectConfig.name, projectSourceDir, filePath);
