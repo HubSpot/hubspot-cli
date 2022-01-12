@@ -20,29 +20,8 @@ const queue = new PQueue({
 });
 const standbyeQueue = [];
 let currentBuildId = null;
-let handleBuildStatus;
+let handleBuildStatus, handleSigInt;
 let timer;
-
-const bindSigIntHandler = (accountId, projectName) => {
-  process.removeAllListeners('SIGINT');
-  process.on('SIGINT', async () => {
-    if (currentBuildId) {
-      try {
-        await cancelStagedBuild(accountId, projectName);
-        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
-        process.exit(0);
-      } catch (err) {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName: projectName })
-        );
-        process.exit(1);
-      }
-    } else {
-      process.exit(0);
-    }
-  });
-};
 
 const processStandByQueue = async (accountId, projectName) => {
   queue.addAll(
@@ -62,7 +41,7 @@ const createNewStagingBuild = async (accountId, projectName) => {
     i18n(`${i18nKey}.logs.createNewBuild`, { buildId: currentBuildId })
   );
 
-  bindSigIntHandler(accountId, projectName);
+  handleSigInt(accountId, projectName, currentBuildId);
 };
 
 const debounceQueueBuild = (accountId, projectName) => {
@@ -171,11 +150,13 @@ const createWatcher = async (
   accountId,
   projectConfig,
   projectDir,
-  handleBuildStatusFn
+  handleBuildStatusFn,
+  handleSigIntFn
 ) => {
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
 
   handleBuildStatus = handleBuildStatusFn;
+  handleSigInt = handleSigIntFn;
 
   const watcher = chokidar.watch(projectSourceDir, {
     ignoreInitial: true,

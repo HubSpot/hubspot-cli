@@ -1,4 +1,11 @@
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
+const { cancelStagedBuild } = require('@hubspot/cli-lib/api/dfs');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
+const { logger } = require('@hubspot/cli-lib/logger');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -13,7 +20,7 @@ const {
   pollDeployStatus,
 } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -36,6 +43,27 @@ const handleBuildStatus = async (accountId, projectName, buildId) => {
   }
 };
 
+const handleSigInt = (accountId, projectName, currentBuildId) => {
+  process.removeAllListeners('SIGINT');
+  process.on('SIGINT', async () => {
+    if (currentBuildId) {
+      try {
+        await cancelStagedBuild(accountId, projectName);
+        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
+        process.exit(EXIT_CODES.SUCCESS);
+      } catch (err) {
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({ accountId, projectName: projectName })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
+    } else {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  });
+};
+
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
@@ -48,7 +76,13 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await createWatcher(accountId, projectConfig, projectDir, handleBuildStatus);
+  await createWatcher(
+    accountId,
+    projectConfig,
+    projectDir,
+    handleBuildStatus,
+    handleSigInt
+  );
 };
 
 exports.builder = yargs => {
