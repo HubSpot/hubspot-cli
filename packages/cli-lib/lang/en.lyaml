@@ -475,7 +475,29 @@ en:
             positionals:
               path:
                 describe: "Path to a project folder"
-      remove:
+          watch:
+            describe: "Path to a project folder"
+            examples:
+              default: "Watch a project within the myProjectFolder folder"
+            logs: 
+              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded and added to the current staging build."
+              resuming: "Resuming watcher..."
+              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              createNewBuild: "Staging build #{{ buildId }} created"
+              buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
+            debug:
+              attemptNewBuild: "Attempting to create a new build"
+              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
+              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
+              pause: "Pausing watcher, attempting to queue build"
+              buildStarted: "Build queued."
+              buildCancelled: "The current staging build has been cancelled. Exiting..."
+              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
+            errors:
+              projectLocked: "The previous staging build is still in progress"
+      remove: 
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
         errors:
