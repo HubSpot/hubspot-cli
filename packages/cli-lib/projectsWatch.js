@@ -55,7 +55,7 @@ const debounceQueueBuild = (accountId, projectName) => {
     await queue.onIdle();
 
     try {
-      await queueBuild(accountId, projectName, currentBuildId);
+      await queueBuild(accountId, projectName);
       logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
     } catch (err) {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
@@ -97,13 +97,7 @@ const queueFileUpload = async (
 
   return queue.add(async () => {
     try {
-      await uploadFileToBuild(
-        accountId,
-        projectName,
-        currentBuildId,
-        filePath,
-        remotePath
-      );
+      await uploadFileToBuild(accountId, projectName, filePath, remotePath);
       logger.log(
         i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
       );

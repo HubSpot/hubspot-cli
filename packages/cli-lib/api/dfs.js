@@ -164,7 +164,7 @@ async function provisionBuild(portalId, projectName) {
   return http.post(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
-    )}/provision-build`,
+    )}/builds/staged/provision`,
     timeout: 50000,
   });
 }
@@ -177,11 +177,11 @@ async function provisionBuild(portalId, projectName) {
  * @param {number} buildId
  * @returns {Promise}
  */
-async function queueBuild(portalId, projectName, buildId) {
+async function queueBuild(portalId, projectName) {
   return http.post(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
-    )}/builds/${buildId}/queue`,
+    )}/builds/staged/queue`,
   });
 }
 
@@ -193,17 +193,11 @@ async function queueBuild(portalId, projectName, buildId) {
  * @param {number} buildId
  * @returns {Promise}
  */
-async function uploadFileToBuild(
-  portalId,
-  projectName,
-  buildId,
-  filePath,
-  path
-) {
+async function uploadFileToBuild(portalId, projectName, filePath, path) {
   return http.post(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
-    )}/builds/staged/${buildId}/upload/${encodeURIComponent(path)}`,
+    )}/builds/staged/files/${encodeURIComponent(path)}`,
     formData: {
       file: fs.createReadStream(filePath),
     },
