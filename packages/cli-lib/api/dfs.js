@@ -194,7 +194,7 @@ async function queueBuild(portalId, projectName) {
  * @returns {Promise}
  */
 async function uploadFileToBuild(portalId, projectName, filePath, path) {
-  return http.post(portalId, {
+  return http.put(portalId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/staged/files/${encodeURIComponent(path)}`,
