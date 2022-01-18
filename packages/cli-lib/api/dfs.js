@@ -205,6 +205,22 @@ async function uploadFileToBuild(portalId, projectName, filePath, path) {
 }
 
 /**
+ * Delete file from staged build (watch)
+ *
+ * @async
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function deleteFileFromBuild(portalId, projectName, path) {
+  return http.delete(portalId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/staged/files/${encodeURIComponent(path)}`,
+  });
+}
+
+/**
  * Cancel staged build
  *
  * @async
@@ -234,5 +250,6 @@ module.exports = {
   provisionBuild,
   queueBuild,
   uploadFileToBuild,
+  deleteFileFromBuild,
   cancelStagedBuild,
 };
