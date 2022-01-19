@@ -64,7 +64,9 @@ async function downloadProject(
     let zipUrl;
     if (releaseType === GITHUB_RELEASE_TYPES.REPOSITORY) {
       logger.log(`Fetching ${releaseType} with name ${repoName}...`);
-      zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball/${ref}`;
+      zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball${
+        ref ? `/${ref}` : ''
+      }`;
     } else {
       const releaseData = await fetchReleaseData(repoName, tag);
       if (!releaseData) return;
