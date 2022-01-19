@@ -69,7 +69,12 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
-const getProjectConfig = async _dir => {
+const getIsInProject = async _dir => {
+  const configPath = await getProjectConfigPath(_dir);
+  return !!configPath;
+};
+
+const getProjectConfigPath = async _dir => {
   const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {
@@ -77,6 +82,11 @@ const getProjectConfig = async _dir => {
     nocase: true,
   });
 
+  return configPath;
+};
+
+const getProjectConfig = async _dir => {
+  const configPath = await getProjectConfigPath(_dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };
   }
@@ -381,6 +391,7 @@ const makeGetTaskStatus = taskType => {
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
+  getIsInProject,
   createProjectConfig,
   validateProjectConfig,
   showWelcomeMessage,
