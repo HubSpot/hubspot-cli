@@ -98,30 +98,19 @@ const queueFileUpload = async (
   logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
 
   return queue.add(async () => {
-    if (action === 'upload') {
-      try {
+    try {
+      if (action === 'upload') {
         await uploadFileToBuild(accountId, projectName, filePath, remotePath);
-
-        logger.log(
-          i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
-        );
-      } catch (err) {
-        logger.debug(
-          i18n(`${i18nKey}.debug.uploadFailed`, { filePath, remotePath })
-        );
-      }
-    } else if (action === 'delete') {
-      try {
+      } else if (action === 'delete') {
         await deleteFileFromBuild(accountId, projectName, remotePath);
-
-        logger.log(
-          i18n(`${i18nKey}.logs.deleteSucceeded`, { filePath, remotePath })
-        );
-      } catch (err) {
-        logger.debug(
-          i18n(`${i18nKey}.debug.deleteFailed`, { filePath, remotePath })
-        );
       }
+      logger.log(
+        i18n(`${i18nKey}.logs.${action}Succeeded`, { filePath, remotePath })
+      );
+    } catch (err) {
+      logger.debug(
+        i18n(`${i18nKey}.errors.${action}Failed`, { filePath, remotePath })
+      );
     }
   });
 };
