@@ -57,13 +57,14 @@ async function fetchReleaseData(repoName, tag = '') {
 async function downloadProject(
   repoName,
   tag = '',
-  releaseType = GITHUB_RELEASE_TYPES.RELEASE
+  releaseType = GITHUB_RELEASE_TYPES.RELEASE,
+  ref
 ) {
   try {
     let zipUrl;
     if (releaseType === GITHUB_RELEASE_TYPES.REPOSITORY) {
       logger.log(`Fetching ${releaseType} with name ${repoName}...`);
-      zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball`;
+      zipUrl = `https://api.github.com/repos/HubSpot/${repoName}/zipball/${ref}`;
     } else {
       const releaseData = await fetchReleaseData(repoName, tag);
       if (!releaseData) return;
@@ -180,9 +181,9 @@ function cleanupTemp(tmpDir) {
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
 async function createProject(dest, type, repoName, sourceDir, options = {}) {
-  const { themeVersion, projectVersion, releaseType } = options;
+  const { themeVersion, projectVersion, releaseType, ref } = options;
   const tag = projectVersion || themeVersion;
-  const zip = await downloadProject(repoName, tag, releaseType);
+  const zip = await downloadProject(repoName, tag, releaseType, ref);
   if (!zip) return false;
   const { extractDir, tmpDir } = (await extractProjectZip(repoName, zip)) || {};
   const success =
