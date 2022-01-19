@@ -10,6 +10,7 @@ const {
   cancelStagedBuild,
   provisionBuild,
   uploadFileToBuild,
+  deleteFileFromBuild,
   queueBuild,
 } = require('./api/dfs');
 
@@ -25,9 +26,9 @@ let timer;
 
 const processStandByQueue = async (accountId, projectName) => {
   queue.addAll(
-    standbyeQueue.map(({ filePath, remotePath }) => {
+    standbyeQueue.map(({ filePath, remotePath, action }) => {
       return async () => {
-        queueFileUpload(accountId, projectName, filePath, remotePath);
+        queueFileUpload(accountId, projectName, filePath, remotePath, action);
       };
     })
   );
@@ -79,7 +80,8 @@ const queueFileUpload = async (
   accountId,
   projectName,
   filePath,
-  remotePath
+  remotePath,
+  action
 ) => {
   if (!isAllowedExtension(filePath)) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
@@ -97,13 +99,17 @@ const queueFileUpload = async (
 
   return queue.add(async () => {
     try {
-      await uploadFileToBuild(accountId, projectName, filePath, remotePath);
+      if (action === 'upload') {
+        await uploadFileToBuild(accountId, projectName, filePath, remotePath);
+      } else if (action === 'delete') {
+        await deleteFileFromBuild(accountId, projectName, remotePath);
+      }
       logger.log(
-        i18n(`${i18nKey}.logs.uploadSucceeded`, { filePath, remotePath })
+        i18n(`${i18nKey}.logs.${action}Succeeded`, { filePath, remotePath })
       );
     } catch (err) {
       logger.debug(
-        i18n(`${i18nKey}.debug.uploadFailed`, { filePath, remotePath })
+        i18n(`${i18nKey}.errors.${action}Failed`, { filePath, remotePath })
       );
     }
   });
@@ -126,7 +132,13 @@ const createNewBuild = async (accountId, projectName) => {
   }
 };
 
-const addFile = async (accountId, projectName, projectSourceDir, filePath) => {
+const addFile = async (
+  accountId,
+  projectName,
+  projectSourceDir,
+  filePath,
+  action = 'upload'
+) => {
   const remotePath = path.relative(projectSourceDir, filePath);
   if (queue.isPaused) {
     standbyeQueue.find(file => file.filePath === filePath)
@@ -134,9 +146,10 @@ const addFile = async (accountId, projectName, projectSourceDir, filePath) => {
       : standbyeQueue.push({
           filePath,
           remotePath,
+          action,
         });
   } else {
-    await queueFileUpload(accountId, projectName, filePath, remotePath);
+    await queueFileUpload(accountId, projectName, filePath, remotePath, action);
   }
 };
 
@@ -166,6 +179,15 @@ const createWatcher = async (
   });
   watcher.on('change', async filePath => {
     addFile(accountId, projectConfig.name, projectSourceDir, filePath);
+  });
+  watcher.on('unlink', async filePath => {
+    addFile(
+      accountId,
+      projectConfig.name,
+      projectSourceDir,
+      filePath,
+      'delete'
+    );
   });
 };
 

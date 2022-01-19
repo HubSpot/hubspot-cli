@@ -8,10 +8,11 @@ const PROJECTS_DEPLOY_API_PATH = 'dfs/deploy/v1';
  * Fetch projects
  *
  * @async
+ * @param {number} accountId
  * @returns {Promise}
  */
-async function fetchProjects(portalId) {
-  return http.get(portalId, {
+async function fetchProjects(accountId) {
+  return http.get(accountId, {
     uri: PROJECTS_API_PATH,
   });
 }
@@ -20,11 +21,12 @@ async function fetchProjects(portalId) {
  * Create project
  *
  * @async
+ * @param {number} accountId
  * @param {string} name
  * @returns {Promise}
  */
-async function createProject(portalId, name) {
-  return http.post(portalId, {
+async function createProject(accountId, name) {
+  return http.post(accountId, {
     uri: PROJECTS_API_PATH,
     body: {
       name,
@@ -36,6 +38,7 @@ async function createProject(portalId, name) {
  * Upload project
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @param {string} projectFile
  * @returns {Promise}
@@ -54,11 +57,12 @@ async function uploadProject(accountId, projectName, projectFile) {
  * Fetch project
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @returns {Promise}
  */
-async function fetchProject(portalId, projectName) {
-  return http.get(portalId, {
+async function fetchProject(accountId, projectName) {
+  return http.get(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
@@ -67,11 +71,12 @@ async function fetchProject(portalId, projectName) {
  * Delete project
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @returns {Promise}
  */
-async function deleteProject(portalId, projectName) {
-  return http.delete(portalId, {
+async function deleteProject(accountId, projectName) {
+  return http.delete(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}`,
   });
 }
@@ -80,11 +85,13 @@ async function deleteProject(portalId, projectName) {
  * Fetch list of project builds
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
+ * @param {object} query
  * @returns {Promise}
  */
-async function fetchProjectBuilds(portalId, projectName, query) {
-  return http.get(portalId, {
+async function fetchProjectBuilds(accountId, projectName, query) {
+  return http.get(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/builds`,
     query,
   });
@@ -94,12 +101,13 @@ async function fetchProjectBuilds(portalId, projectName, query) {
  * Get project build status
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @param {number} buildId
  * @returns {Promise}
  */
-async function getBuildStatus(portalId, projectName, buildId) {
-  return http.get(portalId, {
+async function getBuildStatus(accountId, projectName, buildId) {
+  return http.get(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/${buildId}/status`,
@@ -110,12 +118,13 @@ async function getBuildStatus(portalId, projectName, buildId) {
  * Deploy project
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @param {number} buildId
  * @returns {Promise}
  */
-async function deployProject(portalId, projectName, buildId) {
-  return http.post(portalId, {
+async function deployProject(accountId, projectName, buildId) {
+  return http.post(accountId, {
     uri: `${PROJECTS_DEPLOY_API_PATH}/deploys/queue/async`,
     body: {
       projectName,
@@ -128,12 +137,13 @@ async function deployProject(portalId, projectName, buildId) {
  * Get project deploy status
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @param {number} deployId
  * @returns {Promise}
  */
-async function getDeployStatus(portalId, projectName, deployId) {
-  return http.get(portalId, {
+async function getDeployStatus(accountId, projectName, deployId) {
+  return http.get(accountId, {
     uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${encodeURIComponent(
       projectName
     )}/deploys/${deployId}`,
@@ -144,11 +154,12 @@ async function getDeployStatus(portalId, projectName, deployId) {
  * Get project settings
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @returns {Promise}
  */
-async function fetchProjectSettings(portalId, projectName) {
-  return http.get(portalId, {
+async function fetchProjectSettings(accountId, projectName) {
+  return http.get(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(projectName)}/settings`,
   });
 }
@@ -157,11 +168,12 @@ async function fetchProjectSettings(portalId, projectName) {
  * Provision new project build
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
  * @returns {Promise}
  */
-async function provisionBuild(portalId, projectName) {
-  return http.post(portalId, {
+async function provisionBuild(accountId, projectName) {
+  return http.post(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/staged/provision`,
@@ -173,12 +185,12 @@ async function provisionBuild(portalId, projectName) {
  * Queue build
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
- * @param {number} buildId
  * @returns {Promise}
  */
-async function queueBuild(portalId, projectName) {
-  return http.post(portalId, {
+async function queueBuild(accountId, projectName) {
+  return http.post(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/staged/queue`,
@@ -189,12 +201,14 @@ async function queueBuild(portalId, projectName) {
  * Upload file to staged build (watch)
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
- * @param {number} buildId
+ * @param {string} filePath
+ * @param {string} path
  * @returns {Promise}
  */
-async function uploadFileToBuild(portalId, projectName, filePath, path) {
-  return http.put(portalId, {
+async function uploadFileToBuild(accountId, projectName, filePath, path) {
+  return http.put(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/staged/files/${encodeURIComponent(path)}`,
@@ -205,15 +219,32 @@ async function uploadFileToBuild(portalId, projectName, filePath, path) {
 }
 
 /**
+ * Delete file from staged build (watch)
+ *
+ * @async
+ * @param {number} accountId
+ * @param {string} projectName
+ * @param {string} path
+ * @returns {Promise}
+ */
+async function deleteFileFromBuild(accountId, projectName, path) {
+  return http.delete(accountId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/staged/files/${encodeURIComponent(path)}`,
+  });
+}
+
+/**
  * Cancel staged build
  *
  * @async
+ * @param {number} accountId
  * @param {string} projectName
- * @param {number} buildId
  * @returns {Promise}
  */
-async function cancelStagedBuild(portalId, projectName) {
-  return http.post(portalId, {
+async function cancelStagedBuild(accountId, projectName) {
+  return http.post(accountId, {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/staged/cancel`,
@@ -234,5 +265,6 @@ module.exports = {
   provisionBuild,
   queueBuild,
   uploadFileToBuild,
+  deleteFileFromBuild,
   cancelStagedBuild,
 };
