@@ -401,8 +401,9 @@ en:
       project:
         subcommands:
           create:
+            describe: "Create a new project"
             examples:
-              default: "Create a project"
+              default: "Create a new project"
             options:
               location:
                 describe: "Directory where project should be created"
@@ -411,6 +412,7 @@ en:
               template:
                 describe: "Which template?"
           deploy:
+            describe: "Deploy a project build"
             debug:
               deploying: "Deploying project at path: {{ path }}"
             errors:
@@ -456,7 +458,7 @@ en:
               cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
               compressed: "Project files compressed: {{ byteCount }} bytes"
               compressing: "Compressing build files to \"{{ path }}\""
-            describe: "Upload a project."
+            describe: "Upload your project files and create a new build"
             examples:
               default: "Upload a project"
             loading:
@@ -476,7 +478,7 @@ en:
               path:
                 describe: "Path to a project folder"
           watch:
-            describe: "Path to a project folder"
+            describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs: 

@@ -33,7 +33,7 @@ const i18nKey = 'cli.commands.project.subcommands.upload';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const spinnies = new Spinnies({

@@ -23,7 +23,7 @@ const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'deploy [path]';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
