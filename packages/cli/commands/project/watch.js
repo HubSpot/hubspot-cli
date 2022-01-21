@@ -25,7 +25,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
 exports.command = 'watch [path]';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
   const {
