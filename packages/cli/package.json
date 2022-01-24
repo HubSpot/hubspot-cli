@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "3.0.10-beta.18",
+  "version": "3.0.10",
   "description": "CLI for working with HubSpot",
   "license": "Apache-2.0",
   "repository": {
@@ -8,8 +8,8 @@
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "dependencies": {
-    "@hubspot/cli-lib": "^3.0.10-beta.18",
-    "@hubspot/serverless-dev-runtime": "^3.0.10-beta.18",
+    "@hubspot/cli-lib": "^3.0.10",
+    "@hubspot/serverless-dev-runtime": "^3.0.10",
     "archiver": "^5.3.0",
     "chalk": "^4.1.2",
     "express": "^4.17.1",
