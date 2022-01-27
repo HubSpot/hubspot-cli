@@ -83,7 +83,7 @@ const queueFileUpload = async (
   remotePath,
   action
 ) => {
-  if (!isAllowedExtension(filePath)) {
+  if (action === 'upload' && !isAllowedExtension(filePath)) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
   }
@@ -181,6 +181,15 @@ const createWatcher = async (
     addFile(accountId, projectConfig.name, projectSourceDir, filePath);
   });
   watcher.on('unlink', async filePath => {
+    addFile(
+      accountId,
+      projectConfig.name,
+      projectSourceDir,
+      filePath,
+      'delete'
+    );
+  });
+  watcher.on('unlinkDir', async filePath => {
     addFile(
       accountId,
       projectConfig.name,
