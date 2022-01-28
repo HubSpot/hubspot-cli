@@ -101,7 +101,7 @@ const queueFileUpload = async (
     try {
       if (action === 'upload') {
         await uploadFileToBuild(accountId, projectName, filePath, remotePath);
-      } else if (action === 'delete') {
+      } else if (action === 'deleteFile' || action === 'deleteFolder') {
         await deleteFileFromBuild(accountId, projectName, remotePath);
       }
       logger.log(
@@ -186,7 +186,7 @@ const createWatcher = async (
       projectConfig.name,
       projectSourceDir,
       filePath,
-      'delete'
+      'deleteFile'
     );
   });
   watcher.on('unlinkDir', async filePath => {
@@ -195,7 +195,7 @@ const createWatcher = async (
       projectConfig.name,
       projectSourceDir,
       filePath,
-      'delete'
+      'deleteFolder'
     );
   });
 };
