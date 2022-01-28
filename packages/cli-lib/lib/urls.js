@@ -20,7 +20,7 @@ const getHubSpotApiOrigin = (env, useLocalHost) => {
       env
     )}`;
   }
-  return `https:${domain}//.com`;
+  return `https://${domain}.com`;
 };
 
 module.exports = {
