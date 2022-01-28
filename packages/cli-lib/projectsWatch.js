@@ -28,7 +28,7 @@ const processStandByQueue = async (accountId, projectName) => {
   queue.addAll(
     standbyeQueue.map(({ filePath, remotePath, action }) => {
       return async () => {
-        queueFileUpload(accountId, projectName, filePath, remotePath, action);
+        queueFileOrFolder(accountId, projectName, filePath, remotePath, action);
       };
     })
   );
@@ -76,14 +76,14 @@ const debounceQueueBuild = (accountId, projectName) => {
   }, 2000);
 };
 
-const queueFileUpload = async (
+const queueFileOrFolder = async (
   accountId,
   projectName,
   filePath,
   remotePath,
   action
 ) => {
-  if (!isAllowedExtension(filePath)) {
+  if (action === 'upload' && !isAllowedExtension(filePath)) {
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
   }
@@ -101,7 +101,7 @@ const queueFileUpload = async (
     try {
       if (action === 'upload') {
         await uploadFileToBuild(accountId, projectName, filePath, remotePath);
-      } else if (action === 'delete') {
+      } else if (action === 'deleteFile' || action === 'deleteFolder') {
         await deleteFileFromBuild(accountId, projectName, remotePath);
       }
       logger.log(
@@ -132,7 +132,7 @@ const createNewBuild = async (accountId, projectName) => {
   }
 };
 
-const addFile = async (
+const handleWatchEvent = async (
   accountId,
   projectName,
   projectSourceDir,
@@ -149,7 +149,13 @@ const addFile = async (
           action,
         });
   } else {
-    await queueFileUpload(accountId, projectName, filePath, remotePath, action);
+    await queueFileOrFolder(
+      accountId,
+      projectName,
+      filePath,
+      remotePath,
+      action
+    );
   }
 };
 
@@ -174,19 +180,28 @@ const createWatcher = async (
   watcher.on('ready', async () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
   });
-  watcher.on('add', async filePath => {
-    addFile(accountId, projectConfig.name, projectSourceDir, filePath);
+  watcher.on('add', async path => {
+    handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);
   });
-  watcher.on('change', async filePath => {
-    addFile(accountId, projectConfig.name, projectSourceDir, filePath);
+  watcher.on('change', async path => {
+    handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);
   });
-  watcher.on('unlink', async filePath => {
-    addFile(
+  watcher.on('unlink', async path => {
+    handleWatchEvent(
       accountId,
       projectConfig.name,
       projectSourceDir,
-      filePath,
-      'delete'
+      path,
+      'deleteFile'
+    );
+  });
+  watcher.on('unlinkDir', async path => {
+    handleWatchEvent(
+      accountId,
+      projectConfig.name,
+      projectSourceDir,
+      path,
+      'deleteFolder'
     );
   });
 };
