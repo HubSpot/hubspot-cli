@@ -1,5 +1,8 @@
 # Change Log
 
+## Changelog has moved to releases
+- As of v3.0.10 new changes will be added as [new releases](https://github.com/HubSpot/hubspot-cli/releases)
+
 ## 3.0.9
 
 - Fixed issue in theme marketplace-validate ([#556](https://github.com/HubSpot/hubspot-cli/pull/556))
