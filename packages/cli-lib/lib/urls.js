@@ -13,7 +13,7 @@ const getHubSpotWebsiteOrigin = env => {
 };
 
 const getHubSpotApiOrigin = (env, useLocalHost) => {
-  var domain = process.env.HUBAPI_DOMAIN_OVERRIDE;
+  let domain = process.env.HUBAPI_DOMAIN_OVERRIDE;
 
   if (!domain || typeof domain !== 'string') {
     domain = `${useLocalHost ? 'local' : 'api'}.hubapi${getEnvUrlString(env)}`;
