@@ -485,7 +485,8 @@ en:
               watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded and added to the current staging build."
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteSucceeded: "Deleted file \"{{ remotePath }}\""
+              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
+              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
               createNewBuild: "Staging build #{{ buildId }} created"
               buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
               initialUploadRequired: "This project has no builds. Uploading files."
@@ -501,7 +502,8 @@ en:
             errors:
               projectLocked: "The previous staging build is still in progress"
               uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFailed: "Failed to delete file \"{{ remotePath }}\""
+              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
+              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
