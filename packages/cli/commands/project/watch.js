@@ -101,7 +101,6 @@ exports.handler = async options => {
 
   // Upload all files if no build exists for this project yet
   if (!results || !results.length) {
-    logger.log(i18n(`${i18nKey}.logs.initialUploadRequired`));
     await handleProjectUpload(
       accountId,
       projectConfig,
