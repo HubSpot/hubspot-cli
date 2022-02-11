@@ -1,6 +1,5 @@
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
-const { cancelStagedBuild } = require('@hubspot/cli-lib/api/dfs');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -14,11 +13,17 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
+  ensureProjectExists,
   getProjectConfig,
-  validateProjectConfig,
+  handleProjectUpload,
   pollBuildStatus,
   pollDeployStatus,
+  validateProjectConfig,
 } = require('../../lib/projects');
+const {
+  cancelStagedBuild,
+  fetchProjectBuilds,
+} = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
@@ -76,13 +81,35 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await createWatcher(
+  await ensureProjectExists(accountId, projectConfig.name);
+
+  const { results } = await fetchProjectBuilds(
     accountId,
-    projectConfig,
-    projectDir,
-    handleBuildStatus,
-    handleSigInt
+    projectConfig.name,
+    options
   );
+
+  const startWatching = async () => {
+    await createWatcher(
+      accountId,
+      projectConfig,
+      projectDir,
+      handleBuildStatus,
+      handleSigInt
+    );
+  };
+
+  // Upload all files if no build exists for this project yet
+  if (!results || !results.length) {
+    await handleProjectUpload(
+      accountId,
+      projectConfig,
+      projectDir,
+      startWatching
+    );
+  } else {
+    await startWatching();
+  }
 };
 
 exports.builder = yargs => {

@@ -1,9 +1,4 @@
 const chalk = require('chalk');
-const fs = require('fs');
-const path = require('path');
-const archiver = require('archiver');
-const tmp = require('tmp');
-const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -11,83 +6,24 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
 const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { uploadProject } = require('@hubspot/cli-lib/api/dfs');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
-  getProjectConfig,
-  validateProjectConfig,
-  pollBuildStatus,
   ensureProjectExists,
+  getProjectConfig,
+  handleProjectUpload,
+  pollBuildStatus,
   pollDeployStatus,
+  validateProjectConfig,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload [path]';
 exports.describe = i18n(`${i18nKey}.describe`);
-
-const uploadProjectFiles = async (accountId, projectName, filePath) => {
-  const spinnies = new Spinnies({
-    succeedColor: 'white',
-  });
-  const accountIdentifier = uiAccountDescription(accountId);
-
-  spinnies.add('upload', {
-    text: i18n(`${i18nKey}.loading.upload.add`, {
-      accountIdentifier,
-      projectName,
-    }),
-  });
-
-  let buildId;
-
-  try {
-    const upload = await uploadProject(accountId, projectName, filePath);
-
-    buildId = upload.buildId;
-
-    spinnies.succeed('upload', {
-      text: i18n(`${i18nKey}.loading.upload.succeed`, {
-        accountIdentifier,
-        projectName,
-      }),
-    });
-
-    logger.debug(
-      i18n(`${i18nKey}.debug.buildCreated`, {
-        buildId,
-        projectName,
-      })
-    );
-  } catch (err) {
-    spinnies.fail('upload', {
-      text: i18n(`${i18nKey}.loading.upload.fail`, {
-        accountIdentifier,
-        projectName,
-      }),
-    });
-
-    logApiErrorInstance(
-      err,
-      new ApiErrorContext({
-        accountId,
-        projectName,
-      })
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  return { buildId };
-};
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -103,30 +39,8 @@ exports.handler = async options => {
 
   await ensureProjectExists(accountId, projectConfig.name, forceCreate);
 
-  const tempFile = tmp.fileSync({ postfix: '.zip' });
-
-  logger.debug(
-    i18n(`${i18nKey}.debug.compressing`, {
-      path: tempFile.name,
-    })
-  );
-
-  const output = fs.createWriteStream(tempFile.name);
-  const archive = archiver('zip');
-
-  output.on('close', async function() {
+  const startPolling = async (tempFile, buildId) => {
     let exitCode = EXIT_CODES.SUCCESS;
-    logger.debug(
-      i18n(`${i18nKey}.debug.compressed`, {
-        byteCount: archive.pointer(),
-      })
-    );
-
-    const { buildId } = await uploadProjectFiles(
-      accountId,
-      projectConfig.name,
-      tempFile.name
-    );
 
     const {
       isAutoDeployEnabled,
@@ -183,21 +97,9 @@ exports.handler = async options => {
     }
 
     process.exit(exitCode);
-  });
+  };
 
-  archive.on('error', function(err) {
-    throw err;
-  });
-
-  archive.pipe(output);
-
-  archive.directory(
-    path.resolve(projectDir, projectConfig.srcDir),
-    false,
-    file => (shouldIgnoreFile(file.name) ? false : file)
-  );
-
-  archive.finalize();
+  await handleProjectUpload(accountId, projectConfig, projectDir, startPolling);
 };
 
 exports.builder = yargs => {

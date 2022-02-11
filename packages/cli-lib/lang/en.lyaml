@@ -481,7 +481,7 @@ en:
             describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
               default: "Watch a project within the myProjectFolder folder"
-            logs: 
+            logs:
               watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded and added to the current staging build."
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
@@ -503,7 +503,7 @@ en:
               uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
               deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
               deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
-      remove: 
+      remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
         errors:
