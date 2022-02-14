@@ -10,7 +10,7 @@ const fs = require('fs-extra');
 const ora = require('ora');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
-const { createProject } = require('@hubspot/cli-lib/projects');
+const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.create.subcommands.apiSample';
@@ -60,7 +60,7 @@ module.exports = {
         sampleLanguage,
       })
     );
-    const created = await createProject(
+    const created = await cloneGitHubRepo(
       filePath,
       assetType,
       sampleType,

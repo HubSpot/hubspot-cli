@@ -11,7 +11,10 @@ const path = require('path');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
-const { createProjectConfig } = require('../../lib/projects');
+const {
+  createProjectConfig,
+  showProjectWelcomeMessage,
+} = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
@@ -33,6 +36,8 @@ exports.handler = async options => {
     options.name || name,
     options.template || template
   );
+
+  showProjectWelcomeMessage();
 };
 
 exports.builder = yargs => {

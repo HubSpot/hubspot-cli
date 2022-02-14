@@ -1,9 +1,9 @@
-const { createProject } = require('@hubspot/cli-lib/projects');
+const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 
 module.exports = {
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ options, dest, assetType }) =>
-    createProject(
+    cloneGitHubRepo(
       dest,
       assetType,
       'cms-webpack-serverless-boilerplate',
