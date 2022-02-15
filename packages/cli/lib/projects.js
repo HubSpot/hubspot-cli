@@ -377,7 +377,10 @@ const makeGetTaskStatus = taskType => {
 
   return async (accountId, taskName, taskId, buildId) => {
     const isTaskComplete = task => {
-      if (task.status === statusText.STATES.FAILURE) {
+      if (
+        !task[statusText.SUBTASK_KEY].length ||
+        task.status === statusText.STATES.FAILURE
+      ) {
         return true;
       } else if (task.status === statusText.STATES.SUCCESS) {
         return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
