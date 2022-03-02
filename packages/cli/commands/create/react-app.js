@@ -1,7 +1,7 @@
-const { createProject } = require('@hubspot/cli-lib/projects');
+const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 
 module.exports = {
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ options, dest, assetType }) =>
-    createProject(dest, assetType, 'cms-react-boilerplate', '', options),
+    cloneGitHubRepo(dest, assetType, 'cms-react-boilerplate', '', options),
 };

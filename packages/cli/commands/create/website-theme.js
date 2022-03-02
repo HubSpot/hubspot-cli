@@ -1,4 +1,4 @@
-const { createProject } = require('@hubspot/cli-lib/projects');
+const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { getIsInProject } = require('../../lib/projects');
 
@@ -14,6 +14,6 @@ module.exports = {
       // releaseType has to be 'REPOSITORY' to download a specific branch
       options.releaseType = GITHUB_RELEASE_TYPES.REPOSITORY;
     }
-    createProject(dest, assetType, 'cms-theme-boilerplate', 'src', options);
+    cloneGitHubRepo(dest, assetType, 'cms-theme-boilerplate', 'src', options);
   },
 };
