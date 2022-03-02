@@ -10,14 +10,19 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const { extractZipArchive } = require('@hubspot/cli-lib/archive');
+const {
+  downloadProject,
+  fetchProjectBuilds,
+} = require('@hubspot/cli-lib/api/dfs');
+const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.commands.project.subcommands.deploy';
+const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'fetch [name] [path]';
+exports.command = 'download [name] [path]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -26,11 +31,35 @@ exports.handler = async options => {
   const { name: projectName, path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-fetch', { projectName }, accountId);
+  trackCommandUsage('project-download', { projectName }, accountId);
+
+  await ensureProjectExists(accountId, projectName, { allowCreate: false });
 
   try {
-    const project = await fetchProject(accountId, projectName);
-    console.log('success!, ', project, projectPath);
+    let success = false;
+    const { results } = await fetchProjectBuilds(accountId, projectName);
+
+    if (results && results.length) {
+      const latestBuild = results[0];
+
+      const zippedProject = await downloadProject(
+        accountId,
+        projectName,
+        latestBuild.buildId
+      );
+
+      success = await extractZipArchive(
+        zippedProject,
+        projectName,
+        projectPath
+      );
+    }
+
+    if (success) {
+      logger.log('Successfully downloaded project');
+    } else {
+      logger.log('Something went wrong');
+    }
   } catch (e) {
     if (e.statusCode === 404) {
       logger.error(`Project ${projectName} not found. `);
@@ -49,14 +78,14 @@ exports.builder = yargs => {
     type: 'string',
   });
 
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
+  yargs.positional('location', {
+    describe: i18n(`${i18nKey}.positionals.location.describe`),
     type: 'string',
   });
 
   yargs.example([
     [
-      '$0 project fetch myProject myProjectFolder',
+      '$0 project download myProject myProjectFolder',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);

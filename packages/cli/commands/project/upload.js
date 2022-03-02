@@ -37,7 +37,7 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, forceCreate);
+  await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
   const startPolling = async (tempFile, buildId) => {
     let exitCode = EXIT_CODES.SUCCESS;

@@ -160,14 +160,18 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
-const ensureProjectExists = async (accountId, projectName, forceCreate) => {
+const ensureProjectExists = async (
+  accountId,
+  projectName,
+  { forceCreate, allowCreate } = { forceCreate: false, allowCreate: true }
+) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
     if (err.statusCode === 404) {
       let shouldCreateProject = forceCreate;
 
-      if (!shouldCreateProject) {
+      if (allowCreate && !shouldCreateProject) {
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
