@@ -7,15 +7,14 @@ const findup = require('findup-sync');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
-const {
-  createProject: createProjectTemplate,
-} = require('@hubspot/cli-lib/projects');
+const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   POLLING_DELAY,
   PROJECT_TEMPLATES,
-  PROJECT_TEXT,
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -35,33 +34,6 @@ const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-
-const PROJECT_STRINGS = {
-  BUILD: {
-    INITIALIZE: (name, numOfComponents) =>
-      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
-        numOfComponents !== 1 ? 's' : ''
-      } in this project ...\n`,
-    SUCCESS: name => `Built ${chalk.bold(name)}`,
-    FAIL: name => `Failed to build ${chalk.bold(name)}`,
-    SUBTASK_FAIL: (taskId, name) =>
-      `Build #${taskId} failed because there was a problem\nbuilding ${chalk.bold(
-        name
-      )}`,
-  },
-  DEPLOY: {
-    INITIALIZE: (name, numOfComponents) =>
-      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
-        numOfComponents !== 1 ? 's' : ''
-      } in this project ...\n`,
-    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
-    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
-    SUBTASK_FAIL: (taskId, name) =>
-      `Deploy for build #${taskId} failed because there was a\nproblem deploying ${chalk.bold(
-        name
-      )}`,
-  },
-};
 
 const writeProjectConfig = (configPath, config) => {
   try {
@@ -149,7 +121,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
       srcDir: 'src',
     });
   } else {
-    await createProjectTemplate(
+    await cloneGitHubRepo(
       projectPath,
       'project',
       PROJECT_TEMPLATES.find(t => t.name === template).repo,
@@ -338,12 +310,12 @@ const handleProjectUpload = async (
   archive.finalize();
 };
 
-const showWelcomeMessage = () => {
+const showProjectWelcomeMessage = () => {
   logger.log('');
   logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
-  logger.log(
-    '\n-------------------------------------------------------------\n'
-  );
+  logger.log('\n');
+  uiLine();
+  logger.log('\n');
   logger.log(chalk.bold("What's next?\n"));
   logger.log('🎨 Add components to your project with `hs create`.\n');
   logger.log(
@@ -355,38 +327,22 @@ const showWelcomeMessage = () => {
   logger.log(
     `🔗 Use \`hs project --help\` to learn more about available commands.\n`
   );
-  logger.log('-------------------------------------------------------------');
+  uiLine();
 };
 
-const makeGetTaskStatus = taskType => {
-  let statusFn, statusText, statusStrings;
-  switch (taskType) {
-    case 'build':
-      statusFn = getBuildStatus;
-      statusText = PROJECT_TEXT.BUILD;
-      statusStrings = PROJECT_STRINGS.BUILD;
-      break;
-    case 'deploy':
-      statusFn = getDeployStatus;
-      statusText = PROJECT_TEXT.DEPLOY;
-      statusStrings = PROJECT_STRINGS.DEPLOY;
-      break;
-    default:
-      logger.error(`Cannot get status for task type ${taskType}`);
-  }
+const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
+  const isTaskComplete = task => {
+    if (
+      !task[statusText.SUBTASK_KEY].length ||
+      task.status === statusText.STATES.FAILURE
+    ) {
+      return true;
+    } else if (task.status === statusText.STATES.SUCCESS) {
+      return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
+    }
+  };
 
   return async (accountId, taskName, taskId, buildId) => {
-    const isTaskComplete = task => {
-      if (
-        !task[statusText.SUBTASK_KEY].length ||
-        task.status === statusText.STATES.FAILURE
-      ) {
-        return true;
-      } else if (task.status === statusText.STATES.SUCCESS) {
-        return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
-      }
-    };
-
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
@@ -405,9 +361,12 @@ const makeGetTaskStatus = taskType => {
     });
 
     for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
-      spinnies.add(subTask[statusText.SUBTASK_NAME_KEY], {
-        text: `${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} #${buildId ||
-          taskId} ${statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]}\n`,
+      const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
+
+      spinnies.add(subTaskName, {
+        text: `${chalk.bold(subTaskName)} #${buildId || taskId} ${
+          statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
+        }\n`,
       });
     }
 
@@ -421,29 +380,25 @@ const makeGetTaskStatus = taskType => {
 
         if (spinnies.hasActiveSpinners()) {
           subTaskStatus.forEach(subTask => {
-            if (!spinnies.pick(subTask[statusText.SUBTASK_NAME_KEY])) {
+            const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
+
+            if (!spinnies.pick(subTaskName)) {
               return;
             }
 
-            const updatedText = `${chalk.bold(
-              subTask[statusText.SUBTASK_NAME_KEY]
-            )} #${taskId} ${statusText.STATUS_TEXT[subTask.status]}\n`;
+            const updatedText = `${chalk.bold(subTaskName)} #${taskId} ${
+              statusText.STATUS_TEXT[subTask.status]
+            }\n`;
 
             switch (subTask.status) {
               case statusText.STATES.SUCCESS:
-                spinnies.succeed(subTask[statusText.SUBTASK_NAME_KEY], {
-                  text: updatedText,
-                });
+                spinnies.succeed(subTaskName, { text: updatedText });
                 break;
               case statusText.STATES.FAILURE:
-                spinnies.fail(subTask[statusText.SUBTASK_NAME_KEY], {
-                  text: updatedText,
-                });
+                spinnies.fail(subTaskName, { text: updatedText });
                 break;
               default:
-                spinnies.update(subTask[statusText.SUBTASK_NAME_KEY], {
-                  text: updatedText,
-                });
+                spinnies.update(subTaskName, { text: updatedText });
                 break;
             }
           });
@@ -497,6 +452,40 @@ const makeGetTaskStatus = taskType => {
   };
 };
 
+const pollBuildStatus = makePollTaskStatusFunc({
+  statusFn: getBuildStatus,
+  statusText: PROJECT_BUILD_TEXT,
+  statusStrings: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
+    SUCCESS: name => `Built ${chalk.bold(name)}`,
+    FAIL: name => `Failed to build ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Build #${taskId} failed because there was a problem\nbuilding ${chalk.bold(
+        name
+      )}`,
+  },
+});
+
+const pollDeployStatus = makePollTaskStatusFunc({
+  statusFn: getDeployStatus,
+  statusText: PROJECT_DEPLOY_TEXT,
+  statusStrings: {
+    INITIALIZE: (name, numOfComponents) =>
+      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
+        numOfComponents !== 1 ? 's' : ''
+      } in this project ...\n`,
+    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
+    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+    SUBTASK_FAIL: (taskId, name) =>
+      `Deploy for build #${taskId} failed because there was a\nproblem deploying ${chalk.bold(
+        name
+      )}`,
+  },
+});
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -504,9 +493,9 @@ module.exports = {
   handleProjectUpload,
   createProjectConfig,
   validateProjectConfig,
-  showWelcomeMessage,
+  showProjectWelcomeMessage,
   getProjectDetailUrl,
-  pollBuildStatus: makeGetTaskStatus('build'),
-  pollDeployStatus: makeGetTaskStatus('deploy'),
+  pollBuildStatus,
+  pollDeployStatus,
   ensureProjectExists,
 };
