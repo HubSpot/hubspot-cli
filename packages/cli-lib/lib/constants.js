@@ -112,12 +112,6 @@ const ConfigFlags = {
 
 const MIN_HTTP_TIMEOUT = 3000;
 
-const PROJECT_TEMPLATE_TYPES = {
-  blank: {
-    files: {},
-  },
-};
-
 const PROJECT_TEMPLATES = [
   {
     name: 'getting-started',
@@ -169,7 +163,9 @@ const TEMPLATE_TYPES = {
   quote: 43,
 };
 
-const PROJECT_BUILD_STATUS = {
+const PROJECT_CONFIG_FILE = 'hsproject.json';
+
+const PROJECT_BUILD_STATES = {
   BUILDING: 'BUILDING',
   ENQUEUED: 'ENQUEUED',
   FAILURE: 'FAILURE',
@@ -177,43 +173,36 @@ const PROJECT_BUILD_STATUS = {
   SUCCESS: 'SUCCESS',
 };
 
-const PROJECT_BUILD_STATUS_TEXT = {
-  [PROJECT_BUILD_STATUS.BUILDING]: 'is building',
-  [PROJECT_BUILD_STATUS.ENQUEUED]: 'is queued',
-  [PROJECT_BUILD_STATUS.FAILURE]: 'failed to build',
-  [PROJECT_BUILD_STATUS.PENDING]: 'is pending',
-  [PROJECT_BUILD_STATUS.SUCCESS]: 'built successfully',
-};
-
-const PROJECT_CONFIG_FILE = 'hsproject.json';
-
-const PROJECT_DEPLOY_STATUS = {
+const PROJECT_DEPLOY_STATES = {
   DEPLOYING: 'DEPLOYING',
   FAILURE: 'FAILURE',
   PENDING: 'PENDING',
   SUCCESS: 'SUCCESS',
 };
 
-const PROJECT_DEPLOY_STATUS_TEXT = {
-  [PROJECT_DEPLOY_STATUS.BUILDING]: 'is deploying',
-  [PROJECT_DEPLOY_STATUS.FAILURE]: 'failed to deploy',
-  [PROJECT_DEPLOY_STATUS.PENDING]: 'is pending',
-  [PROJECT_DEPLOY_STATUS.SUCCESS]: 'deployed successfully',
+const PROJECT_BUILD_TEXT = {
+  STATES: { ...PROJECT_BUILD_STATES },
+  STATUS_TEXT: {
+    [PROJECT_BUILD_STATES.BUILDING]: 'is building',
+    [PROJECT_BUILD_STATES.ENQUEUED]: 'is queued',
+    [PROJECT_BUILD_STATES.FAILURE]: 'failed to build',
+    [PROJECT_BUILD_STATES.PENDING]: 'is pending',
+    [PROJECT_BUILD_STATES.SUCCESS]: 'built successfully',
+  },
+  SUBTASK_KEY: 'subbuildStatuses',
+  SUBTASK_NAME_KEY: 'buildName',
 };
 
-const PROJECT_TEXT = {
-  BUILD: {
-    STATES: { ...PROJECT_BUILD_STATUS },
-    STATUS_TEXT: { ...PROJECT_BUILD_STATUS_TEXT },
-    SUBTASK_KEY: 'subbuildStatuses',
-    SUBTASK_NAME_KEY: 'buildName',
+const PROJECT_DEPLOY_TEXT = {
+  STATES: { ...PROJECT_DEPLOY_STATES },
+  STATUS_TEXT: {
+    [PROJECT_DEPLOY_STATES.BUILDING]: 'is deploying',
+    [PROJECT_DEPLOY_STATES.FAILURE]: 'failed to deploy',
+    [PROJECT_DEPLOY_STATES.PENDING]: 'is pending',
+    [PROJECT_DEPLOY_STATES.SUCCESS]: 'deployed successfully',
   },
-  DEPLOY: {
-    STATES: { ...PROJECT_DEPLOY_STATUS },
-    STATUS_TEXT: { ...PROJECT_DEPLOY_STATUS_TEXT },
-    SUBTASK_KEY: 'subdeployStatuses',
-    SUBTASK_NAME_KEY: 'deployName',
-  },
+  SUBTASK_KEY: 'subdeployStatuses',
+  SUBTASK_NAME_KEY: 'deployName',
 };
 
 module.exports = {
@@ -240,14 +229,10 @@ module.exports = {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   POLLING_DELAY,
-  PROJECT_BUILD_STATUS,
-  PROJECT_BUILD_STATUS_TEXT,
   PROJECT_CONFIG_FILE,
-  PROJECT_DEPLOY_STATUS,
-  PROJECT_DEPLOY_STATUS_TEXT,
   PROJECT_TEMPLATES,
-  PROJECT_TEMPLATE_TYPES,
-  PROJECT_TEXT,
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
   SCOPE_GROUPS,
   TEMPLATE_TYPES,
 };
