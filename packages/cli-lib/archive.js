@@ -17,44 +17,44 @@ const {
  * @returns {String|Null} Temp dir where zip has been extracted.
  */
 async function extractZip(name, zip) {
-  const TMP_FOLDER_PREFIX = `hubspot-${name}-`;
+  const result = { extractDir: null, tmpDir: null };
+
+  const TMP_FOLDER_PREFIX = `hubspot-temp-${name}-`;
 
   logger.log('Extracting project source...');
   // Write zip to disk
-  let tmpDir;
   let tmpZipPath;
   try {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), TMP_FOLDER_PREFIX));
-    tmpZipPath = path.join(tmpDir, 'hubspot-temp.zip');
+    result.tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), TMP_FOLDER_PREFIX));
+    tmpZipPath = path.join(result.tmpDir, 'hubspot-temp.zip');
     await fs.ensureFile(tmpZipPath);
     await fs.writeFile(tmpZipPath, zip, {
       mode: 0o777,
     });
   } catch (err) {
     logger.error('An error occured writing temp project source.');
-    if (tmpZipPath || tmpDir) {
+    if (tmpZipPath || result.tmpDir) {
       logFileSystemErrorInstance(err, {
-        filepath: tmpZipPath || tmpDir,
+        filepath: tmpZipPath || result.tmpDir,
         write: true,
       });
     } else {
       logErrorInstance(err);
     }
-    return null;
+    return result;
   }
   // Extract zip
-  let extractDir = null;
   try {
-    const tmpExtractPath = path.join(tmpDir, 'extracted');
+    const tmpExtractPath = path.join(result.tmpDir, 'extracted');
     await extract(tmpZipPath, { dir: tmpExtractPath });
-    extractDir = tmpExtractPath;
+    result.extractDir = tmpExtractPath;
   } catch (err) {
     logger.error('An error occured extracting project source.');
     logErrorInstance(err);
-    return null;
+    return result;
   }
   logger.debug('Completed project source extraction.');
-  return { extractDir, tmpDir };
+  return result;
 }
 
 /**
@@ -63,12 +63,20 @@ async function extractZip(name, zip) {
  * @param {String} dest - Dir to copy boilerplate src files to.
  * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
-async function copySourceToDest(src, dest, sourceDir) {
+async function copySourceToDest(src, dest, sourceDir = null) {
   try {
     logger.log('Copying project source...');
     const files = await fs.readdir(src);
     const rootDir = files[0];
-    const projectSrcDir = path.join(src, rootDir, sourceDir);
+    if (!rootDir) {
+      logger.debug('Project source is empty');
+      // Create the dest path if it doesn't already exist
+      fs.ensureDir(dest);
+      return true;
+    }
+    const projectSrcDir = sourceDir
+      ? path.join(src, rootDir, sourceDir)
+      : path.join(src, rootDir);
     await fs.copy(projectSrcDir, dest);
     logger.debug('Completed copying project source.');
     return true;
@@ -91,7 +99,7 @@ function cleanupTempDir(tmpDir) {
   try {
     fs.remove(tmpDir);
   } catch (e) {
-    // noop
+    logger.debug('Failed to clean up temp dir: ', tmpDir);
   }
 }
 
@@ -99,7 +107,7 @@ async function extractZipArchive(zip, name, dest, { sourceDir } = {}) {
   let success = false;
 
   if (zip) {
-    const { extractDir, tmpDir } = (await extractZip(name, zip)) || {};
+    const { extractDir, tmpDir } = await extractZip(name, zip);
 
     if (extractDir !== null) {
       success = await copySourceToDest(extractDir, dest, sourceDir);

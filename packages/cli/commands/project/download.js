@@ -22,53 +22,49 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download [name] [path]';
+exports.command = 'download [name] [location]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name: projectName, path: projectPath } = options;
+  const { name: projectName, location } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-download', { projectName }, accountId);
 
   await ensureProjectExists(accountId, projectName, { allowCreate: false });
 
+  let success = false;
+  let projectBuildsResult;
+
   try {
-    let success = false;
-    const { results } = await fetchProjectBuilds(accountId, projectName);
-
-    if (results && results.length) {
-      const latestBuild = results[0];
-
-      const zippedProject = await downloadProject(
-        accountId,
-        projectName,
-        latestBuild.buildId
-      );
-
-      success = await extractZipArchive(
-        zippedProject,
-        projectName,
-        projectPath
-      );
-    }
-
-    if (success) {
-      logger.log('Successfully downloaded project');
-    } else {
-      logger.log('Something went wrong');
-    }
+    projectBuildsResult = await fetchProjectBuilds(accountId, projectName);
   } catch (e) {
-    if (e.statusCode === 404) {
-      logger.error(`Project ${projectName} not found. `);
-    } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
-    }
+    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const { results: projectBuilds } = projectBuildsResult;
+
+  if (projectBuilds && projectBuilds.length) {
+    const latestBuild = projectBuilds[0];
+
+    const zippedProject = await downloadProject(
+      accountId,
+      projectName,
+      latestBuild.buildId
+    );
+
+    success = await extractZipArchive(zippedProject, projectName, location);
+  }
+
+  if (!success) {
+    logger.log('Something went wrong downloading the project');
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  logger.log('Successfully downloaded project');
   process.exit(EXIT_CODES.SUCCESS);
 };
 
