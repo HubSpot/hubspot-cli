@@ -80,6 +80,7 @@ async function downloadProject(accountId, projectName, buildId) {
     uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
       projectName
     )}/builds/${buildId}/archive`,
+    encoding: null,
     headers: { accept: 'application/octet-stream' },
   });
 }
