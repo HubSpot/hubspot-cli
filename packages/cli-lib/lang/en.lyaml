@@ -580,6 +580,21 @@ en:
             positionals:
               src:
                 describe: "Path to the local theme, relative to your current working directory."
+      module:
+        describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
+        subcommands:
+          marketplaceValidate:
+            describe: "Validate a module for the marketplace"
+            errors:
+              invalidPath: "The path \"{{ path }}\" is not a path to a folder"
+            logs:
+              validatingModule: "Validating module \"{{ path }}\" \n"
+            options:
+              json:
+                describe: "Output raw json data"
+            positionals:
+              src:
+                describe: "Path to the local module, relative to your current working directory."
       upload:
         describe: "Upload a folder or file from your computer to the HubSpot CMS."
         errors:

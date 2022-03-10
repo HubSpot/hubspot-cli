@@ -4,7 +4,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.module';
 
-exports.command = 'theme';
+exports.command = 'module';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
