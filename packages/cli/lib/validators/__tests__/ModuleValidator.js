@@ -15,7 +15,7 @@ const findError = makeFindError('module');
 
 describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   beforeEach(() => {
-    ModuleValidator.setThemePath(THEME_PATH);
+    ModuleValidator.setAbsolutePath(THEME_PATH);
   });
 
   it('returns error if module limit is exceeded', async () => {

@@ -21,7 +21,7 @@ const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
+const i18nKey = 'cli.commands.module.subcommands.marketplaceValidate';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'marketplace-validate <src>';
@@ -56,20 +56,19 @@ exports.handler = async options => {
 
   if (!options.json) {
     logger.log(
-      i18n(`${i18nKey}.logs.validatingTheme`, {
+      i18n(`${i18nKey}.logs.validatingModule`, {
         path: src,
       })
     );
   }
   trackCommandUsage('validate', {}, accountId);
 
-  const themeFiles = await walk(absoluteSrcPath);
-  console.log(themeFiles);
-  console.log(absoluteSrcPath);
+  const moduleFiles = await walk(absoluteSrcPath);
+
   applyValidators(
-    MARKETPLACE_VALIDATORS.theme,
+    MARKETPLACE_VALIDATORS.module,
     absoluteSrcPath,
-    themeFiles,
+    moduleFiles,
     accountId
   ).then(groupedResults => {
     logValidatorResults(groupedResults, { logAsJson: options.json });

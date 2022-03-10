@@ -8,17 +8,17 @@ class BaseValidator {
     this.key = key;
   }
 
-  clearThemePath() {
-    this._absoluteThemePath = null;
+  clearAbsolutePath() {
+    this._absolutePath = null;
   }
 
-  setThemePath(path) {
-    this._absoluteThemePath = path;
+  setAbsolutePath(path) {
+    this._absolutePath = path;
   }
 
   getRelativePath(filePath) {
-    return this._absoluteThemePath
-      ? path.relative(this._absoluteThemePath, filePath)
+    return this._absolutePath
+      ? path.relative(this._absolutePath, filePath)
       : filePath;
   }
 

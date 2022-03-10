@@ -17,12 +17,12 @@ const getMockDependencyResult = (customPaths = []) => {
 
 describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
   beforeEach(() => {
-    DependencyValidator.setThemePath(THEME_PATH);
+    DependencyValidator.setAbsolutePath(THEME_PATH);
   });
 
   describe('isExternalDep', () => {
     beforeEach(() => {
-      DependencyValidator.setThemePath(THEME_PATH);
+      DependencyValidator.setAbsolutePath(THEME_PATH);
     });
 
     it('returns true if dep is external to the provided absolute path', () => {

@@ -9,6 +9,8 @@ const VALIDATOR_KEYS = {
   section: 'section',
   template: 'template',
   themeConfig: 'themeConfig',
+  specificModule: 'specificModule',
+  moduleDependency: 'moduleDependency',
 };
 
 module.exports = { VALIDATOR_KEYS, VALIDATION_RESULT };

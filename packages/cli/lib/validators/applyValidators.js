@@ -1,9 +1,9 @@
-async function applyValidators(validators, absoluteThemePath, ...args) {
+async function applyValidators(validators, absolutePath, ...args) {
   return Promise.all(
     validators.map(async Validator => {
-      Validator.setThemePath(absoluteThemePath);
+      Validator.setAbsolutePath(absolutePath);
       const validationResult = await Validator.validate(...args);
-      Validator.clearThemePath();
+      Validator.clearAbsolutePath();
 
       if (!validationResult.length) {
         // Return a success obj so we can log the successes

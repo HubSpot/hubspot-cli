@@ -29,6 +29,7 @@ const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
 const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
+const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
 const accountsCommand = require('../commands/accounts');
 const sandboxesCommand = require('../commands/sandbox');
@@ -96,6 +97,7 @@ const argv = yargs
   .command(mvCommand)
   .command(projectCommands)
   .command(themeCommand)
+  .command(moduleCommand)
   .command(configCommand)
   .command(accountsCommand)
   .command(sandboxesCommand)
