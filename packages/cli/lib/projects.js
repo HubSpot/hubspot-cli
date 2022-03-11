@@ -103,7 +103,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     ]);
 
     if (!shouldContinue) {
-      return;
+      return false;
     }
   }
 
@@ -134,7 +134,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     });
   }
 
-  return projectConfig;
+  return true;
 };
 
 const validateProjectConfig = (projectConfig, projectDir) => {

@@ -63,20 +63,34 @@ async function extractZip(name, zip) {
  * @param {String} dest - Dir to copy boilerplate src files to.
  * @returns {Boolean} `true` if successfully copied, `false` otherwise.
  */
-async function copySourceToDest(src, dest, sourceDir = null) {
+async function copySourceToDest(
+  src,
+  dest,
+  { sourceDir = null, includesRootDir = true } = {}
+) {
   try {
     logger.log('Copying project source...');
-    const files = await fs.readdir(src);
-    const rootDir = files[0];
-    if (!rootDir) {
-      logger.debug('Project source is empty');
-      // Create the dest path if it doesn't already exist
-      fs.ensureDir(dest);
-      return true;
+    const srcDirPath = [src];
+
+    if (includesRootDir) {
+      const files = await fs.readdir(src);
+      const rootDir = files[0];
+      if (!rootDir) {
+        logger.debug('Project source is empty');
+        // Create the dest path if it doesn't already exist
+        fs.ensureDir(dest);
+        // No root found so nothing to copy
+        return true;
+      }
+      srcDirPath.push(rootDir);
     }
-    const projectSrcDir = sourceDir
-      ? path.join(src, rootDir, sourceDir)
-      : path.join(src, rootDir);
+
+    if (sourceDir) {
+      srcDirPath.push(sourceDir);
+    }
+
+    const projectSrcDir = path.join(...srcDirPath);
+
     await fs.copy(projectSrcDir, dest);
     logger.debug('Completed copying project source.');
     return true;
@@ -103,14 +117,22 @@ function cleanupTempDir(tmpDir) {
   }
 }
 
-async function extractZipArchive(zip, name, dest, { sourceDir } = {}) {
+async function extractZipArchive(
+  zip,
+  name,
+  dest,
+  { sourceDir, includesRootDir } = {}
+) {
   let success = false;
 
   if (zip) {
     const { extractDir, tmpDir } = await extractZip(name, zip);
 
     if (extractDir !== null) {
-      success = await copySourceToDest(extractDir, dest, sourceDir);
+      success = await copySourceToDest(extractDir, dest, {
+        sourceDir,
+        includesRootDir,
+      });
     }
 
     cleanupTempDir(tmpDir);

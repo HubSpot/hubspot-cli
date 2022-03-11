@@ -15,7 +15,10 @@ const {
   downloadProject,
   fetchProjectBuilds,
 } = require('@hubspot/cli-lib/api/dfs');
-const { ensureProjectExists } = require('../../lib/projects');
+const {
+  createProjectConfig,
+  ensureProjectExists,
+} = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -34,6 +37,17 @@ exports.handler = async options => {
   trackCommandUsage('project-download', { projectName }, accountId);
 
   await ensureProjectExists(accountId, projectName, { allowCreate: false });
+
+  const projectConfigCreated = await createProjectConfig(
+    location,
+    projectName,
+    'none'
+  );
+
+  if (!projectConfigCreated) {
+    logger.log('Aborting download');
+    process.exit(EXIT_CODES.SUCCESS);
+  }
 
   let success = false;
   let projectBuildsResult;
@@ -56,7 +70,12 @@ exports.handler = async options => {
       latestBuild.buildId
     );
 
-    success = await extractZipArchive(zippedProject, projectName, location);
+    success = await extractZipArchive(
+      zippedProject,
+      projectName,
+      `${location}/src`,
+      { includesRootDir: false }
+    );
   }
 
   if (!success) {
