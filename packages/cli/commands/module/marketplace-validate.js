@@ -64,8 +64,7 @@ exports.handler = async options => {
   trackCommandUsage('validate', {}, accountId);
 
   const moduleFiles = await walk(absoluteSrcPath);
-  console.log(moduleFiles);
-  console.log(absoluteSrcPath);
+
   applyValidators(
     MARKETPLACE_VALIDATORS.module,
     absoluteSrcPath,

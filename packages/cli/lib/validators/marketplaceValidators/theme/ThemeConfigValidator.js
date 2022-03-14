@@ -84,7 +84,7 @@ class ThemeValidator extends BaseValidator {
           );
         } else {
           const absoluteScreenshotPath = path.resolve(
-            this._absoluteThemePath,
+            this._absolutePath,
             themeJSON.screenshot_path
           );
           if (!fs.existsSync(absoluteScreenshotPath)) {
