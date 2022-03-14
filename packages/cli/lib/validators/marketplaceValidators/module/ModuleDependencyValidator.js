@@ -32,8 +32,8 @@ class ModuleDependencyValidator extends BaseValidator {
         getCopy: ({ filePath, referencedFilePath }) =>
           `Relative path required. ${filePath} references a file (${referencedFilePath}) using an absolute path`,
       },
-      ASSET_COLOCATION: {
-        key: 'assetColocation',
+      ASSET_CO_LOCATION: {
+        key: 'assetCoLocation',
         getCopy: ({ filePath }) =>
           `CSS/JS must be in the same folder as the module. ${filePath} has assets in the wrong place.`,
       },
@@ -84,7 +84,7 @@ class ModuleDependencyValidator extends BaseValidator {
   }
 
   // Validates:
-  // - Theme does not contain external dependencies
+  // - Module does not contain external dependencies
   // - All paths are either @hubspot or relative
   async validate(files, accountId) {
     let validationErrors = [];
