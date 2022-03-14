@@ -32,6 +32,11 @@ class ModuleDependencyValidator extends BaseValidator {
         getCopy: ({ filePath, referencedFilePath }) =>
           `Relative path required. ${filePath} references a file (${referencedFilePath}) using an absolute path`,
       },
+      ASSET_COLOCATION: {
+        key: 'assetColocation',
+        getCopy: ({ filePath }) =>
+          `CSS/JS must be in the same folder as the module. ${filePath} has assets in the wrong place.`,
+      },
     };
   }
 

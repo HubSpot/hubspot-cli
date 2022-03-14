@@ -49,11 +49,10 @@ class SpecificModuleValidator extends BaseValidator {
   }
 
   // Validates:
-  // - Theme does not have more than MODULE_LIMIT modules
-  // - Each module folder contains a meta.json file
-  // - Each module meta.json file contains valid json
-  // - Each module meta.json file has a "label" field
-  // - Each module meta.json file has an "icon" field
+  // - Module folder contains a meta.json file
+  // - Module meta.json file contains valid json
+  // - Module meta.json file has a "label" field
+  // - Module meta.json file has an "icon" field
   validate(files) {
     let validationErrors = [];
     const uniqueModules = this.getUniqueModulesFromFiles(files);
