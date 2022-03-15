@@ -509,7 +509,7 @@ en:
               deleteFileFailed: 'Failed to delete file "{{ remotePath }}"'
               deleteFolderFailed: 'Failed to delete folder "{{ remotePath }}"'
           download:
-            describe: 'Download your project files from HubSpot'
+            describe: 'Download your project files from HubSpot and write to a path on your computer'
             downloadCancelled: 'Cancelling project download'
             downloadSucceeded: 'Downloaded build "{{ buildId }}" from project "{{ projectName }}"'
             downloadFailed: 'Something went wrong downloading the project'

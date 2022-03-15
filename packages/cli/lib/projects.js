@@ -110,7 +110,9 @@ const createProjectConfig = async (projectPath, projectName, template) => {
   const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
 
   logger.log(
-    `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    `Creating project config in ${
+      projectPath ? projectPath : 'the current folder'
+    }`
   );
 
   if (template === 'none') {

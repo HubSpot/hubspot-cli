@@ -1,8 +1,6 @@
 const path = require('path');
 
 const {
-  addAccountOptions,
-  addConfigOptions,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
@@ -105,8 +103,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
   yargs.positional('name', {
