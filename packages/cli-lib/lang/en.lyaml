@@ -509,7 +509,7 @@ en:
               default: "Download the project myProject into myProjectFolder folder"
             logs:
               downloadCancelled: "Cancelling project download"
-              downloadSucceeded: 'Downloaded build "{{ buildId }}" from project "{{ projectName }}"'
+              downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
             errors:
               downloadFailed: "Something went wrong downloading the project"
             positionals:
