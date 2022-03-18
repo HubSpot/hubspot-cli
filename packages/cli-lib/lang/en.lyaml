@@ -2,393 +2,389 @@ en:
   cli:
     commands:
       accounts:
-        describe: 'Commands for working with accounts.'
+        describe: "Commands for working with accounts."
         subcommands:
           list:
-            accounts: 'Accounts:'
-            defaultAccount: 'Default account: {{ account }}'
-            describe: 'List names of accounts defined in config.'
-            configPath: 'Config path: {{ configPath }}'
+            accounts: "Accounts:"
+            defaultAccount: "Default account: {{ account }}"
+            describe: "List names of accounts defined in config."
+            configPath: "Config path: {{ configPath }}"
             labels:
-              accountId: 'Account ID'
-              authType: 'Auth Type'
-              name: 'Name'
+              accountId: "Account ID"
+              authType: "Auth Type"
+              name: "Name"
           rename:
-            describe: 'Rename account in config.'
+            describe: "Rename account in config."
             positionals:
               accountName:
-                describe: 'Name of account to be renamed.'
+                describe: "Name of account to be renamed."
               newName:
-                describe: 'New name for account.'
+                describe: "New name for account."
             success:
               renamed: 'Account "{{ name }}" renamed to "{{ newName }}"'
       auth:
-        describe: 'Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}.'
+        describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
           accountNameExists: 'Account name "{{ name }}" already exists, please enter a different name.'
           noConfigFileFound: 'No config file was found. To create a new config file, use the "hs init" command.'
-          unsupportedAuthType: 'Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}.'
+          unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
         positionals:
           type:
-            describe: 'Authentication mechanism'
-            defaultDescription:
-              "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+            describe: "Authentication mechanism"
+            defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
-          configFileUpdated: '{{ configFilename }} updated with {{ authMethod }}.'
+          configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
       config:
-        describe: 'Commands for working with the config file.'
+        describe: "Commands for working with the config file."
         subcommands:
           set:
-            describe: 'Commands for working with the config file.'
+            describe: "Commands for working with the config file."
             subcommands:
               allowUsageTracking:
-                describe: 'Enable or disable usage tracking.'
-                disabled: 'Usage tracking is now disabled.'
-                enabled: 'Usage tracking is now enabled.'
+                describe: "Enable or disable usage tracking."
+                disabled: "Usage tracking is now disabled."
+                enabled: "Usage tracking is now enabled."
                 examples:
-                  default: 'Select to enable or disable usage tracking from a list'
+                  default: "Select to enable or disable usage tracking from a list"
                 labels:
-                  enabled: 'Enabled'
-                  disabled: 'Disabled'
-                promptMessage: 'Choose to enable or disable usage tracking'
+                  enabled: "Enabled"
+                  disabled: "Disabled"
+                promptMessage: "Choose to enable or disable usage tracking"
               defaultAccount:
-                describe: 'Change default account used in config.'
+                describe: "Change default account used in config."
                 errors:
                   accountNotFound: 'The account "{{ specifiedAccount }}" was not found in {{ configPath }}.'
                 examples:
-                  default: 'Select account to use as the default from a list'
+                  default: "Select account to use as the default from a list"
                   idBased: 'Set the default account to the account in the config with accountId equal to "1234567"'
                   nameBased: 'Set the default account to the account in the config with name equal to "MyAccount"'
                 positionals:
                   newDefault:
-                    describe: 'Account name or id to use as the default'
-                promptMessage: 'Select an account to use as the default'
+                    describe: "Account name or id to use as the default"
+                promptMessage: "Select an account to use as the default"
                 success:
                   defaultAccountUpdated: 'Default account updated to: "{{ accountName }}".'
               defaultMode:
-                describe: 'Change default mode used in config.'
+                describe: "Change default mode used in config."
                 errors:
                   invalidMode: 'The mode "{{ mode }}" is invalid. Valid values are {{ validModes }}.'
                 examples:
-                  default: 'Select mode to use as the default from a list'
+                  default: "Select mode to use as the default from a list"
                   draft: 'Set the default mode in the config to "draft"'
                   publish: 'Set the default mode in the config to "publish"'
                 positionals:
                   newMode:
-                    describe: 'Mode to use as the default'
-                promptMessage: 'Select a mode to use as the default'
+                    describe: "Mode to use as the default"
+                promptMessage: "Select a mode to use as the default"
                 success:
-                  modeUpdated: 'Default mode updated to: {{ mode }}'
+                  modeUpdated: "Default mode updated to: {{ mode }}"
               httpTimeout:
-                describe: 'Change http timeout used in config.'
+                describe: "Change http timeout used in config."
                 examples:
-                  default: 'Set the http timeout value in the config to 30000ms'
+                  default: "Set the http timeout value in the config to 30000ms"
                 positionals:
                   timeout:
-                    describe: 'Set http timeout value (in ms) in the config'
+                    describe: "Set http timeout value (in ms) in the config"
                 success:
-                  timeoutUpdated: 'The http timeout has been set to: {{ timeout }}'
+                  timeoutUpdated: "The http timeout has been set to: {{ timeout }}"
       create:
-        describe: 'Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}.'
+        describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
           deprecatedAssetType: 'The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "{{ newCommand }}" command instead. Then when prompted select "{{ type }}".'
-          unsupportedAssetType: 'The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}.'
+          unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
           unusablePath: 'The "{{ path }}" is not a usable path to a directory.'
         positionals:
           dest:
-            describe: 'Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory'
+            describe: "Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory"
           name:
-            describe: 'Name of new asset'
+            describe: "Name of new asset"
           type:
-            describe: 'Type of asset'
+            describe: "Type of asset"
         subcommands:
           apiSample:
             errors:
               nameRequired: 'The "name" argument is required when creating an API Sample.'
-              noSamples: 'Currently there are no samples available, please, try again later.'
+              noSamples: "Currently there are no samples available, please, try again later."
             info:
               sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
             loading:
-              apiSamples: 'Loading available API samples'
+              apiSamples: "Loading available API samples"
             success:
-              sampleCreated: 'Please, follow {{ filePath }}/README.md to find out how to run the sample'
+              sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
           module:
-            creatingModule: 'Creating module at {{ path }}'
-            creatingPath: 'Creating {{ path }}'
+            creatingModule: "Creating module at {{ path }}"
+            creatingPath: "Creating {{ path }}"
             errors:
-              pathExists: 'The {{ path }} path already exists'
+              pathExists: "The {{ path }} path already exists"
               nameRequired: 'The "name" argument is required when creating a Custom Module.'
           template:
             debug:
-              creatingPath: 'Making {{ path }} if needed'
+              creatingPath: "Making {{ path }} if needed"
             errors:
               nameRequired: 'The "name" argument is required when creating a Template.'
-              pathExists: 'The {{ path }} path already exists'
+              pathExists: "The {{ path }} path already exists"
             log:
-              creatingFile: 'Creating file at {{ path }}'
+              creatingFile: "Creating file at {{ path }}"
       customObject:
-        betaMessage: '{{#yellow}}The Custom Object CLI is currently in beta and is subject to change.{{/yellow}}'
-        describe: 'Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change.'
-        seeMoreLink: '{{#yellow}}See {{ link }} to find out more.{{/yellow}}'
+        betaMessage: "{{#yellow}}The Custom Object CLI is currently in beta and is subject to change.{{/yellow}}"
+        describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+        seeMoreLink: "{{#yellow}}See {{ link }} to find out more.{{/yellow}}"
         subcommands:
           create:
-            describe: 'Create custom object instances'
+            describe: "Create custom object instances"
             errors:
-              creationFailed: 'Object creation from {{ definition }} failed'
+              creationFailed: "Object creation from {{ definition }} failed"
             positionals:
               definition:
-                describe: 'Local path to the JSON file containing an array of object definitions'
+                describe: "Local path to the JSON file containing an array of object definitions"
               name:
-                describe: 'Schema name to add the object instance to'
+                describe: "Schema name to add the object instance to"
             success:
-              objectsCreated: 'Objects created'
+              objectsCreated: "Objects created"
           schema:
-            describe: 'Manage custom object schemas'
+            describe: "Manage custom object schemas"
             subcommands:
               create:
-                describe: 'Create a custom object schema'
+                describe: "Create a custom object schema"
                 errors:
-                  creationFailed: 'Schema creation from {{ definition }} failed'
+                  creationFailed: "Schema creation from {{ definition }} failed"
                 positionals:
                   definition:
-                    describe: 'Local path to the JSON file containing the schema definition'
+                    describe: "Local path to the JSON file containing the schema definition"
                 success:
                   schemaCreated: 'Your schema has been created in account "{{ accountId }}"'
-                  schemaViewable: 'Schema can be viewed at {{ url }}'
+                  schemaViewable: "Schema can be viewed at {{ url }}"
               delete:
-                describe: 'Delete a custom object schema'
+                describe: "Delete a custom object schema"
                 error:
-                  delete: 'Unable to delete {{ name }}'
+                  delete: "Unable to delete {{ name }}"
                 examples:
                   default: 'Delete "schemaName" schema'
                 positionals:
                   name:
-                    describe: 'Name of the target schema'
+                    describe: "Name of the target schema"
                 success:
-                  delete: 'Successfully initiated deletion of {{ name }}'
+                  delete: "Successfully initiated deletion of {{ name }}"
               fetchAll:
-                describe: 'Fetch all custom object schemas for an account'
+                describe: "Fetch all custom object schemas for an account"
                 errors:
-                  fetch: 'Unable to fetch schemas'
+                  fetch: "Unable to fetch schemas"
                 examples:
-                  default: 'Fetch all schemas for an account and put them in the current working directory'
-                  specifyPath: 'Fetch all schemas for an account and put them in a directory named my/folder'
+                  default: "Fetch all schemas for an account and put them in the current working directory"
+                  specifyPath: "Fetch all schemas for an account and put them in a directory named my/folder"
                 positionals:
                   dest:
-                    describe: 'Local folder where schemas will be written'
+                    describe: "Local folder where schemas will be written"
                 success:
-                  fetch: 'Saved schemas to {{ path }}'
+                  fetch: "Saved schemas to {{ path }}"
               fetch:
-                describe: 'Fetch a custom object schema'
+                describe: "Fetch a custom object schema"
                 errors:
-                  fetch: 'Unable to fetch {{ name }}'
+                  fetch: "Unable to fetch {{ name }}"
                 examples:
                   default: 'Fetch "schemaId" schema and put it in the current working directory'
                   specifyPath: 'Fetch "schemaId" schema and put it in a directory named my/folder'
                 positionals:
                   dest:
-                    describe: 'Local folder where schema will be written'
+                    describe: "Local folder where schema will be written"
                   name:
-                    describe: 'Name of the target schema'
+                    describe: "Name of the target schema"
                 success:
                   save: 'The schema "{{ name }}" has been saved to "{{ path }}"'
-                  savedToPath: 'Saved schema to {{ path }}'
+                  savedToPath: "Saved schema to {{ path }}"
               list:
-                describe: 'List schemas available on your account'
+                describe: "List schemas available on your account"
                 errors:
-                  list: 'Unable to list schemas'
+                  list: "Unable to list schemas"
               update:
-                describe: 'Update an existing custom object schema'
+                describe: "Update an existing custom object schema"
                 errors:
-                  update: 'Schema update from {{ definition }} failed'
+                  update: "Schema update from {{ definition }} failed"
                 positionals:
                   definition:
-                    describe: 'Local path to the JSON file containing the schema definition'
+                    describe: "Local path to the JSON file containing the schema definition"
                   name:
-                    describe: 'Name of the target schema'
+                    describe: "Name of the target schema"
                 success:
                   update: 'Your schema has been updated in account "{{ accountId }}"'
-                  viewAtUrl: 'Schema can be viewed at {{ url }}'
-        warning: '{{#yellow}}***************************** WARNING WARNING WARNING ****************************{{/yellow}}'
+                  viewAtUrl: "Schema can be viewed at {{ url }}"
+        warning: "{{#yellow}}***************************** WARNING WARNING WARNING ****************************{{/yellow}}"
       fetch:
-        describe: 'Fetch a file, directory or module from HubSpot and write to a path on your computer.'
+        describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
         errors:
-          sourceRequired: 'A source to fetch is required.'
+          sourceRequired: "A source to fetch is required."
         options:
           staging:
-            describe: 'Retrieve staged changes for project'
+            describe: "Retrieve staged changes for project"
         positionals:
           dest:
-            describe: 'Local directory you would like the files to be placed in, relative to your current working directory'
+            describe: "Local directory you would like the files to be placed in, relative to your current working directory"
           src:
-            describe: 'Path in HubSpot Design Tools'
+            describe: "Path in HubSpot Design Tools"
       filemanager:
-        describe: 'Commands for working with the File Manager.'
+        describe: "Commands for working with the File Manager."
         subcommands:
           fetch:
-            describe: 'Download a folder or file from the HubSpot File Manager to your computer'
+            describe: "Download a folder or file from the HubSpot File Manager to your computer"
             errors:
-              sourceRequired: 'A source to fetch is required.'
+              sourceRequired: "A source to fetch is required."
             options:
               includeArchived:
                 describe: 'Include files that have been marked as "archived"'
             positionals:
               dest:
-                describe: 'Path in HubSpot Design Tools'
+                describe: "Path in HubSpot Design Tools"
               src:
-                describe: 'Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory'
+                describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
           upload:
-            describe: 'Upload a folder or file from your computer to the HubSpot File Manager'
+            describe: "Upload a folder or file from your computer to the HubSpot File Manager"
             errors:
-              destinationRequired: 'A destination path needs to be passed'
+              destinationRequired: "A destination path needs to be passed"
               fileIgnored: 'The file "{{ path }}" is being ignored via an .hsignore rule'
               invalidPath: 'The path "{{ path }}" is not a path to a file or folder'
               upload: 'Uploading file "{{ src }}" to "{{ dest }}" failed'
-              uploadingFailed: 'Uploading failed'
+              uploadingFailed: "Uploading failed"
             logs:
               uploading: 'Uploading files from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
             positionals:
               dest:
-                describe: 'Path in HubSpot Design Tools, can be a net new path'
+                describe: "Path in HubSpot Design Tools, can be a net new path"
               src:
-                describe: 'Path to the local file, relative to your current working directory'
+                describe: "Path to the local file, relative to your current working directory"
             success:
               upload: 'Uploaded file from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
               uploadComplete: 'Uploading files to "{{ dest }}" in the File Manager is complete'
       functions:
-        describe: 'Commands for working with functions.'
+        describe: "Commands for working with functions."
         subcommands:
           deploy:
             debug:
-              startingBuildAndDeploy: 'Starting build and deploy for .functions folder with path: {{ functionPath }}'
+              startingBuildAndDeploy: "Starting build and deploy for .functions folder with path: {{ functionPath }}"
             errors:
-              buildError: 'Build error: {{ details }}'
-              noPackageJson: 'Unable to find package.json for function {{ functionPath }}.'
-              notFunctionsFolder: 'Specified path {{ functionPath }} is not a .functions folder.'
+              buildError: "Build error: {{ details }}"
+              noPackageJson: "Unable to find package.json for function {{ functionPath }}."
+              notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
             examples:
-              default: 'Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder'
-            loading:
-              "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+              default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
+            loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
             positionals:
               path:
-                describe: 'Path to .functions folder'
+                describe: "Path to .functions folder"
             success:
-              deployed: 'Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s.'
+              deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
           list:
             debug:
-              gettingFunctions: 'Getting currently deployed functions'
-            describe: 'List currently deployed functions'
+              gettingFunctions: "Getting currently deployed functions"
+            describe: "List currently deployed functions"
             info:
-              noFunctions: 'No functions found'
+              noFunctions: "No functions found"
             options:
               json:
-                describe: 'output raw json data'
+                describe: "output raw json data"
           server:
             debug:
-              startingServer: 'Starting local test server for .functions folder with path: {{ functionPath }}'
+              startingServer: "Starting local test server for .functions folder with path: {{ functionPath }}"
             examples:
-              default: 'Run a local function test server.'
+              default: "Run a local function test server."
             options:
               contact:
-                describe: 'Pass contact data to the test function'
+                describe: "Pass contact data to the test function"
               logOutput:
-                describe: 'Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)'
+                describe: "Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)"
               port:
-                describe: 'Port to run the test server on'
+                describe: "Port to run the test server on"
               watch:
-                describe: 'Watch the specified .functions folder for changes and restart the server'
+                describe: "Watch the specified .functions folder for changes and restart the server"
             positionals:
               path:
-                describe: 'Path to local .functions folder'
+                describe: "Path to local .functions folder"
       hubdb:
-        describe: 'Manage HubDB tables.'
+        describe: "Manage HubDB tables."
         subcommands:
           clear:
-            describe: 'Clear all rows in a HubDB table'
+            describe: "Clear all rows in a HubDB table"
             logs:
-              removedRows: 'Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}'
-              rowCount: 'HubDB table {{ tableId }} now contains {{ rowCount }} rows'
-              tableEmpty: 'HubDB table {{ tableId }} is already empty'
+              removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
+              rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
+              tableEmpty: "HubDB table {{ tableId }} is already empty"
             positionals:
               tableId:
-                describe: 'HubDB Table ID'
+                describe: "HubDB Table ID"
           create:
-            describe: 'Create a HubDB table'
+            describe: "Create a HubDB table"
             errors:
               create: 'Creating the table at "{{ src }}" failed'
             positionals:
               src:
-                describe: 'Local path to file used for import'
+                describe: "Local path to file used for import"
             success:
-              create: 'The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows'
+              create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
           delete:
-            describe: 'Delete a HubDB table'
+            describe: "Delete a HubDB table"
             errors:
-              delete: 'Deleting the table {{ tableId }} failed'
+              delete: "Deleting the table {{ tableId }} failed"
             positionals:
               tableId:
-                describe: 'HubDB Table ID'
+                describe: "HubDB Table ID"
             success:
-              delete: 'The table {{ tableId }} was deleted from {{ accountId }}'
+              delete: "The table {{ tableId }} was deleted from {{ accountId }}"
           fetch:
-            describe: 'Fetch a HubDB table'
+            describe: "Fetch a HubDB table"
             positionals:
               dest:
-                describe: 'Local destination folder to fetch table to'
+                describe: "Local destination folder to fetch table to"
               tableId:
-                describe: 'HubDB Table ID'
+                describe: "HubDB Table ID"
             success:
-              fetch: 'Downloaded HubDB table {{ tableId }} to {{ path }}'
+              fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
       init:
-        describe: 'Initialize {{ configName }} for a HubSpot account.'
+        describe: "Initialize {{ configName }} for a HubSpot account."
         options:
           auth:
             describe: 'Specify auth method to use ["personalaccesskey", "oauth2", "apikey"]'
-            defaultDescription:
-              "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+            defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
           configFileCreated: 'The config file "{{ configPath }}" was created using "{{ authType }}" for account {{ account }}.'
         info:
           updateConfig: 'To update an existing config file, use the "hs auth" command.'
         errors:
-          configFileExists: 'The config file {{ configPath }} already exists.'
+          configFileExists: "The config file {{ configPath }} already exists."
       lint:
-        issuesFound: '{{ count }} issues found.'
-        groupName: 'Linting {{ path }}'
+        issuesFound: "{{ count }} issues found."
+        groupName: "Linting {{ path }}"
         positionals:
           path:
-            describe: 'Local folder to lint'
+            describe: "Local folder to lint"
       list:
-        describe: 'List remote contents of a directory.'
-        gettingPathContents: 'Getting contents of {{ path }}.'
-        noFilesFoundAtPath: 'No files found in {{ path }}.'
+        describe: "List remote contents of a directory."
+        gettingPathContents: "Getting contents of {{ path }}."
+        noFilesFoundAtPath: "No files found in {{ path }}."
         positionals:
           path:
-            describe: 'Remote directory to list contents'
+            describe: "Remote directory to list contents"
       logs:
-        describe: 'Get logs for a function.'
+        describe: "Get logs for a function."
         errors:
           noLogsFound: 'No logs were found for the function path "{{ functionPath }}" in account "{{ accountId }}".'
         examples:
-          default: 'Get 5 most recent logs for function residing at /_hcms/api/my-endpoint'
-          follow: 'Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution'
-          limit: 'Get 10 most recent logs for function residing at /_hcms/api/my-endpoint'
-        gettingLogs: 'Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}.'
+          default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
+          follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
+          limit: "Get 10 most recent logs for function residing at /_hcms/api/my-endpoint"
+        gettingLogs: "Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}."
         options:
           compact:
-            describe: 'output compact logs'
+            describe: "output compact logs"
           follow:
-            describe: 'follow logs'
+            describe: "follow logs"
           latest:
-            describe: 'retrieve most recent log only'
+            describe: "retrieve most recent log only"
           limit:
-            describe: 'limit the number of logs to output'
+            describe: "limit the number of logs to output"
         positionals:
-          endpoint: 'Serverless function endpoint'
-        tailLogs:
-          "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+          endpoint: "Serverless function endpoint"
+        tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
       mv:
-        describe: 'Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change.'
+        describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
         errors:
           sourcePathExists: 'The folder "{{ srcPath }}" already exists in "{{ destPath }}".'
           moveFailed: 'Moving "{{ srcPath }}" to "{{ destPath }}" in account {{ accountId }} failed'
@@ -397,140 +393,139 @@ en:
         describe: 'Open a HubSpot page in your browser. Run "hs open list" to see all available shortcuts.'
         options:
           list:
-            describe: 'List all supported shortcuts'
+            describe: "List all supported shortcuts"
         positionals:
           shortcut:
             describe: "Shortcut of the link you'd like to open"
-        selectLink: 'Select a link to open'
+        selectLink: "Select a link to open"
       project:
         subcommands:
           create:
-            describe: 'Create a new project'
+            describe: "Create a new project"
             examples:
-              default: 'Create a new project'
+              default: "Create a new project"
             options:
               location:
-                describe: 'Directory where project should be created'
+                describe: "Directory where project should be created"
               name:
-                describe: 'Project name (cannot be changed)'
+                describe: "Project name (cannot be changed)"
               template:
-                describe: 'Which template?'
+                describe: "Which template?"
           deploy:
-            describe: 'Deploy a project build'
+            describe: "Deploy a project build"
             debug:
-              deploying: 'Deploying project at path: {{ path }}'
+              deploying: "Deploying project at path: {{ path }}"
             errors:
-              deploy: 'Deploy error: {{ details }}'
-              noBuildId: 'No latest build ID was found.'
+              deploy: "Deploy error: {{ details }}"
+              noBuildId: "No latest build ID was found."
             examples:
-              default: 'Deploy a project within the myProjectFolder folder'
+              default: "Deploy a project within the myProjectFolder folder"
             options:
               buildId:
-                describe: 'Project build ID to be deployed'
+                describe: "Project build ID to be deployed"
             positionals:
               path:
-                describe: 'Path to a project folder'
+                describe: "Path to a project folder"
           logs:
-            describe: 'Get logs for a function within a project'
+            describe: "Get logs for a function within a project"
             errors:
-              functionNameRequired: 'You must pass a function name to retrieve logs for.'
+              functionNameRequired: "You must pass a function name to retrieve logs for."
               noAppFunctionLogs: 'No logs were found for the function name "{{ functionName }}" in the app path "{{ appPath }}" within the project "{{ projectName }}" in account {{ accountId }}.'
               noEndpointLogs: 'No logs were found for the function name "{{ functionName }}" within the project "{{ projectName }}" in account {{ accountId }}.'
-              projectNameRequired: 'You must specify a project name using the --projectName argument.'
+              projectNameRequired: "You must specify a project name using the --projectName argument."
             examples:
               default: 'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"'
-            loading:
-              "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
+            loading: "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
             options:
               appPath:
-                describe: 'Path to the app'
+                describe: "Path to the app"
               compact:
-                describe: 'Output compact logs'
+                describe: "Output compact logs"
               follow:
-                describe: 'Follow logs'
+                describe: "Follow logs"
               latest:
-                describe: 'Retrieve most recent log only'
+                describe: "Retrieve most recent log only"
               limit:
-                describe: 'Limit the number of logs to output'
+                describe: "Limit the number of logs to output"
               projectName:
-                describe: 'Project name to retrieve logs for'
+                describe: "Project name to retrieve logs for"
             positionals:
               functionName:
-                describe: 'Serverless app function name'
+                describe: "Serverless app function name"
           upload:
             debug:
               buildCreated: 'Project "{{ projectName }}" uploaded and build #{{ buildId }} created'
-              cleanedUpTempFile: 'Cleaned up temporary file {{ path }}'
-              compressed: 'Project files compressed: {{ byteCount }} bytes'
+              cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+              compressed: "Project files compressed: {{ byteCount }} bytes"
               compressing: 'Compressing build files to "{{ path }}"'
-            describe: 'Upload your project files and create a new build'
+            describe: "Upload your project files and create a new build"
             examples:
-              default: 'Upload a project'
+              default: "Upload a project"
             loading:
               upload:
-                add: 'Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}'
-                fail: 'Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}'
-                succeed: 'Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}'
+                add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+                fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+                succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
             logs:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
-              buildSucceededAutomaticallyDeploying: 'Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}'
-              readyToGoLive: '🚀 Ready to take your project live?'
-              runCommand: 'Run `{{ command }}`'
+              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}"
+              readyToGoLive: "🚀 Ready to take your project live?"
+              runCommand: "Run `{{ command }}`"
             options:
               forceCreate:
-                describe: 'Automatically create project if it does not exist'
+                describe: "Automatically create project if it does not exist"
             positionals:
               path:
-                describe: 'Path to a project folder'
+                describe: "Path to a project folder"
           watch:
-            describe: 'Watch your local project for changes and automatically upload changed files to a new build in HubSpot'
+            describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
-              default: 'Watch a project within the myProjectFolder folder'
+              default: "Watch a project within the myProjectFolder folder"
             logs:
               watching: 'Watcher is ready and watching "{{ projectDir }}". Any changes detected will be automatically uploaded and added to the current staging build.'
-              resuming: 'Resuming watcher...'
+              resuming: "Resuming watcher..."
               uploadSucceeded: 'Uploaded file "{{ filePath }}" to "{{ remotePath }}"'
               deleteFileSucceeded: 'Deleted file "{{ remotePath }}"'
               deleteFolderSucceeded: 'Deleted folder "{{ remotePath }}"'
-              createNewBuild: 'Staging build #{{ buildId }} created'
-              buildCancelled: 'Staging build has been cancelled. Please try running `hs project watch` again'
+              createNewBuild: "Staging build #{{ buildId }} created"
+              buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
             debug:
-              attemptNewBuild: 'Attempting to create a new build'
+              attemptNewBuild: "Attempting to create a new build"
               uploading: 'Attempting to upload file "{{ filePath }}" to "{{ remotePath }}"'
               extensionNotAllowed: 'Skipping "{{ filePath }}" due to unsupported extension'
               ignored: 'Skipping "{{ filePath }}" due to an ignore rule'
-              pause: 'Pausing watcher, attempting to queue build'
-              buildStarted: 'Build queued.'
-              buildCancelled: 'The current staging build has been cancelled. Exiting...'
+              pause: "Pausing watcher, attempting to queue build"
+              buildStarted: "Build queued."
+              buildCancelled: "The current staging build has been cancelled. Exiting..."
               fileAlreadyQueued: 'File "{{ filePath }}" is already queued for upload'
             errors:
-              projectLocked: 'The previous staging build is still in progress'
+              projectLocked: "The previous staging build is still in progress"
               uploadFailed: 'Failed to upload file "{{ filePath }}" to "{{ remotePath }}"'
               deleteFileFailed: 'Failed to delete file "{{ remotePath }}"'
               deleteFolderFailed: 'Failed to delete folder "{{ remotePath }}"'
           download:
-            describe: 'Download your project files from HubSpot and write to a path on your computer'
-            downloadCancelled: 'Cancelling project download'
+            describe: "Download your project files from HubSpot and write to a path on your computer"
+            downloadCancelled: "Cancelling project download"
             downloadSucceeded: 'Downloaded build "{{ buildId }}" from project "{{ projectName }}"'
-            downloadFailed: 'Something went wrong downloading the project'
+            downloadFailed: "Something went wrong downloading the project"
             examples:
-              default: 'Download the project myProject into myProjectFolder folder'
+              default: "Download the project myProject into myProjectFolder folder"
             positionals:
               name:
-                describe: 'The name of the project to download'
+                describe: "The name of the project to download"
               dest:
-                describe: 'Destination folder for the project'
+                describe: "Destination folder for the project"
             options:
               buildNumber:
-                describe: 'The build number to download'
+                describe: "The build number to download"
       remove:
-        describe: 'Delete a file or folder from HubSpot.'
+        describe: "Delete a file or folder from HubSpot."
         deleted: 'Deleted "{{ path }}" from account {{ accountId }}'
         errors:
           deleteFailed: 'Deleting "{{ path }}" from account {{ accountId }} failed'
         positionals:
           path:
-            describe: 'Remote hubspot path'
+            describe: "Remote hubspot path"
       sandbox:
         subcommands:
           create:
@@ -541,97 +536,97 @@ en:
               auth: 'Run "hs auth" to authenticate with the new sandbox account.'
             positionals:
               name:
-                describe: 'Name to use for created sandbox'
+                describe: "Name to use for created sandbox"
             success:
               create: 'Sandbox "{{ name }}" with portalId "{{ sandboxHubId }}" created successfully.'
       secrets:
-        describe: 'Manage HubSpot secrets.'
+        describe: "Manage HubSpot secrets."
         subcommands:
           add:
-            describe: 'Add a HubSpot secret'
+            describe: "Add a HubSpot secret"
             errors:
               add: 'The secret "{{ secretName }}" was not added'
             positionals:
               name:
-                describe: 'Name of the secret'
+                describe: "Name of the secret"
             success:
               add: 'The secret "{{ secretName }}" was added to the HubSpot account: {{ accountId }}'
           delete:
-            describe: 'Delete a HubSpot secret'
+            describe: "Delete a HubSpot secret"
             errors:
               delete: 'The secret "{{ secretName }}" was not deleted'
             positionals:
               name:
-                describe: 'Name of the secret'
+                describe: "Name of the secret"
             success:
               delete: 'The secret "{{ secretName }}" was deleted from the HubSpot account: {{ accountId }}'
           list:
-            describe: 'List all HubSpot secrets'
+            describe: "List all HubSpot secrets"
             errors:
-              list: 'The secrets could not be listed'
-            groupLabel: 'Secrets for account {{ accountId }}:'
+              list: "The secrets could not be listed"
+            groupLabel: "Secrets for account {{ accountId }}:"
           update:
-            describe: 'Update an existing HubSpot secret'
+            describe: "Update an existing HubSpot secret"
             errors:
               update: 'The secret "{{ secretName }}" was not updated'
             positionals:
               name:
-                describe: 'Name of the secret to be updated'
+                describe: "Name of the secret to be updated"
             success:
               update: 'The secret "{{ secretName }}" was updated in the HubSpot account: {{ accountId }}'
       server:
-        description: 'Run the CMS HubL server.'
-        fetching: 'Fetching account data for {{ accountId }} to update context'
-        runningServer: 'Running: {{ cmd }}'
-        startingServer: 'Starting HubSpot CMS HubL server'
+        description: "Run the CMS HubL server."
+        fetching: "Fetching account data for {{ accountId }} to update context"
+        runningServer: "Running: {{ cmd }}"
+        startingServer: "Starting HubSpot CMS HubL server"
       theme:
-        describe: 'Commands for working with themes, including marketplace validation with the marketplace-validate subcommand.'
+        describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
           marketplaceValidate:
-            describe: 'Validate a theme for the marketplace'
+            describe: "Validate a theme for the marketplace"
             errors:
               invalidPath: 'The path "{{ path }}" is not a path to a folder'
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
             options:
               json:
-                describe: 'Output raw json data'
+                describe: "Output raw json data"
             positionals:
               src:
-                describe: 'Path to the local theme, relative to your current working directory.'
+                describe: "Path to the local theme, relative to your current working directory."
       upload:
-        describe: 'Upload a folder or file from your computer to the HubSpot CMS.'
+        describe: "Upload a folder or file from your computer to the HubSpot CMS."
         errors:
-          destinationRequired: 'A destination path needs to be passed'
+          destinationRequired: "A destination path needs to be passed"
           fileIgnored: 'The file "{{ path }}" is being ignored via an .hsignore rule'
           invalidExtension: 'The file "{{ path }}" does not have a valid extension'
           invalidPath: 'The path "{{ path }}" is not a path to a file or folder'
           uploadFailed: 'Uploading file "{{ src }}" to "{{ dest }}" failed'
         positionals:
           src:
-            describe: 'Path to the local file, relative to your current working directory.'
+            describe: "Path to the local file, relative to your current working directory."
           dest:
-            describe: 'Path in HubSpot Design Tools, can be a net new path.'
-        previewUrl: 'To preview this theme, visit: {{ previewUrl }}'
+            describe: "Path in HubSpot Design Tools, can be a net new path."
+        previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         success:
           fileUploaded: 'Uploaded file from "{{ src }}" to "{{ dest }}" in the Design Manager of account {{ accountId }}'
           uploadComplete: 'Uploading files to "{{ dest }}" in the Design Manager is complete'
         uploading: 'Uploading files from "{{ src }}" to "{{ dest }}" in the Design Manager of account {{ accountId }}'
       watch:
-        describe: 'Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS.'
+        describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
-          destinationRequired: 'A destination directory needs to be passed'
+          destinationRequired: "A destination directory needs to be passed"
           invalidPath: 'The "{{ path }}" is not a path to a directory'
         options:
-          disableInitial: 'Disable the initial upload when watching a directory (default)'
-          initialUpload: 'Upload directory before watching for updates'
-          notify: 'Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file'
-          remove: 'Will cause watch to delete files in your HubSpot account that are not found locally.'
+          disableInitial: "Disable the initial upload when watching a directory (default)"
+          initialUpload: "Upload directory before watching for updates"
+          notify: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+          remove: "Will cause watch to delete files in your HubSpot account that are not found locally."
         positionals:
           src:
-            describe: 'Path to the local directory your files are in, relative to your current working directory'
+            describe: "Path to the local directory your files are in, relative to your current working directory"
           dest:
-            describe: 'Path in HubSpot Design Tools. Can be a net new path'
+            describe: "Path in HubSpot Design Tools. Can be a net new path"
         warnings:
           disableInitial: 'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
           initialUpload: 'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
@@ -640,88 +635,87 @@ en:
       commonOpts:
         options:
           portal:
-            describe: 'HubSpot portal id or name from config'
+            describe: "HubSpot portal id or name from config"
           config:
-            describe: 'Path to a config file'
+            describe: "Path to a config file"
           overwrite:
-            describe: 'Overwrite existing files'
+            describe: "Overwrite existing files"
           modes:
             describe:
-              default: '{{ modes }}'
-              read: 'Read from {{ modes }}'
-              write: 'Write to {{ modes }}'
+              default: "{{ modes }}"
+              read: "Read from {{ modes }}"
+              write: "Write to {{ modes }}"
           qa:
-            describe: 'Run command in QA mode'
+            describe: "Run command in QA mode"
           useEnv:
-            describe: 'Use environment variable config'
+            describe: "Use environment variable config"
       prompts:
         personalAccessKeyPrompt:
-          enterAccountId: 'Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): '
-          enterClientId: 'Enter your OAuth2 client ID: '
-          enterClientSecret: 'Enter your OAuth2 client secret: '
-          enterAccountName: 'Enter a unique name to reference your account: '
-          enterApiKey: 'Enter the API key for your account (found at https://app.hubspot.com/l/api-key): '
-          enterPersonalAccessKey: 'Enter your personal access key: '
-          selectScopes: 'Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)'
-          personalAccessKeyBrowserOpenPrep:
-            "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
+          enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
+          enterClientId: "Enter your OAuth2 client ID: "
+          enterClientSecret: "Enter your OAuth2 client secret: "
+          enterAccountName: "Enter a unique name to reference your account: "
+          enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
+          enterPersonalAccessKey: "Enter your personal access key: "
+          selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
+          personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
           logs:
-            openingWebBrowser: 'Opening {{ url }} in your web browser'
+            openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:
-            invalidAccountId: 'You did not enter a valid account ID. Please try again.'
-            invalidAPIKey: 'You did not enter a valid API key. Please try again'
-            invalidName: 'You entered an invalid name. Please try again.'
-            invalidOauthClientId: 'You entered an invalid OAuth2 client ID. Please try again.'
-            invalidOauthClientIdLength: 'The OAuth2 client ID must be 36 characters long. Please try again.'
-            invalidOauthClientSecret: 'You entered an invalid OAuth2 client secret. Please try again.'
-            invalidOauthClientSecretLength: 'The OAuth2 client secret must be 36 characters long. Please try again.'
-            invalidOauthClientSecretCopy: 'Please copy the actual OAuth2 client secret rather than the asterisks that mask it.'
-            invalidPersonalAccessKey: 'You did not enter a valid access key. Please try again.'
-            invalidPersonalAccessKeyCopy: 'Please copy the actual access key rather than the bullets that mask it.'
-            nameRequired: 'The name may not be blank. Please try again.'
-            spacesInName: 'The name may not contain spaces. Please try again.'
+            invalidAccountId: "You did not enter a valid account ID. Please try again."
+            invalidAPIKey: "You did not enter a valid API key. Please try again"
+            invalidName: "You entered an invalid name. Please try again."
+            invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
+            invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
+            invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
+            invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
+            invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
+            invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
+            invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
+            nameRequired: "The name may not be blank. Please try again."
+            spacesInName: "The name may not contain spaces. Please try again."
         folderOverwritePrompt:
           overwriteConfirm: 'The folder with name "{{ folderName }}" already exists. Overwrite?'
         createTemplatePrompt:
-          selectTemplate: 'Select the type of template to create'
+          selectTemplate: "Select the type of template to create"
         createModulePrompt:
-          enterLabel: 'What should the module label be?'
-          selectContentType: 'What types of content will this module be used in?'
-          confirmGlobal: 'Is this a global module?'
+          enterLabel: "What should the module label be?"
+          selectContentType: "What types of content will this module be used in?"
+          confirmGlobal: "Is this a global module?"
           errors:
-            invalidLabel: 'You entered an invalid name. Please try again.'
-            labelRequired: 'The name may not be blank. Please try again.'
-            contentTypeRequired: 'Please select at least one content type for this module.'
+            invalidLabel: "You entered an invalid name. Please try again."
+            labelRequired: "The name may not be blank. Please try again."
+            contentTypeRequired: "Please select at least one content type for this module."
         createFunctionPrompt:
-          enterFolder: 'Name of the folder where your function will be created: '
-          enterFilename: 'Name of the JavaScript file for your function: '
-          enterEndpointPath: 'Path portion of the URL created for the function: '
-          selectEndpointMethod: 'Select the HTTP method for the endpoint'
+          enterFolder: "Name of the folder where your function will be created: "
+          enterFilename: "Name of the JavaScript file for your function: "
+          enterEndpointPath: "Path portion of the URL created for the function: "
+          selectEndpointMethod: "Select the HTTP method for the endpoint"
           errors:
-            invalid: 'You entered an invalid name. Please try again.'
-            blank: 'The name may not be blank. Please try again.'
-            space: 'The name may not contain spaces. Please try again.'
+            invalid: "You entered an invalid name. Please try again."
+            blank: "The name may not be blank. Please try again."
+            space: "The name may not contain spaces. Please try again."
         createApiSamplePrompt:
-          selectApiSampleApp: 'Please, select API sample app'
+          selectApiSampleApp: "Please, select API sample app"
           selectLanguage: "Please, select sample app's language"
           errors:
-            apiSampleAppRequired: 'Please select API sample app'
+            apiSampleAppRequired: "Please select API sample app"
             languageRequired: "Please select API sample app's language"
         createProjectPrompt:
-          enterName: '[--name] Give your project a name: '
-          enterLocation: '[--location] Where should the project be created?'
-          selectTemplate: '[--template] Start from a template?'
+          enterName: "[--name] Give your project a name: "
+          enterLocation: "[--location] Where should the project be created?"
+          selectTemplate: "[--template] Start from a template?"
           templateOptions:
-            noTemplate: 'No template'
+            noTemplate: "No template"
           errors:
-            nameRequired: 'A project name is required'
-            locationRequired: 'A project location is required'
-            invalidTemplate: '[--template] Could not find template {{ template }}. Please choose an available template.'
+            nameRequired: "A project name is required"
+            locationRequired: "A project location is required"
+            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
         secretPrompt:
-          enterValue: 'Enter a value for your secret: '
+          enterValue: "Enter a value for your secret: "
           errors:
-            invalidValue: 'You entered an invalid value. Please try again.'
+            invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
-          enterName: 'Enter a name to use for the sandbox: '
+          enterName: "Enter a name to use for the sandbox: "
           errors:
-            invalidName: 'You entered an invalid name. Please try again.'
+            invalidName: "You entered an invalid name. Please try again."
