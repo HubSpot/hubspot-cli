@@ -48,7 +48,7 @@ exports.handler = async options => {
   );
 
   if (!projectConfigCreated) {
-    logger.log(i18n(`${i18nKey}.downloadCancelled`));
+    logger.log(i18n(`${i18nKey}.logs.downloadCancelled`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -89,12 +89,12 @@ exports.handler = async options => {
   );
 
   if (!success) {
-    logger.log(i18n(`${i18nKey}.downloadFailed`));
+    logger.log(i18n(`${i18nKey}.errors.downloadFailed`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log(
-    i18n(`${i18nKey}.downloadSucceeded`, {
+    i18n(`${i18nKey}.logs.downloadSucceeded`, {
       buildId: buildNumberToDownload,
       projectName,
     })
