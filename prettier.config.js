@@ -18,6 +18,7 @@ module.exports = {
         printWidth: 999,
         // Wrapping looks bad for certain strings that use newlines
         proseWrap: 'preserve',
+        quoteProps: 'perserve',
         singleQuote: false,
       },
     },

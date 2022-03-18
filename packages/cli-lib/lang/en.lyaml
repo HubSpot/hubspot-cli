@@ -21,12 +21,12 @@ en:
               newName:
                 describe: "New name for account."
             success:
-              renamed: 'Account "{{ name }}" renamed to "{{ newName }}"'
+              renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
-          accountNameExists: 'Account name "{{ name }}" already exists, please enter a different name.'
-          noConfigFileFound: 'No config file was found. To create a new config file, use the "hs init" command.'
+          accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
+          noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
           unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
         positionals:
           type:
@@ -53,25 +53,25 @@ en:
               defaultAccount:
                 describe: "Change default account used in config."
                 errors:
-                  accountNotFound: 'The account "{{ specifiedAccount }}" was not found in {{ configPath }}.'
+                  accountNotFound: "The account \"{{ specifiedAccount }}\" was not found in {{ configPath }}."
                 examples:
                   default: "Select account to use as the default from a list"
-                  idBased: 'Set the default account to the account in the config with accountId equal to "1234567"'
-                  nameBased: 'Set the default account to the account in the config with name equal to "MyAccount"'
+                  idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
+                  nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
                 positionals:
                   newDefault:
                     describe: "Account name or id to use as the default"
                 promptMessage: "Select an account to use as the default"
                 success:
-                  defaultAccountUpdated: 'Default account updated to: "{{ accountName }}".'
+                  defaultAccountUpdated: "Default account updated to: \"{{ accountName }}\"."
               defaultMode:
                 describe: "Change default mode used in config."
                 errors:
-                  invalidMode: 'The mode "{{ mode }}" is invalid. Valid values are {{ validModes }}.'
+                  invalidMode: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
                 examples:
                   default: "Select mode to use as the default from a list"
-                  draft: 'Set the default mode in the config to "draft"'
-                  publish: 'Set the default mode in the config to "publish"'
+                  draft: "Set the default mode in the config to \"draft\""
+                  publish: "Set the default mode in the config to \"publish\""
                 positionals:
                   newMode:
                     describe: "Mode to use as the default"
@@ -90,9 +90,9 @@ en:
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
-          deprecatedAssetType: 'The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the "{{ newCommand }}" command instead. Then when prompted select "{{ type }}".'
+          deprecatedAssetType: "The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the \"{{ newCommand }}\" command instead. Then when prompted select \"{{ type }}\"."
           unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
-          unusablePath: 'The "{{ path }}" is not a usable path to a directory.'
+          unusablePath: "The \"{{ path }}\" is not a usable path to a directory."
         positionals:
           dest:
             describe: "Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory"
@@ -103,7 +103,7 @@ en:
         subcommands:
           apiSample:
             errors:
-              nameRequired: 'The "name" argument is required when creating an API Sample.'
+              nameRequired: "The \"name\" argument is required when creating an API Sample."
               noSamples: "Currently there are no samples available, please, try again later."
             info:
               sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
@@ -116,12 +116,12 @@ en:
             creatingPath: "Creating {{ path }}"
             errors:
               pathExists: "The {{ path }} path already exists"
-              nameRequired: 'The "name" argument is required when creating a Custom Module.'
+              nameRequired: "The \"name\" argument is required when creating a Custom Module."
           template:
             debug:
               creatingPath: "Making {{ path }} if needed"
             errors:
-              nameRequired: 'The "name" argument is required when creating a Template.'
+              nameRequired: "The \"name\" argument is required when creating a Template."
               pathExists: "The {{ path }} path already exists"
             log:
               creatingFile: "Creating file at {{ path }}"
@@ -152,14 +152,14 @@ en:
                   definition:
                     describe: "Local path to the JSON file containing the schema definition"
                 success:
-                  schemaCreated: 'Your schema has been created in account "{{ accountId }}"'
+                  schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
                   schemaViewable: "Schema can be viewed at {{ url }}"
               delete:
                 describe: "Delete a custom object schema"
                 error:
                   delete: "Unable to delete {{ name }}"
                 examples:
-                  default: 'Delete "schemaName" schema'
+                  default: "Delete \"schemaName\" schema"
                 positionals:
                   name:
                     describe: "Name of the target schema"
@@ -182,15 +182,15 @@ en:
                 errors:
                   fetch: "Unable to fetch {{ name }}"
                 examples:
-                  default: 'Fetch "schemaId" schema and put it in the current working directory'
-                  specifyPath: 'Fetch "schemaId" schema and put it in a directory named my/folder'
+                  default: "Fetch \"schemaId\" schema and put it in the current working directory"
+                  specifyPath: "Fetch \"schemaId\" schema and put it in a directory named my/folder"
                 positionals:
                   dest:
                     describe: "Local folder where schema will be written"
                   name:
                     describe: "Name of the target schema"
                 success:
-                  save: 'The schema "{{ name }}" has been saved to "{{ path }}"'
+                  save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                   savedToPath: "Saved schema to {{ path }}"
               list:
                 describe: "List schemas available on your account"
@@ -206,7 +206,7 @@ en:
                   name:
                     describe: "Name of the target schema"
                 success:
-                  update: 'Your schema has been updated in account "{{ accountId }}"'
+                  update: "Your schema has been updated in account \"{{ accountId }}\""
                   viewAtUrl: "Schema can be viewed at {{ url }}"
         warning: "{{#yellow}}***************************** WARNING WARNING WARNING ****************************{{/yellow}}"
       fetch:
@@ -230,7 +230,7 @@ en:
               sourceRequired: "A source to fetch is required."
             options:
               includeArchived:
-                describe: 'Include files that have been marked as "archived"'
+                describe: "Include files that have been marked as \"archived\""
             positionals:
               dest:
                 describe: "Path in HubSpot Design Tools"
@@ -240,20 +240,20 @@ en:
             describe: "Upload a folder or file from your computer to the HubSpot File Manager"
             errors:
               destinationRequired: "A destination path needs to be passed"
-              fileIgnored: 'The file "{{ path }}" is being ignored via an .hsignore rule'
-              invalidPath: 'The path "{{ path }}" is not a path to a file or folder'
-              upload: 'Uploading file "{{ src }}" to "{{ dest }}" failed'
+              fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+              invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+              upload: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
               uploadingFailed: "Uploading failed"
             logs:
-              uploading: 'Uploading files from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
+              uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
             positionals:
               dest:
                 describe: "Path in HubSpot Design Tools, can be a net new path"
               src:
                 describe: "Path to the local file, relative to your current working directory"
             success:
-              upload: 'Uploaded file from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
-              uploadComplete: 'Uploading files to "{{ dest }}" in the File Manager is complete'
+              upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+              uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
       functions:
         describe: "Commands for working with functions."
         subcommands:
@@ -313,7 +313,7 @@ en:
           create:
             describe: "Create a HubDB table"
             errors:
-              create: 'Creating the table at "{{ src }}" failed'
+              create: "Creating the table at \"{{ src }}\" failed"
             positionals:
               src:
                 describe: "Local path to file used for import"
@@ -341,12 +341,12 @@ en:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:
           auth:
-            describe: 'Specify auth method to use ["personalaccesskey", "oauth2", "apikey"]'
+            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
-          configFileCreated: 'The config file "{{ configPath }}" was created using "{{ authType }}" for account {{ account }}.'
+          configFileCreated: "The config file \"{{ configPath }}\" was created using \"{{ authType }}\" for account {{ account }}."
         info:
-          updateConfig: 'To update an existing config file, use the "hs auth" command.'
+          updateConfig: "To update an existing config file, use the \"hs auth\" command."
         errors:
           configFileExists: "The config file {{ configPath }} already exists."
       lint:
@@ -365,7 +365,7 @@ en:
       logs:
         describe: "Get logs for a function."
         errors:
-          noLogsFound: 'No logs were found for the function path "{{ functionPath }}" in account "{{ accountId }}".'
+          noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
         examples:
           default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
           follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
@@ -386,11 +386,11 @@ en:
       mv:
         describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
         errors:
-          sourcePathExists: 'The folder "{{ srcPath }}" already exists in "{{ destPath }}".'
-          moveFailed: 'Moving "{{ srcPath }}" to "{{ destPath }}" in account {{ accountId }} failed'
-        move: 'Moved "{{ srcPath }}" to "{{ destPath }}" in account {{ accountId }}'
+          sourcePathExists: "The folder \"{{ srcPath }}\" already exists in \"{{ destPath }}\"."
+          moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
+        move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
       open:
-        describe: 'Open a HubSpot page in your browser. Run "hs open list" to see all available shortcuts.'
+        describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
         options:
           list:
             describe: "List all supported shortcuts"
@@ -430,11 +430,11 @@ en:
             describe: "Get logs for a function within a project"
             errors:
               functionNameRequired: "You must pass a function name to retrieve logs for."
-              noAppFunctionLogs: 'No logs were found for the function name "{{ functionName }}" in the app path "{{ appPath }}" within the project "{{ projectName }}" in account {{ accountId }}.'
-              noEndpointLogs: 'No logs were found for the function name "{{ functionName }}" within the project "{{ projectName }}" in account {{ accountId }}.'
+              noAppFunctionLogs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
+              noEndpointLogs: "No logs were found for the function name \"{{ functionName }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
               projectNameRequired: "You must specify a project name using the --projectName argument."
             examples:
-              default: 'Get 5 most recent logs for function named "my-function" within the app named "app" within the project named "my-project"'
+              default: "Get 5 most recent logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             loading: "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
             options:
               appPath:
@@ -454,10 +454,10 @@ en:
                 describe: "Serverless app function name"
           upload:
             debug:
-              buildCreated: 'Project "{{ projectName }}" uploaded and build #{{ buildId }} created'
+              buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
               cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
               compressed: "Project files compressed: {{ byteCount }} bytes"
-              compressing: 'Compressing build files to "{{ path }}"'
+              compressing: "Compressing build files to \"{{ path }}\""
             describe: "Upload your project files and create a new build"
             examples:
               default: "Upload a project"
@@ -482,27 +482,27 @@ en:
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs:
-              watching: 'Watcher is ready and watching "{{ projectDir }}". Any changes detected will be automatically uploaded and added to the current staging build.'
+              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded and added to the current staging build."
               resuming: "Resuming watcher..."
-              uploadSucceeded: 'Uploaded file "{{ filePath }}" to "{{ remotePath }}"'
-              deleteFileSucceeded: 'Deleted file "{{ remotePath }}"'
-              deleteFolderSucceeded: 'Deleted folder "{{ remotePath }}"'
+              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
+              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
               createNewBuild: "Staging build #{{ buildId }} created"
               buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
             debug:
               attemptNewBuild: "Attempting to create a new build"
-              uploading: 'Attempting to upload file "{{ filePath }}" to "{{ remotePath }}"'
-              extensionNotAllowed: 'Skipping "{{ filePath }}" due to unsupported extension'
-              ignored: 'Skipping "{{ filePath }}" due to an ignore rule'
+              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
+              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
               pause: "Pausing watcher, attempting to queue build"
               buildStarted: "Build queued."
               buildCancelled: "The current staging build has been cancelled. Exiting..."
-              fileAlreadyQueued: 'File "{{ filePath }}" is already queued for upload'
+              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
             errors:
               projectLocked: "The previous staging build is still in progress"
-              uploadFailed: 'Failed to upload file "{{ filePath }}" to "{{ remotePath }}"'
-              deleteFileFailed: 'Failed to delete file "{{ remotePath }}"'
-              deleteFolderFailed: 'Failed to delete folder "{{ remotePath }}"'
+              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
+              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
           download:
             describe: "Download your project files from HubSpot and write to a path on your computer"
             examples:
@@ -522,9 +522,9 @@ en:
                 describe: "The build number to download"
       remove:
         describe: "Delete a file or folder from HubSpot."
-        deleted: 'Deleted "{{ path }}" from account {{ accountId }}'
+        deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
         errors:
-          deleteFailed: 'Deleting "{{ path }}" from account {{ accountId }} failed'
+          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
         positionals:
           path:
             describe: "Remote hubspot path"
@@ -532,36 +532,37 @@ en:
         subcommands:
           create:
             debug:
-              creating: 'Creating sandbox "{{ name }}"'
-            examples: default "Create a sandbox account named MySandboxAccount."
+              creating: "Creating sandbox \"{{ name }}\""
+            examples:
+              default "Create a sandbox account named MySandboxAccount."
             info:
-              auth: 'Run "hs auth" to authenticate with the new sandbox account.'
+              auth: "Run \"hs auth\" to authenticate with the new sandbox account."
             positionals:
               name:
                 describe: "Name to use for created sandbox"
             success:
-              create: 'Sandbox "{{ name }}" with portalId "{{ sandboxHubId }}" created successfully.'
+              create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
           add:
             describe: "Add a HubSpot secret"
             errors:
-              add: 'The secret "{{ secretName }}" was not added'
+              add: "The secret \"{{ secretName }}\" was not added"
             positionals:
               name:
                 describe: "Name of the secret"
             success:
-              add: 'The secret "{{ secretName }}" was added to the HubSpot account: {{ accountId }}'
+              add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountId }}"
           delete:
             describe: "Delete a HubSpot secret"
             errors:
-              delete: 'The secret "{{ secretName }}" was not deleted'
+              delete: "The secret \"{{ secretName }}\" was not deleted"
             positionals:
               name:
                 describe: "Name of the secret"
             success:
-              delete: 'The secret "{{ secretName }}" was deleted from the HubSpot account: {{ accountId }}'
+              delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountId }}"
           list:
             describe: "List all HubSpot secrets"
             errors:
@@ -570,12 +571,12 @@ en:
           update:
             describe: "Update an existing HubSpot secret"
             errors:
-              update: 'The secret "{{ secretName }}" was not updated'
+              update: "The secret \"{{ secretName }}\" was not updated"
             positionals:
               name:
                 describe: "Name of the secret to be updated"
             success:
-              update: 'The secret "{{ secretName }}" was updated in the HubSpot account: {{ accountId }}'
+              update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
       server:
         description: "Run the CMS HubL server."
         fetching: "Fetching account data for {{ accountId }} to update context"
@@ -587,7 +588,7 @@ en:
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
-              invalidPath: 'The path "{{ path }}" is not a path to a folder'
+              invalidPath: "The path \"{{ path }}\" is not a path to a folder"
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
             options:
@@ -600,10 +601,10 @@ en:
         describe: "Upload a folder or file from your computer to the HubSpot CMS."
         errors:
           destinationRequired: "A destination path needs to be passed"
-          fileIgnored: 'The file "{{ path }}" is being ignored via an .hsignore rule'
-          invalidExtension: 'The file "{{ path }}" does not have a valid extension'
-          invalidPath: 'The path "{{ path }}" is not a path to a file or folder'
-          uploadFailed: 'Uploading file "{{ src }}" to "{{ dest }}" failed'
+          fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+          invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
+          invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+          uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
         positionals:
           src:
             describe: "Path to the local file, relative to your current working directory."
@@ -611,14 +612,14 @@ en:
             describe: "Path in HubSpot Design Tools, can be a net new path."
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         success:
-          fileUploaded: 'Uploaded file from "{{ src }}" to "{{ dest }}" in the Design Manager of account {{ accountId }}'
-          uploadComplete: 'Uploading files to "{{ dest }}" in the Design Manager is complete'
-        uploading: 'Uploading files from "{{ src }}" to "{{ dest }}" in the Design Manager of account {{ accountId }}'
+          fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+          uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
+        uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
           destinationRequired: "A destination directory needs to be passed"
-          invalidPath: 'The "{{ path }}" is not a path to a directory'
+          invalidPath: "The \"{{ path }}\" is not a path to a directory"
         options:
           disableInitial: "Disable the initial upload when watching a directory (default)"
           initialUpload: "Upload directory before watching for updates"
@@ -630,9 +631,9 @@ en:
           dest:
             describe: "Path in HubSpot Design Tools. Can be a net new path"
         warnings:
-          disableInitial: 'Passing the "--disable-initial" option is no longer necessary. Running "hs watch" no longer uploads the watched directory by default.'
-          initialUpload: 'To upload the directory run "hs upload" beforehand or add the "--initial-upload" option when running "hs watch".'
-          notUploaded: 'The "hs watch" command no longer uploads the watched directory when started. The directory "{{ path }}" was not uploaded.'
+          disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
+          initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
+          notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     lib:
       commonOpts:
         options:
@@ -677,7 +678,7 @@ en:
             nameRequired: "The name may not be blank. Please try again."
             spacesInName: "The name may not contain spaces. Please try again."
         folderOverwritePrompt:
-          overwriteConfirm: 'The folder with name "{{ folderName }}" already exists. Overwrite?'
+          overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
         createTemplatePrompt:
           selectTemplate: "Select the type of template to create"
         createModulePrompt:
