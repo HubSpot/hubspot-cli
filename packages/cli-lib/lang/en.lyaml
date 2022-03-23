@@ -503,6 +503,23 @@ en:
               uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
               deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
               deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
+          download:
+            describe: "Download your project files from HubSpot and write to a path on your computer"
+            examples:
+              default: "Download the project myProject into myProjectFolder folder"
+            logs:
+              downloadCancelled: "Cancelling project download"
+              downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
+            errors:
+              downloadFailed: "Something went wrong downloading the project"
+            positionals:
+              name:
+                describe: "The name of the project to download"
+              dest:
+                describe: "Destination folder for the project"
+            options:
+              buildNumber:
+                describe: "The build number to download"
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"

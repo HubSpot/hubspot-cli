@@ -103,14 +103,16 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     ]);
 
     if (!shouldContinue) {
-      return;
+      return false;
     }
   }
 
   const projectConfigPath = path.join(projectPath, PROJECT_CONFIG_FILE);
 
   logger.log(
-    `Creating project in ${projectPath ? projectPath : 'the current folder'}`
+    `Creating project config in ${
+      projectPath ? projectPath : 'the current folder'
+    }`
   );
 
   if (template === 'none') {
@@ -134,7 +136,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     });
   }
 
-  return projectConfig;
+  return true;
 };
 
 const validateProjectConfig = (projectConfig, projectDir) => {
@@ -160,14 +162,18 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
-const ensureProjectExists = async (accountId, projectName, forceCreate) => {
+const ensureProjectExists = async (
+  accountId,
+  projectName,
+  { forceCreate, allowCreate } = { forceCreate: false, allowCreate: true }
+) => {
   try {
     await fetchProject(accountId, projectName);
   } catch (err) {
     if (err.statusCode === 404) {
       let shouldCreateProject = forceCreate;
 
-      if (!shouldCreateProject) {
+      if (allowCreate && !shouldCreateProject) {
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',

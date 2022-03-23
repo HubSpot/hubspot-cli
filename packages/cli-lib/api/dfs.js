@@ -68,6 +68,24 @@ async function fetchProject(accountId, projectName) {
 }
 
 /**
+ * Download project
+ *
+ * @async
+ * @param {number} accountId
+ * @param {string} projectName
+ * @returns {Promise}
+ */
+async function downloadProject(accountId, projectName, buildId) {
+  return http.get(accountId, {
+    uri: `${PROJECTS_API_PATH}/${encodeURIComponent(
+      projectName
+    )}/builds/${buildId}/archive`,
+    encoding: null,
+    headers: { accept: 'application/octet-stream' },
+  });
+}
+
+/**
  * Delete project
  *
  * @async
@@ -252,19 +270,20 @@ async function cancelStagedBuild(accountId, projectName) {
 }
 
 module.exports = {
-  fetchProjects,
+  cancelStagedBuild,
   createProject,
-  uploadProject,
-  fetchProject,
+  deleteFileFromBuild,
   deleteProject,
-  fetchProjectBuilds,
-  getBuildStatus,
   deployProject,
-  getDeployStatus,
+  downloadProject,
+  fetchProject,
+  fetchProjectBuilds,
+  fetchProjects,
   fetchProjectSettings,
+  getBuildStatus,
+  getDeployStatus,
   provisionBuild,
   queueBuild,
   uploadFileToBuild,
-  deleteFileFromBuild,
-  cancelStagedBuild,
+  uploadProject,
 };

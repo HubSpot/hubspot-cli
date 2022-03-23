@@ -5,6 +5,7 @@ const upload = require('./project/upload');
 const listBuilds = require('./project/listBuilds');
 const logs = require('./project/logs');
 const watch = require('./project/watch');
+const download = require('./project/download');
 
 exports.command = 'project';
 exports.describe = false; //'Commands for working with projects';
@@ -20,6 +21,7 @@ exports.builder = yargs => {
   yargs.command(watch).demandCommand(0, '');
   yargs.command(listBuilds).demandCommand(0, '');
   yargs.command(logs).demandCommand(1, '');
+  yargs.command(download).demandCommand(0, '');
 
   return yargs;
 };
