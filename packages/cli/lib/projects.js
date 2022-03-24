@@ -32,7 +32,7 @@ const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { uiLine, uiAccountDescription } = require('../lib/ui');
+const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const writeProjectConfig = (configPath, config) => {
@@ -214,6 +214,11 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
 };
 
+const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
+  if (!projectName || !buildId || !accountId) return;
+  return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
+};
+
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
@@ -336,7 +341,12 @@ const showProjectWelcomeMessage = () => {
   uiLine();
 };
 
-const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
+const makePollTaskStatusFunc = ({
+  statusFn,
+  statusText,
+  statusStrings,
+  linkToHubSpot,
+}) => {
   const isTaskComplete = task => {
     if (
       !task[statusText.SUBTASK_KEY].length ||
@@ -348,7 +358,12 @@ const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
     }
   };
 
-  return async (accountId, taskName, taskId, buildId) => {
+  return async (accountId, taskName, taskId) => {
+    let hubspotLinkText = '';
+    if (linkToHubSpot) {
+      logger.log(`\n${linkToHubSpot(taskName, taskId, accountId)}\n`);
+    }
+
     const spinnies = new Spinnies({
       succeedColor: 'white',
       failColor: 'white',
@@ -359,20 +374,23 @@ const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
 
     const initialTaskStatus = await statusFn(accountId, taskName, taskId);
 
+    const numOfComponents = initialTaskStatus[statusText.SUBTASK_KEY].length;
+    const componentCountText = `\nFound ${numOfComponents} component${
+      numOfComponents !== 1 ? 's' : ''
+    } in this project ...\n`;
+
     spinnies.update('overallTaskStatus', {
-      text: statusStrings.INITIALIZE(
-        taskName,
-        initialTaskStatus[statusText.SUBTASK_KEY].length
-      ),
+      text: `${statusStrings.INITIALIZE(taskName)}${componentCountText}`,
     });
 
     for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
-        text: `${chalk.bold(subTaskName)} #${buildId || taskId} ${
+        text: `${chalk.bold(subTaskName)} #${taskId} ${
           statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
         }\n`,
+        indent: 2,
       });
     }
 
@@ -416,11 +434,11 @@ const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
 
             if (status === statusText.STATES.SUCCESS) {
               spinnies.succeed('overallTaskStatus', {
-                text: statusStrings.SUCCESS(taskName),
+                text: `${statusStrings.SUCCESS(taskName)}${hubspotLinkText}`,
               });
             } else if (status === statusText.STATES.FAILURE) {
               spinnies.fail('overallTaskStatus', {
-                text: statusStrings.FAIL(taskName),
+                text: `${statusStrings.FAIL(taskName)}${hubspotLinkText}`,
               });
 
               const failedSubtask = subTaskStatus.filter(
@@ -430,7 +448,7 @@ const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
               uiLine();
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
-                  buildId || taskId,
+                  taskId,
                   failedSubtask.length === 1
                     ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
                     : failedSubtask.length + ' components'
@@ -459,13 +477,15 @@ const makePollTaskStatusFunc = ({ statusFn, statusText, statusStrings }) => {
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({
+  linkToHubSpot: (projectName, buildId, accountId) =>
+    uiLink(
+      `View build #${buildId} in HubSpot`,
+      getProjectBuildDetailUrl(projectName, buildId, accountId)
+    ),
   statusFn: getBuildStatus,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
-    INITIALIZE: (name, numOfComponents) =>
-      `Building ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
-        numOfComponents !== 1 ? 's' : ''
-      } in this project ...\n`,
+    INITIALIZE: name => `Building ${chalk.bold(name)}`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
     SUBTASK_FAIL: (taskId, name) =>
@@ -479,10 +499,7 @@ const pollDeployStatus = makePollTaskStatusFunc({
   statusFn: getDeployStatus,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
-    INITIALIZE: (name, numOfComponents) =>
-      `Deploying ${chalk.bold(name)}\n\nFound ${numOfComponents} component${
-        numOfComponents !== 1 ? 's' : ''
-      } in this project ...\n`,
+    INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
     SUBTASK_FAIL: (taskId, name) =>
@@ -501,6 +518,7 @@ module.exports = {
   validateProjectConfig,
   showProjectWelcomeMessage,
   getProjectDetailUrl,
+  getProjectBuildDetailUrl,
   pollBuildStatus,
   pollDeployStatus,
   ensureProjectExists,
