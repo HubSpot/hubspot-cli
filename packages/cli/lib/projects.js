@@ -165,7 +165,7 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 const ensureProjectExists = async (
   accountId,
   projectName,
-  { forceCreate, allowCreate } = { forceCreate: false, allowCreate: true }
+  { forceCreate = false, allowCreate = true } = {}
 ) => {
   try {
     await fetchProject(accountId, projectName);
