@@ -80,7 +80,7 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath } = options;
+  const { initialUpload, path: projectPath } = options;
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-watch', { projectPath }, accountId);
@@ -91,11 +91,12 @@ exports.handler = async options => {
 
   await ensureProjectExists(accountId, projectConfig.name);
 
-  const { results } = await fetchProjectBuilds(
+  const { results: builds } = await fetchProjectBuilds(
     accountId,
     projectConfig.name,
     options
   );
+  const hasNoBuilds = !builds || !builds.length;
 
   const startWatching = async () => {
     await createWatcher(
@@ -108,7 +109,7 @@ exports.handler = async options => {
   };
 
   // Upload all files if no build exists for this project yet
-  if (!results || !results.length) {
+  if (initialUpload || hasNoBuilds) {
     await handleProjectUpload(
       accountId,
       projectConfig,
@@ -124,6 +125,12 @@ exports.builder = yargs => {
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
+  });
+
+  yargs.option('initial-upload', {
+    alias: 'i',
+    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
+    type: 'boolean',
   });
 
   yargs.example([

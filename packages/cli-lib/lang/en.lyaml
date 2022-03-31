@@ -469,7 +469,6 @@ en:
             logs:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
-              viewBuild: "\nView build #{{ buildId }} in HubSpot\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
             options:
@@ -515,6 +514,9 @@ en:
             positionals:
               path:
                 describe: "Path to a project folder"
+            options:
+              initialUpload:
+                describe: "Upload directory before watching for updates"
           download:
             describe: "Download your project files from HubSpot and write to a path on your computer"
             examples:
@@ -633,10 +635,14 @@ en:
           destinationRequired: "A destination directory needs to be passed"
           invalidPath: "The \"{{ path }}\" is not a path to a directory"
         options:
-          disableInitial: "Disable the initial upload when watching a directory (default)"
-          initialUpload: "Upload directory before watching for updates"
-          notify: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-          remove: "Will cause watch to delete files in your HubSpot account that are not found locally."
+          disableInitial:
+            describe: "Disable the initial upload when watching a directory (default)"
+          initialUpload:
+            describe: "Upload directory before watching for updates"
+          notify:
+            describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+          remove:
+            describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
         positionals:
           src:
             describe: "Path to the local directory your files are in, relative to your current working directory"
