@@ -26,6 +26,7 @@ const {
 } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -48,13 +49,13 @@ const handleBuildStatus = async (accountId, projectName, buildId) => {
   }
 };
 
-const handleSigInt = (accountId, projectName, currentBuildId) => {
-  process.removeAllListeners('SIGINT');
-  process.on('SIGINT', async () => {
+const handleUserInput = (accountId, projectName, currentBuildId) => {
+  const onTerminate = async () => {
+    logger.log(i18n(`${i18nKey}.logs.processExited`));
+
     if (currentBuildId) {
       try {
         await cancelStagedBuild(accountId, projectName);
-        logger.debug(i18n(`${i18nKey}.debug.buildCancelled`));
         process.exit(EXIT_CODES.SUCCESS);
       } catch (err) {
         logApiErrorInstance(
@@ -65,6 +66,13 @@ const handleSigInt = (accountId, projectName, currentBuildId) => {
       }
     } else {
       process.exit(EXIT_CODES.SUCCESS);
+    }
+  };
+
+  handleExit(onTerminate);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      onTerminate();
     }
   });
 };
@@ -96,7 +104,7 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       handleBuildStatus,
-      handleSigInt
+      handleUserInput
     );
   };
 

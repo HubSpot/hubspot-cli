@@ -1,5 +1,6 @@
 const chokidar = require('chokidar');
 const path = require('path');
+const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
 const { logApiErrorInstance, ApiErrorContext } = require('./errorHandlers');
 const { i18n } = require('./lib/lang');
@@ -21,7 +22,7 @@ const queue = new PQueue({
 });
 const standbyeQueue = [];
 let currentBuildId = null;
-let handleBuildStatus, handleSigInt;
+let handleBuildStatus, handleUserInput;
 let timer;
 
 const processStandByQueue = async (accountId, projectName) => {
@@ -38,11 +39,8 @@ const processStandByQueue = async (accountId, projectName) => {
 
 const createNewStagingBuild = async (accountId, projectName) => {
   currentBuildId = await createNewBuild(accountId, projectName);
-  logger.log(
-    i18n(`${i18nKey}.logs.createNewBuild`, { buildId: currentBuildId })
-  );
 
-  handleSigInt(accountId, projectName, currentBuildId);
+  handleUserInput(accountId, projectName, currentBuildId);
 };
 
 const debounceQueueBuild = (accountId, projectName) => {
@@ -73,6 +71,7 @@ const debounceQueueBuild = (accountId, projectName) => {
 
     queue.start();
     logger.log(i18n(`${i18nKey}.logs.resuming`));
+    logger.log(`\n> Press ${chalk.bold('q')} to quit\n`);
   }, 2000);
 };
 
@@ -127,7 +126,7 @@ const createNewBuild = async (accountId, projectName) => {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     }
     await cancelStagedBuild(accountId, projectName);
-    logger.log(i18n(`${i18nKey}.logs.buildCancelled`));
+    logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     process.exit(1);
   }
 };
@@ -164,12 +163,12 @@ const createWatcher = async (
   projectConfig,
   projectDir,
   handleBuildStatusFn,
-  handleSigIntFn
+  handleUserInputFn
 ) => {
   const projectSourceDir = path.join(projectDir, projectConfig.srcDir);
 
   handleBuildStatus = handleBuildStatusFn;
-  handleSigInt = handleSigIntFn;
+  handleUserInput = handleUserInputFn;
 
   await createNewStagingBuild(accountId, projectConfig.name);
 
@@ -179,6 +178,7 @@ const createWatcher = async (
   });
   watcher.on('ready', async () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
+    logger.log(`\n> Press ${chalk.bold('q')} to quit\n`);
   });
   watcher.on('add', async path => {
     handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);

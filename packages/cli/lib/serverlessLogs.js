@@ -1,5 +1,4 @@
 const https = require('https');
-const readline = require('readline');
 
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
@@ -9,19 +8,11 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
+const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
+
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const TAIL_DELAY = 5000;
-
-const handleKeypressToExit = exit => {
-  readline.emitKeypressEvents(process.stdin);
-  process.stdin.setRawMode(true);
-  process.stdin.on('keypress', (str, key) => {
-    if (key && ((key.ctrl && key.name == 'c') || key.name === 'escape')) {
-      exit(key.name === 'escape' ? 'esc' : 'ctrl+c');
-    }
-  });
-};
 
 const tailLogs = async ({
   accountId,
@@ -76,12 +67,13 @@ const tailLogs = async ({
     }, TAIL_DELAY);
   };
 
-  handleKeypressToExit(exitKey => {
-    spinnies.succeed('tailLogs', {
-      text: `Stopped polling because "${exitKey}" was pressed.`,
-    });
-    process.exit(EXIT_CODES.SUCCESS);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name == 'c') || key.name === 'escape') {
+      spinnies.succeed('tailLogs', { text: `Stopped polling` });
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   });
+
   await tail(initialAfter);
 };
 

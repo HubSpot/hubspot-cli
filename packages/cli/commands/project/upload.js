@@ -48,6 +48,8 @@ exports.handler = async options => {
       status,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
 
+    uiLine();
+
     if (status === 'FAILURE') {
       exitCode = EXIT_CODES.ERROR;
       return;
