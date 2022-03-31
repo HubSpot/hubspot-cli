@@ -469,7 +469,6 @@ en:
             logs:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
-              viewBuild: "\nView build #{{ buildId }} in HubSpot\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
             options:

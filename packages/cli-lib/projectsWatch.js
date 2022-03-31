@@ -71,7 +71,7 @@ const debounceQueueBuild = (accountId, projectName) => {
 
     queue.start();
     logger.log(i18n(`${i18nKey}.logs.resuming`));
-    logger.log(`\n> Press ${chalk.bold('q')} to quit\n`);
+    logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   }, 2000);
 };
 
@@ -178,7 +178,7 @@ const createWatcher = async (
   });
   watcher.on('ready', async () => {
     logger.log(i18n(`${i18nKey}.logs.watching`, { projectDir }));
-    logger.log(`\n> Press ${chalk.bold('q')} to quit\n`);
+    logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   });
   watcher.on('add', async path => {
     handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);
