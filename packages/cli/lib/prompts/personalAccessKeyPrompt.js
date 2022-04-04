@@ -107,7 +107,7 @@ const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
   message: i18n(`${i18nKey}.enterPersonalAccessKey`),
   validate(val) {
-    if (typeof val !== 'string') {
+    if (!val || typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidPersonalAccessKey`);
     } else if (val[0] === '•') {
       return i18n(`${i18nKey}.errors.invalidPersonalAccessKeyCopy`);
