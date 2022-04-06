@@ -19,7 +19,7 @@
     "moment": "^2.29.1",
     "open": "^7.0.3",
     "ora": "^4.0.3",
-    "shelljs": "0.8.3",
+    "shelljs": "^0.8.5",
     "spinnies": "^0.5.1",
     "supports-hyperlinks": "^2.2.0",
     "tmp": "^0.2.1",
