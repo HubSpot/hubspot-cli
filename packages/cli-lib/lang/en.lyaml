@@ -614,6 +614,7 @@ en:
           invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+          someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
         positionals:
           src:
             describe: "Path to the local file, relative to your current working directory."
