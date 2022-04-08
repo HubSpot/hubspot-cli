@@ -26,6 +26,7 @@ const {
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
+const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
@@ -34,7 +35,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'upload <src> <dest>';
+exports.command = 'upload [src] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
@@ -50,8 +51,6 @@ const logThemePreview = (filePath, accountId) => {
 };
 
 exports.handler = async options => {
-  const { src, dest } = options;
-
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
@@ -60,6 +59,12 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const mode = getMode(options);
+
+  const uploadPromptAnswers = await uploadPrompt(options);
+
+  const src = options.src || uploadPromptAnswers.src;
+  const dest = options.dest || uploadPromptAnswers.dest;
+
   const absoluteSrcPath = path.resolve(getCwd(), src);
   let stats;
   try {
