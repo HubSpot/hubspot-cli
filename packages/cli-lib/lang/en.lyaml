@@ -591,11 +591,6 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
-      server:
-        description: "Run the CMS HubL server."
-        fetching: "Fetching account data for {{ accountId }} to update context"
-        runningServer: "Running: {{ cmd }}"
-        startingServer: "Starting HubSpot CMS HubL server"
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
