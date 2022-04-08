@@ -55,7 +55,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.WARNING);
   }
 
   const accountId = getAccountId(options);
@@ -98,7 +98,7 @@ exports.handler = async options => {
 
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src)) {
@@ -150,7 +150,7 @@ exports.handler = async options => {
             payload: src,
           })
         );
-        process.exit(EXIT_CODES.ERROR);
+        process.exit(EXIT_CODES.WARNING);
       });
   } else {
     logger.log(
@@ -177,7 +177,7 @@ exports.handler = async options => {
               dest,
             })
           );
-          process.exit(EXIT_CODES.ERROR);
+          process.exit(EXIT_CODES.WARNING);
         }
       })
       .catch(error => {
@@ -190,7 +190,7 @@ exports.handler = async options => {
         logErrorInstance(error, {
           accountId,
         });
-        process.exit(EXIT_CODES.ERROR);
+        process.exit(EXIT_CODES.WARNING);
       });
   }
 };
