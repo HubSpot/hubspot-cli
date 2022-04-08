@@ -150,6 +150,7 @@ exports.handler = async options => {
             payload: src,
           })
         );
+        process.exit(EXIT_CODES.ERROR);
       });
   } else {
     logger.log(
@@ -180,6 +181,7 @@ exports.handler = async options => {
         logErrorInstance(error, {
           accountId,
         });
+        process.exit(EXIT_CODES.ERROR);
       });
   }
 };
