@@ -12,7 +12,7 @@ const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 const BaseValidator = require('../BaseValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
-class DependencyValidator extends BaseValidator {
+class ThemeDependencyValidator extends BaseValidator {
   constructor(options) {
     super(options);
 
@@ -117,7 +117,7 @@ class DependencyValidator extends BaseValidator {
   }
 }
 
-module.exports = new DependencyValidator({
-  name: 'Dependency',
-  key: VALIDATOR_KEYS.dependency,
+module.exports = new ThemeDependencyValidator({
+  name: 'Theme dependency',
+  key: VALIDATOR_KEYS.themeDependency,
 });

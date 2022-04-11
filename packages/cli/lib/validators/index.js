@@ -1,10 +1,10 @@
 const ThemeConfigValidator = require('./marketplaceValidators/theme/ThemeConfigValidator');
 const SectionValidator = require('./marketplaceValidators/theme/SectionValidator');
 const TemplateValidator = require('./marketplaceValidators/theme/TemplateValidator');
-const ModuleValidator = require('./marketplaceValidators/theme/ModuleValidator');
-const DependencyValidator = require('./marketplaceValidators/theme/DependencyValidator');
+const ThemeModuleValidator = require('./marketplaceValidators/theme/ThemeModuleValidator');
+const ThemeDependencyValidator = require('./marketplaceValidators/theme/ThemeDependencyValidator');
 
-const SpecificModuleValidator = require('./marketplaceValidators/module/SpecificModuleValidator');
+const ModuleValidator = require('./marketplaceValidators/module/ModuleValidator');
 const ModuleDependencyValidator = require('./marketplaceValidators/module/ModuleDependencyValidator');
 
 const MARKETPLACE_VALIDATORS = {
@@ -12,10 +12,10 @@ const MARKETPLACE_VALIDATORS = {
     ThemeConfigValidator,
     SectionValidator,
     TemplateValidator,
-    ModuleValidator,
-    DependencyValidator,
+    ThemeModuleValidator,
+    ThemeDependencyValidator,
   ],
-  module: [SpecificModuleValidator, ModuleDependencyValidator],
+  module: [ModuleValidator, ModuleDependencyValidator],
 };
 
 module.exports = MARKETPLACE_VALIDATORS;

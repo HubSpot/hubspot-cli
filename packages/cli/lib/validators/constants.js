@@ -4,12 +4,12 @@ const SUCCESS = 'SUCCESS';
 
 const VALIDATION_RESULT = { WARNING, FATAL, SUCCESS };
 const VALIDATOR_KEYS = {
-  dependency: 'dependency',
-  module: 'module',
+  themeDependency: 'themeDependency',
+  themeModule: 'themeModule',
   section: 'section',
   template: 'template',
   themeConfig: 'themeConfig',
-  specificModule: 'specificModule',
+  module: 'module',
   moduleDependency: 'moduleDependency',
 };
 

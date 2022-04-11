@@ -7,7 +7,7 @@ const { VALIDATOR_KEYS } = require('../../constants');
 
 const MODULE_LIMIT = 50;
 
-class ModuleValidator extends BaseValidator {
+class ThemeModuleValidator extends BaseValidator {
   constructor(options) {
     super(options);
 
@@ -111,7 +111,7 @@ class ModuleValidator extends BaseValidator {
   }
 }
 
-module.exports = new ModuleValidator({
-  name: 'Module',
-  key: VALIDATOR_KEYS.module,
+module.exports = new ThemeModuleValidator({
+  name: 'Theme modules',
+  key: VALIDATOR_KEYS.themeModule,
 });
