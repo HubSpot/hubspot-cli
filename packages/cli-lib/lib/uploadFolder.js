@@ -155,9 +155,8 @@ async function uploadFolder(accountId, src, dest, options) {
 }
 
 function hasUploadErrors(results) {
-  return (
-    results.filter(result => result.resultType === FileUploadResultType.FAILURE)
-      .length > 0
+  return results.some(
+    result => result.resultType === FileUploadResultType.FAILURE
   );
 }
 
