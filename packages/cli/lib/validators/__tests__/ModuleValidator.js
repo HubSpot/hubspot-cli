@@ -1,5 +1,5 @@
 const fs = require('fs');
-const ModuleValidator = require('../marketplaceValidators/theme/ModuleValidator');
+const ThemeModuleValidator = require('../marketplaceValidators/theme/ThemeModuleValidator');
 const { VALIDATION_RESULT } = require('../constants');
 const {
   generateModulesList,
@@ -13,13 +13,13 @@ const MODULE_LIMIT = 50;
 
 const findError = makeFindError('module');
 
-describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
+describe('validators/marketplaceValidators/theme/ThemeModuleValidator', () => {
   beforeEach(() => {
-    ModuleValidator.setAbsolutePath(THEME_PATH);
+    ThemeModuleValidator.setAbsolutePath(THEME_PATH);
   });
 
   it('returns error if module limit is exceeded', async () => {
-    const validationErrors = ModuleValidator.validate(
+    const validationErrors = ThemeModuleValidator.validate(
       generateModulesList(MODULE_LIMIT + 1)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
@@ -28,7 +28,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   });
 
   it('returns no limit error if module limit is not exceeded', async () => {
-    const validationErrors = ModuleValidator.validate(
+    const validationErrors = ThemeModuleValidator.validate(
       generateModulesList(MODULE_LIMIT)
     );
     const limitError = findError(validationErrors, 'limitExceeded');
@@ -36,7 +36,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   });
 
   it('returns error if no module meta.json file exists', async () => {
-    const validationErrors = ModuleValidator.validate([
+    const validationErrors = ThemeModuleValidator.validate([
       'module.module/module.html',
     ]);
     expect(validationErrors.length).toBe(1);
@@ -46,7 +46,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns error if module meta.json file has invalid json', async () => {
     fs.readFileSync.mockReturnValue('{} bad json }');
 
-    const validationErrors = ModuleValidator.validate([
+    const validationErrors = ThemeModuleValidator.validate([
       'module.module/meta.json',
     ]);
     expect(validationErrors.length).toBe(1);
@@ -56,7 +56,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns error if module meta.json file is missing a label field', async () => {
     fs.readFileSync.mockReturnValue('{ "icon": "woo" }');
 
-    const validationErrors = ModuleValidator.validate([
+    const validationErrors = ThemeModuleValidator.validate([
       'module.module/meta.json',
     ]);
     expect(validationErrors.length).toBe(1);
@@ -66,7 +66,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns error if module meta.json file is missing an icon field', async () => {
     fs.readFileSync.mockReturnValue('{ "label": "yay" }');
 
-    const validationErrors = ModuleValidator.validate([
+    const validationErrors = ThemeModuleValidator.validate([
       'module.module/meta.json',
     ]);
     expect(validationErrors.length).toBe(1);
@@ -76,7 +76,7 @@ describe('validators/marketplaceValidators/theme/ModuleValidator', () => {
   it('returns no error if module meta.json file exists and has all required fields', async () => {
     fs.readFileSync.mockReturnValue('{ "label": "yay", "icon": "woo" }');
 
-    const validationErrors = ModuleValidator.validate([
+    const validationErrors = ThemeModuleValidator.validate([
       'module.module/meta.json',
     ]);
     expect(validationErrors.length).toBe(0);

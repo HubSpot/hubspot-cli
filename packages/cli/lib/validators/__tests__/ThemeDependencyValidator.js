@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const marketplace = require('@hubspot/cli-lib/api/marketplace');
 
-const DependencyValidator = require('../marketplaceValidators/theme/DependencyValidator');
+const ThemeDependencyValidator = require('../marketplaceValidators/theme/ThemeDependencyValidator');
 const { VALIDATION_RESULT } = require('../constants');
 const { THEME_PATH } = require('./validatorTestUtils');
 
@@ -15,20 +15,20 @@ const getMockDependencyResult = (customPaths = []) => {
   return Promise.resolve(result);
 };
 
-describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
+describe('validators/marketplaceValidators/theme/ThemeDependencyValidator', () => {
   beforeEach(() => {
-    DependencyValidator.setAbsolutePath(THEME_PATH);
+    ThemeDependencyValidator.setAbsolutePath(THEME_PATH);
   });
 
   describe('isExternalDep', () => {
     beforeEach(() => {
-      DependencyValidator.setAbsolutePath(THEME_PATH);
+      ThemeDependencyValidator.setAbsolutePath(THEME_PATH);
     });
 
     it('returns true if dep is external to the provided absolute path', () => {
       const absoluteFilePath = `${THEME_PATH}/file.js`;
       const relativeDepPath = '../external/dep/path/file2.js';
-      const isExternal = DependencyValidator.isExternalDep(
+      const isExternal = ThemeDependencyValidator.isExternalDep(
         absoluteFilePath,
         relativeDepPath
       );
@@ -38,7 +38,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
     it('returns false if dep is not external to the provided absolute path', () => {
       const absoluteFilePath = `${THEME_PATH}/file.js`;
       const relativeDepPath = './internal/dep/path/file2.js';
-      const isExternal = DependencyValidator.isExternalDep(
+      const isExternal = ThemeDependencyValidator.isExternalDep(
         absoluteFilePath,
         relativeDepPath
       );
@@ -55,7 +55,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
       marketplace.fetchDependencies.mockReturnValue(
         getMockDependencyResult(['/absolute/file-3.js'])
       );
-      const validationErrors = await DependencyValidator.validate([
+      const validationErrors = await ThemeDependencyValidator.validate([
         `${THEME_PATH}/template.html`,
       ]);
 
@@ -67,7 +67,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
       marketplace.fetchDependencies.mockReturnValue(
         getMockDependencyResult(['../../external/file-3.js'])
       );
-      const validationErrors = await DependencyValidator.validate([
+      const validationErrors = await ThemeDependencyValidator.validate([
         `${THEME_PATH}/template.html`,
       ]);
 
@@ -77,7 +77,7 @@ describe('validators/marketplaceValidators/theme/DependencyValidator', () => {
 
     it('returns no errors if paths are relative and internal', async () => {
       marketplace.fetchDependencies.mockReturnValue(getMockDependencyResult());
-      const validationErrors = await DependencyValidator.validate([
+      const validationErrors = await ThemeDependencyValidator.validate([
         `${THEME_PATH}/template.html`,
       ]);
 
