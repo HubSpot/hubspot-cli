@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { uploadFolder } = require('@hubspot/cli-lib');
+const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
@@ -55,7 +55,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.WARNING);
   }
 
   const accountId = getAccountId(options);
@@ -98,7 +98,7 @@ exports.handler = async options => {
 
   if (srcDestIssues.length) {
     srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
     if (!isAllowedExtension(src)) {
@@ -150,6 +150,7 @@ exports.handler = async options => {
             payload: src,
           })
         );
+        process.exit(EXIT_CODES.WARNING);
       });
   } else {
     logger.log(
@@ -162,13 +163,22 @@ exports.handler = async options => {
     uploadFolder(accountId, absoluteSrcPath, dest, {
       mode,
     })
-      .then(() => {
-        logger.success(
-          i18n(`${i18nKey}.success.uploadComplete`, {
-            dest,
-          })
-        );
-        logThemePreview(src, accountId);
+      .then(results => {
+        if (!hasUploadErrors(results)) {
+          logger.success(
+            i18n(`${i18nKey}.success.uploadComplete`, {
+              dest,
+            })
+          );
+          logThemePreview(src, accountId);
+        } else {
+          logger.error(
+            i18n(`${i18nKey}.errors.someFilesFailed`, {
+              dest,
+            })
+          );
+          process.exit(EXIT_CODES.WARNING);
+        }
       })
       .catch(error => {
         logger.error(
@@ -180,6 +190,7 @@ exports.handler = async options => {
         logErrorInstance(error, {
           accountId,
         });
+        process.exit(EXIT_CODES.WARNING);
       });
   }
 };
