@@ -11,7 +11,7 @@ jest.mock('fs');
 
 const MODULE_LIMIT = 50;
 
-const findError = makeFindError('module');
+const findError = makeFindError('themeModule');
 
 describe('validators/marketplaceValidators/theme/ThemeModuleValidator', () => {
   beforeEach(() => {
