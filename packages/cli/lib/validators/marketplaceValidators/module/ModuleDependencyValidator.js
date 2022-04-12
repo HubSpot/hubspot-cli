@@ -1,18 +1,21 @@
-const fs = require('fs-extra');
+//const fs = require('fs-extra');
 const path = require('path');
 
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  HUBL_EXTENSIONS,
+  //  HUBL_EXTENSIONS,
   HUBSPOT_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
-const { fetchDependencies } = require('@hubspot/cli-lib/api/marketplace');
-const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
+const { fetchModuleDependencies } = require('@hubspot/cli-lib/api/marketplace');
+const {
+  //getExt,
+  isRelativePath,
+} = require('@hubspot/cli-lib/path');
 
-const BaseValidator = require('../BaseValidator');
+const RelativeValidator = require('../RelativeValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
-class ModuleDependencyValidator extends BaseValidator {
+class ModuleDependencyValidator extends RelativeValidator {
   constructor(options) {
     super(options);
 
@@ -25,7 +28,7 @@ class ModuleDependencyValidator extends BaseValidator {
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
         getCopy: ({ filePath, referencedFilePath }) =>
-          `External dependency. ${filePath} references a file (${referencedFilePath}) that is outside of the theme`,
+          `External dependency. ${filePath} references a file (${referencedFilePath}) that is outside of the module`,
       },
       ABSOLUTE_DEPENDENCY_PATH: {
         key: 'absoluteDependencyPath',
@@ -40,36 +43,31 @@ class ModuleDependencyValidator extends BaseValidator {
     };
   }
 
-  failedToFetchDependencies(err, file, validationErrors) {
-    logger.debug(`Failed to fetch dependencies for ${file}: `, err.error);
+  failedToFetchDependencies(err, relativePath, validationErrors) {
+    logger.debug(
+      `Failed to fetch dependencies for ${relativePath}: `,
+      err.error
+    );
 
     validationErrors.push(
-      this.getError(this.errors.FAILED_TO_FETCH_DEPS, file)
+      this.getError(this.errors.FAILED_TO_FETCH_DEPS, relativePath)
     );
   }
 
-  async getAllDependenciesByFile(files, accountId, validationErrors) {
-    return Promise.all(
-      files
-        .filter(file => HUBL_EXTENSIONS.has(getExt(file)))
-        .map(async file => {
-          const source = await fs.readFile(file, { encoding: 'utf8' });
-          let deps = [];
-          if (!(source && source.trim())) {
-            return { file, deps };
-          }
-          const file_deps = await fetchDependencies(accountId, source).catch(
-            err => {
-              this.failedToFetchDependencies(err, file, validationErrors);
-              return null;
-            }
-          );
-          if (file_deps) {
-            deps = file_deps.dependencies || [];
-          }
-          return { file, deps };
-        })
-    );
+  async getAllDependenciesByPath(relativePath, accountId, validationErrors) {
+    let deps = [];
+    const file_deps = await fetchModuleDependencies(
+      accountId,
+      relativePath
+    ).catch(err => {
+      console.log(err);
+      this.failedToFetchDependencies(err, relativePath, validationErrors);
+      return null;
+    });
+    if (file_deps) {
+      deps = file_deps.dependencies || [];
+    }
+    return deps;
   }
 
   isExternalDep(file, relativeDepPath) {
@@ -86,15 +84,16 @@ class ModuleDependencyValidator extends BaseValidator {
   // Validates:
   // - Module does not contain external dependencies
   // - All paths are either @hubspot or relative
-  async validate(files, accountId) {
+  async validate(relativePath, accountId) {
     let validationErrors = [];
 
-    const dependencyData = await this.getAllDependenciesByFile(
-      files,
+    console.log(relativePath);
+    const dependencyData = await this.getAllDependenciesByPath(
+      relativePath,
       accountId,
       validationErrors
     );
-
+    console.log(dependencyData);
     dependencyData.forEach(depData => {
       const { file, deps } = depData;
       deps.forEach(dependency => {
@@ -123,6 +122,6 @@ class ModuleDependencyValidator extends BaseValidator {
 }
 
 module.exports = new ModuleDependencyValidator({
-  name: 'ModuleDependency',
+  name: 'Module dependency',
   key: VALIDATOR_KEYS.moduleDependency,
 });

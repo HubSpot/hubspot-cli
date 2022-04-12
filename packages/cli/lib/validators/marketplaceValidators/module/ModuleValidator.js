@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
-const BaseValidator = require('../BaseValidator');
+const RelativeValidator = require('../RelativeValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
-class SpecificModuleValidator extends BaseValidator {
+class ModuleValidator extends RelativeValidator {
   constructor(options) {
     super(options);
 
@@ -53,9 +53,9 @@ class SpecificModuleValidator extends BaseValidator {
   // - Module meta.json file contains valid json
   // - Module meta.json file has a "label" field
   // - Module meta.json file has an "icon" field
-  validate(files) {
+  validate(relativePath) {
     let validationErrors = [];
-    const uniqueModules = this.getUniqueModulesFromFiles(files);
+    const uniqueModules = this.getUniqueModulesFromFiles(relativePath);
 
     Object.keys(uniqueModules).forEach(modulePath => {
       const metaJSONFile = uniqueModules[modulePath]['meta.json'];
@@ -93,7 +93,7 @@ class SpecificModuleValidator extends BaseValidator {
   }
 }
 
-module.exports = new SpecificModuleValidator({
-  name: 'SpecificModule',
-  key: VALIDATOR_KEYS.specificModule,
+module.exports = new ModuleValidator({
+  name: 'Module',
+  key: VALIDATOR_KEYS.module,
 });

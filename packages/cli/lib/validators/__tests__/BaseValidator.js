@@ -1,12 +1,12 @@
-const BaseValidator = require('../marketplaceValidators/BaseValidator');
+const AbsoluteValidator = require('../marketplaceValidators/AbsoluteValidator');
 const { VALIDATION_RESULT } = require('../constants');
 
-const Validator = new BaseValidator({
+const Validator = new AbsoluteValidator({
   name: 'Test validator',
   key: 'validatorKey',
 });
 
-describe('validators/marketplaceValidators/BaseValidator', () => {
+describe('validators/marketplaceValidators/AbsoluteValidator', () => {
   it('getSuccess returns expected object', async () => {
     const success = Validator.getSuccess();
 

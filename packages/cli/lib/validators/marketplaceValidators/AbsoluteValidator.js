@@ -2,7 +2,7 @@ const path = require('path');
 
 const { VALIDATION_RESULT } = require('../constants');
 
-class BaseValidator {
+class AbsoluteValidator {
   constructor({ name, key }) {
     this.name = name;
     this.key = key;
@@ -47,4 +47,4 @@ class BaseValidator {
   }
 }
 
-module.exports = BaseValidator;
+module.exports = AbsoluteValidator;

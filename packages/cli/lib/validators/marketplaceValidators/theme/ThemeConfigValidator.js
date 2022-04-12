@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 const { isRelativePath } = require('@hubspot/cli-lib/path');
-const BaseValidator = require('../BaseValidator');
+const AbsoluteValidator = require('../AbsoluteValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
-class ThemeValidator extends BaseValidator {
+class ThemeValidator extends AbsoluteValidator {
   constructor(options) {
     super(options);
 

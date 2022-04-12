@@ -3,7 +3,7 @@ const {
   buildAnnotationValueGetter,
   isCodedFile,
 } = require('@hubspot/cli-lib/templates');
-const BaseValidator = require('../BaseValidator');
+const AbsoluteValidator = require('../AbsoluteValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
 const TEMPLATE_LIMIT = 50;
@@ -50,7 +50,7 @@ const VALIDATIONS_BY_TYPE = {
   blog_post: { allowed: true, label: true, screenshot: true },
 };
 
-class TemplateValidator extends BaseValidator {
+class TemplateValidator extends AbsoluteValidator {
   constructor(options) {
     super(options);
 

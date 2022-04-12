@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+//const fs = require('fs');
+//const path = require('path');
 
-const { getCwd } = require('@hubspot/cli-lib/path');
+//const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { walk } = require('@hubspot/cli-lib');
+//const { walk } = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,
@@ -16,7 +16,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   logValidatorResults,
 } = require('../../lib/validators/logValidatorResults');
-const { applyValidators } = require('../../lib/validators/applyValidators');
+const {
+  applyRelativeValidators,
+} = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -33,26 +35,26 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  const absoluteSrcPath = path.resolve(getCwd(), src);
-  let stats;
-  try {
-    stats = fs.statSync(absoluteSrcPath);
-    if (!stats.isDirectory()) {
-      logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
-          path: src,
-        })
-      );
-      return;
-    }
-  } catch (e) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: src,
-      })
-    );
-    return;
-  }
+  //  const absoluteSrcPath = path.resolve(getCwd(), src);
+  //  let stats;
+  //  try {
+  //    stats = fs.statSync(absoluteSrcPath);
+  //    if (!stats.isDirectory()) {
+  //      logger.error(
+  //        i18n(`${i18nKey}.errors.invalidPath`, {
+  //          path: src,
+  //        })
+  //      );
+  //      return;
+  //    }
+  //  } catch (e) {
+  //    logger.error(
+  //      i18n(`${i18nKey}.errors.invalidPath`, {
+  //        path: src,
+  //      })
+  //    );
+  //    return;
+  //  }
 
   if (!options.json) {
     logger.log(
@@ -63,12 +65,12 @@ exports.handler = async options => {
   }
   trackCommandUsage('validate', {}, accountId);
 
-  const moduleFiles = await walk(absoluteSrcPath);
+  //  const moduleFiles = await walk(absoluteSrcPath);
 
-  applyValidators(
+  applyRelativeValidators(
     MARKETPLACE_VALIDATORS.module,
-    absoluteSrcPath,
-    moduleFiles,
+    src,
+    src,
     accountId
   ).then(groupedResults => {
     logValidatorResults(groupedResults, { logAsJson: options.json });
