@@ -41,7 +41,7 @@ exports.handler = async options => {
   return createSandbox(accountId, sandboxName).then(
     ({ name, sandboxHubId }) => {
       logger.success(
-        i18n(`${i18nKey}.describe`, {
+        i18n(`${i18nKey}.success.create`, {
           name,
           sandboxHubId,
         })

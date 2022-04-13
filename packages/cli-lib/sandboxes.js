@@ -1,5 +1,4 @@
 const { createSandbox: _createSandbox } = require('./api/sandbox-hubs');
-const { logger } = require('./logger');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -12,7 +11,7 @@ async function createSandbox(accountId, name) {
   try {
     resp = await _createSandbox(accountId, name);
   } catch (err) {
-    logger.error(err.error.message);
+    throw err.error;
   }
 
   return {

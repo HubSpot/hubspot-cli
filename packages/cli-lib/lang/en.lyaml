@@ -548,7 +548,7 @@ en:
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
-              default "Create a sandbox account named MySandboxAccount."
+              default: "Creates a sandbox account named MySandboxAccount."
             info:
               auth: "Run \"hs auth\" to authenticate with the new sandbox account."
             positionals:
