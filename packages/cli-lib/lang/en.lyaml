@@ -381,7 +381,8 @@ en:
           limit:
             describe: "limit the number of logs to output"
         positionals:
-          endpoint: "Serverless function endpoint"
+          endpoint:
+            describe: "Serverless function endpoint"
         tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
       mv:
         describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
