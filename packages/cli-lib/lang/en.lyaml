@@ -544,8 +544,10 @@ en:
           path:
             describe: "Remote hubspot path"
       sandbox:
+        describe: "Commands for working with Sandboxes"
         subcommands:
           create:
+            describe: "Create a sandbox account"
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
