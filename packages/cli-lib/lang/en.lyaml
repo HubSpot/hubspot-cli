@@ -544,7 +544,7 @@ en:
           path:
             describe: "Remote hubspot path"
       sandbox:
-        describe: "Commands for working with Sandboxes"
+        describe: "Commands for working with sandboxes."
         subcommands:
           create:
             describe: "Create a sandbox account"
