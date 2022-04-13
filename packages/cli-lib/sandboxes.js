@@ -1,4 +1,6 @@
+const { EXIT_CODES } = require('../cli/lib/enums/exitCodes');
 const { createSandbox: _createSandbox } = require('./api/sandbox-hubs');
+const { logger } = require('./logger');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -11,7 +13,8 @@ async function createSandbox(accountId, name) {
   try {
     resp = await _createSandbox(accountId, name);
   } catch (err) {
-    throw err.error;
+    logger.error(err.error.message);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return {
