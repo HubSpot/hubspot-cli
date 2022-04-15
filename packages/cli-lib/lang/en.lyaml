@@ -55,7 +55,7 @@ en:
             describe: "Commands for modifying the CLI configuration"
             promptMessage: "Select a config option to update"
             examples:
-              default: "This is an example of something"
+              default: "Opens a prompt to select a config item to modify"
             options:
               defaultMode:
                 describe: "Set the default mode"
