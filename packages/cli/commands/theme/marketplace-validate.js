@@ -16,7 +16,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   logValidatorResults,
 } = require('../../lib/validators/logValidatorResults');
-const { applyValidators } = require('../../lib/validators/applyValidators');
+const {
+  applyAbsoluteValidators,
+} = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -65,7 +67,7 @@ exports.handler = async options => {
 
   const themeFiles = await walk(absoluteSrcPath);
 
-  applyValidators(
+  applyAbsoluteValidators(
     MARKETPLACE_VALIDATORS.theme,
     absoluteSrcPath,
     themeFiles,

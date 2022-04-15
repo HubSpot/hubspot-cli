@@ -1,7 +1,5 @@
-const fs = require('fs');
-const path = require('path');
-
-const { isModuleFolderChild } = require('@hubspot/cli-lib/modules');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { fetchModuleMeta } = require('@hubspot/cli-lib/api/marketplace');
 const RelativeValidator = require('../RelativeValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
@@ -10,6 +8,11 @@ class ModuleValidator extends RelativeValidator {
     super(options);
 
     this.errors = {
+      FAILED_TO_FETCH_META_JSON: {
+        key: 'failedMetaFetch',
+        getCopy: ({ filePath }) =>
+          `Internal error. Failed to fetch meta.json for ${filePath}. Please try again.`,
+      },
       MISSING_META_JSON: {
         key: 'missingMetaJSON',
         getCopy: ({ filePath }) =>
@@ -32,20 +35,25 @@ class ModuleValidator extends RelativeValidator {
       },
     };
   }
+  failedToFetchDependencies(err, relativePath, validationErrors) {
+    logger.debug(
+      `Failed to fetch dependencies for ${relativePath}: `,
+      err.error
+    );
+    validationErrors.push(
+      this.getError(this.errors.FAILED_TO_FETCH_META_JSON, relativePath)
+    );
+  }
 
-  getUniqueModulesFromFiles(files) {
-    const uniqueModules = {};
-
-    files.forEach(file => {
-      if (isModuleFolderChild({ isLocal: true, path: file }, true)) {
-        const { base, dir } = path.parse(file);
-        if (!uniqueModules[dir]) {
-          uniqueModules[dir] = {};
-        }
-        uniqueModules[dir][base] = file;
+  async getModuleMetaByPath(relativePath, accountId, validationErrors) {
+    const moduleMeta = await fetchModuleMeta(accountId, relativePath).catch(
+      err => {
+        console.log(err);
+        this.failedToFetchDependencies(err, relativePath, validationErrors);
+        return null;
       }
-    });
-    return uniqueModules;
+    );
+    return moduleMeta;
   }
 
   // Validates:
@@ -53,42 +61,38 @@ class ModuleValidator extends RelativeValidator {
   // - Module meta.json file contains valid json
   // - Module meta.json file has a "label" field
   // - Module meta.json file has an "icon" field
-  validate(relativePath) {
+  async validate(relativePath, accountId) {
     let validationErrors = [];
-    const uniqueModules = this.getUniqueModulesFromFiles(relativePath);
-
-    Object.keys(uniqueModules).forEach(modulePath => {
-      const metaJSONFile = uniqueModules[modulePath]['meta.json'];
-
-      if (!metaJSONFile) {
+    const metaJSONFile = await this.getModuleMetaByPath(
+      relativePath,
+      accountId,
+      validationErrors
+    );
+    if (!metaJSONFile) {
+      validationErrors.push(
+        this.getError(this.errors.MISSING_META_JSON, relativePath)
+      );
+    }
+    let metaJSON;
+    try {
+      metaJSON = JSON.parse(metaJSONFile.source);
+    } catch (err) {
+      validationErrors.push(
+        this.getError(this.errors.INVALID_META_JSON, relativePath)
+      );
+    }
+    if (metaJSON) {
+      if (!metaJSON.label) {
         validationErrors.push(
-          this.getError(this.errors.MISSING_META_JSON, modulePath)
+          this.getError(this.errors.MISSING_LABEL, relativePath)
         );
-      } else {
-        let metaJSON;
-        try {
-          metaJSON = JSON.parse(fs.readFileSync(metaJSONFile));
-        } catch (err) {
-          validationErrors.push(
-            this.getError(this.errors.INVALID_META_JSON, modulePath)
-          );
-        }
-
-        if (metaJSON) {
-          if (!metaJSON.label) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_LABEL, modulePath)
-            );
-          }
-          if (!metaJSON.icon) {
-            validationErrors.push(
-              this.getError(this.errors.MISSING_ICON, modulePath)
-            );
-          }
-        }
       }
-    });
-
+      if (!metaJSON.icon) {
+        validationErrors.push(
+          this.getError(this.errors.MISSING_ICON, relativePath)
+        );
+      }
+    }
     return validationErrors;
   }
 }

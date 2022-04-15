@@ -1,16 +1,9 @@
-//const fs = require('fs-extra');
 const path = require('path');
 
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  //  HUBL_EXTENSIONS,
-  HUBSPOT_FOLDER,
-} = require('@hubspot/cli-lib/lib/constants');
+const { HUBSPOT_FOLDER } = require('@hubspot/cli-lib/lib/constants');
 const { fetchModuleDependencies } = require('@hubspot/cli-lib/api/marketplace');
-const {
-  //getExt,
-  isRelativePath,
-} = require('@hubspot/cli-lib/path');
+const { isRelativePath } = require('@hubspot/cli-lib/path');
 
 const RelativeValidator = require('../RelativeValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
@@ -28,17 +21,12 @@ class ModuleDependencyValidator extends RelativeValidator {
       EXTERNAL_DEPENDENCY: {
         key: 'externalDependency',
         getCopy: ({ filePath, referencedFilePath }) =>
-          `External dependency. ${filePath} references a file (${referencedFilePath}) that is outside of the module`,
+          `External dependency. ${filePath} references a file (${referencedFilePath}) that is outside of the module's immediate folder.`,
       },
       ABSOLUTE_DEPENDENCY_PATH: {
         key: 'absoluteDependencyPath',
         getCopy: ({ filePath, referencedFilePath }) =>
           `Relative path required. ${filePath} references a file (${referencedFilePath}) using an absolute path`,
-      },
-      ASSET_CO_LOCATION: {
-        key: 'assetCoLocation',
-        getCopy: ({ filePath }) =>
-          `CSS/JS must be in the same folder as the module. ${filePath} has assets in the wrong place.`,
       },
     };
   }
@@ -70,15 +58,10 @@ class ModuleDependencyValidator extends RelativeValidator {
     return deps;
   }
 
-  isExternalDep(file, relativeDepPath) {
-    // Get dir of file that references the dep
-    const { dir } = path.parse(file);
-    // Use dir to get the dep's absolute path
-    const absoluteDepPath = path.resolve(dir, relativeDepPath);
-    // Get relative path to dep using theme absolute path and dep absolute path
-    const relativePath = this.getRelativePath(absoluteDepPath);
-    // Check that dep is not within the theme
-    return relativePath && relativePath.startsWith('..');
+  isExternalDep(relPath, relativeDepPath) {
+    const moduleDir = path.parse(relPath).dir;
+    const depDir = path.parse(relativeDepPath).dir;
+    return !depDir.startsWith(moduleDir);
   }
 
   // Validates:
@@ -87,36 +70,28 @@ class ModuleDependencyValidator extends RelativeValidator {
   async validate(relativePath, accountId) {
     let validationErrors = [];
 
-    console.log(relativePath);
     const dependencyData = await this.getAllDependenciesByPath(
       relativePath,
       accountId,
       validationErrors
     );
-    console.log(dependencyData);
-    dependencyData.forEach(depData => {
-      const { file, deps } = depData;
-      deps.forEach(dependency => {
-        // Ignore:
-        // - Hubspot modules
-        if (!dependency.startsWith(HUBSPOT_FOLDER)) {
-          if (!isRelativePath(dependency)) {
-            validationErrors.push(
-              this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, file, {
-                referencedFilePath: dependency,
-              })
-            );
-          } else if (this.isExternalDep(file, dependency)) {
-            validationErrors.push(
-              this.getError(this.errors.EXTERNAL_DEPENDENCY, file, {
-                referencedFilePath: dependency,
-              })
-            );
-          }
+    dependencyData.forEach(dependency => {
+      if (!dependency.startsWith(HUBSPOT_FOLDER)) {
+        if (!isRelativePath(dependency)) {
+          validationErrors.push(
+            this.getError(this.errors.ABSOLUTE_DEPENDENCY_PATH, relativePath, {
+              referencedFilePath: dependency,
+            })
+          );
+        } else if (this.isExternalDep(relativePath, dependency)) {
+          validationErrors.push(
+            this.getError(this.errors.EXTERNAL_DEPENDENCY, relativePath, {
+              referencedFilePath: dependency,
+            })
+          );
         }
-      });
+      }
     });
-
     return validationErrors;
   }
 }
