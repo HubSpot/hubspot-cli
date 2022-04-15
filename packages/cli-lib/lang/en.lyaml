@@ -381,7 +381,8 @@ en:
           limit:
             describe: "limit the number of logs to output"
         positionals:
-          endpoint: "Serverless function endpoint"
+          endpoint:
+            describe: "Serverless function endpoint"
         tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
       mv:
         describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
@@ -468,7 +469,7 @@ en:
                 succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
             logs:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
-              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}"
+              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
             options:
@@ -477,18 +478,27 @@ en:
             positionals:
               path:
                 describe: "Path to a project folder"
+          unlock:
+            describe: "Unlock a locked project"
+            examples:
+              default: "Unlock a locked project in the myProjectsFolder folder"
+            logs:
+              unlockSucceeded: "Successfully unlocked the project"
+            positionals:
+              path:
+                describe: "Path to a project folder"
           watch:
             describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs:
-              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded and added to the current staging build."
+              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
               resuming: "Resuming watcher..."
               uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
               deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
               deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
-              createNewBuild: "Staging build #{{ buildId }} created"
-              buildCancelled: "Staging build has been cancelled. Please try running `hs project watch` again"
+              previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
+              processExited: "Stopping watcher..."
             debug:
               attemptNewBuild: "Attempting to create a new build"
               uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
@@ -496,13 +506,35 @@ en:
               ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
               pause: "Pausing watcher, attempting to queue build"
               buildStarted: "Build queued."
-              buildCancelled: "The current staging build has been cancelled. Exiting..."
               fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
             errors:
-              projectLocked: "The previous staging build is still in progress"
+              projectLocked: "The previous watch process is still in progress"
               uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
               deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
               deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
+            positionals:
+              path:
+                describe: "Path to a project folder"
+            options:
+              initialUpload:
+                describe: "Upload directory before watching for updates"
+          download:
+            describe: "Download your project files from HubSpot and write to a path on your computer"
+            examples:
+              default: "Download the project myProject into myProjectFolder folder"
+            logs:
+              downloadCancelled: "Cancelling project download"
+              downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
+            errors:
+              downloadFailed: "Something went wrong downloading the project"
+            positionals:
+              name:
+                describe: "The name of the project to download"
+              dest:
+                describe: "Destination folder for the project"
+            options:
+              buildNumber:
+                describe: "The build number to download"
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -560,11 +592,6 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
-      server:
-        description: "Run the CMS HubL server."
-        fetching: "Fetching account data for {{ accountId }} to update context"
-        runningServer: "Running: {{ cmd }}"
-        startingServer: "Starting HubSpot CMS HubL server"
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
@@ -603,6 +630,7 @@ en:
           invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+          someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
         positionals:
           src:
             describe: "Path to the local file, relative to your current working directory."
@@ -619,10 +647,14 @@ en:
           destinationRequired: "A destination directory needs to be passed"
           invalidPath: "The \"{{ path }}\" is not a path to a directory"
         options:
-          disableInitial: "Disable the initial upload when watching a directory (default)"
-          initialUpload: "Upload directory before watching for updates"
-          notify: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-          remove: "Will cause watch to delete files in your HubSpot account that are not found locally."
+          disableInitial:
+            describe: "Disable the initial upload when watching a directory (default)"
+          initialUpload:
+            describe: "Upload directory before watching for updates"
+          notify:
+            describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+          remove:
+            describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
         positionals:
           src:
             describe: "Path to the local directory your files are in, relative to your current working directory"

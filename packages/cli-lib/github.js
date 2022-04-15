@@ -1,16 +1,8 @@
-const fs = require('fs-extra');
-const path = require('path');
-const os = require('os');
-const { promisify } = require('util');
-
 const request = require('request-promise-native');
-const extract = promisify(require('extract-zip'));
 
 const { logger } = require('./logger');
-const {
-  logFileSystemErrorInstance,
-  logErrorInstance,
-} = require('./errorHandlers');
+const { logErrorInstance } = require('./errorHandlers');
+const { extractZipArchive } = require('./archive');
 
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
@@ -105,92 +97,6 @@ async function downloadGithubRepoZip(
 }
 
 /**
- * @param {String} repoName - Name of repository.
- * @param {Buffer} zip
- * @returns {String|Null} Temp dir where zip has been extracted.
- */
-async function extractGithubRepoZip(repoName, zip) {
-  const TMP_BOILERPLATE_FOLDER_PREFIX = `hubspot-${repoName}-`;
-
-  logger.log('Extracting project source...');
-  // Write zip to disk
-  let tmpDir;
-  let tmpZipPath;
-  try {
-    tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), TMP_BOILERPLATE_FOLDER_PREFIX)
-    );
-    tmpZipPath = path.join(tmpDir, 'boilerplate.zip');
-    await fs.ensureFile(tmpZipPath);
-    await fs.writeFile(tmpZipPath, zip, {
-      mode: 0o777,
-    });
-  } catch (err) {
-    logger.error('An error occured writing temp project source.');
-    if (tmpZipPath || tmpDir) {
-      logFileSystemErrorInstance(err, {
-        filepath: tmpZipPath || tmpDir,
-        write: true,
-      });
-    } else {
-      logErrorInstance(err);
-    }
-    return null;
-  }
-  // Extract zip
-  let extractDir = null;
-  try {
-    const tmpExtractPath = path.join(tmpDir, 'extracted');
-    await extract(tmpZipPath, { dir: tmpExtractPath });
-    extractDir = tmpExtractPath;
-  } catch (err) {
-    logger.error('An error occured extracting project source.');
-    logErrorInstance(err);
-    return null;
-  }
-  logger.debug('Completed project source extraction.');
-  return { extractDir, tmpDir };
-}
-
-/**
- * @param {String} src - Dir where boilerplate repo files have been extracted.
- * @param {String} sourceDir - Directory in project that should get copied.
- * @param {String} dest - Dir to copy boilerplate src files to.
- * @returns {Boolean} `true` if successfully copied, `false` otherwise.
- */
-async function copyGitHubRepoToDest(src, sourceDir, dest) {
-  try {
-    logger.log('Copying project source...');
-    const files = await fs.readdir(src);
-    const rootDir = files[0];
-    const projectSrcDir = path.join(src, rootDir, sourceDir);
-    await fs.copy(projectSrcDir, dest);
-    logger.debug('Completed copying project source.');
-    return true;
-  } catch (err) {
-    logger.error(`An error occured copying project source to ${dest}.`);
-    logFileSystemErrorInstance(err, {
-      filepath: dest,
-      write: true,
-    });
-  }
-  return false;
-}
-
-/**
- * Try cleaning up resources from os's tempdir
- * @param {String} tmpDir
- */
-function cleanupTemp(tmpDir) {
-  if (!tmpDir) return;
-  try {
-    fs.remove(tmpDir);
-  } catch (e) {
-    // noop
-  }
-}
-
-/**
  * Writes a copy of the boilerplate project to dest.
  * @param {String} dest - Dir to write project src to.
  * @param {String} type - Type of project to create.
@@ -203,16 +109,11 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   const { themeVersion, projectVersion, releaseType, ref } = options;
   const tag = projectVersion || themeVersion;
   const zip = await downloadGithubRepoZip(repoName, tag, releaseType, ref);
-  if (!zip) return false;
-  const { extractDir, tmpDir } =
-    (await extractGithubRepoZip(repoName, zip)) || {};
-  const success =
-    extractDir != null &&
-    (await copyGitHubRepoToDest(extractDir, sourceDir, dest));
+  const success = await extractZipArchive(zip, repoName, dest, { sourceDir });
+
   if (success) {
     logger.success(`Your new ${type} project has been created in ${dest}`);
   }
-  cleanupTemp(tmpDir);
   return success;
 }
 

@@ -22,7 +22,14 @@ const uiLine = () => {
  */
 const uiLink = (linkText, url, options = {}) => {
   if (supportsHyperlinks.stdout) {
-    return ['\u001B]8;;', url, '\u0007', linkText, '\u001B]8;;\u0007'].join('');
+    const result = [
+      '\u001B]8;;',
+      url,
+      '\u0007',
+      linkText,
+      '\u001B]8;;\u0007',
+    ].join('');
+    return options.useColor ? chalk.cyan(result) : result;
   } else {
     return options.fallback ? `${linkText}: ${url}` : linkText;
   }
