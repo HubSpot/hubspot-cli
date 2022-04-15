@@ -1,9 +1,4 @@
-//const fs = require('fs');
-//const path = require('path');
-
-//const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-//const { walk } = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,
@@ -35,26 +30,6 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  //  const absoluteSrcPath = path.resolve(getCwd(), src);
-  //  let stats;
-  //  try {
-  //    stats = fs.statSync(absoluteSrcPath);
-  //    if (!stats.isDirectory()) {
-  //      logger.error(
-  //        i18n(`${i18nKey}.errors.invalidPath`, {
-  //          path: src,
-  //        })
-  //      );
-  //      return;
-  //    }
-  //  } catch (e) {
-  //    logger.error(
-  //      i18n(`${i18nKey}.errors.invalidPath`, {
-  //        path: src,
-  //      })
-  //    );
-  //    return;
-  //  }
 
   if (!options.json) {
     logger.log(
@@ -64,8 +39,6 @@ exports.handler = async options => {
     );
   }
   trackCommandUsage('validate', {}, accountId);
-
-  //  const moduleFiles = await walk(absoluteSrcPath);
 
   applyRelativeValidators(
     MARKETPLACE_VALIDATORS.module,
