@@ -48,7 +48,6 @@ class ModuleValidator extends RelativeValidator {
   async getModuleMetaByPath(relativePath, accountId, validationErrors) {
     const moduleMeta = await fetchModuleMeta(accountId, relativePath).catch(
       err => {
-        console.log(err);
         this.failedToFetchDependencies(err, relativePath, validationErrors);
         return null;
       }

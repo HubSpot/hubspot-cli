@@ -48,7 +48,6 @@ class ModuleDependencyValidator extends RelativeValidator {
       accountId,
       relativePath
     ).catch(err => {
-      console.log(err);
       this.failedToFetchDependencies(err, relativePath, validationErrors);
       return null;
     });
