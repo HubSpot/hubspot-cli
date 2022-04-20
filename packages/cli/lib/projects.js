@@ -29,7 +29,8 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { read } = require('@hubspot/cli-lib');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -51,7 +52,7 @@ const getIsInProject = async _dir => {
 };
 
 const getProjectConfigPath = async _dir => {
-  const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
+  const projectDir = _dir ? getAbsoluteFilePath(_dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectDir,
@@ -217,6 +218,30 @@ const getProjectDetailUrl = (projectName, accountId) => {
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   if (!projectName || !buildId || !accountId) return;
   return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
+};
+
+const getProjectComponents = async () => {
+  const { projectConfig } = await getProjectConfig();
+  const absoluteProjectSrc = getAbsoluteFilePath(projectConfig.srcDir);
+  const componentDirs = await read(absoluteProjectSrc);
+
+  let result = [];
+  componentDirs.forEach(dir => {
+    const appConfigPath = path.resolve(dir.filepath, 'app.json');
+    try {
+      const rawConfig = fs.readFileSync(appConfigPath);
+      const configJson = JSON.parse(rawConfig);
+      if (configJson.name) {
+        result.push({
+          path: dir.filepath,
+          name: configJson.name,
+        });
+      }
+    } catch (e) {
+      logger.debug('Failed to locate app.json file in:', dir.filepath);
+    }
+  });
+  return result;
 };
 
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
@@ -523,4 +548,5 @@ module.exports = {
   pollBuildStatus,
   pollDeployStatus,
   ensureProjectExists,
+  getProjectComponents,
 };

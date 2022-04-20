@@ -1,4 +1,3 @@
-const Spinnies = require('spinnies');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -42,11 +41,6 @@ const endpointLog = async (accountId, options) => {
   let logsResp;
 
   if (follow) {
-    const spinnies = new Spinnies();
-
-    spinnies.add('tailLogs', {
-      text: i18n(`${i18nKey}.tailLogs`),
-    });
     const tailCall = after =>
       getFunctionLogs(accountId, functionPath, { after });
     const fetchLatest = () => {
@@ -60,7 +54,6 @@ const endpointLog = async (accountId, options) => {
     await tailLogs({
       accountId,
       compact,
-      spinnies,
       tailCall,
       fetchLatest,
     });
