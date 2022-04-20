@@ -535,6 +535,14 @@ en:
             options:
               buildNumber:
                 describe: "The build number to download"
+          open:
+            describe: "Open available projects for the specified account"
+            options:
+              account:
+                describe: "View account projects"
+            examples:
+              default: "Opens the projects page for the specified account"
+            success: "Successfully opened projects for account id \"{{ accountId }}\""
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
