@@ -30,7 +30,6 @@ const getFileInfoAsync = (dir, file) => {
 };
 
 const flattenAndRemoveSymlinks = filesData => {
-  console.log('filesData :>> ', filesData);
   return filesData.reduce((acc, fileData) => {
     switch (fileData.type) {
       case STAT_TYPES.FILE:
@@ -46,13 +45,13 @@ const flattenAndRemoveSymlinks = filesData => {
 };
 
 async function read(dir) {
-  const processFiles = files => {
-    return Promise.all(files.map(file => getFileInfoAsync(dir, file)));
-  };
+  const processFiles = files =>
+    Promise.all(files.map(file => getFileInfoAsync(dir, file)));
 
   return fs.promises
     .readdir(dir)
     .then(processFiles)
+    .then(flattenAndRemoveSymlinks)
     .catch(err => {
       logger.debug(err);
       return [];
