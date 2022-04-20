@@ -1,5 +1,3 @@
-const path = require('path');
-const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
@@ -12,6 +10,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
+const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const {
   getTableContents,
   getTableHeader,
@@ -24,11 +23,7 @@ const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
-const {
-  getProjectConfig,
-  ensureProjectExists,
-  getProjectComponents,
-} = require('../../lib/projects');
+const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
@@ -137,35 +132,35 @@ exports.handler = async options => {
     projectName: promptProjectName,
     appName: promptAppName,
     functionName: promptFunctionName,
-  } = await projectLogsPrompt(options);
+  } = await projectLogsPrompt(accountId, options);
 
   const projectName = options.project || promptProjectName;
   const appName = options.app || promptAppName;
   const functionName =
     options.function || promptFunctionName || options.endpoint;
-
-  await ensureProjectExists(accountId, projectName, {
-    allowCreate: false,
-  });
-
   let relativeAppPath;
 
-  if (appName) {
-    const projectComponents = await getProjectComponents();
+  if (appName && !options.endpoint) {
+    await ensureProjectExists(accountId, projectName, {
+      allowCreate: false,
+    });
+    const { deployedBuild } = await fetchProject(accountId, projectName);
 
-    const appData = projectComponents.find(
-      component => component.name.toLowerCase() === appName.toLowerCase()
-    );
-
-    if (appData) {
-      const { projectConfig } = await getProjectConfig();
-      const absoluteProjectSrc = getAbsoluteFilePath(projectConfig.srcDir);
-      relativeAppPath = path.relative(absoluteProjectSrc, appData.path);
-    } else {
-      logger.error(
-        i18n(`${i18nKey}.errors.invalidAppName`, { appName, projectName })
+    if (deployedBuild && deployedBuild.subbuildStatuses) {
+      const appSubbuild = deployedBuild.subbuildStatuses.find(
+        subbuild => subbuild.buildName === appName
       );
-      process.exit(EXIT_CODES.ERROR);
+      if (appSubbuild) {
+        relativeAppPath = appSubbuild.rootPath;
+      } else {
+        logger.error(
+          i18n(`${i18nKey}.errors.invalidAppName`, {
+            appName: options.app,
+            projectName,
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
   }
 
