@@ -1,5 +1,4 @@
 const open = require('open');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -9,28 +8,47 @@ const {
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
+const {
+  getProjectConfig,
+  getProjectDetailUrl,
+  verifyProjectExists,
+} = require('../../lib/projects');
+const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 
 const i18nKey = 'cli.commands.project.subcommands.open';
 
 exports.command = 'open';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-const openProjectPage = ({ env, accountId } = {}) => {
-  const websiteOrigin = getHubSpotWebsiteOrigin(env);
-  const url = `${websiteOrigin}/developer-projects/${accountId}`;
-  open(url, { url: true });
-};
-
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  openProjectPage({ env, accountId });
-  logger.success(i18n(`${i18nKey}.success`, { accountId }));
+  const { project } = options;
+  const { projectConfig } = await getProjectConfig();
+  let projectName = project;
+  if (projectName) {
+    const projectExists = await verifyProjectExists(accountId, projectName);
+    if (!projectExists) {
+      return;
+    }
+  } else if (!projectName && projectConfig) {
+    projectName = projectConfig.name;
+  } else if (!projectName && !projectConfig) {
+    const namePrompt = await projectNamePrompt(accountId, projectConfig);
+    const projectExists = await verifyProjectExists(
+      accountId,
+      namePrompt.projectName
+    );
+    if (!projectExists) {
+      return;
+    }
+    projectName = namePrompt.projectName;
+  }
+  const url = getProjectDetailUrl(projectName, accountId);
+  open(url, { url: true });
+  logger.success(i18n(`${i18nKey}.success`, { projectName }));
 };
 
 exports.builder = yargs => {
@@ -40,8 +58,8 @@ exports.builder = yargs => {
   addTestingOptions(yargs, true);
 
   yargs.options({
-    account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
+    project: {
+      describe: i18n(`${i18nKey}.options.project.describe`),
       type: 'string',
     },
   });

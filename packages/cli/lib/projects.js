@@ -162,6 +162,26 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
+const verifyProjectExists = async (accountId, projectName) => {
+  try {
+    const project = await fetchProject(accountId, projectName);
+    if (project) {
+      return true;
+    }
+  } catch (err) {
+    if (err.statusCode === 404) {
+      logger.error(
+        `Your project ${chalk.bold(
+          projectName
+        )} could not be found in ${chalk.bold(accountId)}.`
+      );
+    } else {
+      logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+    }
+    return false;
+  }
+};
+
 const ensureProjectExists = async (
   accountId,
   projectName,
@@ -523,4 +543,5 @@ module.exports = {
   pollBuildStatus,
   pollDeployStatus,
   ensureProjectExists,
+  verifyProjectExists,
 };
