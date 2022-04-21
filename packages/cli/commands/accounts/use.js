@@ -3,6 +3,7 @@ const {
   getConfig,
   getConfigPath,
   updateDefaultAccount,
+  getAccountId: getAccountIdFromConfig,
 } = require('@hubspot/cli-lib/lib/config');
 const { loadAndValidateOptions } = require('../../lib/validation');
 
@@ -11,7 +12,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.commands.accounts.subcommands.setDefault';
+const i18nKey = 'cli.commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async config => {
   const { default: selectedDefault } = await promptUser([
@@ -21,7 +22,10 @@ const selectAccountFromConfig = async config => {
       name: 'default',
       pageSize: 20,
       message: i18n(`${i18nKey}.promptMessage`),
-      choices: config.portals.map(p => p.name || p.portalId),
+      choices: config.portals.map(p => ({
+        name: `${p.name} (${p.portalId})`,
+        value: p.name || p.portalId,
+      })),
       default: config.defaultPortal,
     },
   ]);
@@ -29,35 +33,26 @@ const selectAccountFromConfig = async config => {
   return selectedDefault;
 };
 
-exports.command = 'set-default [--default]';
+exports.command = 'use [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  await loadAndValidateOptions({ debug: options.debug });
 
   const accountId = getAccountId(options);
   const config = getConfig();
-  const configPath = getConfigPath();
 
-  const { default: defaultAccount } = options;
-  let newDefaultAccount;
+  let newDefaultAccount = options.account;
 
-  trackCommandUsage('accounts-set-default', {}, accountId);
+  trackCommandUsage('accounts-use', {}, accountId);
 
-  if (!defaultAccount) {
+  if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig(config);
-  } else if (
-    defaultAccount &&
-    config.portals.find(
-      p => p.name === defaultAccount || p.portalId === defaultAccount
-    )
-  ) {
-    newDefaultAccount = defaultAccount;
-  } else {
+  } else if (!getAccountIdFromConfig(newDefaultAccount)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
-        specifiedAccount: defaultAccount,
-        configPath,
+        specifiedAccount: newDefaultAccount,
+        configPath: getConfigPath(),
       })
     );
     newDefaultAccount = await selectAccountFromConfig(config);
@@ -73,21 +68,14 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.options('default', {
-    describe: i18n(`${i18nKey}.options.default.describe`),
+  yargs.positional('account', {
+    describe: i18n(`${i18nKey}.positionals.account.describe`),
     type: 'string',
   });
-
   yargs.example([
-    ['$0 accounts set-default', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts set-default --default=MyAccount',
-      i18n(`${i18nKey}.examples.nameBased`),
-    ],
-    [
-      '$0 accounts set-default --default=1234567',
-      i18n(`${i18nKey}.examples.idBased`),
-    ],
+    ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
+    ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
+    ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;
