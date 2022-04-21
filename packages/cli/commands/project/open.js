@@ -53,6 +53,7 @@ exports.handler = async options => {
   const url = getProjectDetailUrl(projectName, accountId);
   open(url, { url: true });
   logger.success(i18n(`${i18nKey}.success`, { projectName }));
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
