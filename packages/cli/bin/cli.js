@@ -82,12 +82,21 @@ const argv = yargs
     type: 'boolean',
   })
   .check(argv => {
-    if (getIsInProject(argv.src)) {
-      throw new Error(
-        i18n(`${i18nKey}.srcIsProject`, {
-          src: argv.src,
-        })
-      );
+    if (
+      argv._.length === 1 &&
+      (argv._.join(' ') === 'upload' || argv._.join(' ') === 'watch')
+    ) {
+      if (getIsInProject(argv.src)) {
+        logger.error(
+          i18n(`${i18nKey}.srcIsProject`, {
+            src: argv.src,
+            command: argv._.join(' '),
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      } else {
+        return true;
+      }
     } else {
       return true;
     }
