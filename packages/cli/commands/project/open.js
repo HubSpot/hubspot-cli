@@ -12,13 +12,14 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getProjectConfig,
   getProjectDetailUrl,
-  verifyProjectExists,
+  ensureProjectExists,
 } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.open';
 
-exports.command = 'open';
+exports.command = 'open [--project]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -27,25 +28,28 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const { project } = options;
   const { projectConfig } = await getProjectConfig();
+
   let projectName = project;
+
   if (projectName) {
-    const projectExists = await verifyProjectExists(accountId, projectName);
+    const projectExists = await ensureProjectExists(accountId, projectName, {
+      allowCreate: false,
+    });
+
     if (!projectExists) {
-      return;
+      process.exit(EXIT_CODES.ERROR);
     }
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
     const namePrompt = await projectNamePrompt(accountId, projectConfig);
-    const projectExists = await verifyProjectExists(
-      accountId,
-      namePrompt.projectName
-    );
-    if (!projectExists) {
-      return;
+
+    if (!namePrompt.projectName) {
+      process.exit(EXIT_CODES.ERROR);
     }
     projectName = namePrompt.projectName;
   }
+
   const url = getProjectDetailUrl(projectName, accountId);
   open(url, { url: true });
   logger.success(i18n(`${i18nKey}.success`, { projectName }));
