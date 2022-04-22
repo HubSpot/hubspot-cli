@@ -15,7 +15,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
 exports.command = 'create [name]';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -41,7 +41,7 @@ exports.handler = async options => {
   return createSandbox(accountId, sandboxName).then(
     ({ name, sandboxHubId }) => {
       logger.success(
-        i18n(`${i18nKey}.describe`, {
+        i18n(`${i18nKey}.success.create`, {
           name,
           sandboxHubId,
         })

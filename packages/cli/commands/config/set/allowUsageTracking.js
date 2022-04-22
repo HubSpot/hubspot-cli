@@ -1,14 +1,11 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/cli-lib/lib/config');
-
-const { getAccountId } = require('../../../lib/commonOpts');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
-const { loadAndValidateOptions } = require('../../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey =
-  'cli.commands.config.subcommands.set.subcommands.allowUsageTracking';
+  'cli.commands.config.subcommands.set.options.allowUsageTracking';
 
 const enableOrDisableUsageTracking = async () => {
   const { isEnabled } = await promptUser([
@@ -35,26 +32,22 @@ const enableOrDisableUsageTracking = async () => {
   return isEnabled;
 };
 
-exports.command = 'allow-usage-tracking';
-exports.describe = i18n(`${i18nKey}.describe`);
-
-exports.handler = async options => {
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
-
+const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
   trackCommandUsage('config-set-allow-usage-tracking', {}, accountId);
 
-  const isEnabled = await enableOrDisableUsageTracking();
+  let isEnabled;
+
+  if (typeof allowUsageTracking === 'boolean') {
+    isEnabled = allowUsageTracking;
+  } else {
+    isEnabled = await enableOrDisableUsageTracking();
+  }
+
   updateAllowUsageTracking(isEnabled);
 
-  return logger.log(i18n(`${i18nKey}.${isEnabled ? 'enabled' : 'disabled'}`));
+  return logger.log(i18n(`${i18nKey}.success`, { isEnabled }));
 };
 
-exports.builder = yargs => {
-  yargs.example([
-    ['$0 config set allow-usage-tracking', i18n(`${i18nKey}.examples.default`)],
-  ]);
-
-  return yargs;
+module.exports = {
+  setAllowUsageTracking,
 };
