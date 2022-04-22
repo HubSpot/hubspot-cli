@@ -1,4 +1,3 @@
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { promptUser } = require('./promptUtils');
@@ -15,7 +14,7 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
       message: i18n(`${i18nKey}.projectName`),
       when: !promptOptions.project,
       default: async () => {
-        const { projectConfig } = await getProjectConfig(getCwd());
+        const { projectConfig } = await getProjectConfig();
         return projectConfig && projectConfig.name ? projectConfig.name : null;
       },
     },

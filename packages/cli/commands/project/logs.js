@@ -29,9 +29,9 @@ const { uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.logs';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const getPrivateAppsUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
@@ -138,6 +138,7 @@ exports.handler = async options => {
   const appName = options.app || promptAppName;
   const functionName =
     options.function || promptFunctionName || options.endpoint;
+
   let relativeAppPath;
 
   if (appName && !options.endpoint) {
