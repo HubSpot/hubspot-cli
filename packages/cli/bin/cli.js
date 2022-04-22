@@ -82,10 +82,7 @@ const argv = yargs
     type: 'boolean',
   })
   .check(argv => {
-    if (
-      argv._.length === 1 &&
-      (argv._.join(' ') === 'upload' || argv._.join(' ') === 'watch')
-    ) {
+    if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
       if (getIsInProject(argv.src)) {
         logger.error(
           i18n(`${i18nKey}.srcIsProject`, {
