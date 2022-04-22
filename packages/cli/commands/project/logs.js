@@ -128,6 +128,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
+  logger.log(options);
   const {
     projectName: promptProjectName,
     appName: promptAppName,
@@ -210,20 +211,24 @@ exports.builder = yargs => {
       function: {
         alias: 'function',
         describe: i18n(`${i18nKey}.options.function.describe`),
+        requiresArg: true,
         type: 'string',
       },
       endpoint: {
         alias: 'endpoint',
         describe: i18n(`${i18nKey}.options.endpoint.describe`),
         hidden: true,
+        requiresArg: true,
         type: 'string',
       },
       app: {
         describe: i18n(`${i18nKey}.options.app.describe`),
+        requiresArg: true,
         type: 'string',
       },
       project: {
         describe: i18n(`${i18nKey}.options.project.describe`),
+        requiresArg: true,
         type: 'string',
       },
       latest: {
