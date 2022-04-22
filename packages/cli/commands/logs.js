@@ -56,6 +56,7 @@ const endpointLog = async (accountId, options) => {
       compact,
       tailCall,
       fetchLatest,
+      name: functionPath,
     });
   } else if (latest) {
     try {
