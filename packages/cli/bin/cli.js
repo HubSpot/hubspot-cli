@@ -8,7 +8,9 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const { trackHelpUsage } = require('../lib/usageTracking');
+const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -36,6 +38,8 @@ const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
 
+const i18nKey = 'cli.commands.generalErrors';
+
 const CLI_UPGRADE_MESSAGE =
   chalk.bold('The CMS CLI is now the HubSpot CLI') +
   '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli';
@@ -58,8 +62,11 @@ const argv = yargs
   .middleware([setLogLevel])
   .exitProcess(false)
   .fail((msg, err, yargs) => {
-    if (msg) logger.error(msg);
-    if (err) logErrorInstance(err);
+    if (msg) {
+      logger.error(msg);
+    } else if (err) {
+      logErrorInstance(err);
+    }
 
     if (msg === null) {
       yargs.showHelp();
@@ -73,6 +80,23 @@ const argv = yargs
     default: false,
     describe: 'set log level to debug',
     type: 'boolean',
+  })
+  .check(argv => {
+    if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
+      if (getIsInProject(argv.src)) {
+        logger.error(
+          i18n(`${i18nKey}.srcIsProject`, {
+            src: argv.src,
+            command: argv._.join(' '),
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
   })
   .command(authCommand)
   .command(initCommand)

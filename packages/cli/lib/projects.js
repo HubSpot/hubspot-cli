@@ -45,12 +45,12 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
-const getIsInProject = async _dir => {
-  const configPath = await getProjectConfigPath(_dir);
+const getIsInProject = _dir => {
+  const configPath = getProjectConfigPath(_dir);
   return !!configPath;
 };
 
-const getProjectConfigPath = async _dir => {
+const getProjectConfigPath = _dir => {
   const projectDir = _dir ? getAbsoluteFilePath(_dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {

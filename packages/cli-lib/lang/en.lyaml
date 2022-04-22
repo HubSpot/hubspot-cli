@@ -1,6 +1,8 @@
 en:
   cli:
     commands:
+      generalErrors:
+        srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       accounts:
         describe: "Commands for working with accounts."
         subcommands:
