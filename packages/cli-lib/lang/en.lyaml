@@ -528,6 +528,14 @@ en:
             options:
               buildNumber:
                 describe: "The build number to download"
+          open:
+            describe: "Open available projects for the specified account"
+            options:
+              project:
+                describe: "Name of project to open"
+            examples:
+              default: "Opens the projects page for the specified account"
+            success: "Successfully opened \"{{ projectName }}\""
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -734,5 +742,9 @@ en:
             invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
           enterName: "Enter a name to use for the sandbox: "
+          errors:
+            invalidName: "You entered an invalid name. Please try again."
+        projectNamePrompt:
+          enterName: "Name of project you want to open: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
