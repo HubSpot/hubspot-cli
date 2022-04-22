@@ -418,16 +418,22 @@ en:
           logs:
             describe: "Get logs for a function within a project"
             errors:
-              functionNameRequired: "You must pass a function name to retrieve logs for."
-              noAppFunctionLogs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
-              noEndpointLogs: "No logs were found for the function name \"{{ functionName }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
-              projectNameRequired: "You must specify a project name using the --projectName argument."
+              invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            logs:
+              showingLogs: "Showing logs for:"
+              hubspotLogsLink: "View logs in HubSpot"
+              noLogsFound: "No logs were found for \"{{ name }}\""
+              startLogFetch: "Showing logs for \"{{ functionName }}\" in \"{{ appName }}\""
+            table:
+              accountHeader: "Account"
+              projectHeader: "Project"
+              appHeader: "App"
+              functionHeader: "Function"
             examples:
-              default: "Get 5 most recent logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
-            loading: "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
+              default: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             options:
-              appPath:
-                describe: "Path to the app"
+              app:
+                describe: "Name of the app"
               compact:
                 describe: "Output compact logs"
               follow:
@@ -436,11 +442,12 @@ en:
                 describe: "Retrieve most recent log only"
               limit:
                 describe: "Limit the number of logs to output"
-              projectName:
+              project:
                 describe: "Project name to retrieve logs for"
-            positionals:
-              functionName:
+              function:
                 describe: "Serverless app function name"
+              endpoint:
+                describe: "API endpoint name"
           upload:
             debug:
               buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
@@ -666,6 +673,10 @@ en:
           useEnv:
             describe: "Use environment variable config"
       prompts:
+        projectLogsPrompt:
+          projectName: "[--project] Project name"
+          appName: "[--app] Which app would you like to view logs for?"
+          functionName: "[--function] Enter the name of a function to view logs for"
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "

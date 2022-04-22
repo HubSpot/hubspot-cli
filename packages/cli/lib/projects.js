@@ -29,7 +29,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -51,7 +51,7 @@ const getIsInProject = _dir => {
 };
 
 const getProjectConfigPath = _dir => {
-  const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
+  const projectDir = _dir ? getAbsoluteFilePath(_dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectDir,

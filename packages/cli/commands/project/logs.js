@@ -1,5 +1,6 @@
-const Spinnies = require('spinnies');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -9,6 +10,11 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
+const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 const {
   getProjectAppFunctionLogs,
   getLatestProjectAppFunctionLog,
@@ -17,35 +23,32 @@ const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
-const { getProjectConfig } = require('../../lib/projects');
+const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { uiLine, uiLink } = require('../../lib/ui');
+const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { tailLogs } = require('../../lib/serverlessLogs');
-const { uiAccountDescription } = require('../../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-
-const i18nKey = 'cli.commands.project.subcommands.logs';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const handleLogsError = (e, accountId, projectName, appPath, functionName) => {
+const i18nKey = 'cli.commands.project.subcommands.logs';
+
+const getPrivateAppsUrl = accountId => {
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
+  return `${baseUrl}/private-apps/${accountId}`;
+};
+
+const handleLogsError = (e, name) => {
+  logger.debug(`Log fetch error: ${e.message}`);
   if (e.statusCode === 404) {
-    logger.error(
-      appPath
-        ? i18n(`${i18nKey}.errors.noAppFunctionLogs`, {
-            accountId,
-            appPath,
-            functionName,
-            projectName,
-          })
-        : i18n(`${i18nKey}.errors.noEndpointLogs`, {
-            accountId,
-            functionName,
-            projectName,
-          })
-    );
+    logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
   }
 };
 
-const functionLog = async (accountId, options) => {
+const handleFunctionLog = async (accountId, options) => {
   const {
     latest,
     follow,
@@ -71,9 +74,10 @@ const functionLog = async (accountId, options) => {
           )
         : getFunctionLogs(accountId, functionName, { after });
     } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
+      handleLogsError(e, functionName);
     }
   };
+
   const fetchLatest = async () => {
     return appPath
       ? getLatestProjectAppFunctionLog(
@@ -86,85 +90,145 @@ const functionLog = async (accountId, options) => {
   };
 
   if (follow) {
-    const spinnies = new Spinnies();
-
-    spinnies.add('tailLogs', {
-      text: i18n(`${i18nKey}.loading`, {
-        functionName,
-        accountId: uiAccountDescription(accountId),
-      }),
-    });
-
     await tailLogs({
       accountId,
       compact,
-      spinnies,
       tailCall,
       fetchLatest,
+      name: functionName,
     });
   } else if (latest) {
     try {
       logsResp = await fetchLatest();
     } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
+      handleLogsError(e, functionName);
+      return true;
     }
   } else {
     try {
       logsResp = await tailCall();
     } catch (e) {
-      handleLogsError(e, accountId, projectName, appPath, functionName);
+      handleLogsError(e, functionName);
+      return true;
     }
   }
 
   if (logsResp) {
-    return outputLogs(logsResp, options);
+    outputLogs(logsResp, options);
+    return true;
   }
+  return false;
 };
 
-exports.command = 'logs';
+exports.command = 'logs [--project] [--app] [--function]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { latest, functionName } = options;
-  let projectName = options.projectName;
+  const accountId = getAccountId(options);
 
-  if (!functionName) {
-    logger.error(i18n(`${i18nKey}.errors.functionNameRequired`));
-    process.exit(EXIT_CODES.ERROR);
-  } else if (!projectName) {
-    const { projectConfig } = await getProjectConfig(getCwd());
-    if (projectConfig && projectConfig.name) {
-      projectName = projectConfig.name;
-    } else {
-      logger.error(i18n(`${i18nKey}.errors.projectNameRequired`));
-      process.exit(EXIT_CODES.ERROR);
+  logger.log(options);
+  const {
+    projectName: promptProjectName,
+    appName: promptAppName,
+    functionName: promptFunctionName,
+  } = await projectLogsPrompt(accountId, options);
+
+  const projectName = options.project || promptProjectName;
+  const appName = options.app || promptAppName;
+  const functionName =
+    options.function || promptFunctionName || options.endpoint;
+
+  let relativeAppPath;
+
+  if (appName && !options.endpoint) {
+    await ensureProjectExists(accountId, projectName, {
+      allowCreate: false,
+    });
+    const { deployedBuild } = await fetchProject(accountId, projectName);
+
+    if (deployedBuild && deployedBuild.subbuildStatuses) {
+      const appSubbuild = deployedBuild.subbuildStatuses.find(
+        subbuild => subbuild.buildName === appName
+      );
+      if (appSubbuild) {
+        relativeAppPath = appSubbuild.rootPath;
+      } else {
+        logger.error(
+          i18n(`${i18nKey}.errors.invalidAppName`, {
+            appName: options.app,
+            projectName,
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
     }
   }
 
-  const accountId = getAccountId(options);
+  trackCommandUsage('project-logs', { latest: options.latest }, accountId);
 
-  trackCommandUsage('project-logs', { latest }, accountId);
+  const logsInfo = [
+    [accountId, `"${projectName}"`, `"${appName}"`, functionName],
+  ];
 
-  functionLog(accountId, { ...options, projectName });
+  logsInfo.unshift(
+    getTableHeader([
+      i18n(`${i18nKey}.table.accountHeader`),
+      i18n(`${i18nKey}.table.projectHeader`),
+      i18n(`${i18nKey}.table.appHeader`),
+      i18n(`${i18nKey}.table.functionHeader`),
+    ])
+  );
+
+  logger.log(i18n(`${i18nKey}.logs.showingLogs`));
+  logger.log(getTableContents(logsInfo, { border: { bodyLeft: '  ' } }));
+
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.logs.hubspotLogsLink`),
+      getPrivateAppsUrl(accountId)
+    )
+  );
+  logger.log();
+  uiLine();
+
+  const showFinalMessage = await handleFunctionLog(accountId, {
+    ...options,
+    projectName,
+    appPath: relativeAppPath,
+    functionName,
+  });
+
+  if (showFinalMessage) {
+    uiLine();
+  }
 };
 
 exports.builder = yargs => {
   yargs
     .options({
-      functionName: {
+      function: {
         alias: 'function',
-        describe: i18n(`${i18nKey}.positionals.functionName.describe`),
-        type: 'string',
-        demandOption: true,
-      },
-      appPath: {
-        describe: i18n(`${i18nKey}.options.appPath.describe`),
+        describe: i18n(`${i18nKey}.options.function.describe`),
+        requiresArg: true,
         type: 'string',
       },
-      projectName: {
-        describe: i18n(`${i18nKey}.options.projectName.describe`),
+      endpoint: {
+        alias: 'endpoint',
+        describe: i18n(`${i18nKey}.options.endpoint.describe`),
+        hidden: true,
+        requiresArg: true,
+        type: 'string',
+      },
+      app: {
+        describe: i18n(`${i18nKey}.options.app.describe`),
+        requiresArg: true,
+        type: 'string',
+      },
+      project: {
+        describe: i18n(`${i18nKey}.options.project.describe`),
+        requiresArg: true,
         type: 'string',
       },
       latest: {
@@ -191,7 +255,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project logs --function=my-function --appPath="app" --projectName="my-project"',
+      '$0 project logs --project="my-project" --app="app" --function=my-function',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);
