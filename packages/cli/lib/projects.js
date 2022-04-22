@@ -168,7 +168,8 @@ const ensureProjectExists = async (
   { forceCreate = false, allowCreate = true } = {}
 ) => {
   try {
-    await fetchProject(accountId, projectName);
+    const project = await fetchProject(accountId, projectName);
+    return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
       let shouldCreateProject = forceCreate;
@@ -193,14 +194,16 @@ const ensureProjectExists = async (
           return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
       } else {
-        return logger.log(
+        logger.log(
           `Your project ${chalk.bold(
             projectName
           )} could not be found in ${chalk.bold(accountId)}.`
         );
+        return false;
       }
     }
     logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+    return false;
   }
 };
 
