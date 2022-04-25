@@ -6,13 +6,15 @@ const {
   HUBL_EXTENSIONS,
   HUBSPOT_FOLDER,
 } = require('@hubspot/cli-lib/lib/constants');
-const { fetchDependencies } = require('@hubspot/cli-lib/api/marketplace');
+const {
+  fetchTemplateDependencies,
+} = require('@hubspot/cli-lib/api/marketplace');
 const { getExt, isRelativePath } = require('@hubspot/cli-lib/path');
 
-const BaseValidator = require('../BaseValidator');
+const AbsoluteValidator = require('../AbsoluteValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
-class DependencyValidator extends BaseValidator {
+class ThemeDependencyValidator extends AbsoluteValidator {
   constructor(options) {
     super(options);
 
@@ -53,12 +55,13 @@ class DependencyValidator extends BaseValidator {
           if (!(source && source.trim())) {
             return { file, deps };
           }
-          const file_deps = await fetchDependencies(accountId, source).catch(
-            err => {
-              this.failedToFetchDependencies(err, file, validationErrors);
-              return null;
-            }
-          );
+          const file_deps = await fetchTemplateDependencies(
+            accountId,
+            source
+          ).catch(err => {
+            this.failedToFetchDependencies(err, file, validationErrors);
+            return null;
+          });
           if (file_deps) {
             deps = file_deps.dependencies || [];
           }
@@ -117,7 +120,7 @@ class DependencyValidator extends BaseValidator {
   }
 }
 
-module.exports = new DependencyValidator({
-  name: 'Dependency',
-  key: VALIDATOR_KEYS.dependency,
+module.exports = new ThemeDependencyValidator({
+  name: 'Theme dependency',
+  key: VALIDATOR_KEYS.themeDependency,
 });

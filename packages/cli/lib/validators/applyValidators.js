@@ -1,9 +1,9 @@
-async function applyValidators(validators, absoluteThemePath, ...args) {
+async function applyAbsoluteValidators(validators, absolutePath, ...args) {
   return Promise.all(
     validators.map(async Validator => {
-      Validator.setThemePath(absoluteThemePath);
+      Validator.setAbsolutePath(absolutePath);
       const validationResult = await Validator.validate(...args);
-      Validator.clearThemePath();
+      Validator.clearAbsolutePath();
 
       if (!validationResult.length) {
         // Return a success obj so we can log the successes
@@ -14,4 +14,20 @@ async function applyValidators(validators, absoluteThemePath, ...args) {
   );
 }
 
-module.exports = { applyValidators };
+async function applyRelativeValidators(validators, relativePath, ...args) {
+  return Promise.all(
+    validators.map(async Validator => {
+      Validator.setRelativePath(relativePath);
+      const validationResult = await Validator.validate(...args);
+      Validator.clearRelativePath();
+
+      if (!validationResult.length) {
+        // Return a success obj so we can log the successes
+        return [Validator.getSuccess()];
+      }
+      return validationResult;
+    })
+  );
+}
+
+module.exports = { applyAbsoluteValidators, applyRelativeValidators };

@@ -2,6 +2,7 @@
 test.skip('skip', () => null);
 
 const THEME_PATH = '/path/to/a/theme';
+const MODULE_PATH = 'module/path';
 
 const makeFindError = baseKey => (errors, errorKey) =>
   errors.find(error => error.key === `${baseKey}.${errorKey}`);
@@ -31,4 +32,5 @@ module.exports = {
   generateTemplatesList,
   makeFindError,
   THEME_PATH,
+  MODULE_PATH,
 };
