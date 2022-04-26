@@ -19,10 +19,29 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
       },
     },
     {
+      name: 'logType',
+      type: 'list',
+      message: i18n(`${i18nKey}.logType`),
+      when:
+        !promptOptions.app &&
+        !promptOptions.function &&
+        !promptOptions.endpoint,
+      choices: [
+        { name: 'CMS api endpoint', value: 'endpoint' },
+        { name: 'App function', value: 'function' },
+      ],
+    },
+    {
       name: 'appName',
       type: 'list',
       message: i18n(`${i18nKey}.appName`),
-      when: !promptOptions.app && !promptOptions.endpoint,
+      when: ({ logType }) => {
+        return (
+          (promptOptions.function || logType === 'function') &&
+          !promptOptions.app &&
+          !promptOptions.endpoint
+        );
+      },
       choices: async ({ projectName }) => {
         const name = projectName || promptOptions.project;
 
@@ -47,7 +66,24 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
     {
       name: 'functionName',
       message: i18n(`${i18nKey}.functionName`),
-      when: !promptOptions.function && !promptOptions.endpoint,
+      when: ({ logType }) => {
+        return (
+          (promptOptions.app || logType === 'function') &&
+          !promptOptions.function &&
+          !promptOptions.endpoint
+        );
+      },
+    },
+    {
+      name: 'endpointName',
+      message: i18n(`${i18nKey}.endpointName`),
+      when: ({ logType }) => {
+        return (
+          logType === 'endpoint' &&
+          !promptOptions.function &&
+          !promptOptions.endpoint
+        );
+      },
     },
   ]);
 };

@@ -1,5 +1,6 @@
 const https = require('https');
 const Spinnies = require('spinnies');
+const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
@@ -17,6 +18,7 @@ const TAIL_DELAY = 5000;
 const handleUserInput = spinnies => {
   const onTerminate = async () => {
     spinnies.remove('tailLogs');
+    spinnies.remove('stopMessage');
     process.exit(EXIT_CODES.SUCCESS);
   };
 
@@ -83,7 +85,11 @@ const tailLogs = async ({
   const spinnies = new Spinnies();
 
   spinnies.add('tailLogs', {
-    text: `Following logs for ${name}. Press "Q" to stop following`,
+    text: `Following logs for ${name}`,
+  });
+  spinnies.add('stopMessage', {
+    text: `> Press ${chalk.bold('q')} to stop following`,
+    status: 'non-spinnable',
   });
 
   handleUserInput(spinnies);

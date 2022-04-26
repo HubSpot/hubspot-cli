@@ -429,6 +429,7 @@ en:
               projectHeader: "Project"
               appHeader: "App"
               functionHeader: "Function"
+              endpointHeader: "Endpoint"
             examples:
               default: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             options:
@@ -447,7 +448,7 @@ en:
               function:
                 describe: "Serverless app function name"
               endpoint:
-                describe: "API endpoint name"
+                describe: "CMS api endpoint name"
           upload:
             debug:
               buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
@@ -690,8 +691,10 @@ en:
       prompts:
         projectLogsPrompt:
           projectName: "[--project] Project name"
+          logType: "Which type of serverless function?"
           appName: "[--app] Which app would you like to view logs for?"
           functionName: "[--function] Enter the name of a function to view logs for"
+          endpointName: "[--endpoint] Enter the path of the endpoint to view logs for"
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "

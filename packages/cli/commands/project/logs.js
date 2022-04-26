@@ -120,7 +120,7 @@ const handleFunctionLog = async (accountId, options) => {
   return false;
 };
 
-exports.command = 'logs [--project] [--app] [--function]';
+exports.command = 'logs [--project] [--app] [--function] [--endpoint]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -128,21 +128,22 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  logger.log(options);
   const {
     projectName: promptProjectName,
     appName: promptAppName,
     functionName: promptFunctionName,
+    endpointName: promptEndpointName,
   } = await projectLogsPrompt(accountId, options);
 
   const projectName = options.project || promptProjectName;
   const appName = options.app || promptAppName;
   const functionName =
     options.function || promptFunctionName || options.endpoint;
+  const endpointName = options.endpoint || promptEndpointName;
 
   let relativeAppPath;
 
-  if (appName && !options.endpoint) {
+  if (appName && !endpointName) {
     await ensureProjectExists(accountId, projectName, {
       allowCreate: false,
     });
@@ -168,21 +169,31 @@ exports.handler = async options => {
 
   trackCommandUsage('project-logs', { latest: options.latest }, accountId);
 
-  const logsInfo = [
-    [accountId, `"${projectName}"`, `"${appName}"`, functionName],
-  ];
+  const logsInfo = [accountId, `"${projectName}"`];
+  let tableHeader;
 
-  logsInfo.unshift(
-    getTableHeader([
+  if (endpointName) {
+    logsInfo.push(`"${endpointName}"`);
+    tableHeader = getTableHeader([
+      i18n(`${i18nKey}.table.accountHeader`),
+      i18n(`${i18nKey}.table.projectHeader`),
+      i18n(`${i18nKey}.table.endpointHeader`),
+    ]);
+  } else {
+    logsInfo.push(`"${appName}"`);
+    logsInfo.push(functionName);
+    tableHeader = getTableHeader([
       i18n(`${i18nKey}.table.accountHeader`),
       i18n(`${i18nKey}.table.projectHeader`),
       i18n(`${i18nKey}.table.appHeader`),
       i18n(`${i18nKey}.table.functionHeader`),
-    ])
-  );
+    ]);
+  }
 
   logger.log(i18n(`${i18nKey}.logs.showingLogs`));
-  logger.log(getTableContents(logsInfo, { border: { bodyLeft: '  ' } }));
+  logger.log(
+    getTableContents([tableHeader, logsInfo], { border: { bodyLeft: '  ' } })
+  );
 
   logger.log(
     uiLink(
@@ -197,7 +208,7 @@ exports.handler = async options => {
     ...options,
     projectName,
     appPath: relativeAppPath,
-    functionName,
+    functionName: functionName || endpointName,
   });
 
   if (showFinalMessage) {
@@ -217,7 +228,6 @@ exports.builder = yargs => {
       endpoint: {
         alias: 'endpoint',
         describe: i18n(`${i18nKey}.options.endpoint.describe`),
-        hidden: true,
         requiresArg: true,
         type: 'string',
       },
