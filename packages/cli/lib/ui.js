@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const supportsHyperlinks = require('supports-hyperlinks');
+const supportsHyperlinks = require('../lib/supportHyperlinks');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 const { logger } = require('@hubspot/cli-lib/logger');
 
