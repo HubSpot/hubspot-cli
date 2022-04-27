@@ -2,6 +2,8 @@
 const supportsColor = require('supports-color');
 const hasFlag = require('has-flag');
 
+//See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
+
 function parseVersion(versionString) {
   if (/^\d{3,4}$/.test(versionString)) {
     // Env var doesn't always use dots. example: 4601 => 46.1.0
