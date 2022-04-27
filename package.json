@@ -40,6 +40,8 @@
     }
   },
   "dependencies": {
-    "jest": "^26.6.3"
+    "has-flag": "^5.0.1",
+    "jest": "^26.6.3",
+    "supports-color": "^9.2.2"
   }
 }
