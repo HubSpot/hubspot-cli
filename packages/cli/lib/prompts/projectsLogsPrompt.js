@@ -21,14 +21,14 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
     {
       name: 'logType',
       type: 'list',
-      message: i18n(`${i18nKey}.logType`),
+      message: i18n(`${i18nKey}.logType.description`),
       when:
         !promptOptions.app &&
         !promptOptions.function &&
         !promptOptions.endpoint,
       choices: [
-        { name: 'CMS api endpoint', value: 'endpoint' },
-        { name: 'App function', value: 'function' },
+        { name: i18n(`${i18nKey}.logType.function`), value: 'function' },
+        { name: i18n(`${i18nKey}.logType.endpoint`), value: 'endpoint' },
       ],
     },
     {
