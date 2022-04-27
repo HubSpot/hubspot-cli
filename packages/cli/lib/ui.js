@@ -31,7 +31,9 @@ const uiLink = (linkText, url, options = {}) => {
     ].join('');
     return options.useColor ? chalk.cyan(result) : result;
   } else {
-    return options.fallback ? `${linkText}: ${url}` : linkText;
+    return options.useColor
+      ? `${linkText}: ${chalk.cyan(url)}`
+      : `${linkText}: ${url}`;
   }
 };
 
