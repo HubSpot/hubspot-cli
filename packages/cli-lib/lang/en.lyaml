@@ -430,7 +430,8 @@ en:
               functionHeader: "Function"
               endpointHeader: "Endpoint"
             examples:
-              default: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
+              default: "Open the project logs prompt to get logs for a serverless function"
+              withOptions: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             options:
               app:
                 describe: "App name"
@@ -689,9 +690,11 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectLogsPrompt:
-          projectName: "[--project] Enter a project name"
+          projectName:
+            message: "[--project] Enter a project name"
+            error: "Project name is required"
           logType:
-            description: "Select the type of serverless function"
+            message: "Select the type of serverless function"
             function: "App function"
             endpoint: "Public endpoint"
           appName: "[--app] Select the app"

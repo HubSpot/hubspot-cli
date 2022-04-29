@@ -263,10 +263,11 @@ exports.builder = yargs => {
     })
     .conflicts('follow', 'limit');
 
+  yargs.example([['$0 project logs', i18n(`${i18nKey}.examples.default`)]]);
   yargs.example([
     [
-      '$0 project logs --project="my-project" --app="app" --function=my-function',
-      i18n(`${i18nKey}.examples.default`),
+      '$0 project logs --project=my-project --app=app --function=my-function',
+      i18n(`${i18nKey}.examples.withOptions`),
     ],
   ]);
 
