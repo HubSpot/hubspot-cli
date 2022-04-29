@@ -1,18 +1,6 @@
 'use strict';
-const process = require('process');
+const hasFlag = require('./hasFlag');
 const supportsColor = require('supports-color');
-
-// See https://github.com/sindresorhus/has-flag/blob/main/index.js (License: https://github.com/sindresorhus/has-flag/blob/main/license)
-
-function hasFlag(flag, argv = process.argv) {
-  const prefix = flag.startsWith('-') ? '' : flag.length === 1 ? '-' : '--';
-  const position = argv.indexOf(prefix + flag);
-  const terminatorPosition = argv.indexOf('--');
-  return (
-    position !== -1 &&
-    (terminatorPosition === -1 || position < terminatorPosition)
-  );
-}
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 
