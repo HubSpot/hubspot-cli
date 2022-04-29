@@ -1,6 +1,6 @@
 'use strict';
 const hasFlag = require('./hasFlag');
-const supportsColor = require('supports-color');
+const supportsColor = require('./supportsColor');
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 
@@ -46,7 +46,7 @@ function supportsHyperlink(stream) {
   }
 
   // If they specify no colors, they probably don't want hyperlinks.
-  if (!supportsColor.supportsColor(stream)) {
+  if (!supportsColor.createSupportsColor(stream)) {
     return false;
   }
 
