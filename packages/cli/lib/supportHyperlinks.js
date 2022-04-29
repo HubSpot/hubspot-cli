@@ -58,15 +58,7 @@ function supportsHyperlink(stream) {
     return false;
   }
 
-  if ('NETLIFY' in env) {
-    return true;
-  }
-
   if ('CI' in env) {
-    return false;
-  }
-
-  if ('TEAMCITY_VERSION' in env) {
     return false;
   }
 
