@@ -416,14 +416,13 @@ en:
               path:
                 describe: "Path to a project folder"
           logs:
-            describe: "Get logs for a function within a project"
+            describe: "Get execution logs for a serverless function within a project"
             errors:
               invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
             logs:
               showingLogs: "Showing logs for:"
-              hubspotLogsLink: "View logs in HubSpot"
+              hubspotLogsLink: "View Private apps in HubSpot"
               noLogsFound: "No logs were found for \"{{ name }}\""
-              startLogFetch: "Showing logs for \"{{ functionName }}\" in \"{{ appName }}\""
             table:
               accountHeader: "Account"
               projectHeader: "Project"
@@ -434,7 +433,7 @@ en:
               default: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             options:
               app:
-                describe: "Name of the app"
+                describe: "App name"
               compact:
                 describe: "Output compact logs"
               follow:
@@ -444,11 +443,11 @@ en:
               limit:
                 describe: "Limit the number of logs to output"
               project:
-                describe: "Project name to retrieve logs for"
+                describe: "Project name"
               function:
-                describe: "Serverless app function name"
+                describe: "App function name"
               endpoint:
-                describe: "CMS api endpoint name"
+                describe: "Public endpoint path"
           upload:
             debug:
               buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
