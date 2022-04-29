@@ -91,10 +91,8 @@ function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
     // Windows 10 build 10586 is the first Windows release that supports 256 colors.
     // Windows 10 build 14931 is the first release that supports 16m/TrueColor.
     const osRelease = os.release().split('.');
-    const osReleaseZero = osRelease[0];
-    const osReleaseTwo = osRelease[2];
-    if (Number(osReleaseZero) >= 10 && Number(osReleaseTwo) >= 10586) {
-      return Number(osReleaseTwo) >= 14931 ? 3 : 2;
+    if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
+      return Number(osRelease[2]) >= 14931 ? 3 : 2;
     }
 
     return 1;
