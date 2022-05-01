@@ -21,7 +21,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'watch [src] [dest]';
+exports.command = 'watch [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {

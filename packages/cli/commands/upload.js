@@ -35,7 +35,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'upload [src] [dest]';
+exports.command = 'upload [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
