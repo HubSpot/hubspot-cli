@@ -29,7 +29,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -45,13 +45,13 @@ const writeProjectConfig = (configPath, config) => {
   }
 };
 
-const getIsInProject = async _dir => {
-  const configPath = await getProjectConfigPath(_dir);
+const getIsInProject = _dir => {
+  const configPath = getProjectConfigPath(_dir);
   return !!configPath;
 };
 
-const getProjectConfigPath = async _dir => {
-  const projectDir = _dir ? path.resolve(getCwd(), _dir) : getCwd();
+const getProjectConfigPath = _dir => {
+  const projectDir = _dir ? getAbsoluteFilePath(_dir) : getCwd();
 
   const configPath = findup(PROJECT_CONFIG_FILE, {
     cwd: projectDir,
@@ -168,7 +168,8 @@ const ensureProjectExists = async (
   { forceCreate = false, allowCreate = true } = {}
 ) => {
   try {
-    await fetchProject(accountId, projectName);
+    const project = await fetchProject(accountId, projectName);
+    return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
       let shouldCreateProject = forceCreate;
@@ -193,14 +194,16 @@ const ensureProjectExists = async (
           return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
       } else {
-        return logger.log(
+        logger.log(
           `Your project ${chalk.bold(
             projectName
           )} could not be found in ${chalk.bold(accountId)}.`
         );
+        return false;
       }
     }
     logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+    return false;
   }
 };
 

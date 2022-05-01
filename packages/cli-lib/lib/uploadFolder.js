@@ -19,6 +19,11 @@ const {
   isFatalError,
 } = require('../errorHandlers');
 
+const FileUploadResultType = {
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE',
+};
+
 const queue = new PQueue({
   concurrency: 10,
 });
@@ -112,13 +117,18 @@ async function uploadFolder(accountId, src, dest, options) {
     await queue.addAll(filesToUpload.map(uploadFile));
   }
 
-  return queue.addAll(
+  const results = await queue.addAll(
     failures.map(({ file, destPath }) => {
       return async () => {
         logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
         try {
           await upload(accountId, file, destPath, apiOptions);
           logger.log('Uploaded file "%s" to "%s"', file, destPath);
+          return {
+            resultType: FileUploadResultType.SUCCESS,
+            error: null,
+            file,
+          };
         } catch (error) {
           logger.error('Uploading file "%s" to "%s" failed', file, destPath);
           if (isFatalError(error)) {
@@ -132,12 +142,26 @@ async function uploadFolder(accountId, src, dest, options) {
               payload: file,
             })
           );
+          return {
+            resultType: FileUploadResultType.FAILURE,
+            error,
+            file,
+          };
         }
       };
     })
   );
+  return results;
+}
+
+function hasUploadErrors(results) {
+  return results.some(
+    result => result.resultType === FileUploadResultType.FAILURE
+  );
 }
 
 module.exports = {
+  hasUploadErrors,
+  FileUploadResultType,
   uploadFolder,
 };

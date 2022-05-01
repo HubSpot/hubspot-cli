@@ -10,7 +10,7 @@ jest.mock('path');
 
 describe('validators/marketplaceValidators/theme/ThemeConfigValidator', () => {
   beforeEach(() => {
-    ThemeConfigValidator.setThemePath(THEME_PATH);
+    ThemeConfigValidator.setAbsolutePath(THEME_PATH);
   });
 
   it('returns error if no theme.json file exists', async () => {

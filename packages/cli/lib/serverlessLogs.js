@@ -1,5 +1,5 @@
 const https = require('https');
-
+const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
@@ -8,18 +8,32 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
-const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
+const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const TAIL_DELAY = 5000;
 
+const handleUserInput = spinnies => {
+  const onTerminate = async () => {
+    spinnies.remove('tailLogs');
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+
+  handleExit(onTerminate);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name == 'c') || key.name === 'q') {
+      onTerminate();
+    }
+  });
+};
+
 const tailLogs = async ({
   accountId,
   compact,
-  spinnies,
   fetchLatest,
   tailCall,
+  name,
 }) => {
   let initialAfter;
 
@@ -44,7 +58,6 @@ const tailLogs = async ({
       latestLog = await tailCall(after);
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
-      spinnies.fail('tailLogs', { text: 'Stopped polling due to error.' });
       if (e.statusCode !== 404) {
         logApiErrorInstance(
           e,
@@ -62,17 +75,18 @@ const tailLogs = async ({
       });
     }
 
-    setTimeout(() => {
-      tail(nextAfter);
+    setTimeout(async () => {
+      await tail(nextAfter);
     }, TAIL_DELAY);
   };
 
-  handleKeypress(key => {
-    if ((key.ctrl && key.name == 'c') || key.name === 'escape') {
-      spinnies.succeed('tailLogs', { text: `Stopped polling` });
-      process.exit(EXIT_CODES.SUCCESS);
-    }
+  const spinnies = new Spinnies();
+
+  spinnies.add('tailLogs', {
+    text: `Following logs for ${name}. Press "Q" to stop following`,
   });
+
+  handleUserInput(spinnies);
 
   await tail(initialAfter);
 };

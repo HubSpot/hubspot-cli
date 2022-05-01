@@ -2,12 +2,12 @@ const {
   ANNOTATION_KEYS,
   buildAnnotationValueGetter,
 } = require('@hubspot/cli-lib/templates');
-const BaseValidator = require('../BaseValidator');
+const AbsoluteValidator = require('../AbsoluteValidator');
 const { VALIDATOR_KEYS } = require('../../constants');
 
 const SECTION_LIMIT = 50;
 
-class SectionValidator extends BaseValidator {
+class SectionValidator extends AbsoluteValidator {
   constructor(options) {
     super(options);
 

@@ -1,9 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { walk } = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,
@@ -17,13 +12,13 @@ const {
   logValidatorResults,
 } = require('../../lib/validators/logValidatorResults');
 const {
-  applyAbsoluteValidators,
+  applyRelativeValidators,
 } = require('../../lib/validators/applyValidators');
 const MARKETPLACE_VALIDATORS = require('../../lib/validators');
 const { VALIDATION_RESULT } = require('../../lib/validators/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
+const i18nKey = 'cli.commands.module.subcommands.marketplaceValidate';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'marketplace-validate <src>';
@@ -35,42 +30,20 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  const absoluteSrcPath = path.resolve(getCwd(), src);
-  let stats;
-  try {
-    stats = fs.statSync(absoluteSrcPath);
-    if (!stats.isDirectory()) {
-      logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
-          path: src,
-        })
-      );
-      return;
-    }
-  } catch (e) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: src,
-      })
-    );
-    return;
-  }
 
   if (!options.json) {
     logger.log(
-      i18n(`${i18nKey}.logs.validatingTheme`, {
+      i18n(`${i18nKey}.logs.validatingModule`, {
         path: src,
       })
     );
   }
   trackCommandUsage('validate', {}, accountId);
 
-  const themeFiles = await walk(absoluteSrcPath);
-
-  applyAbsoluteValidators(
-    MARKETPLACE_VALIDATORS.theme,
-    absoluteSrcPath,
-    themeFiles,
+  applyRelativeValidators(
+    MARKETPLACE_VALIDATORS.module,
+    src,
+    src,
     accountId
   ).then(groupedResults => {
     logValidatorResults(groupedResults, { logAsJson: options.json });

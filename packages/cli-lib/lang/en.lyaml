@@ -1,6 +1,8 @@
 en:
   cli:
     commands:
+      generalErrors:
+        srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       accounts:
         describe: "Commands for working with accounts."
         subcommands:
@@ -22,6 +24,20 @@ en:
                 describe: "New name for account."
             success:
               renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
+          use:
+            describe: "Change default account in config"
+            errors:
+              accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+            examples:
+              default: "Select account to use as the default from a list"
+              idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
+              nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
+            positionals:
+              account:
+                describe: "Account name or id to use as the default"
+            promptMessage: "Select an account to use as the default"
+            success:
+              defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
@@ -38,55 +54,27 @@ en:
         describe: "Commands for working with the config file."
         subcommands:
           set:
-            describe: "Commands for working with the config file."
-            subcommands:
+            describe: "Commands for modifying the CLI configuration"
+            promptMessage: "Select a config option to update"
+            examples:
+              default: "Opens a prompt to select a config item to modify"
+            options:
+              defaultMode:
+                describe: "Set the default mode"
+                promptMessage: "Select mode to be used as the default"
+                error: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+                success: "Default mode updated to: {{ mode }}"
               allowUsageTracking:
-                describe: "Enable or disable usage tracking."
-                disabled: "Usage tracking is now disabled."
-                enabled: "Usage tracking is now enabled."
-                examples:
-                  default: "Select to enable or disable usage tracking from a list"
+                describe: "Enable or disable usage tracking"
+                promptMessage: "Choose to enable or disable usage tracking"
+                success: "Allow usage tracking set to: \"{{ isEnabled }}\""
                 labels:
                   enabled: "Enabled"
                   disabled: "Disabled"
-                promptMessage: "Choose to enable or disable usage tracking"
-              defaultAccount:
-                describe: "Change default account used in config."
-                errors:
-                  accountNotFound: "The account \"{{ specifiedAccount }}\" was not found in {{ configPath }}."
-                examples:
-                  default: "Select account to use as the default from a list"
-                  idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
-                  nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
-                positionals:
-                  newDefault:
-                    describe: "Account name or id to use as the default"
-                promptMessage: "Select an account to use as the default"
-                success:
-                  defaultAccountUpdated: "Default account updated to: \"{{ accountName }}\"."
-              defaultMode:
-                describe: "Change default mode used in config."
-                errors:
-                  invalidMode: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
-                examples:
-                  default: "Select mode to use as the default from a list"
-                  draft: "Set the default mode in the config to \"draft\""
-                  publish: "Set the default mode in the config to \"publish\""
-                positionals:
-                  newMode:
-                    describe: "Mode to use as the default"
-                promptMessage: "Select a mode to use as the default"
-                success:
-                  modeUpdated: "Default mode updated to: {{ mode }}"
               httpTimeout:
-                describe: "Change http timeout used in config."
-                examples:
-                  default: "Set the http timeout value in the config to 30000ms"
-                positionals:
-                  timeout:
-                    describe: "Set http timeout value (in ms) in the config"
-                success:
-                  timeoutUpdated: "The http timeout has been set to: {{ timeout }}"
+                describe: "Set the http timeout duration"
+                promptMessage: "Enter http timeout duration"
+                success: "The http timeout has been set to: {{ timeout }}"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
@@ -381,7 +369,8 @@ en:
           limit:
             describe: "limit the number of logs to output"
         positionals:
-          endpoint: "Serverless function endpoint"
+          endpoint:
+            describe: "Serverless function endpoint"
         tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
       mv:
         describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
@@ -429,16 +418,22 @@ en:
           logs:
             describe: "Get logs for a function within a project"
             errors:
-              functionNameRequired: "You must pass a function name to retrieve logs for."
-              noAppFunctionLogs: "No logs were found for the function name \"{{ functionName }}\" in the app path \"{{ appPath }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
-              noEndpointLogs: "No logs were found for the function name \"{{ functionName }}\" within the project \"{{ projectName }}\" in account {{ accountId }}."
-              projectNameRequired: "You must specify a project name using the --projectName argument."
+              invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            logs:
+              showingLogs: "Showing logs for:"
+              hubspotLogsLink: "View logs in HubSpot"
+              noLogsFound: "No logs were found for \"{{ name }}\""
+              startLogFetch: "Showing logs for \"{{ functionName }}\" in \"{{ appName }}\""
+            table:
+              accountHeader: "Account"
+              projectHeader: "Project"
+              appHeader: "App"
+              functionHeader: "Function"
             examples:
-              default: "Get 5 most recent logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
-            loading: "Waiting for log entries for \"{{ functionName }}\" on account \"{{ accountId }}\".\n"
+              default: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
             options:
-              appPath:
-                describe: "Path to the app"
+              app:
+                describe: "Name of the app"
               compact:
                 describe: "Output compact logs"
               follow:
@@ -447,11 +442,12 @@ en:
                 describe: "Retrieve most recent log only"
               limit:
                 describe: "Limit the number of logs to output"
-              projectName:
+              project:
                 describe: "Project name to retrieve logs for"
-            positionals:
-              functionName:
+              function:
                 describe: "Serverless app function name"
+              endpoint:
+                describe: "API endpoint name"
           upload:
             debug:
               buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
@@ -534,6 +530,14 @@ en:
             options:
               buildNumber:
                 describe: "The build number to download"
+          open:
+            describe: "Open available projects for the specified account"
+            options:
+              project:
+                describe: "Name of project to open"
+            examples:
+              default: "Opens the projects page for the specified account"
+            success: "Successfully opened \"{{ projectName }}\""
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -543,12 +547,14 @@ en:
           path:
             describe: "Remote hubspot path"
       sandbox:
+        describe: "Commands for working with sandboxes."
         subcommands:
           create:
+            describe: "Create a sandbox account"
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
-              default "Create a sandbox account named MySandboxAccount."
+              default: "Creates a sandbox account named MySandboxAccount."
             info:
               auth: "Run \"hs auth\" to authenticate with the new sandbox account."
             positionals:
@@ -606,6 +612,21 @@ en:
             positionals:
               src:
                 describe: "Path to the local theme, relative to your current working directory."
+      module:
+        describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
+        subcommands:
+          marketplaceValidate:
+            describe: "Validate a module for the marketplace"
+            errors:
+              invalidPath: "The path \"{{ path }}\" is not a path to a module within the Design Manager."
+            logs:
+              validatingModule: "Validating module \"{{ path }}\" \n"
+            options:
+              json:
+                describe: "Output raw json data"
+            positionals:
+              src:
+                describe: "Path to the module within the Design Manager."
       upload:
         describe: "Upload a folder or file from your computer to the HubSpot CMS."
         errors:
@@ -614,6 +635,7 @@ en:
           invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+          someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
         positionals:
           src:
             describe: "Path to the local file, relative to your current working directory."
@@ -666,6 +688,10 @@ en:
           useEnv:
             describe: "Use environment variable config"
       prompts:
+        projectLogsPrompt:
+          projectName: "[--project] Project name"
+          appName: "[--app] Which app would you like to view logs for?"
+          functionName: "[--function] Enter the name of a function to view logs for"
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
@@ -741,3 +767,7 @@ en:
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
+        projectNamePrompt:
+          enterName: "Name of project you want to open: "
+          errors:
+            invalidName: "You entered an invalid name. Please try again."

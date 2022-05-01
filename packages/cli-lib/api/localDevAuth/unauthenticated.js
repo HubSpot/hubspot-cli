@@ -11,7 +11,7 @@ async function fetchAccessToken(
 ) {
   const query = portalId ? { portalId } : {};
   const requestOptions = getRequestOptions(
-    { env },
+    { env, localHostOverride: true },
     {
       uri: `${LOCALDEVAUTH_API_AUTH_PATH}/refresh`,
       body: {

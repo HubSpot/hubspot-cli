@@ -145,7 +145,6 @@ const createGetRequestStream = ({ contentType }) => async (
         ...opts,
         headers: {
           ...headers,
-          'content-type': contentType,
           accept: contentType,
         },
         json: false,

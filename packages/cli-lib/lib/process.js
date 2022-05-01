@@ -20,8 +20,12 @@ const handleExit = callback => {
 };
 
 const handleKeypress = callback => {
+  readline.createInterface(process.stdin, process.stdout);
   readline.emitKeypressEvents(process.stdin);
-  process.stdin.setRawMode(true);
+
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
 
   process.stdin.on('keypress', (str, key) => {
     if (key) {

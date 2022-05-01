@@ -29,7 +29,7 @@ const findError = makeFindError('template');
 
 describe('validators/marketplaceValidators/theme/TemplateValidator', () => {
   beforeEach(() => {
-    TemplateValidator.setThemePath(THEME_PATH);
+    TemplateValidator.setAbsolutePath(THEME_PATH);
     templates.isCodedFile.mockReturnValue(true);
   });
 

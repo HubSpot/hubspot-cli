@@ -16,7 +16,7 @@ const {
   writeConfig,
 } = require('./lib/config');
 const { checkAndWarnGitInclusion } = require('./lib/git');
-const { uploadFolder } = require('./lib/uploadFolder');
+const { hasUploadErrors, uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
 const { read } = require('./lib/read');
 const { walk } = require('./lib/walk');
@@ -37,6 +37,7 @@ module.exports = {
   getAccountId,
   getPortalConfig: getAccountConfig,
   getPortalId: getAccountId,
+  hasUploadErrors,
   updateAccountConfig,
   updatePortalConfig: updateAccountConfig,
   uploadFolder,
