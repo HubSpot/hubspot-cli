@@ -1,6 +1,6 @@
-const process = require('node:process');
-const os = require('node:os');
-const tty = require('node:tty');
+const process = require('process');
+const os = require('os');
+const tty = require('tty');
 const hasFlag = require('./hasFlag');
 
 const { env } = process;
