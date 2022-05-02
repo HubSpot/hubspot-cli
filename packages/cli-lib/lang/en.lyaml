@@ -691,15 +691,15 @@ en:
       prompts:
         projectLogsPrompt:
           projectName:
-            message: "[--project] Enter a project name"
+            message: "[--project] Enter the project name:"
             error: "Project name is required"
           logType:
             message: "Select the type of serverless function"
             function: "App function"
             endpoint: "Public endpoint"
           appName: "[--app] Select the app"
-          functionName: "[--function] Enter the app function to view logs for"
-          endpointName: "[--endpoint] Enter the path of the public endpoint to view logs for"
+          functionName: "[--function] Enter the app function name:"
+          endpointName: "[--endpoint] Enter the public endpoint path:"
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
