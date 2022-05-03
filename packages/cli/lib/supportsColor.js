@@ -29,7 +29,7 @@ function _supportsColor(haveStream, { streamIsTTY } = {}) {
     return min;
   }
 
-  if (hasFlag('no-color')) {
+  if (hasFlag('noColor')) {
     return 0;
   }
 

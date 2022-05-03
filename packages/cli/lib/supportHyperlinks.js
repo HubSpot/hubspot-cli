@@ -25,7 +25,7 @@ function parseVersion(versionString) {
 function supportsHyperlink(stream) {
   const { env } = process;
 
-  if (hasFlag('no-hyperlinks')) {
+  if (hasFlag('noHyperlinks')) {
     return false;
   }
 
