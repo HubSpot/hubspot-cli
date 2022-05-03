@@ -1,5 +1,6 @@
 const chalk = require('chalk');
-const supportsHyperlinks = require('supports-hyperlinks');
+const supportsHyperlinks = require('../lib/supportHyperlinks');
+const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -13,6 +14,19 @@ const uiLine = () => {
 };
 
 /**
+ * Returns an object that aggregates what the terminal supports (eg. hyperlinks and color)
+ *
+ * @returns {object}
+ */
+
+const getTerminalUISupport = () => {
+  return {
+    hyperlinks: supportsHyperlinks.stdout,
+    color: supportsColor.stdout.hasBasic,
+  };
+};
+
+/**
  * Returns a hyperlink or link and description
  *
  * @param {string} linkText
@@ -20,8 +34,9 @@ const uiLine = () => {
  * @param {object} options
  * @returns {string}
  */
-const uiLink = (linkText, url, options = {}) => {
-  if (supportsHyperlinks.stdout) {
+const uiLink = (linkText, url) => {
+  const terminalUISupport = getTerminalUISupport();
+  if (terminalUISupport.hyperlinks) {
     const result = [
       '\u001B]8;;',
       url,
@@ -29,9 +44,11 @@ const uiLink = (linkText, url, options = {}) => {
       linkText,
       '\u001B]8;;\u0007',
     ].join('');
-    return options.useColor ? chalk.cyan(result) : result;
+    return terminalUISupport.color ? chalk.cyan(result) : result;
   } else {
-    return options.fallback ? `${linkText}: ${url}` : linkText;
+    return terminalUISupport.color
+      ? `${linkText}: ${chalk.cyan(url)}`
+      : `${linkText}: ${url}`;
   }
 };
 

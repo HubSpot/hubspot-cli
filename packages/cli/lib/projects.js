@@ -483,8 +483,7 @@ const pollBuildStatus = makePollTaskStatusFunc({
   linkToHubSpot: (projectName, buildId, accountId) =>
     uiLink(
       `View build #${buildId} in HubSpot`,
-      getProjectBuildDetailUrl(projectName, buildId, accountId),
-      { useColor: true }
+      getProjectBuildDetailUrl(projectName, buildId, accountId)
     ),
   statusFn: getBuildStatus,
   statusText: PROJECT_BUILD_TEXT,

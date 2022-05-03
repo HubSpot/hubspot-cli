@@ -82,6 +82,18 @@ const argv = yargs
     describe: 'set log level to debug',
     type: 'boolean',
   })
+  .option('noHyperlinks', {
+    default: false,
+    describe: 'prevent hyperlinks from displaying in the ui',
+    hidden: true,
+    type: 'boolean',
+  })
+  .option('noColor', {
+    default: false,
+    describe: 'prevent color from displaying in the ui',
+    hidden: true,
+    type: 'boolean',
+  })
   .check(argv => {
     if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
       if (getIsInProject(argv.src)) {
