@@ -22,7 +22,7 @@ const uiLine = () => {
 const getTerminalUISupport = () => {
   return {
     hyperlinks: supportsHyperlinks.stdout,
-    color: supportsColor.stdout.level >= 1,
+    color: supportsColor.stdout.hasBasic,
   };
 };
 

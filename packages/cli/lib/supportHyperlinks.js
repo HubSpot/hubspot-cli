@@ -1,6 +1,5 @@
 'use strict';
 const hasFlag = require('./hasFlag');
-const supportsColor = require('./supportsColor');
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 
@@ -26,27 +25,7 @@ function parseVersion(versionString) {
 function supportsHyperlink(stream) {
   const { env } = process;
 
-  if ('FORCE_HYPERLINK' in env) {
-    return !(
-      env.FORCE_HYPERLINK.length > 0 && parseInt(env.FORCE_HYPERLINK, 10) === 0
-    );
-  }
-
-  if (
-    hasFlag('no-hyperlink') ||
-    hasFlag('no-hyperlinks') ||
-    hasFlag('hyperlink=false') ||
-    hasFlag('hyperlink=never')
-  ) {
-    return false;
-  }
-
-  if (hasFlag('hyperlink=true') || hasFlag('hyperlink=always')) {
-    return true;
-  }
-
-  // If they specify no colors, they probably don't want hyperlinks.
-  if (!supportsColor.createSupportsColor(stream)) {
+  if (hasFlag('no-hyperlinks')) {
     return false;
   }
 
