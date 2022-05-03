@@ -7,7 +7,12 @@ const { env } = process;
 
 function translateLevel(level) {
   if (level === 0) {
-    return false;
+    return {
+      level,
+      hasBasic: false,
+      has256: false,
+      has16m: false,
+    };
   }
 
   return {
