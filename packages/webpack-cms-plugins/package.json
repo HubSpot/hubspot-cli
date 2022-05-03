@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/webpack-cms-plugins",
-  "version": "3.0.13-beta.2",
+  "version": "3.0.13-beta.3",
   "description": "Webpack plugins for using with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
@@ -17,7 +17,7 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@hubspot/cli-lib": "3.0.13-beta.2"
+    "@hubspot/cli-lib": "3.0.13-beta.3"
   },
   "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
 }
