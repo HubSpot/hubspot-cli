@@ -5,6 +5,8 @@ const hasFlag = require('./hasFlag');
 
 const { env } = process;
 
+//From: https://github.com/chalk/supports-color/blob/main/index.js (License: https://github.com/chalk/supports-color/blob/main/license)
+
 function translateLevel(level) {
   if (level === 0) {
     return {
