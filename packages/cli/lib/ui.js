@@ -2,6 +2,7 @@ const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 /**
@@ -65,8 +66,22 @@ const uiAccountDescription = accountId => {
   );
 };
 
+const uiFeatureHighlight = (commands, title) => {
+  const i18nKey = 'cli.lib.ui.featureHighlight';
+
+  uiLine();
+  logger.log(chalk.bold(title ? title : i18n(`${i18nKey}.defaultTitle`)));
+  commands.forEach(command => {
+    logger.log('');
+    logger.log(i18n(`${i18nKey}.commandKeys.${command}`));
+  });
+  logger.log('');
+  uiLine();
+};
+
 module.exports = {
   uiLine,
   uiLink,
   uiAccountDescription,
+  uiFeatureHighlight,
 };

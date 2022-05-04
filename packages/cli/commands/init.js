@@ -36,6 +36,7 @@ const {
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { uiFeatureHighlight } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.init';
 
@@ -85,6 +86,12 @@ const CONFIG_CREATION_FLOWS = {
   [API_KEY_AUTH_METHOD.value]: apiKeyConfigCreationFlow,
 };
 
+const AUTH_TYPE_NAMES = {
+  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+  [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
+  [API_KEY_AUTH_METHOD.value]: API_KEY_AUTH_METHOD.name,
+};
+
 exports.command = 'init';
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -106,7 +113,7 @@ exports.handler = async options => {
         configPath,
       })
     );
-    logger.info(i18n(`${i18nKey}.info.updateConfig`));
+    logger.info(i18n(`${i18nKey}.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -118,13 +125,19 @@ exports.handler = async options => {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](env);
     const configPath = getConfigPath();
 
+    logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
         configPath,
-        authType,
+      })
+    );
+    logger.success(
+      i18n(`${i18nKey}.success.configFileUpdated`, {
+        authType: AUTH_TYPE_NAMES[authType],
         account: name || accountId,
       })
     );
+    uiFeatureHighlight(['help', 'auth', 'accountsList']);
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
     process.exit(EXIT_CODES.SUCCESS);

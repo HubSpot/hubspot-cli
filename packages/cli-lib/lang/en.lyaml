@@ -40,9 +40,6 @@ en:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
-        logs:
-          acccountsUseHelp: "Run `hs accounts use` to easily switch between accounts"
-          acccountsListHelp: "Try `hs accounts list` to see a list of configured HubSpot accounts"
         errors:
           accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
@@ -52,7 +49,7 @@ en:
             describe: "Authentication mechanism"
             defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
-          configFileUpdated: "{{ accountName }} updated in {{ configFilename }} with {{ authType }}"
+          configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
       config:
         describe: "Commands for working with the config file."
         subcommands:
@@ -335,8 +332,9 @@ en:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
-          configFileCreated: "The config file \"{{ configPath }}\" was created using \"{{ authType }}\" for account {{ account }}."
-        info:
+          configFileCreated: "Created config file \"{{ configPath }}\""
+          configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\"."
+        logs:
           updateConfig: "To update an existing config file, use the \"hs auth\" command."
         errors:
           configFileExists: "The config file {{ configPath }} already exists."
@@ -674,6 +672,18 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     lib:
+      ui:
+        featureHighlight:
+          defaultTitle: "What's next?"
+          commandKeys:
+            help: "Run `hs --help` to see a list of available commands"
+            auth: "Run `hs auth` to connect the CLI to additional HubSpot accounts"
+            accountsUse: "Run `hs accounts use` to easily switch between accounts"
+            accountsList: "Run `hs accounts list` to see a list of configured HubSpot accounts"
+            create: "🎨 Add components to your project with `hs create`"
+            projectUpload: "🏗  Run `hs project upload` to upload your files to HubSpot and trigger builds"
+            projectDeploy: "🚀 Ready to take your project live? Run `hs project deploy`"
+            projectHelp: "🔗 Use `hs project --help` to learn more about available commands"
       commonOpts:
         options:
           portal:

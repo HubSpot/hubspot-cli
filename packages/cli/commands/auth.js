@@ -34,7 +34,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiLine } = require('../lib/ui');
+const { uiFeatureHighlight } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -152,7 +152,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  uiLine();
+  logger.log('');
   logger.success(
     i18n(`${i18nKey}.success.configFileUpdated`, {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -160,12 +160,7 @@ exports.handler = async options => {
       accountName: updatedConfig.name,
     })
   );
-  logger.log('');
-  logger.log(i18n(`${i18nKey}.logs.acccountsUseHelp`));
-  logger.log('');
-  logger.log(i18n(`${i18nKey}.logs.acccountsListHelp`));
-  logger.log('');
-  uiLine();
+  uiFeatureHighlight(['accountsUse', 'accountsList']);
 
   process.exit(EXIT_CODES.SUCCESS);
 };
