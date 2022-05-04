@@ -769,6 +769,12 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
+        uploadPrompt:
+          enterDest: "[--dest] Enter the destination path: "
+          enterSrc: "[--src] Enter the source path: "
+          errors:
+            srcRequired: "You must specify a source directory."
+            destRequired: "You must specify a destination directory."
         projectNamePrompt:
           enterName: "Name of project you want to open: "
           errors:

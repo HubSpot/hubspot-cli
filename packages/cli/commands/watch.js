@@ -13,6 +13,7 @@ const {
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
+const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -20,11 +21,11 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'watch <src> <dest>';
+exports.command = 'watch [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest, remove, initialUpload, disableInitial, notify } = options;
+  const { remove, initialUpload, disableInitial, notify } = options;
 
   await loadAndValidateOptions(options);
 
@@ -34,6 +35,11 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const mode = getMode(options);
+
+  const uploadPromptAnswers = await uploadPrompt(options);
+
+  const src = options.src || uploadPromptAnswers.src;
+  const dest = options.dest || uploadPromptAnswers.dest;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   try {
