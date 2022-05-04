@@ -408,13 +408,13 @@ en:
               deploy: "Deploy error: {{ details }}"
               noBuildId: "No latest build ID was found."
             examples:
-              default: "Deploy a project within the myProjectFolder folder"
+              default: "Deploy the latest build of the current project"
+              withOptions: "Deploy build 5 of the project my-project"
             options:
               buildId:
                 describe: "Project build ID to be deployed"
-            positionals:
-              path:
-                describe: "Path to a project folder"
+              project:
+                describe: "Project name"
           logs:
             describe: "Get execution logs for a serverless function within a project"
             errors:
@@ -770,6 +770,7 @@ en:
           errors:
             invalidName: "You entered an invalid name. Please try again."
         projectNamePrompt:
-          enterName: "Name of project you want to open: "
+          enterName: "[--project] Enter project name:"
           errors:
             invalidName: "You entered an invalid name. Please try again."
+            projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""

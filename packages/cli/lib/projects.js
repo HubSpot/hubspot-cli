@@ -165,7 +165,7 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 const ensureProjectExists = async (
   accountId,
   projectName,
-  { forceCreate = false, allowCreate = true } = {}
+  { forceCreate = false, allowCreate = true, noLogs = false } = {}
 ) => {
   try {
     const project = await fetchProject(accountId, projectName);
@@ -194,11 +194,13 @@ const ensureProjectExists = async (
           return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
       } else {
-        logger.log(
-          `Your project ${chalk.bold(
-            projectName
-          )} could not be found in ${chalk.bold(accountId)}.`
-        );
+        if (!noLogs) {
+          logger.log(
+            `Your project ${chalk.bold(
+              projectName
+            )} could not be found in ${chalk.bold(accountId)}.`
+          );
+        }
         return false;
       }
     }
