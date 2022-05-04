@@ -8,14 +8,14 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const path = require('path');
+const chalk = require('chalk');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
-const {
-  createProjectConfig,
-  showProjectWelcomeMessage,
-} = require('../../lib/projects');
+const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { uiLine } = require('../../lib/ui');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
@@ -37,7 +37,21 @@ exports.handler = async options => {
     options.template || template
   );
 
-  showProjectWelcomeMessage();
+  logger.log('');
+  logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
+  uiLine();
+  logger.log(chalk.bold("What's next?\n"));
+  logger.log('🎨 Add components to your project with `hs create`.\n');
+  logger.log(
+    `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
+  );
+  logger.log(
+    `🚀 Ready to take your project live? Run \`hs project deploy\`.\n`
+  );
+  logger.log(
+    `🔗 Use \`hs project --help\` to learn more about available commands.\n`
+  );
+  uiLine();
 };
 
 exports.builder = yargs => {

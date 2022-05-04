@@ -34,6 +34,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { uiLine } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -92,6 +93,8 @@ exports.handler = async options => {
   let configData;
   let updatedConfig;
   let validName;
+  let successAuthMethod;
+
   switch (authType) {
     case API_KEY_AUTH_METHOD.value:
       configData = await promptUser(API_KEY_FLOW);
@@ -105,13 +108,7 @@ exports.handler = async options => {
       });
       writeConfig();
 
-      logger.success(
-        i18n(`${i18nKey}.success.configFileUpdated`, {
-          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-          authMethod: API_KEY_AUTH_METHOD.name,
-        })
-      );
-
+      successAuthMethod = API_KEY_AUTH_METHOD.name;
       break;
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
@@ -119,13 +116,14 @@ exports.handler = async options => {
         ...configData,
         env,
       });
+      successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
-        process.exit(EXIT_CODES.SUCCESS);
+        break;
       }
 
       validName = await promptForAccountNameIfNotSet(updatedConfig);
@@ -138,12 +136,7 @@ exports.handler = async options => {
       });
       writeConfig();
 
-      logger.success(
-        i18n(`${i18nKey}.success.configFileUpdated`, {
-          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-        })
-      );
+      successAuthMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.name;
       break;
     default:
       logger.error(
@@ -154,6 +147,26 @@ exports.handler = async options => {
       );
       break;
   }
+
+  if (!successAuthMethod) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  uiLine();
+  logger.success(
+    i18n(`${i18nKey}.success.configFileUpdated`, {
+      configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      authType: successAuthMethod,
+      accountName: updatedConfig.name,
+    })
+  );
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.logs.acccountsUseHelp`));
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.logs.acccountsListHelp`));
+  logger.log('');
+  uiLine();
+
   process.exit(EXIT_CODES.SUCCESS);
 };
 
