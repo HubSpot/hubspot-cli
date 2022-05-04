@@ -762,8 +762,8 @@ en:
           errors:
             invalidName: "You entered an invalid name. Please try again."
         uploadPrompt:
-          enterSrc: "[--src] Enter the path that you want to upload: "
-          enterDest: "[--dest] Enter the path that you want to upload to: "
+          enterSrc: "[--src] Enter the source path: "
+          enterDest: "[--dest] Enter the destination path: "
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
