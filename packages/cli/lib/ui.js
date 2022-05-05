@@ -66,22 +66,36 @@ const uiAccountDescription = accountId => {
   );
 };
 
-const uiFeatureHighlight = (commands, title) => {
-  const i18nKey = 'cli.lib.ui.featureHighlight';
-
+const uiInfoSection = (title, logContent) => {
   uiLine();
-  logger.log(chalk.bold(title ? title : i18n(`${i18nKey}.defaultTitle`)));
-  commands.forEach(command => {
-    logger.log('');
-    logger.log(i18n(`${i18nKey}.commandKeys.${command}`));
-  });
+  logger.log(chalk.bold(title));
+  logger.log('');
+  logContent();
   logger.log('');
   uiLine();
 };
 
+const uiFeatureHighlight = (commands, title) => {
+  const i18nKey = 'cli.lib.ui.featureHighlight';
+
+  uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
+    commands.forEach((c, i) => {
+      const commandKey = `${i18nKey}.commandKeys.${c}`;
+      const message = i18n(`${commandKey}.message`, {
+        command: chalk.bold(i18n(`${commandKey}.command`)),
+      });
+      if (i !== 0) {
+        logger.log('');
+      }
+      logger.log(message);
+    });
+  });
+};
+
 module.exports = {
-  uiLine,
-  uiLink,
   uiAccountDescription,
   uiFeatureHighlight,
+  uiInfoSection,
+  uiLine,
+  uiLink,
 };

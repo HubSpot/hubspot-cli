@@ -40,10 +40,10 @@ exports.handler = async options => {
   logger.log('');
   logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
   uiFeatureHighlight([
-    'create',
-    'projectUpload',
-    'projectDeploy',
-    'projectHelp',
+    'createCommand',
+    'projectUploadCommand',
+    'projectDeployCommand',
+    'projectHelpCommand',
   ]);
 };
 

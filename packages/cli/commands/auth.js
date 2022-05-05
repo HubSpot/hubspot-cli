@@ -160,7 +160,11 @@ exports.handler = async options => {
       accountName: updatedConfig.name,
     })
   );
-  uiFeatureHighlight(['accountsUse', 'accountsList']);
+  uiFeatureHighlight([
+    'accountsUseCommand',
+    'accountOption',
+    'accountsListCommand',
+  ]);
 
   process.exit(EXIT_CODES.SUCCESS);
 };

@@ -25,11 +25,11 @@ en:
             success:
               renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
           use:
-            describe: "Change default account in config"
+            describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
             errors:
               accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
             examples:
-              default: "Select account to use as the default from a list"
+              default: "Select a HubSpot account to use as the default account"
               idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
               nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
             positionals:
@@ -676,14 +676,33 @@ en:
         featureHighlight:
           defaultTitle: "What's next?"
           commandKeys:
-            help: "Run `hs --help` to see a list of available commands"
-            auth: "Run `hs auth` to connect the CLI to additional HubSpot accounts"
-            accountsUse: "Run `hs accounts use` to easily switch between accounts"
-            accountsList: "Run `hs accounts list` to see a list of configured HubSpot accounts"
-            create: "🎨 Add components to your project with `hs create`"
-            projectUpload: "🏗  Run `hs project upload` to upload your files to HubSpot and trigger builds"
-            projectDeploy: "🚀 Ready to take your project live? Run `hs project deploy`"
-            projectHelp: "🔗 Use `hs project --help` to learn more about available commands"
+            accountOption:
+              command: "--account"
+              message: "Use the {{ command }} option with any command to override the default account"
+            accountsListCommand:
+              command: hs accounts list
+              message: "Run {{ command }} to see a list of configured HubSpot accounts"
+            accountsUseCommand:
+              command: "hs accounts use"
+              message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+            authCommand:
+              command: "hs auth"
+              message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
+            createCommand:
+              command: "hs create"
+              message: "Add new components to your project with {{ command }}"
+            helpCommand:
+              command: "hs --help"
+              message: "Run {{ command }} to see a list of available commands"
+            projectDeployCommand:
+              command: "hs project deploy"
+              message: "Ready to take your project live? Run {{ command }}"
+            projectHelpCommand:
+              command: "hs project --help"
+              message: "Run {{ command }} to learn more about available project commands"
+            projectUploadCommand:
+              command: "hs project upload"
+              message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
       commonOpts:
         options:
           portal:
@@ -721,7 +740,8 @@ en:
           enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
-          personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step.\n<Press enter to open the page and generate your personal access key>"
+          personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
+          personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step."
           logs:
             openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:

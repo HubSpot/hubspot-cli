@@ -137,7 +137,7 @@ exports.handler = async options => {
         account: name || accountId,
       })
     );
-    uiFeatureHighlight(['help', 'auth', 'accountsList']);
+    uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
     process.exit(EXIT_CODES.SUCCESS);

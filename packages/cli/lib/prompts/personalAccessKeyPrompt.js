@@ -8,6 +8,8 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { uiInfoSection } = require('../ui');
+const { EXIT_CODES } = require('../enums/exitCodes');
 
 const i18nKey = 'cli.lib.prompts.personalAccessKeyPrompt';
 
@@ -19,8 +21,18 @@ const personalAccessKeyPrompt = async ({ env } = {}) => {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
   const url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
-    await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
-    open(url, { url: true });
+    uiInfoSection(i18n(`${i18nKey}.personalAccessKeySetupTitle`), () => {
+      logger.log(i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrep`));
+    });
+
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser([
+      PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+    ]);
+    if (shouldOpen) {
+      open(url, { url: true });
+    } else {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   logger.log(i18n(`${i18nKey}.logs.openingWebBrowser`, { url }));
@@ -100,11 +112,13 @@ const ACCOUNT_API_KEY = {
 
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
-  message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrep`),
+  type: 'confirm',
+  message: 'Continue to open page and generate your personal access key?',
 };
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
+  type: 'password',
   message: i18n(`${i18nKey}.enterPersonalAccessKey`),
   validate(val) {
     if (!val || typeof val !== 'string') {
