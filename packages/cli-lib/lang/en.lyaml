@@ -40,6 +40,8 @@ en:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
+        logs:
+          setAsDefaultAccountPrompt: "Set this account as the default?"
         errors:
           accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
@@ -49,6 +51,7 @@ en:
             describe: "Authentication mechanism"
             defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
+          setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
           configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
       config:
         describe: "Commands for working with the config file."
@@ -333,7 +336,7 @@ en:
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         success:
           configFileCreated: "Created config file \"{{ configPath }}\""
-          configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\"."
+          configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
         logs:
           updateConfig: "To update an existing config file, use the \"hs auth\" command."
         errors:

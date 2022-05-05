@@ -15,7 +15,9 @@ const {
   updateAccountConfig,
   accountNameExistsInConfig,
   writeConfig,
+  getConfig,
   getConfigPath,
+  updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
@@ -65,6 +67,24 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
     }
     return validName;
   }
+};
+
+const promptToSetDefaultAccount = async accountName => {
+  const config = getConfig();
+
+  const { setAsDefault } = await promptUser([
+    {
+      name: 'setAsDefault',
+      type: 'confirm',
+      when: config.defaultPortal !== accountName,
+      message: i18n(`${i18nKey}.logs.setAsDefaultAccountPrompt`),
+    },
+  ]);
+
+  if (setAsDefault) {
+    updateDefaultAccount(accountName);
+  }
+  return setAsDefault;
 };
 
 exports.command = 'auth [type]';
@@ -152,12 +172,23 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const accountName = updatedConfig.name || validName;
+
+  const setAsDefault = await promptToSetDefaultAccount(accountName);
+
   logger.log('');
+  if (setAsDefault) {
+    logger.success(
+      i18n(`${i18nKey}.success.setAsDefaultAccount`, {
+        accountName,
+      })
+    );
+  }
   logger.success(
     i18n(`${i18nKey}.success.configFileUpdated`, {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       authType: successAuthMethod,
-      accountName: updatedConfig.name,
+      accountName,
     })
   );
   uiFeatureHighlight([

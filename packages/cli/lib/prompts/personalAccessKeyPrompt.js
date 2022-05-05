@@ -118,8 +118,15 @@ const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
 
 const PERSONAL_ACCESS_KEY = {
   name: 'personalAccessKey',
-  type: 'password',
   message: i18n(`${i18nKey}.enterPersonalAccessKey`),
+  transformer: val => {
+    if (!val) return val;
+    let res = '';
+    for (let i = 0; i < val.length; i++) {
+      res += '*';
+    }
+    return res;
+  },
   validate(val) {
     if (!val || typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidPersonalAccessKey`);
