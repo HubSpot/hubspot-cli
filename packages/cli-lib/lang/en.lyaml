@@ -3,6 +3,7 @@ en:
     commands:
       generalErrors:
         srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
+        setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       accounts:
         describe: "Commands for working with accounts."
         subcommands:
@@ -32,7 +33,7 @@ en:
               default: "Select account to use as the default from a list"
               idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
               nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
-            positionals:
+            options:
               account:
                 describe: "Account name or id to use as the default"
             promptMessage: "Select an account to use as the default"
