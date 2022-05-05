@@ -89,7 +89,7 @@ exports.builder = yargs => {
 
   yargs.example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
 
-  //TODO remove this
+  //TODO remove this when "hs accounts use" is fully rolled out
   yargs.strict(false);
 
   return yargs;
