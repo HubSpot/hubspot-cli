@@ -65,8 +65,13 @@ const uiAccountDescription = accountId => {
   );
 };
 
+const uiPromptShortcut = command => {
+  logger.log(`Shortcut: ${chalk.bold(command)}`);
+};
+
 module.exports = {
   uiLine,
   uiLink,
   uiAccountDescription,
+  uiPromptShortcut,
 };

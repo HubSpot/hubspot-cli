@@ -25,7 +25,7 @@ const {
 } = require('@hubspot/cli-lib/api/results');
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { uiLine, uiLink } = require('../../lib/ui');
+const { uiLine, uiLink, uiPromptShortcut } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -168,6 +168,24 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('project-logs', { latest: options.latest }, accountId);
+
+  // Show shortcut if any of the prompt questions were answered
+  const promptUsed =
+    !!promptProjectName ||
+    !!promptAppName ||
+    !!promptFunctionName ||
+    promptEndpointName;
+  if (promptUsed) {
+    let optionShortcut;
+
+    if (endpointName) {
+      optionShortcut = `--project="${projectName}" --endpoint="${endpointName}"`;
+    } else {
+      optionShortcut = `--project="${projectName}" --app="${appName}" --function="${functionName}"`;
+    }
+    uiPromptShortcut(`hs project logs ${optionShortcut}`);
+    logger.log('');
+  }
 
   const logsInfo = [accountId, `"${projectName}"`];
   let tableHeader;
