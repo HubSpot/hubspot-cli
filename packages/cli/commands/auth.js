@@ -66,13 +66,13 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
   }
 };
 
-exports.command = 'auth [type]';
+exports.command = 'auth [--type] [--accountId]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
 
 exports.handler = async options => {
-  const { type, config: configPath, qa } = options;
+  const { type, config: configPath, qa, accountId } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
@@ -121,7 +121,7 @@ exports.handler = async options => {
       });
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env });
+      configData = await personalAccessKeyPrompt({ env, accountId });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
@@ -158,18 +158,27 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('type', {
-    describe: i18n(`${i18nKey}.positionals.type.describe`),
-    type: 'string',
-    choices: [
-      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-      `${OAUTH_AUTH_METHOD.value}`,
-      `${API_KEY_AUTH_METHOD.value}`,
-    ],
-    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    }),
+  yargs.options({
+    type: {
+      describe: i18n(`${i18nKey}.positionals.type.describe`),
+      type: 'string',
+      choices: [
+        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+        `${OAUTH_AUTH_METHOD.value}`,
+        `${API_KEY_AUTH_METHOD.value}`,
+      ],
+      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      defaultDescription: i18n(
+        `${i18nKey}.positionals.type.defaultDescription`,
+        {
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
+    },
+    accountId: {
+      describe: i18n(`${i18nKey}.options.accountId.describe`),
+      type: 'string',
+    },
   });
 
   addConfigOptions(yargs, true);
