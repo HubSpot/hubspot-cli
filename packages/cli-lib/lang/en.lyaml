@@ -570,12 +570,8 @@ en:
               scopes:
                 message: "The HubSpot CLI doesn’t have permission to create sandboxes under \"{{ accountName }}\"."
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
-
-                  - Visit {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
-
-                  - Update the CLI config for this account by running `hs auth` and entering the new key.
-
-                "
+                  \n- Visit {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+                  \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
