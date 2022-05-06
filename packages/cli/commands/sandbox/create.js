@@ -30,6 +30,9 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../../lib/regex');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const {
+  isMissingScopeError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -138,11 +141,7 @@ The following step will prompt you to authenticate with sandbox "${name}" and ad
       }
     );
   } catch (err) {
-    if (
-      err.error &&
-      err.error.category &&
-      err.error.category === 'MISSING_SCOPES'
-    ) {
+    if (isMissingScopeError(err)) {
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
