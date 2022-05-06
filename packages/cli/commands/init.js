@@ -45,8 +45,8 @@ const TRACKING_STATUS = {
   COMPLETE: 'complete',
 };
 
-const personalAccessKeyConfigCreationFlow = async (env, accountId) => {
-  const configData = await personalAccessKeyPrompt({ env, accountId });
+const personalAccessKeyConfigCreationFlow = async (env, account) => {
+  const configData = await personalAccessKeyPrompt({ env, account });
   const { name } = await promptUser([ACCOUNT_NAME]);
   const accountConfig = {
     ...configData,
@@ -85,7 +85,7 @@ const CONFIG_CREATION_FLOWS = {
   [API_KEY_AUTH_METHOD.value]: apiKeyConfigCreationFlow,
 };
 
-exports.command = 'init [--auth] [--accountId]';
+exports.command = 'init [--auth] [--account]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
@@ -94,7 +94,7 @@ exports.handler = async options => {
   const {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
-    accountId: optionalAccountId,
+    account: optionalAccount,
   } = options;
   const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
   setLogLevel(options);
@@ -121,7 +121,7 @@ exports.handler = async options => {
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](
       env,
-      optionalAccountId
+      optionalAccount
     );
     const configPath = getConfigPath();
 
@@ -156,8 +156,8 @@ exports.builder = yargs => {
         defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
       }),
     },
-    accountId: {
-      describe: i18n(`${i18nKey}.options.accountId.describe`),
+    account: {
+      describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
     },
   });
