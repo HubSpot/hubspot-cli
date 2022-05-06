@@ -132,10 +132,9 @@ exports.handler = async options => {
             name,
             sandboxHubId,
           }),
-          `
-
-The following step will prompt you to authenticate with sandbox "${name}" and add it to the CLI config.
-          `
+          i18n(`${i18nKey}.success.prePrompt`, {
+            name,
+          })
         );
         return { name, sandboxHubId };
       }
@@ -145,11 +144,9 @@ The following step will prompt you to authenticate with sandbox "${name}" and ad
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        `
-          Verify that the personal access key used has the Sandboxes scope by navigating to "${url}".
-          - If the scope is missing, deactivate the key and generate a new personal access key with Sandboxes permissions.
-          - To update the personal access key in the CLI, run "hs auth" and enter the new key.
-        `
+        i18n(`${i18nKey}.failure.scopes`, {
+          url,
+        })
       );
     }
     process.exit(EXIT_CODES.ERROR);

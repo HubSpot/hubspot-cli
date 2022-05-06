@@ -565,7 +565,24 @@ en:
                 describe: "Name to use for created sandbox"
             success:
               create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
+              prePrompt: "
+
+
+              The following step will prompt you to authenticate with sandbox \"{{ name }}\" and add it to the CLI config.
+
+              "
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+            failure:
+              scopes: "
+
+
+              Verify that the personal access key used has the Sandboxes scope by navigating to \"{{ url }}\".
+
+                - If the scope is missing, deactivate the key and generate a new personal access key with Sandboxes permissions.
+
+                - To update the personal access key in the CLI, run \"hs auth\" and enter the new key.
+
+              "
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
