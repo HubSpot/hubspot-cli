@@ -25,7 +25,11 @@ const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { writeConfig, updateAccountConfig } = require('@hubspot/cli-lib');
+const {
+  writeConfig,
+  updateAccountConfig,
+  getAccountConfig,
+} = require('@hubspot/cli-lib');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../../lib/regex');
@@ -107,6 +111,7 @@ exports.handler = async options => {
 
   const { name } = options;
   const accountId = getAccountId(options);
+  const accountConfig = getAccountConfig(accountId);
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   let namePrompt;
 
@@ -131,9 +136,6 @@ exports.handler = async options => {
           i18n(`${i18nKey}.success.create`, {
             name,
             sandboxHubId,
-          }),
-          i18n(`${i18nKey}.success.prePrompt`, {
-            name,
           })
         );
         return { name, sandboxHubId };
@@ -141,10 +143,16 @@ exports.handler = async options => {
     );
   } catch (err) {
     if (isMissingScopeError(err)) {
+      logger.error(
+        i18n(`${i18nKey}.failure.scopes.message`, {
+          accountName: accountConfig.name || accountId,
+        })
+      );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n(`${i18nKey}.failure.scopes`, {
+        i18n(`${i18nKey}.failure.scopes.instructions`, {
+          accountName: accountConfig.name || accountId,
           url,
         })
       );
