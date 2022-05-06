@@ -553,6 +553,7 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
+            enterAccountName: "Enter a unique name to reference your account: "
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
