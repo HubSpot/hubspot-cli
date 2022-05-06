@@ -29,6 +29,7 @@ const { writeConfig, updateAccountConfig } = require('@hubspot/cli-lib');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../../lib/regex');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -90,6 +91,7 @@ const personalAccessKeyFlow = async (env, accountId, name) => {
     i18n(`${i18nKey}.success.configFileUpdated`, {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
       authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+      account: validName,
     })
   );
 };
@@ -118,18 +120,37 @@ exports.handler = async options => {
       name: sandboxName,
     })
   );
-
-  const result = await createSandbox(accountId, sandboxName).then(
-    ({ name, sandboxHubId }) => {
-      logger.success(
-        i18n(`${i18nKey}.success.create`, {
-          name,
-          sandboxHubId,
-        })
+  let result;
+  try {
+    result = await createSandbox(accountId, sandboxName).then(
+      ({ name, sandboxHubId }) => {
+        logger.success(
+          i18n(`${i18nKey}.success.create`, {
+            name,
+            sandboxHubId,
+          })
+        );
+        return { name, sandboxHubId };
+      }
+    );
+  } catch (err) {
+    if (
+      err.error &&
+      err.error.category &&
+      err.error.category === 'MISSING_SCOPES'
+    ) {
+      const websiteOrigin = getHubSpotWebsiteOrigin(env);
+      const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+      logger.info(
+        `
+          Verify that the personal access key used has the Sandboxes scope by navigating to "${url}".
+          - If the scope is missing, deactivate the key and generate a new personal access key with Sandboxes permissions.
+          - To update the personal access key in the CLI, run "hs auth" and enter the new key.
+        `
       );
-      return { name, sandboxHubId };
     }
-  );
+    process.exit(EXIT_CODES.ERROR);
+  }
   try {
     await personalAccessKeyFlow(env, result.sandboxHubId, result.name);
     process.exit(EXIT_CODES.SUCCESS);

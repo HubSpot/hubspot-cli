@@ -565,7 +565,7 @@ en:
                 describe: "Name to use for created sandbox"
             success:
               create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
-              configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
+              configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:

@@ -13,7 +13,7 @@ async function createSandbox(accountId, name) {
     resp = await _createSandbox(accountId, name);
   } catch (err) {
     logger.error(err.error.message);
-    process.exit(1);
+    throw err;
   }
 
   return {
