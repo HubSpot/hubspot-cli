@@ -15,10 +15,13 @@ const i18nKey = 'cli.lib.prompts.personalAccessKeyPrompt';
  * Displays notification to user that we are about to open the browser,
  * then opens their browser to the personal-access-key shortlink
  */
-const personalAccessKeyPrompt = async ({ env } = {}) => {
+const personalAccessKeyPrompt = async ({ env, accountId } = {}) => {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
-  const url = `${websiteOrigin}/l/personal-access-key`;
+  let url = `${websiteOrigin}/l/personal-access-key`;
   if (process.env.BROWSER !== 'none') {
+    if (accountId) {
+      url = `${websiteOrigin}/personal-access-key/${accountId}`;
+    }
     await promptUser([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
     open(url, { url: true });
   }
