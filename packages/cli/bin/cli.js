@@ -58,24 +58,55 @@ const getTerminalWidth = () => {
   return width;
 };
 
+const handleFailure = (msg, err, yargs) => {
+  if (msg) {
+    logger.error(msg);
+  } else if (err) {
+    logErrorInstance(err);
+  }
+
+  if (msg === null) {
+    yargs.showHelp();
+    process.exit(EXIT_CODES.SUCCESS);
+  } else {
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
+const performChecks = argv => {
+  // "hs config set default-account" has moved to "hs accounts use"
+  if (
+    argv._[0] === 'config' &&
+    argv._[1] === 'set' &&
+    argv._[2] === 'default-account'
+  ) {
+    logger.error(i18n(`${i18nKey}.setDefaultAccountMoved`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Require "project" command when running upload/watch inside of a project
+  if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
+    if (getIsInProject(argv.src)) {
+      logger.error(
+        i18n(`${i18nKey}.srcIsProject`, {
+          src: argv.src || './',
+          command: argv._.join(' '),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    } else {
+      return true;
+    }
+  } else {
+    return true;
+  }
+};
+
 const argv = yargs
   .usage('Tools for working with HubSpot')
   .middleware([setLogLevel])
   .exitProcess(false)
-  .fail((msg, err, yargs) => {
-    if (msg) {
-      logger.error(msg);
-    } else if (err) {
-      logErrorInstance(err);
-    }
-
-    if (msg === null) {
-      yargs.showHelp();
-      process.exit(EXIT_CODES.SUCCESS);
-    } else {
-      process.exit(EXIT_CODES.ERROR);
-    }
-  })
+  .fail(handleFailure)
   .option('debug', {
     alias: 'd',
     default: false,
@@ -94,23 +125,7 @@ const argv = yargs
     hidden: true,
     type: 'boolean',
   })
-  .check(argv => {
-    if (argv._.length === 1 && ['upload', 'watch'].includes(argv._[0])) {
-      if (getIsInProject(argv.src)) {
-        logger.error(
-          i18n(`${i18nKey}.srcIsProject`, {
-            src: argv.src,
-            command: argv._.join(' '),
-          })
-        );
-        process.exit(EXIT_CODES.ERROR);
-      } else {
-        return true;
-      }
-    } else {
-      return true;
-    }
-  })
+  .check(performChecks)
   .command(authCommand)
   .command(initCommand)
   .command(logsCommand)

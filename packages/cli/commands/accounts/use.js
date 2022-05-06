@@ -33,7 +33,7 @@ const selectAccountFromConfig = async config => {
   return selectedDefault;
 };
 
-exports.command = 'use [account]';
+exports.command = 'use [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -68,14 +68,17 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('account', {
-    describe: i18n(`${i18nKey}.positionals.account.describe`),
+  yargs.option('account', {
+    describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
   yargs.example([
     ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
-    ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
-    ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
+    [
+      '$0 accounts use --account=MyAccount',
+      i18n(`${i18nKey}.examples.nameBased`),
+    ],
+    ['$0 accounts use --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;
