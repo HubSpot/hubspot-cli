@@ -128,7 +128,11 @@ exports.handler = async options => {
           i18n(`${i18nKey}.success.create`, {
             name,
             sandboxHubId,
-          })
+          }),
+          `
+
+The following step will prompt you to authenticate with sandbox "${name}" and add it to the CLI config.
+          `
         );
         return { name, sandboxHubId };
       }
