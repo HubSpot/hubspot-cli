@@ -66,13 +66,13 @@ const promptForAccountNameIfNotSet = async updatedConfig => {
   }
 };
 
-exports.command = 'auth [type]';
+exports.command = 'auth [type] [--account]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
 
 exports.handler = async options => {
-  const { type, config: configPath, qa } = options;
+  const { type, config: configPath, qa, account } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
@@ -121,7 +121,7 @@ exports.handler = async options => {
       });
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env });
+      configData = await personalAccessKeyPrompt({ env, account });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
@@ -170,6 +170,13 @@ exports.builder = yargs => {
     defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
       authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     }),
+  });
+
+  yargs.options({
+    account: {
+      describe: i18n(`${i18nKey}.options.account.describe`),
+      type: 'string',
+    },
   });
 
   addConfigOptions(yargs, true);
