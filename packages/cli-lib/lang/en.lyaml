@@ -49,6 +49,9 @@ en:
           type:
             describe: "Authentication mechanism"
             defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        options:
+          account:
+            describe: "HubSpot account to authenticate"
         success:
           configFileUpdated: "{{ configFilename }} updated with {{ authMethod }}."
       config:
@@ -332,6 +335,8 @@ en:
           auth:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          account:
+            describe: "HubSpot account to authenticate"
         success:
           configFileCreated: "The config file \"{{ configPath }}\" was created using \"{{ authType }}\" for account {{ account }}."
         info:
