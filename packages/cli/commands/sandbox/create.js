@@ -77,8 +77,8 @@ const promptForAccountNameIfNotSet = async (updatedConfig, name) => {
   }
 };
 
-const personalAccessKeyFlow = async (env, accountId, name) => {
-  const configData = await personalAccessKeyPrompt({ env, accountId });
+const personalAccessKeyFlow = async (env, account, name) => {
+  const configData = await personalAccessKeyPrompt({ env, account });
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
   if (!updatedConfig) {
