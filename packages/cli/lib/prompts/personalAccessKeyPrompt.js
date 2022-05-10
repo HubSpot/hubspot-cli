@@ -3,6 +3,7 @@ const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cli-lib/lib/constants');
+const { deleteEmptyConfigFile } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('../regex');
@@ -31,6 +32,7 @@ const personalAccessKeyPrompt = async ({ env } = {}) => {
     if (shouldOpen) {
       open(url, { url: true });
     } else {
+      deleteEmptyConfigFile();
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
