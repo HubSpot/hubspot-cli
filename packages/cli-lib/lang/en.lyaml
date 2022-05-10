@@ -3,6 +3,7 @@ en:
     commands:
       generalErrors:
         srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
+        setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       accounts:
         describe: "Commands for working with accounts."
         subcommands:
@@ -32,7 +33,7 @@ en:
               default: "Select a HubSpot account to use as the default account"
               idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
               nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
-            positionals:
+            options:
               account:
                 describe: "Account name or id to use as the default"
             promptMessage: "Select an account to use as the default"
@@ -50,6 +51,9 @@ en:
           type:
             describe: "Authentication mechanism"
             defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        options:
+          account:
+            describe: "HubSpot account to authenticate"
         success:
           setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
           configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
@@ -334,6 +338,8 @@ en:
           auth:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+          account:
+            describe: "HubSpot account to authenticate"
         success:
           configFileCreated: "Created config file \"{{ configPath }}\""
           configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -805,6 +811,12 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
+        uploadPrompt:
+          enterDest: "[--dest] Enter the destination path: "
+          enterSrc: "[--src] Enter the source path: "
+          errors:
+            srcRequired: "You must specify a source directory."
+            destRequired: "You must specify a destination directory."
         projectNamePrompt:
           enterName: "Name of project you want to open: "
           errors:

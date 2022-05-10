@@ -33,7 +33,7 @@ const selectOptions = async () => {
 };
 
 const handleConfigUpdate = async (accountId, options) => {
-  const { defaultMode, httpTimeout, allowUsageTracking } = options;
+  const { allowUsageTracking, defaultMode, httpTimeout } = options;
 
   if (typeof defaultMode !== 'undefined') {
     await setDefaultMode({ defaultMode, accountId });
@@ -88,6 +88,9 @@ exports.builder = yargs => {
     .conflicts('allowUsageTracking', 'httpTimeout');
 
   yargs.example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
+
+  //TODO remove this when "hs accounts use" is fully rolled out
+  yargs.strict(false);
 
   return yargs;
 };
