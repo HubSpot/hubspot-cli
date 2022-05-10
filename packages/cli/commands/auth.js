@@ -88,7 +88,6 @@ const promptToSetDefaultAccount = async accountName => {
 };
 
 exports.command = 'auth [type] [--account]';
-
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
@@ -182,6 +181,13 @@ exports.handler = async options => {
     logger.success(
       i18n(`${i18nKey}.success.setAsDefaultAccount`, {
         accountName,
+      })
+    );
+  } else {
+    const config = getConfig();
+    logger.info(
+      i18n(`${i18nKey}.success.keepingCurrentDefault`, {
+        accountName: config.defaultPortal,
       })
     );
   }

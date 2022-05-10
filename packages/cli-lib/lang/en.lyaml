@@ -56,6 +56,7 @@ en:
             describe: "HubSpot account to authenticate"
         success:
           setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
+          keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
           configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
       config:
         describe: "Commands for working with the config file."
@@ -701,7 +702,7 @@ en:
               command: "hs create"
               message: "Add new components to your project with {{ command }}"
             helpCommand:
-              command: "hs --help"
+              command: "hs help"
               message: "Run {{ command }} to see a list of available commands"
             projectDeployCommand:
               command: "hs project deploy"
@@ -750,7 +751,8 @@ en:
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
           personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
-          personalAccessKeyBrowserOpenPrep: "When you're ready, we'll open a secure page in your default browser where you can view and copy your personal access key, which you'll need to complete the next step."
+          personalAccessKeyBrowserOpenPrep: "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key."
+          personalAccessKeyBrowserOpenPrompt: "Open hubspot.com to copy your personal access key?"
           logs:
             openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:

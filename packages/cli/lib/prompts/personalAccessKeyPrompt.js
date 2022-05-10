@@ -117,7 +117,7 @@ const ACCOUNT_API_KEY = {
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   type: 'confirm',
-  message: 'Continue to open page and generate your personal access key?',
+  message: i18n(`${i18nKey}.personalAccessKeyBrowserOpenPrompt`),
 };
 
 const PERSONAL_ACCESS_KEY = {
