@@ -573,9 +573,9 @@ en:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
               scopes:
-                message: "The HubSpot CLI doesn’t have permission to create sandboxes under \"{{ accountName }}\"."
+                message: "The personal access key you provided doesn't include sandbox permissions."
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
-                  \n- Visit {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+                  \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
                   \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
       secrets:
         describe: "Manage HubSpot secrets."
