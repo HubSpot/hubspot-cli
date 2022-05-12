@@ -273,4 +273,5 @@ module.exports = {
   logApiErrorInstance,
   logApiUploadErrorInstance,
   logServerlessFunctionApiErrorInstance,
+  isMissingScopeError,
 };

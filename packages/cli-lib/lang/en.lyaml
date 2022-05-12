@@ -558,6 +558,7 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
+            enterAccountName: "Enter a unique name to reference your account: "
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
@@ -569,6 +570,13 @@ en:
                 describe: "Name to use for created sandbox"
             success:
               create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
+              configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+            failure:
+              scopes:
+                message: "The personal access key you provided doesn't include sandbox permissions."
+                instructions: "To update CLI permissions for \"{{ accountName }}\":
+                  \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+                  \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
