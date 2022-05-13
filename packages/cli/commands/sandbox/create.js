@@ -26,56 +26,24 @@ const {
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
+  getConfig,
   writeConfig,
   updateAccountConfig,
   getAccountConfig,
 } = require('@hubspot/cli-lib');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
-const { STRING_WITH_NO_SPACES_REGEX } = require('../../lib/regex');
+const {
+  enterAccountNamePrompt,
+} = require('../../lib/prompts/enterAccountNamePrompt');
+const {
+  setAsDefaultAccountPrompt,
+} = require('../../lib/prompts/setAsDefaultAccountPrompt');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { uiFeatureHighlight } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
-
-const promptForAccountNameIfNotSet = async (updatedConfig, name) => {
-  if (!updatedConfig.name) {
-    let promptAnswer;
-    let validName = null;
-    while (!validName) {
-      promptAnswer = await promptUser([
-        {
-          name: 'name',
-          message: i18n(`${i18nKey}.enterAccountName`),
-          validate(val) {
-            if (typeof val !== 'string') {
-              return i18n(`${i18nKey}.errors.invalidName`);
-            } else if (!val.length) {
-              return i18n(`${i18nKey}.errors.nameRequired`);
-            } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-              return i18n(`${i18nKey}.errors.spacesInName`);
-            }
-            return true;
-          },
-          default: name,
-        },
-      ]);
-
-      if (!accountNameExistsInConfig(promptAnswer.name)) {
-        validName = promptAnswer.name;
-      } else {
-        logger.log(
-          i18n(`${i18nKey}.errors.accountNameExists`, {
-            name: promptAnswer.name,
-          })
-        );
-      }
-    }
-    return validName;
-  }
-};
 
 const personalAccessKeyFlow = async (env, account, name) => {
   const configData = await personalAccessKeyPrompt({ env, account });
@@ -85,7 +53,16 @@ const personalAccessKeyFlow = async (env, account, name) => {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const validName = await promptForAccountNameIfNotSet(updatedConfig, name);
+  let validName = updatedConfig.name;
+
+  if (!updatedConfig.name) {
+    const nameForConfig = name
+      .toLowerCase()
+      .split(' ')
+      .join('-');
+    const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
+    validName = promptName;
+  }
 
   updateAccountConfig({
     ...updatedConfig,
@@ -94,6 +71,24 @@ const personalAccessKeyFlow = async (env, account, name) => {
     name: validName,
   });
   writeConfig();
+
+  const setAsDefault = await setAsDefaultAccountPrompt(validName);
+
+  logger.log('');
+  if (setAsDefault) {
+    logger.success(
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+        accountName: validName,
+      })
+    );
+  } else {
+    const config = getConfig();
+    logger.info(
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+        accountName: config.defaultPortal,
+      })
+    );
+  }
   logger.success(
     i18n(`${i18nKey}.success.configFileUpdated`, {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -101,6 +96,11 @@ const personalAccessKeyFlow = async (env, account, name) => {
       account: validName,
     })
   );
+  uiFeatureHighlight([
+    'accountsUseCommand',
+    'accountOption',
+    'accountsListCommand',
+  ]);
 };
 
 exports.command = 'create [name]';
@@ -132,6 +132,7 @@ exports.handler = async options => {
   try {
     result = await createSandbox(accountId, sandboxName).then(
       ({ name, sandboxHubId }) => {
+        logger.log('');
         logger.success(
           i18n(`${i18nKey}.success.create`, {
             name,

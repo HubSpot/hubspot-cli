@@ -103,7 +103,7 @@ const performChecks = argv => {
 };
 
 const argv = yargs
-  .usage('Tools for working with HubSpot')
+  .usage('The command line interface to interact with HubSpot.')
   .middleware([setLogLevel])
   .exitProcess(false)
   .fail(handleFailure)

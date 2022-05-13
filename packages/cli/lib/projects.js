@@ -326,26 +326,6 @@ const handleProjectUpload = async (
   archive.finalize();
 };
 
-const showProjectWelcomeMessage = () => {
-  logger.log('');
-  logger.log(chalk.bold('Welcome to HubSpot Developer Projects!'));
-  logger.log('\n');
-  uiLine();
-  logger.log('\n');
-  logger.log(chalk.bold("What's next?\n"));
-  logger.log('🎨 Add components to your project with `hs create`.\n');
-  logger.log(
-    `🏗  Run \`hs project upload\` to upload your files to HubSpot and trigger builds.\n`
-  );
-  logger.log(
-    `🚀 Ready to take your project live? Run \`hs project deploy\`.\n`
-  );
-  logger.log(
-    `🔗 Use \`hs project --help\` to learn more about available commands.\n`
-  );
-  uiLine();
-};
-
 const makePollTaskStatusFunc = ({
   statusFn,
   statusText,
@@ -521,7 +501,6 @@ module.exports = {
   handleProjectUpload,
   createProjectConfig,
   validateProjectConfig,
-  showProjectWelcomeMessage,
   getProjectDetailUrl,
   getProjectBuildDetailUrl,
   pollBuildStatus,

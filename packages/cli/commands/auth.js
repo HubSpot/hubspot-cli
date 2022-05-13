@@ -13,8 +13,8 @@ const {
 } = require('@hubspot/cli-lib/personalAccessKey');
 const {
   updateAccountConfig,
-  accountNameExistsInConfig,
   writeConfig,
+  getConfig,
   getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
@@ -23,8 +23,13 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   API_KEY_FLOW,
-  ACCOUNT_NAME,
 } = require('../lib/prompts/personalAccessKeyPrompt');
+const {
+  enterAccountNamePrompt,
+} = require('../lib/prompts/enterAccountNamePrompt');
+const {
+  setAsDefaultAccountPrompt,
+} = require('../lib/prompts/setAsDefaultAccountPrompt');
 const {
   addConfigOptions,
   setLogLevel,
@@ -34,6 +39,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { uiFeatureHighlight } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -44,27 +50,6 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
-
-const promptForAccountNameIfNotSet = async updatedConfig => {
-  if (!updatedConfig.name) {
-    let promptAnswer;
-    let validName = null;
-    while (!validName) {
-      promptAnswer = await promptUser([ACCOUNT_NAME]);
-
-      if (!accountNameExistsInConfig(promptAnswer.name)) {
-        validName = promptAnswer.name;
-      } else {
-        logger.log(
-          i18n(`${i18nKey}.errors.accountNameExists`, {
-            name: promptAnswer.name,
-          })
-        );
-      }
-    }
-    return validName;
-  }
-};
 
 exports.command = 'auth [type] [--account]';
 exports.describe = i18n(`${i18nKey}.describe`, {
@@ -92,11 +77,18 @@ exports.handler = async options => {
   let configData;
   let updatedConfig;
   let validName;
+  let successAuthMethod;
+
   switch (authType) {
     case API_KEY_AUTH_METHOD.value:
       configData = await promptUser(API_KEY_FLOW);
       updatedConfig = await updateAccountConfig(configData);
-      validName = await promptForAccountNameIfNotSet(updatedConfig);
+      validName = updatedConfig.name;
+
+      if (!validName) {
+        const { name: namePrompt } = await enterAccountNamePrompt();
+        validName = namePrompt;
+      }
 
       updateAccountConfig({
         ...updatedConfig,
@@ -105,13 +97,7 @@ exports.handler = async options => {
       });
       writeConfig();
 
-      logger.success(
-        i18n(`${i18nKey}.success.configFileUpdated`, {
-          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-          authMethod: API_KEY_AUTH_METHOD.name,
-        })
-      );
-
+      successAuthMethod = API_KEY_AUTH_METHOD.name;
       break;
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
@@ -119,16 +105,22 @@ exports.handler = async options => {
         ...configData,
         env,
       });
+      successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env, account });
       updatedConfig = await updateConfigWithPersonalAccessKey(configData);
 
       if (!updatedConfig) {
-        process.exit(EXIT_CODES.SUCCESS);
+        break;
       }
 
-      validName = await promptForAccountNameIfNotSet(updatedConfig);
+      validName = updatedConfig.name;
+
+      if (!validName) {
+        const { name: namePrompt } = await enterAccountNamePrompt();
+        validName = namePrompt;
+      }
 
       updateAccountConfig({
         ...updatedConfig,
@@ -138,12 +130,7 @@ exports.handler = async options => {
       });
       writeConfig();
 
-      logger.success(
-        i18n(`${i18nKey}.success.configFileUpdated`, {
-          configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-        })
-      );
+      successAuthMethod = PERSONAL_ACCESS_KEY_AUTH_METHOD.name;
       break;
     default:
       logger.error(
@@ -154,6 +141,43 @@ exports.handler = async options => {
       );
       break;
   }
+
+  if (!successAuthMethod) {
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const accountName = updatedConfig.name || validName;
+
+  const setAsDefault = await setAsDefaultAccountPrompt(accountName);
+
+  logger.log('');
+  if (setAsDefault) {
+    logger.success(
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+        accountName,
+      })
+    );
+  } else {
+    const config = getConfig();
+    logger.info(
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+        accountName: config.defaultPortal,
+      })
+    );
+  }
+  logger.success(
+    i18n(`${i18nKey}.success.configFileUpdated`, {
+      configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      authType: successAuthMethod,
+      accountName,
+    })
+  );
+  uiFeatureHighlight([
+    'accountsUseCommand',
+    'accountOption',
+    'accountsListCommand',
+  ]);
+
   process.exit(EXIT_CODES.SUCCESS);
 };
 

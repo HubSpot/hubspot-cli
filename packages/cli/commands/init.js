@@ -30,12 +30,15 @@ const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
   API_KEY_FLOW,
-  ACCOUNT_NAME,
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
+const {
+  enterAccountNamePrompt,
+} = require('../lib/prompts/enterAccountNamePrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { uiFeatureHighlight } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.init';
 
@@ -47,7 +50,7 @@ const TRACKING_STATUS = {
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
   const configData = await personalAccessKeyPrompt({ env, account });
-  const { name } = await promptUser([ACCOUNT_NAME]);
+  const { name } = await enterAccountNamePrompt();
   const accountConfig = {
     ...configData,
     name,
@@ -85,7 +88,13 @@ const CONFIG_CREATION_FLOWS = {
   [API_KEY_AUTH_METHOD.value]: apiKeyConfigCreationFlow,
 };
 
-exports.command = 'init [--auth] [--account]';
+const AUTH_TYPE_NAMES = {
+  [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+  [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
+  [API_KEY_AUTH_METHOD.value]: API_KEY_AUTH_METHOD.name,
+};
+
+exports.command = 'init [--account]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
@@ -110,7 +119,7 @@ exports.handler = async options => {
         configPath,
       })
     );
-    logger.info(i18n(`${i18nKey}.info.updateConfig`));
+    logger.info(i18n(`${i18nKey}.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -125,13 +134,19 @@ exports.handler = async options => {
     );
     const configPath = getConfigPath();
 
+    logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
         configPath,
-        authType,
+      })
+    );
+    logger.success(
+      i18n(`${i18nKey}.success.configFileUpdated`, {
+        authType: AUTH_TYPE_NAMES[authType],
         account: name || accountId,
       })
     );
+    uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
     trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
     process.exit(EXIT_CODES.SUCCESS);
