@@ -6,6 +6,7 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -27,6 +28,9 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const { project } = options;
+
+  trackCommandUsage('project-open', { project }, accountId);
+
   const { projectConfig } = await getProjectConfig();
 
   let projectName = project;
@@ -42,7 +46,7 @@ exports.handler = async options => {
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
-    const namePrompt = await projectNamePrompt(accountId, projectConfig);
+    const namePrompt = await projectNamePrompt(accountId);
 
     if (!namePrompt.projectName) {
       process.exit(EXIT_CODES.ERROR);

@@ -12,41 +12,44 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  getProjectConfig,
-  pollDeployStatus,
-  validateProjectConfig,
-} = require('../../lib/projects');
+const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'deploy [path]';
+exports.command = 'deploy [--project] [--buildId]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath, buildId } = options;
   const accountId = getAccountId(options);
+  const { project, buildId } = options;
 
-  trackCommandUsage('project-deploy', { projectPath }, accountId);
+  trackCommandUsage('project-deploy', { project }, accountId);
 
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  const { projectConfig } = await getProjectConfig();
 
-  validateProjectConfig(projectConfig, projectDir);
+  let projectName = project;
 
-  logger.debug(
-    i18n(`${i18nKey}.debug.deploying`, {
-      path: projectPath,
-    })
-  );
+  if (!projectName && projectConfig) {
+    projectName = projectConfig.name;
+  }
+
+  const namePrompt = await projectNamePrompt(accountId, {
+    project: projectName,
+  });
+
+  if (!projectName && namePrompt.projectName) {
+    projectName = namePrompt.projectName;
+  }
 
   let exitCode = EXIT_CODES.SUCCESS;
 
   const getBuildId = async () => {
-    const { latestBuild } = await fetchProject(accountId, projectConfig.name);
+    const { latestBuild } = await fetchProject(accountId, projectName);
     if (latestBuild && latestBuild.buildId) {
       return latestBuild.buildId;
     }
@@ -60,7 +63,7 @@ exports.handler = async options => {
 
     const deployResp = await deployProject(
       accountId,
-      projectConfig.name,
+      projectName,
       deployedBuildId
     );
 
@@ -76,7 +79,7 @@ exports.handler = async options => {
 
     await pollDeployStatus(
       accountId,
-      projectConfig.name,
+      projectName,
       deployResp.id,
       deployedBuildId
     );
@@ -84,7 +87,7 @@ exports.handler = async options => {
     if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectPath }));
+      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
     }
     exitCode = 1;
   }
@@ -92,20 +95,23 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
   yargs.options({
+    project: {
+      describe: i18n(`${i18nKey}.options.project.describe`),
+      type: 'string',
+    },
     buildId: {
       describe: i18n(`${i18nKey}.options.buildId.describe`),
       type: 'number',
     },
   });
 
+  yargs.example([['$0 project deploy', i18n(`${i18nKey}.examples.default`)]]);
   yargs.example([
-    ['$0 project deploy myProjectFolder', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 project deploy --project="my-project" --buildId=5',
+      i18n(`${i18nKey}.examples.withOptions`),
+    ],
   ]);
 
   addConfigOptions(yargs, true);
