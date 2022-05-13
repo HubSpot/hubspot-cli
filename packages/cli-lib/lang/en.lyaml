@@ -397,6 +397,8 @@ en:
         subcommands:
           create:
             describe: "Create a new project"
+            logs:
+              welcomeMessage: "Welcome to HubSpot Developer Projects!"
             examples:
               default: "Create a new project"
             options:
