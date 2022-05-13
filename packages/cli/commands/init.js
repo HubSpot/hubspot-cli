@@ -30,9 +30,11 @@ const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
   API_KEY_FLOW,
-  ACCOUNT_NAME,
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
+const {
+  enterAccountNamePrompt,
+} = require('../lib/prompts/enterAccountNamePrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -48,7 +50,7 @@ const TRACKING_STATUS = {
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
   const configData = await personalAccessKeyPrompt({ env, account });
-  const { name } = await promptUser([ACCOUNT_NAME]);
+  const { name } = await enterAccountNamePrompt();
   const accountConfig = {
     ...configData,
     name,

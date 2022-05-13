@@ -6,8 +6,9 @@ const {
 const { deleteEmptyConfigFile } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { API_KEY_REGEX, STRING_WITH_NO_SPACES_REGEX } = require('../regex');
+const { API_KEY_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
+const { accountNamePrompt } = require('./enterAccountNamePrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { uiInfoSection } = require('../ui');
 const { EXIT_CODES } = require('../enums/exitCodes');
@@ -88,21 +89,6 @@ const CLIENT_SECRET = {
   },
 };
 
-const ACCOUNT_NAME = {
-  name: 'name',
-  message: i18n(`${i18nKey}.enterAccountName`),
-  validate(val) {
-    if (typeof val !== 'string') {
-      return i18n(`${i18nKey}.errors.invalidName`);
-    } else if (!val.length) {
-      return i18n(`${i18nKey}.errors.nameRequired`);
-    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
-      return i18n(`${i18nKey}.errors.spacesInName`);
-    }
-    return true;
-  },
-};
-
 const ACCOUNT_API_KEY = {
   name: 'apiKey',
   message: i18n(`${i18nKey}.enterApiKey`),
@@ -149,8 +135,14 @@ const SCOPES = {
   choices: OAUTH_SCOPES,
 };
 
-const OAUTH_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, CLIENT_ID, CLIENT_SECRET, SCOPES];
-const API_KEY_FLOW = [ACCOUNT_NAME, ACCOUNT_ID, ACCOUNT_API_KEY];
+const OAUTH_FLOW = [
+  accountNamePrompt(),
+  ACCOUNT_ID,
+  CLIENT_ID,
+  CLIENT_SECRET,
+  SCOPES,
+];
+const API_KEY_FLOW = [accountNamePrompt(), ACCOUNT_ID, ACCOUNT_API_KEY];
 
 module.exports = {
   personalAccessKeyPrompt,
@@ -158,10 +150,8 @@ module.exports = {
   CLIENT_SECRET,
   ACCOUNT_API_KEY,
   ACCOUNT_ID,
-  ACCOUNT_NAME,
   SCOPES,
   PERSONAL_ACCESS_KEY,
-
   // Flows
   API_KEY_FLOW,
   OAUTH_FLOW,

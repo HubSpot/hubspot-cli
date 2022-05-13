@@ -13,11 +13,9 @@ const {
 } = require('@hubspot/cli-lib/personalAccessKey');
 const {
   updateAccountConfig,
-  accountNameExistsInConfig,
   writeConfig,
   getConfig,
   getConfigPath,
-  updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
@@ -25,8 +23,13 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
   API_KEY_FLOW,
-  ACCOUNT_NAME,
 } = require('../lib/prompts/personalAccessKeyPrompt');
+const {
+  enterAccountNamePrompt,
+} = require('../lib/prompts/enterAccountNamePrompt');
+const {
+  setAsDefaultAccountPrompt,
+} = require('../lib/prompts/setAsDefaultAccountPrompt');
 const {
   addConfigOptions,
   setLogLevel,
@@ -47,45 +50,6 @@ const ALLOWED_AUTH_METHODS = [
 const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
-
-const promptForAccountNameIfNotSet = async updatedConfig => {
-  if (!updatedConfig.name) {
-    let promptAnswer;
-    let validName = null;
-    while (!validName) {
-      promptAnswer = await promptUser([ACCOUNT_NAME]);
-
-      if (!accountNameExistsInConfig(promptAnswer.name)) {
-        validName = promptAnswer.name;
-      } else {
-        logger.log(
-          i18n(`${i18nKey}.errors.accountNameExists`, {
-            name: promptAnswer.name,
-          })
-        );
-      }
-    }
-    return validName;
-  }
-};
-
-const promptToSetDefaultAccount = async accountName => {
-  const config = getConfig();
-
-  const { setAsDefault } = await promptUser([
-    {
-      name: 'setAsDefault',
-      type: 'confirm',
-      when: config.defaultPortal !== accountName,
-      message: i18n(`${i18nKey}.logs.setAsDefaultAccountPrompt`),
-    },
-  ]);
-
-  if (setAsDefault) {
-    updateDefaultAccount(accountName);
-  }
-  return setAsDefault;
-};
 
 exports.command = 'auth [type] [--account]';
 exports.describe = i18n(`${i18nKey}.describe`, {
@@ -119,7 +83,12 @@ exports.handler = async options => {
     case API_KEY_AUTH_METHOD.value:
       configData = await promptUser(API_KEY_FLOW);
       updatedConfig = await updateAccountConfig(configData);
-      validName = await promptForAccountNameIfNotSet(updatedConfig);
+      validName = updatedConfig.name;
+
+      if (!validName) {
+        const { name: namePrompt } = await enterAccountNamePrompt();
+        validName = namePrompt;
+      }
 
       updateAccountConfig({
         ...updatedConfig,
@@ -146,7 +115,12 @@ exports.handler = async options => {
         break;
       }
 
-      validName = await promptForAccountNameIfNotSet(updatedConfig);
+      validName = updatedConfig.name;
+
+      if (!validName) {
+        const { name: namePrompt } = await enterAccountNamePrompt();
+        validName = namePrompt;
+      }
 
       updateAccountConfig({
         ...updatedConfig,
@@ -174,19 +148,19 @@ exports.handler = async options => {
 
   const accountName = updatedConfig.name || validName;
 
-  const setAsDefault = await promptToSetDefaultAccount(accountName);
+  const setAsDefault = await setAsDefaultAccountPrompt(accountName);
 
   logger.log('');
   if (setAsDefault) {
     logger.success(
-      i18n(`${i18nKey}.success.setAsDefaultAccount`, {
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
         accountName,
       })
     );
   } else {
     const config = getConfig();
     logger.info(
-      i18n(`${i18nKey}.success.keepingCurrentDefault`, {
+      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
         accountName: config.defaultPortal,
       })
     );

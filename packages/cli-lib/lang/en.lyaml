@@ -41,10 +41,7 @@ en:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
-        logs:
-          setAsDefaultAccountPrompt: "Set this account as the default?"
         errors:
-          accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
           unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
         positionals:
@@ -55,8 +52,6 @@ en:
           account:
             describe: "HubSpot account to authenticate"
         success:
-          setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
-          keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
           configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
       config:
         describe: "Commands for working with the config file."
@@ -563,7 +558,6 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
-            enterAccountName: "Enter a unique name to reference your account: "
             debug:
               creating: "Creating sandbox \"{{ name }}\""
             examples:
@@ -750,11 +744,21 @@ en:
           appName: "[--app] Select the app"
           functionName: "[--function] Enter the app function name:"
           endpointName: "[--endpoint] Enter the public endpoint path:"
+        setAsDefaultAccountPrompt:
+          setAsDefaultAccountMessage: "Set this account as the default?"
+          setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
+          keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
+        enterAccountNamePrompt:
+          enterAccountName: "Enter a unique name to reference this account in the CLI:"
+          errors:
+            invalidName: "You entered an invalid name. Please try again."
+            nameRequired: "The name may not be blank. Please try again."
+            spacesInName: "The name may not contain spaces. Please try again."
+            accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
           enterClientSecret: "Enter your OAuth2 client secret: "
-          enterAccountName: "Enter a unique name to reference this account in the CLI:"
           enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
@@ -766,7 +770,6 @@ en:
           errors:
             invalidAccountId: "You did not enter a valid account ID. Please try again."
             invalidAPIKey: "You did not enter a valid API key. Please try again"
-            invalidName: "You entered an invalid name. Please try again."
             invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
             invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
             invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
@@ -774,8 +777,6 @@ en:
             invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
             invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
             invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
-            nameRequired: "The name may not be blank. Please try again."
-            spacesInName: "The name may not contain spaces. Please try again."
         folderOverwritePrompt:
           overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
         createTemplatePrompt:
