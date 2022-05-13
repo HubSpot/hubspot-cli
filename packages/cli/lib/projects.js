@@ -213,7 +213,7 @@ const getProjectDetailUrl = (projectName, accountId) => {
   if (!projectName) return;
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
   return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
