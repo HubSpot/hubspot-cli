@@ -700,7 +700,14 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
       whoami:
+        accountId: "Account ID: {{ accountId }}"
         describe: "Print information about the current user and portal."
+        examples:
+          default: "Print information for the default account"
+          idBased: "Print information for the account with accountId equal to \"1234567\""
+          nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
+        name: "Account name: {{ name }}"
+        scopeGroups: "Scopes available:\n{{ scopeGroups }}"
     lib:
       ui:
         featureHighlight:
