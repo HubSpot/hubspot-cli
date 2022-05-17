@@ -22,7 +22,7 @@ exports.handler = async options => {
 
   const response = await getAccessToken(personalAccessKey, env, accountId);
 
-  let scopeGroups = response.scopeGroups.toString().replaceAll(',', '\n');
+  let scopeGroups = response.scopeGroups.join('\n');
 
   logger.log(i18n(`${i18nKey}.name`, { name }));
   logger.log(i18n(`${i18nKey}.accountId`, { accountId }));
