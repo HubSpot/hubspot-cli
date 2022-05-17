@@ -134,7 +134,7 @@ async function fetchAllPagedFiles(accountId, folderId, { includeArchived }) {
     });
 
     if (totalFiles === null) {
-      totalFiles = response.total;
+      totalFiles = response.total_count;
     }
 
     count += response.objects.length;
@@ -164,7 +164,11 @@ async function fetchFolderContents(accountId, folder, dest, options) {
       })
     );
   }
+
   const files = await fetchAllPagedFiles(accountId, folder.id, options);
+  logger.debug(
+    `Fetching ${files.length} files from remote folder: ${folder.name}`
+  );
   for (const file of files) {
     await downloadFile(accountId, file, dest, options);
   }

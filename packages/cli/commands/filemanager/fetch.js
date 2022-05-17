@@ -35,7 +35,7 @@ exports.handler = async options => {
   trackCommandUsage('filemanager-fetch', {}, accountId);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder(accountId, src, dest, options);
+  await downloadFileOrFolder(accountId, src, dest, options);
 };
 
 exports.builder = yargs => {
