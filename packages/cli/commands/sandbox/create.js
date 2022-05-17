@@ -157,6 +157,8 @@ exports.handler = async options => {
           url,
         })
       );
+    } else {
+      logger.error(err.error.message);
     }
     process.exit(EXIT_CODES.ERROR);
   }
