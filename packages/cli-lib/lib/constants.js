@@ -21,8 +21,9 @@ const ALLOWED_EXTENSIONS = new Set([
   'woff',
   'woff2',
   'graphql',
+  'hubl',
 ]);
-const HUBL_EXTENSIONS = new Set(['css', 'html', 'js']);
+const HUBL_EXTENSIONS = new Set(['css', 'html', 'js', 'hubl']);
 const MODULE_EXTENSION = 'module';
 const FUNCTIONS_EXTENSION = 'functions';
 
