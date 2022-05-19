@@ -17,10 +17,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   logger.log('');
-  logger.log(
-    `The CLI currently does not support deleting sandboxes.
-    \nTo delete a sandbox, go to your HubSpot portal and navigate to the Sandboxes accounts page to delete your sandbox.\n`
-  );
+  logger.log(i18n(`${i18nKey}.temporaryMessage`));
 };
 
 exports.builder = yargs => {
