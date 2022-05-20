@@ -578,6 +578,20 @@ en:
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
                   \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
                   \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
+          delete:
+            describe: "Delete a sandbox account"
+            examples:
+              default: "Deletes the sandbox account named MySandboxAccount."
+            success:
+              delete: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
+            failure:
+              delete: "Unable to delete sandbox account {{ account }}."
+            options:
+              account:
+                describe: "Account name or id to delete"
+            temporaryMessage: "The CLI currently does not support deleting sandboxes.
+              \n\nTo delete a sandbox, go to https://app.hubspot.com and navigate to the Sandboxes accounts page to delete your sandbox.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
