@@ -14,6 +14,7 @@ const {
 } = require('./lib/constants');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
+const { fetchHubData } = require('./api/hubs');
 
 const refreshRequests = new Map();
 
@@ -144,6 +145,18 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     return;
   }
   const { portalId, accessToken, expiresAt } = token;
+  console.log('token: ', token);
+
+  let hubInfo;
+  try {
+    console.log('FETCHING HUB DATA: ', portalId, env);
+    hubInfo = await fetchHubData(accessToken, portalId, env);
+  } catch (err) {
+    console.log('error: ', err.error);
+    logErrorInstance(err);
+    return;
+  }
+  console.log('HUB INFO: ', hubInfo);
 
   const updatedConfig = updateAccountConfig({
     portalId,
