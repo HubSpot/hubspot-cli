@@ -5,14 +5,14 @@ const {
   getAccountId,
   addAccountOptions,
   addConfigOptions,
-} = require('../lib/commonOpts');
-const { loadAndValidateOptions } = require('../lib/validation');
+} = require('../../lib/commonOpts');
+const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.commands.whoami';
+const i18nKey = 'cli.commands.accounts.subcommands.info';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-exports.command = 'whoami';
+exports.command = 'info [--account]';
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -34,9 +34,12 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
 
   yargs.example([
-    ['$0 whoami', i18n(`${i18nKey}.examples.default`)],
-    ['$0 whoami --account=MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
-    ['$0 accounts use --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
+    ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 accounts info --account=MyAccount',
+      i18n(`${i18nKey}.examples.nameBased`),
+    ],
+    ['$0 accounts info --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;
