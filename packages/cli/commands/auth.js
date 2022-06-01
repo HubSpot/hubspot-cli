@@ -3,7 +3,6 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cli-lib/lib/constants');
@@ -22,7 +21,6 @@ const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
-  API_KEY_FLOW,
 } = require('../lib/prompts/personalAccessKeyPrompt');
 const {
   enterAccountNamePrompt,
@@ -80,26 +78,6 @@ exports.handler = async options => {
   let successAuthMethod;
 
   switch (authType) {
-    case API_KEY_AUTH_METHOD.value:
-      logger.warn(i18n(`${i18nKey}.apiKeyDeprecationWarning`));
-      configData = await promptUser(API_KEY_FLOW);
-      updatedConfig = await updateAccountConfig(configData);
-      validName = updatedConfig.name;
-
-      if (!validName) {
-        const { name: namePrompt } = await enterAccountNamePrompt();
-        validName = namePrompt;
-      }
-
-      updateAccountConfig({
-        ...updatedConfig,
-        environment: updatedConfig.env,
-        name: validName,
-      });
-      writeConfig();
-
-      successAuthMethod = API_KEY_AUTH_METHOD.name;
-      break;
     case OAUTH_AUTH_METHOD.value:
       configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth({
@@ -189,7 +167,6 @@ exports.builder = yargs => {
     choices: [
       `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
       `${OAUTH_AUTH_METHOD.value}`,
-      `${API_KEY_AUTH_METHOD.value}`,
     ],
     default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {

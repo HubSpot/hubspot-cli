@@ -31,13 +31,6 @@ jest.mock('findup-sync', () => {
 const fsReadFileSyncSpy = jest.spyOn(fs, 'readFileSync');
 const fsWriteFileSyncSpy = jest.spyOn(fs, 'writeFileSync');
 
-const API_KEY_CONFIG = {
-  portalId: 1111,
-  name: 'API',
-  authType: 'apikey',
-  apiKey: 'secret',
-};
-
 const OAUTH2_CONFIG = {
   name: 'OAUTH2',
   portalId: 2222,
@@ -68,7 +61,7 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
   personalAccessKey: 'fakePersonalAccessKey',
 };
 
-const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
+const PORTALS = [OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
 
 const getAccountByAuthType = (config, authType) => {
   return config.portals.filter(portal => portal.authType === authType)[0];
@@ -444,44 +437,6 @@ describe('lib/config', () => {
 
       it('properly loads refresh token value', () => {
         expect(portalConfig.auth.tokenInfo.refreshToken).toEqual(refreshToken);
-      });
-    });
-
-    describe('apikey environment variable config', () => {
-      const { portalId, apiKey } = API_KEY_CONFIG;
-      let portalConfig;
-
-      beforeEach(() => {
-        process.env = {
-          HUBSPOT_PORTAL_ID: portalId,
-          HUBSPOT_API_KEY: apiKey,
-        };
-        getAndLoadConfigIfNeeded({ useEnv: true });
-        portalConfig = getAccountConfig(portalId);
-        fsReadFileSyncSpy.mockReset();
-      });
-
-      afterEach(() => {
-        // Clean up environment variable config so subsequent tests don't break
-        process.env = {};
-        setConfig(null);
-        getAndLoadConfigIfNeeded();
-      });
-
-      it('does not load a config from file', () => {
-        expect(fsReadFileSyncSpy).not.toHaveBeenCalled();
-      });
-
-      it('creates a portal config', () => {
-        expect(portalConfig).toBeTruthy();
-      });
-
-      it('properly loads portal id value', () => {
-        expect(portalConfig.portalId).toEqual(portalId);
-      });
-
-      it('properly loads api key value', () => {
-        expect(portalConfig.apiKey).toEqual(apiKey);
       });
     });
 

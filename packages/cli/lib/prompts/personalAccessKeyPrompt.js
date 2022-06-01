@@ -6,7 +6,6 @@ const {
 const { deleteEmptyConfigFile } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { API_KEY_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { accountNamePrompt } = require('./enterAccountNamePrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -89,17 +88,6 @@ const CLIENT_SECRET = {
   },
 };
 
-const ACCOUNT_API_KEY = {
-  name: 'apiKey',
-  message: i18n(`${i18nKey}.enterApiKey`),
-  validate(val) {
-    if (!API_KEY_REGEX.test(val)) {
-      return i18n(`${i18nKey}.errors.invalidAPIKey`);
-    }
-    return true;
-  },
-};
-
 const PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP = {
   name: 'personalAcessKeyBrowserOpenPrep',
   type: 'confirm',
@@ -142,17 +130,14 @@ const OAUTH_FLOW = [
   CLIENT_SECRET,
   SCOPES,
 ];
-const API_KEY_FLOW = [accountNamePrompt(), ACCOUNT_ID, ACCOUNT_API_KEY];
 
 module.exports = {
   personalAccessKeyPrompt,
   CLIENT_ID,
   CLIENT_SECRET,
-  ACCOUNT_API_KEY,
   ACCOUNT_ID,
   SCOPES,
   PERSONAL_ACCESS_KEY,
   // Flows
-  API_KEY_FLOW,
   OAUTH_FLOW,
 };

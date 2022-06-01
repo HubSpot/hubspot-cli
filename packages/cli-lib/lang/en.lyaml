@@ -41,7 +41,6 @@ en:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
-        apiKeydeprecationWarning: "API Key auth is deprecated and will be removed soon. We recommend using a Personal Access Key instead."
         errors:
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
           unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
@@ -331,7 +330,6 @@ en:
               fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
-        apiKeyDeprecationWarning: "API Key auth is deprecated and will be removed soon. We recommend using a Personal Access Key instead."
         options:
           auth:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
@@ -777,7 +775,6 @@ en:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
           enterClientSecret: "Enter your OAuth2 client secret: "
-          enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
           personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
@@ -787,7 +784,6 @@ en:
             openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:
             invalidAccountId: "You did not enter a valid account ID. Please try again."
-            invalidAPIKey: "You did not enter a valid API key. Please try again"
             invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
             invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
             invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
