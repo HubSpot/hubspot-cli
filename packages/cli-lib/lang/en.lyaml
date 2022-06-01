@@ -41,7 +41,7 @@ en:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
-        apiKeydeprecationWarning: "API Key auth is deprecated and will be removed soon. We suggest using a Personal Access Key instead."
+        apiKeydeprecationWarning: "API Key auth is deprecated and will be removed soon. We recommend using a Personal Access Key instead."
         errors:
           noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
           unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
@@ -331,7 +331,7 @@ en:
               fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
       init:
         describe: "Initialize {{ configName }} for a HubSpot account."
-        apiKeyDeprecationWarning: "API Key auth is deprecated and will be removed soon. We suggest using a Personal Access Key instead."
+        apiKeyDeprecationWarning: "API Key auth is deprecated and will be removed soon. We recommend using a Personal Access Key instead."
         options:
           auth:
             describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
