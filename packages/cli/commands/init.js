@@ -71,6 +71,7 @@ const oauthConfigCreationFlow = async env => {
 };
 
 const apiKeyConfigCreationFlow = async env => {
+  logger.warn(i18n(`${i18nKey}.apiKeyDeprecationWarning`));
   const configData = await promptUser(API_KEY_FLOW);
   const accountConfig = {
     ...configData,

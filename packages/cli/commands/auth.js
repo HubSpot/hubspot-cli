@@ -81,6 +81,7 @@ exports.handler = async options => {
 
   switch (authType) {
     case API_KEY_AUTH_METHOD.value:
+      logger.warn(i18n(`${i18nKey}.apiKeyDeprecationWarning`));
       configData = await promptUser(API_KEY_FLOW);
       updatedConfig = await updateAccountConfig(configData);
       validName = updatedConfig.name;
