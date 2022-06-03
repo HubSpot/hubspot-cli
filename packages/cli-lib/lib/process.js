@@ -27,6 +27,8 @@ const handleKeypress = callback => {
     process.stdin.setRawMode(true);
   }
 
+  process.stdin.removeAllListeners('keypress');
+
   process.stdin.on('keypress', (str, key) => {
     if (key) {
       callback(key);
