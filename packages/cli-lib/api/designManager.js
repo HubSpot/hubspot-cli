@@ -19,6 +19,17 @@ async function fetchMenus(accountId, query = {}) {
  * @param {number} accountId
  * @returns {Promise}
  */
+async function fetchThemes(accountId) {
+  return http.get(accountId, {
+    uri: `${DESIGN_MANAGER_API_PATH}/themes/combined`,
+  });
+}
+
+/**
+ * @async
+ * @param {number} accountId
+ * @returns {Promise}
+ */
 async function fetchBuiltinMapping(accountId) {
   return http.get(accountId, {
     uri: `${DESIGN_MANAGER_API_PATH}/widgets/builtin-mapping`,
@@ -35,4 +46,5 @@ module.exports = {
   fetchBuiltinMapping,
   fetchMenus,
   fetchRawAssetByPath,
+  fetchThemes,
 };

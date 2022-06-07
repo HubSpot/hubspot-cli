@@ -78,6 +78,16 @@ en:
                 describe: "Set the http timeout duration"
                 promptMessage: "Enter http timeout duration"
                 success: "The http timeout has been set to: {{ timeout }}"
+      cms:
+        subcommands:
+          lighthouseScore:
+            describe: "Score a theme using Google lighthouse."
+            promptMessage: "Select a theme"
+            examples:
+              default: "Get the lighthouse score for a theme"
+            options:
+              theme:
+                describe: "Path to the theme in the Design Manager"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
