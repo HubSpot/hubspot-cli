@@ -261,7 +261,7 @@ const loadConfig = (
     environmentVariableConfigLoaded = true;
     return;
   } else {
-    logger.debug(`Loaded config from ${path}`);
+    logger.debug(`Loading config from ${path}`);
     loadConfigFromFile(path, options);
     environmentVariableConfigLoaded = false;
   }
@@ -660,6 +660,7 @@ const loadConfigFromEnvironment = () => {
   } else if (apiKey) {
     return generateApiKeyConfig(portalId, apiKey, env);
   } else {
+    logger.error('Unable to load config from environment variables.');
     return;
   }
 };
