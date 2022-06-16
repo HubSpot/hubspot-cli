@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { getConfig, getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 const { getAccessToken } = require('@hubspot/cli-lib/personalAccessKey.js');
 const {
   getAccountId,
@@ -18,15 +18,24 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   let accountId = getAccountId(options);
-  const { name, personalAccessKey, env } = getAccountConfig(accountId);
 
-  const response = await getAccessToken(personalAccessKey, env, accountId);
+  // check if the provided account is using a personal access key, if not, show an error
+  const config = getConfig();
+  const portal = config.portals.find(portal => portal.portalId === accountId);
 
-  let scopeGroups = response.scopeGroups.join('\n');
+  if (portal.authType === 'personalaccesskey') {
+    const { name, personalAccessKey, env } = getAccountConfig(accountId);
 
-  logger.log(i18n(`${i18nKey}.name`, { name }));
-  logger.log(i18n(`${i18nKey}.accountId`, { accountId }));
-  logger.log(i18n(`${i18nKey}.scopeGroups`, { scopeGroups }));
+    const response = await getAccessToken(personalAccessKey, env, accountId);
+
+    let scopeGroups = response.scopeGroups.join('\n');
+
+    logger.log(i18n(`${i18nKey}.name`, { name }));
+    logger.log(i18n(`${i18nKey}.accountId`, { accountId }));
+    logger.log(i18n(`${i18nKey}.scopeGroups`, { scopeGroups }));
+  } else {
+    logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
+  }
 };
 
 exports.builder = yargs => {
