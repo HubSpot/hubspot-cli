@@ -1,13 +1,13 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
 const { ENVIRONMENTS } = require('../lib/constants');
-const HUBS_API_PATH = 'hubs2/v1/info/hub';
+const HUBS_API_PATH = 'sandbox-hubs/v1/self';
 
 async function fetchHubData(accessToken, portalId, env = ENVIRONMENTS.PROD) {
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `${HUBS_API_PATH}/${portalId}`,
+      uri: `${HUBS_API_PATH}`,
       qs: { portalId },
     }
   );
@@ -18,7 +18,6 @@ async function fetchHubData(accessToken, portalId, env = ENVIRONMENTS.PROD) {
       Authorization: `Bearer ${accessToken}`,
     },
   };
-  console.log('req with token: ', reqWithToken);
 
   return request.get(reqWithToken);
 }

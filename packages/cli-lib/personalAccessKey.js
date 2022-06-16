@@ -145,18 +145,30 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     return;
   }
   const { portalId, accessToken, expiresAt } = token;
-  console.log('token: ', token);
 
   let hubInfo;
   try {
-    console.log('FETCHING HUB DATA: ', portalId, env);
-    hubInfo = await fetchHubData(accessToken, portalId, env);
+    hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
   } catch (err) {
-    console.log('error: ', err.error);
     logErrorInstance(err);
-    return;
+    // Don't throw here
   }
-  console.log('HUB INFO: ', hubInfo);
+  console.log('hub info: ', hubInfo);
+  /*
+    sandboxHubId: string
+    parentHubId: string
+    type: 'DEVELOPER' || null [where null is standard sandbox]
+  */
+  let sandboxType = null;
+  let parentHubId = null;
+  if (hubInfo) {
+    if (hubInfo.type !== undefined) {
+      sandboxType = hubInfo.type === null ? 'STANDARD' : hubInfo.type;
+    }
+    if (hubInfo.parentHubId) {
+      parentHubId = hubInfo.parentHubId;
+    }
+  }
 
   const updatedConfig = updateAccountConfig({
     portalId,
@@ -165,6 +177,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     environment: getValidEnv(accountEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
+    sandboxType,
+    parentHubId,
   });
   writeConfig();
 
