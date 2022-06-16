@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfig, getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 const { getAccessToken } = require('@hubspot/cli-lib/personalAccessKey.js');
 const {
   getAccountId,
@@ -18,13 +18,11 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   let accountId = getAccountId(options);
+  const config = getAccountConfig(accountId);
 
   // check if the provided account is using a personal access key, if not, show an error
-  const config = getConfig();
-  const portal = config.portals.find(portal => portal.portalId === accountId);
-
-  if (portal.authType === 'personalaccesskey') {
-    const { name, personalAccessKey, env } = getAccountConfig(accountId);
+  if (config.authType === 'personalaccesskey') {
+    const { name, personalAccessKey, env } = config;
 
     const response = await getAccessToken(personalAccessKey, env, accountId);
 
