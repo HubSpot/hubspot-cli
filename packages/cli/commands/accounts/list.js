@@ -19,6 +19,49 @@ const i18nKey = 'cli.commands.accounts.subcommands.list';
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
 
+const sortAndMapPortals = portals => {
+  const mappedPortalData = {};
+  portals
+    .sort((a, b) => {
+      if (a.sandboxType === null && b.sandboxType !== null) {
+        return -1;
+      }
+      if (a.sandboxType !== null && b.sandboxType === null) {
+        return 1;
+      }
+      return 0;
+    })
+    .forEach(portal => {
+      if (portal.sandboxType === null) {
+        mappedPortalData[portal.portalId] = [portal];
+      } else if (portal.sandboxType && portal.parentHubId) {
+        mappedPortalData[portal.parentHubId] = [
+          ...(mappedPortalData[portal.parentHubId] || []),
+          portal,
+        ];
+      }
+    });
+  return mappedPortalData;
+};
+
+const getPortalData = mappedPortalData => {
+  const portalData = [];
+  Object.values(mappedPortalData).forEach(set => {
+    set.forEach((portal, i) => {
+      if (i === 0) {
+        portalData.push([portal.name, portal.portalId, portal.authType]);
+      } else {
+        portalData.push([
+          `↳ ${portal.name} [sandbox]`,
+          portal.portalId,
+          portal.authType,
+        ]);
+      }
+    });
+  });
+  return portalData;
+};
+
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
@@ -28,9 +71,8 @@ exports.handler = async options => {
 
   const config = getConfig();
   const configPath = getConfigPath();
-  const portalData = config.portals.map(portal => {
-    return [portal.name, portal.portalId, portal.authType];
-  });
+  const mappedPortalData = sortAndMapPortals(config.portals);
+  const portalData = getPortalData(mappedPortalData);
   portalData.unshift(
     getTableHeader([
       i18n(`${i18nKey}.labels.name`),

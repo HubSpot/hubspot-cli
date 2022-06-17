@@ -150,15 +150,9 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   try {
     hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
   } catch (err) {
-    logErrorInstance(err);
-    // Don't throw here
+    // Ignore error, returns 404 if account is not a sandbox
   }
-  console.log('hub info: ', hubInfo);
-  /*
-    sandboxHubId: string
-    parentHubId: string
-    type: 'DEVELOPER' || null [where null is standard sandbox]
-  */
+
   let sandboxType = null;
   let parentHubId = null;
   if (hubInfo) {
