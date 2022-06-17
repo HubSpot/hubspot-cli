@@ -1,6 +1,8 @@
+const fs = require('fs');
 const path = require('path');
+const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
-
+const { fieldsArrayToJson } = require('./handleFieldsJs');
 const { logger } = require('../logger');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
@@ -41,7 +43,24 @@ function getFilesByType(files) {
 
     const moduleFolder = parts.find(part => part.endsWith('.module'));
     if (moduleFolder) {
-      moduleFiles.push(file);
+      const fileName = parts[parts.length - 1];
+      if (
+        fileName === 'fields.js' &&
+        !moduleFiles.includes(path.dirname(file) + '/fields.json')
+      ) {
+        let fields = require(file)(yargs.argv.options);
+        let finalPath = path.dirname(file) + '/fields.json';
+        fs.writeFileSync(finalPath, fieldsArrayToJson(fields));
+        moduleFiles.push(finalPath);
+      } else {
+        if (getExt(file) == 'json') {
+          if (file === 'fields.json') {
+            moduleFiles.push(file);
+          }
+        } else {
+          moduleFiles.push(file);
+        }
+      }
     } else if (extension === 'js' || extension === 'css') {
       cssAndJsFiles.push(file);
     } else if (extension === 'html') {
@@ -52,7 +71,6 @@ function getFilesByType(files) {
       otherFiles.push(file);
     }
   });
-
   return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles];
 }
 /**

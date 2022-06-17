@@ -671,6 +671,8 @@ en:
             describe: "Path to the local file, relative to your current working directory."
           dest:
             describe: "Path in HubSpot Design Tools, can be a net new path."
+          options:
+            describe: "Options to pass to fields.js"
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         success:
           fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
