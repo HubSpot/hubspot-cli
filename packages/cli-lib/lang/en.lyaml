@@ -666,6 +666,10 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
+          fileConversionFailed: "Converting \"{{ src }}\" to \"{{dest }}\" failed"
+          jsonPartiaNotFound: "Partial \"{{ partial }}\" not found in \"{{ src }}\""
+          jsonParsingFailed: "There was an error parsing JSON file \"{{ json }}\""
+          jsSyntaxError: "There was an error processing JS file \"{{ js }}\""
         positionals:
           src:
             describe: "Path to the local file, relative to your current working directory."
@@ -678,6 +682,7 @@ en:
           fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+        converting: "Converting \"{{ src }}\" to \"{{ dest }}\"."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
