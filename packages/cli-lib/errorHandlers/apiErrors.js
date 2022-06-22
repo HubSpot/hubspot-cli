@@ -14,6 +14,7 @@ const {
 const isApiStatusCodeError = err =>
   err.name === 'StatusCodeError' ||
   (err.statusCode >= 100 && err.statusCode < 600);
+
 const isApiUploadValidationError = err =>
   !!(
     err.statusCode === 400 &&
@@ -21,10 +22,12 @@ const isApiUploadValidationError = err =>
     err.response.body &&
     (err.response.body.message || err.response.body.errors)
   );
+
 const isMissingScopeError = err =>
   err.name === 'StatusCodeError' &&
   err.statusCode === 403 &&
   err.error.category === 'MISSING_SCOPES';
+
 const contactSupportString =
   'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 

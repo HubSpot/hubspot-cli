@@ -82,12 +82,16 @@ en:
         subcommands:
           lighthouseScore:
             describe: "Score a theme using Google lighthouse."
-            promptMessage: "Select a theme"
+            promptMessage: "Select a theme to score"
             examples:
-              default: "Get the lighthouse score for a theme"
+              default: "Get the lighthouse score for the my-theme theme"
             options:
               theme:
                 describe: "Path to the theme in the Design Manager"
+              target:
+                describe: "Medium to test against"
+              detailed:
+                describe: "View a detailed output of the lighthouse sores"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
