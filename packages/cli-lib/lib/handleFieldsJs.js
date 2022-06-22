@@ -40,6 +40,7 @@ function convertFieldsJs(file, options) {
 }
 
 function fieldToJson(field) {
+  // If the object has a toJson function, then run it and return the output.
   if (typeof field['toJSON'] === 'function') {
     return field.toJSON();
   }
@@ -47,7 +48,6 @@ function fieldToJson(field) {
 }
 
 function loadJson(file) {
-  // We would do validation etc. here, but for now just load the file
   let json = JSON.parse(fs.readFileSync(path.resolve(file)));
   return json;
 }
@@ -61,6 +61,7 @@ function loadPartial(file, partial) {
     throw e;
   }
   if (partial in json) {
+    console.log(json[partial]);
     return json[partial];
   } else {
     logger.error(
@@ -69,15 +70,18 @@ function loadPartial(file, partial) {
         src: file,
       })
     );
+    // Just move on if no partial is found.
+    return {};
   }
-  return {};
 }
 
 function fieldsArrayToJson(fields) {
   //Transform fields array to JSON
-  fields = fields.flat(Infinity).map(field => fieldToJson(field));
-
-  return JSON.stringify(fields);
+  if (Array.isArray(fields)) {
+    fields = fields.flat(Infinity).map(field => fieldToJson(field));
+    return JSON.stringify(fields);
+  }
+  //Not an array... bad
 }
 
 module.exports = {

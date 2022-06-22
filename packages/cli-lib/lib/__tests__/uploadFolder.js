@@ -55,5 +55,11 @@ describe('uploadFolder', () => {
         });
       });
     });
+
+    it('converts fields.js files to field.json', () => {});
+
+    it('does not upload field.json files from module folder if a field.js is present', () => {});
+
+    it('does not upload any json files inside of module folder besides fields.json and meta.json', () => {});
   });
 });

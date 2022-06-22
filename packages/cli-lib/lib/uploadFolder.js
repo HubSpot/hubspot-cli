@@ -62,9 +62,13 @@ function getFilesByType(files) {
         }
       } else {
         if (getExt(file) == 'json') {
-          // Don't push any JSON files that are in the modules folder besides fields.
+          // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
+          if (fileName == 'meta.json') {
+            moduleFiles.push(file);
+          }
+
           if (fileName === 'fields.json') {
-            // IF the folder contains a fields.js, then do not push the fields.json - we will push our own.
+            // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
             const dir = fs
               .readdirSync(path.dirname(file), { withFileTypes: true })
               .filter(item => !item.isDirectory())
