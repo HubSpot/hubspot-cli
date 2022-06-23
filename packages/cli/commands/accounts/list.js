@@ -34,9 +34,9 @@ const sortAndMapPortals = portals => {
     .forEach(portal => {
       if (portal.sandboxType === null) {
         mappedPortalData[portal.portalId] = [portal];
-      } else if (portal.sandboxType && portal.parentHubId) {
-        mappedPortalData[portal.parentHubId] = [
-          ...(mappedPortalData[portal.parentHubId] || []),
+      } else if (portal.sandboxType && portal.parentAccountId) {
+        mappedPortalData[portal.parentAccountId] = [
+          ...(mappedPortalData[portal.parentAccountId] || []),
           portal,
         ];
       }

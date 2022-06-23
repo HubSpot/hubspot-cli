@@ -154,13 +154,13 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   }
 
   let sandboxType = null;
-  let parentHubId = null;
+  let parentAccountId = null;
   if (hubInfo) {
     if (hubInfo.type !== undefined) {
       sandboxType = hubInfo.type === null ? 'STANDARD' : hubInfo.type;
     }
     if (hubInfo.parentHubId) {
-      parentHubId = hubInfo.parentHubId;
+      parentAccountId = hubInfo.parentHubId;
     }
   }
 
@@ -172,7 +172,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
     sandboxType,
-    parentHubId,
+    parentAccountId,
   });
   writeConfig();
 
