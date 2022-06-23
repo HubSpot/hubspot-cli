@@ -30,6 +30,24 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.cms.subcommands.lighthouseScore';
 
+const DEFAULT_TABLE_HEADER = [
+  'Accessibility',
+  'Best practices',
+  'Performace',
+  'PWA',
+  'SEO',
+];
+
+const PLACEHOLDER_TABLE_DATA = [
+  '../about.html',
+  93,
+  93,
+  83,
+  21,
+  59,
+  'https://googlechrome.github.io/lighthouse/viewer/?psiurl=https%3A%2F%2Fwww.hubspot.com%2F&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&category=pwa&utm_source=lh-chrome-ext',
+];
+
 exports.command = 'lighthouse-score [--theme]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
@@ -53,6 +71,14 @@ exports.handler = async options => {
 
   let themeToCheck = options.theme;
   let availableThemes;
+
+  // Validate options
+  // TODO are there any other option combinations that we want to validate?
+  if (options.detailed) {
+    if (!options.target) {
+      logger.error('[--target] is required for detailed view');
+    }
+  }
 
   try {
     const result = await fetchThemes(accountId);
@@ -106,13 +132,17 @@ exports.handler = async options => {
     });
 
     while (!scoringCompleted) {
-      const status = await getLighthouseScoreStatus(accountId, {
+      const scoreStatus = await getLighthouseScoreStatus(accountId, {
         themeId: themeToCheck,
       });
-      logger.log('Request status', status);
-      scoringCompleted = true;
+      logger.log('Request status', scoreStatus);
+      if (scoreStatus.status === 'COMPLETED') {
+        scoringCompleted = true;
+      } else if (scoreStatus.status === 'FAILED') {
+        logger.log('Lighthouse scoring failed: ', scoreStatus);
+        break;
+      }
     }
-
     spinnies.remove('lighthouseScore');
   } catch (err) {
     logger.error('error getting status: ', err.statusCode);
@@ -120,56 +150,76 @@ exports.handler = async options => {
   }
 
   // Fetch the scoring results
+  let scoreResult;
   try {
     const isDesktop = options.target === 'desktop';
     const params = {
       isAverage: !options.detailed,
       desktopId: isDesktop ? requestResult.desktopId : null,
       mobileId: isDesktop ? null : requestResult.mobileId,
-      emulatedFormFactor: options.target.toUpperCase(),
+      emulatedFormFactor: options.target ? options.target.toUpperCase() : null,
+      onlyLinks: options.linksOnly,
     };
-    const scoreResult = await getLighthouseScoreAverage(accountId, params);
+    scoreResult = await getLighthouseScoreAverage(accountId, params);
     logger.log(scoreResult);
   } catch (err) {
     logger.error('error getting final score: ', err.statusCode);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log('Page Template Scores for: ', themeToCheck);
-  logger.log();
+  // TODO handle linksOnly output and also errors
 
-  const logsInfo1 = [
-    '../about.html',
-    93,
-    93,
-    83,
-    21,
-    59,
-    'https://googlechrome.github.io/lighthouse/viewer/?psiurl=https%3A%2F%2Fwww.hubspot.com%2F&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&category=pwa&utm_source=lh-chrome-ext',
-  ];
+  if (options.detailed) {
+    logger.log(`${themeToCheck} theme ${options.target} scores`);
+    const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
-  const tableHeader = getTableHeader([
-    'Template',
-    'Accessibility',
-    'Best practices',
-    'Performace',
-    'PWA',
-    'SEO',
-    'Lighthouse link',
-  ]);
+    // TODO create a row for the average (using whichever target was specified) and replace placeholder data
 
+    logger.log(
+      getTableContents([tableHeader, PLACEHOLDER_TABLE_DATA], {
+        border: { bodyLeft: '  ' },
+      })
+    );
+    logger.log('Page template scores');
+    const table2Header = getTableHeader([
+      'Template path',
+      ...DEFAULT_TABLE_HEADER,
+    ]);
+
+    // TODO create rows for individual template scores and replace placeholder data
+
+    logger.log(
+      getTableContents([table2Header, PLACEHOLDER_TABLE_DATA], {
+        border: { bodyLeft: '  ' },
+      })
+    );
+
+    logger.log(`Note: Scores are being shown for ${options.target} only.`);
+  } else {
+    logger.log(`Theme: ${themeToCheck} `);
+    const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
+
+    // TODO create rows for desktop score + mobile score and replace placeholder data
+
+    logger.log(
+      getTableContents([tableHeader, PLACEHOLDER_TABLE_DATA], {
+        border: { bodyLeft: '  ' },
+      })
+    );
+
+    logger.log(
+      'Note: Theme scores are averages of all theme templates. Use "hs cms lighthouse-score-detail" for template scores.'
+    );
+  }
+
+  // TODO fix the link
   logger.log(
-    getTableContents([tableHeader, logsInfo1], {
-      border: { bodyLeft: '  ' },
-    })
-  );
-  logger.log();
-  logger.log(
-    `See ${uiLink(
+    `Powered by ${uiLink(
       'Google Lighthouse',
       'https://www.webpagetest.org/lighthouse'
-    )} for template scoring methodology.`
+    )}.`
   );
+
   process.exit();
 };
 
@@ -182,12 +232,18 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.target.describe`),
     type: 'string',
     choices: ['desktop', 'mobile'],
-    default: 'desktop',
   });
   yargs.option('detailed', {
     describe: i18n(`${i18nKey}.options.detailed.describe`),
     boolean: true,
+    default: false,
   });
+  yargs.option('linksOnly', {
+    describe: i18n(`${i18nKey}.options.linksOnly.describe`),
+    boolean: true,
+    default: false,
+  });
+  yargs.conflicts('detailed', 'target');
   yargs.example([
     [
       '$0 cms lighthouse-score --theme=my-theme',
