@@ -186,4 +186,5 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 module.exports = {
   accessTokenForPersonalAccessKey,
   updateConfigWithPersonalAccessKey,
+  getAccessToken,
 };
