@@ -65,10 +65,9 @@ The priority is Local Test Overrides > CLI Arg Overrides > Environment Variables
 
 
 ### Running Locally
+
 1. Run `lerna bootstrap` to install dependencies
 2. Run `yarn test-cli`
-
-
 
 ## Why Jasmine
 
