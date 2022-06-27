@@ -31,6 +31,7 @@ function handleFieldErrors(e, file) {
  * @returns {string} The path of the written fields.json file.
  */
 function convertFieldsJs(file, options) {
+  // If no options are provided, yargs will pass [''].
   let fields = require(file)(options);
   let finalPath = path.dirname(file) + '/fields.json';
 

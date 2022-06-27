@@ -1,6 +1,6 @@
 const { uploadFolder } = require('../uploadFolder');
 const { upload } = require('../../api/fileMapper');
-const { walk } = require('../walk');
+const { walk, listFilesInDir } = require('../walk');
 const { createIgnoreFilter } = require('../../ignoreRules');
 
 jest.mock('../walk');
@@ -24,6 +24,7 @@ describe('uploadFolder', () => {
         'folder/templates/page.html',
       ];
 
+      listFilesInDir.mockReturnValue(['fields.json']);
       walk.mockResolvedValue(files);
       upload.mockImplementation(() => Promise.resolve());
       createIgnoreFilter.mockImplementation(() => () => true);
@@ -58,7 +59,9 @@ describe('uploadFolder', () => {
 
     it('converts fields.js files to field.json', () => {});
 
-    it('does not upload field.json files from module folder if a field.js is present', () => {});
+    it('does not upload field.json files from module folder if a field.js is present in module folder', () => {});
+
+    it('does not upload root fields.json if a fields.js is present in root', () => {});
 
     it('does not upload any json files inside of module folder besides fields.json and meta.json', () => {});
   });

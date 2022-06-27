@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
@@ -7,7 +6,7 @@ const { logger } = require('../logger');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
-const { walk } = require('./walk');
+const { walk, listFilesInDir } = require('./walk');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.upload';
 const escapeRegExp = require('./escapeRegExp');
@@ -32,20 +31,21 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function getFilesByType(files) {
+function getFilesByType(files, src) {
   const moduleFiles = [];
   const cssAndJsFiles = [];
   const otherFiles = [];
   const templateFiles = [];
   const jsonFiles = [];
 
+  const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
+
   files.forEach(file => {
     const parts = splitLocalPath(file);
     const extension = getExt(file);
-
     const moduleFolder = parts.find(part => part.endsWith('.module'));
+    const fileName = parts[parts.length - 1];
     if (moduleFolder) {
-      const fileName = parts[parts.length - 1];
       //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
         try {
@@ -69,10 +69,7 @@ function getFilesByType(files) {
 
           if (fileName === 'fields.json') {
             // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
-            const dir = fs
-              .readdirSync(path.dirname(file), { withFileTypes: true })
-              .filter(item => !item.isDirectory())
-              .map(item => item.name);
+            const dir = listFilesInDir(path.dirname(file));
             if (!dir.includes('fields.js')) {
               moduleFiles.push(file);
             }
@@ -82,11 +79,39 @@ function getFilesByType(files) {
         }
       }
     } else if (extension === 'js' || extension === 'css') {
+      if (fileName === 'fields.js') {
+        const regex = new RegExp(`^${escapeRegExp(src)}`);
+        const relativePath = file.replace(regex, '');
+        console.log('The file is here:', file);
+        if (relativePath == '/fields.js') {
+          //There is a fields.js in the root
+          try {
+            logger.info(
+              i18n(`${i18nKey}.converting`, {
+                src: '/fields.js',
+                dest: '/fields.json',
+              })
+            );
+            jsonFiles.push(convertFieldsJs(file, yargs.argv.options));
+          } catch (e) {
+            handleFieldErrors(e, file);
+            throw e;
+          }
+        }
+      }
+
       cssAndJsFiles.push(file);
     } else if (extension === 'html') {
       templateFiles.push(file);
     } else if (extension === 'json') {
-      jsonFiles.push(file);
+      if (fileName == 'fields.json') {
+        // Only add a fields.json if there is not a fields.js.
+        if (!fieldsJsInRoot) {
+          jsonFiles.push(file);
+        }
+      } else {
+        jsonFiles.push(file);
+      }
     } else {
       otherFiles.push(file);
     }
@@ -103,7 +128,6 @@ function getFilesByType(files) {
 async function uploadFolder(accountId, src, dest, options) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const files = await walk(src);
-
   const allowedFiles = files
     .filter(file => {
       if (!isAllowedExtension(file)) {
@@ -113,7 +137,7 @@ async function uploadFolder(accountId, src, dest, options) {
     })
     .filter(createIgnoreFilter());
 
-  const filesByType = getFilesByType(allowedFiles);
+  const filesByType = getFilesByType(allowedFiles, src);
   const apiOptions = getFileMapperQueryValues(options);
 
   const failures = [];
