@@ -4,6 +4,22 @@ const { logger } = require('../logger');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt } = require('../path');
 const i18nKey = 'cli.commands.upload';
+const { getCwd } = require('@hubspot/cli-lib/path');
+const fileResolver = {
+  apply: (target, thisArg, args) => {
+    let filePath = args.shift();
+
+    // Get the path to the folder containing the fields.js file through a stack trace so we can resolve relative paths.
+    const line = new Error().stack.split('\n')[2];
+    const callerPath = line.slice(
+      line.lastIndexOf('(') + 1,
+      line.lastIndexOf('/') + 1
+    );
+    const absoluteSrcPath = path.resolve(getCwd(), callerPath, filePath);
+    console.log(args);
+    return target(absoluteSrcPath, ...args);
+  },
+};
 
 function handleFieldErrors(e, file) {
   if (e instanceof SyntaxError) {
@@ -30,11 +46,10 @@ function handleFieldErrors(e, file) {
  * @param {string[]} options - Optional arguments to pass to the exported function in fields.js
  * @returns {string} The path of the written fields.json file.
  */
-function convertFieldsJs(file, options) {
+function convertFieldsJs(filePath, options) {
   // If no options are provided, yargs will pass [''].
-  let fields = require(file)(options);
-  let finalPath = path.dirname(file) + '/fields.json';
-
+  let fields = require(filePath)(options);
+  let finalPath = path.dirname(filePath) + '/fields.json';
   let json = fieldsArrayToJson(fields);
   fs.writeFileSync(finalPath, json);
   return finalPath;
@@ -48,27 +63,27 @@ function fieldToJson(field) {
   return field;
 }
 
-function loadJson(file) {
-  let json = JSON.parse(fs.readFileSync(path.resolve(file)));
+function jsonLoader(filePath) {
+  const file = fs.readFileSync(filePath);
+  let json = JSON.parse(file);
   return json;
 }
 
-function loadPartial(file, partial) {
+function partialLoader(filePath, partial) {
   let json = {};
   try {
-    json = JSON.parse(fs.readFileSync(file));
+    json = JSON.parse(fs.readFileSync(filePath));
   } catch (e) {
-    handleFieldErrors(e, file);
+    handleFieldErrors(e, filePath);
     throw e;
   }
   if (partial in json) {
-    console.log(json[partial]);
     return json[partial];
   } else {
     logger.error(
       i18n(`${i18nKey}.errors.jsonPartiaNotFound`, {
         partial: partial,
-        src: file,
+        src: filePath,
       })
     );
     // Just move on if no partial is found.
@@ -84,6 +99,9 @@ function fieldsArrayToJson(fields) {
   }
   //Not an array... bad
 }
+
+const loadJson = new Proxy(jsonLoader, fileResolver);
+const loadPartial = new Proxy(partialLoader, fileResolver);
 
 module.exports = {
   fieldsArrayToJson,

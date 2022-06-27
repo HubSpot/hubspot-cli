@@ -45,6 +45,7 @@ function getFilesByType(files, src) {
     const extension = getExt(file);
     const moduleFolder = parts.find(part => part.endsWith('.module'));
     const fileName = parts[parts.length - 1];
+    const options = yargs.argv.options;
     if (moduleFolder) {
       //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
@@ -55,7 +56,7 @@ function getFilesByType(files, src) {
               dest: moduleFolder + '/fields.json',
             })
           );
-          moduleFiles.push(convertFieldsJs(file, yargs.argv.options));
+          moduleFiles.push(convertFieldsJs(file, options));
         } catch (e) {
           handleFieldErrors(e, file);
           throw e;
@@ -82,7 +83,6 @@ function getFilesByType(files, src) {
       if (fileName === 'fields.js') {
         const regex = new RegExp(`^${escapeRegExp(src)}`);
         const relativePath = file.replace(regex, '');
-        console.log('The file is here:', file);
         if (relativePath == '/fields.js') {
           //There is a fields.js in the root
           try {
@@ -92,7 +92,7 @@ function getFilesByType(files, src) {
                 dest: '/fields.json',
               })
             );
-            jsonFiles.push(convertFieldsJs(file, yargs.argv.options));
+            jsonFiles.push(convertFieldsJs(file, options));
           } catch (e) {
             handleFieldErrors(e, file);
             throw e;
