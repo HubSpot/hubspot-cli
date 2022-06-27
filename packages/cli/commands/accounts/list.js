@@ -32,13 +32,15 @@ const sortAndMapPortals = portals => {
       return 0;
     })
     .forEach(portal => {
-      if (portal.sandboxType === null) {
+      if (portal.sandboxType !== undefined && portal.sandboxType === null) {
         mappedPortalData[portal.portalId] = [portal];
       } else if (portal.sandboxType && portal.parentAccountId) {
         mappedPortalData[portal.parentAccountId] = [
           ...(mappedPortalData[portal.parentAccountId] || []),
           portal,
         ];
+      } else {
+        mappedPortalData[portal.portalId] = [portal];
       }
     });
   return mappedPortalData;
