@@ -21,7 +21,7 @@ To setup these tests, first [create an app](https://developers.hubspot.com/docs/
 
 Next, in the navigation bar, click "Testing", and then "Create app test account". Then, paste the OAuth URL you copied earlier into your browser,  choose your newly created test account, and click "Connect App".
 
-Now, navigate back to the "Testing" page, and click your test account. Take note of the Portal ID in the URL (`https://app.hubspot.com/dashboard-library/PORTAL_ID`). Then [navigate to the following page and generate a personal access key](https://app.hubspot.com/portal-recommend/l?slug=personal-access-key) that is associated with your test account.
+Now, navigate back to the "Testing" page, and click your test account. Take note of the Account ID in the URL (`https://app.hubspot.com/dashboard-library/ACCOUNT_ID`). Then [navigate to the following page and generate a personal access key](https://app.hubspot.com/portal-recommend/l?slug=personal-access-key) that is associated with your test account.
 
 You know have all the information required to create a `.env` file in the [Configuration](./README.md#configuration) section.
 
@@ -35,7 +35,7 @@ There are four ways to pass in necessary configuration to the script.
 1. Creating a `.env` file in `acceptance-tests` folder. Note that each variable must be on a new line - you may need to bypass the formatter of your IDE for this.
 
 ```bash
-PORTAL_ID="9289088"
+ACCOUNT_ID="9289088"
 CLI_PATH="hs"
 PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 CLIENT_ID="123a4b56-****-****-****-************"
@@ -46,7 +46,7 @@ CLIENT_SECRET="ab12345c-****-****-****-************"
 
 ```bash
 
-export PORTAL_ID="9289088"
+export ACCOUNT_ID="9289088"
 export CLI_PATH="hs"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 export CLIENT_ID="123a4b56-****-****-****-************"
@@ -56,7 +56,7 @@ export CLIENT_SECRET="ab12345c-****-****-****-************"
 3. Through arguments on the `run-tests` script
 
 ```bash
-run-tests --portalId=9289088 --cliPath=hs --personalAccessKey="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX" --clientId="123a4b56-****-****-****-************" --clientSecret="ab12345c-****-****-****-************"
+run-tests --accountId=9289088 --cliPath=hs --personalAccessKey="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX" --clientId="123a4b56-****-****-****-************" --clientSecret="ab12345c-****-****-****-************"
 ```
 
 4. If you need to override any environment variables at a test variable, you can do that via the `setLocalTestOverrides` function available in `env.js`
