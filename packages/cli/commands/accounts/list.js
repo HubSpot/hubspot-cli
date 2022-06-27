@@ -23,18 +23,21 @@ const sortAndMapPortals = portals => {
   const mappedPortalData = {};
   portals
     .sort((a, b) => {
-      if (a.sandboxType === null && b.sandboxType !== null) {
+      if (a.sandboxAccountType === null && b.sandboxAccountType !== null) {
         return -1;
       }
-      if (a.sandboxType !== null && b.sandboxType === null) {
+      if (a.sandboxAccountType !== null && b.sandboxAccountType === null) {
         return 1;
       }
       return 0;
     })
     .forEach(portal => {
-      if (portal.sandboxType !== undefined && portal.sandboxType === null) {
+      if (
+        portal.sandboxAccountType !== undefined &&
+        portal.sandboxAccountType === null
+      ) {
         mappedPortalData[portal.portalId] = [portal];
-      } else if (portal.sandboxType && portal.parentAccountId) {
+      } else if (portal.sandboxAccountType && portal.parentAccountId) {
         mappedPortalData[portal.parentAccountId] = [
           ...(mappedPortalData[portal.parentAccountId] || []),
           portal,

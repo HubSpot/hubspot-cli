@@ -153,11 +153,11 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     // Ignore error, returns 404 if account is not a sandbox
   }
 
-  let sandboxType = null;
+  let sandboxAccountType = null;
   let parentAccountId = null;
   if (hubInfo) {
     if (hubInfo.type !== undefined) {
-      sandboxType = hubInfo.type === null ? 'STANDARD' : hubInfo.type;
+      sandboxAccountType = hubInfo.type === null ? 'STANDARD' : hubInfo.type;
     }
     if (hubInfo.parentHubId) {
       parentAccountId = hubInfo.parentHubId;
@@ -171,7 +171,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     environment: getValidEnv(accountEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
-    sandboxType,
+    sandboxAccountType,
     parentAccountId,
   });
   writeConfig();

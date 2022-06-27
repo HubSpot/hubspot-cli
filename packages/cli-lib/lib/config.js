@@ -375,7 +375,7 @@ const updateAccountConfig = configOptions => {
     name,
     apiKey,
     personalAccessKey,
-    sandboxType,
+    sandboxAccountType,
     parentAccountId,
   } = configOptions;
 
@@ -411,7 +411,7 @@ const updateAccountConfig = configOptions => {
     apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
     personalAccessKey,
-    sandboxType,
+    sandboxAccountType,
     parentAccountId,
   };
 
