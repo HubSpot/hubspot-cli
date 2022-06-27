@@ -95,6 +95,7 @@ exports.handler = async options => {
     logger.log('Failed to fetch available themes');
   }
 
+  themeToCheck = options.theme;
   if (themeToCheck) {
     // Still attempt to run the scoring if the theme request fails
     const isValidTheme =
@@ -117,9 +118,11 @@ exports.handler = async options => {
       themePath: themeToCheck,
     });
   } catch (err) {
-    logger.error('failed to request lighthouse score: ', err.statusCode);
+    logger.error('failed to request lighthouse score: ', err);
     process.exit(EXIT_CODES.ERROR);
   }
+
+  // TODO: Should we write desktopId and mobileId to local storage, for the --detail option
 
   // Poll till scoring is finished
   try {
@@ -132,16 +135,31 @@ exports.handler = async options => {
     });
 
     while (!scoringCompleted) {
-      const scoreStatus = await getLighthouseScoreStatus(accountId, {
-        themeId: themeToCheck,
+      const desktopScoreStatus = await getLighthouseScoreStatus(accountId, {
+        themeId: requestResult.desktopId,
       });
-      logger.log('Request status', scoreStatus);
-      if (scoreStatus.status === 'COMPLETED') {
+      const mobileScoreStatus = await getLighthouseScoreStatus(accountId, {
+        themeId: requestResult.mobileId,
+      });
+      logger.log('Request statuses: ', desktopScoreStatus, mobileScoreStatus);
+      if (
+        desktopScoreStatus.status === 'COMPLETED' &&
+        mobileScoreStatus.status === 'COMPLETED'
+      ) {
         scoringCompleted = true;
-      } else if (scoreStatus.status === 'FAILED') {
-        logger.log('Lighthouse scoring failed: ', scoreStatus);
+      } else if (
+        desktopScoreStatus.status !== 'REQUESTED' &&
+        mobileScoreStatus.status !== 'REQUESTED'
+      ) {
+        logger.log(
+          'Lighthouse scoring failed: ',
+          desktopScoreStatus,
+          mobileScoreStatus
+        );
         break;
       }
+
+      // TODO: We can sleep here for like 2 seconds
     }
     spinnies.remove('lighthouseScore');
   } catch (err) {
