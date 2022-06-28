@@ -31,21 +31,9 @@ async function getLighthouseScoreStatus(accountId, query = {}) {
  * @param {number} accountId
  * @returns {Promise}
  */
-async function getLighthouseScoreAverage(accountId, query = {}) {
+async function getLighthouseScore(accountId, query = {}) {
   return http.get(accountId, {
     uri: `${LIGHTHOUSE_SCORE_API_BASE}/scores`,
-    query,
-  });
-}
-
-/**
- * @async
- * @param {number} accountId
- * @returns {Promise}
- */
-async function getLighthouseScoreDetailed(accountId, query = {}) {
-  return http.get(accountId, {
-    uri: `${LIGHTHOUSE_SCORE_API_BASE}/detailed-scores`,
     query,
   });
 }
@@ -53,6 +41,5 @@ async function getLighthouseScoreDetailed(accountId, query = {}) {
 module.exports = {
   requestLighthouseScore,
   getLighthouseScoreStatus,
-  getLighthouseScoreAverage,
-  getLighthouseScoreDetailed,
+  getLighthouseScore,
 };

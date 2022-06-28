@@ -18,8 +18,7 @@ const { fetchThemes } = require('@hubspot/cli-lib/api/designManager');
 const {
   requestLighthouseScore,
   getLighthouseScoreStatus,
-  getLighthouseScoreAverage,
-  //getLighthouseScoreDetailed,
+  getLighthouseScore,
 } = require('@hubspot/cli-lib/api/lighthouseScore');
 const {
   HUBSPOT_FOLDER,
@@ -36,16 +35,6 @@ const DEFAULT_TABLE_HEADER = [
   'Performace',
   'PWA',
   'SEO',
-];
-
-const PLACEHOLDER_TABLE_DATA = [
-  '../about.html',
-  93,
-  93,
-  83,
-  21,
-  59,
-  'https://googlechrome.github.io/lighthouse/viewer/?psiurl=https%3A%2F%2Fwww.hubspot.com%2F&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo&category=pwa&utm_source=lh-chrome-ext',
 ];
 
 exports.command = 'lighthouse-score [--theme]';
@@ -73,12 +62,18 @@ exports.handler = async options => {
   let availableThemes;
 
   // Validate options
-  // TODO are there any other option combinations that we want to validate?
   if (options.detailed) {
     if (!options.target) {
       logger.error('[--target] is required for detailed view');
+      process.exit(EXIT_CODES.ERROR);
     }
+  } else if (options.target) {
+    logger.error('[--target] can only be used for detailed view');
+    process.exit(EXIT_CODES.ERROR);
   }
+
+  const includeDesktopScore = options.target === 'desktop' || !options.detailed;
+  const includeMobileScore = options.target === 'mobile' || !options.detailed;
 
   try {
     const result = await fetchThemes(accountId);
@@ -108,6 +103,7 @@ exports.handler = async options => {
     }
   } else {
     themeToCheck = await selectTheme(availableThemes);
+    logger.log();
   }
 
   let requestResult;
@@ -122,64 +118,78 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  // TODO: Should we write desktopId and mobileId to local storage, for the --detail option
+  if (!requestResult.mobileId || !requestResult.desktopId) {
+    logger.log(
+      'Failed to request lighthouse score. No desktopId or mobileId to poll'
+    );
+  }
 
   // Poll till scoring is finished
   try {
-    let scoringCompleted = false;
-
     const spinnies = new Spinnies();
 
     spinnies.add('lighthouseScore', {
       text: `Generating lighthouse score for ${themeToCheck}`,
     });
 
-    while (!scoringCompleted) {
-      const desktopScoreStatus = await getLighthouseScoreStatus(accountId, {
-        themeId: requestResult.desktopId,
-      });
-      const mobileScoreStatus = await getLighthouseScoreStatus(accountId, {
-        themeId: requestResult.mobileId,
-      });
-      logger.log('Request statuses: ', desktopScoreStatus, mobileScoreStatus);
-      if (
-        desktopScoreStatus.status === 'COMPLETED' &&
-        mobileScoreStatus.status === 'COMPLETED'
-      ) {
-        scoringCompleted = true;
-      } else if (
-        desktopScoreStatus.status !== 'REQUESTED' &&
-        mobileScoreStatus.status !== 'REQUESTED'
-      ) {
-        logger.log(
-          'Lighthouse scoring failed: ',
-          desktopScoreStatus,
-          mobileScoreStatus
-        );
-        break;
-      }
+    const checkScoreStatus = async () => {
+      const desktopScoreStatus = includeDesktopScore
+        ? await getLighthouseScoreStatus(accountId, {
+            themeId: requestResult.desktopId,
+          })
+        : 'COMPLETED';
+      const mobileScoreStatus = includeMobileScore
+        ? await getLighthouseScoreStatus(accountId, {
+            themeId: requestResult.mobileId,
+          })
+        : 'COMPLETED';
 
-      // TODO: We can sleep here for like 2 seconds
-    }
+      if (
+        desktopScoreStatus === 'REQUESTED' ||
+        mobileScoreStatus === 'REQUESTED'
+      ) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await checkScoreStatus();
+      }
+    };
+
+    await checkScoreStatus();
+
     spinnies.remove('lighthouseScore');
   } catch (err) {
-    logger.error('error getting status: ', err.statusCode);
+    logger.error('error getting status: ', err);
     process.exit(EXIT_CODES.ERROR);
   }
 
   // Fetch the scoring results
-  let scoreResult;
+  let desktopScoreResult;
+  let mobileScoreResult;
+  let detailedViewAverageScoreResult;
   try {
-    const isDesktop = options.target === 'desktop';
     const params = {
       isAverage: !options.detailed,
-      desktopId: isDesktop ? requestResult.desktopId : null,
-      mobileId: isDesktop ? null : requestResult.mobileId,
-      emulatedFormFactor: options.target ? options.target.toUpperCase() : null,
       onlyLinks: options.linksOnly,
     };
-    scoreResult = await getLighthouseScoreAverage(accountId, params);
-    logger.log(scoreResult);
+    desktopScoreResult = includeDesktopScore
+      ? await getLighthouseScore(accountId, {
+          ...params,
+          desktopId: requestResult.desktopId,
+        })
+      : {};
+    mobileScoreResult = includeMobileScore
+      ? await getLighthouseScore(accountId, {
+          ...params,
+          mobileId: requestResult.mobileId,
+        })
+      : {};
+    detailedViewAverageScoreResult = options.detailed
+      ? await getLighthouseScore(accountId, {
+          ...params,
+          isAverage: true,
+          desktopId: includeDesktopScore ? requestResult.desktopId : null,
+          mobileId: includeMobileScore ? requestResult.mobileId : null,
+        })
+      : {};
   } catch (err) {
     logger.error('error getting final score: ', err.statusCode);
     process.exit(EXIT_CODES.ERROR);
@@ -188,13 +198,20 @@ exports.handler = async options => {
   // TODO handle linksOnly output and also errors
 
   if (options.detailed) {
-    logger.log(`${themeToCheck} theme ${options.target} scores`);
+    logger.log(`${themeToCheck} ${options.target} scores`);
     const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
-    // TODO create a row for the average (using whichever target was specified) and replace placeholder data
+    const scores = detailedViewAverageScoreResult.scores[''] || {};
+    const averageTableData = [
+      scores.accessibilityScore,
+      scores.bestPracticesScore,
+      scores.performanceScore,
+      scores.pwaScore,
+      scores.seoScore,
+    ];
 
     logger.log(
-      getTableContents([tableHeader, PLACEHOLDER_TABLE_DATA], {
+      getTableContents([tableHeader, averageTableData], {
         border: { bodyLeft: '  ' },
       })
     );
@@ -204,10 +221,24 @@ exports.handler = async options => {
       ...DEFAULT_TABLE_HEADER,
     ]);
 
-    // TODO create rows for individual template scores and replace placeholder data
+    const scoreResult =
+      options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+    const templateTableData = Object.keys(scoreResult.scores).map(
+      lighthouseLink => {
+        const templateScore = scoreResult.scores[lighthouseLink];
+        return [
+          '/templatePath',
+          templateScore.accessibilityScore,
+          templateScore.bestPracticesScore,
+          templateScore.performanceScore,
+          templateScore.pwaScore,
+          templateScore.seoScore,
+        ];
+      }
+    );
 
     logger.log(
-      getTableContents([table2Header, PLACEHOLDER_TABLE_DATA], {
+      getTableContents([table2Header, ...templateTableData], {
         border: { bodyLeft: '  ' },
       })
     );
@@ -217,10 +248,25 @@ exports.handler = async options => {
     logger.log(`Theme: ${themeToCheck} `);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
-    // TODO create rows for desktop score + mobile score and replace placeholder data
+    const getTableData = (target, scoreResult) => {
+      const scores = scoreResult.scores[''] || {};
+      return [
+        target,
+        scores.accessibilityScore,
+        scores.bestPracticesScore,
+        scores.performanceScore,
+        scores.pwaScore,
+        scores.seoScore,
+      ];
+    };
+
+    const tableData = [
+      getTableData('desktop', desktopScoreResult),
+      getTableData('mobile', mobileScoreResult),
+    ];
 
     logger.log(
-      getTableContents([tableHeader, PLACEHOLDER_TABLE_DATA], {
+      getTableContents([tableHeader, ...tableData], {
         border: { bodyLeft: '  ' },
       })
     );
@@ -230,11 +276,11 @@ exports.handler = async options => {
     );
   }
 
-  // TODO fix the link
+  logger.log();
   logger.log(
     `Powered by ${uiLink(
       'Google Lighthouse',
-      'https://www.webpagetest.org/lighthouse'
+      'https://developer.chrome.com/docs/lighthouse/overview/'
     )}.`
   );
 
@@ -261,7 +307,6 @@ exports.builder = yargs => {
     boolean: true,
     default: false,
   });
-  yargs.conflicts('detailed', 'target');
   yargs.example([
     [
       '$0 cms lighthouse-score --theme=my-theme',
