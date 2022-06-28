@@ -37,17 +37,40 @@ const DEFAULT_TABLE_HEADER = [
   'SEO',
 ];
 
+// TODO this is temporary until the BE returns template path in the response
+const parseLighthouseLinkForTemplatePath = lighthouseLink => {
+  const TEMPLATE_PATH_REGEX = /&template_file_path=([^&]*)/;
+  const matches = lighthouseLink.match(TEMPLATE_PATH_REGEX);
+  return matches[1];
+};
+
 exports.command = 'lighthouse-score [--theme]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-const selectTheme = async availableThemes => {
+const selectTheme = async accountId => {
   const { theme: selectedTheme } = await promptUser([
     {
       type: 'list',
       look: false,
       name: 'theme',
-      message: i18n(`${i18nKey}.promptMessage`),
-      choices: availableThemes,
+      message: i18n(`${i18nKey}.info.promptMessage`),
+      choices: async () => {
+        try {
+          const result = await fetchThemes(accountId);
+          if (result && result.objects) {
+            return result.objects
+              .map(({ theme }) => theme.path)
+              .filter(
+                themePath =>
+                  !themePath.startsWith(HUBSPOT_FOLDER) &&
+                  !themePath.startsWith(MARKETPLACE_FOLDER)
+              );
+          }
+        } catch (err) {
+          logger.error(i18n(`${i18nKey}.errors.failedToFetchThemes`));
+          process.exit(EXIT_CODES.ERROR);
+        }
+      },
     },
   ]);
 
@@ -58,70 +81,61 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
   const accountId = getAccountId(options);
 
-  let themeToCheck = options.theme;
-  let availableThemes;
-
   // Validate options
   if (options.detailed) {
     if (!options.target) {
-      logger.error('[--target] is required for detailed view');
+      logger.error(i18n(`${i18nKey}.errors.targetOptonRequired`));
       process.exit(EXIT_CODES.ERROR);
     }
-  } else if (options.target) {
-    logger.error('[--target] can only be used for detailed view');
-    process.exit(EXIT_CODES.ERROR);
+  } else {
+    if (options.target) {
+      logger.error(i18n(`${i18nKey}.errors.invalidTargetOption`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+    if (options.linksOnly) {
+      logger.error(i18n(`${i18nKey}.errors.invalidLinksOnlyOption`));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
   const includeDesktopScore = options.target === 'desktop' || !options.detailed;
   const includeMobileScore = options.target === 'mobile' || !options.detailed;
+  let themeToCheck = options.theme;
 
-  try {
-    const result = await fetchThemes(accountId);
-    if (result && result.objects) {
-      availableThemes = result.objects
-        .map(({ theme }) => theme.path)
-        .filter(
-          themePath =>
-            !themePath.startsWith(HUBSPOT_FOLDER) &&
-            !themePath.startsWith(MARKETPLACE_FOLDER)
-        );
-    }
-  } catch (err) {
-    logger.log('Failed to fetch available themes');
-  }
-
-  themeToCheck = options.theme;
   if (themeToCheck) {
-    // Still attempt to run the scoring if the theme request fails
-    const isValidTheme =
-      !availableThemes || availableThemes.includes(themeToCheck);
+    let isValidTheme = true;
+    try {
+      const result = await fetchThemes(accountId, {
+        name: encodeURIComponent(themeToCheck),
+      });
+      isValidTheme = result && result.total;
+    } catch (err) {
+      isValidTheme = false;
+    }
     if (!isValidTheme) {
       logger.error(
-        `Theme "${themeToCheck}" not found. Please rerun using a valid theme path.`
+        i18n(`${i18nKey}.errors.themeNotFound`, { theme: themeToCheck })
       );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    themeToCheck = await selectTheme(availableThemes);
+    themeToCheck = await selectTheme(accountId);
     logger.log();
   }
 
-  let requestResult;
-
   // Kick off the scoring
+  let requestResult;
   try {
     requestResult = await requestLighthouseScore(accountId, {
       themePath: themeToCheck,
     });
   } catch (err) {
-    logger.error('failed to request lighthouse score: ', err);
-    process.exit(EXIT_CODES.ERROR);
+    logger.debug(err);
   }
 
-  if (!requestResult.mobileId || !requestResult.desktopId) {
-    logger.log(
-      'Failed to request lighthouse score. No desktopId or mobileId to poll'
-    );
+  if (!requestResult || !requestResult.mobileId || !requestResult.desktopId) {
+    logger.error(i18n(`${i18nKey}.errors.failedToGetLighthouseScore`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   // Poll till scoring is finished
@@ -129,7 +143,7 @@ exports.handler = async options => {
     const spinnies = new Spinnies();
 
     spinnies.add('lighthouseScore', {
-      text: `Generating lighthouse score for ${themeToCheck}`,
+      text: i18n(`${i18nKey}.info.generatingScore`, { theme: themeToCheck }),
     });
 
     const checkScoreStatus = async () => {
@@ -157,7 +171,7 @@ exports.handler = async options => {
 
     spinnies.remove('lighthouseScore');
   } catch (err) {
-    logger.error('error getting status: ', err);
+    logger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -182,6 +196,7 @@ exports.handler = async options => {
           mobileId: requestResult.mobileId,
         })
       : {};
+    // This is needed to show the average scores above the detailed output
     detailedViewAverageScoreResult = options.detailed
       ? await getLighthouseScore(accountId, {
           ...params,
@@ -195,57 +210,74 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  // TODO handle linksOnly output and also errors
-
   if (options.detailed) {
-    logger.log(`${themeToCheck} ${options.target} scores`);
-    const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
+    if (options.linksOnly) {
+      logger.log('Page template score links:');
 
-    const scores = detailedViewAverageScoreResult.scores[''] || {};
-    const averageTableData = [
-      scores.accessibilityScore,
-      scores.bestPracticesScore,
-      scores.performanceScore,
-      scores.pwaScore,
-      scores.seoScore,
-    ];
+      const scoreResult =
+        options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
 
-    logger.log(
-      getTableContents([tableHeader, averageTableData], {
-        border: { bodyLeft: '  ' },
-      })
-    );
-    logger.log('Page template scores');
-    const table2Header = getTableHeader([
-      'Template path',
-      ...DEFAULT_TABLE_HEADER,
-    ]);
+      Object.keys(scoreResult.scores).forEach(lighthouseLink => {
+        logger.log(
+          uiLink(
+            parseLighthouseLinkForTemplatePath(lighthouseLink),
+            lighthouseLink
+          )
+        );
+      });
+    } else {
+      logger.log(`${themeToCheck} ${options.target} scores`);
+      const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
-    const scoreResult =
-      options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
-    const templateTableData = Object.keys(scoreResult.scores).map(
-      lighthouseLink => {
-        const templateScore = scoreResult.scores[lighthouseLink];
-        return [
-          '/templatePath',
-          templateScore.accessibilityScore,
-          templateScore.bestPracticesScore,
-          templateScore.performanceScore,
-          templateScore.pwaScore,
-          templateScore.seoScore,
-        ];
-      }
-    );
+      const scores = detailedViewAverageScoreResult.scores[''] || {};
+      const averageTableData = [
+        scores.accessibilityScore,
+        scores.bestPracticesScore,
+        scores.performanceScore,
+        scores.pwaScore,
+        scores.seoScore,
+      ];
 
-    logger.log(
-      getTableContents([table2Header, ...templateTableData], {
-        border: { bodyLeft: '  ' },
-      })
-    );
+      logger.log(
+        getTableContents([tableHeader, averageTableData], {
+          border: { bodyLeft: '  ' },
+        })
+      );
+      logger.log('Page template scores');
+      const table2Header = getTableHeader([
+        'Template path',
+        ...DEFAULT_TABLE_HEADER,
+      ]);
 
-    logger.log(`Note: Scores are being shown for ${options.target} only.`);
+      const scoreResult =
+        options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+
+      const templateTableData = Object.keys(scoreResult.scores).map(
+        lighthouseLink => {
+          const templateScore = scoreResult.scores[lighthouseLink];
+          return [
+            parseLighthouseLinkForTemplatePath(lighthouseLink),
+            templateScore.accessibilityScore,
+            templateScore.bestPracticesScore,
+            templateScore.performanceScore,
+            templateScore.pwaScore,
+            templateScore.seoScore,
+          ];
+        }
+      );
+
+      logger.log(
+        getTableContents([table2Header, ...templateTableData], {
+          border: { bodyLeft: '  ' },
+        })
+      );
+
+      logger.info(
+        i18n(`${i18nKey}.info.targetDeviceNote`, { target: options.target })
+      );
+    }
   } else {
-    logger.log(`Theme: ${themeToCheck} `);
+    logger.log(`Theme: ${themeToCheck}`);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
     const getTableData = (target, scoreResult) => {
@@ -271,9 +303,7 @@ exports.handler = async options => {
       })
     );
 
-    logger.log(
-      'Note: Theme scores are averages of all theme templates. Use "hs cms lighthouse-score-detail" for template scores.'
-    );
+    logger.info(i18n(`${i18nKey}.info.detailedOptionNote`));
   }
 
   logger.log();

@@ -19,9 +19,10 @@ async function fetchMenus(accountId, query = {}) {
  * @param {number} accountId
  * @returns {Promise}
  */
-async function fetchThemes(accountId) {
+async function fetchThemes(accountId, query = {}) {
   return http.get(accountId, {
     uri: `${DESIGN_MANAGER_API_PATH}/themes/combined`,
+    query,
   });
 }
 

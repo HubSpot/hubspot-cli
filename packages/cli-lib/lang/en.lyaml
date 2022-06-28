@@ -93,9 +93,21 @@ en:
         subcommands:
           lighthouseScore:
             describe: "Score a theme using Google lighthouse."
-            promptMessage: "Select a theme to score"
             examples:
               default: "Get the lighthouse score for the my-theme theme"
+            info:
+              promptMessage: "Select a theme to score"
+              fetchingThemes: "Fetching available themes"
+              generatingScore: "Generating Google Lighthouse score for {{ theme }}"
+              targetDeviceNote: "Scores are being shown for {{ target }} only."
+              detailedOptionNote: "Theme scores are averages of all theme templates. Use the [--detailed] option to include individual template scores."
+            errors:
+              targetOptionRequired: "[--target] is required for detailed view"
+              invalidTargetOption: "[--target] can only be used for detailed view"
+              invalidLinksOnlyOption: "[--linksOnly] can only be used for detailed view"
+              themeNotFound: "Theme \"{{ theme }}\" not found. Please rerun using a valid theme path."
+              failedToFetchThemes: "Failed to fetch available themes. Try running again with the [--theme] option"
+              failedToGetLighthouseScore: "Failed to generate a Google Lighthouse score"
             options:
               theme:
                 describe: "Path to the theme in the Design Manager"
