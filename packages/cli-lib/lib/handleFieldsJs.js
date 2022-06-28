@@ -48,6 +48,11 @@ function handleFieldErrors(e, file) {
 function convertFieldsJs(filePath, options) {
   // If no options are provided, yargs will pass [''].
   let fields = require(filePath)(options);
+  if (!Array.isArray(fields)) {
+    //logger.error()
+    throw new SyntaxError(`${filePath} does not return an array.`);
+  }
+
   let finalPath = path.dirname(filePath) + '/fields.json';
   let json = fieldsArrayToJson(fields);
   fs.writeFileSync(finalPath, json);
@@ -92,11 +97,8 @@ function partialLoader(filePath, partial) {
 
 function fieldsArrayToJson(fields) {
   //Transform fields array to JSON
-  if (Array.isArray(fields)) {
-    fields = fields.flat(Infinity).map(field => fieldToJson(field));
-    return JSON.stringify(fields);
-  }
-  //Not an array... bad
+  fields = fields.flat(Infinity).map(field => fieldToJson(field));
+  return JSON.stringify(fields);
 }
 
 const loadJson = new Proxy(jsonLoader, fileResolver);
