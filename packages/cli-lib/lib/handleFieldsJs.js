@@ -16,7 +16,6 @@ const fileResolver = {
       line.lastIndexOf('/') + 1
     );
     const absoluteSrcPath = path.resolve(getCwd(), callerPath, filePath);
-    console.log(args);
     return target(absoluteSrcPath, ...args);
   },
 };

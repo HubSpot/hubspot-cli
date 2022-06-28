@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
@@ -37,6 +38,7 @@ function getFilesByType(files, src) {
   const otherFiles = [];
   const templateFiles = [];
   const jsonFiles = [];
+  const compiledJsonFiles = [];
 
   const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
 
@@ -56,7 +58,9 @@ function getFilesByType(files, src) {
               dest: moduleFolder + '/fields.json',
             })
           );
-          moduleFiles.push(convertFieldsJs(file, options));
+          const compiledJson = convertFieldsJs(file, options);
+          moduleFiles.push(compiledJson);
+          compiledJsonFiles.push(compiledJson);
         } catch (e) {
           handleFieldErrors(e, file);
           throw e;
@@ -92,7 +96,9 @@ function getFilesByType(files, src) {
                 dest: '/fields.json',
               })
             );
-            jsonFiles.push(convertFieldsJs(file, options));
+            const compiledJson = convertFieldsJs(file, options);
+            moduleFiles.push(compiledJson);
+            compiledJsonFiles.push(compiledJson);
           } catch (e) {
             handleFieldErrors(e, file);
             throw e;
@@ -116,7 +122,10 @@ function getFilesByType(files, src) {
       otherFiles.push(file);
     }
   });
-  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles];
+  return [
+    [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
+    compiledJsonFiles,
+  ];
 }
 /**
  *
@@ -137,7 +146,7 @@ async function uploadFolder(accountId, src, dest, options) {
     })
     .filter(createIgnoreFilter());
 
-  const filesByType = getFilesByType(allowedFiles, src);
+  const [filesByType, compiledJsonFiles] = getFilesByType(allowedFiles, src);
   const apiOptions = getFileMapperQueryValues(options);
 
   const failures = [];
@@ -213,6 +222,12 @@ async function uploadFolder(accountId, src, dest, options) {
       };
     })
   );
+
+  // After uploading the compiled json files, delete.
+  compiledJsonFiles.forEach(file => {
+    fs.unlinkSync(file);
+  });
+
   return results;
 }
 
