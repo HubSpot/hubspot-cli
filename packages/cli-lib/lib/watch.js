@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
@@ -10,12 +11,13 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
+const { convertFieldsJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension } = require('../path');
+const { convertToUnixPath, isAllowedExtension, getExt } = require('../path');
 const { triggerNotify } = require('./notify');
 const { getThemePreviewUrl } = require('./files');
 
@@ -35,7 +37,7 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 };
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
-function uploadFile(accountId, file, dest, options) {
+function uploadFile(accountId, file, dest, options, watcher) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -44,33 +46,47 @@ function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
+  const isFieldsJs = path.basename(file) == 'fields.js';
+  if (isFieldsJs) {
+    file = convertFieldsJs(file, options.options);
+    if (getExt(dest) !== 'json') {
+      dest = dest.substring(0, dest.lastIndexOf('.')) + '.json';
+    }
+    watcher.unwatch(file);
+  }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
 
-  return queue.add(() => {
-    return upload(accountId, file, dest, apiOptions)
-      .then(() => {
-        logger.log(`Uploaded file ${file} to ${dest}`);
-        notifyOfThemePreview(file, accountId);
-      })
-      .catch(() => {
-        const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
-        logger.debug(uploadFailureMessage);
-        logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-        return upload(accountId, file, dest, apiOptions).catch(error => {
-          logger.error(uploadFailureMessage);
-          logApiUploadErrorInstance(
-            error,
-            new ApiErrorContext({
-              accountId,
-              request: dest,
-              payload: file,
-            })
-          );
+  return queue
+    .add(() => {
+      return upload(accountId, file, dest, apiOptions)
+        .then(() => {
+          logger.log(`Uploaded file ${file} to ${dest}`);
+          notifyOfThemePreview(file, accountId);
+        })
+        .catch(() => {
+          const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
+          logger.debug(uploadFailureMessage);
+          logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
+          return upload(accountId, file, dest, apiOptions).catch(error => {
+            logger.error(uploadFailureMessage);
+            logApiUploadErrorInstance(
+              error,
+              new ApiErrorContext({
+                accountId,
+                request: dest,
+                payload: file,
+              })
+            );
+          });
         });
-      });
-  });
+    })
+    .finally(() => {
+      if (isFieldsJs) {
+        fs.unlinkSync(file);
+      }
+    });
 }
 
 async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
@@ -99,7 +115,12 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
   });
 }
 
-function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
+function watch(
+  accountId,
+  src,
+  dest,
+  { mode, remove, disableInitial, notify, options }
+) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   if (notify) {
@@ -142,9 +163,16 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
 
   watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(accountId, filePath, destPath, {
-      mode,
-    });
+    const uploadPromise = uploadFile(
+      accountId,
+      filePath,
+      destPath,
+      {
+        mode,
+        options,
+      },
+      watcher
+    );
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
 
@@ -184,9 +212,16 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
 
   watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(accountId, filePath, destPath, {
-      mode,
-    });
+    const uploadPromise = uploadFile(
+      accountId,
+      filePath,
+      destPath,
+      {
+        mode,
+        options,
+      },
+      watcher
+    );
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });
 

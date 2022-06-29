@@ -63,7 +63,7 @@ exports.handler = async options => {
   const uploadPromptAnswers = await uploadPrompt(options);
 
   const src = options.src || uploadPromptAnswers.src;
-  const dest = options.dest || uploadPromptAnswers.dest;
+  let dest = options.dest || uploadPromptAnswers.dest;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';

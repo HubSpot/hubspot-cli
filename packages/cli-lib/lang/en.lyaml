@@ -702,6 +702,8 @@ en:
             describe: "Path to the local directory your files are in, relative to your current working directory"
           dest:
             describe: "Path in HubSpot Design Tools. Can be a net new path"
+          options:
+            describe: "Options to pass to fields.js"
         warnings:
           disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."

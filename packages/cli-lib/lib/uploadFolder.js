@@ -164,45 +164,47 @@ async function uploadFolder(accountId, src, dest, options) {
     await queue.addAll(filesToUpload.map(uploadFile));
   }
 
-  const results = await queue.addAll(
-    failures.map(({ file, destPath }) => {
-      return async () => {
-        logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
-        try {
-          await upload(accountId, file, destPath, apiOptions);
-          logger.log('Uploaded file "%s" to "%s"', file, destPath);
-          return {
-            resultType: FileUploadResultType.SUCCESS,
-            error: null,
-            file,
-          };
-        } catch (error) {
-          logger.error('Uploading file "%s" to "%s" failed', file, destPath);
-          if (isFatalError(error)) {
-            throw error;
+  const results = await queue
+    .addAll(
+      failures.map(({ file, destPath }) => {
+        return async () => {
+          logger.debug('Retrying to upload file "%s" to "%s"', file, destPath);
+          try {
+            await upload(accountId, file, destPath, apiOptions);
+            logger.log('Uploaded file "%s" to "%s"', file, destPath);
+            return {
+              resultType: FileUploadResultType.SUCCESS,
+              error: null,
+              file,
+            };
+          } catch (error) {
+            logger.error('Uploading file "%s" to "%s" failed', file, destPath);
+            if (isFatalError(error)) {
+              throw error;
+            }
+            logApiUploadErrorInstance(
+              error,
+              new ApiErrorContext({
+                accountId,
+                request: destPath,
+                payload: file,
+              })
+            );
+            return {
+              resultType: FileUploadResultType.FAILURE,
+              error,
+              file,
+            };
           }
-          logApiUploadErrorInstance(
-            error,
-            new ApiErrorContext({
-              accountId,
-              request: destPath,
-              payload: file,
-            })
-          );
-          return {
-            resultType: FileUploadResultType.FAILURE,
-            error,
-            file,
-          };
-        }
-      };
-    })
-  );
-
-  // After uploading the compiled json files, delete.
-  compiledJsonFiles.forEach(file => {
-    fs.unlinkSync(file);
-  });
+        };
+      })
+    )
+    .finally(() => {
+      // After uploading the compiled json files, delete.
+      compiledJsonFiles.forEach(file => {
+        fs.unlinkSync(file);
+      });
+    });
 
   return results;
 }

@@ -55,7 +55,6 @@ function handleFieldErrors(e, filePath) {
  * @returns {string} The path of the written fields.json file.
  */
 function convertFieldsJs(filePath, options) {
-  // If no options are provided, yargs will pass [''].
   const dirName = path.dirname(filePath);
   logger.info(
     i18n(`${i18nKey}.converting`, {
@@ -66,6 +65,10 @@ function convertFieldsJs(filePath, options) {
 
   let fields;
   try {
+    // If we do not clear the cache, hs watch will not work
+    delete require.cache[filePath];
+
+    // If no options are provided, yargs will pass [''].
     fields = require(filePath)(options);
   } catch (e) {
     handleFieldErrors(e, filePath);
