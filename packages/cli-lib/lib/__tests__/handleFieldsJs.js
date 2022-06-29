@@ -98,21 +98,5 @@ describe('handleFieldsJs', () => {
       const json = fieldsArrayToJson(array);
       expect(json).toEqual(JSON.stringify(expected));
     });
-
-    it('fails gracefully on non-objects', () => {});
-  });
-
-  describe('loadPartials()', () => {
-    it('fails gracefully on ENOENT errors', () => {});
-
-    it('fails gracefully on json parse errors', () => {});
-
-    it('logs and continues if no partial is found', () => {});
-  });
-
-  describe('loadJson()', () => {
-    it('fails gracefully on ENOENT errors', () => {});
-
-    it('fails gracefully on json parse errors', () => {});
   });
 });

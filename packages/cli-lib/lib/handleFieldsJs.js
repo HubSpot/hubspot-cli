@@ -5,8 +5,9 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt } = require('../path');
 const i18nKey = 'cli.commands.upload';
 const { getCwd } = require('@hubspot/cli-lib/path');
+
 const fileResolver = {
-  apply: (target, thisArg, args) => {
+  apply: (target, _, args) => {
     let filePath = args.shift();
 
     // Get the path to the folder containing the fields.js file through a stack trace so we can resolve relative paths.
@@ -20,23 +21,31 @@ const fileResolver = {
   },
 };
 
-function handleFieldErrors(e, file) {
+function handleFieldErrors(e, filePath) {
   if (e instanceof SyntaxError) {
-    const ext = getExt(file);
+    const ext = getExt(filePath);
     if (ext === 'json') {
-      logger.error(i18n(`${i18nKey}.errors.jsonParsingFailed`, { json: file }));
+      logger.error(
+        i18n(`${i18nKey}.errors.jsonParsingFailed`, { json: filePath })
+      );
     } else if (ext == 'js') {
-      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: file }));
+      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
     }
   }
   if (e.code === 'ENOENT') {
     logger.error(
       i18n(`${i18nKey}.errors.invalidPath`, {
-        path: file,
+        path: filePath,
       })
     );
   }
-  logger.error(e);
+  if (e.code === 'MODULE_NOT_FOUND') {
+    logger.error(
+      i18n(`${i18nKey}.errors.jsSyntaxError`, {
+        path: filePath,
+      })
+    );
+  }
 }
 
 /**
@@ -47,24 +56,35 @@ function handleFieldErrors(e, file) {
  */
 function convertFieldsJs(filePath, options) {
   // If no options are provided, yargs will pass [''].
-  let fields = require(filePath)(options);
+  const dirName = path.dirname(filePath);
+  logger.info(
+    i18n(`${i18nKey}.converting`, {
+      src: dirName + '/fields.js',
+      dest: dirName + '/fields.json',
+    })
+  );
+
+  let fields;
+  try {
+    fields = require(filePath)(options);
+  } catch (e) {
+    handleFieldErrors(e, filePath);
+    throw e;
+  }
+
   if (!Array.isArray(fields)) {
-    //logger.error()
     throw new SyntaxError(`${filePath} does not return an array.`);
   }
 
   let finalPath = path.dirname(filePath) + '/fields.json';
   let json = fieldsArrayToJson(fields);
-  fs.writeFileSync(finalPath, json);
-  return finalPath;
-}
-
-function fieldToJson(field) {
-  // If the object has a toJson function, then run it and return the output.
-  if (typeof field['toJSON'] === 'function') {
-    return field.toJSON();
+  try {
+    fs.writeFileSync(finalPath, json);
+  } catch (e) {
+    handleFieldErrors(e, filePath);
+    throw e;
   }
-  return field;
+  return finalPath;
 }
 
 function jsonLoader(filePath) {
@@ -97,7 +117,9 @@ function partialLoader(filePath, partial) {
 
 function fieldsArrayToJson(fields) {
   //Transform fields array to JSON
-  fields = fields.flat(Infinity).map(field => fieldToJson(field));
+  fields = fields.flat(Infinity).map(field => {
+    return typeof field['toJSON'] === 'function' ? field.toJSON() : field;
+  });
   return JSON.stringify(fields);
 }
 

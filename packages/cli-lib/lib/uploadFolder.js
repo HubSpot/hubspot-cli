@@ -2,14 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
-const { convertFieldsJs, handleFieldErrors } = require('./handleFieldsJs');
+const { convertFieldsJs } = require('./handleFieldsJs');
 const { logger } = require('../logger');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
 const { walk, listFilesInDir } = require('./walk');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const i18nKey = 'cli.commands.upload';
 const escapeRegExp = require('./escapeRegExp');
 const {
   convertToUnixPath,
@@ -51,20 +49,9 @@ function getFilesByType(files, src) {
     if (moduleFolder) {
       //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
-        try {
-          logger.info(
-            i18n(`${i18nKey}.converting`, {
-              src: moduleFolder + '/fields.js',
-              dest: moduleFolder + '/fields.json',
-            })
-          );
-          const compiledJson = convertFieldsJs(file, options);
-          moduleFiles.push(compiledJson);
-          compiledJsonFiles.push(compiledJson);
-        } catch (e) {
-          handleFieldErrors(e, file);
-          throw e;
-        }
+        const compiledJson = convertFieldsJs(file, options);
+        moduleFiles.push(compiledJson);
+        compiledJsonFiles.push(compiledJson);
       } else {
         if (getExt(file) == 'json') {
           // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
@@ -88,25 +75,14 @@ function getFilesByType(files, src) {
         const regex = new RegExp(`^${escapeRegExp(src)}`);
         const relativePath = file.replace(regex, '');
         if (relativePath == '/fields.js') {
-          //There is a fields.js in the root
-          try {
-            logger.info(
-              i18n(`${i18nKey}.converting`, {
-                src: '/fields.js',
-                dest: '/fields.json',
-              })
-            );
-            const compiledJson = convertFieldsJs(file, options);
-            moduleFiles.push(compiledJson);
-            compiledJsonFiles.push(compiledJson);
-          } catch (e) {
-            handleFieldErrors(e, file);
-            throw e;
-          }
+          // Root fields.js
+          const compiledJson = convertFieldsJs(file, options);
+          jsonFiles.push(compiledJson);
+          compiledJsonFiles.push(compiledJson);
         }
+      } else {
+        cssAndJsFiles.push(file);
       }
-
-      cssAndJsFiles.push(file);
     } else if (extension === 'html') {
       templateFiles.push(file);
     } else if (extension === 'json') {
@@ -238,6 +214,7 @@ function hasUploadErrors(results) {
 }
 
 module.exports = {
+  getFilesByType,
   hasUploadErrors,
   FileUploadResultType,
   uploadFolder,
