@@ -9,6 +9,7 @@ const {
   convertToUnixPath,
   isAllowedExtension,
 } = require('@hubspot/cli-lib/path');
+const { convertFieldsJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
@@ -31,7 +32,6 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
@@ -66,6 +66,12 @@ exports.handler = async options => {
   const dest = options.dest || uploadPromptAnswers.dest;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
+  const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';
+  let compiledJsonPath;
+  if (isFieldsJs) {
+    compiledJsonPath = convertFieldsJs(absoluteSrcPath, options.options);
+  }
+
   let stats;
   try {
     stats = fs.statSync(absoluteSrcPath);
@@ -123,10 +129,9 @@ exports.handler = async options => {
       );
       return;
     }
-
     upload(
       accountId,
-      absoluteSrcPath,
+      isFieldsJs ? compiledJsonPath : absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues({ mode, options })
     )
@@ -156,6 +161,11 @@ exports.handler = async options => {
           })
         );
         process.exit(EXIT_CODES.WARNING);
+      })
+      .finally(() => {
+        if (isFieldsJs) {
+          fs.unlinkSync(compiledJsonPath);
+        }
       });
   } else {
     logger.log(
