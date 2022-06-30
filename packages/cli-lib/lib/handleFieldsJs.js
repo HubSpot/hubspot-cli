@@ -38,7 +38,7 @@ function handleFieldErrors(e, filePath) {
  * @param {string[]} options - Optional arguments to pass to the exported function in fields.js
  * @returns {string} The path of the written fields.json file.
  */
-function convertFieldsJs(filePath, options) {
+async function convertFieldsJs(filePath, options) {
   const dirName = path.dirname(filePath);
   logger.info(
     i18n(`${i18nKey}.converting`, {
@@ -47,31 +47,34 @@ function convertFieldsJs(filePath, options) {
     })
   );
 
-  let fields;
+  //let fields;
   try {
     // If we do not clear the cache, hs watch will not work
     delete require.cache[filePath];
 
     // If no options are provided, yargs will pass [''].
-    fields = require(filePath)(options);
+    const finalPath = Promise.resolve(await require(filePath)(options)).then(
+      fields => {
+        if (!Array.isArray(fields)) {
+          throw new SyntaxError(`${filePath} does not return an array.`);
+        }
+
+        let finalPath = path.dirname(filePath) + '/fields.json';
+        let json = fieldsArrayToJson(fields);
+        try {
+          fs.writeFileSync(finalPath, json);
+        } catch (e) {
+          handleFieldErrors(e, filePath);
+          throw e;
+        }
+        return finalPath;
+      }
+    );
+    return finalPath;
   } catch (e) {
     handleFieldErrors(e, filePath);
     throw e;
   }
-
-  if (!Array.isArray(fields)) {
-    throw new SyntaxError(`${filePath} does not return an array.`);
-  }
-
-  let finalPath = path.dirname(filePath) + '/fields.json';
-  let json = fieldsArrayToJson(fields);
-  try {
-    fs.writeFileSync(finalPath, json);
-  } catch (e) {
-    handleFieldErrors(e, filePath);
-    throw e;
-  }
-  return finalPath;
 }
 
 function fieldsArrayToJson(fields) {

@@ -85,21 +85,23 @@ describe('uploadFolder', () => {
 
       listFilesInDir.mockReturnValue(['fields.json']);
 
-      const [filesByType, compiledJsonFiles] = getFilesByType(files, 'folder');
-
-      expect(filesByType[1]).toEqual([
-        'folder/sample.module/module.css',
-        'folder/sample.module/module.js',
-        'folder/sample.module/fields.converted.json',
-        'folder/sample.module/meta.json',
-        'folder/sample.module/module.html',
-      ]);
-      expect(filesByType[4]).toContain('folder/fields.converted.json');
-      expect(compiledJsonFiles).toEqual(
-        expect.arrayContaining([
-          'folder/fields.converted.json',
-          'folder/sample.module/fields.converted.json',
-        ])
+      return Promise.resolve(getFilesByType(files, 'folder')).then(
+        ([filesByType, compiledJsonFiles]) => {
+          expect(filesByType[1]).toEqual([
+            'folder/sample.module/module.css',
+            'folder/sample.module/module.js',
+            'folder/sample.module/meta.json',
+            'folder/sample.module/module.html',
+            'folder/sample.module/fields.converted.json',
+          ]);
+          expect(filesByType[4]).toContain('folder/fields.converted.json');
+          expect(compiledJsonFiles).toEqual(
+            expect.arrayContaining([
+              'folder/fields.converted.json',
+              'folder/sample.module/fields.converted.json',
+            ])
+          );
+        }
       );
     });
 
@@ -116,15 +118,16 @@ describe('uploadFolder', () => {
         return dir === 'folder/sample.module' ? ['fields.js'] : [''];
       });
 
-      const filesByType = getFilesByType(files, 'folder')[0];
-
-      expect(filesByType[1]).toEqual([
-        'folder/sample.module/module.css',
-        'folder/sample.module/module.js',
-        'folder/sample.module/fields.converted.json',
-        'folder/sample.module/meta.json',
-        'folder/sample.module/module.html',
-      ]);
+      return Promise.resolve(getFilesByType(files, 'folder')).then(data => {
+        const filesByType = data[0];
+        expect(filesByType[1]).toEqual([
+          'folder/sample.module/module.css',
+          'folder/sample.module/module.js',
+          'folder/sample.module/meta.json',
+          'folder/sample.module/module.html',
+          'folder/sample.module/fields.converted.json',
+        ]);
+      });
     });
 
     it('converts fields.js in root and skips field.json in root', () => {
@@ -141,10 +144,12 @@ describe('uploadFolder', () => {
         return dir === 'folder' ? ['fields.js', 'fields.json'] : [''];
       });
 
-      const [filesByType, convertedJsonFiles] = getFilesByType(files, 'folder');
-
-      expect(filesByType[4]).toEqual(['folder/fields.converted.json']);
-      expect(convertedJsonFiles).toEqual(['folder/fields.converted.json']);
+      return Promise.resolve(getFilesByType(files, 'folder')).then(
+        ([filesByType, compiledJsonFiles]) => {
+          expect(filesByType[4]).toEqual(['folder/fields.converted.json']);
+          expect(compiledJsonFiles).toEqual(['folder/fields.converted.json']);
+        }
+      );
     });
 
     it('does not add any json files inside of module folder besides fields.json and meta.json', () => {

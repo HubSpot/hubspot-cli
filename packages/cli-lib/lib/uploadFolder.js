@@ -49,9 +49,11 @@ function getFilesByType(files, src) {
     if (moduleFolder) {
       //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
-        const compiledJson = convertFieldsJs(file, options);
-        moduleFiles.push(compiledJson);
-        compiledJsonFiles.push(compiledJson);
+        const compiledJsonPath = convertFieldsJs(file, options);
+        Promise.resolve(compiledJsonPath).then(filePath => {
+          moduleFiles.push(filePath);
+          compiledJsonFiles.push(filePath);
+        });
       } else {
         if (getExt(file) == 'json') {
           // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
@@ -76,9 +78,11 @@ function getFilesByType(files, src) {
         const relativePath = file.replace(regex, '');
         if (relativePath == '/fields.js') {
           // Root fields.js
-          const compiledJson = convertFieldsJs(file, options);
-          jsonFiles.push(compiledJson);
-          compiledJsonFiles.push(compiledJson);
+          const compiledJsonPath = convertFieldsJs(file, options);
+          Promise.resolve(compiledJsonPath).then(filePath => {
+            jsonFiles.push(filePath);
+            compiledJsonFiles.push(filePath);
+          });
         }
       } else {
         cssAndJsFiles.push(file);
