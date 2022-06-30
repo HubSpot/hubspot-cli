@@ -217,12 +217,15 @@ exports.handler = async options => {
   );
 
   logger.log(
-    uiLink(
-      i18n(`${i18nKey}.logs.hubspotLogsLink`),
-      appId
-        ? `${getPrivateAppsUrl(accountId)}/${appId}`
-        : getPrivateAppsUrl(accountId)
-    )
+    appId
+      ? uiLink(
+          i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
+          `${getPrivateAppsUrl(accountId)}/${appId}/logs/extensions`
+        )
+      : uiLink(
+          i18n(`${i18nKey}.logs.hubspotLogsLink`),
+          getPrivateAppsUrl(accountId)
+        )
   );
   logger.log();
   uiLine();
