@@ -4,22 +4,6 @@ const { logger } = require('../logger');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt } = require('../path');
 const i18nKey = 'cli.commands.upload';
-const { getCwd } = require('@hubspot/cli-lib/path');
-
-const fileResolver = {
-  apply: (target, _, args) => {
-    let filePath = args.shift();
-
-    // Get the path to the folder containing the fields.js file through a stack trace so we can resolve relative paths.
-    const line = new Error().stack.split('\n')[2];
-    const callerPath = line.slice(
-      line.lastIndexOf('(') + 1,
-      line.lastIndexOf('/') + 1
-    );
-    const absoluteSrcPath = path.resolve(getCwd(), callerPath, filePath);
-    return target(absoluteSrcPath, ...args);
-  },
-};
 
 function handleFieldErrors(e, filePath) {
   if (e instanceof SyntaxError) {
@@ -90,34 +74,6 @@ function convertFieldsJs(filePath, options) {
   return finalPath;
 }
 
-function jsonLoader(filePath) {
-  const file = fs.readFileSync(filePath);
-  let json = JSON.parse(file);
-  return json;
-}
-
-function partialLoader(filePath, partial) {
-  let json = {};
-  try {
-    json = JSON.parse(fs.readFileSync(filePath));
-  } catch (e) {
-    handleFieldErrors(e, filePath);
-    throw e;
-  }
-  if (partial in json) {
-    return json[partial];
-  } else {
-    logger.error(
-      i18n(`${i18nKey}.errors.jsonPartiaNotFound`, {
-        partial: partial,
-        src: filePath,
-      })
-    );
-    // Just move on if no partial is found.
-    return {};
-  }
-}
-
 function fieldsArrayToJson(fields) {
   //Transform fields array to JSON
   fields = fields.flat(Infinity).map(field => {
@@ -126,13 +82,8 @@ function fieldsArrayToJson(fields) {
   return JSON.stringify(fields);
 }
 
-const loadJson = new Proxy(jsonLoader, fileResolver);
-const loadPartial = new Proxy(partialLoader, fileResolver);
-
 module.exports = {
   fieldsArrayToJson,
-  loadJson,
-  loadPartial,
   convertFieldsJs,
   handleFieldErrors,
 };
