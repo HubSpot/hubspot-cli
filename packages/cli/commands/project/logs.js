@@ -10,7 +10,10 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
-const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const {
+  fetchProject,
+  fetchDeployComponentsAndSubComponentsMetadata,
+} = require('@hubspot/cli-lib/api/dfs');
 const {
   getTableContents,
   getTableHeader,
@@ -142,12 +145,30 @@ exports.handler = async options => {
   const endpointName = options.endpoint || promptEndpointName;
 
   let relativeAppPath;
+  let appId;
 
   if (appName && !endpointName) {
     await ensureProjectExists(accountId, projectName, {
       allowCreate: false,
     });
-    const { deployedBuild } = await fetchProject(accountId, projectName);
+
+    const { deployedBuild, id: projectId } = await fetchProject(
+      accountId,
+      projectName
+    );
+
+    const {
+      results: components,
+    } = await fetchDeployComponentsAndSubComponentsMetadata(
+      accountId,
+      projectId
+    );
+
+    const appComponent = components.find(s => s.componentName === appName);
+
+    if (appComponent) {
+      appId = appComponent.componentIdentifier;
+    }
 
     if (deployedBuild && deployedBuild.subbuildStatuses) {
       const appSubbuild = deployedBuild.subbuildStatuses.find(
@@ -198,7 +219,9 @@ exports.handler = async options => {
   logger.log(
     uiLink(
       i18n(`${i18nKey}.logs.hubspotLogsLink`),
-      getPrivateAppsUrl(accountId)
+      appId
+        ? `${getPrivateAppsUrl(accountId)}/${appId}`
+        : getPrivateAppsUrl(accountId)
     )
   );
   logger.log();
