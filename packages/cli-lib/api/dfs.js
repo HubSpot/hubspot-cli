@@ -183,19 +183,16 @@ async function fetchProjectSettings(accountId, projectName) {
 }
 
 /**
- * Fetch deploy components and sub components metadata
+ * Fetch top-level deploy components metadata
  *
  * @async
  * @param {number} accountId
  * @param {number} projectId
  * @returns {Promise}
  */
-async function fetchDeployComponentsAndSubComponentsMetadata(
-  accountId,
-  projectId
-) {
+async function fetchDeployComponentsMetadata(accountId, projectId) {
   return http.get(accountId, {
-    uri: `${PROJECTS_API_PATH}/by-id/${projectId}/deploy-components-and-sub-components-metadata`,
+    uri: `${PROJECTS_API_PATH}/by-id/${projectId}/deploy-components-metadata`,
   });
 }
 
@@ -297,7 +294,7 @@ module.exports = {
   fetchProjectBuilds,
   fetchProjects,
   fetchProjectSettings,
-  fetchDeployComponentsAndSubComponentsMetadata,
+  fetchDeployComponentsMetadata,
   getBuildStatus,
   getDeployStatus,
   provisionBuild,

@@ -12,7 +12,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   fetchProject,
-  fetchDeployComponentsAndSubComponentsMetadata,
+  fetchDeployComponentsMetadata,
 } = require('@hubspot/cli-lib/api/dfs');
 const {
   getTableContents,
@@ -157,14 +157,14 @@ exports.handler = async options => {
       projectName
     );
 
-    const {
-      results: components,
-    } = await fetchDeployComponentsAndSubComponentsMetadata(
+    const { results: deployComponents } = await fetchDeployComponentsMetadata(
       accountId,
       projectId
     );
 
-    const appComponent = components.find(s => s.componentName === appName);
+    const appComponent = deployComponents.find(
+      c => c.componentName === appName
+    );
 
     if (appComponent) {
       appId = appComponent.componentIdentifier;
