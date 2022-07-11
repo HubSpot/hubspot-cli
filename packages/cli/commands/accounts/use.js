@@ -37,7 +37,7 @@ exports.command = 'use [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions({ debug: options.debug });
+  await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   const config = getConfig();

@@ -591,6 +591,8 @@ en:
                   \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
           delete:
             describe: "Delete a sandbox account"
+            debug:
+              deleting: "Deleting sandbox account \"{{ account }}\""
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
             success:
@@ -849,6 +851,8 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
+          selectAccountName: "Select the sandbox account you want to delete"
+          selectParentAccountName: "Select the account that the sandbox belongs to"
         uploadPrompt:
           enterDest: "[--dest] Enter the destination path: "
           enterSrc: "[--src] Enter the source path: "
