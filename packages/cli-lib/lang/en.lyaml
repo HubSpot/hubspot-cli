@@ -100,11 +100,12 @@ en:
               fetchingThemes: "Fetching available themes"
               generatingScore: "Generating Google Lighthouse score for {{ theme }}"
               targetDeviceNote: "Scores are being shown for {{ target }} only."
-              detailedOptionNote: "Theme scores are averages of all theme templates. Use the [--detailed] option to include individual template scores."
+              verboseOptionNote: "Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores."
+              pageTemplateScoreTitle: "Page template scores"
+              lighthouseLinksTitle: "Lighthouse links"
             errors:
               targetOptionRequired: "[--target] is required for detailed view"
               invalidTargetOption: "[--target] can only be used for detailed view"
-              invalidLinksOnlyOption: "[--linksOnly] can only be used for detailed view"
               themeNotFound: "Theme \"{{ theme }}\" not found. Please rerun using a valid theme path."
               failedToFetchThemes: "Failed to fetch available themes. Try running again with the [--theme] option"
               failedToGetLighthouseScore: "Failed to generate a Google Lighthouse score"
@@ -113,10 +114,8 @@ en:
                 describe: "Path to the theme in the Design Manager"
               target:
                 describe: "Medium to test against"
-              detailed:
+              verbose:
                 describe: "View a detailed output of the lighthouse sores"
-              linksOnly:
-                describe: "Output links to lighthouse scores"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:

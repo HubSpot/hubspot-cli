@@ -74,25 +74,8 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
   const accountId = getAccountId(options);
 
-  // Validate options
-  if (options.detailed) {
-    if (!options.target) {
-      logger.error(i18n(`${i18nKey}.errors.targetOptonRequired`));
-      process.exit(EXIT_CODES.ERROR);
-    }
-  } else {
-    if (options.target) {
-      logger.error(i18n(`${i18nKey}.errors.invalidTargetOption`));
-      process.exit(EXIT_CODES.ERROR);
-    }
-    if (options.linksOnly) {
-      logger.error(i18n(`${i18nKey}.errors.invalidLinksOnlyOption`));
-      process.exit(EXIT_CODES.ERROR);
-    }
-  }
-
-  const includeDesktopScore = options.target === 'desktop' || !options.detailed;
-  const includeMobileScore = options.target === 'mobile' || !options.detailed;
+  const includeDesktopScore = options.target === 'desktop' || !options.verbose;
+  const includeMobileScore = options.target === 'mobile' || !options.verbose;
   let themeToCheck = options.theme;
 
   if (themeToCheck) {
@@ -171,12 +154,9 @@ exports.handler = async options => {
   // Fetch the scoring results
   let desktopScoreResult;
   let mobileScoreResult;
-  let detailedViewAverageScoreResult;
+  let verboseViewAverageScoreResult;
   try {
-    const params = {
-      isAverage: !options.detailed,
-      onlyLinks: options.linksOnly,
-    };
+    const params = { isAverage: !options.verbose };
     desktopScoreResult = includeDesktopScore
       ? await getLighthouseScore(accountId, {
           ...params,
@@ -189,8 +169,8 @@ exports.handler = async options => {
           mobileId: requestResult.mobileId,
         })
       : {};
-    // This is needed to show the average scores above the detailed output
-    detailedViewAverageScoreResult = options.detailed
+    // This is needed to show the average scores above the verbose output
+    verboseViewAverageScoreResult = options.verbose
       ? await getLighthouseScore(accountId, {
           ...params,
           isAverage: true,
@@ -199,71 +179,69 @@ exports.handler = async options => {
         })
       : {};
   } catch (err) {
-    logger.error('error getting final score: ', err.statusCode);
+    logger.error(i18n(`${i18nKey}.errors.failedToGetLighthouseScore`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (options.detailed) {
-    if (options.linksOnly) {
-      logger.log('Page template score links:');
+  if (options.verbose) {
+    logger.log(`${themeToCheck} ${options.target} scores`);
 
-      const scoreResult =
-        options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+    const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
-      scoreResult.scores.forEach(score => {
-        logger.log(uiLink(score.templatePath, score.link));
-      });
-    } else {
-      logger.log(`${themeToCheck} ${options.target} scores`);
-      const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
+    const scores = verboseViewAverageScoreResult.scores
+      ? verboseViewAverageScoreResult.scores[0]
+      : {};
 
-      const scores = detailedViewAverageScoreResult.scores
-        ? detailedViewAverageScoreResult.scores[0]
-        : {};
+    const averageTableData = [
+      scores.accessibilityScore,
+      scores.bestPracticesScore,
+      scores.performanceScore,
+      scores.pwaScore,
+      scores.seoScore,
+    ];
 
-      const averageTableData = [
-        scores.accessibilityScore,
-        scores.bestPracticesScore,
-        scores.performanceScore,
-        scores.pwaScore,
-        scores.seoScore,
+    logger.log(
+      getTableContents([tableHeader, averageTableData], {
+        border: { bodyLeft: '  ' },
+      })
+    );
+    logger.log(i18n(`${i18nKey}.info.pageTemplateScoreTitle`));
+
+    const table2Header = getTableHeader([
+      'Template path',
+      ...DEFAULT_TABLE_HEADER,
+    ]);
+
+    const scoreResult =
+      options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+
+    const templateTableData = scoreResult.scores.map(score => {
+      return [
+        score.templatePath,
+        score.accessibilityScore,
+        score.bestPracticesScore,
+        score.performanceScore,
+        score.pwaScore,
+        score.seoScore,
       ];
+    });
 
-      logger.log(
-        getTableContents([tableHeader, averageTableData], {
-          border: { bodyLeft: '  ' },
-        })
-      );
-      logger.log('Page template scores');
-      const table2Header = getTableHeader([
-        'Template path',
-        ...DEFAULT_TABLE_HEADER,
-      ]);
+    logger.log(
+      getTableContents([table2Header, ...templateTableData], {
+        border: { bodyLeft: '  ' },
+      })
+    );
 
-      const scoreResult =
-        options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
+    logger.log(i18n(`${i18nKey}.info.lighthouseLinksTitle`));
 
-      const templateTableData = scoreResult.scores.map(score => {
-        return [
-          score.templatePath,
-          score.accessibilityScore,
-          score.bestPracticesScore,
-          score.performanceScore,
-          score.pwaScore,
-          score.seoScore,
-        ];
-      });
+    scoreResult.scores.forEach(score => {
+      logger.log(' ', uiLink(score.templatePath, score.link));
+    });
 
-      logger.log(
-        getTableContents([table2Header, ...templateTableData], {
-          border: { bodyLeft: '  ' },
-        })
-      );
-
-      logger.info(
-        i18n(`${i18nKey}.info.targetDeviceNote`, { target: options.target })
-      );
-    }
+    logger.log();
+    logger.info(
+      i18n(`${i18nKey}.info.targetDeviceNote`, { target: options.target })
+    );
   } else {
     logger.log(`Theme: ${themeToCheck}`);
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
@@ -291,7 +269,7 @@ exports.handler = async options => {
       })
     );
 
-    logger.info(i18n(`${i18nKey}.info.detailedOptionNote`));
+    logger.info(i18n(`${i18nKey}.info.verboseOptionNote`));
   }
 
   logger.log();
@@ -314,14 +292,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.target.describe`),
     type: 'string',
     choices: ['desktop', 'mobile'],
+    default: 'desktop',
   });
-  yargs.option('detailed', {
-    describe: i18n(`${i18nKey}.options.detailed.describe`),
-    boolean: true,
-    default: false,
-  });
-  yargs.option('linksOnly', {
-    describe: i18n(`${i18nKey}.options.linksOnly.describe`),
+  yargs.option('verbose', {
+    describe: i18n(`${i18nKey}.options.verbose.describe`),
     boolean: true,
     default: false,
   });
