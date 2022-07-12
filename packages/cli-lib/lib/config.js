@@ -362,6 +362,37 @@ const getAccountId = nameOrId => {
 /**
  * @throws {Error}
  */
+const removeAccountFromConfig = nameOrId => {
+  const config = getAndLoadConfigIfNeeded();
+  const accountId = getAccountId(nameOrId);
+  let promptDefaultAccount = false;
+
+  if (!accountId) {
+    throw new Error(`No account found with ${nameOrId}.`);
+  }
+
+  const accountConfig = getAccountConfig(accountId);
+
+  if (config.defaultPortal === accountConfig.name) {
+    promptDefaultAccount = true;
+  }
+
+  let accounts = getConfigAccounts(config);
+
+  if (accountConfig) {
+    logger.debug(`Deleting config for ${accountId}`);
+    const index = accounts.indexOf(accountConfig);
+    accounts.splice(index, 1);
+  }
+
+  writeConfig();
+
+  return promptDefaultAccount;
+};
+
+/**
+ * @throws {Error}
+ */
 const updateAccountConfig = configOptions => {
   const {
     portalId,
@@ -715,6 +746,7 @@ module.exports = {
   loadConfigFromEnvironment,
   getAccountConfig,
   getAccountId,
+  removeAccountFromConfig,
   updateAccountConfig,
   updateDefaultAccount,
   updateDefaultMode,

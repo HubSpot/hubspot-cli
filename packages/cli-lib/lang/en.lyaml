@@ -596,7 +596,7 @@ en:
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
             success:
-              delete: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
             failure:
               delete: "Unable to delete sandbox account {{ account }}."

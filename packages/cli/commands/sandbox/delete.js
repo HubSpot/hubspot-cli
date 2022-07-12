@@ -13,6 +13,11 @@ const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const { removeAccountFromConfig } = require('@hubspot/cli-lib/lib/config');
+const {
+  selectAndSetAsDefaultAccountPrompt,
+} = require('../../lib/prompts/accountsPrompt');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -55,14 +60,27 @@ exports.handler = async options => {
     })
   );
 
-  return deleteSandbox(parentAccountId, sandboxAccountId).then(() => {
+  try {
+    await deleteSandbox(parentAccountId, sandboxAccountId);
+
+    logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        account,
+        account: account || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );
-  });
+    logger.log('');
+
+    const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+    if (promptDefaultAccount && config.portals.length > 0) {
+      await selectAndSetAsDefaultAccountPrompt(config);
+    }
+    process.exit(EXIT_CODES.SUCCESS);
+  } catch (err) {
+    logger.error(err.error.message);
+    process.exit(EXIT_CODES.ERROR);
+  }
 };
 
 exports.builder = yargs => {

@@ -129,6 +129,14 @@ exports.handler = async options => {
     })
   );
   let result;
+  const twirlTimer = (function() {
+    var P = ['\\', '|', '/', '-'];
+    var x = 0;
+    return setInterval(function() {
+      process.stdout.write('\r' + P[x++]);
+      x &= 3;
+    }, 250);
+  })();
   try {
     result = await createSandbox(accountId, sandboxName).then(
       ({ name, sandboxHubId }) => {
@@ -142,7 +150,9 @@ exports.handler = async options => {
         return { name, sandboxHubId };
       }
     );
+    clearInterval(twirlTimer);
   } catch (err) {
+    clearInterval(twirlTimer);
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
@@ -167,6 +177,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
