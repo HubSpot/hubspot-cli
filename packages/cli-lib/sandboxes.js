@@ -1,10 +1,8 @@
 /* eslint-disable no-useless-catch */
-const { EXIT_CODES } = require('../cli/lib/enums/exitCodes');
 const {
   createSandbox: _createSandbox,
   deleteSandbox: _deleteSandbox,
 } = require('./api/sandbox-hubs');
-const { logger } = require('./logger');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -32,8 +30,7 @@ async function deleteSandbox(parentAccountId, sandboxAccountId) {
   try {
     resp = await _deleteSandbox(parentAccountId, sandboxAccountId);
   } catch (err) {
-    logger.error(err.error.message);
-    process.exit(EXIT_CODES.ERROR);
+    throw err;
   }
 
   return {
