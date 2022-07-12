@@ -37,13 +37,6 @@ const DEFAULT_TABLE_HEADER = [
   'SEO',
 ];
 
-// TODO this is temporary until the BE returns template path in the response
-const parseLighthouseLinkForTemplatePath = lighthouseLink => {
-  const TEMPLATE_PATH_REGEX = /&template_file_path=([^&]*)/;
-  const matches = lighthouseLink.match(TEMPLATE_PATH_REGEX);
-  return matches[1];
-};
-
 exports.command = 'lighthouse-score [--theme]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
@@ -217,19 +210,17 @@ exports.handler = async options => {
       const scoreResult =
         options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
 
-      Object.keys(scoreResult.scores).forEach(lighthouseLink => {
-        logger.log(
-          uiLink(
-            parseLighthouseLinkForTemplatePath(lighthouseLink),
-            lighthouseLink
-          )
-        );
+      scoreResult.scores.forEach(score => {
+        logger.log(uiLink(score.templatePath, score.link));
       });
     } else {
       logger.log(`${themeToCheck} ${options.target} scores`);
       const tableHeader = getTableHeader(DEFAULT_TABLE_HEADER);
 
-      const scores = detailedViewAverageScoreResult.scores[''] || {};
+      const scores = detailedViewAverageScoreResult.scores
+        ? detailedViewAverageScoreResult.scores[0]
+        : {};
+
       const averageTableData = [
         scores.accessibilityScore,
         scores.bestPracticesScore,
@@ -252,19 +243,16 @@ exports.handler = async options => {
       const scoreResult =
         options.target === 'desktop' ? desktopScoreResult : mobileScoreResult;
 
-      const templateTableData = Object.keys(scoreResult.scores).map(
-        lighthouseLink => {
-          const templateScore = scoreResult.scores[lighthouseLink];
-          return [
-            parseLighthouseLinkForTemplatePath(lighthouseLink),
-            templateScore.accessibilityScore,
-            templateScore.bestPracticesScore,
-            templateScore.performanceScore,
-            templateScore.pwaScore,
-            templateScore.seoScore,
-          ];
-        }
-      );
+      const templateTableData = scoreResult.scores.map(score => {
+        return [
+          score.templatePath,
+          score.accessibilityScore,
+          score.bestPracticesScore,
+          score.performanceScore,
+          score.pwaScore,
+          score.seoScore,
+        ];
+      });
 
       logger.log(
         getTableContents([table2Header, ...templateTableData], {
@@ -281,7 +269,7 @@ exports.handler = async options => {
     const tableHeader = getTableHeader(['Target', ...DEFAULT_TABLE_HEADER]);
 
     const getTableData = (target, scoreResult) => {
-      const scores = scoreResult.scores[''] || {};
+      const scores = scoreResult.scores ? scoreResult.scores[0] : {};
       return [
         target,
         scores.accessibilityScore,
