@@ -238,6 +238,14 @@ exports.handler = async options => {
       logger.log(' ', uiLink(score.templatePath, score.link));
     });
 
+    if (scoreResult.failedTemplatePaths.length) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.info.failedTemplatePathsTitle`));
+      scoreResult.failedTemplatePaths.forEach(failedTemplatePath => {
+        logger.log(' ', failedTemplatePath);
+      });
+    }
+
     logger.log();
     logger.info(
       i18n(`${i18nKey}.info.targetDeviceNote`, { target: options.target })

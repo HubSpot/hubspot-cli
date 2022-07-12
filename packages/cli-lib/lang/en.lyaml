@@ -103,6 +103,7 @@ en:
               verboseOptionNote: "Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores."
               pageTemplateScoreTitle: "Page template scores"
               lighthouseLinksTitle: "Lighthouse links"
+              failedTemplatePathsTitle: "The following templates could not be scored"
             errors:
               targetOptionRequired: "[--target] is required for detailed view"
               invalidTargetOption: "[--target] can only be used for detailed view"
