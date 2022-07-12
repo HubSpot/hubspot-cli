@@ -47,30 +47,32 @@ async function convertFieldsJs(filePath, options) {
     })
   );
 
-  //let fields;
   try {
     // If we do not clear the cache, hs watch will not work
     delete require.cache[filePath];
 
     // If no options are provided, yargs will pass [''].
-    const finalPath = Promise.resolve(await require(filePath)(options)).then(
-      fields => {
-        if (!Array.isArray(fields)) {
-          throw new SyntaxError(`${filePath} does not return an array.`);
-        }
-
-        let finalPath = path.dirname(filePath) + '/fields.json';
-        let json = fieldsArrayToJson(fields);
-        try {
-          fs.writeFileSync(finalPath, json);
-        } catch (e) {
-          handleFieldErrors(e, filePath);
-          throw e;
-        }
-        return finalPath;
+    return Promise.resolve(await require(filePath)(options)).then(fields => {
+      if (!Array.isArray(fields)) {
+        throw new SyntaxError(`${filePath} does not return an array.`);
       }
-    );
-    return finalPath;
+
+      let finalPath = path.dirname(filePath) + '/fields.json';
+      let json = fieldsArrayToJson(fields);
+      try {
+        fs.writeFileSync(finalPath, json);
+      } catch (e) {
+        handleFieldErrors(e, filePath);
+        throw e;
+      }
+      logger.info(
+        i18n(`${i18nKey}.converted`, {
+          src: dirName + '/fields.js',
+          dest: dirName + '/fields.json',
+        })
+      );
+      return finalPath;
+    });
   } catch (e) {
     handleFieldErrors(e, filePath);
     throw e;

@@ -683,6 +683,7 @@ en:
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
         converting: "Converting \"{{ src }}\" to \"{{ dest }}\"."
+        converted: "Finished converting \"{{ src }}\" to \"{{ dest }}\"."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
