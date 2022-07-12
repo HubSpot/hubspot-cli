@@ -598,8 +598,6 @@ en:
             success:
               delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            failure:
-              delete: "Unable to delete sandbox account {{ account }}."
             options:
               account:
                 describe: "Account name or id to delete"

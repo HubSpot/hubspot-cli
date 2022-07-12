@@ -73,7 +73,7 @@ exports.handler = async options => {
     logger.log('');
 
     const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
-    if (promptDefaultAccount && config.portals.length > 0) {
+    if (promptDefaultAccount) {
       await selectAndSetAsDefaultAccountPrompt(config);
     }
     process.exit(EXIT_CODES.SUCCESS);

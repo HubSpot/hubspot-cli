@@ -368,7 +368,7 @@ const removeAccountFromConfig = nameOrId => {
   let promptDefaultAccount = false;
 
   if (!accountId) {
-    throw new Error(`No account found with ${nameOrId}.`);
+    throw new Error(`Unable to find account for ${nameOrId}.`);
   }
 
   const accountConfig = getAccountConfig(accountId);
@@ -411,7 +411,7 @@ const updateAccountConfig = configOptions => {
   } = configOptions;
 
   if (!portalId) {
-    throw new Error('An portalId is required to update the config');
+    throw new Error('A portalId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
