@@ -32,7 +32,6 @@ async function deleteSandbox(parentAccountId, sandboxAccountId) {
   try {
     resp = await _deleteSandbox(parentAccountId, sandboxAccountId);
   } catch (err) {
-    console.log('err: ', err.error);
     logger.error(err.error.message);
     process.exit(EXIT_CODES.ERROR);
   }
