@@ -5,12 +5,13 @@ const {
   updateDefaultAccount,
   getAccountId: getAccountIdFromConfig,
 } = require('@hubspot/cli-lib/lib/config');
-const { loadAndValidateOptions } = require('../../lib/validation');
 
-const { getAccountId } = require('../../lib/commonOpts');
+const { setLogLevel } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
+const { logDebugInfo } = require('../../lib/debugInfo');
+const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 
@@ -18,14 +19,20 @@ exports.command = 'use [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions({ debug: options.debug });
+  /*
+    Extracted loadAndValidateOptions for cases where
+    the set default account does not exist
+  */
 
-  const accountId = getAccountId(options);
+  setLogLevel(options);
+  logDebugInfo(options);
+  const { config: configPath } = options;
+  loadConfig(configPath, options);
+  checkAndWarnGitInclusion(getConfigPath());
+
   const config = getConfig();
 
   let newDefaultAccount = options.account;
-
-  trackCommandUsage('accounts-use', {}, accountId);
 
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig(config);
@@ -38,6 +45,12 @@ exports.handler = async options => {
     );
     newDefaultAccount = await selectAccountFromConfig(config);
   }
+
+  trackCommandUsage(
+    'accounts-use',
+    {},
+    getAccountIdFromConfig(newDefaultAccount)
+  );
 
   updateDefaultAccount(newDefaultAccount);
 

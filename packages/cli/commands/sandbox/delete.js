@@ -22,7 +22,7 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
-exports.command = 'delete';
+exports.command = 'delete [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
