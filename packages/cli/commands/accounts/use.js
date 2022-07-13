@@ -11,7 +11,12 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { logDebugInfo } = require('../../lib/debugInfo');
-const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
+const {
+  loadConfig,
+  checkAndWarnGitInclusion,
+  validateConfig,
+} = require('@hubspot/cli-lib');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 
@@ -29,6 +34,9 @@ exports.handler = async options => {
   const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion(getConfigPath());
+  if (!validateConfig()) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const config = getConfig();
 
