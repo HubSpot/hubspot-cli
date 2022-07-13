@@ -26,14 +26,19 @@ const fs = require('fs');
 const path = require('path');
 const { EXIT_CODES } = require('./enums/exitCodes');
 
-async function loadAndValidateOptions(options) {
+async function loadAndValidateOptions(options, shouldValidateAccount = true) {
   setLogLevel(options);
   logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion(getConfigPath());
 
-  if (!(validateConfig() && (await validateAccount(options)))) {
+  let validAccount = true;
+  if (shouldValidateAccount) {
+    validAccount = await validateAccount(options);
+  }
+
+  if (!(validateConfig() && validAccount)) {
     process.exit(EXIT_CODES.ERROR);
   }
 }
