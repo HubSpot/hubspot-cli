@@ -18,6 +18,7 @@ const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -61,6 +62,19 @@ exports.handler = async options => {
   );
 
   try {
+    const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
+      {
+        name: 'confirmSandboxDeletePrompt',
+        type: 'confirm',
+        message: i18n(`${i18nKey}.confirm`, {
+          account: account || accountPrompt.account,
+        }),
+      },
+    ]);
+    if (!confirmed) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
     await deleteSandbox(parentAccountId, sandboxAccountId);
 
     logger.log('');

@@ -571,8 +571,6 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
-            debug:
-              creating: "Creating sandbox \"{{ name }}\""
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
             info:
@@ -580,8 +578,11 @@ en:
             positionals:
               name:
                 describe: "Name to use for created sandbox"
+            loading:
+              add: "Creating sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
-              create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
               scopes:
@@ -595,6 +596,7 @@ en:
               deleting: "Deleting sandbox account \"{{ account }}\""
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
+            confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
             success:
               delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
