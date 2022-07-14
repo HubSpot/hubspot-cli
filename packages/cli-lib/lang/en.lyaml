@@ -600,11 +600,10 @@ en:
             success:
               delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
+            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} not found, it may have already been deleted."
             options:
               account:
                 describe: "Account name or id to delete"
-            temporaryMessage: "The CLI currently does not support deleting sandboxes.
-              \n\nTo delete a sandbox, go to https://app.hubspot.com and navigate to the Sandboxes accounts page to delete your sandbox.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:

@@ -22,11 +22,14 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
+const SANDBOX_NOT_FOUND = 'SandboxErrors.SANDBOX_NOT_FOUND';
+const OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND';
+
 exports.command = 'delete [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  await loadAndValidateOptions(options, false);
 
   const { account } = options;
   const config = getConfig();
@@ -92,7 +95,27 @@ exports.handler = async options => {
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
-    logger.error(err.error.message);
+    if (
+      err.error &&
+      err.error.category === OBJECT_NOT_FOUND &&
+      err.error.subCategory === SANDBOX_NOT_FOUND
+    ) {
+      logger.log('');
+      logger.warn(
+        i18n(`${i18nKey}.objectNotFound`, {
+          account: account || accountPrompt.account,
+        })
+      );
+      logger.log('');
+
+      const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+      if (promptDefaultAccount) {
+        await selectAndSetAsDefaultAccountPrompt(config);
+      }
+      process.exit(EXIT_CODES.SUCCESS);
+    } else {
+      logger.error(err.error.message);
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 };
