@@ -183,6 +183,7 @@ const writeConfig = (options = {}) => {
     logger.debug(`Writing current config to ${configPath}`);
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
+    setConfig(parseConfig(source).parsed);
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
@@ -261,7 +262,7 @@ const loadConfig = (
     environmentVariableConfigLoaded = true;
     return;
   } else {
-    logger.debug(`Loaded config from ${path}`);
+    logger.debug(`Loading config from ${path}`);
     loadConfigFromFile(path, options);
     environmentVariableConfigLoaded = false;
   }
@@ -375,6 +376,8 @@ const updateAccountConfig = configOptions => {
     name,
     apiKey,
     personalAccessKey,
+    sandboxAccountType,
+    parentAccountId,
   } = configOptions;
 
   if (!portalId) {
@@ -409,6 +412,8 @@ const updateAccountConfig = configOptions => {
     apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
     personalAccessKey,
+    sandboxAccountType,
+    parentAccountId,
   };
 
   let accounts = getConfigAccounts(config);
@@ -641,8 +646,11 @@ const loadConfigFromEnvironment = () => {
     refreshToken,
     env,
   } = getConfigVariablesFromEnv();
+  const unableToLoadEnvConfigError =
+    'Unable to load config from environment variables.';
 
   if (!portalId) {
+    logger.error(unableToLoadEnvConfigError);
     return;
   }
 
@@ -660,6 +668,7 @@ const loadConfigFromEnvironment = () => {
   } else if (apiKey) {
     return generateApiKeyConfig(portalId, apiKey, env);
   } else {
+    logger.error(unableToLoadEnvConfigError);
     return;
   }
 };

@@ -112,7 +112,7 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   const success = await extractZipArchive(zip, repoName, dest, { sourceDir });
 
   if (success) {
-    logger.success(`Your new ${type} project has been created in ${dest}`);
+    logger.success(`Your new ${type} has been created in ${dest}`);
   }
   return success;
 }

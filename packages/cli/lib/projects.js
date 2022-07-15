@@ -449,6 +449,14 @@ const makePollTaskStatusFunc = ({
                   } with the following error ---`
                 );
                 logger.error(subTask.errorMessage);
+
+                // Log nested errors
+                if (subTask.standardError && subTask.standardError.errors) {
+                  logger.log();
+                  subTask.standardError.errors.forEach(error => {
+                    logger.log(error.message);
+                  });
+                }
               });
             }
 

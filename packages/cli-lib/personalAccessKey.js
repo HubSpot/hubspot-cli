@@ -14,6 +14,7 @@ const {
 } = require('./lib/constants');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
+const { fetchHubData } = require('./api/hubs');
 
 const refreshRequests = new Map();
 
@@ -145,6 +146,24 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
   }
   const { portalId, accessToken, expiresAt } = token;
 
+  let hubInfo;
+  try {
+    hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
+  } catch (err) {
+    // Ignore error, returns 404 if account is not a sandbox
+  }
+
+  let sandboxAccountType = null;
+  let parentAccountId = null;
+  if (hubInfo) {
+    if (hubInfo.type !== undefined) {
+      sandboxAccountType = hubInfo.type === null ? 'STANDARD' : hubInfo.type;
+    }
+    if (hubInfo.parentHubId) {
+      parentAccountId = hubInfo.parentHubId;
+    }
+  }
+
   const updatedConfig = updateAccountConfig({
     portalId,
     personalAccessKey,
@@ -152,6 +171,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     environment: getValidEnv(accountEnv, true),
     authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     tokenInfo: { accessToken, expiresAt },
+    sandboxAccountType,
+    parentAccountId,
   });
   writeConfig();
 
@@ -165,4 +186,5 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 module.exports = {
   accessTokenForPersonalAccessKey,
   updateConfigWithPersonalAccessKey,
+  getAccessToken,
 };
