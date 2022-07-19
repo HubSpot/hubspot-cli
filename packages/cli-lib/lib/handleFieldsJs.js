@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fsExtra = require('fs-extra');
 const path = require('path');
 const { logger } = require('../logger');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -36,9 +36,10 @@ function handleFieldErrors(e, filePath) {
  * Converts a fields.js file into a fields.json file, writes, and returns of fields.json
  * @param {string} file - The path of the fields.js javascript file.
  * @param {string[]} options - Optional arguments to pass to the exported function in fields.js
+ * @param {string} writeDir - The path to write the file to.
  * @returns {string} The path of the written fields.json file.
  */
-async function convertFieldsJs(filePath, options) {
+async function convertFieldsJs(filePath, options, writeDir) {
   const dirName = path.dirname(filePath);
   logger.info(
     i18n(`${i18nKey}.converting`, {
@@ -57,10 +58,10 @@ async function convertFieldsJs(filePath, options) {
         throw new SyntaxError(`${filePath} does not return an array.`);
       }
 
-      let finalPath = path.dirname(filePath) + '/fields.json';
+      let finalPath = path.join(writeDir, '/fields.json');
       let json = fieldsArrayToJson(fields);
       try {
-        fs.writeFileSync(finalPath, json);
+        fsExtra.outputFileSync(finalPath, json);
       } catch (e) {
         handleFieldErrors(e, filePath);
         throw e;

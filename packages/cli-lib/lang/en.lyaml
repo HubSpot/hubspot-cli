@@ -677,6 +677,8 @@ en:
             describe: "Path in HubSpot Design Tools, can be a net new path."
           options:
             describe: "Options to pass to fields.js"
+          saveOutput:
+            decribe: If true, saves all output from fields.js files as 'fields.output.json'.
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         success:
           fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"

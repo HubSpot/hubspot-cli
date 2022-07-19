@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
@@ -30,7 +31,8 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function getFilesByType(files, src) {
+function getFilesByType(files, src, writeDir = src) {
+  const writeDirRegex = new RegExp(`^${escapeRegExp(src)}`);
   const moduleFiles = [];
   const cssAndJsFiles = [];
   const otherFiles = [];
@@ -46,14 +48,22 @@ function getFilesByType(files, src) {
     const moduleFolder = parts.find(part => part.endsWith('.module'));
     const fileName = parts[parts.length - 1];
     const options = yargs.argv.options;
+    const relativePath = file.replace(writeDirRegex, '');
+
+    if (fileName == 'fields.output.json') {
+      return;
+    }
     if (moduleFolder) {
       //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
-        const compiledJsonPath = convertFieldsJs(file, options);
-        Promise.resolve(compiledJsonPath).then(filePath => {
-          moduleFiles.push(filePath);
-          compiledJsonFiles.push(filePath);
-        });
+        const compiledJsonPath = convertFieldsJs(
+          file,
+          options,
+          path.dirname(path.join(writeDir, relativePath))
+        );
+
+        moduleFiles.push(compiledJsonPath);
+        compiledJsonFiles.push(compiledJsonPath);
       } else {
         if (getExt(file) == 'json') {
           // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
@@ -74,15 +84,11 @@ function getFilesByType(files, src) {
       }
     } else if (extension === 'js' || extension === 'css') {
       if (fileName === 'fields.js') {
-        const regex = new RegExp(`^${escapeRegExp(src)}`);
-        const relativePath = file.replace(regex, '');
         if (relativePath == '/fields.js') {
           // Root fields.js
-          const compiledJsonPath = convertFieldsJs(file, options);
-          Promise.resolve(compiledJsonPath).then(filePath => {
-            jsonFiles.push(filePath);
-            compiledJsonFiles.push(filePath);
-          });
+          const compiledJsonPath = convertFieldsJs(file, options, writeDir);
+          jsonFiles.push(compiledJsonPath);
+          compiledJsonFiles.push(compiledJsonPath);
         }
       } else {
         cssAndJsFiles.push(file);
@@ -102,11 +108,14 @@ function getFilesByType(files, src) {
       otherFiles.push(file);
     }
   });
+
+  // These could contain promises!
   return [
     [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
     compiledJsonFiles,
   ];
 }
+
 /**
  *
  * @param {number} accountId
@@ -114,9 +123,12 @@ function getFilesByType(files, src) {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(accountId, src, dest, options) {
+async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
+  const tmpDir = createTmpDir();
   const regex = new RegExp(`^${escapeRegExp(src)}`);
+  const tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
   const files = await walk(src);
+
   const allowedFiles = files
     .filter(file => {
       if (!isAllowedExtension(file)) {
@@ -126,15 +138,22 @@ async function uploadFolder(accountId, src, dest, options) {
     })
     .filter(createIgnoreFilter());
 
-  const [filesByType, compiledJsonFiles] = getFilesByType(allowedFiles, src);
+  // These might contain promises, so resolve first.
+  const [filesByType, compiledJsonFiles] = await resolvePromises(
+    getFilesByType(allowedFiles, src, tmpDir)
+  );
+
   const apiOptions = getFileMapperQueryValues(options);
 
   const failures = [];
 
   const uploadFile = file => {
-    const relativePath = file.replace(regex, '');
+    // files in compiledJsonFiles always belong to the tmp directory.
+    const relativePath = file.replace(
+      compiledJsonFiles.includes(file) ? tmpDirRegex : regex,
+      ''
+    );
     const destPath = convertToUnixPath(path.join(dest, relativePath));
-
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
@@ -204,10 +223,35 @@ async function uploadFolder(accountId, src, dest, options) {
       })
     )
     .finally(() => {
-      // After uploading the compiled json files, delete.
-      compiledJsonFiles.forEach(file => {
-        fs.unlinkSync(file);
-      });
+      if (typeof yargs.argv.saveOutput !== undefined) {
+        saveOutput = yargs.argv.saveOutput;
+      }
+
+      // After uploading the compiled json files, delete/keep based on user choice
+      if (saveOutput) {
+        compiledJsonFiles.forEach(filePath => {
+          // Save in same directory as respective fields.js.
+          const relativePath = path.relative(tmpDir, path.dirname(filePath));
+          const savePath = path.join(src, relativePath, 'fields.output.json');
+          try {
+            fs.copyFileSync(filePath, savePath);
+          } catch (err) {
+            logger.error(
+              `There was an error saving the json output to ${savePath}`
+            );
+            throw err;
+          }
+        });
+      }
+      // Delete tmp directory
+      try {
+        fs.rmdirSync(tmpDir, { recursive: true });
+      } catch (err) {
+        logger.error(
+          'There was an error deleting the temporary project source'
+        );
+        throw err;
+      }
     });
 
   return results;
@@ -219,9 +263,31 @@ function hasUploadErrors(results) {
   );
 }
 
+async function resolvePromises([filesByTypePromises, compiledJsonPromises]) {
+  const filesByType = await Promise.all(
+    filesByTypePromises.map(typeArray => Promise.all(typeArray))
+  );
+  const compiledJsonFiles = await Promise.all(compiledJsonPromises);
+  return [filesByType, compiledJsonFiles];
+}
+
+function createTmpDir() {
+  let tmpDir;
+  try {
+    tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'hubspot-temp-fieldsjs-output-')
+    );
+  } catch (err) {
+    logger.error('An error occured writing temporary project source.');
+    throw err;
+  }
+  return tmpDir;
+}
+
 module.exports = {
   getFilesByType,
   hasUploadErrors,
   FileUploadResultType,
   uploadFolder,
+  resolvePromises,
 };

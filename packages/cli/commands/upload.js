@@ -229,5 +229,10 @@ exports.builder = yargs => {
     type: 'array',
     default: [''],
   });
+  yargs.option('saveOutput', {
+    describe: i18n(`${i18nKey}.positionals.options.saveOutput`),
+    type: 'boolean',
+    default: true,
+  });
   return yargs;
 };
