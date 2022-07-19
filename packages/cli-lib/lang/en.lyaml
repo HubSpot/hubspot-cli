@@ -343,7 +343,7 @@ en:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:
           auth:
-            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
+            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
           account:
             describe: "HubSpot account to authenticate"
@@ -787,7 +787,6 @@ en:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
           enterClientSecret: "Enter your OAuth2 client secret: "
-          enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
           personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
@@ -797,7 +796,6 @@ en:
             openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:
             invalidAccountId: "You did not enter a valid account ID. Please try again."
-            invalidAPIKey: "You did not enter a valid API key. Please try again"
             invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
             invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
             invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."

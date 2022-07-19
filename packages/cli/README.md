@@ -133,7 +133,7 @@ hs hubdb delete <id or name>
 
 ## Authentication
 
-There are three ways that the tools can authenticate with HubSpot.
+There are two ways that the tools can authenticate with HubSpot.
 
 ### Personal Access Key (recommended)
 
@@ -146,20 +146,6 @@ There are three ways that the tools can authenticate with HubSpot.
 3. Select `OAuth2` and follow the steps
 
 _**Note:** The Account ID used should be the Test Account ID (not the developer app ID). Client ID and Client Secret are from the developer app._
-
-### HubSpot API Key
-
-1. [Set up an API Key for the Account](https://knowledge.hubspot.com/articles/kcs_article/integrations/how-do-i-get-my-hubspot-api-key)
-2. Edit the [hubspot.config.yml](../../docs/HubspotConfigFile.md) file to set the `authType` for the account to `apikey` and add `apiKey` as shown below:
-
-```yaml
-defaultPortal: DEV
-portals:
-  - name: DEV
-    portalId: 123
-    authType: apikey
-    apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-```
 ### Exit Codes
 
 The CLI will exit with one of the following exit codes:
