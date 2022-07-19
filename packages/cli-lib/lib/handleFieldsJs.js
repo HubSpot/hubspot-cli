@@ -49,7 +49,10 @@ async function convertFieldsJs(filePath, options, writeDir) {
   );
 
   try {
-    // If we do not clear the cache, hs watch will not work
+    /* Since we require() fields.js files, node will cache them.
+     * Thus during an hs watch, if the user edits a fields.js file, node will return the cached version on require() instead of re-requiring the new one.
+     * So we clean the cache before requiring so that node requires the fresh fields.js. See https://nodejs.org/api/modules.html#caching.
+     */
     delete require.cache[filePath];
 
     // If no options are provided, yargs will pass [''].
