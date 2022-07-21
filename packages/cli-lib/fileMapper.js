@@ -108,6 +108,19 @@ function getFileMapperQueryValues({ mode, options = {} }) {
 }
 
 /**
+* Determines API param based on mode an options
+*
+* @property {Object} options
+* @returns {string}
+*/
+function getAssetVersionIdentifier(options) {
+  if (options.assetVersion && options.src.startsWith("@hubspot/")) {
+    return " v" +options.assetVersion;
+  }
+ return "";
+}
+
+/**
  * TODO: Replace with TypeScript interface.
  * @typedef {Object} FileMapperNode A tree node from the filemapper API.
  * @property {string} path - Directory or file path.
@@ -378,9 +391,10 @@ async function downloadFile(input) {
     await fetchAndWriteFileStream(input, input.src, localFsPath);
     await queue.onIdle();
     logger.success(
-      'Completed fetch of file "%s" to "%s" from the Design Manager',
+      'Completed fetch of file "%s"%s to "%s" from the Design Manager',
       input.src,
-      localFsPath
+      getAssetVersionIdentifier(input.options),
+      input.dest
     );
   } catch (err) {
     if (isHubspot && isTimeout(err)) {
@@ -476,8 +490,9 @@ async function downloadFolder(input) {
 
     if (success) {
       logger.success(
-        'Completed fetch of folder "%s" to "%s" from the Design Manager',
+        'Completed fetch of folder "%s"%s to "%s" from the Design Manager',
         input.src,
+        getAssetVersionIdentifier(input.options),
         input.dest
       );
     } else {
