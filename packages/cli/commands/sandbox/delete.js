@@ -11,7 +11,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getConfig } = require('@hubspot/cli-lib');
+const { getConfig, getEnv } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { removeAccountFromConfig } = require('@hubspot/cli-lib/lib/config');
 const {
@@ -19,6 +19,8 @@ const {
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -56,6 +58,26 @@ exports.handler = async options => {
         });
       }
     }
+  }
+
+  if (!getAccountId({ account: parentAccountId })) {
+    const baseUrl = getHubSpotWebsiteOrigin(
+      getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    );
+    const url = `${baseUrl}/sandboxes/${parentAccountId}`;
+    const command = `hs auth ${
+      getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
+    } --account=${parentAccountId}`;
+    logger.log('');
+    logger.error(
+      i18n(`${i18nKey}.noParentPortalAvailable`, {
+        parentAccountId,
+        url,
+        command,
+      })
+    );
+    logger.log('');
+    process.exit(EXIT_CODES.ERROR);
   }
 
   logger.debug(

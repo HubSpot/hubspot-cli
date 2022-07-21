@@ -602,6 +602,7 @@ en:
               delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} not found, it may have already been deleted."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             options:
               account:
                 describe: "Account name or id to delete"
