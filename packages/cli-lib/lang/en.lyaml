@@ -218,6 +218,8 @@ en:
         options:
           staging:
             describe: "Retrieve staged changes for project"
+          assetVersion:
+            describe: "Specify what version of a default asset to fetch"
         positionals:
           dest:
             describe: "Local directory you would like the files to be placed in, relative to your current working directory"

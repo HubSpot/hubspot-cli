@@ -102,6 +102,7 @@ function getFileMapperQueryValues({ mode, options = {} }) {
     qs: {
       buffer: useApiBuffer(mode),
       environmentId: options.staging ? 2 : 1,
+      version: options.assetVersion,
     },
   };
 }
