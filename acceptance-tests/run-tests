@@ -17,9 +17,9 @@ const reporter = new Reporter({
 setArgsOverrides(
   yargs(hideBin(process.argv))
     .option('portalId', {
-      alias: 'p',
+      alias: ['p', 'accountId'],
       type: 'string',
-      description: 'Portal Id',
+      description: 'Account Id',
     })
     .option('cliPath', {
       alias: 'c',

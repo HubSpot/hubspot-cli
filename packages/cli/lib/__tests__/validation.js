@@ -24,13 +24,6 @@ describe('validation', () => {
       getAccountConfig.mockReturnValueOnce(undefined);
       expect(await validateAccount({ account: 123 })).toBe(false);
     });
-    it('returns false if an api key is missing', async () => {
-      getAccountId.mockReturnValueOnce(123);
-      getAccountConfig.mockReturnValueOnce({
-        accountId: 123,
-      });
-      expect(await validateAccount({ account: 123 })).toBe(false);
-    });
     it('returns false for oauth2 authType if auth is missing', async () => {
       getAccountId.mockReturnValueOnce(123);
       getAccountConfig.mockReturnValueOnce({

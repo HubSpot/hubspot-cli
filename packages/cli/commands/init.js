@@ -5,8 +5,6 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
-  writeConfig,
-  updateAccountConfig,
 } = require('@hubspot/cli-lib/lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
@@ -15,7 +13,6 @@ const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
-  API_KEY_AUTH_METHOD,
   ENVIRONMENTS,
 } = require('@hubspot/cli-lib/lib/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -29,7 +26,6 @@ const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
-  API_KEY_FLOW,
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
 const {
@@ -70,28 +66,14 @@ const oauthConfigCreationFlow = async env => {
   return accountConfig;
 };
 
-const apiKeyConfigCreationFlow = async env => {
-  const configData = await promptUser(API_KEY_FLOW);
-  const accountConfig = {
-    ...configData,
-    env,
-  };
-  updateAccountConfig(accountConfig);
-  updateDefaultAccount(accountConfig.name);
-  writeConfig();
-  return accountConfig;
-};
-
 const CONFIG_CREATION_FLOWS = {
   [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: personalAccessKeyConfigCreationFlow,
   [OAUTH_AUTH_METHOD.value]: oauthConfigCreationFlow,
-  [API_KEY_AUTH_METHOD.value]: apiKeyConfigCreationFlow,
 };
 
 const AUTH_TYPE_NAMES = {
   [PERSONAL_ACCESS_KEY_AUTH_METHOD.value]: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
-  [API_KEY_AUTH_METHOD.value]: API_KEY_AUTH_METHOD.name,
 };
 
 exports.command = 'init [--account]';
@@ -164,7 +146,6 @@ exports.builder = yargs => {
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
         `${OAUTH_AUTH_METHOD.value}`,
-        `${API_KEY_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
       defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {

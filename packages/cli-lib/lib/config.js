@@ -376,6 +376,8 @@ const updateAccountConfig = configOptions => {
     name,
     apiKey,
     personalAccessKey,
+    sandboxAccountType,
+    parentAccountId,
   } = configOptions;
 
   if (!portalId) {
@@ -410,6 +412,8 @@ const updateAccountConfig = configOptions => {
     apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
     personalAccessKey,
+    sandboxAccountType,
+    parentAccountId,
   };
 
   let accounts = getConfigAccounts(config);
