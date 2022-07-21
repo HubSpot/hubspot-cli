@@ -108,16 +108,16 @@ function getFileMapperQueryValues({ mode, options = {} }) {
 }
 
 /**
-* Determines API param based on mode an options
-*
-* @property {Object} options
-* @returns {string}
-*/
+ * Determines API param based on mode an options
+ *
+ * @property {Object} options
+ * @returns {string}
+ */
 function getAssetVersionIdentifier(options) {
-  if (options.assetVersion && options.src.startsWith("@hubspot/")) {
-    return " v" +options.assetVersion;
+  if (options.assetVersion && options.src.startsWith('@hubspot/')) {
+    return ' v' + options.assetVersion;
   }
- return "";
+  return '';
 }
 
 /**
