@@ -1,7 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
+const {
+  uploadFolder,
+  hasUploadErrors,
+  createTmpDir,
+} = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
@@ -61,17 +65,24 @@ exports.handler = async options => {
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
-
   const src = options.src || uploadPromptAnswers.src;
   let dest = options.dest || uploadPromptAnswers.dest;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';
   let compiledJsonPath;
+  let tmpDir;
   if (isFieldsJs) {
-    compiledJsonPath = convertFieldsJs(absoluteSrcPath, options.options);
+    // Write to a tmp folder, and change dest to have correct extension
+    tmpDir = createTmpDir();
+    compiledJsonPath = await convertFieldsJs(
+      absoluteSrcPath,
+      options.options,
+      tmpDir
+    );
+    // Ensures that the dest path is a .json:
+    dest = path.join(path.dirname(dest), 'fields.json');
   }
-
   let stats;
   try {
     stats = fs.statSync(absoluteSrcPath);
@@ -164,7 +175,14 @@ exports.handler = async options => {
       })
       .finally(() => {
         if (isFieldsJs) {
-          fs.unlinkSync(compiledJsonPath);
+          try {
+            fs.rmdirSync(tmpDir, { recursive: true });
+          } catch (err) {
+            logger.error(
+              'There was an error deleting the temporary project source'
+            );
+            throw err;
+          }
         }
       });
   } else {

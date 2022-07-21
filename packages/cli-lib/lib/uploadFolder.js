@@ -290,4 +290,5 @@ module.exports = {
   FileUploadResultType,
   uploadFolder,
   resolvePromises,
+  createTmpDir,
 };

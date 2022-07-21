@@ -12,12 +12,12 @@ const {
   logErrorInstance,
 } = require('../errorHandlers');
 const { convertFieldsJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
-const { uploadFolder } = require('./uploadFolder');
+const { uploadFolder, createTmpDir } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension, getExt } = require('../path');
+const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
 const { getThemePreviewUrl } = require('./files');
 
@@ -37,7 +37,7 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 };
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
-function uploadFile(accountId, file, dest, options, watcher) {
+async function uploadFile(accountId, file, dest, options) {
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -47,20 +47,23 @@ function uploadFile(accountId, file, dest, options, watcher) {
     return;
   }
   const isFieldsJs = path.basename(file) == 'fields.js';
+  let compiledJsonPath;
+  let tmpDir;
   if (isFieldsJs) {
-    file = convertFieldsJs(file, options.options);
-    if (getExt(dest) !== 'json') {
-      dest = dest.substring(0, dest.lastIndexOf('.')) + '.json';
-    }
-    watcher.unwatch(file);
+    // Write to a tmp folder, and change dest to have correct extension
+    tmpDir = createTmpDir();
+    compiledJsonPath = await convertFieldsJs(file, options.options, tmpDir);
+    // Ensures that the dest path is a .json:
+    dest = path.join(path.dirname(dest), 'fields.json');
   }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
+  const fileToUpload = isFieldsJs ? compiledJsonPath : file;
 
   return queue
     .add(() => {
-      return upload(accountId, file, dest, apiOptions)
+      return upload(accountId, fileToUpload, dest, apiOptions)
         .then(() => {
           logger.log(`Uploaded file ${file} to ${dest}`);
           notifyOfThemePreview(file, accountId);
@@ -69,22 +72,31 @@ function uploadFile(accountId, file, dest, options, watcher) {
           const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
           logger.debug(uploadFailureMessage);
           logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-          return upload(accountId, file, dest, apiOptions).catch(error => {
-            logger.error(uploadFailureMessage);
-            logApiUploadErrorInstance(
-              error,
-              new ApiErrorContext({
-                accountId,
-                request: dest,
-                payload: file,
-              })
-            );
-          });
+          return upload(accountId, fileToUpload, dest, apiOptions).catch(
+            error => {
+              logger.error(uploadFailureMessage);
+              logApiUploadErrorInstance(
+                error,
+                new ApiErrorContext({
+                  accountId,
+                  request: dest,
+                  payload: file,
+                })
+              );
+            }
+          );
         });
     })
     .finally(() => {
       if (isFieldsJs) {
-        fs.unlinkSync(file);
+        try {
+          fs.rmdirSync(tmpDir, { recursive: true });
+        } catch (err) {
+          logger.error(
+            'There was an error deleting the temporary project source'
+          );
+          throw err;
+        }
       }
     });
 }
