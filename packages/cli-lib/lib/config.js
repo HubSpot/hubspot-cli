@@ -183,6 +183,7 @@ const writeConfig = (options = {}) => {
     logger.debug(`Writing current config to ${configPath}`);
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
+    setConfig(parseConfig(source).parsed);
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
