@@ -83,13 +83,11 @@ function getFilesByType(files, src, writeDir = src) {
         }
       }
     } else if (extension === 'js' || extension === 'css') {
-      if (fileName === 'fields.js') {
-        if (relativePath == '/fields.js') {
-          // Root fields.js
-          const compiledJsonPath = convertFieldsJs(file, options, writeDir);
-          jsonFiles.push(compiledJsonPath);
-          compiledJsonFiles.push(compiledJsonPath);
-        }
+      if (fileName === 'fields.js' && relativePath == '/fields.js') {
+        // Root fields.js
+        const compiledJsonPath = convertFieldsJs(file, options, writeDir);
+        jsonFiles.push(compiledJsonPath);
+        compiledJsonFiles.push(compiledJsonPath);
       } else {
         cssAndJsFiles.push(file);
       }
