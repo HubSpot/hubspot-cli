@@ -252,5 +252,10 @@ exports.builder = yargs => {
     type: 'boolean',
     default: true,
   });
+  yargs.option('processFields', {
+    describe: i18n(`${i18nKey}.positionals.options.processFields`),
+    type: 'boolean',
+    default: false,
+  });
   return yargs;
 };

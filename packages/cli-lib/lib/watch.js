@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const yargs = require('yargs');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
@@ -38,6 +39,7 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
+  const processFields = yargs.argv.processFields;
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -49,7 +51,7 @@ async function uploadFile(accountId, file, dest, options) {
   const isFieldsJs = path.basename(file) == 'fields.js';
   let compiledJsonPath;
   let tmpDir;
-  if (isFieldsJs) {
+  if (isFieldsJs && processFields) {
     // Write to a tmp folder, and change dest to have correct extension
     tmpDir = createTmpDir();
     compiledJsonPath = await convertFieldsJs(file, options.options, tmpDir);
@@ -88,7 +90,7 @@ async function uploadFile(accountId, file, dest, options) {
         });
     })
     .finally(() => {
-      if (isFieldsJs) {
+      if (isFieldsJs && processFields) {
         try {
           fs.rmdirSync(tmpDir, { recursive: true });
         } catch (err) {

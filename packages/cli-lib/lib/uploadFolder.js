@@ -3,12 +3,12 @@ const os = require('os');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
-const { convertFieldsJs } = require('./handleFieldsJs');
+const { getFilesByTypeAndProcessFields } = require('./handleFieldsJs');
 const { logger } = require('../logger');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
-const { walk, listFilesInDir } = require('./walk');
+const { walk } = require('./walk');
 const escapeRegExp = require('./escapeRegExp');
 const {
   convertToUnixPath,
@@ -31,87 +31,32 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function getFilesByType(files, src, writeDir = src) {
-  const writeDirRegex = new RegExp(`^${escapeRegExp(src)}`);
+function getFilesByType(files) {
   const moduleFiles = [];
   const cssAndJsFiles = [];
   const otherFiles = [];
   const templateFiles = [];
   const jsonFiles = [];
-  const compiledJsonFiles = [];
-
-  const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
 
   files.forEach(file => {
     const parts = splitLocalPath(file);
     const extension = getExt(file);
+
     const moduleFolder = parts.find(part => part.endsWith('.module'));
-    const fileName = parts[parts.length - 1];
-    const options = yargs.argv.options;
-    const relativePath = file.replace(writeDirRegex, '');
-
-    if (fileName == 'fields.output.json') {
-      return;
-    }
     if (moduleFolder) {
-      //If the folder contains a fields.js, we will always overwrite the existing fields.json.
-      if (fileName === 'fields.js') {
-        const compiledJsonPath = convertFieldsJs(
-          file,
-          options,
-          path.dirname(path.join(writeDir, relativePath))
-        );
-
-        moduleFiles.push(compiledJsonPath);
-        compiledJsonFiles.push(compiledJsonPath);
-      } else {
-        if (getExt(file) == 'json') {
-          // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
-          if (fileName == 'meta.json') {
-            moduleFiles.push(file);
-          }
-
-          if (fileName === 'fields.json') {
-            // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
-            const dir = listFilesInDir(path.dirname(file));
-            if (!dir.includes('fields.js')) {
-              moduleFiles.push(file);
-            }
-          }
-        } else {
-          moduleFiles.push(file);
-        }
-      }
+      moduleFiles.push(file);
     } else if (extension === 'js' || extension === 'css') {
-      if (fileName === 'fields.js' && relativePath == '/fields.js') {
-        // Root fields.js
-        const compiledJsonPath = convertFieldsJs(file, options, writeDir);
-        jsonFiles.push(compiledJsonPath);
-        compiledJsonFiles.push(compiledJsonPath);
-      } else {
-        cssAndJsFiles.push(file);
-      }
+      cssAndJsFiles.push(file);
     } else if (extension === 'html') {
       templateFiles.push(file);
     } else if (extension === 'json') {
-      if (fileName == 'fields.json') {
-        // Only add a fields.json if there is not a fields.js.
-        if (!fieldsJsInRoot) {
-          jsonFiles.push(file);
-        }
-      } else {
-        jsonFiles.push(file);
-      }
+      jsonFiles.push(file);
     } else {
       otherFiles.push(file);
     }
   });
 
-  // These could contain promises!
-  return [
-    [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
-    compiledJsonFiles,
-  ];
+  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles];
 }
 
 /**
@@ -126,6 +71,11 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   const tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
   const files = await walk(src);
+  const apiOptions = getFileMapperQueryValues(options);
+  const failures = [];
+  const processFields = yargs.argv.processFields;
+  let filesByType;
+  let compiledJsonFiles = [];
 
   const allowedFiles = files
     .filter(file => {
@@ -136,14 +86,14 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
     })
     .filter(createIgnoreFilter());
 
-  // These might contain promises, so resolve first.
-  const [filesByType, compiledJsonFiles] = await resolvePromises(
-    getFilesByType(allowedFiles, src, tmpDir)
-  );
-
-  const apiOptions = getFileMapperQueryValues(options);
-
-  const failures = [];
+  if (processFields) {
+    // These might contain promises, so resolve first.
+    [filesByType, compiledJsonFiles] = await resolvePromises(
+      getFilesByTypeAndProcessFields(allowedFiles, src, tmpDir)
+    );
+  } else {
+    filesByType = getFilesByType(allowedFiles, src);
+  }
 
   const uploadFile = file => {
     // files in compiledJsonFiles always belong to the tmp directory.
@@ -221,6 +171,7 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
       })
     )
     .finally(() => {
+      if (!processFields) return;
       if (typeof yargs.argv.saveOutput !== undefined) {
         saveOutput = yargs.argv.saveOutput;
       }
