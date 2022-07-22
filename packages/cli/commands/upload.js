@@ -65,6 +65,7 @@ exports.handler = async options => {
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
+  const processFields = options.processFields;
   const src = options.src || uploadPromptAnswers.src;
   let dest = options.dest || uploadPromptAnswers.dest;
 
@@ -72,7 +73,7 @@ exports.handler = async options => {
   const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';
   let compiledJsonPath;
   let tmpDir;
-  if (isFieldsJs) {
+  if (isFieldsJs && processFields) {
     // Write to a tmp folder, and change dest to have correct extension
     tmpDir = createTmpDir();
     compiledJsonPath = await convertFieldsJs(
@@ -174,15 +175,15 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
-        if (isFieldsJs) {
-          try {
-            fs.rmdirSync(tmpDir, { recursive: true });
-          } catch (err) {
-            logger.error(
-              'There was an error deleting the temporary project source'
-            );
-            throw err;
-          }
+        if (isFieldsJs && processFields) {
+          fs.rm(tmpDir, { recursive: true }, err => {
+            if (err) {
+              logger.error(
+                'There was an error deleting the temporary project source'
+              );
+              throw err;
+            }
+          });
         }
       });
   } else {

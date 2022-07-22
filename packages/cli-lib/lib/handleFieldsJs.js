@@ -35,6 +35,20 @@ function handleFieldErrors(e, filePath) {
   }
 }
 
+/*
+ * Determines if file is a processable fields.js file (i.e., if it is in the root or in a module folder)
+ */
+function isProcessableFieldsJs(src, filePath) {
+  const regex = new RegExp(`^${escapeRegExp(src)}`);
+  const parts = splitLocalPath(filePath);
+  const relativePath = filePath.replace(regex, '');
+  const baseName = path.basename(filePath);
+  const moduleFolder = parts.find(part => part.endsWith('.module'));
+  return (
+    baseName == 'fields.js' && (moduleFolder || relativePath == '/fields.js')
+  );
+}
+
 /**
  * Converts a fields.js file into a fields.json file, writes, and returns of fields.json
  * @param {string} file - The path of the fields.js javascript file.
@@ -184,4 +198,5 @@ module.exports = {
   convertFieldsJs,
   handleFieldErrors,
   getFilesByTypeAndProcessFields,
+  isProcessableFieldsJs,
 };

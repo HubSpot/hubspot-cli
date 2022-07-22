@@ -12,7 +12,10 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
-const { convertFieldsJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
+const {
+  convertFieldsJs,
+  isProcessableFieldsJs,
+} = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { uploadFolder, createTmpDir } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
@@ -91,14 +94,14 @@ async function uploadFile(accountId, file, dest, options) {
     })
     .finally(() => {
       if (isFieldsJs && processFields) {
-        try {
-          fs.rmdirSync(tmpDir, { recursive: true });
-        } catch (err) {
-          logger.error(
-            'There was an error deleting the temporary project source'
-          );
-          throw err;
-        }
+        fs.rm(tmpDir, { recursive: true }, err => {
+          if (err) {
+            logger.error(
+              'There was an error deleting the temporary project source'
+            );
+            throw err;
+          }
+        });
       }
     });
 }
@@ -177,23 +180,19 @@ function watch(
 
   watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(
-      accountId,
-      filePath,
-      destPath,
-      {
-        mode,
-        options,
-      },
-      watcher
-    );
+    const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      mode,
+      options,
+    });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
 
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
-      const remotePath = getDesignManagerPath(filePath);
+      // If it's a fields.js file that is in a module folder or the root, then ignore
+      if (isProcessableFieldsJs(src, filePath)) return;
 
+      const remotePath = getDesignManagerPath(filePath);
       if (shouldIgnoreFile(filePath)) {
         logger.debug(`Skipping ${filePath} due to an ignore rule`);
         return;
@@ -226,16 +225,10 @@ function watch(
 
   watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
-    const uploadPromise = uploadFile(
-      accountId,
-      filePath,
-      destPath,
-      {
-        mode,
-        options,
-      },
-      watcher
-    );
+    const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      mode,
+      options,
+    });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });
 

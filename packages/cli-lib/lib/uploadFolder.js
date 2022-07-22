@@ -193,13 +193,15 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
         });
       }
       // Delete tmp directory
-      try {
-        fs.rmdirSync(tmpDir, { recursive: true });
-      } catch (err) {
-        logger.error(
-          'There was an error deleting the temporary project source'
-        );
-        throw err;
+      if (processFields) {
+        fs.rm(tmpDir, { recursive: true }, err => {
+          if (err) {
+            logger.error(
+              'There was an error deleting the temporary project source'
+            );
+            throw err;
+          }
+        });
       }
     });
 
