@@ -1,12 +1,10 @@
 const fsExtra = require('fs-extra');
 const path = require('path');
-const yargs = require('yargs');
 const escapeRegExp = require('./escapeRegExp');
 const { logger } = require('../logger');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt, splitLocalPath } = require('../path');
 const i18nKey = 'cli.commands.upload';
-const { listFilesInDir } = require('./walk');
 
 function handleFieldErrors(e, filePath) {
   if (e instanceof SyntaxError) {
@@ -108,95 +106,9 @@ function fieldsArrayToJson(fields) {
   return JSON.stringify(fields);
 }
 
-function getFilesByTypeAndProcessFields(files, src, writeDir = src) {
-  const writeDirRegex = new RegExp(`^${escapeRegExp(src)}`);
-  const moduleFiles = [];
-  const cssAndJsFiles = [];
-  const otherFiles = [];
-  const templateFiles = [];
-  const jsonFiles = [];
-  const compiledJsonFiles = [];
-
-  const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
-  const options = yargs.argv.options;
-
-  files.forEach(file => {
-    const parts = splitLocalPath(file);
-    const extension = getExt(file);
-    const moduleFolder = parts.find(part => part.endsWith('.module'));
-    const fileName = parts[parts.length - 1];
-    const relativePath = file.replace(writeDirRegex, '');
-
-    if (fileName == 'fields.output.json') {
-      return;
-    }
-    if (moduleFolder) {
-      //If the folder contains a fields.js, we will always overwrite the existing fields.json.
-      if (fileName === 'fields.js') {
-        const compiledJsonPath = convertFieldsJs(
-          file,
-          options,
-          path.dirname(path.join(writeDir, relativePath))
-        );
-
-        moduleFiles.push(compiledJsonPath);
-        compiledJsonFiles.push(compiledJsonPath);
-      } else {
-        if (getExt(file) == 'json') {
-          // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
-          if (fileName == 'meta.json') {
-            moduleFiles.push(file);
-          }
-
-          if (fileName === 'fields.json') {
-            // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
-            const dir = listFilesInDir(path.dirname(file));
-            if (!dir.includes('fields.js')) {
-              moduleFiles.push(file);
-            }
-          }
-        } else {
-          moduleFiles.push(file);
-        }
-      }
-    } else if (extension === 'js' || extension === 'css') {
-      if (fileName === 'fields.js') {
-        if (relativePath == '/fields.js') {
-          // Root fields.js
-          const compiledJsonPath = convertFieldsJs(file, options, writeDir);
-          jsonFiles.push(compiledJsonPath);
-          compiledJsonFiles.push(compiledJsonPath);
-        }
-      } else {
-        cssAndJsFiles.push(file);
-      }
-    } else if (extension === 'html') {
-      templateFiles.push(file);
-    } else if (extension === 'json') {
-      if (fileName == 'fields.json') {
-        // Only add a fields.json if there is not a fields.js.
-        if (!fieldsJsInRoot) {
-          jsonFiles.push(file);
-        }
-      } else {
-        jsonFiles.push(file);
-      }
-    } else {
-      otherFiles.push(file);
-    }
-  });
-
-  // These could contain promises!
-  return [
-    [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
-    compiledJsonFiles,
-  ];
-}
-
 module.exports = {
   fieldsArrayToJson,
   convertFieldsJs,
   handleFieldErrors,
-  getFilesByTypeAndProcessFields,
   isProcessableFieldsJs,
 };

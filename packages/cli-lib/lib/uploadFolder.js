@@ -3,12 +3,12 @@ const os = require('os');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
-const { getFilesByTypeAndProcessFields } = require('./handleFieldsJs');
 const { logger } = require('../logger');
+const { convertFieldsJs } = require('./handleFieldsJs');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
-const { walk } = require('./walk');
+const { walk, listFilesInDir } = require('./walk');
 const escapeRegExp = require('./escapeRegExp');
 const {
   convertToUnixPath,
@@ -30,6 +30,91 @@ const FileUploadResultType = {
 const queue = new PQueue({
   concurrency: 10,
 });
+
+function getFilesByTypeAndProcessFields(files, src, writeDir = src) {
+  const writeDirRegex = new RegExp(`^${escapeRegExp(src)}`);
+  const moduleFiles = [];
+  const cssAndJsFiles = [];
+  const otherFiles = [];
+  const templateFiles = [];
+  const jsonFiles = [];
+  const compiledJsonFiles = [];
+
+  const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
+  const options = yargs.argv.options;
+
+  files.forEach(file => {
+    const parts = splitLocalPath(file);
+    const extension = getExt(file);
+    const moduleFolder = parts.find(part => part.endsWith('.module'));
+    const fileName = parts[parts.length - 1];
+    const relativePath = file.replace(writeDirRegex, '');
+
+    if (fileName == 'fields.output.json') {
+      return;
+    }
+    if (moduleFolder) {
+      //If the folder contains a fields.js, we will always overwrite the existing fields.json.
+      if (fileName === 'fields.js') {
+        const compiledJsonPath = convertFieldsJs(
+          file,
+          options,
+          path.dirname(path.join(writeDir, relativePath))
+        );
+
+        moduleFiles.push(compiledJsonPath);
+        compiledJsonFiles.push(compiledJsonPath);
+      } else {
+        if (getExt(file) == 'json') {
+          // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
+          if (fileName == 'meta.json') {
+            moduleFiles.push(file);
+          }
+
+          if (fileName === 'fields.json') {
+            // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
+            const dir = listFilesInDir(path.dirname(file));
+            if (!dir.includes('fields.js')) {
+              moduleFiles.push(file);
+            }
+          }
+        } else {
+          moduleFiles.push(file);
+        }
+      }
+    } else if (extension === 'js' || extension === 'css') {
+      if (fileName === 'fields.js') {
+        if (relativePath == '/fields.js') {
+          // Root fields.js
+          const compiledJsonPath = convertFieldsJs(file, options, writeDir);
+          jsonFiles.push(compiledJsonPath);
+          compiledJsonFiles.push(compiledJsonPath);
+        }
+      } else {
+        cssAndJsFiles.push(file);
+      }
+    } else if (extension === 'html') {
+      templateFiles.push(file);
+    } else if (extension === 'json') {
+      if (fileName == 'fields.json') {
+        // Only add a fields.json if there is not a fields.js.
+        if (!fieldsJsInRoot) {
+          jsonFiles.push(file);
+        }
+      } else {
+        jsonFiles.push(file);
+      }
+    } else {
+      otherFiles.push(file);
+    }
+  });
+
+  // These could contain promises!
+  return [
+    [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
+    compiledJsonFiles,
+  ];
+}
 
 function getFilesByType(files) {
   const moduleFiles = [];
@@ -242,4 +327,5 @@ module.exports = {
   uploadFolder,
   resolvePromises,
   createTmpDir,
+  getFilesByTypeAndProcessFields,
 };
