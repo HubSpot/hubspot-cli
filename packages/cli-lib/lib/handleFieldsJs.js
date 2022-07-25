@@ -2,6 +2,7 @@ const fsExtra = require('fs-extra');
 const path = require('path');
 const escapeRegExp = require('./escapeRegExp');
 const { logger } = require('../logger');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt, splitLocalPath } = require('../path');
 const i18nKey = 'cli.commands.upload';
@@ -70,6 +71,9 @@ async function convertFieldsJs(filePath, options, writeDir) {
      */
     delete require.cache[filePath];
 
+    // Save CWD and then switch CWD to the project. This is so that any calls to the file system that are written relatively will resolve properly.
+    const cwd = getCwd();
+    process.chdir(dirName);
     // If no options are provided, yargs will pass [''].
     return Promise.resolve(await require(filePath)(options)).then(fields => {
       if (!Array.isArray(fields)) {
@@ -90,6 +94,8 @@ async function convertFieldsJs(filePath, options, writeDir) {
           dest: dirName + '/fields.json',
         })
       );
+      // Switch back to the original directory.
+      process.chdir(cwd);
       return finalPath;
     });
   } catch (e) {
