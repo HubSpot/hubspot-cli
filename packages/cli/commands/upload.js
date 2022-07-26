@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
+const yargs = require('yargs');
 const {
   uploadFolder,
   hasUploadErrors,
@@ -34,7 +34,10 @@ const {
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { getThemePreviewUrl } = require('@hubspot/cli-lib/lib/files');
+const {
+  getThemePreviewUrl,
+  getThemeJSONPath,
+} = require('@hubspot/cli-lib/lib/files');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -68,20 +71,31 @@ exports.handler = async options => {
   const processFields = options.processFields;
   const src = options.src || uploadPromptAnswers.src;
   let dest = options.dest || uploadPromptAnswers.dest;
+  let saveOutput = options.saveOutput;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
   const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';
+  let relativePath;
+  let projectRoot;
   let compiledJsonPath;
-  let tmpDir;
+  let tmpDirRoot;
   if (isFieldsJs && processFields) {
     // Write to a tmp folder, and change dest to have correct extension
-    tmpDir = createTmpDir();
+    tmpDirRoot = createTmpDir();
+
+    // Since the user passes a path directly to the file, it's hard to determine where the project root is.
+    // The theme.json file must always be at the root of the project - so we look for that and determine the path based on it.
+    // The idea here is that if the file to upload is at <root>/modules/example.module/fields.js, then the write location will be <temp-dir>/modules/example.module/fields.json
+    projectRoot = path.dirname(getThemeJSONPath(absoluteSrcPath));
+    relativePath = path.relative(projectRoot, path.dirname(absoluteSrcPath));
+    const writeDir = path.join(tmpDirRoot, relativePath);
+
     compiledJsonPath = await convertFieldsJs(
       absoluteSrcPath,
       options.options,
-      tmpDir
+      writeDir
     );
-    // Ensures that the dest path is a .json:
+    // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this just ensures it works.
     dest = path.join(path.dirname(dest), 'fields.json');
   }
   let stats;
@@ -175,8 +189,30 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
-        if (isFieldsJs && processFields) {
-          fs.rm(tmpDir, { recursive: true }, err => {
+        if (!processFields || !isFieldsJs) return;
+        if (typeof yargs.argv.saveOutput !== undefined) {
+          saveOutput = yargs.argv.saveOutput;
+        }
+
+        // After uploading the compiled json files, delete/keep based on user choice
+        if (saveOutput) {
+          const savePath = path.join(
+            projectRoot,
+            relativePath,
+            'fields.output.json'
+          );
+          try {
+            fs.copyFileSync(compiledJsonPath, savePath);
+          } catch (err) {
+            logger.error(
+              `There was an error saving the json output to ${savePath}`
+            );
+            throw err;
+          }
+        }
+        // Delete tmp directory
+        if (processFields) {
+          fs.rm(tmpDirRoot, { recursive: true }, err => {
             if (err) {
               logger.error(
                 'There was an error deleting the temporary project source'
