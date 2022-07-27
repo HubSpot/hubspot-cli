@@ -54,7 +54,6 @@ function getFilesByTypeAndProcessFields(files, src, writeDir = src) {
       return;
     }
     if (moduleFolder) {
-      //If the folder contains a fields.js, we will always overwrite the existing fields.json.
       if (fileName === 'fields.js') {
         const compiledJsonPath = convertFieldsJs(
           file,

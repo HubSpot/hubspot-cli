@@ -101,9 +101,10 @@ exports.builder = yargs => {
     type: 'string',
   });
   yargs.option('options', {
-    describe: i18n(`${i18nKey}.positionals.options.describe`),
+    describe: i18n(`${i18nKey}.options.options.describe`),
     type: 'array',
     default: [''],
+    hidden: true,
   });
   yargs.option('remove', {
     alias: 'r',
@@ -128,9 +129,10 @@ exports.builder = yargs => {
     requiresArg: true,
   });
   yargs.option('processFields', {
-    describe: i18n(`${i18nKey}.positionals.options.processFields`),
+    describe: i18n(`${i18nKey}.options.processFields.describe`),
     type: 'boolean',
     default: false,
+    hidden: true,
   });
 
   return yargs;

@@ -51,10 +51,10 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  const isFieldsJs = path.basename(file) == 'fields.js';
+  const processFieldsJs = path.basename(file) == 'fields.js' && processFields;
   let compiledJsonPath;
   let tmpDir;
-  if (isFieldsJs && processFields) {
+  if (processFieldsJs) {
     // Write to a tmp folder, and change dest to have correct extension
     tmpDir = createTmpDir();
     compiledJsonPath = await convertFieldsJs(file, options.options, tmpDir);
@@ -64,7 +64,7 @@ async function uploadFile(accountId, file, dest, options) {
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
-  const fileToUpload = isFieldsJs ? compiledJsonPath : file;
+  const fileToUpload = processFieldsJs ? compiledJsonPath : file;
 
   return queue
     .add(() => {
@@ -93,7 +93,7 @@ async function uploadFile(accountId, file, dest, options) {
         });
     })
     .finally(() => {
-      if (isFieldsJs && processFields) {
+      if (processFieldsJs) {
         fs.rm(tmpDir, { recursive: true }, err => {
           if (err) {
             logger.error(

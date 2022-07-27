@@ -74,12 +74,13 @@ exports.handler = async options => {
   let saveOutput = options.saveOutput;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
-  const isFieldsJs = path.basename(absoluteSrcPath) == 'fields.js';
+  const processFieldsJs =
+    path.basename(absoluteSrcPath) == 'fields.js' && processFields;
   let relativePath;
   let projectRoot;
   let compiledJsonPath;
   let tmpDirRoot;
-  if (isFieldsJs && processFields) {
+  if (processFieldsJs) {
     // Write to a tmp folder, and change dest to have correct extension
     tmpDirRoot = createTmpDir();
 
@@ -157,7 +158,7 @@ exports.handler = async options => {
     }
     upload(
       accountId,
-      isFieldsJs ? compiledJsonPath : absoluteSrcPath,
+      processFieldsJs ? compiledJsonPath : absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues({ mode, options })
     )
@@ -189,7 +190,7 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
-        if (!processFields || !isFieldsJs) return;
+        if (!processFieldsJs) return;
         if (typeof yargs.argv.saveOutput !== undefined) {
           saveOutput = yargs.argv.saveOutput;
         }
@@ -280,19 +281,22 @@ exports.builder = yargs => {
     type: 'string',
   });
   yargs.option('options', {
-    describe: i18n(`${i18nKey}.positionals.options.describe`),
+    describe: i18n(`${i18nKey}.options.options.describe`),
     type: 'array',
     default: [''],
+    hidden: true,
   });
   yargs.option('saveOutput', {
-    describe: i18n(`${i18nKey}.positionals.options.saveOutput`),
+    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
     type: 'boolean',
     default: true,
+    hidden: true,
   });
   yargs.option('processFields', {
-    describe: i18n(`${i18nKey}.positionals.options.processFields`),
+    describe: i18n(`${i18nKey}.options.processFields.describe`),
     type: 'boolean',
     default: false,
+    hidden: true,
   });
   return yargs;
 };

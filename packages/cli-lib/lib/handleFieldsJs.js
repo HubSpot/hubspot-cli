@@ -10,11 +10,7 @@ const i18nKey = 'cli.commands.upload';
 function handleFieldErrors(e, filePath) {
   if (e instanceof SyntaxError) {
     const ext = getExt(filePath);
-    if (ext === 'json') {
-      logger.error(
-        i18n(`${i18nKey}.errors.jsonParsingFailed`, { json: filePath })
-      );
-    } else if (ext == 'js') {
+    if (ext == 'js') {
       logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
     }
   }
