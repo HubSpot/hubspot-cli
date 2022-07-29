@@ -49,10 +49,11 @@ function isProcessableFieldsJs(src, filePath) {
  * @param {string} file - The path of the fields.js javascript file.
  * @param {string[]} options - Optional arguments to pass to the exported function in fields.js
  * @param {string} writeDir - The path to write the file to.
- * @returns {string} The path of the written fields.json file.
+ * @returns {Promise} finalPath - Promise that returns path of the written fields.json file.
  */
-async function convertFieldsJs(filePath, options, writeDir) {
+function convertFieldsJs(filePath, options, writeDir) {
   const dirName = path.dirname(filePath);
+
   logger.info(
     i18n(`${i18nKey}.converting`, {
       src: dirName + '/fields.js',
@@ -70,20 +71,21 @@ async function convertFieldsJs(filePath, options, writeDir) {
     // Save CWD and then switch CWD to the project. This is so that any calls to the file system that are written relatively will resolve properly.
     const cwd = getCwd();
     process.chdir(dirName);
-    // If no options are provided, yargs will pass [''].
-    return Promise.resolve(await require(filePath)(options)).then(fields => {
+
+    /*
+     * If the dev marks their exported function as async, then require(filePath) returns an async function. In that case, fieldsArray is going to be a Promise.
+     * Further, it is expected that devs use await on any asyncronous calls.
+     * But fieldsArray _might_ not be a Promise. In order to be sure that it is, we use Promise.resolve.
+     */
+    const fieldsArray = require(filePath)(options);
+    return Promise.resolve(fieldsArray).then(fields => {
       if (!Array.isArray(fields)) {
         throw new SyntaxError(`${filePath} does not return an array.`);
       }
 
       let finalPath = path.join(writeDir, '/fields.json');
       let json = fieldsArrayToJson(fields);
-      try {
-        fsExtra.outputFileSync(finalPath, json);
-      } catch (e) {
-        handleFieldErrors(e, filePath);
-        throw e;
-      }
+      fsExtra.outputFileSync(finalPath, json);
       logger.info(
         i18n(`${i18nKey}.converted`, {
           src: dirName + '/fields.js',

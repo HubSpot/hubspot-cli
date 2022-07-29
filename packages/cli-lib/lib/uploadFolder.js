@@ -108,7 +108,6 @@ function getFilesByTypeAndProcessFields(files, src, writeDir = src) {
     }
   });
 
-  // These could contain promises!
   return [
     [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
     compiledJsonFiles,
@@ -171,7 +170,7 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
     .filter(createIgnoreFilter());
 
   if (processFields) {
-    // These might contain promises, so resolve first.
+    // Because this uploadFolder is async, and because getFilesByTypeAndProcessFields could have promises in the returned arrays, we need wait for them to first.
     [filesByType, compiledJsonFiles] = await resolvePromises(
       getFilesByTypeAndProcessFields(allowedFiles, src, tmpDir)
     );
