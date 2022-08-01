@@ -371,7 +371,7 @@ en:
         describe: "Initialize {{ configName }} for a HubSpot account."
         options:
           auth:
-            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\", \"apikey\"]"
+            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
             defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
           account:
             describe: "HubSpot account to authenticate"
@@ -469,6 +469,7 @@ en:
             logs:
               showingLogs: "Showing logs for:"
               hubspotLogsLink: "View private apps in HubSpot"
+              hubspotLogsDirectLink: "View logs in HubSpot"
               noLogsFound: "No logs were found for \"{{ name }}\""
             table:
               accountHeader: "Account"
@@ -599,8 +600,6 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
-            debug:
-              creating: "Creating sandbox \"{{ name }}\""
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
             info:
@@ -608,8 +607,11 @@ en:
             positionals:
               name:
                 describe: "Name to use for created sandbox"
+            loading:
+              add: "Creating sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
-              create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
               scopes:
@@ -619,18 +621,19 @@ en:
                   \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
           delete:
             describe: "Delete a sandbox account"
+            debug:
+              deleting: "Deleting sandbox account \"{{ account }}\""
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
+            confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
             success:
-              delete: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            failure:
-              delete: "Unable to delete sandbox account {{ account }}."
+            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} not found, it may have already been deleted."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             options:
               account:
                 describe: "Account name or id to delete"
-            temporaryMessage: "The CLI currently does not support deleting sandboxes.
-              \n\nTo delete a sandbox, go to https://app.hubspot.com and navigate to the Sandboxes accounts page to delete your sandbox.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
@@ -814,7 +817,6 @@ en:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
           enterClientSecret: "Enter your OAuth2 client secret: "
-          enterApiKey: "Enter the API key for your account (found at https://app.hubspot.com/l/api-key): "
           enterPersonalAccessKey: "Enter your personal access key: "
           selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
           personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
@@ -824,7 +826,6 @@ en:
             openingWebBrowser: "Opening {{ url }} in your web browser"
           errors:
             invalidAccountId: "You did not enter a valid account ID. Please try again."
-            invalidAPIKey: "You did not enter a valid API key. Please try again"
             invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
             invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
             invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
@@ -877,6 +878,8 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
+          selectAccountName: "Select the sandbox account you want to delete"
+          selectParentAccountName: "Select the account that the sandbox belongs to"
         uploadPrompt:
           enterDest: "[--dest] Enter the destination path: "
           enterSrc: "[--src] Enter the source path: "

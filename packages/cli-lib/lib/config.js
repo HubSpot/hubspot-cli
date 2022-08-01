@@ -183,6 +183,7 @@ const writeConfig = (options = {}) => {
     logger.debug(`Writing current config to ${configPath}`);
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
+    setConfig(parseConfig(source).parsed);
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }
@@ -362,6 +363,37 @@ const getAccountId = nameOrId => {
 /**
  * @throws {Error}
  */
+const removeAccountFromConfig = nameOrId => {
+  const config = getAndLoadConfigIfNeeded();
+  const accountId = getAccountId(nameOrId);
+  let promptDefaultAccount = false;
+
+  if (!accountId) {
+    throw new Error(`Unable to find account for ${nameOrId}.`);
+  }
+
+  const accountConfig = getAccountConfig(accountId);
+
+  if (config.defaultPortal === accountConfig.name) {
+    promptDefaultAccount = true;
+  }
+
+  let accounts = getConfigAccounts(config);
+
+  if (accountConfig) {
+    logger.debug(`Deleting config for ${accountId}`);
+    const index = accounts.indexOf(accountConfig);
+    accounts.splice(index, 1);
+  }
+
+  writeConfig();
+
+  return promptDefaultAccount;
+};
+
+/**
+ * @throws {Error}
+ */
 const updateAccountConfig = configOptions => {
   const {
     portalId,
@@ -380,7 +412,7 @@ const updateAccountConfig = configOptions => {
   } = configOptions;
 
   if (!portalId) {
-    throw new Error('An portalId is required to update the config');
+    throw new Error('A portalId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
@@ -715,6 +747,7 @@ module.exports = {
   loadConfigFromEnvironment,
   getAccountConfig,
   getAccountId,
+  removeAccountFromConfig,
   updateAccountConfig,
   updateDefaultAccount,
   updateDefaultMode,

@@ -11,13 +11,6 @@ allowUsageTracking: false
 
 # List of accounts that are intended to be used
 portals:
-  # Account set up to use an API Key
-  - name: DEV
-    portalId: 123
-    # Override mode for account
-    defaultMode: draft
-    authType: apikey
-    apiKey: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
   # Account set up to use OAuth2
   - name: PROD
     portalId: 456

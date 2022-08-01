@@ -46,7 +46,7 @@ const setArgsOverrides = args => {
 };
 
 const envOverrides = getTruthyValuesOnly({
-  portalId: getEnvValue('PORTAL_ID'),
+  portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
   clientId: getEnvValue('CLIENT_ID'),
@@ -64,7 +64,7 @@ const getTestConfig = () => {
 
   if (!config.portalId)
     throw new Error(
-      'portalId must be defined.  Either set the PORTAL_ID environment variable or use the --portal flag to pass it in.'
+      'accountId must be defined.  Either set the ACCOUNT_ID environment variables, or use the --accountId flag to pass it in.'
     );
 
   if (!config.cliPath)

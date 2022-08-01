@@ -90,7 +90,7 @@ useCustomObjectHubfile: Boolean or Undefined
 portals:
   - name: String
     portalId: Number
-    authType: `personalaccesskey` or `oauth2` or `apikey`
+    authType: `personalaccesskey` or `oauth2`
     auth:
       clientId: String or Undefined
       clientSecret: String or Undefined

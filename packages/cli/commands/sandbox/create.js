@@ -7,7 +7,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
-
+const Spinnies = require('spinnies');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -113,6 +113,10 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const spinnies = new Spinnies({
+    succeedColor: 'white',
+  });
+
   let namePrompt;
 
   trackCommandUsage('sandbox-create', {}, accountId);
@@ -123,26 +127,30 @@ exports.handler = async options => {
 
   const sandboxName = name || namePrompt.name;
 
-  logger.debug(
-    i18n(`${i18nKey}.debug.creating`, {
-      name: sandboxName,
-    })
-  );
   let result;
+
   try {
-    result = await createSandbox(accountId, sandboxName).then(
-      ({ name, sandboxHubId }) => {
-        logger.log('');
-        logger.success(
-          i18n(`${i18nKey}.success.create`, {
-            name,
-            sandboxHubId,
-          })
-        );
-        return { name, sandboxHubId };
-      }
-    );
+    spinnies.add('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.add`, {
+        sandboxName,
+      }),
+    });
+
+    result = await createSandbox(accountId, sandboxName);
+
+    logger.log('');
+    spinnies.succeed('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.succeed`, {
+        name: result.name,
+        sandboxHubId: result.sandboxHubId,
+      }),
+    });
   } catch (err) {
+    spinnies.fail('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.fail`, {
+        sandboxName,
+      }),
+    });
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
@@ -167,6 +175,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
