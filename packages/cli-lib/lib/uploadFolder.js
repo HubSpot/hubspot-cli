@@ -1,10 +1,8 @@
-const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
-const { convertFieldsJs } = require('./handleFieldsJs');
+const { isProcessableFieldsJs, FieldsJs } = require('./handleFieldsJs');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
@@ -31,115 +29,79 @@ const queue = new PQueue({
   concurrency: 10,
 });
 
-function getFilesByTypeAndProcessFields(files, src, writeDir = src) {
-  const writeDirRegex = new RegExp(`^${escapeRegExp(src)}`);
-  const moduleFiles = [];
-  const cssAndJsFiles = [];
-  const otherFiles = [];
-  const templateFiles = [];
-  const jsonFiles = [];
-  const compiledJsonFiles = [];
+const FileTypes = {
+  module: 'moduleFiles',
+  cssAndJs: 'cssAndJsFiles',
+  template: 'templateFiles',
+  json: 'jsonFiles',
+  other: 'otherFiles',
+  fieldsJsOutput: 'fieldsJsOutputFiles',
+};
 
-  const fieldsJsInRoot = listFilesInDir(src).includes('fields.js');
-  const options = yargs.argv.options;
-
-  files.forEach(file => {
-    const parts = splitLocalPath(file);
-    const extension = getExt(file);
-    const moduleFolder = parts.find(part => part.endsWith('.module'));
-    const fileName = parts[parts.length - 1];
-    const relativePath = file.replace(writeDirRegex, '');
-
-    if (fileName == 'fields.output.json') {
-      return;
-    }
-    if (moduleFolder) {
-      if (fileName === 'fields.js') {
-        const compiledJsonPath = convertFieldsJs(
-          file,
-          options,
-          path.dirname(path.join(writeDir, relativePath))
-        );
-
-        moduleFiles.push(compiledJsonPath);
-        compiledJsonFiles.push(compiledJsonPath);
-      } else {
-        if (getExt(file) == 'json') {
-          // Don't push any JSON files that are in the modules folder besides fields & meta or the design manager will get mad.
-          if (fileName == 'meta.json') {
-            moduleFiles.push(file);
-          }
-
-          if (fileName === 'fields.json') {
-            // If the folder contains a fields.js, then do not push the fields.json - we will push our own.
-            const dir = listFilesInDir(path.dirname(file));
-            if (!dir.includes('fields.js')) {
-              moduleFiles.push(file);
-            }
-          }
-        } else {
-          moduleFiles.push(file);
-        }
-      }
-    } else if (extension === 'js' || extension === 'css') {
-      if (fileName === 'fields.js') {
-        if (relativePath == '/fields.js') {
-          // Root fields.js
-          const compiledJsonPath = convertFieldsJs(file, options, writeDir);
-          jsonFiles.push(compiledJsonPath);
-          compiledJsonFiles.push(compiledJsonPath);
-        }
-      } else {
-        cssAndJsFiles.push(file);
-      }
-    } else if (extension === 'html') {
-      templateFiles.push(file);
-    } else if (extension === 'json') {
-      if (fileName == 'fields.json') {
-        // Only add a fields.json if there is not a fields.js.
-        if (!fieldsJsInRoot) {
-          jsonFiles.push(file);
-        }
-      } else {
-        jsonFiles.push(file);
-      }
-    } else {
-      otherFiles.push(file);
-    }
-  });
-
-  return [
-    [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles],
-    compiledJsonFiles,
-  ];
+// Checks if file is in a module folder and if it is, returns the module folder name
+function isModuleFolder(filePath) {
+  const parts = splitLocalPath(filePath);
+  return parts.find(part => part.endsWith('.module'));
 }
 
-function getFilesByType(files) {
-  const moduleFiles = [];
-  const cssAndJsFiles = [];
-  const otherFiles = [];
-  const templateFiles = [];
-  const jsonFiles = [];
+function getFileType(filePath) {
+  const extension = getExt(filePath);
+  const moduleFolder = isModuleFolder(filePath);
+  if (moduleFolder) return FileTypes.module;
 
-  files.forEach(file => {
-    const parts = splitLocalPath(file);
-    const extension = getExt(file);
+  switch (extension) {
+    case 'js' || 'css':
+      return FileTypes.cssAndJs;
+    case 'html':
+      return FileTypes.template;
+    case 'json':
+      return FileTypes.json;
+    default:
+      return FileTypes.other;
+  }
+}
 
-    const moduleFolder = parts.find(part => part.endsWith('.module'));
-    if (moduleFolder) {
-      moduleFiles.push(file);
-    } else if (extension === 'js' || extension === 'css') {
-      cssAndJsFiles.push(file);
-    } else if (extension === 'html') {
-      templateFiles.push(file);
-    } else if (extension === 'json') {
-      jsonFiles.push(file);
+function getFilesByType(filePaths, src, rootWriteDir, processFields) {
+  const srcDirRegex = new RegExp(`^${escapeRegExp(src)}`);
+  const fieldsJsObjects = [];
+  const filePathsByType = {
+    moduleFiles: [],
+    cssAndJsFiles: [],
+    templateFiles: [],
+    jsonFiles: [],
+    otherFiles: [],
+  };
+
+  filePaths.forEach(filePath => {
+    const fileType = getFileType(filePath);
+    const fileName = path.basename(filePath);
+    const relativePath = filePath.replace(srcDirRegex, '');
+
+    if (!processFields) {
+      filePathsByType[fileType].push(filePath);
+      return;
+    }
+    if (fileName === 'fields.output.json') return;
+
+    if (isProcessableFieldsJs(src, filePath)) {
+      const fieldsJs = new FieldsJs(src, filePath, rootWriteDir);
+      const rootOrModule =
+        relativePath === '/fields.js' ? FileTypes.json : FileTypes.module;
+
+      fieldsJsObjects.push(fieldsJs);
+      filePathsByType[rootOrModule].push(fieldsJs);
+    } else if (fileName === 'fields.json') {
+      // A fields.json is only added if there is no fields.js in the same directory.
+      const dirFiles = listFilesInDir(path.dirname(filePath));
+      if (!dirFiles.includes('fields.js')) {
+        filePathsByType[fileType].push(filePath);
+      }
     } else {
-      otherFiles.push(file);
+      filePathsByType[fileType].push(filePath);
     }
   });
 
-  return [otherFiles, moduleFiles, cssAndJsFiles, templateFiles, jsonFiles];
+  return [filePathsByType, fieldsJsObjects];
 }
 
 /**
@@ -150,15 +112,17 @@ function getFilesByType(files) {
  * @param {object} options
  */
 async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
-  const tmpDir = createTmpDir();
+  const processFieldsJs = yargs.argv.processFields;
+  const tmpDir = processFieldsJs ? FieldsJs.createTmpDir() : null;
   const regex = new RegExp(`^${escapeRegExp(src)}`);
-  const tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
+
   const files = await walk(src);
   const apiOptions = getFileMapperQueryValues(options);
   const failures = [];
-  const processFields = yargs.argv.processFields;
   let filesByType;
-  let compiledJsonFiles = [];
+  let fieldsJsObjects = [];
+  let fieldsJsPaths = [];
+  let tmpDirRegex;
 
   const allowedFiles = files
     .filter(file => {
@@ -169,27 +133,40 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
     })
     .filter(createIgnoreFilter());
 
-  if (processFields) {
-    // Because this uploadFolder is async, and because getFilesByTypeAndProcessFields could have promises in the returned arrays, we need wait for them to first.
-    [filesByType, compiledJsonFiles] = await resolvePromises(
-      getFilesByTypeAndProcessFields(allowedFiles, src, tmpDir)
-    );
-  } else {
-    filesByType = getFilesByType(allowedFiles, src);
-  }
+  [filesByType, fieldsJsObjects] = getFilesByType(
+    allowedFiles,
+    src,
+    tmpDir,
+    processFieldsJs
+  );
+  if (fieldsJsObjects.length) {
+    // Wait for each promise to resolve in sequence. Since we need to change the directory of the process during
+    // FieldsJS processing, it is important that we wait for each fieldsjs to finish processing before moving on to the next
+    for (let fieldsJs of fieldsJsObjects) {
+      let outputPath = await fieldsJs.getOutputPathPromise();
+      fieldsJs.outputPath = outputPath;
+    }
 
+    // By construction, the filesByType array will contain FieldsJs objects. Since we have now resolved the
+    // outputPaths, go through and replace the objects with their outputPaths.
+    filesByType = removeFieldsJsFromFilesByType(Object.values(filesByType));
+    fieldsJsPaths = fieldsJsObjects.map(fieldsJs => fieldsJs.outputPath);
+    tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
+  } else {
+    filesByType = Object.values(filesByType);
+  }
   const uploadFile = file => {
-    // files in compiledJsonFiles always belong to the tmp directory.
+    // files in fieldsJSOutputFiles always belong to the tmp directory.
     const relativePath = file.replace(
-      compiledJsonFiles.includes(file) ? tmpDirRegex : regex,
+      fieldsJsPaths.includes(file) ? tmpDirRegex : regex,
       ''
     );
     const destPath = convertToUnixPath(path.join(dest, relativePath));
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
-        await upload(accountId, file, destPath, apiOptions);
-        logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        //await upload(accountId, file, destPath, apiOptions);
+        //logger.log('Uploaded file "%s" to "%s"', file, destPath);
       } catch (error) {
         if (isFatalError(error)) {
           throw error;
@@ -254,38 +231,15 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
       })
     )
     .finally(() => {
-      if (!processFields) return;
+      if (!processFieldsJs) return;
       if (typeof yargs.argv.saveOutput !== undefined) {
         saveOutput = yargs.argv.saveOutput;
       }
-
-      // After uploading the compiled json files, delete/keep based on user choice
+      // After uploading the output json files, delete/keep based on user choice
       if (saveOutput) {
-        compiledJsonFiles.forEach(filePath => {
-          // Save in same directory as respective fields.js.
-          const relativePath = path.relative(tmpDir, path.dirname(filePath));
-          const savePath = path.join(src, relativePath, 'fields.output.json');
-          try {
-            fs.copyFileSync(filePath, savePath);
-          } catch (err) {
-            logger.error(
-              `There was an error saving the json output to ${savePath}`
-            );
-            throw err;
-          }
-        });
+        fieldsJsObjects.forEach(fieldsJs => fieldsJs.saveOutput());
       }
-      // Delete tmp directory
-      if (processFields) {
-        fs.rm(tmpDir, { recursive: true }, err => {
-          if (err) {
-            logger.error(
-              'There was an error deleting the temporary project source'
-            );
-            throw err;
-          }
-        });
-      }
+      FieldsJs.deleteDir(tmpDir);
     });
 
   return results;
@@ -297,25 +251,12 @@ function hasUploadErrors(results) {
   );
 }
 
-async function resolvePromises([filesByTypePromises, compiledJsonPromises]) {
-  const filesByType = await Promise.all(
-    filesByTypePromises.map(typeArray => Promise.all(typeArray))
+function removeFieldsJsFromFilesByType(filesByType) {
+  return filesByType.map(fileTypeArray =>
+    fileTypeArray.map(filePath => {
+      return filePath instanceof FieldsJs ? filePath.outputPath : filePath;
+    })
   );
-  const compiledJsonFiles = await Promise.all(compiledJsonPromises);
-  return [filesByType, compiledJsonFiles];
-}
-
-function createTmpDir() {
-  let tmpDir;
-  try {
-    tmpDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'hubspot-temp-fieldsjs-output-')
-    );
-  } catch (err) {
-    logger.error('An error occured writing temporary project source.');
-    throw err;
-  }
-  return tmpDir;
 }
 
 module.exports = {
@@ -323,7 +264,4 @@ module.exports = {
   hasUploadErrors,
   FileUploadResultType,
   uploadFolder,
-  resolvePromises,
-  createTmpDir,
-  getFilesByTypeAndProcessFields,
 };

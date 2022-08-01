@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
 const chokidar = require('chokidar');
@@ -13,10 +12,10 @@ const {
   logErrorInstance,
 } = require('../errorHandlers');
 const {
-  convertFieldsJs,
+  FieldsJs,
   isProcessableFieldsJs,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
-const { uploadFolder, createTmpDir } = require('./uploadFolder');
+const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
@@ -43,6 +42,7 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const processFields = yargs.argv.processFields;
+  const src = yargs.argv.src;
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -51,20 +51,17 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  const processFieldsJs = path.basename(file) == 'fields.js' && processFields;
-  let compiledJsonPath;
-  let tmpDir;
+  const processFieldsJs = isProcessableFieldsJs(src, file) && processFields;
+  let fieldsJs;
   if (processFieldsJs) {
-    // Write to a tmp folder, and change dest to have correct extension
-    tmpDir = createTmpDir();
-    compiledJsonPath = await convertFieldsJs(file, options.options, tmpDir);
-    // Ensures that the dest path is a .json:
+    fieldsJs = await new FieldsJs(src, file);
+    fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
     dest = path.join(path.dirname(dest), 'fields.json');
   }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
-  const fileToUpload = processFieldsJs ? compiledJsonPath : file;
+  const fileToUpload = processFieldsJs ? fieldsJs.outputPath : file;
 
   return queue
     .add(() => {
@@ -94,14 +91,7 @@ async function uploadFile(accountId, file, dest, options) {
     })
     .finally(() => {
       if (processFieldsJs) {
-        fs.rm(tmpDir, { recursive: true }, err => {
-          if (err) {
-            logger.error(
-              'There was an error deleting the temporary project source'
-            );
-            throw err;
-          }
-        });
+        FieldsJs.deleteDir(fieldsJs.rootWriteDir);
       }
     });
 }

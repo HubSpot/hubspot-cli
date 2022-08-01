@@ -1,57 +1,88 @@
-const fsExtra = require('fs-extra');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const fsExtra = require('fs-extra');
 const escapeRegExp = require('./escapeRegExp');
+const yargs = require('yargs');
 const { logger } = require('../logger');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getExt, splitLocalPath } = require('../path');
 const i18nKey = 'cli.commands.upload';
 
-function handleFieldErrors(e, filePath) {
-  if (e instanceof SyntaxError) {
-    const ext = getExt(filePath);
-    if (ext == 'js') {
-      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
+class FieldsJs {
+  constructor(src, filePath, rootWriteDir) {
+    this.src = src;
+    this.filePath = filePath;
+
+    // Create tmpDir if no writeDir is given.
+    this.rootWriteDir =
+      rootWriteDir === undefined ? FieldsJs.createTmpDir() : rootWriteDir;
+  }
+
+  static createTmpDir() {
+    let tmpDir;
+    try {
+      tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'hubspot-temp-fieldsjs-output-')
+      );
+    } catch (err) {
+      logger.error('An error occured writing temporary project source.');
+      throw err;
+    }
+    return tmpDir;
+  }
+
+  // Accepts either a path as a string, or a FieldsJs object with a rootWriteDir property.
+  static deleteDir(dir) {
+    fs.rm(dir, { recursive: true }, err => {
+      if (err) {
+        logger.error(
+          'There was an error deleting the temporary project source'
+        );
+        throw err;
+      }
+    });
+  }
+
+  saveOutput() {
+    // Save in same directory as respective fields.js.
+    const relativePath = path.relative(
+      this.rootWriteDir,
+      path.dirname(this.outputPath)
+    );
+    const savePath = path.join(this.src, relativePath, 'fields.output.json');
+    try {
+      fs.copyFileSync(this.outputPath, savePath);
+    } catch (err) {
+      logger.error(`There was an error saving the json output to ${savePath}`);
+      throw err;
     }
   }
-  if (e.code === 'ENOENT') {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: filePath,
-      })
-    );
-  }
-  if (e.code === 'MODULE_NOT_FOUND') {
-    logger.error(
-      i18n(`${i18nKey}.errors.jsSyntaxError`, {
-        path: filePath,
-      })
-    );
-  }
-}
 
-/*
- * Determines if file is a processable fields.js file (i.e., if it is in the root or in a module folder)
- */
-function isProcessableFieldsJs(src, filePath) {
-  const regex = new RegExp(`^${escapeRegExp(src)}`);
-  const parts = splitLocalPath(filePath);
-  const relativePath = filePath.replace(regex, '');
-  const baseName = path.basename(filePath);
-  const moduleFolder = parts.find(part => part.endsWith('.module'));
-  return (
-    baseName == 'fields.js' && (moduleFolder || relativePath == '/fields.js')
-  );
+  getWriteDir() {
+    const srcDirRegex = new RegExp(`^${escapeRegExp(this.src)}`);
+    const relativePath = this.filePath.replace(srcDirRegex, '');
+    return path.dirname(path.join(this.rootWriteDir, relativePath));
+  }
+
+  // Returns a promise that resolves to the output path of the fields.js file.
+  getOutputPathPromise() {
+    const writeDir = this.getWriteDir();
+    return convertFieldsJs(this.filePath, writeDir).then(
+      outputPath => outputPath
+    );
+  }
 }
 
 /**
  * Converts a fields.js file into a fields.json file, writes, and returns of fields.json
  * @param {string} file - The path of the fields.js javascript file.
- * @param {string[]} options - Optional arguments to pass to the exported function in fields.js
- * @param {string} writeDir - The path to write the file to.
+ * @param {string} writeDir - The directory to write the file to.
  * @returns {Promise} finalPath - Promise that returns path of the written fields.json file.
  */
-function convertFieldsJs(filePath, options, writeDir) {
+function convertFieldsJs(filePath, writeDir) {
+  const options = yargs.argv.options;
   const dirName = path.dirname(filePath);
 
   logger.info(
@@ -110,7 +141,45 @@ function fieldsArrayToJson(fields) {
   return JSON.stringify(fields);
 }
 
+function handleFieldErrors(e, filePath) {
+  if (e instanceof SyntaxError) {
+    const ext = getExt(filePath);
+    if (ext == 'js') {
+      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
+    }
+  }
+  if (e.code === 'ENOENT') {
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: filePath,
+      })
+    );
+  }
+  if (e.code === 'MODULE_NOT_FOUND') {
+    logger.error(
+      i18n(`${i18nKey}.errors.jsSyntaxError`, {
+        path: filePath,
+      })
+    );
+  }
+}
+
+/*
+ * Determines if file is a processable fields.js file (i.e., if it is called 'fields.js' and in a root or in a module folder)
+ */
+function isProcessableFieldsJs(src, filePath) {
+  const regex = new RegExp(`^${escapeRegExp(src)}`);
+  const parts = splitLocalPath(filePath);
+  const relativePath = filePath.replace(regex, '');
+  const baseName = path.basename(filePath);
+  const moduleFolder = parts.find(part => part.endsWith('.module'));
+  return (
+    baseName == 'fields.js' && (moduleFolder || relativePath == '/fields.js')
+  );
+}
+
 module.exports = {
+  FieldsJs,
   fieldsArrayToJson,
   convertFieldsJs,
   handleFieldErrors,
