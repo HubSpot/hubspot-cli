@@ -19,6 +19,25 @@ const createSandboxPrompt = () => {
   ]);
 };
 
+const deleteSandboxPrompt = (config, promptParentAccount = false) => {
+  return promptUser([
+    {
+      name: 'account',
+      message: i18n(
+        promptParentAccount
+          ? `${i18nKey}.selectParentAccountName`
+          : `${i18nKey}.selectAccountName`
+      ),
+      type: 'list',
+      look: false,
+      pageSize: 20,
+      choices: config.portals.map(p => p.name || p.portalId),
+      default: config.defaultPortal,
+    },
+  ]);
+};
+
 module.exports = {
   createSandboxPrompt,
+  deleteSandboxPrompt,
 };

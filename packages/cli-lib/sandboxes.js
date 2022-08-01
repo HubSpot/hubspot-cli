@@ -1,5 +1,8 @@
 /* eslint-disable no-useless-catch */
-const { createSandbox: _createSandbox } = require('./api/sandbox-hubs');
+const {
+  createSandbox: _createSandbox,
+  deleteSandbox: _deleteSandbox,
+} = require('./api/sandbox-hubs');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -21,6 +24,23 @@ async function createSandbox(accountId, name) {
   };
 }
 
+async function deleteSandbox(parentAccountId, sandboxAccountId) {
+  let resp;
+
+  try {
+    resp = await _deleteSandbox(parentAccountId, sandboxAccountId);
+  } catch (err) {
+    throw err;
+  }
+
+  return {
+    parentAccountId,
+    sandboxAccountId,
+    ...resp,
+  };
+}
+
 module.exports = {
   createSandbox,
+  deleteSandbox,
 };
