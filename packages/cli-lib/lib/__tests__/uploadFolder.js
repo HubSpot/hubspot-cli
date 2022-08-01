@@ -1,12 +1,9 @@
-const {
-  uploadFolder,
-  resolvePromises,
-  getFilesByTypeAndProcessFields,
-} = require('../uploadFolder');
+const path = require('path');
+const { uploadFolder, getFilesByType } = require('../uploadFolder');
 const { upload } = require('../../api/fileMapper');
 const { walk, listFilesInDir } = require('../walk');
 const { createIgnoreFilter } = require('../../ignoreRules');
-const { convertFieldsJs } = require('../handleFieldsJs');
+const { FieldsJs, isProcessableFieldsJs } = require('../handleFieldsJs');
 
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
@@ -15,9 +12,19 @@ jest.mock('../handleFieldsJs');
 
 //folder/fields.js -> folder/fields.converted.js
 // We add the .converted to differentiate from a unconverted fields.json
-convertFieldsJs.mockImplementation(
-  file => file.substring(0, file.lastIndexOf('.')) + '.converted.json'
-);
+FieldsJs.mockImplementation((src, filePath, rootWriteDir) => {
+  return {
+    src,
+    outputPath:
+      filePath.substring(0, filePath.lastIndexOf('.')) + '.converted.json',
+    rootWriteDir,
+  };
+});
+
+isProcessableFieldsJs.mockImplementation((src, filePath) => {
+  const fileName = path.basename(filePath);
+  return fileName === 'fields.js';
+});
 
 describe('uploadFolder', () => {
   describe('uploadFolder()', () => {
@@ -59,9 +66,7 @@ describe('uploadFolder', () => {
       ];
 
       await uploadFolder(accountId, src, dest, { mode: 'publish' });
-
       expect(upload).toReturnTimes(11);
-
       uploadedFilesInOrder.forEach((file, index) => {
         expect(upload).nthCalledWith(index + 1, accountId, file, file, {
           qs: { buffer: false, environmentId: 1 },
@@ -69,7 +74,7 @@ describe('uploadFolder', () => {
       });
     });
   });
-  describe('getFilesByTypeAndProcessFields()', () => {
+  describe('getFilesByType()', () => {
     beforeEach(() => {
       jest.resetModules();
     });
@@ -90,21 +95,41 @@ describe('uploadFolder', () => {
       ];
 
       listFilesInDir.mockReturnValue(['fields.json']);
-      const [filesByType, compiledJsonFiles] = await resolvePromises(
-        getFilesByTypeAndProcessFields(files, 'folder')
+      let [filesByType, compiledJsonFiles] = getFilesByType(
+        files,
+        'folder',
+        'folder',
+        true
       );
+      filesByType = Object.values(filesByType);
       expect(filesByType[1]).toEqual([
         'folder/sample.module/module.css',
         'folder/sample.module/module.js',
-        'folder/sample.module/fields.converted.json',
+        {
+          outputPath: 'folder/sample.module/fields.converted.json',
+          rootWriteDir: 'folder',
+          src: 'folder',
+        },
         'folder/sample.module/meta.json',
         'folder/sample.module/module.html',
       ]);
-      expect(filesByType[4]).toContain('folder/fields.converted.json');
+      expect(filesByType[4]).toContainEqual({
+        outputPath: 'folder/fields.converted.json',
+        rootWriteDir: 'folder',
+        src: 'folder',
+      });
       expect(compiledJsonFiles).toEqual(
         expect.arrayContaining([
-          'folder/fields.converted.json',
-          'folder/sample.module/fields.converted.json',
+          {
+            outputPath: 'folder/fields.converted.json',
+            rootWriteDir: 'folder',
+            src: 'folder',
+          },
+          {
+            outputPath: 'folder/sample.module/fields.converted.json',
+            rootWriteDir: 'folder',
+            src: 'folder',
+          },
         ])
       );
     });
@@ -122,13 +147,16 @@ describe('uploadFolder', () => {
         return dir === 'folder/sample.module' ? ['fields.js'] : [''];
       });
 
-      const [filesByType] = await resolvePromises(
-        getFilesByTypeAndProcessFields(files, 'folder')
-      );
+      let [filesByType] = getFilesByType(files, 'folder', 'folder', true);
+      filesByType = Object.values(filesByType);
       expect(filesByType[1]).toEqual([
         'folder/sample.module/module.css',
         'folder/sample.module/module.js',
-        'folder/sample.module/fields.converted.json',
+        {
+          outputPath: 'folder/sample.module/fields.converted.json',
+          rootWriteDir: 'folder',
+          src: 'folder',
+        },
         'folder/sample.module/meta.json',
         'folder/sample.module/module.html',
       ]);
@@ -148,32 +176,26 @@ describe('uploadFolder', () => {
         return dir === 'folder' ? ['fields.js', 'fields.json'] : [''];
       });
 
-      const [filesByType, compiledJsonFiles] = await resolvePromises(
-        getFilesByTypeAndProcessFields(files, 'folder')
+      let [filesByType, compiledJsonFiles] = getFilesByType(
+        files,
+        'folder',
+        'folder',
+        true
       );
-      expect(filesByType[4]).toEqual(['folder/fields.converted.json']);
-      expect(compiledJsonFiles).toEqual(['folder/fields.converted.json']);
-    });
-
-    it('does not add any json files inside of module folder besides fields.json and meta.json', async () => {
-      const files = [
-        'folder/sample.module/module.css',
-        'folder/sample.module/module.js',
-        'folder/sample.module/fields.json',
-        'folder/sample.module/dont_add.json',
-        'folder/sample.module/meta.json',
-        'folder/sample.module/module.html',
-      ];
-      listFilesInDir.mockReturnValue(['']);
-      const [filesByType] = await resolvePromises(
-        getFilesByTypeAndProcessFields(files, 'folder')
-      );
-      expect(filesByType[1]).toEqual([
-        'folder/sample.module/module.css',
-        'folder/sample.module/module.js',
-        'folder/sample.module/fields.json',
-        'folder/sample.module/meta.json',
-        'folder/sample.module/module.html',
+      filesByType = Object.values(filesByType);
+      expect(filesByType[4]).toEqual([
+        {
+          outputPath: 'folder/fields.converted.json',
+          rootWriteDir: 'folder',
+          src: 'folder',
+        },
+      ]);
+      expect(compiledJsonFiles).toEqual([
+        {
+          outputPath: 'folder/fields.converted.json',
+          rootWriteDir: 'folder',
+          src: 'folder',
+        },
       ]);
     });
   });

@@ -35,7 +35,6 @@ const FileTypes = {
   template: 'templateFiles',
   json: 'jsonFiles',
   other: 'otherFiles',
-  fieldsJsOutput: 'fieldsJsOutputFiles',
 };
 
 // Checks if file is in a module folder and if it is, returns the module folder name
@@ -50,7 +49,8 @@ function getFileType(filePath) {
   if (moduleFolder) return FileTypes.module;
 
   switch (extension) {
-    case 'js' || 'css':
+    case 'js':
+    case 'css':
       return FileTypes.cssAndJs;
     case 'html':
       return FileTypes.template;
@@ -65,11 +65,11 @@ function getFilesByType(filePaths, src, rootWriteDir, processFields) {
   const srcDirRegex = new RegExp(`^${escapeRegExp(src)}`);
   const fieldsJsObjects = [];
   const filePathsByType = {
+    otherFiles: [],
     moduleFiles: [],
     cssAndJsFiles: [],
     templateFiles: [],
     jsonFiles: [],
-    otherFiles: [],
   };
 
   filePaths.forEach(filePath => {
@@ -165,8 +165,8 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
     return async () => {
       logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
       try {
-        //await upload(accountId, file, destPath, apiOptions);
-        //logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        await upload(accountId, file, destPath, apiOptions);
+        logger.log('Uploaded file "%s" to "%s"', file, destPath);
       } catch (error) {
         if (isFatalError(error)) {
           throw error;
