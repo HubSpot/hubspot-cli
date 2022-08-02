@@ -5,6 +5,28 @@ jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 
 describe('handleFieldsJs', () => {
+  describe('FieldsJs', () => {
+    it.todo('attempts to create a tmpDir if rootWriteDir is undefined');
+
+    test.todo('createTmpDir() creates a tmpDir');
+
+    test.todo('deleteDir() deletes directories');
+
+    test.todo('saveOutput() sets the save path correctly');
+
+    test.todo('getWriteDir() returns the correct path');
+  });
+
+  describe('convertFieldsJs()', () => {
+    it.todo('changes the directory to the filePath dir');
+
+    it.todo('changes the directory back to the original before exit');
+
+    it.todo('sets the final path correctly');
+
+    it.todo('returns a Promise');
+  });
+
   describe('fieldsArrayToJson()', () => {
     it('flattens nested arrays', () => {
       let input = [
@@ -102,5 +124,17 @@ describe('handleFieldsJs', () => {
       const json = fieldsArrayToJson(array);
       expect(json).toEqual(JSON.stringify(expected));
     });
+  });
+
+  describe('isProcessableFieldsJs()', () => {
+    it.todo('returns true for root fields.js files');
+
+    it.todo('returns true for module fields.js files');
+
+    it.todo(
+      'returns false for fields.js files outside of root or module folder'
+    );
+
+    it.todo('returns false for any other file name');
   });
 });

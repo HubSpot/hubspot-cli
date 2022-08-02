@@ -1,5 +1,4 @@
 const path = require('path');
-const yargs = require('yargs');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
 const { isProcessableFieldsJs, FieldsJs } = require('./handleFieldsJs');
@@ -30,11 +29,11 @@ const queue = new PQueue({
 });
 
 const FileTypes = {
+  other: 'otherFiles',
   module: 'moduleFiles',
   cssAndJs: 'cssAndJsFiles',
   template: 'templateFiles',
   json: 'jsonFiles',
-  other: 'otherFiles',
 };
 
 // Checks if file is in a module folder and if it is, returns the module folder name
@@ -64,13 +63,11 @@ function getFileType(filePath) {
 function getFilesByType(filePaths, src, rootWriteDir, processFields) {
   const srcDirRegex = new RegExp(`^${escapeRegExp(src)}`);
   const fieldsJsObjects = [];
-  const filePathsByType = {
-    otherFiles: [],
-    moduleFiles: [],
-    cssAndJsFiles: [],
-    templateFiles: [],
-    jsonFiles: [],
-  };
+
+  // Create object with key-value pairs of form FileType.type: []
+  const filePathsByType = Object.assign(
+    ...Object.values(FileTypes).map(key => ({ [key]: [] }))
+  );
 
   filePaths.forEach(filePath => {
     const fileType = getFileType(filePath);
@@ -81,7 +78,6 @@ function getFilesByType(filePaths, src, rootWriteDir, processFields) {
       filePathsByType[fileType].push(filePath);
       return;
     }
-    if (fileName === 'fields.output.json') return;
 
     if (isProcessableFieldsJs(src, filePath)) {
       const fieldsJs = new FieldsJs(src, filePath, rootWriteDir);
@@ -111,13 +107,19 @@ function getFilesByType(filePaths, src, rootWriteDir, processFields) {
  * @param {string} dest
  * @param {object} options
  */
-async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
-  const processFieldsJs = yargs.argv.processFields;
+async function uploadFolder(
+  accountId,
+  src,
+  dest,
+  fileMapperOptions,
+  commandOptions
+) {
+  const { saveOutput, processFieldsJs } = commandOptions;
   const tmpDir = processFieldsJs ? FieldsJs.createTmpDir() : null;
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   const files = await walk(src);
-  const apiOptions = getFileMapperQueryValues(options);
+  const apiOptions = getFileMapperQueryValues(fileMapperOptions);
   const failures = [];
   let filesByType;
   let fieldsJsObjects = [];
@@ -232,9 +234,6 @@ async function uploadFolder(accountId, src, dest, options, saveOutput = true) {
     )
     .finally(() => {
       if (!processFieldsJs) return;
-      if (typeof yargs.argv.saveOutput !== undefined) {
-        saveOutput = yargs.argv.saveOutput;
-      }
       // After uploading the output json files, delete/keep based on user choice
       if (saveOutput) {
         fieldsJsObjects.forEach(fieldsJs => fieldsJs.saveOutput());
@@ -264,4 +263,5 @@ module.exports = {
   hasUploadErrors,
   FileUploadResultType,
   uploadFolder,
+  FileTypes,
 };

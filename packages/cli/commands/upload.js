@@ -177,7 +177,7 @@ exports.handler = async options => {
       })
       .finally(() => {
         if (!processFieldsJs) return;
-        if (typeof yargs.argv.saveOutput !== undefined) {
+        if (typeof yargs.argv.saveOutput !== 'undefined') {
           saveOutput = yargs.argv.saveOutput;
         }
         if (saveOutput) {
@@ -193,9 +193,15 @@ exports.handler = async options => {
         src,
       })
     );
-    uploadFolder(accountId, absoluteSrcPath, dest, {
-      mode,
-    })
+    uploadFolder(
+      accountId,
+      absoluteSrcPath,
+      dest,
+      {
+        mode,
+      },
+      options
+    )
       .then(results => {
         if (!hasUploadErrors(results)) {
           logger.success(
@@ -254,7 +260,7 @@ exports.builder = yargs => {
     default: true,
     hidden: true,
   });
-  yargs.option('processFields', {
+  yargs.option('processFieldsJs', {
     describe: i18n(`${i18nKey}.options.processFields.describe`),
     type: 'boolean',
     default: false,

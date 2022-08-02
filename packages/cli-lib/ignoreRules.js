@@ -4,6 +4,7 @@ const ignore = require('ignore');
 const findup = require('findup-sync');
 
 const ignoreList = [
+  'fields.output.json',
   'hubspot.config.yml',
   'hubspot.config.yaml',
   'node_modules', // dependencies
