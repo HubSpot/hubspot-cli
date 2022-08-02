@@ -93,7 +93,6 @@ const uiFeatureHighlight = (commands, title) => {
 };
 
 module.exports = {
-  getTerminalUISupport,
   uiAccountDescription,
   uiFeatureHighlight,
   uiInfoSection,
