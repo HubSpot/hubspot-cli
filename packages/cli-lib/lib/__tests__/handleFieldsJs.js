@@ -1,30 +1,114 @@
-const { fieldsArrayToJson } = require('../handleFieldsJs');
+const {
+  fieldsArrayToJson,
+  FieldsJs,
+  isProcessableFieldsJs,
+} = require('../handleFieldsJs');
+const fs = require('fs-extra');
 
+jest.mock('fs-extra');
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 
+jest.mock('@hubspot/cli-lib/path', () => {
+  const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
+  return {
+    ...cliLibPath,
+    getCwd: jest.fn().mockReturnValue('test-cwd'),
+  };
+});
 describe('handleFieldsJs', () => {
   describe('FieldsJs', () => {
-    it.todo('attempts to create a tmpDir if rootWriteDir is undefined');
+    beforeEach(() => {
+      chDirSpy.mockClear();
+      jest.resetModules();
+      jest.doMock(filePath, () => () => [], {
+        virtual: true,
+      });
+    });
 
-    test.todo('createTmpDir() creates a tmpDir');
+    const testCwd = 'test-cwd';
+    const projectRoot = 'folder';
+    const filePath = 'folder/sample.module/fields.js';
+    const defaultFieldsJs = new FieldsJs(projectRoot, filePath);
+    const chDirSpy = jest.spyOn(process, 'chdir').mockImplementation(() => {});
+    jest.mock('@hubspot/cli-lib/path', () => {
+      const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
+      return {
+        ...cliLibPath,
+        getCwd: jest.fn().mockReturnValue('test-cwd'),
+      };
+    });
 
-    test.todo('deleteDir() deletes directories');
+    test('getOutputPathPromise() resolves to the correct path', async () => {
+      const fieldsJs = new FieldsJs(
+        'folder',
+        'folder/sample.module/fields.js',
+        'temp-dir'
+      );
+      const convertSpy = jest
+        .spyOn(FieldsJs.prototype, 'convertFieldsJs')
+        .mockResolvedValue('temp-dir/sample.module/fields.js');
 
-    test.todo('saveOutput() sets the save path correctly');
+      const returned = fieldsJs.getOutputPathPromise();
+      await expect(returned).resolves.toBe('temp-dir/sample.module/fields.js');
+      convertSpy.mockRestore();
+    });
 
-    test.todo('getWriteDir() returns the correct path');
-  });
+    test('getWriteDir() returns the correct path', () => {
+      const fieldsJs = new FieldsJs(
+        'folder',
+        'folder/sample.module/fields.js',
+        'temp-dir'
+      );
+      const returned = fieldsJs.getWriteDir();
+      expect(returned).toBe('temp-dir/sample.module');
+    });
 
-  describe('convertFieldsJs()', () => {
-    it.todo('changes the directory to the filePath dir');
+    test('saveOutput() sets the save path correctly', () => {
+      const copyFileSpy = jest.spyOn(fs, 'copyFileSync');
+      const fieldsJs = new FieldsJs(
+        'folder',
+        'folder/sample.module/fields.js',
+        'writeDir'
+      );
 
-    it.todo('changes the directory back to the original before exit');
+      fieldsJs.outputPath = 'folder/sample.module/fields.js';
 
-    it.todo('sets the final path correctly');
+      fieldsJs.saveOutput();
+      expect(copyFileSpy).toHaveBeenCalledWith(
+        'folder/sample.module/fields.js',
+        'folder/sample.module/fields.output.json'
+      );
+    });
 
-    it.todo('returns a Promise');
+    test('convertFieldsJs attempts to create a tmpDir if rootWriteDir is undefined', () => {
+      jest.spyOn(FieldsJs, 'createTmpDir').mockReturnValue('temp-folder');
+      const fieldsJs = new FieldsJs('folder', 'folder/fields.js');
+      expect(fieldsJs.rootWriteDir).toBe('temp-folder');
+    });
+
+    test('convertFieldsJs returns a Promise', () => {
+      const returned = defaultFieldsJs.convertFieldsJs('');
+      expect(returned).toBeInstanceOf(Promise);
+    });
+
+    test('convertFieldsJs changes the directory properly', async () => {
+      await defaultFieldsJs.convertFieldsJs('temp-dir');
+      expect(chDirSpy.mock.calls).toEqual([
+        ['folder/sample.module'],
+        [testCwd],
+      ]);
+    });
+
+    test('convertFieldsJs sets the final path correctly', async () => {
+      const writeDir = 'test-dir/sample.module';
+      const returned = await defaultFieldsJs.convertFieldsJs(writeDir);
+      expect(returned).toBe('test-dir/sample.module/fields.json');
+    });
+
+    // Not sure of a good way to do this ATM - mocking the require(filePath) is tricky.
+    test.todo('convertFieldsJs throws SyntaxError if no array is given');
   });
 
   describe('fieldsArrayToJson()', () => {
@@ -127,14 +211,32 @@ describe('handleFieldsJs', () => {
   });
 
   describe('isProcessableFieldsJs()', () => {
-    it.todo('returns true for root fields.js files');
+    const src = 'folder';
 
-    it.todo('returns true for module fields.js files');
+    it('returns true for root fields.js files', () => {
+      const filePath = 'folder/fields.js';
+      const returned = isProcessableFieldsJs(src, filePath);
+      expect(returned).toBe(true);
+    });
 
-    it.todo(
-      'returns false for fields.js files outside of root or module folder'
-    );
+    it('returns true for module fields.js files', () => {
+      const filePath = 'folder/sample.module/fields.js';
+      const returned = isProcessableFieldsJs(src, filePath);
+      expect(returned).toBe(true);
+    });
 
-    it.todo('returns false for any other file name');
+    it('is false for fields.js files outside of root or module', () => {
+      const filePath = 'folder/js/fields.js';
+      const returned = isProcessableFieldsJs(src, filePath);
+      expect(returned).toBe(false);
+    });
+
+    it('returns false for any other file name', () => {
+      expect(isProcessableFieldsJs(src, 'folder/fields.json')).toBe(false);
+      expect(
+        isProcessableFieldsJs(src, 'folder/sample.module/fields.json')
+      ).toBe(false);
+      expect(isProcessableFieldsJs(src, 'folder/js/example.js')).toBe(false);
+    });
   });
 });
