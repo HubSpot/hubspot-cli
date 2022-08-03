@@ -76,5 +76,12 @@ exports.builder = yargs => {
     },
   });
 
+  yargs.options({
+    assetVersion: {
+      type: 'number',
+      describe: i18n(`${i18nKey}.options.assetVersion.describe`),
+    },
+  });
+
   return yargs;
 };
