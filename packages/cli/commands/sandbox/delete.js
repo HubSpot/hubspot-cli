@@ -117,6 +117,9 @@ exports.handler = async options => {
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
+    logger.debug(i18n(`${i18nKey}.debug.error`));
+    logger.debug(err.error);
+
     if (
       err.error &&
       err.error.category === OBJECT_NOT_FOUND &&

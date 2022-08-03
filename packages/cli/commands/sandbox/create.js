@@ -103,7 +103,7 @@ const personalAccessKeyFlow = async (env, account, name) => {
   ]);
 };
 
-exports.command = 'create [name]';
+exports.command = 'create [--name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -146,6 +146,9 @@ exports.handler = async options => {
       }),
     });
   } catch (err) {
+    logger.debug(i18n(`${i18nKey}.debug.error`));
+    logger.debug(err.error);
+
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {
         sandboxName,
@@ -180,13 +183,16 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+  yargs.option('name', {
+    describe: i18n(`${i18nKey}.options.name.describe`),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 sandbox create MySandboxAccount', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 sandbox create --name=MySandboxAccount',
+      i18n(`${i18nKey}.examples.default`),
+    ],
   ]);
 
   addConfigOptions(yargs, true);
