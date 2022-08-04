@@ -5,9 +5,8 @@ const escapeRegExp = require('./escapeRegExp');
 const yargs = require('yargs');
 const { splitLocalPath } = require('../path');
 const { logger } = require('../logger');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd, getExt } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { logFieldJsErrors } = require('@hubspot/cli-lib/errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
 /**
@@ -81,7 +80,7 @@ class FieldsJs {
         return finalPath;
       });
     } catch (e) {
-      logFieldJsErrors(e, filePath);
+      logFieldsJsErrors(e, filePath);
       throw e;
     }
   }
@@ -158,6 +157,29 @@ function isProcessableFieldsJs(rootDir, filePath) {
     baseName == 'fields.js' &&
     (typeof moduleFolder === 'string' || relativePath == '/fields.js')
   );
+}
+
+function logFieldsJsErrors(e, filePath) {
+  if (e instanceof SyntaxError) {
+    const ext = getExt(filePath);
+    if (ext == 'js') {
+      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
+    }
+  }
+  if (e.code === 'ENOENT') {
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: filePath,
+      })
+    );
+  }
+  if (e.code === 'MODULE_NOT_FOUND') {
+    logger.error(
+      i18n(`${i18nKey}.errors.jsSyntaxError`, {
+        path: filePath,
+      })
+    );
+  }
 }
 
 /**
