@@ -227,7 +227,7 @@ const loadConfigFromFile = (path, options = {}) => {
   if (!_configPath) {
     if (!options.silenceErrors) {
       logger.error(
-        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found. To create a new config file, use the "hs init" command.`
       );
     } else {
       logger.debug(
