@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const yargs = require('yargs');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
@@ -39,6 +38,7 @@ const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {
   FieldsJs,
   isProcessableFieldsJs,
+  cleanupTmpDirSync,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
 exports.command = 'upload [--src] [--dest] [--option]';
@@ -67,7 +67,7 @@ exports.handler = async options => {
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
-  const processFieldsOpt = options.processFields;
+  const processFieldsOpt = options.processFieldsJs;
   const src = options.src || uploadPromptAnswers.src;
   let dest = options.dest || uploadPromptAnswers.dest;
   let saveOutput = options.saveOutput;
@@ -80,9 +80,9 @@ exports.handler = async options => {
     isProcessableFieldsJs(projectRoot, absoluteSrcPath) && processFieldsOpt;
   let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = await new FieldsJs(projectRoot, absoluteSrcPath);
+    fieldsJs = new FieldsJs(projectRoot, absoluteSrcPath);
     fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
-    // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this just ensures it works.
+    // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
     dest = path.join(path.dirname(dest), 'fields.json');
   }
   let stats;
@@ -177,13 +177,10 @@ exports.handler = async options => {
       })
       .finally(() => {
         if (!processFieldsJs) return;
-        if (typeof yargs.argv.saveOutput !== 'undefined') {
-          saveOutput = yargs.argv.saveOutput;
-        }
         if (saveOutput) {
           fieldsJs.saveOutput();
         }
-        FieldsJs.deleteDir(fieldsJs.rootWriteDir);
+        cleanupTmpDirSync(fieldsJs.rootWriteDir);
       });
   } else {
     logger.log(

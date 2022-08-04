@@ -3,7 +3,12 @@ const { uploadFolder, getFilesByType, FileTypes } = require('../uploadFolder');
 const { upload } = require('../../api/fileMapper');
 const { walk, listFilesInDir } = require('../walk');
 const { createIgnoreFilter } = require('../../ignoreRules');
-const { FieldsJs, isProcessableFieldsJs } = require('../handleFieldsJs');
+const {
+  FieldsJs,
+  isProcessableFieldsJs,
+  cleanupTmpDirSync,
+  createTmpDirSync,
+} = require('../handleFieldsJs');
 const { logger } = require('../../logger');
 const { logApiUploadErrorInstance } = require('../../errorHandlers');
 
@@ -51,6 +56,7 @@ describe('uploadFolder', () => {
   });
   beforeEach(() => {
     FieldsJs.mockReset();
+    createTmpDirSync.mockReset();
   });
   describe('uploadFolder()', () => {
     const defaultParams = [
@@ -109,8 +115,8 @@ describe('uploadFolder', () => {
       expect(logApiUploadErrorInstance).toHaveBeenCalled();
     });
 
-    it('does not create a temp directory if --processFields is false', async () => {
-      const tmpDirSpy = jest.spyOn(FieldsJs, 'createTmpDir');
+    it('does not create a temp directory if --processFieldsJs is false', async () => {
+      const tmpDirSpy = createTmpDirSync.mockImplementation(() => {});
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
@@ -139,7 +145,7 @@ describe('uploadFolder', () => {
         });
       });
 
-      jest.spyOn(FieldsJs, 'createTmpDir').mockReturnValue('folder');
+      createTmpDirSync.mockReturnValue('folder');
       walk.mockResolvedValue([
         'folder/fields.js',
         'folder/sample.module/fields.js',
@@ -151,12 +157,11 @@ describe('uploadFolder', () => {
     });
 
     it('deletes the temporary directory', async () => {
-      const deleteDirSpy = jest.spyOn(FieldsJs, 'deleteDir');
+      const deleteDirSpy = cleanupTmpDirSync.mockImplementation(() => {});
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
       FieldsJs.mockImplementation(defaultFieldsJsImplementation);
-      jest.spyOn(FieldsJs, 'createTmpDir').mockReturnValue('folder');
       walk.mockResolvedValue([]);
       upload.mockImplementation(() => Promise.resolve());
 
@@ -170,7 +175,7 @@ describe('uploadFolder', () => {
       FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       jest.resetModules();
     });
-    it('outputs getFilesByType with no processing if processFields is false', () => {
+    it('outputs getFilesByType with no processing if processFieldsJs is false', () => {
       let files = [...filesProto];
       files.push('folder/sample.module/fields.js');
       const [filesByType] = getFilesByType(files, 'folder', 'folder', false);

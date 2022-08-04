@@ -1,18 +1,19 @@
 const path = require('path');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
-const { isProcessableFieldsJs, FieldsJs } = require('./handleFieldsJs');
+const {
+  isProcessableFieldsJs,
+  FieldsJs,
+  createTmpDirSync,
+  cleanupTmpDirSync,
+} = require('./handleFieldsJs');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
 const { walk, listFilesInDir } = require('./walk');
+const { isModuleFolderChild } = require('../modules');
 const escapeRegExp = require('./escapeRegExp');
-const {
-  convertToUnixPath,
-  isAllowedExtension,
-  getExt,
-  splitLocalPath,
-} = require('../path');
+const { convertToUnixPath, isAllowedExtension, getExt } = require('../path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -36,15 +37,9 @@ const FileTypes = {
   json: 'jsonFiles',
 };
 
-// Checks if file is in a module folder and if it is, returns the module folder name
-function isModuleFolder(filePath) {
-  const parts = splitLocalPath(filePath);
-  return parts.find(part => part.endsWith('.module'));
-}
-
 function getFileType(filePath) {
   const extension = getExt(filePath);
-  const moduleFolder = isModuleFolder(filePath);
+  const moduleFolder = isModuleFolderChild({ path: filePath, isLocal: true });
   if (moduleFolder) return FileTypes.module;
 
   switch (extension) {
@@ -60,11 +55,11 @@ function getFileType(filePath) {
   }
 }
 
-function getFilesByType(filePaths, src, rootWriteDir, processFields) {
-  const srcDirRegex = new RegExp(`^${escapeRegExp(src)}`);
+function getFilesByType(filePaths, projectDir, rootWriteDir, processFieldsJs) {
+  const projectDirRegex = new RegExp(`^${escapeRegExp(projectDir)}`);
   const fieldsJsObjects = [];
 
-  // Create object with key-value pairs of form FileType.type: []
+  // Create object with key-value pairs of form { FileType.type: [] }
   const filePathsByType = Object.assign(
     ...Object.values(FileTypes).map(key => ({ [key]: [] }))
   );
@@ -72,22 +67,22 @@ function getFilesByType(filePaths, src, rootWriteDir, processFields) {
   filePaths.forEach(filePath => {
     const fileType = getFileType(filePath);
     const fileName = path.basename(filePath);
-    const relativePath = filePath.replace(srcDirRegex, '');
+    const relativePath = filePath.replace(projectDirRegex, '');
 
-    if (!processFields) {
+    if (!processFieldsJs) {
       filePathsByType[fileType].push(filePath);
       return;
     }
 
-    if (isProcessableFieldsJs(src, filePath)) {
-      const fieldsJs = new FieldsJs(src, filePath, rootWriteDir);
+    if (isProcessableFieldsJs(projectDir, filePath)) {
+      const fieldsJs = new FieldsJs(projectDir, filePath, rootWriteDir);
       const rootOrModule =
         relativePath === '/fields.js' ? FileTypes.json : FileTypes.module;
 
       fieldsJsObjects.push(fieldsJs);
       filePathsByType[rootOrModule].push(fieldsJs);
     } else if (fileName === 'fields.json') {
-      // A fields.json is only added if there is no fields.js in the same directory.
+      // Only add fields.json if there is no fields.js in the same directory.
       const dirFiles = listFilesInDir(path.dirname(filePath));
       if (!dirFiles.includes('fields.js')) {
         filePathsByType[fileType].push(filePath);
@@ -115,7 +110,9 @@ async function uploadFolder(
   commandOptions
 ) {
   const { saveOutput, processFieldsJs } = commandOptions;
-  const tmpDir = processFieldsJs ? FieldsJs.createTmpDir() : null;
+  const tmpDir = processFieldsJs
+    ? createTmpDirSync('hubspot-temp-fieldsjs-output-')
+    : null;
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
   const files = await walk(src);
@@ -158,7 +155,7 @@ async function uploadFolder(
     filesByType = Object.values(filesByType);
   }
   const uploadFile = file => {
-    // files in fieldsJSOutputFiles always belong to the tmp directory.
+    // files in fieldsJsPaths always belong to the tmp directory.
     const relativePath = file.replace(
       fieldsJsPaths.includes(file) ? tmpDirRegex : regex,
       ''
@@ -234,11 +231,10 @@ async function uploadFolder(
     )
     .finally(() => {
       if (!processFieldsJs) return;
-      // After uploading the output json files, delete/keep based on user choice
       if (saveOutput) {
         fieldsJsObjects.forEach(fieldsJs => fieldsJs.saveOutput());
       }
-      FieldsJs.deleteDir(tmpDir);
+      cleanupTmpDirSync(tmpDir);
     });
 
   return results;

@@ -14,6 +14,7 @@ const {
 const {
   FieldsJs,
   isProcessableFieldsJs,
+  cleanupTmpDirSync,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
@@ -41,7 +42,6 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
-  const processFields = yargs.argv.processFields;
   const src = yargs.argv.src;
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
@@ -51,10 +51,12 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  const processFieldsJs = isProcessableFieldsJs(src, file) && processFields;
+  const processFieldsJsOpt = yargs.argv.processFieldsJs;
+  const processFieldsJs =
+    isProcessableFieldsJs(src, file) && processFieldsJsOpt;
   let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = await new FieldsJs(src, file);
+    fieldsJs = new FieldsJs(src, file);
     fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
     dest = path.join(path.dirname(dest), 'fields.json');
   }
@@ -91,7 +93,7 @@ async function uploadFile(accountId, file, dest, options) {
     })
     .finally(() => {
       if (processFieldsJs) {
-        FieldsJs.deleteDir(fieldsJs.rootWriteDir);
+        cleanupTmpDirSync(fieldsJs.rootWriteDir);
       }
     });
 }
@@ -179,8 +181,10 @@ function watch(
 
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
-      // If it's a fields.js file that is in a module folder or the root, then ignore
-      if (isProcessableFieldsJs(src, filePath)) return;
+      // If it's a fields.js file that is in a module folder or the root, then ignore because it will not exist on the server.
+      if (isProcessableFieldsJs(src, filePath) && yargs.argv.processFieldsJs) {
+        return;
+      }
 
       const remotePath = getDesignManagerPath(filePath);
       if (shouldIgnoreFile(filePath)) {

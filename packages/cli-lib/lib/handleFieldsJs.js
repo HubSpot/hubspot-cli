@@ -10,39 +10,22 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logFieldJsErrors } = require('@hubspot/cli-lib/errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
+/**
+ * FieldsJS Class.
+ * @param {string} projectDir - The root directory of the filePath
+ * @param {string} filePath - The path to the fields.js file to be converted
+ * @param {string} [rootWriteDir] - (Optional) The root of the directory in which to output the fields.js. If blank, a temporary directory is created.
+ */
 class FieldsJs {
-  constructor(src, filePath, rootWriteDir) {
-    this.src = src;
+  constructor(projectDir, filePath, rootWriteDir) {
+    this.projectDir = projectDir;
     this.filePath = filePath;
 
     // Create tmpDir if no writeDir is given.
     this.rootWriteDir =
-      rootWriteDir === undefined ? FieldsJs.createTmpDir() : rootWriteDir;
-  }
-
-  static createTmpDir() {
-    let tmpDir;
-    try {
-      tmpDir = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'hubspot-temp-fieldsjs-output-')
-      );
-    } catch (err) {
-      logger.error('An error occured writing temporary project source.');
-      throw err;
-    }
-    return tmpDir;
-  }
-
-  // Accepts either a path as a string, or a FieldsJs object with a rootWriteDir property.
-  static deleteDir(dir) {
-    fs.rm(dir, { recursive: true }, err => {
-      if (err) {
-        logger.error(
-          'There was an error deleting the temporary project source'
-        );
-        throw err;
-      }
-    });
+      rootWriteDir === undefined
+        ? createTmpDirSync('hubspot-temp-fieldsjs-output-')
+        : rootWriteDir;
   }
 
   /**
@@ -103,13 +86,27 @@ class FieldsJs {
     }
   }
 
+  /**
+   * If there has been a fields.json written to the output path, then copy it from the output
+   * directory to the project directory, respecting the path within the output directory.
+   * Ex: path/to/tmp/example.module/fields.json => path/to/project/example.module/fields.output.json
+   */
   saveOutput() {
-    // Save in same directory as respective fields.js.
+    if (!fs.existsSync(this.outputPath)) {
+      logger.error(
+        `There was an error saving the json output of ${this.filePath}`
+      );
+      return;
+    }
     const relativePath = path.relative(
       this.rootWriteDir,
       path.dirname(this.outputPath)
     );
-    const savePath = path.join(this.src, relativePath, 'fields.output.json');
+    const savePath = path.join(
+      this.projectDir,
+      relativePath,
+      'fields.output.json'
+    );
     try {
       fs.copyFileSync(this.outputPath, savePath);
     } catch (err) {
@@ -118,28 +115,36 @@ class FieldsJs {
     }
   }
 
+  /**
+   * Resolves the relative path to the fields.js within the project directory and returns
+   * directory name to write to in rootWriteDir directory.
+   *
+   * Ex: If rootWriteDir = 'path/to/temp', filePath = 'projectRoot/sample.module/fields.js'. Then getWriteDir() => path/to/temp/sample.module
+   */
   getWriteDir() {
-    const srcDirRegex = new RegExp(`^${escapeRegExp(this.src)}`);
-    const relativePath = this.filePath.replace(srcDirRegex, '');
+    const projectDirRegex = new RegExp(`^${escapeRegExp(this.projectDir)}`);
+    const relativePath = this.filePath.replace(projectDirRegex, '');
     return path.dirname(path.join(this.rootWriteDir, relativePath));
   }
 
-  // Returns a promise that resolves to the output path of the fields.js file.
+  /**
+   * @returns {Promise} Promise that resolves to the path of the output fields.json
+   */
   getOutputPathPromise() {
     const writeDir = this.getWriteDir();
     return this.convertFieldsJs(writeDir).then(outputPath => outputPath);
   }
 }
 
+//Transform fields array to JSON
 function fieldsArrayToJson(fields) {
-  //Transform fields array to JSON
   fields = fields.flat(Infinity).map(field => {
     return typeof field['toJSON'] === 'function' ? field.toJSON() : field;
   });
   return JSON.stringify(fields);
 }
 
-/*
+/**
  * Determines if file is a processable fields.js file (i.e., if it is called 'fields.js' and in a root or in a module folder)
  */
 function isProcessableFieldsJs(rootDir, filePath) {
@@ -155,8 +160,37 @@ function isProcessableFieldsJs(rootDir, filePath) {
   );
 }
 
+/**
+ * Try cleaning up resources from os's tempdir
+ * @param {String} prefix - Prefix for directory name.
+ */
+function createTmpDirSync(prefix) {
+  let tmpDir;
+  try {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  } catch (err) {
+    logger.error('An error occured writing temporary project source.');
+    throw err;
+  }
+  return tmpDir;
+}
+
+/**
+ * Try cleaning up resources from os's tempdir
+ * @param {String} tmpDir
+ */
+function cleanupTmpDirSync(tmpDir) {
+  fs.rm(tmpDir, { recursive: true }, err => {
+    if (err) {
+      logger.error('There was an error deleting the temporary project source');
+      throw err;
+    }
+  });
+}
 module.exports = {
   FieldsJs,
   fieldsArrayToJson,
   isProcessableFieldsJs,
+  createTmpDirSync,
+  cleanupTmpDirSync,
 };

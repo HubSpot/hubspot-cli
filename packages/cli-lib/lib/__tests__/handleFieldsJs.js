@@ -9,7 +9,6 @@ jest.mock('fs-extra');
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
-
 jest.mock('@hubspot/cli-lib/path', () => {
   const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
   return {
@@ -17,6 +16,7 @@ jest.mock('@hubspot/cli-lib/path', () => {
     getCwd: jest.fn().mockReturnValue('test-cwd'),
   };
 });
+
 describe('handleFieldsJs', () => {
   describe('FieldsJs', () => {
     beforeEach(() => {
@@ -32,13 +32,7 @@ describe('handleFieldsJs', () => {
     const filePath = 'folder/sample.module/fields.js';
     const defaultFieldsJs = new FieldsJs(projectRoot, filePath);
     const chDirSpy = jest.spyOn(process, 'chdir').mockImplementation(() => {});
-    jest.mock('@hubspot/cli-lib/path', () => {
-      const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
-      return {
-        ...cliLibPath,
-        getCwd: jest.fn().mockReturnValue('test-cwd'),
-      };
-    });
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     test('getOutputPathPromise() resolves to the correct path', async () => {
       const fieldsJs = new FieldsJs(
@@ -80,12 +74,6 @@ describe('handleFieldsJs', () => {
         'folder/sample.module/fields.js',
         'folder/sample.module/fields.output.json'
       );
-    });
-
-    test('convertFieldsJs attempts to create a tmpDir if rootWriteDir is undefined', () => {
-      jest.spyOn(FieldsJs, 'createTmpDir').mockReturnValue('temp-folder');
-      const fieldsJs = new FieldsJs('folder', 'folder/fields.js');
-      expect(fieldsJs.rootWriteDir).toBe('temp-folder');
     });
 
     test('convertFieldsJs returns a Promise', () => {

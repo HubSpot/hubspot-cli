@@ -16,11 +16,7 @@ const {
   writeConfig,
 } = require('./lib/config');
 const { checkAndWarnGitInclusion } = require('./lib/git');
-const {
-  hasUploadErrors,
-  uploadFolder,
-  createTmpDir,
-} = require('./lib/uploadFolder');
+const { hasUploadErrors, uploadFolder } = require('./lib/uploadFolder');
 const { watch } = require('./lib/watch');
 const { read } = require('./lib/read');
 const { walk } = require('./lib/walk');
@@ -30,7 +26,6 @@ module.exports = {
   DEFAULT_MODE,
   Mode,
   checkAndWarnGitInclusion,
-  createTmpDir,
   getAndLoadConfigIfNeeded,
   getConfig,
   getConfigPath,
