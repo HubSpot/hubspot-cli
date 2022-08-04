@@ -49,7 +49,10 @@ const selectTheme = async accountId => {
       message: i18n(`${i18nKey}.info.promptMessage`),
       choices: async () => {
         try {
-          const result = await fetchThemes(accountId);
+          const result = await fetchThemes(accountId, {
+            limit: 500,
+            sorting: 'MOST_USED',
+          });
           if (result && result.objects) {
             return result.objects
               .map(({ theme }) => theme.path)
