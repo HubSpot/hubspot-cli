@@ -50,7 +50,7 @@ const selectTheme = async accountId => {
       choices: async () => {
         try {
           const result = await fetchThemes(accountId, {
-            limit: 50,
+            limit: 500,
             sorting: 'MOST_USED',
           });
           if (result && result.objects) {
