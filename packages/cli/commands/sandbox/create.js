@@ -14,6 +14,9 @@ const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
+  debugErrorAndContext,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
+const {
   ENVIRONMENTS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -146,14 +149,14 @@ exports.handler = async options => {
       }),
     });
   } catch (err) {
-    logger.debug(i18n(`${i18nKey}.debug.error`));
-    logger.debug(err.error);
+    debugErrorAndContext(err);
 
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {
         sandboxName,
       }),
     });
+
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
