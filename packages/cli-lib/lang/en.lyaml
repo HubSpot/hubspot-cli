@@ -604,9 +604,11 @@ en:
             describe: "Create a sandbox account"
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
+            debug:
+              error: "Error creating sandbox:"
             info:
               auth: "Run \"hs auth\" to authenticate with the new sandbox account."
-            positionals:
+            options:
               name:
                 describe: "Name to use for created sandbox"
             loading:
@@ -625,6 +627,7 @@ en:
             describe: "Delete a sandbox account"
             debug:
               deleting: "Deleting sandbox account \"{{ account }}\""
+              error: "Error deleting sandbox account:"
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
             confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."

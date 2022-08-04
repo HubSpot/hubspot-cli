@@ -14,6 +14,9 @@ const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
+  debugErrorAndContext,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
+const {
   ENVIRONMENTS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -103,7 +106,7 @@ const personalAccessKeyFlow = async (env, account, name) => {
   ]);
 };
 
-exports.command = 'create [name]';
+exports.command = 'create [--name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -146,11 +149,14 @@ exports.handler = async options => {
       }),
     });
   } catch (err) {
+    debugErrorAndContext(err);
+
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {
         sandboxName,
       }),
     });
+
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
@@ -180,13 +186,16 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+  yargs.option('name', {
+    describe: i18n(`${i18nKey}.options.name.describe`),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 sandbox create MySandboxAccount', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 sandbox create --name=MySandboxAccount',
+      i18n(`${i18nKey}.examples.default`),
+    ],
   ]);
 
   addConfigOptions(yargs, true);

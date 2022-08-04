@@ -8,6 +8,9 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const {
+  debugErrorAndContext,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -117,6 +120,8 @@ exports.handler = async options => {
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
+    debugErrorAndContext(err);
+
     if (
       err.error &&
       err.error.category === OBJECT_NOT_FOUND &&
