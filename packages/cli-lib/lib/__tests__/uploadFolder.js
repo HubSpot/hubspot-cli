@@ -23,11 +23,14 @@ jest.mock('../../errorHandlers');
 
 const defaultFieldsJsImplementation = jest.fn((src, filePath, rootWriteDir) => {
   const fieldsJs = Object.create(FieldsJs.prototype);
+  const outputPath =
+    filePath.substring(0, filePath.lastIndexOf('.')) + '.converted.json';
   return Object.assign(fieldsJs, {
     src,
-    outputPath:
-      filePath.substring(0, filePath.lastIndexOf('.')) + '.converted.json',
+    outputPath,
     rootWriteDir,
+    getOutputPathPromise: jest.fn().mockResolvedValue(outputPath),
+    rejected: false,
   });
 });
 
@@ -49,7 +52,7 @@ const filesProto = [
   'folder/sample.module/module.html',
   'folder/templates/page.html',
 ];
-
+FieldsJs.mockImplementation(defaultFieldsJsImplementation);
 describe('uploadFolder', () => {
   beforeAll(() => {
     createIgnoreFilter.mockImplementation(() => () => true);
@@ -57,7 +60,9 @@ describe('uploadFolder', () => {
   beforeEach(() => {
     FieldsJs.mockReset();
     createTmpDirSync.mockReset();
+    listFilesInDir.mockReset();
   });
+
   describe('uploadFolder()', () => {
     const defaultParams = [
       '123',
@@ -171,14 +176,31 @@ describe('uploadFolder', () => {
   });
 
   describe('getFilesByType()', () => {
+    FieldsJs.mockImplementation(defaultFieldsJsImplementation);
+    const convertedFieldsObj = new FieldsJs(
+      'folder',
+      'folder/fields.json',
+      'folder'
+    );
+    const convertedFilePath = convertedFieldsObj.outputPath;
+
+    const convertedModuleFieldsObj = new FieldsJs(
+      'folder',
+      'folder/sample.module/fields.json',
+      'folder'
+    );
+    const convertedModuleFilePath = convertedModuleFieldsObj.outputPath;
+
     beforeEach(() => {
       FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       jest.resetModules();
     });
-    it('outputs getFilesByType with no processing if processFieldsJs is false', () => {
+    it('outputs getFilesByType with no processing if processFieldsJs is false', async () => {
       let files = [...filesProto];
       files.push('folder/sample.module/fields.js');
-      const [filesByType] = getFilesByType(files, 'folder', 'folder', false);
+      const [filesByType] = await getFilesByType(files, 'folder', 'folder', {
+        processFieldsJs: false,
+      });
 
       expect(filesByType).toEqual({
         [FileTypes.other]: [
@@ -201,15 +223,15 @@ describe('uploadFolder', () => {
       });
     });
 
-    it('finds and converts fields.js files to field.json', () => {
+    it('finds and converts fields.js files to field.json', async () => {
       const files = [...filesProto];
       files.push('folder/fields.js', 'folder/sample.module/fields.js');
       listFilesInDir.mockReturnValue(['fields.json']);
-      let [filesByType, compiledJsonFiles] = getFilesByType(
+      let [filesByType, fieldsJsObjects] = await getFilesByType(
         files,
         'folder',
         'folder',
-        true
+        { processFieldsJs: true }
       );
       filesByType = Object.values(filesByType);
       expect(filesByType[1]).toEqual([
@@ -217,81 +239,58 @@ describe('uploadFolder', () => {
         'folder/sample.module/module.js',
         'folder/sample.module/meta.json',
         'folder/sample.module/module.html',
-        {
-          outputPath: 'folder/sample.module/fields.converted.json',
-          rootWriteDir: 'folder',
-          src: 'folder',
-        },
+        convertedModuleFilePath,
       ]);
-      expect(filesByType[4]).toContainEqual({
-        outputPath: 'folder/fields.converted.json',
-        rootWriteDir: 'folder',
-        src: 'folder',
-      });
-      expect(compiledJsonFiles).toEqual(
-        expect.arrayContaining([
-          {
-            outputPath: 'folder/fields.converted.json',
-            rootWriteDir: 'folder',
-            src: 'folder',
-          },
-          {
-            outputPath: 'folder/sample.module/fields.converted.json',
-            rootWriteDir: 'folder',
-            src: 'folder',
-          },
-        ])
+      expect(filesByType[4]).toContainEqual(convertedFilePath);
+      expect(JSON.stringify(fieldsJsObjects)).toBe(
+        JSON.stringify([convertedFieldsObj, convertedModuleFieldsObj])
       );
     });
 
-    it('does not add fields.json if fields.js is present in same directory', () => {
+    it('does not add fields.json if fields.js is present in same directory', async () => {
       const files = ['folder/fields.js', 'folder/fields.json'];
-      const [filesByType] = getFilesByType(files, 'folder', 'folder', true);
+      listFilesInDir.mockReturnValue(['fields.json', 'fields.js']);
+      const [filesByType] = await getFilesByType(files, 'folder', 'folder', {
+        processFieldsJs: true,
+      });
       expect(filesByType).not.toMatchObject({
         [FileTypes.json]: ['folder/fields.json'],
       });
     });
 
-    it('adds root fields.js to jsonFiles', () => {
+    it('adds root fields.js to jsonFiles', async () => {
       const files = ['folder/fields.js'];
-      const converted = {
-        outputPath: 'folder/fields.converted.json',
-        rootWriteDir: 'folder',
-        src: 'folder',
-      };
-      const [filesByType, compiledJsonFiles] = getFilesByType(
+      const [filesByType, fieldsJsObjects] = await getFilesByType(
         files,
         'folder',
         'folder',
-        true
+        { processFieldsJs: true }
       );
-
       expect(filesByType).toMatchObject({
-        [FileTypes.json]: [converted],
+        [FileTypes.json]: [convertedFilePath],
       });
 
-      expect(compiledJsonFiles).toEqual([converted]);
+      expect(JSON.stringify(fieldsJsObjects)).toEqual(
+        JSON.stringify([convertedFieldsObj])
+      );
     });
 
-    it('adds module fields.js to moduleFiles', () => {
+    it('adds module fields.js to moduleFiles', async () => {
       const files = ['folder/sample.module/fields.js'];
-      const converted = {
-        outputPath: 'folder/sample.module/fields.converted.json',
-        rootWriteDir: 'folder',
-        src: 'folder',
-      };
-      const [filesByType, compiledJsonFiles] = getFilesByType(
+      const [filesByType, fieldsJsObjects] = await getFilesByType(
         files,
         'folder',
         'folder',
-        true
+        { processFieldsJs: true }
       );
 
       expect(filesByType).toMatchObject({
-        [FileTypes.module]: [converted],
+        [FileTypes.module]: [convertedModuleFilePath],
       });
 
-      expect(compiledJsonFiles).toEqual([converted]);
+      expect(JSON.stringify(fieldsJsObjects)).toBe(
+        JSON.stringify([convertedModuleFieldsObj])
+      );
     });
   });
 });

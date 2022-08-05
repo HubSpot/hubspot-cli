@@ -55,7 +55,12 @@ function getFileType(filePath) {
   }
 }
 
-function getFilesByType(filePaths, projectDir, rootWriteDir, commandOptions) {
+async function getFilesByType(
+  filePaths,
+  projectDir,
+  rootWriteDir,
+  commandOptions
+) {
   const { processFieldsJs, fieldOptions } = commandOptions;
   const projectDirRegex = new RegExp(`^${escapeRegExp(projectDir)}`);
   const fieldsJsObjects = [];
@@ -65,14 +70,13 @@ function getFilesByType(filePaths, projectDir, rootWriteDir, commandOptions) {
     ...Object.values(FileTypes).map(key => ({ [key]: [] }))
   );
 
-  filePaths.forEach(filePath => {
+  for (const filePath of filePaths) {
     const fileType = getFileType(filePath);
     const fileName = path.basename(filePath);
     const relativePath = filePath.replace(projectDirRegex, '');
-
     if (!processFieldsJs) {
       filePathsByType[fileType].push(filePath);
-      return;
+      continue;
     }
 
     if (isProcessableFieldsJs(projectDir, filePath)) {
@@ -84,9 +88,17 @@ function getFilesByType(filePaths, projectDir, rootWriteDir, commandOptions) {
       );
       const rootOrModule =
         relativePath === '/fields.js' ? FileTypes.json : FileTypes.module;
+      const outputPath = await fieldsJs.getOutputPathPromise();
 
+      /*
+       * A fields.js will be rejected if the promise is rejected or if the some other error occurs.
+       * We handle this gracefully by not adding the failed fields.js to the object list.
+       */
+      if (fieldsJs.rejected) continue;
+
+      fieldsJs.outputPath = outputPath;
       fieldsJsObjects.push(fieldsJs);
-      filePathsByType[rootOrModule].push(fieldsJs);
+      filePathsByType[rootOrModule].push(outputPath);
     } else if (fileName === 'fields.json') {
       // Only add fields.json if there is no fields.js in the same directory.
       const dirFiles = listFilesInDir(path.dirname(filePath));
@@ -96,8 +108,7 @@ function getFilesByType(filePaths, projectDir, rootWriteDir, commandOptions) {
     } else {
       filePathsByType[fileType].push(filePath);
     }
-  });
-
+  }
   return [filePathsByType, fieldsJsObjects];
 }
 
@@ -138,28 +149,18 @@ async function uploadFolder(
     })
     .filter(createIgnoreFilter());
 
-  [filesByType, fieldsJsObjects] = getFilesByType(
+  [filesByType, fieldsJsObjects] = await getFilesByType(
     allowedFiles,
     src,
     tmpDir,
     commandOptions
   );
+  filesByType = Object.values(filesByType);
   if (fieldsJsObjects.length) {
-    // Wait for each promise to resolve in sequence. Since we need to change the directory of the process during
-    // FieldsJS processing, it is important that we wait for each fieldsjs to finish processing before moving on to the next
-    for (let fieldsJs of fieldsJsObjects) {
-      let outputPath = await fieldsJs.getOutputPathPromise();
-      fieldsJs.outputPath = outputPath;
-    }
-
-    // By construction, the filesByType array will contain FieldsJs objects. Since we have now resolved the
-    // outputPaths, go through and replace the objects with their outputPaths.
-    filesByType = removeFieldsJsFromFilesByType(Object.values(filesByType));
     fieldsJsPaths = fieldsJsObjects.map(fieldsJs => fieldsJs.outputPath);
     tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
-  } else {
-    filesByType = Object.values(filesByType);
   }
+
   const uploadFile = file => {
     // files in fieldsJsPaths always belong to the tmp directory.
     const relativePath = file.replace(
@@ -249,14 +250,6 @@ async function uploadFolder(
 function hasUploadErrors(results) {
   return results.some(
     result => result.resultType === FileUploadResultType.FAILURE
-  );
-}
-
-function removeFieldsJsFromFilesByType(filesByType) {
-  return filesByType.map(fileTypeArray =>
-    fileTypeArray.map(filePath => {
-      return filePath instanceof FieldsJs ? filePath.outputPath : filePath;
-    })
   );
 }
 

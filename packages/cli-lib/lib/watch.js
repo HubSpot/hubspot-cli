@@ -58,7 +58,10 @@ async function uploadFile(accountId, file, dest, options) {
   let fieldsJs;
   if (processFieldsJs) {
     fieldsJs = new FieldsJs(src, file, undefined, fieldOptions);
-    fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
+    const outputPath = await fieldsJs.getOutputPathPromise();
+    if (fieldsJs.rejected) return;
+
+    fieldsJs.outputPath = outputPath;
     dest = path.join(path.dirname(dest), 'fields.json');
   }
 

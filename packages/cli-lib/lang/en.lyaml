@@ -698,6 +698,7 @@ en:
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
         converting: "Converting \"{{ src }}\" to \"{{ dest }}\"."
         converted: "Finished converting \"{{ src }}\" to \"{{ dest }}\"."
+        notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:

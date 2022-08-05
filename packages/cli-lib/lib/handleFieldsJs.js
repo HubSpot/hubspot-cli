@@ -19,6 +19,7 @@ class FieldsJs {
     this.projectDir = projectDir;
     this.filePath = filePath;
     this.fieldOptions = fieldOptions;
+    this.rejected = false;
     // Create tmpDir if no writeDir is given.
     this.rootWriteDir =
       rootWriteDir === undefined
@@ -35,7 +36,8 @@ class FieldsJs {
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
     const dirName = path.dirname(filePath);
-
+    const cwd = getCwd();
+    console.log(cwd, dirName);
     logger.info(
       i18n(`${i18nKey}.converting`, {
         src: dirName + '/fields.js',
@@ -50,8 +52,7 @@ class FieldsJs {
        */
       delete require.cache[filePath];
 
-      // Save CWD and then switch CWD to the project. This is so that any calls to the file system that are written relatively will resolve properly.
-      const cwd = getCwd();
+      // Switch CWD to the dir of the fieldsjs. This is so that any calls to the file system that are written relatively will resolve properly.
       process.chdir(dirName);
       /*
        * If the dev marks their exported function as async, then require(filePath) returns an async function. In that case, fieldsArray is going to be a Promise.
@@ -59,27 +60,34 @@ class FieldsJs {
        * But fieldsArray _might_ not be a Promise. In order to be sure that it is, we use Promise.resolve.
        */
       const fieldsArray = require(filePath)(this.fieldOptions);
-      return Promise.resolve(fieldsArray).then(fields => {
-        if (!Array.isArray(fields)) {
-          throw new SyntaxError(`${filePath} does not return an array.`);
-        }
+      return Promise.resolve(fieldsArray)
+        .then(fields => {
+          if (!Array.isArray(fields)) {
+            throw new SyntaxError(`${filePath} does not return an array.`);
+          }
 
-        const finalPath = path.join(writeDir, '/fields.json');
-        const json = fieldsArrayToJson(fields);
-        fs.outputFileSync(finalPath, json);
-        logger.success(
-          i18n(`${i18nKey}.converted`, {
-            src: dirName + '/fields.js',
-            dest: dirName + '/fields.json',
-          })
-        );
-        // Switch back to the original directory.
-        process.chdir(cwd);
-        return finalPath;
-      });
+          const finalPath = path.join(writeDir, '/fields.json');
+          const json = fieldsArrayToJson(fields);
+          fs.outputFileSync(finalPath, json);
+          logger.success(
+            i18n(`${i18nKey}.converted`, {
+              src: dirName + '/fields.js',
+              dest: dirName + '/fields.json',
+            })
+          );
+          // Switch back to the original directory.
+          process.chdir(cwd);
+          return finalPath;
+        })
+        .catch(e => {
+          process.chdir(cwd);
+          // Errors caught by this could be caused by the users field.js, so just print the whole error for them.
+          logger.error(e);
+        });
     } catch (e) {
+      process.chdir(cwd);
+      this.rejected = true;
       logFieldsJsErrors(e, filePath);
-      throw e;
     }
   }
 
@@ -149,7 +157,6 @@ function isProcessableFieldsJs(rootDir, filePath) {
   const relativePath = filePath.replace(regex, '');
   const baseName = path.basename(filePath);
   const inModuleFolder = isModuleFolderChild({ path: filePath, isLocal: true });
-
   return (
     baseName == 'fields.js' && (inModuleFolder || relativePath == '/fields.js')
   );

@@ -86,7 +86,10 @@ exports.handler = async options => {
       undefined,
       options.fieldOptions
     );
-    fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
+    const outputPath = await fieldsJs.getOutputPathPromise();
+    if (fieldsJs.rejected) return;
+
+    fieldsJs.outputPath = outputPath;
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
     dest = path.join(path.dirname(dest), 'fields.json');
   }
