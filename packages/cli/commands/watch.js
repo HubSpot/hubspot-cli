@@ -82,7 +82,7 @@ exports.handler = async options => {
     remove,
     disableInitial: initialUpload ? false : true,
     notify,
-    options: options.options,
+    fieldOptions: options.fieldOptions,
   });
 };
 
@@ -100,7 +100,7 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
-  yargs.option('options', {
+  yargs.option('fieldOptions', {
     describe: i18n(`${i18nKey}.options.options.describe`),
     type: 'array',
     default: [''],

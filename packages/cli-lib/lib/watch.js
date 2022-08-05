@@ -43,6 +43,7 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const src = yargs.argv.src;
+  const fieldOptions = options.fieldOptions;
   if (!isAllowedExtension(file)) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
@@ -56,7 +57,7 @@ async function uploadFile(accountId, file, dest, options) {
     isProcessableFieldsJs(src, file) && processFieldsJsOpt;
   let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = new FieldsJs(src, file);
+    fieldsJs = new FieldsJs(src, file, undefined, fieldOptions);
     fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
     dest = path.join(path.dirname(dest), 'fields.json');
   }
@@ -128,7 +129,7 @@ function watch(
   accountId,
   src,
   dest,
-  { mode, remove, disableInitial, notify, options }
+  { mode, remove, disableInitial, notify, fieldOptions }
 ) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
@@ -174,7 +175,7 @@ function watch(
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
-      options,
+      fieldOptions,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
@@ -221,7 +222,7 @@ function watch(
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
       mode,
-      options,
+      fieldOptions,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });

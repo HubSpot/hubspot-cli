@@ -55,7 +55,8 @@ function getFileType(filePath) {
   }
 }
 
-function getFilesByType(filePaths, projectDir, rootWriteDir, processFieldsJs) {
+function getFilesByType(filePaths, projectDir, rootWriteDir, commandOptions) {
+  const { processFieldsJs, fieldOptions } = commandOptions;
   const projectDirRegex = new RegExp(`^${escapeRegExp(projectDir)}`);
   const fieldsJsObjects = [];
 
@@ -75,7 +76,12 @@ function getFilesByType(filePaths, projectDir, rootWriteDir, processFieldsJs) {
     }
 
     if (isProcessableFieldsJs(projectDir, filePath)) {
-      const fieldsJs = new FieldsJs(projectDir, filePath, rootWriteDir);
+      const fieldsJs = new FieldsJs(
+        projectDir,
+        filePath,
+        rootWriteDir,
+        fieldOptions
+      );
       const rootOrModule =
         relativePath === '/fields.js' ? FileTypes.json : FileTypes.module;
 
@@ -136,7 +142,7 @@ async function uploadFolder(
     allowedFiles,
     src,
     tmpDir,
-    processFieldsJs
+    commandOptions
   );
   if (fieldsJsObjects.length) {
     // Wait for each promise to resolve in sequence. Since we need to change the directory of the process during

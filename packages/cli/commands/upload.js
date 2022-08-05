@@ -69,8 +69,8 @@ exports.handler = async options => {
   const uploadPromptAnswers = await uploadPrompt(options);
   const processFieldsOpt = options.processFieldsJs;
   const src = options.src || uploadPromptAnswers.src;
+  const saveOutput = options.saveOutput;
   let dest = options.dest || uploadPromptAnswers.dest;
-  let saveOutput = options.saveOutput;
 
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
@@ -80,7 +80,12 @@ exports.handler = async options => {
     isProcessableFieldsJs(projectRoot, absoluteSrcPath) && processFieldsOpt;
   let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = new FieldsJs(projectRoot, absoluteSrcPath);
+    fieldsJs = new FieldsJs(
+      projectRoot,
+      absoluteSrcPath,
+      undefined,
+      options.fieldOptions
+    );
     fieldsJs.outputPath = await fieldsJs.getOutputPathPromise();
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
     dest = path.join(path.dirname(dest), 'fields.json');
@@ -245,7 +250,7 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
-  yargs.option('options', {
+  yargs.option('fieldOptions', {
     describe: i18n(`${i18nKey}.options.options.describe`),
     type: 'array',
     default: [''],

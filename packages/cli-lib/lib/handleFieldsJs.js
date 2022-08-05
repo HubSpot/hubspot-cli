@@ -2,8 +2,7 @@ const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 const escapeRegExp = require('./escapeRegExp');
-const yargs = require('yargs');
-const { splitLocalPath } = require('../path');
+const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
 const { getCwd, getExt } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -16,10 +15,10 @@ const i18nKey = 'cli.commands.upload';
  * @param {string} [rootWriteDir] - (Optional) The root of the directory in which to output the fields.js. If blank, a temporary directory is created.
  */
 class FieldsJs {
-  constructor(projectDir, filePath, rootWriteDir) {
+  constructor(projectDir, filePath, rootWriteDir, fieldOptions = ['']) {
     this.projectDir = projectDir;
     this.filePath = filePath;
-
+    this.fieldOptions = fieldOptions;
     // Create tmpDir if no writeDir is given.
     this.rootWriteDir =
       rootWriteDir === undefined
@@ -35,7 +34,6 @@ class FieldsJs {
    */
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
-    const options = yargs.argv.options;
     const dirName = path.dirname(filePath);
 
     logger.info(
@@ -60,16 +58,16 @@ class FieldsJs {
        * Further, it is expected that devs use await on any asyncronous calls.
        * But fieldsArray _might_ not be a Promise. In order to be sure that it is, we use Promise.resolve.
        */
-      const fieldsArray = require(filePath)(options);
+      const fieldsArray = require(filePath)(this.fieldOptions);
       return Promise.resolve(fieldsArray).then(fields => {
         if (!Array.isArray(fields)) {
           throw new SyntaxError(`${filePath} does not return an array.`);
         }
 
-        let finalPath = path.join(writeDir, '/fields.json');
-        let json = fieldsArrayToJson(fields);
+        const finalPath = path.join(writeDir, '/fields.json');
+        const json = fieldsArrayToJson(fields);
         fs.outputFileSync(finalPath, json);
-        logger.info(
+        logger.success(
           i18n(`${i18nKey}.converted`, {
             src: dirName + '/fields.js',
             dest: dirName + '/fields.json',
@@ -148,14 +146,12 @@ function fieldsArrayToJson(fields) {
  */
 function isProcessableFieldsJs(rootDir, filePath) {
   const regex = new RegExp(`^${escapeRegExp(rootDir)}`);
-  const parts = splitLocalPath(filePath);
   const relativePath = filePath.replace(regex, '');
   const baseName = path.basename(filePath);
-  const moduleFolder = parts.find(part => part.endsWith('.module'));
+  const inModuleFolder = isModuleFolderChild({ path: filePath, isLocal: true });
 
   return (
-    baseName == 'fields.js' &&
-    (typeof moduleFolder === 'string' || relativePath == '/fields.js')
+    baseName == 'fields.js' && (inModuleFolder || relativePath == '/fields.js')
   );
 }
 
