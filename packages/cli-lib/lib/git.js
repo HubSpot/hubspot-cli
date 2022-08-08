@@ -4,6 +4,9 @@ const os = require('os');
 const ignore = require('ignore');
 const findup = require('findup-sync');
 const { logger } = require('../logger');
+const { DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME } = require('./constants');
+
+const GITIGNORE_FILE = '.gitignore';
 
 const makeComparisonDir = filepath => {
   if (typeof filepath !== 'string') return null;
@@ -24,7 +27,7 @@ const getGitignoreFiles = configPath => {
   // Start findup from config dir
   let cwd = configPath && path.dirname(configPath);
   while (cwd) {
-    const ignorePath = findup('.gitignore', { cwd });
+    const ignorePath = findup(GITIGNORE_FILE, { cwd });
     if (
       ignorePath &&
       // Stop findup after .git dir is reached
@@ -52,7 +55,6 @@ const configFilenameIsIgnoredByGitignore = (ignoreFiles, configPath) => {
   return ignoreFiles.some(gitignore => {
     const gitignoreContents = fs.readFileSync(gitignore).toString();
     const gitignoreConfig = ignore().add(gitignoreContents);
-
     if (
       gitignoreConfig.ignores(
         path.relative(path.dirname(gitignore), configPath)
@@ -64,32 +66,35 @@ const configFilenameIsIgnoredByGitignore = (ignoreFiles, configPath) => {
   });
 };
 
-const shouldWarnOfGitInclusion = configPath => {
-  if (!isConfigPathInGitRepo(configPath)) {
-    // Not in git
-    return false;
+const checkGitInclusion = configPath => {
+  const result = { inGit: false, configIgnored: false, gitignoreFiles: null };
+
+  if (isConfigPathInGitRepo(configPath)) {
+    result.inGit = true;
+    result.gitignoreFiles = getGitignoreFiles(configPath);
+
+    if (configFilenameIsIgnoredByGitignore(result.gitignoreFiles, configPath)) {
+      // Found ignore statement in .gitignore that matches config filename
+      result.configIgnored = true;
+    }
   }
-  const gitignoreFiles = getGitignoreFiles(configPath);
-  if (configFilenameIsIgnoredByGitignore(gitignoreFiles, configPath)) {
-    // Found ignore statement in .gitignore that matches config filename
-    return false;
-  }
-  // In git w/o a gitignore rule
-  return true;
+  return result;
 };
 
 const checkAndWarnGitInclusion = configPath => {
   try {
-    if (!shouldWarnOfGitInclusion(configPath)) return;
-    logger.warn('Security Issue');
-    logger.warn('Config file can be tracked by git.');
+    const { inGit, configIgnored } = checkGitInclusion(configPath);
+
+    if (!inGit || configIgnored) return;
+    logger.warn('Security Issue Detected');
+    logger.warn('The HubSpot config file can be tracked by git.');
     logger.warn(`File: "${configPath}"`);
     logger.warn(`To remediate:
-      - Move config file to your home directory: "${os.homedir()}"
+      - Move the config file to your home directory: "${os.homedir()}"
       - Add gitignore pattern "${path.basename(
         configPath
       )}" to a .gitignore file in root of your repository.
-      - Ensure that config file has not already been pushed to a remote repository.
+      - Ensure that the config file has not already been pushed to a remote repository.
     `);
   } catch (e) {
     // fail silently
@@ -99,7 +104,32 @@ const checkAndWarnGitInclusion = configPath => {
   }
 };
 
+const checkAndUpdateGitignore = configPath => {
+  try {
+    const { configIgnored, gitignoreFiles } = checkGitInclusion(configPath);
+    if (configIgnored) return;
+
+    let gitignoreFilePath =
+      gitignoreFiles && gitignoreFiles.length ? gitignoreFiles[0] : null;
+
+    if (!gitignoreFilePath) {
+      gitignoreFilePath = path.resolve(configPath, GITIGNORE_FILE);
+      fs.writeFileSync(gitignoreFilePath);
+    }
+
+    const gitignoreContents = fs.readFileSync(gitignoreFilePath).toString();
+    const updatedContents = `${gitignoreContents.trim()}\n\n# HubSpot config file\n${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}\n`;
+    fs.writeFileSync(gitignoreFilePath, updatedContents);
+  } catch (e) {
+    // fail silently
+    logger.debug(
+      'Unable to determine if config file is properly ignored by git.'
+    );
+  }
+};
+
 module.exports = {
+  checkAndUpdateGitignore,
   checkAndWarnGitInclusion,
   configFilenameIsIgnoredByGitignore,
   isConfigPathInGitRepo,
