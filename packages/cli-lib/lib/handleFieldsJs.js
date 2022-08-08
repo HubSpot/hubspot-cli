@@ -183,6 +183,7 @@ function logFieldsJsErrors(e, filePath) {
       })
     );
   }
+  logger.error(e);
 }
 
 /**

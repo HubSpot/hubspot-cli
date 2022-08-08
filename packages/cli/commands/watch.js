@@ -130,6 +130,7 @@ exports.builder = yargs => {
   });
   yargs.option('processFieldsJs', {
     describe: i18n(`${i18nKey}.options.processFields.describe`),
+    alias: ['processFields'],
     type: 'boolean',
     default: false,
     hidden: true,
