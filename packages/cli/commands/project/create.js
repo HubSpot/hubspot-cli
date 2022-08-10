@@ -14,7 +14,7 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { uiFeatureHighlight } = require('../../lib/ui');
+const { uiBetaWarning, uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
@@ -23,6 +23,9 @@ exports.command = 'create';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
+  uiBetaWarning(
+    'Developer Projects are curently in beta right now, and the functionality is subject to change.'
+  );
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);

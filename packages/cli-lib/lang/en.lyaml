@@ -748,6 +748,9 @@ en:
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     lib:
       ui:
+        betaWarning:
+          header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
+          footer: "{{#yellow}}******************************************************************{{/yellow}}"
         featureHighlight:
           defaultTitle: "What's next?"
           commandKeys:
