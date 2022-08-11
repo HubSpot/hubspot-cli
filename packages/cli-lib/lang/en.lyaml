@@ -715,6 +715,8 @@ en:
             describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
           processFields:
             describe: "If true, processes any fields.js files contained in module folder or project root."
+          saveOutput:
+            describe: "If true, saves all output from fields.js files as 'fields.output.json'."
           options:
             describe: "Options to pass to fields.js"
         positionals:

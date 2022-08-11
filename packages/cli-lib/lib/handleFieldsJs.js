@@ -1,7 +1,9 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
+const yargs = require('yargs');
 const escapeRegExp = require('./escapeRegExp');
+const dynamicImport = require('./dynamicImport');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
 const { getCwd, getExt } = require('@hubspot/cli-lib/path');
@@ -27,6 +29,12 @@ class FieldsJs {
         : rootWriteDir;
   }
 
+  async init() {
+    const outputPath = await this.getOutputPathPromise();
+    this.outputPath = this.rejected ? undefined : outputPath;
+    return this;
+  }
+
   /**
    * Converts a fields.js file into a fields.json file, writes, and returns of fields.json
    * @param {string} file - The path of the fields.js javascript file.
@@ -35,55 +43,62 @@ class FieldsJs {
    */
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
+    const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
     const cwd = getCwd();
     console.log(cwd, dirName);
     logger.info(
       i18n(`${i18nKey}.converting`, {
-        src: dirName + '/fields.js',
+        src: dirName + `/${baseName}`,
         dest: dirName + '/fields.json',
       })
     );
 
     try {
-      /* Since we require() fields.js files, node will cache them.
-       * Thus during an hs watch, if the user edits a fields.js file, node will return the cached version on require() instead of re-requiring the new one.
-       * So we clean the cache before requiring so that node requires the fresh fields.js. See https://nodejs.org/api/modules.html#caching.
-       */
-      delete require.cache[filePath];
-
       // Switch CWD to the dir of the fieldsjs. This is so that any calls to the file system that are written relatively will resolve properly.
       process.chdir(dirName);
-      /*
-       * If the dev marks their exported function as async, then require(filePath) returns an async function. In that case, fieldsArray is going to be a Promise.
-       * Further, it is expected that devs use await on any asyncronous calls.
-       * But fieldsArray _might_ not be a Promise. In order to be sure that it is, we use Promise.resolve.
-       */
-      const fieldsArray = require(filePath)(this.fieldOptions);
-      return Promise.resolve(fieldsArray)
-        .then(fields => {
-          if (!Array.isArray(fields)) {
-            throw new SyntaxError(`${filePath} does not return an array.`);
-          }
 
-          const finalPath = path.join(writeDir, '/fields.json');
-          const json = fieldsArrayToJson(fields);
-          fs.outputFileSync(finalPath, json);
-          logger.success(
-            i18n(`${i18nKey}.converted`, {
-              src: dirName + '/fields.js',
-              dest: dirName + '/fields.json',
-            })
-          );
-          // Switch back to the original directory.
-          process.chdir(cwd);
-          return finalPath;
-        })
-        .catch(e => {
-          process.chdir(cwd);
-          // Errors caught by this could be caused by the users field.js, so just print the whole error for them.
-          logger.error(e);
-        });
+      /*
+       * How this works: dynamicImport will _always_ either return a Promise, or undefined.
+       * In the case when it's a Promise, it will resolve to a function.
+       * This function has optional return type of Promise<Array> | Array. In order to have uniform handling,
+       * we wrap the return value of the function in a Promise.resolve().
+       */
+      const fieldsPromise = dynamicImport(filePath);
+
+      // Need some cool good error handling here
+      /*if (typeof fieldsPromise !== 'function') {
+        throw 'PROCESS_JS_ERROR';
+      }*/
+      return fieldsPromise.then(fieldsFunc => {
+        if (typeof fieldsFunc !== 'function') {
+          throw 'NO_FUNCTION_EXPORTED';
+        }
+        return Promise.resolve(fieldsFunc(this.fieldOptions))
+          .then(fields => {
+            if (!Array.isArray(fields)) {
+              throw new SyntaxError(`${filePath} does not return an array.`);
+            }
+
+            const finalPath = path.join(writeDir, '/fields.json');
+            const json = fieldsArrayToJson(fields);
+            fs.outputFileSync(finalPath, json);
+            logger.success(
+              i18n(`${i18nKey}.converted`, {
+                src: dirName + `/${baseName}`,
+                dest: dirName + '/fields.json',
+              })
+            );
+            // Switch back to the original directory.
+            process.chdir(cwd);
+            return finalPath;
+          })
+          .catch(e => {
+            process.chdir(cwd);
+            // Errors caught by this could be caused by the users field.js, so just print the whole error for them.
+            logger.error(e);
+          });
+      });
     } catch (e) {
       process.chdir(cwd);
       this.rejected = true;
@@ -146,19 +161,30 @@ function fieldsArrayToJson(fields) {
   fields = fields.flat(Infinity).map(field => {
     return typeof field['toJSON'] === 'function' ? field.toJSON() : field;
   });
-  return JSON.stringify(fields);
+  return JSON.stringify(fields, null, 2);
 }
 
 /**
- * Determines if file is a processable fields.js file (i.e., if it is called 'fields.js' and in a root or in a module folder)
+ * Determines if file is a processable fields.js file i.e., if it is called
+ * 'fields.js' and in a root or in a module folder, and if processFieldsJs flag is true.
+ * @param {string} rootDir - The root directory of the project where the file is
+ * @param {string} filePath - The file to check
+ * @param {Boolean} processFieldsJs - The processFields flag option value
  */
-function isProcessableFieldsJs(rootDir, filePath) {
+function isProcessableFieldsJs(
+  rootDir,
+  filePath,
+  processFieldsJs = yargs.argv.processFieldsJs
+) {
+  const allowedFieldsNames = ['fields.js', 'fields.mjs', 'fields.cjs'];
   const regex = new RegExp(`^${escapeRegExp(rootDir)}`);
-  const relativePath = filePath.replace(regex, '');
+  const relativePath = path.dirname(filePath.replace(regex, ''));
   const baseName = path.basename(filePath);
   const inModuleFolder = isModuleFolderChild({ path: filePath, isLocal: true });
-  return (
-    baseName == 'fields.js' && (inModuleFolder || relativePath == '/fields.js')
+  return !!(
+    processFieldsJs &&
+    allowedFieldsNames.includes(baseName) &&
+    (inModuleFolder || relativePath == '/')
   );
 }
 

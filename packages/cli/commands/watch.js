@@ -82,7 +82,7 @@ exports.handler = async options => {
     remove,
     disableInitial: initialUpload ? false : true,
     notify,
-    fieldOptions: options.fieldOptions,
+    commandOptions: options,
   });
 };
 
@@ -135,6 +135,11 @@ exports.builder = yargs => {
     default: false,
     hidden: true,
   });
-
+  yargs.option('saveOutput', {
+    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
+    type: 'boolean',
+    default: true,
+    hidden: true,
+  });
   return yargs;
 };

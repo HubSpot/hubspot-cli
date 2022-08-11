@@ -1,5 +1,4 @@
 const path = require('path');
-const yargs = require('yargs');
 const chokidar = require('chokidar');
 const { default: PQueue } = require('p-queue');
 
@@ -12,9 +11,7 @@ const {
   logErrorInstance,
 } = require('../errorHandlers');
 const {
-  FieldsJs,
   isProcessableFieldsJs,
-  cleanupTmpDirSync,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
@@ -24,6 +21,7 @@ const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
 const { getThemePreviewUrl } = require('./files');
+const spawn = require('./spawnFunction');
 
 const queue = new PQueue({
   concurrency: 10,
@@ -42,9 +40,10 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
-  const src = yargs.argv.src;
-  const fieldOptions = options.fieldOptions;
-  if (!isAllowedExtension(file)) {
+  const src = options.src;
+  const processFieldsJs = isProcessableFieldsJs(src, file);
+
+  if (!isAllowedExtension(file) && !processFieldsJs) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
   }
@@ -52,54 +51,46 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  const processFieldsJsOpt = yargs.argv.processFieldsJs;
-  const processFieldsJs =
-    isProcessableFieldsJs(src, file) && processFieldsJsOpt;
-  let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = new FieldsJs(src, file, undefined, fieldOptions);
-    const outputPath = await fieldsJs.getOutputPathPromise();
-    if (fieldsJs.rejected) return;
+    const parsedOptions = JSON.stringify({
+      ...options.commandOptions,
+      src: file,
+      dest: path.join(path.dirname(dest), 'fields.json'),
+      mode: options.mode,
+      _: ['upload'],
+    });
 
-    fieldsJs.outputPath = outputPath;
-    dest = path.join(path.dirname(dest), 'fields.json');
+    const fieldsJsProcessCode = `require('@hubspot/cli/commands/upload').handler(${parsedOptions})`;
+    spawn(fieldsJsProcessCode);
+    return;
   }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
-  const fileToUpload = processFieldsJs ? fieldsJs.outputPath : file;
 
-  return queue
-    .add(() => {
-      return upload(accountId, fileToUpload, dest, apiOptions)
-        .then(() => {
-          logger.log(`Uploaded file ${file} to ${dest}`);
-          notifyOfThemePreview(file, accountId);
-        })
-        .catch(() => {
-          const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
-          logger.debug(uploadFailureMessage);
-          logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
-          return upload(accountId, fileToUpload, dest, apiOptions).catch(
-            error => {
-              logger.error(uploadFailureMessage);
-              logApiUploadErrorInstance(
-                error,
-                new ApiErrorContext({
-                  accountId,
-                  request: dest,
-                  payload: file,
-                })
-              );
-            }
+  return queue.add(() => {
+    return upload(accountId, file, dest, apiOptions)
+      .then(() => {
+        logger.log(`Uploaded file ${file} to ${dest}`);
+        notifyOfThemePreview(file, accountId);
+      })
+      .catch(() => {
+        const uploadFailureMessage = `Uploading file ${file} to ${dest} failed`;
+        logger.debug(uploadFailureMessage);
+        logger.debug('Retrying to upload file "%s" to "%s"', file, dest);
+        return upload(accountId, file, dest, apiOptions).catch(error => {
+          logger.error(uploadFailureMessage);
+          logApiUploadErrorInstance(
+            error,
+            new ApiErrorContext({
+              accountId,
+              request: dest,
+              payload: file,
+            })
           );
         });
-    })
-    .finally(() => {
-      if (processFieldsJs) {
-        cleanupTmpDirSync(fieldsJs.rootWriteDir);
-      }
-    });
+      });
+  });
 }
 
 async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
@@ -132,10 +123,9 @@ function watch(
   accountId,
   src,
   dest,
-  { mode, remove, disableInitial, notify, fieldOptions }
+  { mode, remove, disableInitial, notify, commandOptions }
 ) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
-
   if (notify) {
     ignoreFile(notify);
   }
@@ -177,8 +167,9 @@ function watch(
   watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      src,
       mode,
-      fieldOptions,
+      commandOptions,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
@@ -186,7 +177,7 @@ function watch(
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
       // If it's a fields.js file that is in a module folder or the root, then ignore because it will not exist on the server.
-      if (isProcessableFieldsJs(src, filePath) && yargs.argv.processFieldsJs) {
+      if (isProcessableFieldsJs(src, filePath)) {
         return;
       }
 
@@ -224,8 +215,9 @@ function watch(
   watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      src,
       mode,
-      fieldOptions,
+      commandOptions,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });

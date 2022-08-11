@@ -67,30 +67,32 @@ exports.handler = async options => {
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
-  const processFieldsOpt = options.processFieldsJs;
   const src = options.src || uploadPromptAnswers.src;
   const saveOutput = options.saveOutput;
   let dest = options.dest || uploadPromptAnswers.dest;
-
-  const absoluteSrcPath = path.resolve(getCwd(), src);
-
+  let absoluteSrcPath = path.resolve(getCwd(), src);
+  if (!dest) {
+    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
+    return;
+  }
   // The theme.json file must always be at the root of the project - so we look for that and determine the root path based on it.
   const projectRoot = path.dirname(getThemeJSONPath(absoluteSrcPath));
-  const processFieldsJs =
-    isProcessableFieldsJs(projectRoot, absoluteSrcPath) && processFieldsOpt;
+  const processFieldsJs = isProcessableFieldsJs(
+    projectRoot,
+    absoluteSrcPath,
+    options.processFieldsJs
+  );
   let fieldsJs;
   if (processFieldsJs) {
-    fieldsJs = new FieldsJs(
+    fieldsJs = await new FieldsJs(
       projectRoot,
       absoluteSrcPath,
       undefined,
       options.fieldOptions
-    );
-    const outputPath = await fieldsJs.getOutputPathPromise();
+    ).init();
     if (fieldsJs.rejected) return;
-
-    fieldsJs.outputPath = outputPath;
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
+    absoluteSrcPath = fieldsJs.outputPath;
     dest = path.join(path.dirname(dest), 'fields.json');
   }
   let stats;
@@ -113,10 +115,6 @@ exports.handler = async options => {
     return;
   }
 
-  if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
-    return;
-  }
   const normalizedDest = convertToUnixPath(dest);
   trackCommandUsage(
     'upload',
@@ -133,7 +131,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
-    if (!isAllowedExtension(src)) {
+    if (!isAllowedExtension(src) && !processFieldsJs) {
       logger.error(
         i18n(`${i18nKey}.errors.invalidPath`, {
           path: src,
@@ -152,7 +150,7 @@ exports.handler = async options => {
     }
     upload(
       accountId,
-      processFieldsJs ? fieldsJs.outputPath : absoluteSrcPath,
+      absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues({ mode, options })
     )

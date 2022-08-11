@@ -73,22 +73,21 @@ async function getFilesByType(
   for (const filePath of filePaths) {
     const fileType = getFileType(filePath);
     const fileName = path.basename(filePath);
-    const relativePath = filePath.replace(projectDirRegex, '');
+    const relativeDir = path.dirname(filePath.replace(projectDirRegex, ''));
+
     if (!processFieldsJs) {
       filePathsByType[fileType].push(filePath);
       continue;
     }
-
     if (isProcessableFieldsJs(projectDir, filePath)) {
-      const fieldsJs = new FieldsJs(
+      const fieldsJs = await new FieldsJs(
         projectDir,
         filePath,
         rootWriteDir,
         fieldOptions
-      );
+      ).init();
       const rootOrModule =
-        relativePath === '/fields.js' ? FileTypes.json : FileTypes.module;
-      const outputPath = await fieldsJs.getOutputPathPromise();
+        relativeDir === '/' ? FileTypes.json : FileTypes.module;
 
       /*
        * A fields.js will be rejected if the promise is rejected or if the some other error occurs.
@@ -96,9 +95,8 @@ async function getFilesByType(
        */
       if (fieldsJs.rejected) continue;
 
-      fieldsJs.outputPath = outputPath;
       fieldsJsObjects.push(fieldsJs);
-      filePathsByType[rootOrModule].push(outputPath);
+      filePathsByType[rootOrModule].push(fieldsJs.outputPath);
     } else if (fileName === 'fields.json') {
       // Only add fields.json if there is no fields.js in the same directory.
       const dirFiles = listFilesInDir(path.dirname(filePath));
