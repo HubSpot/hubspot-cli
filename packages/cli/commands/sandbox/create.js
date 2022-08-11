@@ -122,8 +122,6 @@ exports.handler = async options => {
 
   let namePrompt;
 
-  trackCommandUsage('sandbox-create', {}, accountId);
-
   if (!name) {
     namePrompt = await createSandboxPrompt();
   }
@@ -140,6 +138,8 @@ exports.handler = async options => {
     });
 
     result = await createSandbox(accountId, sandboxName);
+
+    trackCommandUsage('sandbox-create', {}, accountId);
 
     logger.log('');
     spinnies.succeed('sandboxCreate', {
