@@ -20,4 +20,4 @@ async function dynamicImport(filePath) {
   }
 }
 
-module.exports = dynamicImport;
+module.exports = { dynamicImport };

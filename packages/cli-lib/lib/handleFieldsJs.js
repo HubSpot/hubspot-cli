@@ -3,11 +3,12 @@ const os = require('os');
 const path = require('path');
 const yargs = require('yargs');
 const escapeRegExp = require('./escapeRegExp');
-const dynamicImport = require('./dynamicImport');
+const { dynamicImport } = require('./dynamicImport');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
-const { getCwd, getExt } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/cli-lib/path');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
 /**
@@ -46,7 +47,7 @@ class FieldsJs {
     const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
     const cwd = getCwd();
-    console.log(cwd, dirName);
+    const logError = err => logFieldsJsError(err, filePath);
     logger.info(
       i18n(`${i18nKey}.converting`, {
         src: dirName + `/${baseName}`,
@@ -66,20 +67,19 @@ class FieldsJs {
        */
       const fieldsPromise = dynamicImport(filePath);
 
-      // Need some cool good error handling here
-      /*if (typeof fieldsPromise !== 'function') {
-        throw 'PROCESS_JS_ERROR';
-      }*/
       return fieldsPromise.then(fieldsFunc => {
         if (typeof fieldsFunc !== 'function') {
-          throw 'NO_FUNCTION_EXPORTED';
+          logError(FieldErrors.IsNotFunction);
+          this.rejected = true;
+          return;
         }
         return Promise.resolve(fieldsFunc(this.fieldOptions))
           .then(fields => {
             if (!Array.isArray(fields)) {
-              throw new SyntaxError(`${filePath} does not return an array.`);
+              logError(FieldErrors.DoesNotReturnArray);
+              this.rejected = true;
+              return;
             }
-
             const finalPath = path.join(writeDir, '/fields.json');
             const json = fieldsArrayToJson(fields);
             fs.outputFileSync(finalPath, json);
@@ -96,13 +96,16 @@ class FieldsJs {
           .catch(e => {
             process.chdir(cwd);
             // Errors caught by this could be caused by the users field.js, so just print the whole error for them.
+            this.rejected = true;
+            logError(e);
             logger.error(e);
           });
       });
     } catch (e) {
       process.chdir(cwd);
       this.rejected = true;
-      logFieldsJsErrors(e, filePath);
+      logError(e);
+      logger.error(e);
     }
   }
 
@@ -186,30 +189,6 @@ function isProcessableFieldsJs(
     allowedFieldsNames.includes(baseName) &&
     (inModuleFolder || relativePath == '/')
   );
-}
-
-function logFieldsJsErrors(e, filePath) {
-  if (e instanceof SyntaxError) {
-    const ext = getExt(filePath);
-    if (ext == 'js') {
-      logger.error(i18n(`${i18nKey}.errors.jsSyntaxError`, { js: filePath }));
-    }
-  }
-  if (e.code === 'ENOENT') {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: filePath,
-      })
-    );
-  }
-  if (e.code === 'MODULE_NOT_FOUND') {
-    logger.error(
-      i18n(`${i18nKey}.errors.jsSyntaxError`, {
-        path: filePath,
-      })
-    );
-  }
-  logger.error(e);
 }
 
 /**

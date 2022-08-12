@@ -15,6 +15,11 @@ const {
   parseValidationErrors,
 } = require('./errorHandlers/apiErrors');
 
+const {
+  FieldErrors,
+  logFieldsJsError,
+} = require('./errorHandlers/fieldsJsErrors');
+
 module.exports = {
   ErrorContext,
   ApiErrorContext,
@@ -26,4 +31,6 @@ module.exports = {
   logApiUploadErrorInstance,
   logFileSystemErrorInstance,
   logServerlessFunctionApiErrorInstance,
+  FieldErrors,
+  logFieldsJsError,
 };

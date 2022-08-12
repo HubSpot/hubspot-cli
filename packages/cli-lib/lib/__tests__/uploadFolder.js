@@ -20,19 +20,23 @@ jest.mock('../../errorHandlers');
 
 //folder/fields.js -> folder/fields.converted.js
 // We add the .converted to differentiate from a unconverted fields.json
-
 const defaultFieldsJsImplementation = jest.fn((src, filePath, rootWriteDir) => {
   const fieldsJs = Object.create(FieldsJs.prototype);
   const outputPath =
     filePath.substring(0, filePath.lastIndexOf('.')) + '.converted.json';
-  return Object.assign(fieldsJs, {
-    src,
-    outputPath,
-    rootWriteDir,
-    getOutputPathPromise: jest.fn().mockResolvedValue(outputPath),
-    rejected: false,
-  });
+  return {
+    init: jest.fn().mockReturnValue(
+      Object.assign(fieldsJs, {
+        src,
+        outputPath,
+        rootWriteDir,
+        getOutputPathPromise: jest.fn().mockResolvedValue(outputPath),
+        rejected: false,
+      })
+    ),
+  };
 });
+FieldsJs.mockImplementation(defaultFieldsJsImplementation);
 
 isProcessableFieldsJs.mockImplementation((src, filePath) => {
   const fileName = path.basename(filePath);
@@ -52,13 +56,12 @@ const filesProto = [
   'folder/sample.module/module.html',
   'folder/templates/page.html',
 ];
-FieldsJs.mockImplementation(defaultFieldsJsImplementation);
 describe('uploadFolder', () => {
   beforeAll(() => {
     createIgnoreFilter.mockImplementation(() => () => true);
   });
   beforeEach(() => {
-    FieldsJs.mockReset();
+    FieldsJs.mockClear();
     createTmpDirSync.mockReset();
     listFilesInDir.mockReset();
   });
@@ -73,7 +76,6 @@ describe('uploadFolder', () => {
     ];
 
     it('uploads files in the correct order', async () => {
-      FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       listFilesInDir.mockReturnValue(['fields.json']);
       walk.mockResolvedValue(filesProto);
       upload.mockImplementation(() => Promise.resolve());
@@ -106,7 +108,6 @@ describe('uploadFolder', () => {
       const logSpy = jest.spyOn(logger, 'debug');
       const file = 'folder/test.json';
 
-      FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       logApiUploadErrorInstance.mockImplementation(() => {});
       upload.mockImplementation(uploadMock);
       walk.mockResolvedValue([file]);
@@ -125,7 +126,6 @@ describe('uploadFolder', () => {
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
-      FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       walk.mockResolvedValue([]);
       upload.mockImplementation(() => Promise.resolve());
 
@@ -137,18 +137,6 @@ describe('uploadFolder', () => {
       const saveOutputSpy = jest.spyOn(FieldsJs.prototype, 'saveOutput');
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
-
-      FieldsJs.mockImplementation((src, filePath, rootWriteDir) => {
-        const outputPath =
-          filePath.substring(0, filePath.lastIndexOf('.')) + '.converted.json';
-        const fieldsJs = Object.create(FieldsJs.prototype);
-        return Object.assign(fieldsJs, {
-          getOutputPathPromise: jest.fn(() => outputPath),
-          src,
-          outputPath,
-          rootWriteDir,
-        });
-      });
 
       createTmpDirSync.mockReturnValue('folder');
       walk.mockResolvedValue([
@@ -166,7 +154,6 @@ describe('uploadFolder', () => {
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
-      FieldsJs.mockImplementation(defaultFieldsJsImplementation);
       walk.mockResolvedValue([]);
       upload.mockImplementation(() => Promise.resolve());
 
@@ -176,23 +163,22 @@ describe('uploadFolder', () => {
   });
 
   describe('getFilesByType()', () => {
-    FieldsJs.mockImplementation(defaultFieldsJsImplementation);
     const convertedFieldsObj = new FieldsJs(
       'folder',
       'folder/fields.json',
       'folder'
-    );
+    ).init();
     const convertedFilePath = convertedFieldsObj.outputPath;
 
     const convertedModuleFieldsObj = new FieldsJs(
       'folder',
       'folder/sample.module/fields.json',
       'folder'
-    );
+    ).init();
     const convertedModuleFilePath = convertedModuleFieldsObj.outputPath;
 
     beforeEach(() => {
-      FieldsJs.mockImplementation(defaultFieldsJsImplementation);
+      FieldsJs.mockClear();
       jest.resetModules();
     });
     it('outputs getFilesByType with no processing if processFieldsJs is false', async () => {
@@ -233,6 +219,7 @@ describe('uploadFolder', () => {
         'folder',
         { processFieldsJs: true }
       );
+
       filesByType = Object.values(filesByType);
       expect(filesByType[1]).toEqual([
         'folder/sample.module/module.css',

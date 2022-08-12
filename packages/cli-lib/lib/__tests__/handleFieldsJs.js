@@ -4,6 +4,7 @@ const {
   isProcessableFieldsJs,
 } = require('../handleFieldsJs');
 const fs = require('fs-extra');
+const dynamicImport = require('../dynamicImport');
 
 jest.mock('fs-extra');
 jest.mock('../walk');
@@ -16,15 +17,16 @@ jest.mock('@hubspot/cli-lib/path', () => {
     getCwd: jest.fn().mockReturnValue('test-cwd'),
   };
 });
-
+jest.mock('../dynamicImport');
+const dynamicImportSpy = jest.spyOn(dynamicImport, 'dynamicImport');
 describe('handleFieldsJs', () => {
   describe('FieldsJs', () => {
     beforeEach(() => {
+      dynamicImportSpy.mockImplementation(() => {
+        return Promise.resolve(() => []);
+      });
       chDirSpy.mockClear();
       jest.resetModules();
-      jest.doMock(filePath, () => () => [], {
-        virtual: true,
-      });
     });
 
     const testCwd = 'test-cwd';
@@ -95,6 +97,24 @@ describe('handleFieldsJs', () => {
       expect(returned).toBe('test-dir/sample.module/fields.json');
     });
 
+    test('convertFieldsJs errors if no function returned', async () => {
+      dynamicImportSpy.mockReset();
+      jest.spyOn(dynamicImport, 'dynamicImport').mockImplementation(() => {
+        return Promise.resolve(null);
+      });
+      await defaultFieldsJs.convertFieldsJs('temp-dir');
+      expect(defaultFieldsJs.rejected).toBe(true);
+    });
+
+    test('convertFieldsJs errors if no array returned', async () => {
+      dynamicImportSpy.mockReset();
+      jest.spyOn(dynamicImport, 'dynamicImport').mockImplementation(() => {
+        return Promise.resolve(() => 'string');
+      });
+      await defaultFieldsJs.convertFieldsJs('temp-dir');
+      expect(defaultFieldsJs.rejected).toBe(true);
+    });
+
     // Not sure of a good way to do this ATM - mocking the require(filePath) is tricky.
     test.todo('convertFieldsJs throws SyntaxError if no array is given');
   });
@@ -161,7 +181,7 @@ describe('handleFieldsJs', () => {
         },
       ];
 
-      const json = fieldsArrayToJson(input);
+      const json = fieldsArrayToJson(input).replace(/\s/g, '');
 
       expect(json).toEqual(JSON.stringify(expected));
     });
@@ -193,7 +213,7 @@ describe('handleFieldsJs', () => {
           label: 'test',
         },
       ];
-      const json = fieldsArrayToJson(array);
+      const json = fieldsArrayToJson(array).replace(/\s/g, '');
       expect(json).toEqual(JSON.stringify(expected));
     });
   });
@@ -203,28 +223,30 @@ describe('handleFieldsJs', () => {
 
     it('returns true for root fields.js files', () => {
       const filePath = 'folder/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath);
+      const returned = isProcessableFieldsJs(src, filePath, true);
       expect(returned).toBe(true);
     });
 
     it('returns true for module fields.js files', () => {
       const filePath = 'folder/sample.module/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath);
+      const returned = isProcessableFieldsJs(src, filePath, true);
       expect(returned).toBe(true);
     });
 
     it('is false for fields.js files outside of root or module', () => {
       const filePath = 'folder/js/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath);
+      const returned = isProcessableFieldsJs(src, filePath, true);
       expect(returned).toBe(false);
     });
 
     it('returns false for any other file name', () => {
       expect(isProcessableFieldsJs(src, 'folder/fields.json')).toBe(false);
       expect(
-        isProcessableFieldsJs(src, 'folder/sample.module/fields.json')
+        isProcessableFieldsJs(src, 'folder/sample.module/fields.json', true)
       ).toBe(false);
-      expect(isProcessableFieldsJs(src, 'folder/js/example.js')).toBe(false);
+      expect(isProcessableFieldsJs(src, 'folder/js/example.js', true)).toBe(
+        false
+      );
     });
   });
 });
