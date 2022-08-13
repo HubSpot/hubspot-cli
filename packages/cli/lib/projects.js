@@ -343,8 +343,9 @@ const makePollTaskStatusFunc = ({
     }
   };
 
-  return async (accountId, taskName, taskId) => {
-    let hubspotLinkText = '';
+  return async (accountId, taskName, taskId, deployedBuildId = null) => {
+    const displayId = deployedBuildId || taskId;
+
     if (linkToHubSpot) {
       logger.log(`\n${linkToHubSpot(taskName, taskId, accountId)}\n`);
     }
@@ -372,7 +373,7 @@ const makePollTaskStatusFunc = ({
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
-        text: `${chalk.bold(subTaskName)} #${taskId} ${
+        text: `${chalk.bold(subTaskName)} #${displayId} ${
           statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
         }\n`,
         indent: 2,
@@ -395,7 +396,7 @@ const makePollTaskStatusFunc = ({
               return;
             }
 
-            const updatedText = `${chalk.bold(subTaskName)} #${taskId} ${
+            const updatedText = `${chalk.bold(subTaskName)} #${displayId} ${
               statusText.STATUS_TEXT[subTask.status]
             }\n`;
 
@@ -413,17 +414,17 @@ const makePollTaskStatusFunc = ({
           });
 
           if (isTaskComplete(taskStatus)) {
-            subTaskStatus.forEach(subTask => {
-              spinnies.remove(subTask[statusText.SUBTASK_NAME_KEY]);
-            });
+            // subTaskStatus.forEach(subTask => {
+            //   spinnies.remove(subTask[statusText.SUBTASK_NAME_KEY]);
+            // });
 
             if (status === statusText.STATES.SUCCESS) {
               spinnies.succeed('overallTaskStatus', {
-                text: `${statusStrings.SUCCESS(taskName)}${hubspotLinkText}`,
+                text: statusStrings.SUCCESS(taskName),
               });
             } else if (status === statusText.STATES.FAILURE) {
               spinnies.fail('overallTaskStatus', {
-                text: `${statusStrings.FAIL(taskName)}${hubspotLinkText}`,
+                text: statusStrings.FAIL(taskName),
               });
 
               const failedSubtask = subTaskStatus.filter(
@@ -433,7 +434,7 @@ const makePollTaskStatusFunc = ({
               uiLine();
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
-                  taskId,
+                  displayId,
                   failedSubtask.length === 1
                     ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
                     : failedSubtask.length + ' components'
@@ -481,8 +482,8 @@ const pollBuildStatus = makePollTaskStatusFunc({
     INITIALIZE: name => `Building ${chalk.bold(name)}`,
     SUCCESS: name => `Built ${chalk.bold(name)}`,
     FAIL: name => `Failed to build ${chalk.bold(name)}`,
-    SUBTASK_FAIL: (taskId, name) =>
-      `Build #${taskId} failed because there was a problem\nbuilding ${chalk.bold(
+    SUBTASK_FAIL: (buildId, name) =>
+      `Build #${buildId} failed because there was a problem\nbuilding ${chalk.bold(
         name
       )}`,
   },
@@ -495,8 +496,8 @@ const pollDeployStatus = makePollTaskStatusFunc({
     INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
     SUCCESS: name => `Deployed ${chalk.bold(name)}`,
     FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
-    SUBTASK_FAIL: (taskId, name) =>
-      `Deploy for build #${taskId} failed because there was a\nproblem deploying ${chalk.bold(
+    SUBTASK_FAIL: (deployedBuildId, name) =>
+      `Deploy for build #${deployedBuildId} failed because there was a\nproblem deploying ${chalk.bold(
         name
       )}`,
   },

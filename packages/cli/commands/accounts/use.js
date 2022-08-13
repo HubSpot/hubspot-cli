@@ -5,46 +5,23 @@ const {
   updateDefaultAccount,
   getAccountId: getAccountIdFromConfig,
 } = require('@hubspot/cli-lib/lib/config');
+
+const { trackCommandUsage } = require('../../lib/usageTracking');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
 
-const { getAccountId } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { promptUser } = require('../../lib/prompts/promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
-
 const i18nKey = 'cli.commands.accounts.subcommands.use';
-
-const selectAccountFromConfig = async config => {
-  const { default: selectedDefault } = await promptUser([
-    {
-      type: 'list',
-      look: false,
-      name: 'default',
-      pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
-      choices: config.portals.map(p => ({
-        name: `${p.name} (${p.portalId})`,
-        value: p.name || p.portalId,
-      })),
-      default: config.defaultPortal,
-    },
-  ]);
-
-  return selectedDefault;
-};
 
 exports.command = 'use [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  await loadAndValidateOptions({ debug: options.debug });
+  await loadAndValidateOptions(options, false);
 
-  const accountId = getAccountId(options);
   const config = getConfig();
 
   let newDefaultAccount = options.account;
-
-  trackCommandUsage('accounts-use', {}, accountId);
 
   if (!newDefaultAccount) {
     newDefaultAccount = await selectAccountFromConfig(config);
@@ -57,6 +34,12 @@ exports.handler = async options => {
     );
     newDefaultAccount = await selectAccountFromConfig(config);
   }
+
+  trackCommandUsage(
+    'accounts-use',
+    {},
+    getAccountIdFromConfig(newDefaultAccount)
+  );
 
   updateDefaultAccount(newDefaultAccount);
 

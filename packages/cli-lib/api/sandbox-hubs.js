@@ -8,6 +8,13 @@ async function createSandbox(accountId, name) {
   });
 }
 
+async function deleteSandbox(parentAccountId, sandboxAccountId) {
+  return http.delete(parentAccountId, {
+    uri: `${SANDBOX_API_PATH}/${sandboxAccountId}`,
+  });
+}
+
 module.exports = {
   createSandbox,
+  deleteSandbox,
 };

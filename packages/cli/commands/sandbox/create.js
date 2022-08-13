@@ -7,12 +7,15 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
-
+const Spinnies = require('spinnies');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  debugErrorAndContext,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const {
   ENVIRONMENTS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -103,7 +106,7 @@ const personalAccessKeyFlow = async (env, account, name) => {
   ]);
 };
 
-exports.command = 'create [name]';
+exports.command = 'create [--name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -113,6 +116,10 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const spinnies = new Spinnies({
+    succeedColor: 'white',
+  });
+
   let namePrompt;
 
   trackCommandUsage('sandbox-create', {}, accountId);
@@ -123,26 +130,33 @@ exports.handler = async options => {
 
   const sandboxName = name || namePrompt.name;
 
-  logger.debug(
-    i18n(`${i18nKey}.debug.creating`, {
-      name: sandboxName,
-    })
-  );
   let result;
+
   try {
-    result = await createSandbox(accountId, sandboxName).then(
-      ({ name, sandboxHubId }) => {
-        logger.log('');
-        logger.success(
-          i18n(`${i18nKey}.success.create`, {
-            name,
-            sandboxHubId,
-          })
-        );
-        return { name, sandboxHubId };
-      }
-    );
+    spinnies.add('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.add`, {
+        sandboxName,
+      }),
+    });
+
+    result = await createSandbox(accountId, sandboxName);
+
+    logger.log('');
+    spinnies.succeed('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.succeed`, {
+        name: result.name,
+        sandboxHubId: result.sandboxHubId,
+      }),
+    });
   } catch (err) {
+    debugErrorAndContext(err);
+
+    spinnies.fail('sandboxCreate', {
+      text: i18n(`${i18nKey}.loading.fail`, {
+        sandboxName,
+      }),
+    });
+
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
@@ -167,17 +181,21 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
+  yargs.option('name', {
+    describe: i18n(`${i18nKey}.options.name.describe`),
     type: 'string',
   });
 
   yargs.example([
-    ['$0 sandbox create MySandboxAccount', i18n(`${i18nKey}.examples.default`)],
+    [
+      '$0 sandbox create --name=MySandboxAccount',
+      i18n(`${i18nKey}.examples.default`),
+    ],
   ]);
 
   addConfigOptions(yargs, true);

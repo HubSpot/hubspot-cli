@@ -89,6 +89,34 @@ en:
                 describe: "Set the http timeout duration"
                 promptMessage: "Enter http timeout duration"
                 success: "The http timeout has been set to: {{ timeout }}"
+      cms:
+        subcommands:
+          lighthouseScore:
+            describe: "Score a theme using Google lighthouse."
+            examples:
+              default: "Get the lighthouse score for the my-theme theme"
+            info:
+              promptMessage: "Select a theme to score"
+              fetchingThemes: "Fetching available themes"
+              generatingScore: "Generating Google Lighthouse score for {{ theme }}"
+              targetDeviceNote: "Scores are being shown for {{ target }} only."
+              verboseOptionNote: "Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores."
+              pageTemplateScoreTitle: "Page template scores"
+              lighthouseLinksTitle: "Lighthouse links"
+              failedTemplatePathsTitle: "The following templates could not be scored"
+            errors:
+              targetOptionRequired: "[--target] is required for detailed view"
+              invalidTargetOption: "[--target] can only be used for detailed view"
+              themeNotFound: "Theme \"{{ theme }}\" not found. Please rerun using a valid theme path."
+              failedToFetchThemes: "Failed to fetch available themes. Try running again with the [--theme] option"
+              failedToGetLighthouseScore: "Failed to generate a Google Lighthouse score"
+            options:
+              theme:
+                describe: "Path to the theme in the Design Manager"
+              target:
+                describe: "Medium to test against"
+              verbose:
+                describe: "View a detailed output of the lighthouse sores"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
@@ -218,6 +246,8 @@ en:
         options:
           staging:
             describe: "Retrieve staged changes for project"
+          assetVersion:
+            describe: "Specify what version of a default asset to fetch"
         positionals:
           dest:
             describe: "Local directory you would like the files to be placed in, relative to your current working directory"
@@ -572,17 +602,20 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
-            debug:
-              creating: "Creating sandbox \"{{ name }}\""
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
+            debug:
+              error: "Error creating sandbox:"
             info:
               auth: "Run \"hs auth\" to authenticate with the new sandbox account."
-            positionals:
+            options:
               name:
                 describe: "Name to use for created sandbox"
+            loading:
+              add: "Creating sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
-              create: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" created successfully."
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
               scopes:
@@ -592,18 +625,20 @@ en:
                   \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
           delete:
             describe: "Delete a sandbox account"
+            debug:
+              deleting: "Deleting sandbox account \"{{ account }}\""
+              error: "Error deleting sandbox account:"
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
+            confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
             success:
-              delete: "Sandbox \"{{ name }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            failure:
-              delete: "Unable to delete sandbox account {{ account }}."
+            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} not found, it may have already been deleted."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             options:
               account:
                 describe: "Account name or id to delete"
-            temporaryMessage: "The CLI currently does not support deleting sandboxes.
-              \n\nTo delete a sandbox, go to https://app.hubspot.com and navigate to the Sandboxes accounts page to delete your sandbox.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
@@ -875,6 +910,8 @@ en:
           enterName: "Enter a name to use for the sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
+          selectAccountName: "Select the sandbox account you want to delete"
+          selectParentAccountName: "Select the account that the sandbox belongs to"
         uploadPrompt:
           enterDest: "[--dest] Enter the destination path: "
           enterSrc: "[--src] Enter the source path: "

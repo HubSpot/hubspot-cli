@@ -227,7 +227,7 @@ const loadConfigFromFile = (path, options = {}) => {
   if (!_configPath) {
     if (!options.silenceErrors) {
       logger.error(
-        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found. To create a new config file, use the "hs init" command.`
       );
     } else {
       logger.debug(
@@ -363,6 +363,37 @@ const getAccountId = nameOrId => {
 /**
  * @throws {Error}
  */
+const removeAccountFromConfig = nameOrId => {
+  const config = getAndLoadConfigIfNeeded();
+  const accountId = getAccountId(nameOrId);
+  let promptDefaultAccount = false;
+
+  if (!accountId) {
+    throw new Error(`Unable to find account for ${nameOrId}.`);
+  }
+
+  const accountConfig = getAccountConfig(accountId);
+
+  if (config.defaultPortal === accountConfig.name) {
+    promptDefaultAccount = true;
+  }
+
+  let accounts = getConfigAccounts(config);
+
+  if (accountConfig) {
+    logger.debug(`Deleting config for ${accountId}`);
+    const index = accounts.indexOf(accountConfig);
+    accounts.splice(index, 1);
+  }
+
+  writeConfig();
+
+  return promptDefaultAccount;
+};
+
+/**
+ * @throws {Error}
+ */
 const updateAccountConfig = configOptions => {
   const {
     portalId,
@@ -381,7 +412,7 @@ const updateAccountConfig = configOptions => {
   } = configOptions;
 
   if (!portalId) {
-    throw new Error('An portalId is required to update the config');
+    throw new Error('A portalId is required to update the config');
   }
 
   const config = getAndLoadConfigIfNeeded();
@@ -716,6 +747,7 @@ module.exports = {
   loadConfigFromEnvironment,
   getAccountConfig,
   getAccountId,
+  removeAccountFromConfig,
   updateAccountConfig,
   updateDefaultAccount,
   updateDefaultMode,
