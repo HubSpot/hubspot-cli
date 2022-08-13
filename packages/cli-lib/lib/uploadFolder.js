@@ -1,4 +1,5 @@
 const path = require('path');
+const { fieldsJsPrompt } = require('@hubspot/cli/lib/prompts/uploadPrompt');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
 const {
@@ -10,7 +11,7 @@ const {
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
 const { createIgnoreFilter } = require('../ignoreRules');
-const { walk, listFilesInDir } = require('./walk');
+const { walk } = require('./walk');
 const { isModuleFolderChild } = require('../modules');
 const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension, getExt } = require('../path');
@@ -69,25 +70,40 @@ async function getFilesByType(
   const filePathsByType = Object.assign(
     ...Object.values(FileTypes).map(key => ({ [key]: [] }))
   );
-
+  let skipFiles = [];
   for (const filePath of filePaths) {
     const fileType = getFileType(filePath);
     const fileName = path.basename(filePath);
-    const relativeDir = path.dirname(filePath.replace(projectDirRegex, ''));
+    const relPath = filePath.replace(projectDirRegex, '');
 
     if (!processFieldsJs) {
       filePathsByType[fileType].push(filePath);
       continue;
     }
-    if (isProcessableFieldsJs(projectDir, filePath)) {
+    if (skipFiles.includes(filePath)) continue;
+
+    const processableFields = isProcessableFieldsJs(projectDir, filePath);
+    if (processableFields || fileName == 'fields.json') {
+      // This prompt checks if there are multiple field files in the folder and gets user to choose.
+      const [choice, updatedSkipFiles] = await fieldsJsPrompt(
+        filePath,
+        projectDir,
+        skipFiles
+      );
+      skipFiles = updatedSkipFiles;
+      // If they chose something other than the current file, move on.
+      if (choice !== filePath) continue;
+    }
+
+    if (processableFields) {
+      const rootOrModule =
+        path.dirname(relPath) === '/' ? FileTypes.json : FileTypes.module;
       const fieldsJs = await new FieldsJs(
         projectDir,
         filePath,
         rootWriteDir,
         fieldOptions
       ).init();
-      const rootOrModule =
-        relativeDir === '/' ? FileTypes.json : FileTypes.module;
 
       /*
        * A fields.js will be rejected if the promise is rejected or if the some other error occurs.
@@ -97,12 +113,6 @@ async function getFilesByType(
 
       fieldsJsObjects.push(fieldsJs);
       filePathsByType[rootOrModule].push(fieldsJs.outputPath);
-    } else if (fileName === 'fields.json') {
-      // Only add fields.json if there is no fields.js in the same directory.
-      const dirFiles = listFilesInDir(path.dirname(filePath));
-      if (!dirFiles.includes('fields.js')) {
-        filePathsByType[fileType].push(filePath);
-      }
     } else {
       filePathsByType[fileType].push(filePath);
     }

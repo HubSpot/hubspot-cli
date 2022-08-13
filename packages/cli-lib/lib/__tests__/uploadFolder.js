@@ -11,12 +11,18 @@ const {
 } = require('../handleFieldsJs');
 const { logger } = require('../../logger');
 const { logApiUploadErrorInstance } = require('../../errorHandlers');
+const uploadPrompt = require('@hubspot/cli/lib/prompts/uploadPrompt.js');
 
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 jest.mock('../handleFieldsJs');
 jest.mock('../../errorHandlers');
+jest.mock('@hubspot/cli/lib/prompts/uploadPrompt.js');
+
+jest
+  .spyOn(uploadPrompt, 'fieldsJsPrompt')
+  .mockImplementation(filePath => [filePath, []]);
 
 //folder/fields.js -> folder/fields.converted.js
 // We add the .converted to differentiate from a unconverted fields.json
