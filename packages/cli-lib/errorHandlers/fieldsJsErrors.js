@@ -7,21 +7,21 @@ const FieldErrors = {
   DoesNotReturnArray: 'DoesNotReturnArray',
 };
 
-function logFieldsJsError(e, filePath) {
-  const logFieldError = errCode => {
-    logger.error(i18n(`${i18nKey}.errors.${errCode}`, { path: filePath }));
+function logFieldsJsError(e, path, info = {}) {
+  const logFieldError = (errCode, options) => {
+    logger.error(i18n(`${i18nKey}.errors.${errCode}`, options));
   };
   if (e instanceof SyntaxError || e.code === 'MODULE_NOT_FOUND') {
-    logFieldError('fieldsJsSyntaxError');
+    logFieldError('fieldsJsSyntaxError', { path });
   }
   if (e === FieldErrors.IsNotFunction) {
-    logFieldError('fieldsJsNotFunction');
+    logFieldError('fieldsJsNotFunction', { path, returned: info.returned });
   }
   if (e === FieldErrors.DoesNotReturnArray) {
-    logFieldError('fieldsJsNotReturnArray');
+    logFieldError('fieldsJsNotReturnArray', { path, returned: info.returned });
   }
   if (e.code === 'ENOENT') {
-    logFieldError('invalidPath');
+    logFieldError('invalidPath', { path });
   }
 }
 

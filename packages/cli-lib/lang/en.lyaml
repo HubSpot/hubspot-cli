@@ -714,8 +714,8 @@ en:
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
           fieldsJsSyntaxError: "There was an error processing JS file \"{{ path }}\""
-          fieldsJsNotReturnArray: "There was an error loading JS file \"{{ path }}\". Make sure that your function returns an array"
-          fieldsJsNotFunction:  "There was an error loading JS file \"{{ path }}\". Make sure that your default export is a function."
+          fieldsJsNotReturnArray: "There was an error loading JS file \"{{ path }}\". Expected type \"Array\" but received type \"{{ returned }}\" . Make sure that your function returns an array"
+          fieldsJsNotFunction:  "There was an error loading JS file \"{{ path }}\". Expected type \"Function\" but received type \"{{ returned }}\". Make sure that your default export is a function."
         options:
           options:
             describe: "Options to pass to javascript fields files"
@@ -918,6 +918,7 @@ en:
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
+          fieldsPrompt: "Multiple fields files located in \"{{ dir }}\". Please choose which to upload: "
         projectNamePrompt:
           enterName: "[--project] Enter project name:"
           errors:

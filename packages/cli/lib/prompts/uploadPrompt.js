@@ -64,7 +64,7 @@ const fieldsJsPrompt = async (filePath, projectDir, skipFiles = []) => {
   });
   const promptVal = await promptUser([
     {
-      message: `Multiple fields files located in ${fileDir}. Please choose which to upload`,
+      message: i18n(`${i18nKey}.fieldsPrompt`, { dir: fileDir }),
       type: 'list',
       name: 'filePathChoice',
       choices: selection,
@@ -72,7 +72,7 @@ const fieldsJsPrompt = async (filePath, projectDir, skipFiles = []) => {
   ]);
   const choice = promptVal.filePathChoice;
 
-  // Remove the choice from the array, add the ones that were not picked to skip files.
+  // Add the ones that were not picked to skip files array.
   const notPicked = fileChoices.filter(item => item !== choice);
   skipFiles.push(...notPicked);
   return [choice, skipFiles];

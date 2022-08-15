@@ -47,7 +47,14 @@ class FieldsJs {
     const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
     const cwd = getCwd();
-    const logError = err => logFieldsJsError(err, filePath);
+    const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
+    const errorCatch = e => {
+      this.rejected = true;
+      process.chdir(cwd);
+      logError(e);
+      // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
+      logger.error(e);
+    };
     logger.info(
       i18n(`${i18nKey}.converting`, {
         src: dirName + `/${baseName}`,
@@ -60,52 +67,47 @@ class FieldsJs {
       process.chdir(dirName);
 
       /*
-       * How this works: dynamicImport will _always_ either return a Promise, or undefined.
-       * In the case when it's a Promise, it will resolve to a function.
+       * How this works: dynamicImport() will always return either a Promise or undefined.
+       * In the case when it's a Promise, its expected that it will resolve to a function.
        * This function has optional return type of Promise<Array> | Array. In order to have uniform handling,
-       * we wrap the return value of the function in a Promise.resolve().
+       * we wrap the return value of the function in a Promise.resolve(), and then process.
        */
-      const fieldsPromise = dynamicImport(filePath);
+
+      const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
 
       return fieldsPromise.then(fieldsFunc => {
-        if (typeof fieldsFunc !== 'function') {
-          logError(FieldErrors.IsNotFunction);
+        const fieldsFuncType = typeof fieldsFunc;
+        if (fieldsFuncType !== 'function') {
           this.rejected = true;
+          logError(FieldErrors.IsNotFunction, {
+            returned: fieldsFuncType,
+          });
           return;
         }
-        return Promise.resolve(fieldsFunc(this.fieldOptions))
-          .then(fields => {
-            if (!Array.isArray(fields)) {
-              logError(FieldErrors.DoesNotReturnArray);
-              this.rejected = true;
-              return;
-            }
-            const finalPath = path.join(writeDir, '/fields.json');
-            const json = fieldsArrayToJson(fields);
-            fs.outputFileSync(finalPath, json);
-            logger.success(
-              i18n(`${i18nKey}.converted`, {
-                src: dirName + `/${baseName}`,
-                dest: dirName + '/fields.json',
-              })
-            );
-            // Switch back to the original directory.
-            process.chdir(cwd);
-            return finalPath;
-          })
-          .catch(e => {
-            process.chdir(cwd);
-            // Errors caught by this could be caused by the users field.js, so just print the whole error for them.
+        return Promise.resolve(fieldsFunc(this.fieldOptions)).then(fields => {
+          if (!Array.isArray(fields)) {
             this.rejected = true;
-            logError(e);
-            logger.error(e);
-          });
+            logError(FieldErrors.DoesNotReturnArray, {
+              returned: typeof fields,
+            });
+            return;
+          }
+          const finalPath = path.join(writeDir, '/fields.json');
+          const json = fieldsArrayToJson(fields);
+          fs.outputFileSync(finalPath, json);
+          logger.success(
+            i18n(`${i18nKey}.converted`, {
+              src: dirName + `/${baseName}`,
+              dest: dirName + '/fields.json',
+            })
+          );
+          // Switch back to the original directory.
+          process.chdir(cwd);
+          return finalPath;
+        });
       });
     } catch (e) {
-      process.chdir(cwd);
-      this.rejected = true;
-      logError(e);
-      logger.error(e);
+      errorCatch(e);
     }
   }
 
@@ -134,7 +136,6 @@ class FieldsJs {
       fs.copyFileSync(this.outputPath, savePath);
     } catch (err) {
       logger.error(`There was an error saving the json output to ${savePath}`);
-      throw err;
     }
   }
 
@@ -214,7 +215,6 @@ function cleanupTmpDirSync(tmpDir) {
   fs.rm(tmpDir, { recursive: true }, err => {
     if (err) {
       logger.error('There was an error deleting the temporary project source');
-      throw err;
     }
   });
 }

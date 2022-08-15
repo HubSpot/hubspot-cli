@@ -260,7 +260,7 @@ exports.builder = yargs => {
   yargs.option('saveOutput', {
     describe: i18n(`${i18nKey}.options.saveOutput.describe`),
     type: 'boolean',
-    default: true,
+    default: false,
     hidden: true,
   });
   yargs.option('processFieldsJs', {
