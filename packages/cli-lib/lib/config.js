@@ -363,7 +363,7 @@ const getAccountId = nameOrId => {
 /**
  * @throws {Error}
  */
-const removeAccountFromConfig = nameOrId => {
+const removeSandboxAccountFromConfig = nameOrId => {
   const config = getAndLoadConfigIfNeeded();
   const accountId = getAccountId(nameOrId);
   let promptDefaultAccount = false;
@@ -373,6 +373,8 @@ const removeAccountFromConfig = nameOrId => {
   }
 
   const accountConfig = getAccountConfig(accountId);
+
+  if (accountConfig.sandboxAccountType === null) return promptDefaultAccount;
 
   if (config.defaultPortal === accountConfig.name) {
     promptDefaultAccount = true;
@@ -387,7 +389,6 @@ const removeAccountFromConfig = nameOrId => {
   }
 
   writeConfig();
-
   return promptDefaultAccount;
 };
 
@@ -747,7 +748,7 @@ module.exports = {
   loadConfigFromEnvironment,
   getAccountConfig,
   getAccountId,
-  removeAccountFromConfig,
+  removeSandboxAccountFromConfig,
   updateAccountConfig,
   updateDefaultAccount,
   updateDefaultMode,
