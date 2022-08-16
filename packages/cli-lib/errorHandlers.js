@@ -18,7 +18,7 @@ const {
 const {
   FieldErrors,
   logFieldsJsError,
-} = require('./errorHandlers/fieldsJsErrors');
+} = require('./errorHandlers/cmsFieldsJsErrors');
 
 module.exports = {
   ErrorContext,

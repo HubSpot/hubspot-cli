@@ -1,5 +1,5 @@
 const path = require('path');
-const { fieldsJsPrompt } = require('@hubspot/cli/lib/prompts/uploadPrompt');
+const { fieldsJsPrompt } = require('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
 const {

@@ -11,17 +11,17 @@ const {
 } = require('../handleFieldsJs');
 const { logger } = require('../../logger');
 const { logApiUploadErrorInstance } = require('../../errorHandlers');
-const uploadPrompt = require('@hubspot/cli/lib/prompts/uploadPrompt.js');
+const cmsFieldPrompt = require('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 jest.mock('../handleFieldsJs');
 jest.mock('../../errorHandlers');
-jest.mock('@hubspot/cli/lib/prompts/uploadPrompt.js');
+jest.mock('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 
 jest
-  .spyOn(uploadPrompt, 'fieldsJsPrompt')
+  .spyOn(cmsFieldPrompt, 'fieldsJsPrompt')
   .mockImplementation(filePath => [filePath, []]);
 
 //folder/fields.js -> folder/fields.converted.js

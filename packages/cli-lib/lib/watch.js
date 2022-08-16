@@ -60,6 +60,9 @@ async function uploadFile(accountId, file, dest, options) {
       _: ['upload'],
     });
 
+    // Because we cannot clear ES Modules from the cache, we need to load them in a separate process.
+    // So this spawns a new node process that calls `hs upload` with the same options as watch was called with.
+    // More context: https://github.com/HubSpot/hubspot-cli/pull/712#discussion_r945056954
     const fieldsJsProcessCode = `require('@hubspot/cli/commands/upload').handler(${parsedOptions})`;
     spawn(fieldsJsProcessCode);
     return;

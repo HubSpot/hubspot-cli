@@ -41,7 +41,7 @@ const {
   cleanupTmpDirSync,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
-exports.command = 'upload [--src] [--dest] [--option]';
+exports.command = 'upload [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
