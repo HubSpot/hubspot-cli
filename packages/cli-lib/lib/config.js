@@ -389,6 +389,7 @@ const removeSandboxAccountFromConfig = nameOrId => {
   }
 
   writeConfig();
+
   return promptDefaultAccount;
 };
 
