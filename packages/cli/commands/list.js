@@ -35,6 +35,7 @@ exports.handler = async options => {
   const { path } = options;
   const directoryPath = path || '/';
   const accountId = getAccountId(options);
+  logger.log(accountId);
   let contentsResp;
 
   trackCommandUsage('list', {}, accountId);

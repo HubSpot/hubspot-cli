@@ -276,18 +276,18 @@ exports.builder = yargs => {
         describe: i18n(`${i18nKey}.options.compact.describe`),
         type: 'boolean',
       },
-      follow: {
-        alias: ['t', 'tail', 'f'],
-        describe: i18n(`${i18nKey}.options.follow.describe`),
+      tail: {
+        alias: ['t'],
+        describe: i18n(`${i18nKey}.options.tail.describe`),
         type: 'boolean',
       },
       limit: {
-        alias: ['limit', 'n', 'max-count'],
         describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
+        default: 10,
       },
     })
-    .conflicts('follow', 'limit');
+    .conflicts('tail', 'limit');
 
   yargs.example([['$0 project logs', i18n(`${i18nKey}.examples.default`)]]);
   yargs.example([

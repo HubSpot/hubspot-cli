@@ -448,7 +448,7 @@ en:
               name:
                 describe: "Project name (cannot be changed)"
               template:
-                describe: "Which template?"
+                describe: "The starting template"
           deploy:
             describe: "Deploy a project build"
             debug:
@@ -487,8 +487,8 @@ en:
                 describe: "App name"
               compact:
                 describe: "Output compact logs"
-              follow:
-                describe: "Follow logs"
+              tail:
+                describe: "Tail logs"
               latest:
                 describe: "Retrieve most recent log only"
               limit:

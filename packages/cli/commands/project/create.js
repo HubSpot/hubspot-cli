@@ -14,6 +14,7 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -60,6 +61,7 @@ exports.builder = yargs => {
     template: {
       describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
+      choices: PROJECT_TEMPLATES.map(template => template.name),
     },
   });
 
