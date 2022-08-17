@@ -354,7 +354,9 @@ const makePollTaskStatusFunc = ({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot) {
-      logger.log(`\n${linkToHubSpot(taskName, taskId, accountId)}\n`);
+      logger.log(
+        `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
+      );
     }
 
     const spinnies = new Spinnies({
@@ -478,10 +480,10 @@ const makePollTaskStatusFunc = ({
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({
-  linkToHubSpot: (projectName, buildId, accountId) =>
+  linkToHubSpot: (accountId, taskName, taskId) =>
     uiLink(
-      `View build #${buildId} in HubSpot`,
-      getProjectBuildDetailUrl(projectName, buildId, accountId)
+      `View build #${taskId} in HubSpot`,
+      getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
   statusText: PROJECT_BUILD_TEXT,
@@ -497,10 +499,10 @@ const pollBuildStatus = makePollTaskStatusFunc({
 });
 
 const pollDeployStatus = makePollTaskStatusFunc({
-  linkToHubSpot: (projectName, deployId, accountId) =>
+  linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
     uiLink(
-      `View deploy in HubSpot`,
-      getProjectDeployDetailUrl(projectName, deployId, accountId)
+      `View deploy of build #${deployedBuildId} in HubSpot`,
+      getProjectDeployDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getDeployStatus,
   statusText: PROJECT_DEPLOY_TEXT,
