@@ -224,6 +224,13 @@ const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
 };
 
+const getProjectDeployDetailUrl = (projectName, buildId, accountId) => {
+  if (!projectName || !buildId || !accountId) return;
+  return `${getProjectDetailUrl(
+    projectName,
+    accountId
+  )}/activity/deploy/${buildId}`;
+};
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
@@ -490,6 +497,11 @@ const pollBuildStatus = makePollTaskStatusFunc({
 });
 
 const pollDeployStatus = makePollTaskStatusFunc({
+  linkToHubSpot: (projectName, buildId, accountId) =>
+    uiLink(
+      `View deploy of build #${buildId} in HubSpot`,
+      getProjectDeployDetailUrl(projectName, buildId, accountId)
+    ),
   statusFn: getDeployStatus,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
