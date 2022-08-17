@@ -120,6 +120,8 @@ exports.handler = async options => {
     succeedColor: 'white',
   });
 
+  trackCommandUsage('sandbox-create', {}, accountId);
+
   let namePrompt;
 
   if (!name) {
@@ -139,8 +141,6 @@ exports.handler = async options => {
 
     result = await createSandbox(accountId, sandboxName);
 
-    trackCommandUsage('sandbox-create', {}, accountId);
-
     logger.log('');
     spinnies.succeed('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.succeed`, {
@@ -150,6 +150,8 @@ exports.handler = async options => {
     });
   } catch (err) {
     debugErrorAndContext(err);
+
+    trackCommandUsage('sandbox-create', { success: false }, accountId);
 
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {
