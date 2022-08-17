@@ -224,6 +224,13 @@ const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
 };
 
+const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
+  if (!projectName || !deployId || !accountId) return;
+  return `${getProjectDetailUrl(
+    projectName,
+    accountId
+  )}/activity/deploy/${deployId}`;
+};
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
@@ -347,7 +354,9 @@ const makePollTaskStatusFunc = ({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot) {
-      logger.log(`\n${linkToHubSpot(taskName, taskId, accountId)}\n`);
+      logger.log(
+        `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
+      );
     }
 
     const spinnies = new Spinnies({
@@ -471,10 +480,10 @@ const makePollTaskStatusFunc = ({
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({
-  linkToHubSpot: (projectName, buildId, accountId) =>
+  linkToHubSpot: (accountId, taskName, taskId) =>
     uiLink(
-      `View build #${buildId} in HubSpot`,
-      getProjectBuildDetailUrl(projectName, buildId, accountId)
+      `View build #${taskId} in HubSpot`,
+      getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
   statusText: PROJECT_BUILD_TEXT,
@@ -490,6 +499,11 @@ const pollBuildStatus = makePollTaskStatusFunc({
 });
 
 const pollDeployStatus = makePollTaskStatusFunc({
+  linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
+    uiLink(
+      `View deploy of build #${deployedBuildId} in HubSpot`,
+      getProjectDeployDetailUrl(taskName, taskId, accountId)
+    ),
   statusFn: getDeployStatus,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
