@@ -16,7 +16,9 @@ const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getConfig, getEnv } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
-const { removeAccountFromConfig } = require('@hubspot/cli-lib/lib/config');
+const {
+  removeSandboxAccountFromConfig,
+} = require('@hubspot/cli-lib/lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
@@ -114,7 +116,9 @@ exports.handler = async options => {
     );
     logger.log('');
 
-    const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+    const promptDefaultAccount = removeSandboxAccountFromConfig(
+      sandboxAccountId
+    );
     if (promptDefaultAccount) {
       await selectAndSetAsDefaultAccountPrompt(config);
     }
@@ -135,7 +139,9 @@ exports.handler = async options => {
       );
       logger.log('');
 
-      const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+      const promptDefaultAccount = removeSandboxAccountFromConfig(
+        sandboxAccountId
+      );
       if (promptDefaultAccount) {
         await selectAndSetAsDefaultAccountPrompt(config);
       }
