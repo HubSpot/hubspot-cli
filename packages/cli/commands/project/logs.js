@@ -277,7 +277,7 @@ exports.builder = yargs => {
         type: 'boolean',
       },
       tail: {
-        alias: ['t'],
+        alias: ['t', 'follow'],
         describe: i18n(`${i18nKey}.options.tail.describe`),
         type: 'boolean',
       },
