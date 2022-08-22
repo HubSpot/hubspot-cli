@@ -15,11 +15,7 @@ const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
 const { setupRoutes, updateRoutePaths } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
-const {
-  MOCK_DATA,
-  ROUTE_PATH_PREFIX,
-  MAX_REQ_BODY_SIZE,
-} = require('./constants');
+const { MOCK_DATA, MAX_REQ_BODY_SIZE } = require('./constants');
 const { watch: watchFolder } = require('./watch');
 
 let connections = [];
@@ -68,7 +64,6 @@ const runTestServer = async callback => {
   }
 
   const {
-    endpoints,
     routes: rawRoutes,
     environment: globalEnvironment,
     tmpDir: temporaryDir,
@@ -83,7 +78,6 @@ const runTestServer = async callback => {
   setupRoutes({
     app,
     routes,
-    endpoints,
     functionPath,
     tmpDir,
     accountId,
@@ -95,10 +89,12 @@ const runTestServer = async callback => {
   currentServer = app.listen(port, () => {
     const testServerPath = `http://localhost:${port}`;
     logger.log(`Local test server running at ${testServerPath}`);
+    logger.debug(`directory is available at ${tmpDir.name}`);
     const envVarsForMockedData = Object.keys(MOCK_DATA);
     const functionsAsArrays = routes.map(route => {
-      const rawRoute = route.replace(ROUTE_PATH_PREFIX, '');
-      const { method, environment: localEnvironment } = endpoints[rawRoute];
+      const { method = 'GET', environment: localEnvironment } =
+        route.type === 'app-function' ? route.appFunction : route.endpoint;
+
       const environmentVariables =
         (localEnvironment &&
           Object.keys(localEnvironment)
@@ -111,7 +107,7 @@ const runTestServer = async callback => {
         [];
 
       return [
-        `${testServerPath}/${route}`,
+        `${testServerPath}/${route.url}`,
         typeof method === 'string' ? method : method.join(', '),
         secrets.join(', '),
         environmentVariables,

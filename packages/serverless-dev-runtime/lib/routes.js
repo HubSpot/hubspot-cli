@@ -29,27 +29,27 @@ const addEndpointToApp = endpointData => {
     options,
   } = endpointData;
   logger.debug(
-    `Setting up route: ${route} to run function ${functionPath}/${file}.`
+    `Setting up route: ${route.url} to run function ${functionPath}/${file}.`
   );
   const { contact } = options;
 
   if (!method) {
-    logger.error(`No method was specified for route "${route}"`);
+    logger.error(`No method was specified for route "${route.url}"`);
     process.exit();
   } else if (ALLOWED_METHODS.indexOf(method) === -1) {
     logger.error(
-      `Invalid method "${method}" for route "${route}". Allowed values are ${commaSeparatedValues(
-        ALLOWED_METHODS
-      )}`
+      `Invalid method "${method}" for route "${
+        route.url
+      }". Allowed values are ${commaSeparatedValues(ALLOWED_METHODS)}`
     );
     process.exit();
   }
 
   if (!file) {
-    logger.error(`No file was specified for route "${route}"`);
+    logger.error(`No file was specified for route "${route.url}"`);
     process.exit();
   }
-  const formattedRoute = `/${route}`;
+  const formattedRoute = `/${route.url}`;
 
   app[method.toLowerCase()](formattedRoute, async (req, res) => {
     const startTime = Date.now();
@@ -83,7 +83,13 @@ const addEndpointToApp = endpointData => {
         trackedLogs.push(args);
       };
       const functionExecutionCallback = sendResponseValue => {
-        const { statusCode, body, headers = {} } = sendResponseValue;
+        const {
+          statusCode,
+          body,
+          headers = {},
+          sections,
+          message,
+        } = sendResponseValue;
         const endTime = Date.now();
         const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024;
         console.log = originalConsoleLog;
@@ -134,7 +140,13 @@ const addEndpointToApp = endpointData => {
         if (statusCode) {
           res.status(statusCode);
         }
-        res.set(headers).send(body);
+        res.set(headers);
+
+        if (sections) {
+          res.send({ sections, message });
+        } else {
+          res.send(body);
+        }
       };
 
       await main(dataForFunc, functionExecutionCallback);
@@ -147,36 +159,47 @@ const addEndpointToApp = endpointData => {
 };
 
 const updateRoutePaths = routes => {
-  return routes.map(route => {
-    return `${ROUTE_PATH_PREFIX}${route}`;
-  });
+  return routes.map(route => ({
+    ...route,
+    url: `${ROUTE_PATH_PREFIX}${route.name}`,
+  }));
 };
 
 const setupRoutes = routeData => {
-  const { routes, endpoints } = routeData;
+  const { routes } = routeData;
 
   routes.forEach(route => {
-    const rawRoute = route.replace(ROUTE_PATH_PREFIX, '');
-    const { method, file, environment: localEnvironment } = endpoints[rawRoute];
-
-    if (Array.isArray(method)) {
-      method.forEach(methodType => {
-        addEndpointToApp({
-          ...routeData,
-          method: methodType,
-          route,
-          file,
-          localEnvironment,
-        });
-      });
-    } else {
+    if (route.type === 'app-function') {
+      const { file, environment: localEnvironment } = route.appFunction;
       addEndpointToApp({
         ...routeData,
-        method,
-        route,
+        method: 'GET',
+        route: route,
         file,
         localEnvironment,
       });
+    } else {
+      const { method, file, environment: localEnvironment } = route.endpoint;
+
+      if (Array.isArray(method)) {
+        method.forEach(methodType => {
+          addEndpointToApp({
+            ...routeData,
+            method: methodType,
+            route: route,
+            file,
+            localEnvironment,
+          });
+        });
+      } else {
+        addEndpointToApp({
+          ...routeData,
+          method,
+          route: route,
+          file,
+          localEnvironment,
+        });
+      }
     }
   });
 };

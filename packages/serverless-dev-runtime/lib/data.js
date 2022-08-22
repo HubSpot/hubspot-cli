@@ -22,15 +22,35 @@ const getValidatedFunctionData = path => {
     }
   }
 
-  const { endpoints = [], environment = {}, secrets = [] } = JSON.parse(
+  const {
+    endpoints = [],
+    appFunctions = {},
+    environment = {},
+    secrets = [],
+  } = JSON.parse(
     fs.readFileSync(`${functionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
   );
-  const routes = Object.keys(endpoints);
+
+  const cmsRoutes = Object.keys(endpoints).map(endpoint => ({
+    type: 'cms-endpoint',
+    name: endpoint,
+    endpoint: endpoints[endpoint],
+  }));
+
+  const appFunctionRoutes = Object.keys(appFunctions).map(appFunction => ({
+    type: 'app-function',
+    name: appFunction,
+    appFunction: appFunctions[appFunction],
+  }));
+
+  const routes = [...cmsRoutes, ...appFunctionRoutes];
 
   if (!routes.length) {
-    logger.error(`No endpoints found in ${functionPath}/serverless.json.`);
+    logger.error(
+      `No endpoints or appFunctions found in ${functionPath}/serverless.json.`
+    );
     return;
   }
 
@@ -43,6 +63,7 @@ const getValidatedFunctionData = path => {
   return {
     srcPath: functionPath,
     endpoints,
+    appFunctions,
     environment,
     routes,
     secrets,
