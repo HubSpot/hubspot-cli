@@ -15,7 +15,11 @@ const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
 const { setupRoutes, updateRoutePaths } = require('./routes');
 const { createTemporaryFunction, cleanupArtifacts } = require('./files');
-const { MOCK_DATA, MAX_REQ_BODY_SIZE } = require('./constants');
+const {
+  MOCK_DATA,
+  MAX_REQ_BODY_SIZE,
+  SERVERLESS_FUNCTION_TYPES,
+} = require('./constants');
 const { watch: watchFolder } = require('./watch');
 
 let connections = [];
@@ -93,7 +97,9 @@ const runTestServer = async callback => {
     const envVarsForMockedData = Object.keys(MOCK_DATA);
     const functionsAsArrays = routes.map(route => {
       const { method = 'GET', environment: localEnvironment } =
-        route.type === 'app-function' ? route.appFunction : route.endpoint;
+        route.type === SERVERLESS_FUNCTION_TYPES.APP_FUNCTION
+          ? route.appFunction
+          : route.endpoint;
 
       const environmentVariables =
         (localEnvironment &&

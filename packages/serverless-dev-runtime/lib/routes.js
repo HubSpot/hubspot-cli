@@ -3,10 +3,14 @@ const util = require('util');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
-const { getFunctionDataContext } = require('./data');
+const { getFunctionDataContext, getAppFunctionDataContext } = require('./data');
 const { loadEnvironmentVariables } = require('./environment');
 const { logFunctionExecution } = require('./logging');
-const { ALLOWED_METHODS, ROUTE_PATH_PREFIX } = require('./constants');
+const {
+  ALLOWED_METHODS,
+  ROUTE_PATH_PREFIX,
+  SERVERLESS_FUNCTION_TYPES,
+} = require('./constants');
 
 const outputTrackedLogs = trackedLogs => {
   trackedLogs.forEach(trackedLog => {
@@ -53,13 +57,17 @@ const addEndpointToApp = endpointData => {
 
   app[method.toLowerCase()](formattedRoute, async (req, res) => {
     const startTime = Date.now();
-    const dataForFunc = await getFunctionDataContext(
-      req,
-      tmpDirName,
-      secrets,
-      accountId,
-      contact
-    );
+    const dataForFunc = await (route.type ===
+    SERVERLESS_FUNCTION_TYPES.APP_FUNCTION_TYPE
+      ? getAppFunctionDataContext(tmpDirName, secrets)
+      : getFunctionDataContext(
+          req,
+          tmpDirName,
+          secrets,
+          accountId,
+          contact,
+          formattedRoute
+        ));
     const functionFilePath = path.resolve(`${tmpDirName}/${file}`);
     if (!fs.existsSync(functionFilePath)) {
       logger.error(`Could not find file ${functionPath}/${file}.`);
@@ -161,7 +169,11 @@ const addEndpointToApp = endpointData => {
 const updateRoutePaths = routes => {
   return routes.map(route => ({
     ...route,
-    url: `${ROUTE_PATH_PREFIX}${route.name}`,
+    url: `${
+      route.type === SERVERLESS_FUNCTION_TYPES.APP_FUNCTION
+        ? ''
+        : ROUTE_PATH_PREFIX
+    }${route.name}`,
   }));
 };
 
@@ -169,7 +181,7 @@ const setupRoutes = routeData => {
   const { routes } = routeData;
 
   routes.forEach(route => {
-    if (route.type === 'app-function') {
+    if (route.type === SERVERLESS_FUNCTION_TYPES.APP_FUNCTION) {
       const { file, environment: localEnvironment } = route.appFunction;
       addEndpointToApp({
         ...routeData,

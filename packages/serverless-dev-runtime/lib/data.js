@@ -1,7 +1,13 @@
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getDotEnvData } = require('./secrets');
-const { MOCK_DATA, MAX_SECRETS, ROUTE_PATH_PREFIX } = require('./constants');
+const {
+  MOCK_DATA,
+  MAX_SECRETS,
+  ROUTE_PATH_PREFIX,
+  RESERVED_PRIVATE_APP_ACCESS_TOKEN_SECRET,
+  SERVERLESS_FUNCTION_TYPES,
+} = require('./constants');
 
 const getValidatedFunctionData = path => {
   // Allow passing serverless folder path with and without .functions extension
@@ -33,19 +39,19 @@ const getValidatedFunctionData = path => {
     })
   );
 
-  const cmsRoutes = Object.keys(endpoints).map(endpoint => ({
-    type: 'cms-endpoint',
+  const publicRoutes = Object.keys(endpoints).map(endpoint => ({
+    type: SERVERLESS_FUNCTION_TYPES.PUBLIC_ENDPOINT,
     name: endpoint,
     endpoint: endpoints[endpoint],
   }));
 
   const appFunctionRoutes = Object.keys(appFunctions).map(appFunction => ({
-    type: 'app-function',
+    type: SERVERLESS_FUNCTION_TYPES.APP_FUNCTION,
     name: appFunction,
     appFunction: appFunctions[appFunction],
   }));
 
-  const routes = [...cmsRoutes, ...appFunctionRoutes];
+  const routes = [...publicRoutes, ...appFunctionRoutes];
 
   if (!routes.length) {
     logger.error(
@@ -108,6 +114,28 @@ const getRequestQueryParams = req => {
   return paramsObj;
 };
 
+const getAppFunctionDataContext = async (functionPath, allowedSecrets = []) => {
+  const {
+    secrets,
+    mockData: { HUBSPOT_ACCOUNT_ID, HUBSPOT_USER_ID, HUBSPOT_USER_EMAIL },
+  } = getDotEnvData(functionPath, [
+    ...allowedSecrets,
+    RESERVED_PRIVATE_APP_ACCESS_TOKEN_SECRET,
+  ]);
+
+  const data = {
+    user: {
+      userId: HUBSPOT_USER_ID || MOCK_DATA.HUBSPOT_USER_ID,
+      email: HUBSPOT_USER_EMAIL || MOCK_DATA.HUBSPOT_USER_EMAIL,
+    },
+    portalId: HUBSPOT_ACCOUNT_ID || MOCK_DATA.HUBSPOT_ACCOUNT_ID,
+    event: null,
+    secrets,
+  };
+
+  return data;
+};
+
 const getFunctionDataContext = async (
   req,
   functionPath,
@@ -163,4 +191,5 @@ const getFunctionDataContext = async (
 module.exports = {
   getValidatedFunctionData,
   getFunctionDataContext,
+  getAppFunctionDataContext,
 };
