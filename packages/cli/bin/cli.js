@@ -35,6 +35,7 @@ const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
 const accountsCommand = require('../commands/accounts');
 const sandboxesCommand = require('../commands/sandbox');
+const processCommand = require('../commands/process');
 const cmsCommand = require('../commands/cms');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
@@ -154,6 +155,7 @@ const argv = yargs
   .command(configCommand)
   .command(accountsCommand)
   .command(sandboxesCommand)
+  .command(processCommand, false)
   .help()
   .recommendCommands()
   .demandCommand(1, '')

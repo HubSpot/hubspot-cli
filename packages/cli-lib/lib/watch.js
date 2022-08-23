@@ -10,6 +10,9 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
+const {
+  isProcessableFieldsJs,
+} = require('@hubspot/cli-lib/lib/handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
@@ -18,6 +21,7 @@ const escapeRegExp = require('./escapeRegExp');
 const { convertToUnixPath, isAllowedExtension } = require('../path');
 const { triggerNotify } = require('./notify');
 const { getThemePreviewUrl } = require('./files');
+const spawn = require('./spawnFunction');
 
 const queue = new PQueue({
   concurrency: 10,
@@ -35,13 +39,32 @@ const _notifyOfThemePreview = (filePath, accountId) => {
 };
 const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
-function uploadFile(accountId, file, dest, options) {
-  if (!isAllowedExtension(file)) {
+async function uploadFile(accountId, file, dest, options) {
+  const src = options.src;
+  const processFieldsJs = isProcessableFieldsJs(src, file);
+
+  if (!isAllowedExtension(file) && !processFieldsJs) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
   }
   if (shouldIgnoreFile(file)) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
+    return;
+  }
+  if (processFieldsJs) {
+    const parsedOptions = JSON.stringify({
+      ...options.commandOptions,
+      src: file,
+      dest: path.join(path.dirname(dest), 'fields.json'),
+      mode: options.mode,
+      _: ['upload'],
+    });
+
+    // Because we cannot clear ES Modules from the cache, we need to load them in a separate process.
+    // So this spawns a new node process that calls `hs upload` with the same options as watch was called with.
+    // More context: https://github.com/HubSpot/hubspot-cli/pull/712#discussion_r945056954
+    const fieldsJsProcessCode = `require('@hubspot/cli/commands/upload').handler(${parsedOptions})`;
+    spawn(fieldsJsProcessCode);
     return;
   }
 
@@ -99,9 +122,13 @@ async function deleteRemoteFile(accountId, filePath, remoteFilePath) {
   });
 }
 
-function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
+function watch(
+  accountId,
+  src,
+  dest,
+  { mode, remove, disableInitial, notify, commandOptions }
+) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
-
   if (notify) {
     ignoreFile(notify);
   }
@@ -143,15 +170,21 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
   watcher.on('add', async filePath => {
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      src,
       mode,
+      commandOptions,
     });
     triggerNotify(notify, 'Added', filePath, uploadPromise);
   });
 
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
-      const remotePath = getDesignManagerPath(filePath);
+      // If it's a fields.js file that is in a module folder or the root, then ignore because it will not exist on the server.
+      if (isProcessableFieldsJs(src, filePath)) {
+        return;
+      }
 
+      const remotePath = getDesignManagerPath(filePath);
       if (shouldIgnoreFile(filePath)) {
         logger.debug(`Skipping ${filePath} due to an ignore rule`);
         return;
@@ -185,7 +218,9 @@ function watch(accountId, src, dest, { mode, remove, disableInitial, notify }) {
   watcher.on('change', async filePath => {
     const destPath = getDesignManagerPath(filePath);
     const uploadPromise = uploadFile(accountId, filePath, destPath, {
+      src,
       mode,
+      commandOptions,
     });
     triggerNotify(notify, 'Changed', filePath, uploadPromise);
   });

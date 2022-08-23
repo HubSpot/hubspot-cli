@@ -82,6 +82,7 @@ exports.handler = async options => {
     remove,
     disableInitial: initialUpload ? false : true,
     notify,
+    commandOptions: options,
   });
 };
 
@@ -98,6 +99,12 @@ exports.builder = yargs => {
   yargs.positional('dest', {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
+  });
+  yargs.option('fieldOptions', {
+    describe: i18n(`${i18nKey}.options.options.describe`),
+    type: 'array',
+    default: [''],
+    hidden: true,
   });
   yargs.option('remove', {
     alias: 'r',
@@ -121,6 +128,18 @@ exports.builder = yargs => {
     type: 'string',
     requiresArg: true,
   });
-
+  yargs.option('processFieldsJs', {
+    describe: i18n(`${i18nKey}.options.processFields.describe`),
+    alias: ['processFields'],
+    type: 'boolean',
+    default: false,
+    hidden: true,
+  });
+  yargs.option('saveOutput', {
+    describe: i18n(`${i18nKey}.options.saveOutput.describe`),
+    type: 'boolean',
+    default: false,
+    hidden: true,
+  });
   return yargs;
 };
