@@ -55,3 +55,18 @@ HUBSPOT_CONTACT_VID=456
 HUBSPOT_CONTACT_IS_LOGGED_IN=true
 HUBSPOT_CONTACT_LIST_MEMBERSHIPS="some, memberships"
 ```
+
+
+#### Private Apps - App Functions
+There is some additional data that can be passed to an app function's serverless function context. As described above it is possible to modify the mocked
+data by setting vlaues for specific variables within a `.env` file within the `..functions` folder
+
+
+Usage example in `.env`
+```
+// ... previous usage example properties
+HUBSPOT_ACCOUNT_ID: 123456
+HUBSPOT_USER_ID: 12345
+HUBSPOT_USER_EMAIL: "example@example.com"
+PRIVATE_APP_ACCESS_TOKEN: "{INSERT_TOKEN_HERE}"
+```
