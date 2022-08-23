@@ -18,10 +18,6 @@ jest.mock('../../ignoreRules');
 jest.mock('../handleFieldsJs');
 jest.mock('../../errorHandlers');
 
-/* jest
-  .spyOn(cmsFieldPrompt, 'fieldsJsPrompt')
-  .mockImplementation(filePath => [filePath, []]); */
-
 //folder/fields.js -> folder/fields.converted.js
 // We add the .converted to differentiate from a unconverted fields.json
 const defaultFieldsJsImplementation = jest.fn((src, filePath, rootWriteDir) => {
