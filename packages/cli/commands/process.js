@@ -13,6 +13,7 @@ const {
 const i18nKey = 'cli.commands.process';
 
 exports.command = 'process';
+exports.describe = false;
 
 const invalidPath = src => {
   logger.error(
