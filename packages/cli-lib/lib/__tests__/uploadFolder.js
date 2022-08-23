@@ -11,18 +11,16 @@ const {
 } = require('../handleFieldsJs');
 const { logger } = require('../../logger');
 const { logApiUploadErrorInstance } = require('../../errorHandlers');
-const cmsFieldPrompt = require('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 jest.mock('../handleFieldsJs');
 jest.mock('../../errorHandlers');
-jest.mock('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 
-jest
+/* jest
   .spyOn(cmsFieldPrompt, 'fieldsJsPrompt')
-  .mockImplementation(filePath => [filePath, []]);
+  .mockImplementation(filePath => [filePath, []]); */
 
 //folder/fields.js -> folder/fields.converted.js
 // We add the .converted to differentiate from a unconverted fields.json
@@ -100,7 +98,7 @@ describe('uploadFolder', () => {
         'folder/fields.json',
       ];
 
-      await uploadFolder(...defaultParams);
+      await uploadFolder(...defaultParams, uploadedFilesInOrder);
       expect(upload).toReturnTimes(11);
       uploadedFilesInOrder.forEach((file, index) => {
         expect(upload).nthCalledWith(index + 1, defaultParams[0], file, file, {
@@ -116,9 +114,8 @@ describe('uploadFolder', () => {
 
       logApiUploadErrorInstance.mockImplementation(() => {});
       upload.mockImplementation(uploadMock);
-      walk.mockResolvedValue([file]);
 
-      await uploadFolder(...defaultParams);
+      await uploadFolder(...defaultParams, [file]);
       expect(logSpy).toHaveBeenCalledWith(
         'Retrying to upload file "%s" to "%s"',
         file,
@@ -132,10 +129,9 @@ describe('uploadFolder', () => {
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
-      walk.mockResolvedValue([]);
       upload.mockImplementation(() => Promise.resolve());
 
-      await uploadFolder(...params);
+      await uploadFolder(...params, []);
       expect(tmpDirSpy).toHaveBeenCalled();
     });
 
@@ -145,13 +141,12 @@ describe('uploadFolder', () => {
       params[4] = { saveOutput: true, processFieldsJs: true };
 
       createTmpDirSync.mockReturnValue('folder');
-      walk.mockResolvedValue([
+      upload.mockImplementation(() => Promise.resolve());
+
+      await uploadFolder(...params, [
         'folder/fields.js',
         'folder/sample.module/fields.js',
       ]);
-      upload.mockImplementation(() => Promise.resolve());
-
-      await uploadFolder(...params);
       expect(saveOutputSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -160,10 +155,9 @@ describe('uploadFolder', () => {
       const params = [...defaultParams];
       params[4] = { saveOutput: true, processFieldsJs: true };
 
-      walk.mockResolvedValue([]);
       upload.mockImplementation(() => Promise.resolve());
 
-      await uploadFolder(...params);
+      await uploadFolder(...params, []);
       expect(deleteDirSpy).toHaveBeenCalledWith('folder');
     });
   });

@@ -1,13 +1,12 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
-const yargs = require('yargs');
 const escapeRegExp = require('./escapeRegExp');
 const { dynamicImport } = require('./dynamicImport');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
-const { getCwd } = require('@hubspot/cli-lib/path');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getCwd } = require('../path');
+const { i18n } = require('./lang');
 const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
@@ -175,11 +174,7 @@ function fieldsArrayToJson(fields) {
  * @param {string} filePath - The file to check
  * @param {Boolean} processFieldsJs - The processFields flag option value
  */
-function isProcessableFieldsJs(
-  rootDir,
-  filePath,
-  processFieldsJs = yargs.argv.processFieldsJs
-) {
+function isProcessableFieldsJs(rootDir, filePath, processFieldsJs = false) {
   const allowedFieldsNames = ['fields.js', 'fields.mjs', 'fields.cjs'];
   const regex = new RegExp(`^${escapeRegExp(rootDir)}`);
   const relativePath = path.dirname(filePath.replace(regex, ''));

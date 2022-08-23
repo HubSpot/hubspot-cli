@@ -1,5 +1,4 @@
 const path = require('path');
-const { fieldsJsPrompt } = require('@hubspot/cli/lib/prompts/cmsFieldPrompt');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
 const {
@@ -10,11 +9,9 @@ const {
 } = require('./handleFieldsJs');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload } = require('../api/fileMapper');
-const { createIgnoreFilter } = require('../ignoreRules');
-const { walk } = require('./walk');
 const { isModuleFolderChild } = require('../modules');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension, getExt } = require('../path');
+const { convertToUnixPath, getExt } = require('../path');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -70,30 +67,20 @@ async function getFilesByType(
   const filePathsByType = Object.assign(
     ...Object.values(FileTypes).map(key => ({ [key]: [] }))
   );
-  let skipFiles = [];
   for (const filePath of filePaths) {
     const fileType = getFileType(filePath);
-    const fileName = path.basename(filePath);
     const relPath = filePath.replace(projectDirRegex, '');
 
     if (!processFieldsJs) {
       filePathsByType[fileType].push(filePath);
       continue;
     }
-    if (skipFiles.includes(filePath)) continue;
 
-    const processableFields = isProcessableFieldsJs(projectDir, filePath);
-    if (processableFields || fileName == 'fields.json') {
-      // This prompt checks if there are multiple field files in the folder and gets user to choose.
-      const [choice, updatedSkipFiles] = await fieldsJsPrompt(
-        filePath,
-        projectDir,
-        skipFiles
-      );
-      skipFiles = updatedSkipFiles;
-      // If they chose something other than the current file, move on.
-      if (choice !== filePath) continue;
-    }
+    const processableFields = isProcessableFieldsJs(
+      projectDir,
+      filePath,
+      processFieldsJs
+    );
 
     if (processableFields) {
       const rootOrModule =
@@ -132,7 +119,8 @@ async function uploadFolder(
   src,
   dest,
   fileMapperOptions,
-  commandOptions
+  commandOptions,
+  filePaths
 ) {
   const { saveOutput, processFieldsJs } = commandOptions;
   const tmpDir = processFieldsJs
@@ -140,7 +128,6 @@ async function uploadFolder(
     : null;
   const regex = new RegExp(`^${escapeRegExp(src)}`);
 
-  const files = await walk(src);
   const apiOptions = getFileMapperQueryValues(fileMapperOptions);
   const failures = [];
   let filesByType;
@@ -148,17 +135,8 @@ async function uploadFolder(
   let fieldsJsPaths = [];
   let tmpDirRegex;
 
-  const allowedFiles = files
-    .filter(file => {
-      if (!isAllowedExtension(file)) {
-        return false;
-      }
-      return true;
-    })
-    .filter(createIgnoreFilter());
-
   [filesByType, fieldsJsObjects] = await getFilesByType(
-    allowedFiles,
+    filePaths,
     src,
     tmpDir,
     commandOptions

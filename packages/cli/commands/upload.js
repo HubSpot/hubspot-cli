@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { createIgnoreFilter } = require('@hubspot/cli-lib/ignoreRules');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
@@ -26,6 +28,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
+const { fieldsJsPrompt } = require('../lib/prompts/cmsFieldPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const {
@@ -196,6 +199,12 @@ exports.handler = async options => {
         src,
       })
     );
+
+    // Generate the first-pass file list in here, and pass to uploadFolder.
+    const filePaths = await getUploadableFileList(
+      absoluteSrcPath,
+      options.processFieldsJs
+    );
     uploadFolder(
       accountId,
       absoluteSrcPath,
@@ -203,7 +212,8 @@ exports.handler = async options => {
       {
         mode,
       },
-      options
+      options,
+      filePaths
     )
       .then(results => {
         if (!hasUploadErrors(results)) {
@@ -235,6 +245,46 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       });
   }
+};
+
+/*
+ * Walks the src folder for files, filters them based on ignore filter.
+ * If processFieldsJs is true then will check for any JS fields conflicts (i.e., JS fields file and fields.json file) and prompt to resolve
+ */
+const getUploadableFileList = async (src, processFieldsJs) => {
+  const filePaths = await walk(src);
+  const allowedFiles = filePaths
+    .filter(file => {
+      if (!isAllowedExtension(file)) {
+        return false;
+      }
+      return true;
+    })
+    .filter(createIgnoreFilter());
+  if (!processFieldsJs) {
+    return allowedFiles;
+  }
+
+  let uploadableFiles = [];
+  let skipFiles = [];
+  for (const filePath of allowedFiles) {
+    const fileName = path.basename(filePath);
+    if (skipFiles.includes(filePath)) continue;
+    const isProcessable = isProcessableFieldsJs(src, filePath, processFieldsJs);
+    if (isProcessable || fileName == 'fields.json') {
+      // This prompt checks if there are multiple field files in the folder and gets user to choose.
+      const [choice, updatedSkipFiles] = await fieldsJsPrompt(
+        filePath,
+        src,
+        skipFiles
+      );
+      skipFiles = updatedSkipFiles;
+      // If they chose something other than the current file, move on.
+      if (choice !== filePath) continue;
+    }
+    uploadableFiles.push(filePath);
+  }
+  return uploadableFiles;
 };
 
 exports.builder = yargs => {
