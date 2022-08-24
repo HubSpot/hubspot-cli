@@ -10,9 +10,7 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
-const {
-  isProcessableFieldsJs,
-} = require('@hubspot/cli-lib/lib/handleFieldsJs');
+const { isProcessableFieldsJs } = require('./handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
@@ -41,7 +39,11 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const src = options.src;
-  const processFieldsJs = isProcessableFieldsJs(src, file);
+  const processFieldsJs = isProcessableFieldsJs(
+    src,
+    file,
+    options.commandOptions.processFieldsJs
+  );
 
   if (!isAllowedExtension(file) && !processFieldsJs) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
@@ -180,7 +182,9 @@ function watch(
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
       // If it's a fields.js file that is in a module folder or the root, then ignore because it will not exist on the server.
-      if (isProcessableFieldsJs(src, filePath)) {
+      if (
+        isProcessableFieldsJs(src, filePath, commandOptions.processFieldsJs)
+      ) {
         return;
       }
 
