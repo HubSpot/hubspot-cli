@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/cli-lib/ignoreRules');
-const { isAllowedExtension } = require('@hubspot/cli-lib//path');
+const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
@@ -24,7 +24,7 @@ const invalidPath = src => {
 };
 
 exports.handler = async options => {
-  const src = options.src;
+  const src = path.resolve(getCwd(), options.src);
   const projectRoot = path.dirname(getThemeJSONPath(src));
   let stats;
   try {
