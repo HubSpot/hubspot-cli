@@ -159,9 +159,21 @@ class FieldsJs {
   }
 }
 
+/*
+ * Polyfill for `Array.flat(Infinity)` since the `flat` is only available for Node v11+
+ * https://stackoverflow.com/a/15030117
+ */
+function flattenArray(arr) {
+  return arr.reduce((flat, toFlatten) => {
+    return flat.concat(
+      Array.isArray(toFlatten) ? flattenArray(toFlatten) : toFlatten
+    );
+  }, []);
+}
+
 //Transform fields array to JSON
 function fieldsArrayToJson(fields) {
-  fields = fields.flat(Infinity).map(field => {
+  fields = flattenArray(fields).map(field => {
     return typeof field['toJSON'] === 'function' ? field.toJSON() : field;
   });
   return JSON.stringify(fields, null, 2);
