@@ -41,7 +41,7 @@ class FieldsJs {
    * @param {string} writeDir - The directory to write the file to.
    * @returns {Promise} finalPath - Promise that returns path of the written fields.json file.
    */
-  async convertFieldsJs(writeDir) {
+  convertFieldsJs(writeDir) {
     const filePath = this.filePath;
     const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
