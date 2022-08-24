@@ -120,7 +120,7 @@ describe('handleFieldsJs', () => {
   });
 
   describe('fieldsArrayToJson()', () => {
-    it('flattens nested arrays', () => {
+    it('flattens nested arrays', async () => {
       let input = [
         [
           {
@@ -181,12 +181,12 @@ describe('handleFieldsJs', () => {
         },
       ];
 
-      const json = fieldsArrayToJson(input).replace(/\s/g, '');
+      const json = (await fieldsArrayToJson(input)).replace(/\s/g, '');
 
       expect(json).toEqual(JSON.stringify(expected));
     });
 
-    it('handles objects with toJSON methods', () => {
+    it('handles objects with toJSON methods', async () => {
       const obj = {
         type: 'link',
         name: 'test',
@@ -213,7 +213,7 @@ describe('handleFieldsJs', () => {
           label: 'test',
         },
       ];
-      const json = fieldsArrayToJson(array).replace(/\s/g, '');
+      const json = (await fieldsArrayToJson(array)).replace(/\s/g, '');
       expect(json).toEqual(JSON.stringify(expected));
     });
   });

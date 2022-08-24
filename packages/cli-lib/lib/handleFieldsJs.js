@@ -41,7 +41,7 @@ class FieldsJs {
    * @param {string} writeDir - The directory to write the file to.
    * @returns {Promise} finalPath - Promise that returns path of the written fields.json file.
    */
-  convertFieldsJs(writeDir) {
+  async convertFieldsJs(writeDir) {
     const filePath = this.filePath;
     const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
@@ -74,37 +74,41 @@ class FieldsJs {
 
       const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
 
-      return fieldsPromise.then(fieldsFunc => {
-        const fieldsFuncType = typeof fieldsFunc;
-        if (fieldsFuncType !== 'function') {
-          this.rejected = true;
-          logError(FieldErrors.IsNotFunction, {
-            returned: fieldsFuncType,
-          });
-          return;
-        }
-        return Promise.resolve(fieldsFunc(this.fieldOptions)).then(fields => {
-          if (!Array.isArray(fields)) {
+      return fieldsPromise
+        .then(fieldsFunc => {
+          const fieldsFuncType = typeof fieldsFunc;
+          if (fieldsFuncType !== 'function') {
             this.rejected = true;
-            logError(FieldErrors.DoesNotReturnArray, {
-              returned: typeof fields,
+            logError(FieldErrors.IsNotFunction, {
+              returned: fieldsFuncType,
             });
             return;
           }
-          const finalPath = path.join(writeDir, '/fields.json');
-          const json = fieldsArrayToJson(fields);
-          fs.outputFileSync(finalPath, json);
-          logger.success(
-            i18n(`${i18nKey}.converted`, {
-              src: dirName + `/${baseName}`,
-              dest: dirName + '/fields.json',
-            })
-          );
+          return Promise.resolve(fieldsFunc(this.fieldOptions)).then(fields => {
+            if (!Array.isArray(fields)) {
+              this.rejected = true;
+              logError(FieldErrors.DoesNotReturnArray, {
+                returned: typeof fields,
+              });
+              return;
+            }
+            const finalPath = path.join(writeDir, '/fields.json');
+            return fieldsArrayToJson(fields).then(json => {
+              fs.outputFileSync(finalPath, json);
+              logger.success(
+                i18n(`${i18nKey}.converted`, {
+                  src: dirName + `/${baseName}`,
+                  dest: dirName + '/fields.json',
+                })
+              );
+              return finalPath;
+            });
+          });
+        })
+        .finally(() => {
           // Switch back to the original directory.
           process.chdir(cwd);
-          return finalPath;
         });
-      });
     } catch (e) {
       errorCatch(e);
     }
@@ -172,8 +176,9 @@ function flattenArray(arr) {
 }
 
 //Transform fields array to JSON
-function fieldsArrayToJson(fields) {
-  fields = flattenArray(fields).map(field => {
+async function fieldsArrayToJson(fields) {
+  fields = await Promise.all(flattenArray(fields));
+  fields = fields.map(field => {
     return typeof field['toJSON'] === 'function' ? field.toJSON() : field;
   });
   return JSON.stringify(fields, null, 2);
