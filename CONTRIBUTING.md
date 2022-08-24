@@ -38,7 +38,10 @@ yarn link @hubspot/cli
 
 
 ## Testing
-Eensure you are on Node 10.24.1 before running any tests, since that is the version of node that the build step uses. Using [nvm](https://github.com/nvm-sh/nvm) to switch between versions will help speed up development.
+Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
+see the `engine` entry in the [cli-lib package.json](./packages/cli-lib/package.json).
+
+Using [nvm](https://github.com/nvm-sh/nvm) to switch between versions will help speed up development.
 
 Tests on the CLI are located in three places:
 - `/acceptance-tests/tests`
