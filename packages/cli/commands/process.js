@@ -10,6 +10,8 @@ const {
   FieldsJs,
   isProcessableFieldsJs,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
+
+const { trackProcessFieldsUsage } = require('../lib/usageTracking');
 const i18nKey = 'cli.commands.process';
 
 exports.command = 'process';
@@ -36,6 +38,8 @@ exports.handler = async options => {
   } catch (e) {
     invalidPath(src);
   }
+
+  trackProcessFieldsUsage('process');
 
   if (stats.isFile()) {
     const fieldsJs = await new FieldsJs(
