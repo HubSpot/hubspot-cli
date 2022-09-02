@@ -78,6 +78,24 @@ async function trackHelpUsage(command) {
   }
 }
 
+async function trackProcessFieldsUsage(command) {
+  if (!isTrackingAllowed()) {
+    return;
+  }
+  try {
+    logger.debug('Attempting to track usage of "%s" command', command);
+    await trackUsage('cli-interaction', EventClass.INTERACTION, {
+      action: 'cli-process-fields',
+      os: getPlatform(),
+      ...getNodeVersionData(),
+      version,
+      command,
+    });
+  } catch (e) {
+    logger.debug('Usage tracking failed: %s', e.message);
+  }
+}
+
 const addHelpUsageTracking = (program, command) => {
   program.on('--help', () => {
     setLogLevel(program);
@@ -118,5 +136,6 @@ module.exports = {
   trackCommandUsage,
   trackHelpUsage,
   addHelpUsageTracking,
+  trackProcessFieldsUsage,
   trackAuthAction,
 };

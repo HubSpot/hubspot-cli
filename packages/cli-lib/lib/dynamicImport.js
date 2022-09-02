@@ -1,5 +1,6 @@
 const semver = require('semver');
 const { getExt } = require('../path');
+const { logger } = require('../logger');
 // This is pulled into it's own file because it must be added to the esignore. Dynamics imports cause eslint _parser_ errors, which cannot be ignored.
 
 /**
