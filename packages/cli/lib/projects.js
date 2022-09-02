@@ -115,7 +115,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     }`
   );
 
-  if (template === 'none') {
+  if (template === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
 
     writeProjectConfig(projectConfigPath, {

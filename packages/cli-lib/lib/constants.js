@@ -114,8 +114,12 @@ const MIN_HTTP_TIMEOUT = 3000;
 
 const PROJECT_TEMPLATES = [
   {
+    name: 'no-template',
+    label: 'No template',
+  },
+  {
     name: 'getting-started',
-    label: 'Getting Started',
+    label: 'Getting started',
     repo: 'getting-started-project-template',
   },
 ];

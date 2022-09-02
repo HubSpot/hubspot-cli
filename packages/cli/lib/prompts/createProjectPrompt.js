@@ -47,18 +47,12 @@ const createProjectPrompt = (promptOptions = {}) => {
         !promptOptions.template ||
         !PROJECT_TEMPLATES.find(t => t.name === promptOptions.template),
       type: 'list',
-      choices: [
-        {
-          name: i18n(`${i18nKey}.templateOptions.noTemplate`),
-          value: 'none',
-        },
-        ...PROJECT_TEMPLATES.map(template => {
-          return {
-            name: template.label,
-            value: template.name,
-          };
-        }),
-      ],
+      choices: PROJECT_TEMPLATES.map(template => {
+        return {
+          name: template.label,
+          value: template.name,
+        };
+      }),
     },
   ]);
 };

@@ -38,7 +38,7 @@ async function getProjectAppFunctionLogs(
   appPath,
   query = {}
 ) {
-  const { limit = 5 } = query;
+  const { limit = 10 } = query;
 
   return http.get(accountId, {
     uri: `${FUNCTION_API_PATH}/app-function/logs/project/${encodeURIComponent(
