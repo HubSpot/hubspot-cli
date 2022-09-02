@@ -573,6 +573,7 @@ en:
               downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
             errors:
               downloadFailed: "Something went wrong downloading the project"
+              projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
             positionals:
               name:
                 describe: "The name of the project to download"
