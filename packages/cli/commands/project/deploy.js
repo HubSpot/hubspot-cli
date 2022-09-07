@@ -15,6 +15,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getAccountConfig } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -26,9 +27,11 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
+  const accountConfig = getAccountConfig(accountId);
   const { project, buildId } = options;
+  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
 
-  trackCommandUsage('project-deploy', { project }, accountId);
+  trackCommandUsage('project-deploy', { project, sandboxType }, accountId);
 
   const { projectConfig } = await getProjectConfig();
 
