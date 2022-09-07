@@ -30,7 +30,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const { project, buildId } = options;
   const sandboxType = accountConfig && accountConfig.sandboxAccountType;
-  console.log('account config: ', accountConfig);
 
   trackCommandUsage('project-deploy', { project, sandboxType }, accountId);
 
