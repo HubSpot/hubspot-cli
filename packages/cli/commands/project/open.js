@@ -29,7 +29,7 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const { project } = options;
 
-  trackCommandUsage('project-open', { project }, accountId);
+  trackCommandUsage('project-open', null, accountId);
 
   const { projectConfig } = await getProjectConfig();
 

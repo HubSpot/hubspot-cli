@@ -120,7 +120,7 @@ exports.handler = async options => {
     succeedColor: 'white',
   });
 
-  trackCommandUsage('sandbox-create', {}, accountId);
+  trackCommandUsage('sandbox-create', null, accountId);
 
   let namePrompt;
 

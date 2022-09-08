@@ -30,7 +30,7 @@ exports.handler = async options => {
 
   const { name, template, location } = await createProjectPrompt(options);
 
-  trackCommandUsage('project-create', { projectName: name }, accountId);
+  trackCommandUsage('project-create', null, accountId);
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),

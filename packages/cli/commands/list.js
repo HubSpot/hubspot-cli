@@ -37,7 +37,7 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   let contentsResp;
 
-  trackCommandUsage('list', {}, accountId);
+  trackCommandUsage('list', null, accountId);
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {

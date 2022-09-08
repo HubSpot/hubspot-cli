@@ -34,7 +34,7 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const sandboxType = accountConfig && accountConfig.sandboxAccountType;
 
-  trackCommandUsage('project-upload', { projectPath, sandboxType }, accountId);
+  trackCommandUsage('project-upload', { sandboxType }, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 

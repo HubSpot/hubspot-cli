@@ -36,7 +36,7 @@ exports.handler = async options => {
   const { name: projectName, dest, buildNumber } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-download', { projectName }, accountId);
+  trackCommandUsage('project-download', null, accountId);
 
   const projectExists = await ensureProjectExists(accountId, projectName, {
     allowCreate: false,

@@ -63,7 +63,7 @@ exports.handler = async options => {
       })
     );
   }
-  trackCommandUsage('validate', {}, accountId);
+  trackCommandUsage('validate', null, accountId);
 
   const themeFiles = await walk(absoluteSrcPath);
 

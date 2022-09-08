@@ -26,7 +26,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-clear', {}, accountId);
+  trackCommandUsage('hubdb-clear', null, accountId);
 
   try {
     const { deletedRowCount } = await clearHubDbTableRows(accountId, tableId);

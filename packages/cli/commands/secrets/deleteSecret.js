@@ -27,7 +27,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  trackCommandUsage('secrets-delete', {}, accountId);
+  trackCommandUsage('secrets-delete', null, accountId);
 
   try {
     await deleteSecret(accountId, secretName);

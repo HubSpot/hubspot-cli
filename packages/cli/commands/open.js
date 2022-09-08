@@ -34,7 +34,7 @@ exports.handler = async options => {
   const { shortcut, list } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('open', { shortcut }, accountId);
+  trackCommandUsage('open', null, accountId);
 
   if (shortcut === undefined && !list) {
     const choice = await createListPrompt(accountId);

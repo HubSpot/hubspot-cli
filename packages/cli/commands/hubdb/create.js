@@ -31,7 +31,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-create', {}, accountId);
+  trackCommandUsage('hubdb-create', null, accountId);
 
   try {
     const filePath = path.resolve(getCwd(), src);

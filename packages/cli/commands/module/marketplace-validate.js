@@ -38,7 +38,7 @@ exports.handler = async options => {
       })
     );
   }
-  trackCommandUsage('validate', {}, accountId);
+  trackCommandUsage('validate', null, accountId);
 
   applyRelativeValidators(
     MARKETPLACE_VALIDATORS.module,

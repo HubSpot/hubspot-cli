@@ -28,7 +28,7 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  trackCommandUsage('secrets-update', {}, accountId);
+  trackCommandUsage('secrets-update', null, accountId);
 
   try {
     const { secretValue } = await secretValuePrompt();
