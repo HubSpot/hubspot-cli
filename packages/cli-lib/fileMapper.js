@@ -114,7 +114,7 @@ function getFileMapperQueryValues({ mode, options = {} }) {
  * @returns {string}
  */
  function getAssetVersionIdentifier(input) {
-  if (input.options.assetVersion !== null && input.src.startsWith('@hubspot/')) {
+  if (input.options.hasOwnProperty('assetVersion') && input.hasOwnProperty('src') && input.src.startsWith('@hubspot/')) {
     return ' v' + input.options.assetVersion;
   }
   return '';
