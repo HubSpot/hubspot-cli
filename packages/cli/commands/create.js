@@ -93,6 +93,8 @@ exports.handler = async options => {
 
   if (asset.validate && !asset.validate(argsToPass)) return;
 
+  await asset.execute(argsToPass);
+
   trackCommandUsage('create', { assetType }, getAccountId(options));
 };
 
