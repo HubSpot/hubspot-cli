@@ -72,7 +72,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('accounts-list', {}, accountId);
+  trackCommandUsage('accounts-list', null, accountId);
 
   const config = getConfig();
   const configPath = getConfigPath();

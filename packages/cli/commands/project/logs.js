@@ -188,7 +188,7 @@ exports.handler = async options => {
     }
   }
 
-  trackCommandUsage('project-logs', { latest: options.latest }, accountId);
+  trackCommandUsage('project-logs', null, accountId);
 
   const logsInfo = [accountId, `"${projectName}"`];
   let tableHeader;

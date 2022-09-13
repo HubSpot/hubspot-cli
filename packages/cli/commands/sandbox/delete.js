@@ -49,7 +49,7 @@ exports.handler = async options => {
     account: account || accountPrompt.account,
   });
 
-  trackCommandUsage('sandbox-delete', {}, sandboxAccountId);
+  trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
   let parentAccountId;
   for (const portal of config.portals) {
@@ -125,8 +125,6 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugErrorAndContext(err);
-
-    trackCommandUsage('sandbox-delete', { success: false }, sandboxAccountId);
 
     if (
       err.error &&

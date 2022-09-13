@@ -27,7 +27,7 @@ const selectMode = async () => {
 };
 
 const setDefaultMode = async ({ accountId, defaultMode }) => {
-  trackCommandUsage('config-set-default-mode', {}, accountId);
+  trackCommandUsage('config-set-default-mode', null, accountId);
 
   let newDefault;
 

@@ -93,13 +93,9 @@ exports.handler = async options => {
 
   if (asset.validate && !asset.validate(argsToPass)) return;
 
-  const additionalTracking = (await asset.execute(argsToPass)) || {};
+  await asset.execute(argsToPass);
 
-  trackCommandUsage(
-    'create',
-    { assetType, ...additionalTracking },
-    getAccountId(options)
-  );
+  trackCommandUsage('create', { assetType }, getAccountId(options));
 };
 
 exports.builder = yargs => {

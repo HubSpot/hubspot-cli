@@ -25,7 +25,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-fetch', {}, accountId);
+  trackCommandUsage('hubdb-fetch', null, accountId);
 
   try {
     const { filePath } = await downloadHubDbTable(accountId, tableId, dest);

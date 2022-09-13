@@ -24,7 +24,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('hubdb-delete', {}, accountId);
+  trackCommandUsage('hubdb-delete', null, accountId);
 
   try {
     await deleteTable(accountId, tableId);

@@ -21,7 +21,7 @@ exports.handler = async options => {
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-server', { functionPath }, accountId);
+  trackCommandUsage('functions-server', null, accountId);
 
   logger.debug(
     i18n(`${i18nKey}.debug.startingServer`, {

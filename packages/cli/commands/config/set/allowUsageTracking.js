@@ -33,7 +33,7 @@ const enableOrDisableUsageTracking = async () => {
 };
 
 const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
-  trackCommandUsage('config-set-allow-usage-tracking', {}, accountId);
+  trackCommandUsage('config-set-allow-usage-tracking', null, accountId);
 
   let isEnabled;
 

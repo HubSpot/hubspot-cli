@@ -21,7 +21,7 @@ exports.handler = async options => {
   const { accountName, newName } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('accounts-rename', {}, accountId);
+  trackCommandUsage('accounts-rename', null, accountId);
 
   await renameAccount(accountName, newName);
 

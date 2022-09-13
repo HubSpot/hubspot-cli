@@ -40,7 +40,7 @@ exports.handler = async options => {
   const { path: projectPath, limit } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-list-builds', { projectPath }, accountId);
+  trackCommandUsage('project-list-builds', null, accountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const { projectConfig, projectDir } = await getProjectConfig(cwd);

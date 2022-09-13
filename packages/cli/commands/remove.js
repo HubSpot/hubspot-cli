@@ -27,7 +27,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('remove', {}, accountId);
+  trackCommandUsage('remove', null, accountId);
 
   try {
     await deleteFile(accountId, hsPath);

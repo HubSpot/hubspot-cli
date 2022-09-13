@@ -83,7 +83,7 @@ exports.handler = async options => {
   const { initialUpload, path: projectPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-watch', { projectPath }, accountId);
+  trackCommandUsage('project-watch', null, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 

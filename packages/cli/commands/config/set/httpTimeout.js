@@ -20,7 +20,7 @@ const enterTimeout = async () => {
 };
 
 const setHttpTimeout = async ({ accountId, httpTimeout }) => {
-  trackCommandUsage('config-set-http-timeout', {}, accountId);
+  trackCommandUsage('config-set-http-timeout', null, accountId);
 
   let newHttpTimeout;
 

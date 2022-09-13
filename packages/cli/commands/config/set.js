@@ -54,7 +54,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('config-set', {}, accountId);
+  trackCommandUsage('config-set', null, accountId);
 
   const configUpdated = await handleConfigUpdate(accountId, options);
 
