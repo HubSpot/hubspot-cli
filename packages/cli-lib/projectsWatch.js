@@ -122,11 +122,11 @@ const createNewBuild = async (accountId, projectName) => {
   } catch (err) {
     if (
       err.error.subCategory ===
-      'BuildPipelineErrors.PROJECT_MANAGED_THROUGH_GITHUB'
+      'BuildPipelineError.PROJECT_MANAGED_THROUGH_GITHUB'
     ) {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
       process.exit(1);
-    } else if (err.error.subCategory === 'BuildPipelineErrors.PROJECT_LOCKED') {
+    } else if (err.error.subCategory === 'BuildPipelineError.PROJECT_LOCKED') {
       logger.error(i18n(`${i18nKey}.errors.projectLocked`));
     } else {
       logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
