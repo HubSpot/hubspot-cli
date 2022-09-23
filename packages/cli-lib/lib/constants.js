@@ -209,6 +209,16 @@ const PROJECT_DEPLOY_TEXT = {
   SUBTASK_NAME_KEY: 'deployName',
 };
 
+const FEEDBACK_OPTIONS = {
+  BUG: 'bug',
+  GENERAL: 'general',
+};
+
+const FEEDBACK_URLS = {
+  BUG: 'https://github.com/HubSpot/hubspot-cli/issues/new',
+  GENERAL: 'https://hubspot.com',
+};
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -221,6 +231,8 @@ module.exports = {
   ENVIRONMENT_VARIABLES,
   ENVIRONMENTS,
   EMPTY_CONFIG_FILE_CONTENTS,
+  FEEDBACK_OPTIONS,
+  FEEDBACK_URLS,
   FOLDER_DOT_EXTENSIONS,
   FUNCTIONS_EXTENSION,
   GITHUB_RELEASE_TYPES,

@@ -590,6 +590,8 @@ en:
             examples:
               default: "Opens the projects page for the specified account"
             success: "Successfully opened \"{{ projectName }}\""
+          feedback:
+            describe: "Leave your feedback on the CLI or file a bug report"
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -923,6 +925,13 @@ en:
           errors:
             invalidName: "You entered an invalid name. Please try again."
             projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""
+        feedbackPrompt:
+          feedbackType:
+            message: "What type of feedback would you like to leave?"
+            bug: "Report a bug"
+            general: "Tell us about your experience with projects"
+          bugPrompt: "Create an issue on Github in your browser? (Y/N)"
+          generalPrompt: "Open the projects feedback form in your browser? (Y/N)"
       process:
         positionals:
           src:
