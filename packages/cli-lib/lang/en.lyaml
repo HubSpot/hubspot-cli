@@ -592,6 +592,7 @@ en:
             success: "Successfully opened \"{{ projectName }}\""
           feedback:
             describe: "Leave your feedback on the CLI or file a bug report"
+            success: "We opened {{ url }} in your browser."
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"

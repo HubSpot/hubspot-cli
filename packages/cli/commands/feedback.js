@@ -5,6 +5,7 @@ const {
   FEEDBACK_OPTIONS,
   FEEDBACK_URLS,
 } = require('@hubspot/cli-lib/lib/constants');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
   feedbackTypePrompt,
@@ -28,5 +29,6 @@ exports.handler = async () => {
     const url =
       type === FEEDBACK_OPTIONS.BUG ? FEEDBACK_URLS.BUG : FEEDBACK_URLS.GENERAL;
     open(url, { url: true });
+    logger.success(i18n(`${i18nKey}.success`, { url }));
   }
 };
