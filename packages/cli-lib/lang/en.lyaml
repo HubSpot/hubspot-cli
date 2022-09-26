@@ -931,8 +931,8 @@ en:
             message: "What type of feedback would you like to leave?"
             bug: "Report a bug"
             general: "Tell us about your experience with projects"
-          bugPrompt: "Create an issue on Github in your browser? (Y/N)"
-          generalPrompt: "Open the projects feedback form in your browser? (Y/N)"
+          bugPrompt: "Create an issue on Github in your browser?"
+          generalPrompt: "Open the projects feedback form in your browser?"
       process:
         positionals:
           src:

@@ -9,8 +9,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
   feedbackTypePrompt,
-  bugPrompt,
-  generalPrompt,
+  shouldOpenBrowserPrompt,
 } = require('../lib/prompts/feedbackPrompt');
 
 const i18nKey = 'cli.commands.project.subcommands.feedback';
@@ -20,12 +19,9 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async () => {
   const { type } = await feedbackTypePrompt();
+  const { shouldOpen } = await shouldOpenBrowserPrompt(type);
 
-  const promptForType =
-    type === FEEDBACK_OPTIONS.BUG ? bugPrompt : generalPrompt;
-  const { shouldOpen } = await promptForType();
-
-  if (shouldOpen === 'Y') {
+  if (shouldOpen) {
     const url =
       type === FEEDBACK_OPTIONS.BUG ? FEEDBACK_URLS.BUG : FEEDBACK_URLS.GENERAL;
     open(url, { url: true });
