@@ -797,6 +797,9 @@ en:
             createCommand:
               command: "hs create"
               message: "Add new components to your project with {{ command }}"
+            feedbackCommand:
+              command: "hs feedback"
+              message: "Run {{ command }} to report a bug or leave feedback"
             helpCommand:
               command: "hs help"
               message: "Run {{ command }} to see a list of available commands"

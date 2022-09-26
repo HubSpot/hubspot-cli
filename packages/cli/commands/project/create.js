@@ -45,6 +45,7 @@ exports.handler = async options => {
     'projectUploadCommand',
     'projectDeployCommand',
     'projectHelpCommand',
+    'feedbackCommand',
   ]);
 };
 
