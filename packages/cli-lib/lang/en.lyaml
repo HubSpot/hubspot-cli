@@ -518,6 +518,8 @@ en:
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
+              feedbackHeader: "We'd love to hear your feedback!"
+              feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"
