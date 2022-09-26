@@ -593,6 +593,12 @@ en:
           feedback:
             describe: "Leave feedback on HubSpot projects or file a bug report"
             success: "We opened {{ url }} in your browser."
+            options:
+              bug:
+                describe: "Open Github issues in your browser to report a bug."
+              general:
+                describe: "Open the projects feedback form in your browser."
+
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -932,8 +938,8 @@ en:
         feedbackPrompt:
           feedbackType:
             message: "What type of feedback would you like to leave?"
-            bug: "Report a bug"
-            general: "Tell us about your experience with projects"
+            bug: "[--bug] Report a bug"
+            general: "[--general] Tell us about your experience with projects"
           bugPrompt: "Create an issue on Github in your browser?"
           generalPrompt: "Open the projects feedback form in your browser?"
       process:
