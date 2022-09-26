@@ -216,7 +216,8 @@ const FEEDBACK_OPTIONS = {
 
 const FEEDBACK_URLS = {
   BUG: 'https://github.com/HubSpot/hubspot-cli/issues/new',
-  GENERAL: 'https://hubspot.com',
+  GENERAL:
+    'https://docs.google.com/forms/d/e/1FAIpQLSejZZewYzuH3oKBU01tseX-cSWOUsTHLTr-YsiMGpzwcvgIMg/viewform?usp=sf_link',
 };
 
 module.exports = {
