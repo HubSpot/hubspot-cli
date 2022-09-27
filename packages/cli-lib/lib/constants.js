@@ -220,6 +220,8 @@ const FEEDBACK_URLS = {
     'https://docs.google.com/forms/d/e/1FAIpQLSejZZewYzuH3oKBU01tseX-cSWOUsTHLTr-YsiMGpzwcvgIMg/viewform?usp=sf_link',
 };
 
+const FEEDBACK_INTERVAL = 10;
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -232,6 +234,7 @@ module.exports = {
   ENVIRONMENT_VARIABLES,
   ENVIRONMENTS,
   EMPTY_CONFIG_FILE_CONTENTS,
+  FEEDBACK_INTERVAL,
   FEEDBACK_OPTIONS,
   FEEDBACK_URLS,
   FOLDER_DOT_EXTENSIONS,

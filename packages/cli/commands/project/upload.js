@@ -13,6 +13,7 @@ const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
+  logFeedbackMessage,
   pollBuildStatus,
   pollDeployStatus,
   validateProjectConfig,
@@ -22,8 +23,6 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
-
-const FEEDBACK_INTERVAL = 1;
 
 exports.command = 'upload [path]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -103,12 +102,7 @@ exports.handler = async options => {
       logger.error(e);
     }
 
-    if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
-      uiLine();
-      logger.log(i18n(`${i18nKey}.logs.feedbackHeader`));
-      uiLine();
-      logger.log(i18n(`${i18nKey}.logs.feedbackMessage`));
-    }
+    logFeedbackMessage(buildId);
 
     process.exit(exitCode);
   };
