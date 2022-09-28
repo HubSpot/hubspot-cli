@@ -941,7 +941,7 @@ en:
           feedbackType:
             message: "What type of feedback would you like to leave?"
             bug: "[--bug] Report a bug"
-            general: "[--general] Tell us about your experience with projects"
+            general: "[--general] Tell us about your experience with HubSpot's developer tools"
           bugPrompt: "Create an issue on Github in your browser?"
           generalPrompt: "Open the projects feedback form in your browser?"
       process:
