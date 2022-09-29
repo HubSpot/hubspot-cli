@@ -209,6 +209,10 @@ const PROJECT_DEPLOY_TEXT = {
   SUBTASK_NAME_KEY: 'deployName',
 };
 
+const ERROR_TYPES = {
+  PROJECT_LOCKED: 'BuildPipelineErrorType.PROJECT_LOCKED',
+};
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -221,6 +225,7 @@ module.exports = {
   ENVIRONMENT_VARIABLES,
   ENVIRONMENTS,
   EMPTY_CONFIG_FILE_CONTENTS,
+  ERROR_TYPES,
   FOLDER_DOT_EXTENSIONS,
   FUNCTIONS_EXTENSION,
   GITHUB_RELEASE_TYPES,

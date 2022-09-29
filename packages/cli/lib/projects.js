@@ -11,6 +11,7 @@ const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
+  ERROR_TYPES,
   POLLING_DELAY,
   PROJECT_TEMPLATES,
   PROJECT_BUILD_TEXT,
@@ -280,6 +281,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
+    if (err.error.subCategory === ERROR_TYPES.PROJECT_LOCKED) {
+      logger.log(i18n(`${i18nKey}.logs.projectLockedError`));
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 
