@@ -51,6 +51,7 @@ exports.handler = async options => {
       deployStatusTaskLocator,
       status,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+    // autoDeployId of 0 indicates a skipped deploy
     const isDeploying =
       isAutoDeployEnabled && autoDeployId === 0 && deployStatusTaskLocator;
 
