@@ -46,17 +46,21 @@ exports.handler = async options => {
     let exitCode = EXIT_CODES.SUCCESS;
 
     const {
+      autoDeployId,
       isAutoDeployEnabled,
       deployStatusTaskLocator,
       status,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+    // autoDeployId of 0 indicates a skipped deploy
+    const isDeploying =
+      isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
 
     uiLine();
 
     if (status === 'FAILURE') {
       exitCode = EXIT_CODES.ERROR;
       return;
-    } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
+    } else if (isDeploying) {
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
           accountIdentifier: uiAccountDescription(accountId),
