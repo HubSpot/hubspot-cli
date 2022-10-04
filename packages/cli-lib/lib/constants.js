@@ -222,6 +222,10 @@ const FEEDBACK_URLS = {
 
 const FEEDBACK_INTERVAL = 10;
 
+const ERROR_TYPES = {
+  PROJECT_LOCKED: 'BuildPipelineErrorType.PROJECT_LOCKED',
+};
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -237,6 +241,7 @@ module.exports = {
   FEEDBACK_INTERVAL,
   FEEDBACK_OPTIONS,
   FEEDBACK_URLS,
+  ERROR_TYPES,
   FOLDER_DOT_EXTENSIONS,
   FUNCTIONS_EXTENSION,
   GITHUB_RELEASE_TYPES,

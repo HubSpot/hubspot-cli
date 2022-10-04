@@ -14,6 +14,7 @@ const {
   deleteFileFromBuild,
   queueBuild,
 } = require('./api/dfs');
+const { ERROR_TYPES } = require('./lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -120,18 +121,11 @@ const createNewBuild = async (accountId, projectName) => {
     const { buildId } = await provisionBuild(accountId, projectName);
     return buildId;
   } catch (err) {
-    if (
-      err.error.subCategory === 'PipelineErrors.PROJECT_MANAGED_THROUGH_GITHUB'
-    ) {
-      logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-      process.exit(1);
-    } else if (err.error.subCategory === 'PipelineErrors.PROJECT_LOCKED') {
-      logger.error(i18n(`${i18nKey}.errors.projectLocked`));
-    } else {
-      logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    if (err.error.subCategory !== ERROR_TYPES.PROJECT_LOCKED) {
+      await cancelStagedBuild(accountId, projectName);
+      logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     }
-    await cancelStagedBuild(accountId, projectName);
-    logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     process.exit(1);
   }
 };
