@@ -518,6 +518,8 @@ en:
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
+              feedbackHeader: "We'd love to hear your feedback!"
+              feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
               projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
             options:
               forceCreate:
@@ -590,6 +592,15 @@ en:
             examples:
               default: "Opens the projects page for the specified account"
             success: "Successfully opened \"{{ projectName }}\""
+          feedback:
+            describe: "Leave feedback on HubSpot projects or file a bug report"
+            success: "We opened {{ url }} in your browser."
+            options:
+              bug:
+                describe: "Open Github issues in your browser to report a bug."
+              general:
+                describe: "Open the projects feedback form in your browser."
+
       remove:
         describe: "Delete a file or folder from HubSpot."
         deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -794,6 +805,9 @@ en:
             createCommand:
               command: "hs create"
               message: "Add new components to your project with {{ command }}"
+            feedbackCommand:
+              command: "hs feedback"
+              message: "Run {{ command }} to report a bug or leave feedback"
             helpCommand:
               command: "hs help"
               message: "Run {{ command }} to see a list of available commands"
@@ -923,6 +937,13 @@ en:
           errors:
             invalidName: "You entered an invalid name. Please try again."
             projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""
+        feedbackPrompt:
+          feedbackType:
+            message: "What type of feedback would you like to leave?"
+            bug: "[--bug] Report a bug"
+            general: "[--general] Tell us about your experience with HubSpot's developer tools"
+          bugPrompt: "Create an issue on Github in your browser?"
+          generalPrompt: "Open the projects feedback form in your browser?"
       process:
         positionals:
           src:

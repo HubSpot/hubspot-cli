@@ -209,6 +209,19 @@ const PROJECT_DEPLOY_TEXT = {
   SUBTASK_NAME_KEY: 'deployName',
 };
 
+const FEEDBACK_OPTIONS = {
+  BUG: 'bug',
+  GENERAL: 'general',
+};
+
+const FEEDBACK_URLS = {
+  BUG: 'https://github.com/HubSpot/hubspot-cli/issues/new',
+  GENERAL:
+    'https://docs.google.com/forms/d/e/1FAIpQLSejZZewYzuH3oKBU01tseX-cSWOUsTHLTr-YsiMGpzwcvgIMg/viewform?usp=sf_link',
+};
+
+const FEEDBACK_INTERVAL = 10;
+
 const ERROR_TYPES = {
   PROJECT_LOCKED: 'BuildPipelineErrorType.PROJECT_LOCKED',
 };
@@ -225,6 +238,9 @@ module.exports = {
   ENVIRONMENT_VARIABLES,
   ENVIRONMENTS,
   EMPTY_CONFIG_FILE_CONTENTS,
+  FEEDBACK_INTERVAL,
+  FEEDBACK_OPTIONS,
+  FEEDBACK_URLS,
   ERROR_TYPES,
   FOLDER_DOT_EXTENSIONS,
   FUNCTIONS_EXTENSION,

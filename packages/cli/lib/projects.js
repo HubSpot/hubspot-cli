@@ -11,6 +11,7 @@ const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
+  FEEDBACK_INTERVAL,
   ERROR_TYPES,
   POLLING_DELAY,
   PROJECT_TEMPLATES,
@@ -521,6 +522,16 @@ const pollDeployStatus = makePollTaskStatusFunc({
   },
 });
 
+const logFeedbackMessage = buildId => {
+  const i18nKey = 'cli.commands.project.subcommands.upload';
+  if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
+    uiLine();
+    logger.log(i18n(`${i18nKey}.logs.feedbackHeader`));
+    uiLine();
+    logger.log(i18n(`${i18nKey}.logs.feedbackMessage`));
+  }
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -533,4 +544,5 @@ module.exports = {
   pollBuildStatus,
   pollDeployStatus,
   ensureProjectExists,
+  logFeedbackMessage,
 };

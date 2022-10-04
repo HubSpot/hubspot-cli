@@ -19,6 +19,7 @@ const {
   pollBuildStatus,
   pollDeployStatus,
   validateProjectConfig,
+  logFeedbackMessage,
 } = require('../../lib/projects');
 const {
   cancelStagedBuild,
@@ -47,6 +48,8 @@ const handleBuildStatus = async (accountId, projectName, buildId) => {
       buildId
     );
   }
+
+  logFeedbackMessage(buildId);
 };
 
 const handleUserInput = (accountId, projectName, currentBuildId) => {

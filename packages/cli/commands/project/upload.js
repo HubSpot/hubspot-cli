@@ -13,6 +13,7 @@ const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
+  logFeedbackMessage,
   pollBuildStatus,
   pollDeployStatus,
   validateProjectConfig,
@@ -104,6 +105,8 @@ exports.handler = async options => {
     } catch (e) {
       logger.error(e);
     }
+
+    logFeedbackMessage(buildId);
 
     process.exit(exitCode);
   };
