@@ -518,6 +518,7 @@ en:
               buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
+              projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"

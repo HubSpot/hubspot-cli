@@ -14,6 +14,7 @@ const {
   deleteFileFromBuild,
   queueBuild,
 } = require('./api/dfs');
+const { ERROR_TYPES } = require('./lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -121,7 +122,7 @@ const createNewBuild = async (accountId, projectName) => {
     return buildId;
   } catch (err) {
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-    if (err.error.subCategory !== 'BuildPipelineErrorType.PROJECT_LOCKED') {
+    if (err.error.subCategory !== ERROR_TYPES.PROJECT_LOCKED) {
       await cancelStagedBuild(accountId, projectName);
       logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     }
