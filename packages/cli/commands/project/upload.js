@@ -19,7 +19,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-// const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig } = require('@hubspot/cli-lib');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
@@ -32,10 +32,10 @@ exports.handler = async options => {
 
   const { forceCreate, path: projectPath } = options;
   const accountId = getAccountId(options);
-  // const accountConfig = getAccountConfig(accountId);
-  // const sandboxType = accountConfig && accountConfig.sandboxAccountType;
+  const accountConfig = getAccountConfig(accountId);
+  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
 
-  trackCommandUsage('project-upload', null, accountId);
+  trackCommandUsage('project-upload', { type: sandboxType }, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 

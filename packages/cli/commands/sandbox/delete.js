@@ -126,6 +126,8 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
+    trackCommandUsage('sandbox-delete', { successful: false }, sandboxAccountId);
+
     if (
       err.error &&
       err.error.category === OBJECT_NOT_FOUND &&
