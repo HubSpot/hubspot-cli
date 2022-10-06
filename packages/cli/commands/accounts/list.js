@@ -19,6 +19,9 @@ const i18nKey = 'cli.commands.accounts.subcommands.list';
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
 
+const getSandboxType = type =>
+  type === 'DEVELOPER' ? 'development' : 'standard';
+
 const sortAndMapPortals = portals => {
   const mappedPortalData = {};
   portals
@@ -57,7 +60,9 @@ const getPortalData = mappedPortalData => {
         portalData.push([portal.name, portal.portalId, portal.authType]);
       } else {
         portalData.push([
-          `↳ ${portal.name} [sandbox]`,
+          `↳ ${portal.name} [${getSandboxType(
+            portal.sandboxAccountType
+          )} sandbox]`,
           portal.portalId,
           portal.authType,
         ]);
