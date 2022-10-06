@@ -30,7 +30,7 @@ const selectAndSetAsDefaultAccountPrompt = async config => {
       look: false,
       name: 'default',
       pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
+      message: i18n(`${i18nKey}.promptMessageReplaceDefault`),
       choices: config.portals.map(p => ({
         name: `${p.name} (${p.portalId})`,
         value: p.name || p.portalId,
