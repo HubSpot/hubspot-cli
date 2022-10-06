@@ -120,13 +120,17 @@ exports.handler = async options => {
       sandboxAccountId
     );
     if (promptDefaultAccount) {
-      await selectAndSetAsDefaultAccountPrompt(config);
+      await selectAndSetAsDefaultAccountPrompt(getConfig());
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugErrorAndContext(err);
 
-    trackCommandUsage('sandbox-delete', { successful: false }, sandboxAccountId);
+    trackCommandUsage(
+      'sandbox-delete',
+      { successful: false },
+      sandboxAccountId
+    );
 
     if (
       err.error &&
@@ -145,7 +149,7 @@ exports.handler = async options => {
         sandboxAccountId
       );
       if (promptDefaultAccount) {
-        await selectAndSetAsDefaultAccountPrompt(config);
+        await selectAndSetAsDefaultAccountPrompt(getConfig());
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {

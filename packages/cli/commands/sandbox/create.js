@@ -124,6 +124,9 @@ exports.handler = async options => {
 
   let namePrompt;
 
+  logger.log(i18n(`${i18nKey}.sandboxLimitation`));
+  logger.log('');
+
   if (!name) {
     namePrompt = await createSandboxPrompt();
   }

@@ -614,6 +614,7 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
+            sandboxLimitation: "The CLI only supports creation of development sandboxes at this time."
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
             debug:
@@ -624,9 +625,9 @@ en:
               name:
                 describe: "Name to use for created sandbox"
             loading:
-              add: "Creating sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-              fail: "Failed to create sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-              succeed: "Successfully created sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
@@ -920,7 +921,7 @@ en:
           errors:
             invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
-          enterName: "Enter a name to use for the sandbox: "
+          enterName: "Enter a name to use for the development sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
           selectAccountName: "Select the sandbox account you want to delete"
