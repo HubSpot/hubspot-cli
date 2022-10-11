@@ -151,6 +151,8 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {
         sandboxName,
