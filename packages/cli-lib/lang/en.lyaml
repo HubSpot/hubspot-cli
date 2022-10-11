@@ -37,7 +37,6 @@ en:
               account:
                 describe: "Account name or id to use as the default"
             promptMessage: "Select an account to use as the default"
-            promptMessageReplaceDefault: "The default account was removed. Select a new account to use as the default"
             success:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
           info:
@@ -645,8 +644,10 @@ en:
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
             confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
+            defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
             success:
-              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully."
+              deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
             objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
             noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."

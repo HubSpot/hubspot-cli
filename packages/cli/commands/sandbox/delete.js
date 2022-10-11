@@ -49,6 +49,9 @@ exports.handler = async options => {
     account: account || accountPrompt.account,
   });
 
+  const isDefaultAccount =
+    sandboxAccountId === getAccountId(config.defaultPortal);
+
   trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
   let parentAccountId;
@@ -91,6 +94,14 @@ exports.handler = async options => {
     })
   );
 
+  if (isDefaultAccount) {
+    logger.log(
+      i18n(`${i18nKey}.defaultAccountWarning`, {
+        account: account || accountPrompt.account,
+      })
+    );
+  }
+
   try {
     const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
       {
@@ -107,9 +118,12 @@ exports.handler = async options => {
 
     await deleteSandbox(parentAccountId, sandboxAccountId);
 
+    const deleteKey = isDefaultAccount
+      ? `${i18nKey}.success.deleteDefault`
+      : `${i18nKey}.success.delete`;
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
+      i18n(deleteKey, {
         account: account || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
