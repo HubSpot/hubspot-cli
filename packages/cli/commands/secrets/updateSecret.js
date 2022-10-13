@@ -7,6 +7,7 @@ const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { uiAccountDescription } = require('../../lib/ui');
 
 const {
   addConfigOptions,
@@ -36,7 +37,7 @@ exports.handler = async options => {
     await updateSecret(accountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.update`, {
-        accountId,
+        accountIdentifier: uiAccountDescription(accountId),
         secretName,
       })
     );
