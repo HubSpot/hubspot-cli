@@ -686,6 +686,7 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
+              updateReupload: "Make sure to `{{#yellow}}upload{{/yellow}}` all components using this secret to access its new value."
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:

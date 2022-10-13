@@ -40,6 +40,7 @@ exports.handler = async options => {
         secretName,
       })
     );
+    logger.log(i18n(`${i18nKey}.success.updateReupload`));
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
