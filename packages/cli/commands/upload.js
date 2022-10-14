@@ -79,12 +79,15 @@ exports.handler = async options => {
     return;
   }
   // The theme.json file must always be at the root of the project - so we look for that and determine the root path based on it.
-  const projectRoot = path.dirname(getThemeJSONPath(absoluteSrcPath));
-  const processFieldsJs = isProcessableFieldsJs(
-    projectRoot,
-    absoluteSrcPath,
-    options.processFieldsJs
-  );
+  const themeJsonPath = getThemeJSONPath(absoluteSrcPath);
+  const projectRoot = themeJsonPath && path.dirname(themeJsonPath);
+  const processFieldsJs =
+    projectRoot &&
+    isProcessableFieldsJs(
+      projectRoot,
+      absoluteSrcPath,
+      options.processFieldsJs
+    );
   let fieldsJs;
   if (processFieldsJs) {
     fieldsJs = await new FieldsJs(
