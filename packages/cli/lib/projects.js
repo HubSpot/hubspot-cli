@@ -387,7 +387,7 @@ const makePollTaskStatusFunc = ({
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
-        text: `${chalk.bold(subTaskName)} #${displayId} ${
+        text: `${chalk.bold(subTaskName)} ${
           statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
         }\n`,
         indent: 2,
@@ -410,7 +410,7 @@ const makePollTaskStatusFunc = ({
               return;
             }
 
-            const updatedText = `${chalk.bold(subTaskName)} #${displayId} ${
+            const updatedText = `${chalk.bold(subTaskName)} ${
               statusText.STATUS_TEXT[subTask.status]
             }\n`;
 
