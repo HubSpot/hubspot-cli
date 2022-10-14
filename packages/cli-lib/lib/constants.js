@@ -203,6 +203,7 @@ const PROJECT_DEPLOY_TEXT = {
     [PROJECT_DEPLOY_STATES.BUILDING]: 'is deploying',
     [PROJECT_DEPLOY_STATES.FAILURE]: 'failed to deploy',
     [PROJECT_DEPLOY_STATES.PENDING]: 'is pending',
+    [PROJECT_DEPLOY_STATES.DEPLOYING]: 'is deploying',
     [PROJECT_DEPLOY_STATES.SUCCESS]: 'deployed successfully',
   },
   SUBTASK_KEY: 'subdeployStatuses',
