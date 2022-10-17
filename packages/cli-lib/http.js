@@ -55,9 +55,21 @@ const withPortalId = (portalId, requestOptions) => {
   };
 };
 
+const withAccessToken = (accessToken, requestOptions) => {
+  const { headers } = requestOptions;
+
+  return {
+    ...requestOptions,
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  };
+};
+
 const withAuth = async (accountId, options) => {
   const accountConfig = getAccountConfig(accountId);
-  const { env, authType, apiKey } = accountConfig;
+  const { env, authType, apiKey, accessToken } = accountConfig;
   const requestOptions = withPortalId(
     accountId,
     getRequestOptions({ env }, options)
@@ -70,6 +82,11 @@ const withAuth = async (accountId, options) => {
   if (authType === 'oauth2') {
     return withOauth(accountId, accountConfig, requestOptions);
   }
+
+  if (authType === 'accesstoken') {
+    return withAccessToken(accessToken, requestOptions);
+  }
+
   const { qs } = requestOptions;
 
   return {
