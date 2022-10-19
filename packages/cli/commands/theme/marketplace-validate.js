@@ -85,7 +85,28 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  logger.log(validationResults);
+  const requiredValidations = validationResults.results['REQUIRED'];
+  const recommendedValidations = validationResults.results['RECOMMENDED'];
+
+  const displayResults = checks => {
+    const { status, results } = checks;
+
+    logger.log(`${status}`);
+    if (status === 'FAIL') {
+      const failedValidations = results.filter(test => test.status === 'FAIL');
+
+      logger.log('Failed checks:');
+      failedValidations.forEach(val => {
+        logger.log(`${val.message}`);
+      });
+    }
+  };
+
+  logger.log('Required validations:');
+  displayResults(requiredValidations);
+  logger.log();
+  logger.log('Recommended validations:');
+  displayResults(recommendedValidations);
   logger.log();
 
   process.exit();
