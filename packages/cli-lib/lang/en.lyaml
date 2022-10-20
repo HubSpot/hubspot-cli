@@ -693,11 +693,13 @@ en:
             describe: "Validate a theme for the marketplace"
             errors:
               invalidPath: "The path \"{{ path }}\" is not a path to a folder"
+              fetch: "Failed to fetch validation results."
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
-            options:
-              json:
-                describe: "Output raw json data"
+            results:
+              required: "Required validations:"
+              recommended: "Recommended validations:"
+              failures: "Failed checks:"
             positionals:
               src:
                 describe: "Path to the local theme, relative to your current working directory."

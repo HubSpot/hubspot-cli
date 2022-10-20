@@ -36,7 +36,9 @@ exports.handler = async options => {
   const spinnies = new Spinnies();
 
   spinnies.add('marketplaceValidation', {
-    text: 'TODO Marketplace validation is underway',
+    text: i18n(`${i18nKey}.logs.validatingTheme`, {
+      path: src,
+    }),
   });
 
   // Kick off validation
@@ -81,7 +83,7 @@ exports.handler = async options => {
       validationId: requestResult,
     });
   } catch (err) {
-    logger.error('TODO Failed to get validation results');
+    logger.error(i18n(`${i18nKey}.errors.fetch`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -95,17 +97,18 @@ exports.handler = async options => {
     if (status === 'FAIL') {
       const failedValidations = results.filter(test => test.status === 'FAIL');
 
-      logger.log('Failed checks:');
+      logger.log();
+      logger.log(i18n(`${i18nKey}.results.failures`));
       failedValidations.forEach(val => {
         logger.log(`${val.message}`);
       });
     }
   };
 
-  logger.log('Required validations:');
+  logger.log(i18n(`${i18nKey}.results.required`));
   displayResults(requiredValidations);
   logger.log();
-  logger.log('Recommended validations:');
+  logger.log(i18n(`${i18nKey}.results.recommended`));
   displayResults(recommendedValidations);
   logger.log();
 
