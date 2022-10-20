@@ -58,11 +58,14 @@ exports.handler = async options => {
   // Poll till validation is finished
   try {
     const checkValidationStatus = async () => {
-      const validationStatus = await getValidationStatus(accountId, {
-        validationId: requestResult,
-      });
+      let validationStatus;
+      if (requestResult) {
+        validationStatus = await getValidationStatus(accountId, {
+          validationId: requestResult,
+        });
+      }
 
-      if (validationStatus === 'REQUESTED') {
+      if (validationStatus && validationStatus === 'REQUESTED') {
         await new Promise(resolve => setTimeout(resolve, 2000));
         await checkValidationStatus();
       }
