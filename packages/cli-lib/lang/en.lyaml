@@ -614,6 +614,7 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
+            sandboxLimitation: "The CLI only supports creation of development sandboxes at this time."
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
             debug:
@@ -624,9 +625,9 @@ en:
               name:
                 describe: "Name to use for created sandbox"
             loading:
-              add: "Creating sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-              fail: "Failed to create sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-              succeed: "Successfully created sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
@@ -643,10 +644,12 @@ en:
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
             confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
+            defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
             success:
-              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" deleted successfully."
+              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully."
+              deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} not found, it may have already been deleted."
+            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
             noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             options:
               account:
@@ -920,7 +923,7 @@ en:
           errors:
             invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
-          enterName: "Enter a name to use for the sandbox: "
+          enterName: "Enter a name to use for the development sandbox: "
           errors:
             invalidName: "You entered an invalid name. Please try again."
           selectAccountName: "Select the sandbox account you want to delete"
