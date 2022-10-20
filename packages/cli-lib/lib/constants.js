@@ -225,6 +225,8 @@ const FEEDBACK_INTERVAL = 10;
 
 const ERROR_TYPES = {
   PROJECT_LOCKED: 'BuildPipelineErrorType.PROJECT_LOCKED',
+  MISSING_PROJECT_PROVISION: 'BuildPipelineErrorType.MISSING_PROJECT_PROVISION',
+  BUILD_NOT_IN_PROGRESS: 'BuildPipelineErrorType.BUILD_NOT_IN_PROGRESS',
 };
 
 module.exports = {

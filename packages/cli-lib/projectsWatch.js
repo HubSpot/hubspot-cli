@@ -15,6 +15,7 @@ const {
   queueBuild,
 } = require('./api/dfs');
 const { ERROR_TYPES } = require('./lib/constants');
+const { EXIT_CODES } = require('../cli/lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -58,7 +59,19 @@ const debounceQueueBuild = (accountId, projectName) => {
       await queueBuild(accountId, projectName);
       logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
     } catch (err) {
-      logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+      if (
+        err.error &&
+        err.error.subCategory === ERROR_TYPES.MISSING_PROJECT_PROVISION
+      ) {
+        logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
+        process.exit(EXIT_CODES.SUCCESS);
+      } else {
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({ accountId, projectName })
+        );
+      }
+
       return;
     }
 

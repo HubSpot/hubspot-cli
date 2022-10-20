@@ -5,6 +5,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -61,11 +62,15 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
         await cancelStagedBuild(accountId, projectName);
         process.exit(EXIT_CODES.SUCCESS);
       } catch (err) {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName: projectName })
-        );
-        process.exit(EXIT_CODES.ERROR);
+        if (err.error.subCategory === ERROR_TYPES.BUILD_NOT_IN_PROGRESS) {
+          process.exit(EXIT_CODES.SUCCESS);
+        } else {
+          logApiErrorInstance(
+            err,
+            new ApiErrorContext({ accountId, projectName: projectName })
+          );
+          process.exit(EXIT_CODES.ERROR);
+        }
       }
     } else {
       process.exit(EXIT_CODES.SUCCESS);

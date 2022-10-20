@@ -548,6 +548,7 @@ en:
               deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
               previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
               processExited: "Stopping watcher..."
+              watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
             debug:
               attemptNewBuild: "Attempting to create a new build"
               uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
