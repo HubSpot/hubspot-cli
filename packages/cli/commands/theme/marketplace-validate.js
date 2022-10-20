@@ -1,4 +1,5 @@
 const Spinnies = require('spinnies');
+const chalk = require('chalk');
 
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -96,22 +97,22 @@ exports.handler = async options => {
   const displayResults = checks => {
     const { status, results } = checks;
 
-    logger.log(`${status}`);
     if (status === 'FAIL') {
       const failedValidations = results.filter(test => test.status === 'FAIL');
-
-      logger.log();
-      logger.log(i18n(`${i18nKey}.results.failures`));
       failedValidations.forEach(val => {
-        logger.log(`${val.message}`);
+        logger.error(`${val.message}`);
       });
+    }
+
+    if (status === 'PASS') {
+      logger.success(i18n(`${i18nKey}.results.noErrors`));
     }
   };
 
-  logger.log(i18n(`${i18nKey}.results.required`));
+  logger.log(chalk.bold(i18n(`${i18nKey}.results.required`)));
   displayResults(requiredValidations);
   logger.log();
-  logger.log(i18n(`${i18nKey}.results.recommended`));
+  logger.log(chalk.bold(i18n(`${i18nKey}.results.recommended`)));
   displayResults(recommendedValidations);
   logger.log();
 

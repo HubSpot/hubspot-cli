@@ -697,12 +697,12 @@ en:
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
             results:
-              required: "Required validations:"
-              recommended: "Recommended validations:"
-              failures: "Failed checks:"
+              required: "Required validation results:"
+              recommended: "Recommended validation results:"
+              noErrors: "No errors"
             positionals:
               src:
-                describe: "Path to the local theme, relative to your current working directory."
+                describe: "Path to the theme within the Design Manager."
       module:
         describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
