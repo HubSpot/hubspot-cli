@@ -14,6 +14,7 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
+const { uiAccountDescription } = require('../../lib/ui');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
@@ -36,7 +37,7 @@ exports.handler = async options => {
     await addSecret(accountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.add`, {
-        accountId,
+        accountIdentifier: uiAccountDescription(accountId),
         secretName,
       })
     );

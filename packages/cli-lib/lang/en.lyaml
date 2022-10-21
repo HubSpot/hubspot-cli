@@ -665,7 +665,7 @@ en:
               name:
                 describe: "Name of the secret"
             success:
-              add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountId }}"
+              add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountIdentifier }}"
           delete:
             describe: "Delete a HubSpot secret"
             errors:
@@ -674,12 +674,12 @@ en:
               name:
                 describe: "Name of the secret"
             success:
-              delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountId }}"
+              delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountIdentifier }}"
           list:
             describe: "List all HubSpot secrets"
             errors:
               list: "The secrets could not be listed"
-            groupLabel: "Secrets for account {{ accountId }}:"
+            groupLabel: "Secrets for account {{ accountIdentifier }}:"
           update:
             describe: "Update an existing HubSpot secret"
             errors:
@@ -688,7 +688,8 @@ en:
               name:
                 describe: "Name of the secret to be updated"
             success:
-              update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountId }}"
+              update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
+              updateReupload: "Make sure to `{{#yellow}}upload{{/yellow}}` all serverless functions using this secret to access its new value."
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
