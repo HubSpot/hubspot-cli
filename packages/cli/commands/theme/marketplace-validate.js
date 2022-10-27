@@ -54,19 +54,17 @@ exports.handler = async options => {
     });
   } catch (err) {
     logger.debug(err);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   // Poll till validation is finished
   try {
     const checkValidationStatus = async () => {
-      let validationStatus;
-      if (requestResult) {
-        validationStatus = await getValidationStatus(accountId, {
-          validationId: requestResult,
-        });
-      }
+      const validationStatus = await getValidationStatus(accountId, {
+        validationId: requestResult,
+      });
 
-      if (validationStatus && validationStatus === 'REQUESTED') {
+      if (validationStatus === 'REQUESTED') {
         await new Promise(resolve => setTimeout(resolve, 2000));
         await checkValidationStatus();
       }
@@ -87,33 +85,52 @@ exports.handler = async options => {
       validationId: requestResult,
     });
   } catch (err) {
-    logger.error(i18n(`${i18nKey}.errors.fetch`));
+    logger.debug(err);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const requiredValidations = validationResults.results['REQUIRED'];
-  const recommendedValidations = validationResults.results['RECOMMENDED'];
+  if (validationResults.errors.length) {
+    const { errors } = validationResults;
+
+    errors.forEach(err => {
+      logger.error(`${err.context}`);
+
+      if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
+        logger.log(
+          i18n(`${i18nKey}.errors.invalidPath`, {
+            path: src,
+          })
+        );
+      }
+    });
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const displayResults = checks => {
-    const { status, results } = checks;
+    if (checks) {
+      const { status, results } = checks;
 
-    if (status === 'FAIL') {
-      const failedValidations = results.filter(test => test.status === 'FAIL');
-      failedValidations.forEach(val => {
-        logger.error(`${val.message}`);
-      });
-    }
+      if (status === 'FAIL') {
+        const failedValidations = results.filter(
+          test => test.status === 'FAIL'
+        );
+        failedValidations.forEach(val => {
+          logger.error(`${val.message}`);
+        });
+      }
 
-    if (status === 'PASS') {
-      logger.success(i18n(`${i18nKey}.results.noErrors`));
+      if (status === 'PASS') {
+        logger.success(i18n(`${i18nKey}.results.noErrors`));
+      }
     }
+    return null;
   };
 
   logger.log(chalk.bold(i18n(`${i18nKey}.results.required`)));
-  displayResults(requiredValidations);
+  displayResults(validationResults.results['REQUIRED']);
   logger.log();
   logger.log(chalk.bold(i18n(`${i18nKey}.results.recommended`)));
-  displayResults(recommendedValidations);
+  displayResults(validationResults.results['RECOMMENDED']);
   logger.log();
 
   process.exit();

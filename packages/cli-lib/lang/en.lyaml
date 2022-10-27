@@ -692,8 +692,7 @@ en:
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
-              invalidPath: "The path \"{{ path }}\" is not a path to a folder"
-              fetch: "Failed to fetch validation results."
+              invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
             results:
