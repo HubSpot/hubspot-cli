@@ -119,8 +119,8 @@ async function uploadFolder(
   src,
   dest,
   fileMapperOptions,
-  commandOptions,
-  filePaths
+  commandOptions = {},
+  filePaths = []
 ) {
   const { saveOutput, processFieldsJs } = commandOptions;
   const tmpDir = processFieldsJs
