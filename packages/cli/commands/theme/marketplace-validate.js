@@ -21,6 +21,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const SLEEP_TIME = 2000;
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -65,7 +66,7 @@ exports.handler = async options => {
       });
 
       if (validationStatus === 'REQUESTED') {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, SLEEP_TIME));
         await checkValidationStatus();
       }
     };
