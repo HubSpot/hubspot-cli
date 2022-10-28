@@ -697,15 +697,16 @@ en:
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
-              invalidPath: "The path \"{{ path }}\" is not a path to a folder"
+              invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
             logs:
               validatingTheme: "Validating theme \"{{ path }}\" \n"
-            options:
-              json:
-                describe: "Output raw json data"
+            results:
+              required: "Required validation results:"
+              recommended: "Recommended validation results:"
+              noErrors: "No errors"
             positionals:
               src:
-                describe: "Path to the local theme, relative to your current working directory."
+                describe: "Path to the theme within the Design Manager."
       module:
         describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
