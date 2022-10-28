@@ -95,14 +95,6 @@ exports.handler = async options => {
 
     errors.forEach(err => {
       logger.error(`${err.context}`);
-
-      if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
-        logger.log(
-          i18n(`${i18nKey}.errors.invalidPath`, {
-            path: src,
-          })
-        );
-      }
     });
     process.exit(EXIT_CODES.ERROR);
   }
