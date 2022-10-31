@@ -15,7 +15,6 @@ const {
   queueBuild,
 } = require('./api/dfs');
 const { ERROR_TYPES } = require('./lib/constants');
-const { EXIT_CODES } = require('../cli/lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -64,7 +63,7 @@ const debounceQueueBuild = (accountId, projectName) => {
         err.error.subCategory === ERROR_TYPES.MISSING_PROJECT_PROVISION
       ) {
         logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
-        process.exit(EXIT_CODES.SUCCESS);
+        process.exit(0);
       } else {
         logApiErrorInstance(
           err,
