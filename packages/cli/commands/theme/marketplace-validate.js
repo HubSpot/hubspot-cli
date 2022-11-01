@@ -101,18 +101,21 @@ exports.handler = async options => {
 
   const displayResults = checks => {
     const displayFileInfo = (file, line) => {
-      file &&
+      if (file) {
         logger.log(
           i18n(`${i18nKey}.results.warnings.file`, {
             file,
           })
         );
-      line &&
+      }
+      if (line) {
         logger.log(
           i18n(`${i18nKey}.results.warnings.lineNumber`, {
             line,
           })
         );
+      }
+      return null;
     };
 
     if (checks) {
@@ -140,13 +143,11 @@ exports.handler = async options => {
       if (status === 'PASS') {
         logger.success(i18n(`${i18nKey}.results.noErrors`));
 
-        const warningValidations = results.filter(
-          test => test.status === 'WARN'
-        );
-
-        warningValidations.forEach(val => {
-          logger.warn(`${val.message}`);
-          displayFileInfo(val.file, val.line);
+        results.forEach(test => {
+          if (test.status === 'WARN') {
+            logger.warn(`${test.message}`);
+            displayFileInfo(test.file, test.line);
+          }
         });
       }
     }
