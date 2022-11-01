@@ -703,6 +703,9 @@ en:
             results:
               required: "Required validation results:"
               recommended: "Recommended validation results:"
+              warnings:
+                file: "File: {{ file }}"
+                lineNumber: "Line number: {{ line }}"
               noErrors: "No errors"
             positionals:
               src:

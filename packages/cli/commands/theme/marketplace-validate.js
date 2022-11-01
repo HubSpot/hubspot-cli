@@ -100,6 +100,24 @@ exports.handler = async options => {
   }
 
   const displayResults = checks => {
+    const displayFileInfo = (file, line) => {
+      if (file) {
+        logger.log(
+          i18n(`${i18nKey}.results.warnings.file`, {
+            file,
+          })
+        );
+      }
+      if (line) {
+        logger.log(
+          i18n(`${i18nKey}.results.warnings.lineNumber`, {
+            line,
+          })
+        );
+      }
+      return null;
+    };
+
     if (checks) {
       const { status, results } = checks;
 
@@ -107,13 +125,30 @@ exports.handler = async options => {
         const failedValidations = results.filter(
           test => test.status === 'FAIL'
         );
+        const warningValidations = results.filter(
+          test => test.status === 'WARN'
+        );
+
         failedValidations.forEach(val => {
           logger.error(`${val.message}`);
+          displayFileInfo(val.file, val.line);
+        });
+
+        warningValidations.forEach(val => {
+          logger.warn(`${val.message}`);
+          displayFileInfo(val.file, val.line);
         });
       }
 
       if (status === 'PASS') {
         logger.success(i18n(`${i18nKey}.results.noErrors`));
+
+        results.forEach(test => {
+          if (test.status === 'WARN') {
+            logger.warn(`${test.message}`);
+            displayFileInfo(test.file, test.line);
+          }
+        });
       }
     }
     return null;
