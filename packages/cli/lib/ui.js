@@ -49,7 +49,7 @@ const uiLink = (linkText, url) => {
     return terminalUISupport.color ? chalk.cyan(result) : result;
   } else {
     return terminalUISupport.color
-      ? `${linkText}: ${chalk.cyan(encodedUrl)}`
+      ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
       : `${linkText}: ${encodedUrl}`;
   }
 };
@@ -93,8 +93,17 @@ const uiFeatureHighlight = (commands, title) => {
   });
 };
 
+const uiBetaWarning = logMessage => {
+  const i18nKey = 'cli.lib.ui.betaWarning';
+
+  logger.log(i18n(`${i18nKey}.header`));
+  logMessage();
+  logger.log(i18n(`${i18nKey}.footer`));
+};
+
 module.exports = {
   uiAccountDescription,
+  uiBetaWarning,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
