@@ -156,9 +156,9 @@ en:
             log:
               creatingFile: "Creating file at {{ path }}"
       customObject:
-        betaMessage: "{{#yellow}}The Custom Object CLI is currently in beta and is subject to change.{{/yellow}}"
+        betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "{{#yellow}}See {{ link }} to find out more.{{/yellow}}"
+        seeMoreLink: "See {{ link }} to find out more."
         subcommands:
           create:
             describe: "Create custom object instances"
