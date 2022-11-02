@@ -93,11 +93,11 @@ const uiFeatureHighlight = (commands, title) => {
   });
 };
 
-const uiBetaWarning = message => {
+const uiBetaWarning = logMessage => {
   const i18nKey = 'cli.lib.ui.betaWarning';
 
   logger.log(i18n(`${i18nKey}.header`));
-  logger.log(chalk.reset.yellow(message));
+  logMessage();
   logger.log(i18n(`${i18nKey}.footer`));
 };
 

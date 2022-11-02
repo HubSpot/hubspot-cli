@@ -14,8 +14,8 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { uiFeatureHighlight } = require('../../lib/ui');
 const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
+const { uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
