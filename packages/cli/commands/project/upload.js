@@ -13,11 +13,13 @@ const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
+  logFeedbackMessage,
   pollBuildStatus,
   pollDeployStatus,
   validateProjectConfig,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getAccountConfig } = require('@hubspot/cli-lib');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
@@ -30,8 +32,10 @@ exports.handler = async options => {
 
   const { forceCreate, path: projectPath } = options;
   const accountId = getAccountId(options);
+  const accountConfig = getAccountConfig(accountId);
+  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
 
-  trackCommandUsage('project-upload', { projectPath }, accountId);
+  trackCommandUsage('project-upload', { type: sandboxType }, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -43,17 +47,21 @@ exports.handler = async options => {
     let exitCode = EXIT_CODES.SUCCESS;
 
     const {
+      autoDeployId,
       isAutoDeployEnabled,
       deployStatusTaskLocator,
       status,
     } = await pollBuildStatus(accountId, projectConfig.name, buildId);
+    // autoDeployId of 0 indicates a skipped deploy
+    const isDeploying =
+      isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
 
     uiLine();
 
     if (status === 'FAILURE') {
       exitCode = EXIT_CODES.ERROR;
       return;
-    } else if (isAutoDeployEnabled && deployStatusTaskLocator) {
+    } else if (isDeploying) {
       logger.log(
         i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
           accountIdentifier: uiAccountDescription(accountId),
@@ -97,6 +105,8 @@ exports.handler = async options => {
     } catch (e) {
       logger.error(e);
     }
+
+    logFeedbackMessage(buildId);
 
     process.exit(exitCode);
   };

@@ -7,6 +7,7 @@ const { deleteSecret } = require('@hubspot/cli-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { uiAccountDescription } = require('../../lib/ui');
 
 const {
   addConfigOptions,
@@ -27,13 +28,13 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  trackCommandUsage('secrets-delete', {}, accountId);
+  trackCommandUsage('secrets-delete', null, accountId);
 
   try {
     await deleteSecret(accountId, secretName);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountId,
+        accountIdentifier: uiAccountDescription(accountId),
         secretName,
       })
     );

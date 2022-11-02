@@ -50,7 +50,7 @@ exports.handler = async options => {
   const splitFunctionPath = functionPath.split('.');
   let spinner;
 
-  trackCommandUsage('functions-deploy', { functionPath }, accountId);
+  trackCommandUsage('functions-deploy', null, accountId);
 
   if (
     !splitFunctionPath.length ||

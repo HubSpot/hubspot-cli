@@ -14,7 +14,8 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { uiBetaWarning, uiFeatureHighlight } = require('../../lib/ui');
+const { uiFeatureHighlight } = require('../../lib/ui');
+const { PROJECT_TEMPLATES } = require('@hubspot/cli-lib/lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
@@ -23,16 +24,13 @@ exports.command = 'create';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  uiBetaWarning(
-    'Developer Projects are curently in beta right now, and the functionality is subject to change.'
-  );
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
 
   const { name, template, location } = await createProjectPrompt(options);
 
-  trackCommandUsage('project-create', { projectName: name }, accountId);
+  trackCommandUsage('project-create', null, accountId);
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
@@ -47,6 +45,7 @@ exports.handler = async options => {
     'projectUploadCommand',
     'projectDeployCommand',
     'projectHelpCommand',
+    'feedbackCommand',
   ]);
 };
 
@@ -63,6 +62,7 @@ exports.builder = yargs => {
     template: {
       describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
+      choices: PROJECT_TEMPLATES.map(template => template.name),
     },
   });
 

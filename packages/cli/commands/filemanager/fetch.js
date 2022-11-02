@@ -32,7 +32,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('filemanager-fetch', {}, accountId);
+  trackCommandUsage('filemanager-fetch', null, accountId);
 
   // Fetch and write file/folder.
   await downloadFileOrFolder(accountId, src, dest, options);

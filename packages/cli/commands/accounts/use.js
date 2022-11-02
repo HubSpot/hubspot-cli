@@ -37,7 +37,7 @@ exports.handler = async options => {
 
   trackCommandUsage(
     'accounts-use',
-    {},
+    null,
     getAccountIdFromConfig(newDefaultAccount)
   );
 

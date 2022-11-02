@@ -108,14 +108,18 @@ function getFileMapperQueryValues({ mode, options = {} }) {
 }
 
 /**
- * Determines version number to log based on options
+ * Determines version number to log based on input.options
  *
- * @property {Object} options
+ * @property {Object} input
  * @returns {string}
  */
-function getAssetVersionIdentifier(options) {
-  if (options.assetVersion !== null && options.src.startsWith('@hubspot/')) {
-    return ' v' + options.assetVersion;
+function getAssetVersionIdentifier(input) {
+  if (
+    typeof input.options.assetVersion !== 'undefined' &&
+    typeof input.src !== 'undefined' &&
+    input.src.startsWith('@hubspot/')
+  ) {
+    return ' v' + input.options.assetVersion;
   }
   return '';
 }
@@ -393,7 +397,7 @@ async function downloadFile(input) {
     logger.success(
       'Completed fetch of file "%s"%s to "%s" from the Design Manager',
       input.src,
-      getAssetVersionIdentifier(input.options),
+      getAssetVersionIdentifier(input),
       input.dest
     );
   } catch (err) {
@@ -492,7 +496,7 @@ async function downloadFolder(input) {
       logger.success(
         'Completed fetch of folder "%s"%s to "%s" from the Design Manager',
         input.src,
-        getAssetVersionIdentifier(input.options),
+        getAssetVersionIdentifier(input),
         input.dest
       );
     } else {

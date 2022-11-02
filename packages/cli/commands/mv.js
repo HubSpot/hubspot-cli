@@ -36,7 +36,7 @@ exports.handler = async options => {
   const { srcPath, destPath } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('mv', {}, accountId);
+  trackCommandUsage('mv', null, accountId);
 
   try {
     await moveFile(accountId, srcPath, getCorrectedDestPath(srcPath, destPath));

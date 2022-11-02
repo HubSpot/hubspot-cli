@@ -29,10 +29,9 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { json, compact } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('functions-list', { json, compact }, accountId);
+  trackCommandUsage('functions-list', null, accountId);
 
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 

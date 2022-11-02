@@ -7,6 +7,7 @@ const { fetchSecrets } = require('@hubspot/cli-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { uiAccountDescription } = require('../../lib/ui');
 
 const {
   addConfigOptions,
@@ -25,12 +26,12 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  trackCommandUsage('secrets-list', {}, accountId);
+  trackCommandUsage('secrets-list', null, accountId);
 
   try {
     const { results } = await fetchSecrets(accountId);
     const groupLabel = i18n(`${i18nKey}.groupLabel`, {
-      accountId,
+      accountIdentifier: uiAccountDescription(accountId),
     });
     logger.group(groupLabel);
     results.forEach(secret => logger.log(secret));

@@ -7,7 +7,10 @@ const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
-const { trackHelpUsage } = require('../lib/usageTracking');
+const {
+  trackHelpUsage,
+  trackProcessFieldsUsage,
+} = require('../lib/usageTracking');
 const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -35,7 +38,9 @@ const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
 const accountsCommand = require('../commands/accounts');
 const sandboxesCommand = require('../commands/sandbox');
+const processCommand = require('../commands/process');
 const cmsCommand = require('../commands/cms');
+const feedbackCommand = require('../commands/feedback');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
@@ -154,6 +159,8 @@ const argv = yargs
   .command(configCommand)
   .command(accountsCommand)
   .command(sandboxesCommand)
+  .command(processCommand, false)
+  .command(feedbackCommand)
   .help()
   .recommendCommands()
   .demandCommand(1, '')
@@ -163,4 +170,8 @@ const argv = yargs
 
 if (argv.help) {
   trackHelpUsage(getCommandName(argv));
+}
+
+if (argv.processFieldsJs) {
+  trackProcessFieldsUsage(getCommandName(argv));
 }

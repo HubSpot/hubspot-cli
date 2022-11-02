@@ -37,10 +37,11 @@ const getTerminalUISupport = () => {
  */
 const uiLink = (linkText, url) => {
   const terminalUISupport = getTerminalUISupport();
+  const encodedUrl = encodeURI(url);
   if (terminalUISupport.hyperlinks) {
     const result = [
       '\u001B]8;;',
-      url,
+      encodedUrl,
       '\u0007',
       linkText,
       '\u001B]8;;\u0007',
@@ -48,8 +49,8 @@ const uiLink = (linkText, url) => {
     return terminalUISupport.color ? chalk.cyan(result) : result;
   } else {
     return terminalUISupport.color
-      ? `${linkText}: ${chalk.reset.cyan(url)}`
-      : `${linkText}: ${url}`;
+      ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
+      : `${linkText}: ${encodedUrl}`;
   }
 };
 

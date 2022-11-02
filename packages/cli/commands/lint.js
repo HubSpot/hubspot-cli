@@ -33,7 +33,7 @@ exports.handler = async options => {
     path: localPath,
   });
 
-  trackCommandUsage('lint', {}, accountId);
+  trackCommandUsage('lint', null, accountId);
 
   logger.group(groupName);
   let count = 0;

@@ -7,6 +7,13 @@ const {
   STAT_TYPES,
 } = require('./read');
 
+const listFilesInDir = dir => {
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter(file => !file.isDirectory())
+    .map(file => file.name);
+};
+
 const generateRecursiveFilePromise = async (dir, file) => {
   return getFileInfoAsync(dir, file).then(fileData => {
     return new Promise(resolve => {
@@ -37,4 +44,5 @@ async function walk(dir) {
 
 module.exports = {
   walk,
+  listFilesInDir,
 };

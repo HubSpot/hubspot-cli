@@ -1,6 +1,7 @@
 const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { mapAccountChoices } = require('./sandboxesPrompt');
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 
@@ -12,10 +13,7 @@ const selectAccountFromConfig = async config => {
       name: 'default',
       pageSize: 20,
       message: i18n(`${i18nKey}.promptMessage`),
-      choices: config.portals.map(p => ({
-        name: `${p.name} (${p.portalId})`,
-        value: p.name || p.portalId,
-      })),
+      choices: mapAccountChoices(config.portals),
       default: config.defaultPortal,
     },
   ]);
@@ -31,10 +29,7 @@ const selectAndSetAsDefaultAccountPrompt = async config => {
       name: 'default',
       pageSize: 20,
       message: i18n(`${i18nKey}.promptMessage`),
-      choices: config.portals.map(p => ({
-        name: `${p.name} (${p.portalId})`,
-        value: p.name || p.portalId,
-      })),
+      choices: mapAccountChoices(config.portals),
       default: config.defaultPortal,
     },
   ]);

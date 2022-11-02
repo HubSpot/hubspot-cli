@@ -12,6 +12,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { getSandboxType } = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.accounts.subcommands.list';
@@ -57,7 +58,9 @@ const getPortalData = mappedPortalData => {
         portalData.push([portal.name, portal.portalId, portal.authType]);
       } else {
         portalData.push([
-          `↳ ${portal.name} [sandbox]`,
+          `↳ ${portal.name} [${getSandboxType(
+            portal.sandboxAccountType
+          )} sandbox]`,
           portal.portalId,
           portal.authType,
         ]);
@@ -72,7 +75,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  trackCommandUsage('accounts-list', {}, accountId);
+  trackCommandUsage('accounts-list', null, accountId);
 
   const config = getConfig();
   const configPath = getConfigPath();

@@ -11,6 +11,8 @@ const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
+  FEEDBACK_INTERVAL,
+  ERROR_TYPES,
   POLLING_DELAY,
   PROJECT_TEMPLATES,
   PROJECT_BUILD_TEXT,
@@ -115,7 +117,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     }`
   );
 
-  if (template === 'none') {
+  if (template === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
 
     writeProjectConfig(projectConfigPath, {
@@ -224,6 +226,13 @@ const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
 };
 
+const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
+  if (!projectName || !deployId || !accountId) return;
+  return `${getProjectDetailUrl(
+    projectName,
+    accountId
+  )}/activity/deploy/${deployId}`;
+};
 const uploadProjectFiles = async (accountId, projectName, filePath) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
@@ -273,6 +282,9 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
         projectName,
       })
     );
+    if (err.error.subCategory === ERROR_TYPES.PROJECT_LOCKED) {
+      logger.log(i18n(`${i18nKey}.logs.projectLockedError`));
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -347,7 +359,9 @@ const makePollTaskStatusFunc = ({
     const displayId = deployedBuildId || taskId;
 
     if (linkToHubSpot) {
-      logger.log(`\n${linkToHubSpot(taskName, taskId, accountId)}\n`);
+      logger.log(
+        `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
+      );
     }
 
     const spinnies = new Spinnies({
@@ -373,7 +387,7 @@ const makePollTaskStatusFunc = ({
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
-        text: `${chalk.bold(subTaskName)} #${displayId} ${
+        text: `${chalk.bold(subTaskName)} ${
           statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
         }\n`,
         indent: 2,
@@ -396,7 +410,7 @@ const makePollTaskStatusFunc = ({
               return;
             }
 
-            const updatedText = `${chalk.bold(subTaskName)} #${displayId} ${
+            const updatedText = `${chalk.bold(subTaskName)} ${
               statusText.STATUS_TEXT[subTask.status]
             }\n`;
 
@@ -471,10 +485,10 @@ const makePollTaskStatusFunc = ({
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({
-  linkToHubSpot: (projectName, buildId, accountId) =>
+  linkToHubSpot: (accountId, taskName, taskId) =>
     uiLink(
-      `View build #${buildId} in HubSpot`,
-      getProjectBuildDetailUrl(projectName, buildId, accountId)
+      `View build #${taskId} in HubSpot`,
+      getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
   statusText: PROJECT_BUILD_TEXT,
@@ -490,6 +504,11 @@ const pollBuildStatus = makePollTaskStatusFunc({
 });
 
 const pollDeployStatus = makePollTaskStatusFunc({
+  linkToHubSpot: (accountId, taskName, taskId, deployedBuildId) =>
+    uiLink(
+      `View deploy of build #${deployedBuildId} in HubSpot`,
+      getProjectDeployDetailUrl(taskName, taskId, accountId)
+    ),
   statusFn: getDeployStatus,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
@@ -503,6 +522,16 @@ const pollDeployStatus = makePollTaskStatusFunc({
   },
 });
 
+const logFeedbackMessage = buildId => {
+  const i18nKey = 'cli.commands.project.subcommands.upload';
+  if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
+    uiLine();
+    logger.log(i18n(`${i18nKey}.logs.feedbackHeader`));
+    uiLine();
+    logger.log(i18n(`${i18nKey}.logs.feedbackMessage`));
+  }
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -515,4 +544,5 @@ module.exports = {
   pollBuildStatus,
   pollDeployStatus,
   ensureProjectExists,
+  logFeedbackMessage,
 };

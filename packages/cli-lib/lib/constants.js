@@ -114,8 +114,12 @@ const MIN_HTTP_TIMEOUT = 3000;
 
 const PROJECT_TEMPLATES = [
   {
+    name: 'no-template',
+    label: 'No template',
+  },
+  {
     name: 'getting-started',
-    label: 'Getting Started',
+    label: 'Getting started',
     repo: 'getting-started-project-template',
   },
 ];
@@ -199,10 +203,30 @@ const PROJECT_DEPLOY_TEXT = {
     [PROJECT_DEPLOY_STATES.BUILDING]: 'is deploying',
     [PROJECT_DEPLOY_STATES.FAILURE]: 'failed to deploy',
     [PROJECT_DEPLOY_STATES.PENDING]: 'is pending',
+    [PROJECT_DEPLOY_STATES.DEPLOYING]: 'is deploying',
     [PROJECT_DEPLOY_STATES.SUCCESS]: 'deployed successfully',
   },
   SUBTASK_KEY: 'subdeployStatuses',
   SUBTASK_NAME_KEY: 'deployName',
+};
+
+const FEEDBACK_OPTIONS = {
+  BUG: 'bug',
+  GENERAL: 'general',
+};
+
+const FEEDBACK_URLS = {
+  BUG: 'https://github.com/HubSpot/hubspot-cli/issues/new',
+  GENERAL:
+    'https://docs.google.com/forms/d/e/1FAIpQLSejZZewYzuH3oKBU01tseX-cSWOUsTHLTr-YsiMGpzwcvgIMg/viewform?usp=sf_link',
+};
+
+const FEEDBACK_INTERVAL = 10;
+
+const ERROR_TYPES = {
+  PROJECT_LOCKED: 'BuildPipelineErrorType.PROJECT_LOCKED',
+  MISSING_PROJECT_PROVISION: 'BuildPipelineErrorType.MISSING_PROJECT_PROVISION',
+  BUILD_NOT_IN_PROGRESS: 'BuildPipelineErrorType.BUILD_NOT_IN_PROGRESS',
 };
 
 module.exports = {
@@ -217,6 +241,10 @@ module.exports = {
   ENVIRONMENT_VARIABLES,
   ENVIRONMENTS,
   EMPTY_CONFIG_FILE_CONTENTS,
+  FEEDBACK_INTERVAL,
+  FEEDBACK_OPTIONS,
+  FEEDBACK_URLS,
+  ERROR_TYPES,
   FOLDER_DOT_EXTENSIONS,
   FUNCTIONS_EXTENSION,
   GITHUB_RELEASE_TYPES,

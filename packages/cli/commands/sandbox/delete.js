@@ -16,7 +16,9 @@ const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getConfig, getEnv } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
-const { removeAccountFromConfig } = require('@hubspot/cli-lib/lib/config');
+const {
+  removeSandboxAccountFromConfig,
+} = require('@hubspot/cli-lib/lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
@@ -47,7 +49,10 @@ exports.handler = async options => {
     account: account || accountPrompt.account,
   });
 
-  trackCommandUsage('sandbox-delete', {}, sandboxAccountId);
+  const isDefaultAccount =
+    sandboxAccountId === getAccountId(config.defaultPortal);
+
+  trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
   let parentAccountId;
   for (const portal of config.portals) {
@@ -89,6 +94,14 @@ exports.handler = async options => {
     })
   );
 
+  if (isDefaultAccount) {
+    logger.log(
+      i18n(`${i18nKey}.defaultAccountWarning`, {
+        account: account || accountPrompt.account,
+      })
+    );
+  }
+
   try {
     const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
       {
@@ -105,22 +118,33 @@ exports.handler = async options => {
 
     await deleteSandbox(parentAccountId, sandboxAccountId);
 
+    const deleteKey = isDefaultAccount
+      ? `${i18nKey}.success.deleteDefault`
+      : `${i18nKey}.success.delete`;
     logger.log('');
     logger.success(
-      i18n(`${i18nKey}.success.delete`, {
+      i18n(deleteKey, {
         account: account || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );
     logger.log('');
 
-    const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+    const promptDefaultAccount = removeSandboxAccountFromConfig(
+      sandboxAccountId
+    );
     if (promptDefaultAccount) {
-      await selectAndSetAsDefaultAccountPrompt(config);
+      await selectAndSetAsDefaultAccountPrompt(getConfig());
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugErrorAndContext(err);
+
+    trackCommandUsage(
+      'sandbox-delete',
+      { successful: false },
+      sandboxAccountId
+    );
 
     if (
       err.error &&
@@ -135,9 +159,11 @@ exports.handler = async options => {
       );
       logger.log('');
 
-      const promptDefaultAccount = removeAccountFromConfig(sandboxAccountId);
+      const promptDefaultAccount = removeSandboxAccountFromConfig(
+        sandboxAccountId
+      );
       if (promptDefaultAccount) {
-        await selectAndSetAsDefaultAccountPrompt(config);
+        await selectAndSetAsDefaultAccountPrompt(getConfig());
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {

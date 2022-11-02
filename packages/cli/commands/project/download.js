@@ -1,4 +1,5 @@
 const path = require('path');
+const chalk = require('chalk');
 
 const {
   getAccountId,
@@ -35,9 +36,22 @@ exports.handler = async options => {
   const { name: projectName, dest, buildNumber } = options;
   const accountId = getAccountId(options);
 
-  trackCommandUsage('project-download', { projectName }, accountId);
+  trackCommandUsage('project-download', null, accountId);
 
-  await ensureProjectExists(accountId, projectName, { allowCreate: false });
+  const projectExists = await ensureProjectExists(accountId, projectName, {
+    allowCreate: false,
+    noLogs: true,
+  });
+
+  if (!projectExists) {
+    logger.error(
+      i18n(`${i18nKey}.errors.projectNotFound`, {
+        projectName: chalk.bold(projectName),
+        accountId: chalk.bold(accountId),
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
 

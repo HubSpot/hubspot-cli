@@ -120,9 +120,12 @@ exports.handler = async options => {
     succeedColor: 'white',
   });
 
+  trackCommandUsage('sandbox-create', null, accountId);
+
   let namePrompt;
 
-  trackCommandUsage('sandbox-create', {}, accountId);
+  logger.log(i18n(`${i18nKey}.sandboxLimitation`));
+  logger.log('');
 
   if (!name) {
     namePrompt = await createSandboxPrompt();
@@ -150,6 +153,8 @@ exports.handler = async options => {
     });
   } catch (err) {
     debugErrorAndContext(err);
+
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
 
     spinnies.fail('sandboxCreate', {
       text: i18n(`${i18nKey}.loading.fail`, {

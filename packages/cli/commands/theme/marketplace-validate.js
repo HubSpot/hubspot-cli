@@ -1,9 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const Spinnies = require('spinnies');
+const chalk = require('chalk');
 
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { walk } = require('@hubspot/cli-lib');
 
 const {
   addConfigOptions,
@@ -14,17 +12,16 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
-  logValidatorResults,
-} = require('../../lib/validators/logValidatorResults');
-const {
-  applyAbsoluteValidators,
-} = require('../../lib/validators/applyValidators');
-const MARKETPLACE_VALIDATORS = require('../../lib/validators');
-const { VALIDATION_RESULT } = require('../../lib/validators/constants');
+  requestValidation,
+  getValidationStatus,
+  getValidationResults,
+} = require('@hubspot/cli-lib/api/marketplaceValidation');
+
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const SLEEP_TIME = 2000;
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -35,54 +32,136 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  const absoluteSrcPath = path.resolve(getCwd(), src);
-  let stats;
-  try {
-    stats = fs.statSync(absoluteSrcPath);
-    if (!stats.isDirectory()) {
-      logger.error(
-        i18n(`${i18nKey}.errors.invalidPath`, {
-          path: src,
-        })
-      );
-      return;
-    }
-  } catch (e) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: src,
-      })
-    );
-    return;
-  }
 
-  if (!options.json) {
-    logger.log(
-      i18n(`${i18nKey}.logs.validatingTheme`, {
-        path: src,
-      })
-    );
-  }
-  trackCommandUsage('validate', {}, accountId);
+  trackCommandUsage('validate', null, accountId);
 
-  const themeFiles = await walk(absoluteSrcPath);
+  const spinnies = new Spinnies();
 
-  applyAbsoluteValidators(
-    MARKETPLACE_VALIDATORS.theme,
-    absoluteSrcPath,
-    themeFiles,
-    accountId
-  ).then(groupedResults => {
-    logValidatorResults(groupedResults, { logAsJson: options.json });
-
-    if (
-      groupedResults
-        .flat()
-        .some(result => result.result === VALIDATION_RESULT.FATAL)
-    ) {
-      process.exit(EXIT_CODES.WARNING);
-    }
+  spinnies.add('marketplaceValidation', {
+    text: i18n(`${i18nKey}.logs.validatingTheme`, {
+      path: src,
+    }),
   });
+
+  // Kick off validation
+  let requestResult;
+  const assetType = 'THEME';
+  const requestGroup = 'EXTERNAL_DEVELOPER';
+  try {
+    requestResult = await requestValidation(accountId, {
+      path: src,
+      assetType,
+      requestGroup,
+    });
+  } catch (err) {
+    logger.debug(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Poll till validation is finished
+  try {
+    const checkValidationStatus = async () => {
+      const validationStatus = await getValidationStatus(accountId, {
+        validationId: requestResult,
+      });
+
+      if (validationStatus === 'REQUESTED') {
+        await new Promise(resolve => setTimeout(resolve, SLEEP_TIME));
+        await checkValidationStatus();
+      }
+    };
+
+    await checkValidationStatus();
+
+    spinnies.remove('marketplaceValidation');
+  } catch (err) {
+    logger.debug(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  // Fetch the validation results
+  let validationResults;
+  try {
+    validationResults = await getValidationResults(accountId, {
+      validationId: requestResult,
+    });
+  } catch (err) {
+    logger.debug(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (validationResults.errors.length) {
+    const { errors } = validationResults;
+
+    errors.forEach(err => {
+      logger.error(`${err.context}`);
+    });
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const displayResults = checks => {
+    const displayFileInfo = (file, line) => {
+      if (file) {
+        logger.log(
+          i18n(`${i18nKey}.results.warnings.file`, {
+            file,
+          })
+        );
+      }
+      if (line) {
+        logger.log(
+          i18n(`${i18nKey}.results.warnings.lineNumber`, {
+            line,
+          })
+        );
+      }
+      return null;
+    };
+
+    if (checks) {
+      const { status, results } = checks;
+
+      if (status === 'FAIL') {
+        const failedValidations = results.filter(
+          test => test.status === 'FAIL'
+        );
+        const warningValidations = results.filter(
+          test => test.status === 'WARN'
+        );
+
+        failedValidations.forEach(val => {
+          logger.error(`${val.message}`);
+          displayFileInfo(val.file, val.line);
+        });
+
+        warningValidations.forEach(val => {
+          logger.warn(`${val.message}`);
+          displayFileInfo(val.file, val.line);
+        });
+      }
+
+      if (status === 'PASS') {
+        logger.success(i18n(`${i18nKey}.results.noErrors`));
+
+        results.forEach(test => {
+          if (test.status === 'WARN') {
+            logger.warn(`${test.message}`);
+            displayFileInfo(test.file, test.line);
+          }
+        });
+      }
+    }
+    return null;
+  };
+
+  logger.log(chalk.bold(i18n(`${i18nKey}.results.required`)));
+  displayResults(validationResults.results['REQUIRED']);
+  logger.log();
+  logger.log(chalk.bold(i18n(`${i18nKey}.results.recommended`)));
+  displayResults(validationResults.results['RECOMMENDED']);
+  logger.log();
+
+  process.exit();
 };
 
 exports.builder = yargs => {
@@ -90,12 +169,6 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
-  yargs.options({
-    json: {
-      describe: i18n(`${i18nKey}.options.json.describe`),
-      type: 'boolean',
-    },
-  });
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
