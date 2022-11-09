@@ -581,6 +581,11 @@ const deleteAccount = async accountName => {
 
   setConfig({
     ...config,
+    defaultPortal:
+      config.defaultPortal === accountName ||
+      config.defaultPortal === accountIdToDelete
+        ? null
+        : config.defaultPortal,
     portals: accounts.filter(account => account.portalId !== accountIdToDelete),
   });
 
