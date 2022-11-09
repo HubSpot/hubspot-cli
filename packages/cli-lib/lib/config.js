@@ -630,6 +630,10 @@ const deleteEmptyConfigFile = () => {
   );
 };
 
+const deleteConfigFile = () => {
+  return configFileExists() && fs.unlinkSync(_configPath);
+};
+
 const getConfigVariablesFromEnv = () => {
   const env = process.env;
 
@@ -787,6 +791,7 @@ module.exports = {
   deleteAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  deleteConfigFile,
   isTrackingAllowed,
   validateConfig,
   writeConfig,
