@@ -567,6 +567,26 @@ const renameAccount = async (currentName, newName) => {
   return writeConfig();
 };
 
+/**
+ * @throws {Error}
+ */
+const deleteAccount = async accountName => {
+  const config = getAndLoadConfigIfNeeded();
+  let accounts = getConfigAccounts(config);
+  const accountIdToDelete = getAccountId(accountName);
+
+  if (!accountIdToDelete) {
+    throw new Error(`Cannot find account with identifier ${accountName}`);
+  }
+
+  setConfig({
+    ...config,
+    portals: accounts.filter(account => account.portalId !== accountIdToDelete),
+  });
+
+  return writeConfig();
+};
+
 const setDefaultConfigPathIfUnset = () => {
   if (!_configPath) {
     setDefaultConfigPath();
@@ -759,6 +779,7 @@ module.exports = {
   updateHttpTimeout,
   updateAllowUsageTracking,
   renameAccount,
+  deleteAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   isTrackingAllowed,
