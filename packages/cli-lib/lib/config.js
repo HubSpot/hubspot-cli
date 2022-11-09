@@ -249,6 +249,8 @@ const loadConfigFromFile = (path, options = {}) => {
     logger.debug('Initializing an empty config');
     setConfig({ portals: [] });
   }
+
+  return getConfig();
 };
 
 const loadConfig = (
@@ -260,12 +262,13 @@ const loadConfig = (
   if (options.useEnv && loadEnvironmentVariableConfig()) {
     logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
-    return;
   } else {
     logger.debug(`Loading config from ${path}`);
     loadConfigFromFile(path, options);
     environmentVariableConfigLoaded = false;
   }
+
+  return getConfig();
 };
 
 const isTrackingAllowed = () => {
