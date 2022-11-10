@@ -227,7 +227,6 @@ const createModule = (moduleDefinition, name, dest) => {
       path: destPath,
     })
   );
-  fs.mkdirp(destPath);
   logger.log(
     i18n(`${i18nKey}.creatingModule`, {
       path: destPath,
