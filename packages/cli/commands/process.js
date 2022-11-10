@@ -15,7 +15,7 @@ const { trackProcessFieldsUsage } = require('../lib/usageTracking');
 const i18nKey = 'cli.commands.process';
 
 exports.command = 'process';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const invalidPath = src => {
   logger.error(

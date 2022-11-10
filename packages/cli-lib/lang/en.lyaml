@@ -786,6 +786,7 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
       process:
+        describe: "Processes a specific javascript fields file"
         positionals:
           src:
             describe: Path to JS Fields file or directory containing javascript fields files.
