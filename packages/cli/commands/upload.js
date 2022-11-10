@@ -314,14 +314,12 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.saveOutput.describe`),
     type: 'boolean',
     default: false,
-    hidden: true,
   });
   yargs.option('processFieldsJs', {
     describe: i18n(`${i18nKey}.options.processFields.describe`),
     alias: ['processFields'],
     type: 'boolean',
     default: false,
-    hidden: true,
   });
   return yargs;
 };

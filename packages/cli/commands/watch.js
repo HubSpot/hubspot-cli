@@ -133,13 +133,11 @@ exports.builder = yargs => {
     alias: ['processFields'],
     type: 'boolean',
     default: false,
-    hidden: true,
   });
   yargs.option('saveOutput', {
     describe: i18n(`${i18nKey}.options.saveOutput.describe`),
     type: 'boolean',
     default: false,
-    hidden: true,
   });
   return yargs;
 };
