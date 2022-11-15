@@ -68,7 +68,19 @@ const PERSONAL_ACCESS_KEY_CONFIG = {
   personalAccessKey: 'fakePersonalAccessKey',
 };
 
-const PORTALS = [API_KEY_CONFIG, OAUTH2_CONFIG, PERSONAL_ACCESS_KEY_CONFIG];
+const ACCESS_TOKEN_CONFIG = {
+  portalId: 4444,
+  name: 'ACCESSTOKEN',
+  authType: 'accesstoken',
+  accessToken: 'fakeAccessToken',
+};
+
+const PORTALS = [
+  API_KEY_CONFIG,
+  OAUTH2_CONFIG,
+  PERSONAL_ACCESS_KEY_CONFIG,
+  ACCESS_TOKEN_CONFIG,
+];
 
 const getAccountByAuthType = (config, authType) => {
   return config.portals.filter(portal => portal.authType === authType)[0];
@@ -520,6 +532,44 @@ describe('lib/config', () => {
 
       it('properly loads personal access key value', () => {
         expect(portalConfig.personalAccessKey).toEqual(personalAccessKey);
+      });
+    });
+
+    describe('accesstoken environment variable config', () => {
+      const { portalId, accessToken } = ACCESS_TOKEN_CONFIG;
+      let portalConfig;
+
+      beforeEach(() => {
+        process.env = {
+          HUBSPOT_PORTAL_ID: portalId,
+          HUBSPOT_ACCESS_TOKEN: accessToken,
+        };
+        getAndLoadConfigIfNeeded({ useEnv: true });
+        portalConfig = getAccountConfig(portalId);
+        fsReadFileSyncSpy.mockReset();
+      });
+
+      afterEach(() => {
+        // Clean up environment variable config so subsequent tests don't break
+        process.env = {};
+        setConfig(null);
+        getAndLoadConfigIfNeeded();
+      });
+
+      it('does not load a config from file', () => {
+        expect(fsReadFileSyncSpy).not.toHaveBeenCalled();
+      });
+
+      it('creates a portal config', () => {
+        expect(portalConfig).toBeTruthy();
+      });
+
+      it('properly loads portal id value', () => {
+        expect(portalConfig.portalId).toEqual(portalId);
+      });
+
+      it('properly loads access token value', () => {
+        expect(portalConfig.accessToken).toEqual(accessToken);
       });
     });
   });

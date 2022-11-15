@@ -12,6 +12,7 @@ const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ACCESS_TOKEN_AUTH_METHOD,
 } = require('@hubspot/cli-lib/lib/constants');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
@@ -90,7 +91,13 @@ async function validateAccount(options) {
     return false;
   }
 
-  const { authType, auth, apiKey, personalAccessKey } = accountConfig;
+  const {
+    authType,
+    auth,
+    apiKey,
+    personalAccessKey,
+    accessToken,
+  } = accountConfig;
 
   if (typeof authType === 'string' && authType !== authType.toLowerCase()) {
     logger.error(
@@ -99,6 +106,7 @@ async function validateAccount(options) {
           PERSONAL_ACCESS_KEY_AUTH_METHOD,
           OAUTH_AUTH_METHOD,
           API_KEY_AUTH_METHOD,
+          ACCESS_TOKEN_AUTH_METHOD,
         ].map(method => method.value)
       )}.`
     );
@@ -155,7 +163,7 @@ async function validateAccount(options) {
       logger.error(e.message);
       return false;
     }
-  } else if (!apiKey) {
+  } else if (!apiKey && !accessToken) {
     logger.error(
       `The accountId ${accountId} is missing authentication configuration`
     );

@@ -19,6 +19,7 @@ const {
   OAUTH_SCOPES,
   ENVIRONMENT_VARIABLES,
   MIN_HTTP_TIMEOUT,
+  ACCESS_TOKEN_AUTH_METHOD,
 } = require('./constants');
 const { getValidEnv } = require('./environment');
 const { isConfigPathInGitRepo } = require('./git');
@@ -613,6 +614,7 @@ const getConfigVariablesFromEnv = () => {
     portalId: parseInt(env[ENVIRONMENT_VARIABLES.HUBSPOT_PORTAL_ID], 10),
     refreshToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_REFRESH_TOKEN],
     env: getValidEnv(env[ENVIRONMENT_VARIABLES.HUBSPOT_ENVIRONMENT]),
+    accessToken: env[ENVIRONMENT_VARIABLES.HUBSPOT_ACCESS_TOKEN],
   };
 };
 
@@ -669,6 +671,19 @@ const generateApiKeyConfig = (portalId, apiKey, env) => {
   };
 };
 
+const generateAccessTokenConfig = (portalId, accessToken, env) => {
+  return {
+    portals: [
+      {
+        authType: ACCESS_TOKEN_AUTH_METHOD.value,
+        portalId,
+        accessToken,
+        env,
+      },
+    ],
+  };
+};
+
 const loadConfigFromEnvironment = () => {
   const {
     apiKey,
@@ -678,6 +693,7 @@ const loadConfigFromEnvironment = () => {
     portalId,
     refreshToken,
     env,
+    accessToken,
   } = getConfigVariablesFromEnv();
   const unableToLoadEnvConfigError =
     'Unable to load config from environment variables.';
@@ -700,6 +716,8 @@ const loadConfigFromEnvironment = () => {
     );
   } else if (apiKey) {
     return generateApiKeyConfig(portalId, apiKey, env);
+  } else if (accessToken) {
+    return generateAccessTokenConfig(portalId, accessToken, env);
   } else {
     logger.error(unableToLoadEnvConfigError);
     return;
