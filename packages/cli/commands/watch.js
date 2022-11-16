@@ -128,9 +128,8 @@ exports.builder = yargs => {
     type: 'string',
     requiresArg: true,
   });
-  yargs.option('processFieldsJs', {
-    describe: i18n(`${i18nKey}.options.processFields.describe`),
-    alias: ['processFields'],
+  yargs.option('convertFields', {
+    describe: i18n(`${i18nKey}.options.convertFields.describe`),
     type: 'boolean',
     default: false,
   });
