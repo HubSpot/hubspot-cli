@@ -38,7 +38,7 @@ const DEFAULT_TABLE_HEADER = [
 ];
 
 exports.command = 'lighthouse-score [--theme]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = false; // i18n(`${i18nKey}.describe`);
 
 const selectTheme = async accountId => {
   const { theme: selectedTheme } = await promptUser([

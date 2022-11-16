@@ -11,11 +11,11 @@ const {
   isProcessableFieldsJs,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
-const { trackProcessFieldsUsage } = require('../lib/usageTracking');
-const i18nKey = 'cli.commands.process';
+const { trackProcessFieldsUsage } = require('../../lib/usageTracking');
+const i18nKey = 'cli.commands.convertFields';
 
-exports.command = 'process';
-exports.describe = false;
+exports.command = 'convert-fields';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const invalidPath = src => {
   logger.error(
