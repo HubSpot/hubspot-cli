@@ -185,20 +185,20 @@ async function fieldsArrayToJson(fields) {
 }
 
 /**
- * Determines if file is a processable fields.js file i.e., if it is called
- * 'fields.js' and in a root or in a module folder, and if processFieldsJs flag is true.
+ * Determines if file is a convertable fields.js file i.e., if it is called
+ * 'fields.js' and in a root or in a module folder, and if convertFields flag is true.
  * @param {string} rootDir - The root directory of the project where the file is
  * @param {string} filePath - The file to check
- * @param {Boolean} processFieldsJs - The processFields flag option value
+ * @param {Boolean} convertFields - The processFields flag option value
  */
-function isProcessableFieldsJs(rootDir, filePath, processFieldsJs = false) {
+function isConvertableFieldJs(rootDir, filePath, convertFields = false) {
   const allowedFieldsNames = ['fields.js', 'fields.mjs', 'fields.cjs'];
   const regex = new RegExp(`^${escapeRegExp(rootDir)}`);
   const relativePath = path.dirname(filePath.replace(regex, ''));
   const baseName = path.basename(filePath);
   const inModuleFolder = isModuleFolderChild({ path: filePath, isLocal: true });
   return !!(
-    processFieldsJs &&
+    convertFields &&
     allowedFieldsNames.includes(baseName) &&
     (inModuleFolder || relativePath == '/')
   );
@@ -233,7 +233,7 @@ function cleanupTmpDirSync(tmpDir) {
 module.exports = {
   FieldsJs,
   fieldsArrayToJson,
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
   createTmpDirSync,
   cleanupTmpDirSync,
 };

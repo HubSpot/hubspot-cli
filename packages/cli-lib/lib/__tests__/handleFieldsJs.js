@@ -1,7 +1,7 @@
 const {
   fieldsArrayToJson,
   FieldsJs,
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
 } = require('../handleFieldsJs');
 const fs = require('fs-extra');
 const dynamicImport = require('../dynamicImport');
@@ -218,33 +218,33 @@ describe('handleFieldsJs', () => {
     });
   });
 
-  describe('isProcessableFieldsJs()', () => {
+  describe('isConvertableFieldJs()', () => {
     const src = 'folder';
 
     it('returns true for root fields.js files', () => {
       const filePath = 'folder/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath, true);
+      const returned = isConvertableFieldJs(src, filePath, true);
       expect(returned).toBe(true);
     });
 
     it('returns true for module fields.js files', () => {
       const filePath = 'folder/sample.module/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath, true);
+      const returned = isConvertableFieldJs(src, filePath, true);
       expect(returned).toBe(true);
     });
 
     it('is false for fields.js files outside of root or module', () => {
       const filePath = 'folder/js/fields.js';
-      const returned = isProcessableFieldsJs(src, filePath, true);
+      const returned = isConvertableFieldJs(src, filePath, true);
       expect(returned).toBe(false);
     });
 
     it('returns false for any other file name', () => {
-      expect(isProcessableFieldsJs(src, 'folder/fields.json')).toBe(false);
+      expect(isConvertableFieldJs(src, 'folder/fields.json')).toBe(false);
       expect(
-        isProcessableFieldsJs(src, 'folder/sample.module/fields.json', true)
+        isConvertableFieldJs(src, 'folder/sample.module/fields.json', true)
       ).toBe(false);
-      expect(isProcessableFieldsJs(src, 'folder/js/example.js', true)).toBe(
+      expect(isConvertableFieldJs(src, 'folder/js/example.js', true)).toBe(
         false
       );
     });

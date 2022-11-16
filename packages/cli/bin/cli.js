@@ -170,6 +170,6 @@ if (argv.help) {
   trackHelpUsage(getCommandName(argv));
 }
 
-if (argv.processFieldsJs) {
+if (argv.convertFields) {
   trackProcessFieldsUsage(getCommandName(argv));
 }

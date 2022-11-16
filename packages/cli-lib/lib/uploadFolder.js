@@ -2,7 +2,7 @@ const path = require('path');
 const { default: PQueue } = require('p-queue');
 const { logger } = require('../logger');
 const {
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
   FieldsJs,
   createTmpDirSync,
   cleanupTmpDirSync,
@@ -59,7 +59,7 @@ async function getFilesByType(
   rootWriteDir,
   commandOptions
 ) {
-  const { processFieldsJs, fieldOptions } = commandOptions;
+  const { convertFields, fieldOptions } = commandOptions;
   const projectDirRegex = new RegExp(`^${escapeRegExp(projectDir)}`);
   const fieldsJsObjects = [];
 
@@ -71,18 +71,18 @@ async function getFilesByType(
     const fileType = getFileType(filePath);
     const relPath = filePath.replace(projectDirRegex, '');
 
-    if (!processFieldsJs) {
+    if (!convertFields) {
       filePathsByType[fileType].push(filePath);
       continue;
     }
 
-    const processableFields = isProcessableFieldsJs(
+    const convertableFields = isConvertableFieldJs(
       projectDir,
       filePath,
-      processFieldsJs
+      convertFields
     );
 
-    if (processableFields) {
+    if (convertableFields) {
       const rootOrModule =
         path.dirname(relPath) === '/' ? FileTypes.json : FileTypes.module;
       const fieldsJs = await new FieldsJs(
@@ -122,8 +122,8 @@ async function uploadFolder(
   commandOptions = {},
   filePaths = []
 ) {
-  const { saveOutput, processFieldsJs } = commandOptions;
-  const tmpDir = processFieldsJs
+  const { saveOutput, convertFields } = commandOptions;
+  const tmpDir = convertFields
     ? createTmpDirSync('hubspot-temp-fieldsjs-output-')
     : null;
   const regex = new RegExp(`^${escapeRegExp(src)}`);
@@ -223,7 +223,7 @@ async function uploadFolder(
       })
     )
     .finally(() => {
-      if (!processFieldsJs) return;
+      if (!convertFields) return;
       if (saveOutput) {
         fieldsJsObjects.forEach(fieldsJs => fieldsJs.saveOutput());
       }
