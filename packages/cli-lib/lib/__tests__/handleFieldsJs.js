@@ -6,7 +6,13 @@ const {
 const fs = require('fs-extra');
 const dynamicImport = require('../dynamicImport');
 
-jest.mock('fs-extra');
+jest.mock('fs-extra', () => {
+  const original = jest.requireActual('fs-extra');
+  return {
+    ...original,
+    outputFileSync: () => jest.fn(),
+  };
+});
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
