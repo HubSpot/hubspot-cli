@@ -78,7 +78,7 @@ async function trackHelpUsage(command) {
   }
 }
 
-async function trackProcessFieldsUsage(command) {
+async function trackConvertFieldsUsage(command) {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -136,6 +136,6 @@ module.exports = {
   trackCommandUsage,
   trackHelpUsage,
   addHelpUsageTracking,
-  trackProcessFieldsUsage,
+  trackConvertFieldsUsage,
   trackAuthAction,
 };
