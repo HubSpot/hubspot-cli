@@ -186,7 +186,7 @@ async function getDeployStatus(accountId, projectName, deployId) {
 }
 
 /**
- * Get project build component structure
+ * Get project deploy component structure
  *
  * @async
  * @param {number} accountId
