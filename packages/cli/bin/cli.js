@@ -9,7 +9,7 @@ const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
   trackHelpUsage,
-  trackProcessFieldsUsage,
+  trackConvertFieldsUsage,
 } = require('../lib/usageTracking');
 const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
@@ -171,5 +171,5 @@ if (argv.help) {
 }
 
 if (argv.convertFields) {
-  trackProcessFieldsUsage(getCommandName(argv));
+  trackConvertFieldsUsage(getCommandName(argv));
 }

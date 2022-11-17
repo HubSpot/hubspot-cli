@@ -189,7 +189,7 @@ async function fieldsArrayToJson(fields) {
  * 'fields.js' and in a root or in a module folder, and if convertFields flag is true.
  * @param {string} rootDir - The root directory of the project where the file is
  * @param {string} filePath - The file to check
- * @param {Boolean} convertFields - The processFields flag option value
+ * @param {Boolean} convertFields - The convertFields flag option value
  */
 function isConvertableFieldJs(rootDir, filePath, convertFields = false) {
   const allowedFieldsNames = ['fields.js', 'fields.mjs', 'fields.cjs'];

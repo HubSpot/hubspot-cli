@@ -11,7 +11,7 @@ const {
   isConvertableFieldJs,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
-const { trackProcessFieldsUsage } = require('../../lib/usageTracking');
+const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const i18nKey = 'cli.commands.convertFields';
 
 exports.command = 'convert-fields';
@@ -39,7 +39,7 @@ exports.handler = async options => {
     invalidPath(src);
   }
 
-  trackProcessFieldsUsage('process');
+  trackConvertFieldsUsage('process');
 
   if (stats.isFile()) {
     const fieldsJs = await new FieldsJs(
