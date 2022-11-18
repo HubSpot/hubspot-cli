@@ -233,7 +233,12 @@ const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
     accountId
   )}/activity/deploy/${deployId}`;
 };
-const uploadProjectFiles = async (accountId, projectName, filePath) => {
+const uploadProjectFiles = async (
+  accountId,
+  projectName,
+  filePath,
+  uploadMessage
+) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
     succeedColor: 'white',
@@ -250,7 +255,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   let buildId;
 
   try {
-    const upload = await uploadProject(accountId, projectName, filePath);
+    const upload = await uploadProject(
+      accountId,
+      projectName,
+      filePath,
+      uploadMessage
+    );
 
     buildId = upload.buildId;
 
@@ -295,7 +305,8 @@ const handleProjectUpload = async (
   accountId,
   projectConfig,
   projectDir,
-  callbackFunc
+  callbackFunc,
+  uploadMessage
 ) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const tempFile = tmp.fileSync({ postfix: '.zip' });
@@ -319,7 +330,8 @@ const handleProjectUpload = async (
     const { buildId } = await uploadProjectFiles(
       accountId,
       projectConfig.name,
-      tempFile.name
+      tempFile.name,
+      uploadMessage
     );
 
     if (callbackFunc) {

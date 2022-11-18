@@ -524,6 +524,8 @@ en:
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"
+              message:
+                describe: "Add a message when you upload your project and create a build"
             positionals:
               path:
                 describe: "Path to a project folder"
