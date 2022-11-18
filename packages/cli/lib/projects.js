@@ -383,11 +383,21 @@ const makePollTaskStatusFunc = ({
       structureFn(accountId, taskName, taskId),
     ]);
 
-    const topLevelSubtasks = initialTaskStatus[statusText.SUBTASK_KEY].filter(
-      ({ id }) => !!taskStructure[id]
-    );
+    const flatTaskList = initialTaskStatus[statusText.SUBTASK_KEY];
 
-    const numOfComponents = topLevelSubtasks.length;
+    const tasksById = flatTaskList.reduce((acc, task) => {
+      acc[task.id] = task;
+      return acc;
+    }, {});
+
+    const structuredTasks = Object.keys(taskStructure).map(key => {
+      return {
+        ...tasksById[key],
+        subtasks: taskStructure[key].map(taskId => tasksById[taskId]),
+      };
+    });
+
+    const numOfComponents = flatTaskList.length;
     const componentCountText = `\nFound ${numOfComponents} component${
       numOfComponents !== 1 ? 's' : ''
     } in this project ...\n`;
@@ -396,16 +406,21 @@ const makePollTaskStatusFunc = ({
       text: `${statusStrings.INITIALIZE(taskName)}${componentCountText}`,
     });
 
-    for (let subTask of topLevelSubtasks) {
-      const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
+    const addTaskSpinner = (task, indent) => {
+      const taskName = task[statusText.SUBTASK_NAME_KEY];
 
-      spinnies.add(subTaskName, {
-        text: `${chalk.bold(subTaskName)} ${
+      spinnies.add(task.id, {
+        text: `${chalk.bold(taskName)} ${
           statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
         }\n`,
-        indent: 2,
+        indent,
       });
-    }
+    };
+
+    structuredTasks.forEach(task => {
+      addTaskSpinner(task, 2);
+      task.subtasks.forEach(task => addTaskSpinner(task, 4));
+    });
 
     return new Promise((resolve, reject) => {
       const pollInterval = setInterval(async () => {
@@ -417,9 +432,9 @@ const makePollTaskStatusFunc = ({
 
         if (spinnies.hasActiveSpinners()) {
           subTaskStatus.forEach(subTask => {
-            const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
+            const { id, [statusText.SUBTASK_NAME_KEY]: subTaskName } = subTask;
 
-            if (!spinnies.pick(subTaskName)) {
+            if (!spinnies.pick(id)) {
               return;
             }
 
@@ -429,13 +444,13 @@ const makePollTaskStatusFunc = ({
 
             switch (subTask.status) {
               case statusText.STATES.SUCCESS:
-                spinnies.succeed(subTaskName, { text: updatedText });
+                spinnies.succeed(id, { text: updatedText });
                 break;
               case statusText.STATES.FAILURE:
-                spinnies.fail(subTaskName, { text: updatedText });
+                spinnies.fail(id, { text: updatedText });
                 break;
               default:
-                spinnies.update(subTaskName, { text: updatedText });
+                spinnies.update(id, { text: updatedText });
                 break;
             }
           });
