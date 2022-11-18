@@ -152,6 +152,11 @@ class CLIConfiguration {
     return null;
   }
 
+  // TODO a util that returns account, respecting the values set in "defaultAccountOverrides"
+  getAccountForCWD(nameOrId) {
+    return this.getAccountId(nameOrId);
+  }
+
   getConfigAccountIndex(accountId) {
     return this.config
       ? this.config.accounts.findIndex(
