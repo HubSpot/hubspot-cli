@@ -4,7 +4,7 @@ const moment = require('moment');
 const { HubSpotAuthError } = require('./Errors');
 const { ENVIRONMENTS } = require('../constants');
 const { getHubSpotApiOrigin } = require('../urls');
-const { getValidEnv } = require('../environment');
+const { getValidEnv } = require('../config/environment');
 
 class OAuth2Manager {
   constructor(
