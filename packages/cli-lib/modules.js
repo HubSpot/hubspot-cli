@@ -171,7 +171,14 @@ const isModuleHTMLFile = filePath => MODULE_HTML_EXTENSION_REGEX.test(filePath);
  */
 const isModuleCSSFile = filePath => MODULE_CSS_EXTENSION_REGEX.test(filePath);
 
-const createModule = (moduleDefinition, name, dest) => {
+const createModule = (
+  moduleDefinition,
+  name,
+  dest,
+  options = {
+    allowExistingDir: false,
+  }
+) => {
   const i18nKey = 'cli.commands.create.subcommands.module';
   const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
     const metaData = {
@@ -209,24 +216,26 @@ const createModule = (moduleDefinition, name, dest) => {
     }
   };
 
-  console.log('process.cwd()', process.cwd());
-  console.log('__dirname', __dirname);
   const assetPath = path.resolve(__dirname, './defaults/Sample.module');
-  const folderName = name.endsWith('.module') ? name : `${name}.module`;
+  const folderName =
+    !name || name.endsWith('.module') ? name : `${name}.module`;
   const destPath = path.join(dest, folderName);
-  if (fs.existsSync(destPath)) {
+  if (!options.allowExistingDir && fs.existsSync(destPath)) {
     logger.error(
       i18n(`${i18nKey}.errors.pathExists`, {
         path: destPath,
       })
     );
     return;
+  } else {
+    logger.log(
+      i18n(`${i18nKey}.creatingPath`, {
+        path: destPath,
+      })
+    );
+    fs.ensureDirSync(destPath);
   }
-  logger.log(
-    i18n(`${i18nKey}.creatingPath`, {
-      path: destPath,
-    })
-  );
+
   logger.log(
     i18n(`${i18nKey}.creatingModule`, {
       path: destPath,
