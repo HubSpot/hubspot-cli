@@ -45,6 +45,7 @@ async function getAccessToken(
     }
   }
   return {
+    accountId: response.hubId,
     portalId: response.hubId,
     accessToken: response.oauthAccessToken,
     expiresAt: moment(response.expiresAtMillis),
@@ -131,9 +132,8 @@ async function accessTokenForPersonalAccessKey(accountId) {
  * @param {object} configData Data containing personalAccessKey and name properties
  * @param {string} configData.personalAccessKey Personal access key string to place in config
  * @param {string} configData.name Unique name to identify this config entry
- * @param {boolean} makeDefault option to make the account being added to the config the default account
  */
-const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
+const generatePersonalAccessKeyConfig = async configData => {
   const { personalAccessKey, name, env } = configData;
   const accountEnv = env || getEnv(name);
 
@@ -144,11 +144,11 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     logErrorInstance(err);
     return;
   }
-  const { portalId, accessToken, expiresAt } = token;
+  const { accountId, accessToken, expiresAt } = token;
 
   let hubInfo;
   try {
-    hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
+    hubInfo = await fetchHubData(accessToken, accountId, accountEnv);
   } catch (err) {
     // Ignore error, returns 404 if account is not a sandbox
   }
@@ -164,8 +164,8 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     }
   }
 
-  const updatedConfig = updateAccountConfig({
-    portalId,
+  return {
+    accountId,
     personalAccessKey,
     name,
     environment: getValidEnv(accountEnv, true),
@@ -173,11 +173,29 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
     tokenInfo: { accessToken, expiresAt },
     sandboxAccountType,
     parentAccountId,
-  });
+  };
+};
+
+/**
+ * Adds a account to the config using authType: personalAccessKey
+ *
+ * @param {object} configData Data containing personalAccessKey and name properties
+ * @param {string} configData.personalAccessKey Personal access key string to place in config
+ * @param {string} configData.name Unique name to identify this config entry
+ * @param {boolean} makeDefault option to make the account being added to the config the default account
+ */
+const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
+  const personalAccessKeyConfig = generatePersonalAccessKeyConfig(configData);
+
+  // Legacy config uses portalId
+  personalAccessKeyConfig.portalId = personalAccessKeyConfig.accountId;
+  delete personalAccessKeyConfig.accountId;
+
+  const updatedConfig = updateAccountConfig(personalAccessKeyConfig);
   writeConfig();
 
   if (makeDefault) {
-    updateDefaultAccount(name);
+    updateDefaultAccount(updatedConfig.name);
   }
 
   return updatedConfig;
@@ -185,6 +203,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 
 module.exports = {
   accessTokenForPersonalAccessKey,
+  generatePersonalAccessKeyConfig,
   updateConfigWithPersonalAccessKey,
   getAccessToken,
 };

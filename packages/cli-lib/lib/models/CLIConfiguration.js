@@ -14,10 +14,21 @@ const { commaSeparatedValues } = require('../text');
 const { Mode, MIN_HTTP_TIMEOUT } = require('../constants');
 
 class CLIConfiguration {
-  constructor(options) {
+  constructor(options = {}) {
+    this.active = false;
     this.options = options;
     this.useEnvConfig = false;
     this.config = null;
+  }
+
+  setActive(isActive) {
+    this.active = isActive;
+  }
+
+  init(options) {
+    this.options = options;
+    this.load();
+    this.active = true;
   }
 
   load() {
@@ -46,8 +57,24 @@ class CLIConfiguration {
     return this.config;
   }
 
+  configIsEmpty() {
+    if (!configFileExists() || configFileIsBlank()) {
+      return true;
+    } else {
+      this.load();
+      if (
+        !!this.config &&
+        Object.keys(this.config).length === 1 &&
+        !!this.config.accounts
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   delete() {
-    if (!this.useEnvConfig && configFileExists() && configFileIsBlank()) {
+    if (!this.useEnvConfig && this.configIsEmpty()) {
       deleteConfigFile();
       this.config = null;
     }
@@ -125,7 +152,7 @@ class CLIConfiguration {
       return null;
     }
 
-    const setNameOrAccount = suppliedValue => {
+    const assignNameOrAccount = suppliedValue => {
       if (typeof suppliedValue === 'number') {
         accountId = suppliedValue;
       } else if (/^\d+$/.test(suppliedValue)) {
@@ -136,11 +163,12 @@ class CLIConfiguration {
     };
 
     if (!nameOrId) {
-      if (this.config.defaultAccount) {
-        setNameOrAccount(this.config.defaultAccount);
+      const defaultAccount = this.getDefaultAccount();
+      if (defaultAccount) {
+        assignNameOrAccount(defaultAccount);
       }
     } else {
-      setNameOrAccount(nameOrId);
+      assignNameOrAccount(nameOrId);
     }
 
     if (name) {
@@ -152,8 +180,12 @@ class CLIConfiguration {
     return null;
   }
 
+  getDefaultAccount() {
+    return this.config ? this.config.defaultAccount : null;
+  }
+
   // TODO a util that returns account, respecting the values set in "defaultAccountOverrides"
-  getAccountForCWD(nameOrId) {
+  getResolvedAccountForCWD(nameOrId) {
     return this.getAccountId(nameOrId);
   }
 
@@ -171,6 +203,10 @@ class CLIConfiguration {
       : null;
   }
 
+  isAccountNameInConfig(name) {
+    return this.config && this.config.accounts && !!this.getAccountId(name);
+  }
+
   /*
    * Config Update Utils
    */
@@ -181,18 +217,18 @@ class CLIConfiguration {
   updateConfigForAccount(updatedConfig, writeUpdate = true) {
     const {
       accountId,
+      apiKey,
       authType,
-      environment,
       clientId,
       clientSecret,
-      scopes,
-      tokenInfo,
       defaultMode,
+      environment,
       name,
-      apiKey,
+      parentAccountId,
       personalAccessKey,
       sandboxAccountType,
-      parentAccountId,
+      scopes,
+      tokenInfo,
     } = updatedConfig;
 
     if (!accountId) {
@@ -216,27 +252,35 @@ class CLIConfiguration {
       };
     }
 
-    const env = getValidEnv(
+    const nextAccountConfig = {
+      ...(currentAccountConfig ? currentAccountConfig : {}),
+    };
+
+    // Allow everything except for 'undefined' values to override the existing values
+    const safelyApplyUpdates = (fieldName, newValue) => {
+      if (typeof newValue !== 'undefined') {
+        nextAccountConfig[fieldName] = newValue;
+      }
+    };
+
+    const updatedEnv = getValidEnv(
       environment || (currentAccountConfig && currentAccountConfig.env),
       {
         maskedProductionValue: undefined,
       }
     );
-    const newDefaultMode = defaultMode && defaultMode.toLowerCase();
-    const nextAccountConfig = {
-      ...(currentAccountConfig ? currentAccountConfig : {}),
-      name:
-        name || (currentAccountConfig ? currentAccountConfig.name : undefined),
-      env,
-      accountId,
-      authType,
-      auth,
-      apiKey,
-      defaultMode: Mode[newDefaultMode] ? newDefaultMode : undefined,
-      personalAccessKey,
-      sandboxAccountType,
-      parentAccountId,
-    };
+    const updatedDefaultMode = defaultMode && defaultMode.toLowerCase();
+
+    safelyApplyUpdates('name', name);
+    safelyApplyUpdates('env', updatedEnv);
+    safelyApplyUpdates('accountId', accountId);
+    safelyApplyUpdates('authType', authType);
+    safelyApplyUpdates('auth', auth);
+    safelyApplyUpdates('apiKey', apiKey);
+    safelyApplyUpdates('defaultMode', Mode[updatedDefaultMode]);
+    safelyApplyUpdates('personalAccessKey', personalAccessKey);
+    safelyApplyUpdates('sandboxAccountType', sandboxAccountType);
+    safelyApplyUpdates('parentAccountId', parentAccountId);
 
     if (currentAccountConfig) {
       logger.debug(`Updating account config for ${accountId}`);
@@ -252,7 +296,7 @@ class CLIConfiguration {
     }
 
     if (writeUpdate) {
-      this.writeConfig();
+      this.write();
     }
 
     return nextAccountConfig;
@@ -275,7 +319,7 @@ class CLIConfiguration {
     }
 
     this.config.defaultAccount = defaultAccount;
-    this.writeConfig();
+    this.write();
   }
 
   /**
@@ -297,7 +341,7 @@ class CLIConfiguration {
       name: newName,
     });
 
-    if (accountConfigToRename.name === this.config.defaultAccount) {
+    if (accountConfigToRename.name === this.getDefaultAccount()) {
       this.updateDefaultAccount(newName);
     }
   }
@@ -323,11 +367,11 @@ class CLIConfiguration {
       const index = this.getConfigAccountIndex(accountId);
       this.config.accounts.splice(index, 1);
 
-      if (this.config.defaultAccount === accountConfig.name) {
+      if (this.getDefaultAccount() === accountConfig.name) {
         shouldShowDefaultAccountPrompt = true;
       }
 
-      this.writeConfig();
+      this.write();
     }
 
     return shouldShowDefaultAccountPrompt;
@@ -350,7 +394,7 @@ class CLIConfiguration {
     }
 
     this.config.defaultMode = defaultMode;
-    this.writeConfig();
+    this.write();
   }
 
   /**
@@ -368,7 +412,7 @@ class CLIConfiguration {
     }
 
     this.config.httpTimeout = parsedTimeout;
-    this.writeConfig();
+    this.write();
   }
 
   /**
@@ -385,7 +429,7 @@ class CLIConfiguration {
     }
 
     this.config.allowUsageTracking = isEnabled;
-    this.writeConfig();
+    this.write();
   }
 }
 

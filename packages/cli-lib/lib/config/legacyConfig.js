@@ -1,26 +1,26 @@
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
 const findup = require('findup-sync');
-const { logger } = require('../logger');
+const { logger } = require('../../logger');
 const {
   logFileSystemErrorInstance,
-} = require('../errorHandlers/fileSystemErrors');
-const { logErrorInstance } = require('../errorHandlers/standardErrors');
-const { commaSeparatedValues } = require('./text');
-const { getCwd } = require('../path');
+} = require('../../errorHandlers/fileSystemErrors');
+const { logErrorInstance } = require('../../errorHandlers/standardErrors');
+const { commaSeparatedValues } = require('../text');
+const { getCwd } = require('../../path');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   EMPTY_CONFIG_FILE_CONTENTS,
   Mode,
   ENVIRONMENTS,
   MIN_HTTP_TIMEOUT,
-} = require('./constants');
+} = require('../constants');
 const {
   getValidEnv,
   getConfigVariablesFromEnv,
   loadConfigFromEnvironment,
-} = require('./config/environment');
-const { isConfigPathInGitRepo } = require('./git');
+} = require('../config/environment');
+const { isConfigPathInGitRepo } = require('../git');
 
 const ALL_MODES = Object.values(Mode);
 let _config;

@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const os = require('os');
 const yaml = require('js-yaml');
 const { logger } = require('../../logger');
 const {
@@ -12,9 +13,8 @@ const {
 } = require('../constants');
 
 const getConfigFilePath = () => {
-  const rootDir = path.parse(process.cwd()).root;
   return path.join(
-    rootDir,
+    os.homedir(),
     HUBSPOT_CONFIGURATION_FOLDER,
     HUBSPOT_CONFIGURATION_FILE
   );
@@ -53,7 +53,7 @@ const getOrderedConfig = unorderedConfig => {
     defaultMode,
     httpTimeout,
     allowUsageTracking,
-    portals,
+    accounts,
     ...rest
   } = unorderedConfig;
 
@@ -63,7 +63,7 @@ const getOrderedConfig = unorderedConfig => {
     httpTimeout,
     allowUsageTracking,
     ...rest,
-    portals: portals.map(getOrderedAccount),
+    accounts: accounts.map(getOrderedAccount),
   };
 };
 
@@ -104,21 +104,16 @@ const loadConfigFromFile = options => {
     if (readError) {
       return;
     }
-
     const { parsed, error: parseError } = parseConfig(source);
 
     if (parseError) {
       return;
     }
-
     return parsed;
   }
 
   const errorFunc = options.silenceErrors ? logger.debug : logger.error;
-  errorFunc(
-    `A configuration file could not be found in ${HUBSPOT_CONFIGURATION_FOLDER}.`
-  );
-
+  errorFunc(`A configuration file could not be found at ${configPath}.`);
   return;
 };
 
@@ -137,15 +132,12 @@ const writeConfigToFile = config => {
     logErrorInstance(err);
     return;
   }
-
   const configPath = getConfigFilePath();
 
   try {
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, source);
-    logger.debug(
-      `Successfully wrote updated config data to ${HUBSPOT_CONFIGURATION_FOLDER}`
-    );
+    logger.debug(`Successfully wrote updated config data to ${configPath}`);
   } catch (err) {
     logFileSystemErrorInstance(err, { filepath: configPath, write: true });
   }

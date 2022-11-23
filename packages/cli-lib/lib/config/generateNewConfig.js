@@ -3,7 +3,7 @@ const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('./constants');
+} = require('../constants');
 
 const generatePersonalAccessKeyConfig = ({
   accountId,
