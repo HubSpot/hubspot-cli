@@ -105,6 +105,7 @@ exports.handler = async options => {
     let newAccountConfig = CLIConfig.updateConfigForAccount(newAccountData);
     const { accountId, name } = newAccountConfig;
 
+    // If this is a new account config, we need a name
     if (!name) {
       const { name: nameFromPrompt } = await enterAccountNamePrompt();
       newAccountConfig = CLIConfig.updateConfigForAccount({
@@ -113,7 +114,7 @@ exports.handler = async options => {
       });
     }
 
-    if (!CLIConfig.config.defaultAccount) {
+    if (!CLIConfig.getDefaultAccount()) {
       CLIConfig.updateDefaultAccount(newAccountConfig.name);
     } else {
       await setAsDefaultAccountPrompt(newAccountConfig.name);
