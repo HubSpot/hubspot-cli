@@ -90,6 +90,7 @@ en:
                 promptMessage: "Enter http timeout duration"
                 success: "The http timeout has been set to: {{ timeout }}"
       cms:
+        describe: "Commands for working with the CMS."
         subcommands:
           lighthouseScore:
             describe: "Score a theme using Google lighthouse."
@@ -733,7 +734,7 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
-          fieldsJsSyntaxError: "There was an error processing JS file \"{{ path }}\""
+          fieldsJsSyntaxError: "There was an error converting JS file \"{{ path }}\""
           fieldsJsNotReturnArray: "There was an error loading JS file \"{{ path }}\". Expected type \"Array\" but received type \"{{ returned }}\" . Make sure that your function returns an array"
           fieldsJsNotFunction:  "There was an error loading JS file \"{{ path }}\". Expected type \"Function\" but received type \"{{ returned }}\". Make sure that your default export is a function."
         options:
@@ -741,8 +742,8 @@ en:
             describe: "Options to pass to javascript fields files"
           saveOutput:
             describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
-          processFields:
-            describe: "If true, processes any javascript fields files contained in module folder or project root."
+          convertFields:
+            describe: "If true, converts any javascript fields files contained in module folder or project root."
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
@@ -770,8 +771,8 @@ en:
             describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
           remove:
             describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
-          processFields:
-            describe: "If true, processes any javascript fields files contained in module folder or project root."
+          convertFields:
+            describe: "If true, converts any javascript fields files contained in module folder or project root."
           saveOutput:
             describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
           options:
@@ -785,7 +786,8 @@ en:
           disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
-      process:
+      convertFields:
+        describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
           src:
             describe: Path to JS Fields file or directory containing javascript fields files.
@@ -955,7 +957,7 @@ en:
             general: "[--general] Tell us about your experience with HubSpot's developer tools"
           bugPrompt: "Create an issue on Github in your browser?"
           generalPrompt: "Open the projects feedback form in your browser?"
-      process:
+      convertFields:
         positionals:
           src:
             describe: Path to JS Fields file or directory containing javascript fields files.

@@ -10,7 +10,7 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
-const { isProcessableFieldsJs } = require('./handleFieldsJs');
+const { isConvertableFieldJs } = require('./handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
@@ -39,13 +39,13 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const src = options.src;
-  const processFieldsJs = isProcessableFieldsJs(
+  const convertFields = isConvertableFieldJs(
     src,
     file,
-    options.commandOptions.processFieldsJs
+    options.commandOptions.convertFields
   );
 
-  if (!isAllowedExtension(file) && !processFieldsJs) {
+  if (!isAllowedExtension(file) && !convertFields) {
     logger.debug(`Skipping ${file} due to unsupported extension`);
     return;
   }
@@ -53,7 +53,7 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  if (processFieldsJs) {
+  if (convertFields) {
     const parsedOptions = JSON.stringify({
       ...options.commandOptions,
       src: file,
@@ -182,9 +182,7 @@ function watch(
   if (remove) {
     const deleteFileOrFolder = type => filePath => {
       // If it's a fields.js file that is in a module folder or the root, then ignore because it will not exist on the server.
-      if (
-        isProcessableFieldsJs(src, filePath, commandOptions.processFieldsJs)
-      ) {
+      if (isConvertableFieldJs(src, filePath, commandOptions.convertFields)) {
         return;
       }
 

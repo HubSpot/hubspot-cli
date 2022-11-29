@@ -32,6 +32,10 @@ const buildAnnotationValueGetter = file => {
     logger.error(`Error reading file annotations ${file}`);
     return;
   }
+  return getAnnotationsFromSource(source);
+};
+
+const getAnnotationsFromSource = source => {
   const match = source.match(ANNOTATIONS_REGEX);
   const annotation = match && match[1] ? match[1] : '';
   return annotationKey => getAnnotationValue(annotation, annotationKey);
@@ -46,6 +50,7 @@ const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 module.exports = {
   ANNOTATION_KEYS,
   getAnnotationValue,
+  getAnnotationsFromSource,
   buildAnnotationValueGetter,
   isCodedFile,
 };

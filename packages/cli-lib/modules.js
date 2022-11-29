@@ -7,9 +7,11 @@ const { i18n } = require('./lib/lang');
 const { MODULE_EXTENSION } = require('./lib/constants');
 
 // Matches files named module.html
-const MODULE_HTML_EXTENSION_REGEX = new RegExp(/\.module\/module\.html$/);
+const MODULE_HTML_EXTENSION_REGEX = new RegExp(
+  /\.module(?:\/|\\)module\.html$/
+);
 // Matches files named module.css
-const MODULE_CSS_EXTENSION_REGEX = new RegExp(/\.module\/module\.css$/);
+const MODULE_CSS_EXTENSION_REGEX = new RegExp(/\.module(?:\/|\\)module\.css$/);
 
 const isBool = x => !!x === x;
 
