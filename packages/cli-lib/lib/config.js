@@ -249,6 +249,8 @@ const loadConfigFromFile = (path, options = {}) => {
     logger.debug('Initializing an empty config');
     setConfig({ portals: [] });
   }
+
+  return getConfig();
 };
 
 const loadConfig = (
@@ -260,12 +262,13 @@ const loadConfig = (
   if (options.useEnv && loadEnvironmentVariableConfig()) {
     logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
-    return;
   } else {
     logger.debug(`Loading config from ${path}`);
     loadConfigFromFile(path, options);
     environmentVariableConfigLoaded = false;
   }
+
+  return getConfig();
 };
 
 const isTrackingAllowed = () => {
@@ -564,6 +567,31 @@ const renameAccount = async (currentName, newName) => {
   return writeConfig();
 };
 
+/**
+ * @throws {Error}
+ */
+const deleteAccount = async accountName => {
+  const config = getAndLoadConfigIfNeeded();
+  let accounts = getConfigAccounts(config);
+  const accountIdToDelete = getAccountId(accountName);
+
+  if (!accountIdToDelete) {
+    throw new Error(`Cannot find account with identifier ${accountName}`);
+  }
+
+  setConfig({
+    ...config,
+    defaultPortal:
+      config.defaultPortal === accountName ||
+      config.defaultPortal === accountIdToDelete
+        ? null
+        : config.defaultPortal,
+    portals: accounts.filter(account => account.portalId !== accountIdToDelete),
+  });
+
+  return writeConfig();
+};
+
 const setDefaultConfigPathIfUnset = () => {
   if (!_configPath) {
     setDefaultConfigPath();
@@ -600,6 +628,10 @@ const deleteEmptyConfigFile = () => {
   return (
     configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
   );
+};
+
+const deleteConfigFile = () => {
+  return configFileExists() && fs.unlinkSync(_configPath);
 };
 
 const getConfigVariablesFromEnv = () => {
@@ -756,8 +788,10 @@ module.exports = {
   updateHttpTimeout,
   updateAllowUsageTracking,
   renameAccount,
+  deleteAccount,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
+  deleteConfigFile,
   isTrackingAllowed,
   validateConfig,
   writeConfig,
