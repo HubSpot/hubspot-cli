@@ -1,4 +1,6 @@
-const fs = require('fs');
+const fs = require('fs-extra');
+const path = require('path');
+const { i18n } = require('./lib/lang');
 const { logger } = require('./logger');
 
 // Matches the .html file extension, excluding module.html
@@ -47,8 +49,51 @@ const getAnnotationsFromSource = source => {
  */
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
+const ASSET_PATHS = {
+  'page-template': path.resolve(__dirname, './defaults/page-template.html'),
+  partial: path.resolve(__dirname, './defaults/partial.html'),
+  'global-partial': path.resolve(__dirname, './defaults/global-partial.html'),
+  'email-template': path.resolve(__dirname, './defaults/email-template.html'),
+  'blog-listing-template': path.resolve(
+    __dirname,
+    './defaults/blog-listing-template.html'
+  ),
+  'blog-post-template': path.resolve(
+    __dirname,
+    './defaults/blog-post-template.html'
+  ),
+  'search-template': path.resolve(__dirname, './defaults/search-template.html'),
+};
+
+const createTemplate = (name, dest, type = 'page-template') => {
+  const assetPath = ASSET_PATHS[type];
+  const filename = name.endsWith('.html') ? name : `${name}.html`;
+  const filePath = path.join(dest, filename);
+  if (fs.existsSync(filePath)) {
+    logger.error(
+      i18n('cli.lib.errors.templates.pathExists', {
+        path: filePath,
+      })
+    );
+    return;
+  }
+  logger.debug(
+    i18n('cli.lib.debug.templates.creatingPath', {
+      path: dest,
+    })
+  );
+  fs.mkdirp(dest);
+  logger.log(
+    i18n('cli.lib.logging.templates.creatingFile', {
+      path: filePath,
+    })
+  );
+  fs.copySync(assetPath, filePath);
+};
+
 module.exports = {
   ANNOTATION_KEYS,
+  createTemplate,
   getAnnotationValue,
   getAnnotationsFromSource,
   buildAnnotationValueGetter,
