@@ -30,7 +30,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath } = options;
+  const { forceCreate, path: projectPath, message } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const sandboxType = accountConfig && accountConfig.sandboxAccountType;
@@ -111,7 +111,13 @@ exports.handler = async options => {
     process.exit(exitCode);
   };
 
-  await handleProjectUpload(accountId, projectConfig, projectDir, startPolling);
+  await handleProjectUpload(
+    accountId,
+    projectConfig,
+    projectDir,
+    startPolling,
+    message
+  );
 };
 
 exports.builder = yargs => {
@@ -124,6 +130,13 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.forceCreate.describe`),
     type: 'boolean',
     default: false,
+  });
+
+  yargs.option('message', {
+    alias: 'm',
+    describe: i18n(`${i18nKey}.options.message.describe`),
+    type: 'string',
+    default: '',
   });
 
   yargs.example([
