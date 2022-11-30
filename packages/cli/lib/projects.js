@@ -169,6 +169,8 @@ const ensureProjectExists = async (
   projectName,
   { forceCreate = false, allowCreate = true, noLogs = false } = {}
 ) => {
+  const i18nKey = 'cli.commands.project.lib.ensureProjectExists';
+  const accountIdentifier = uiAccountDescription(accountId);
   try {
     const project = await fetchProject(accountId, projectName);
     return !!project;
@@ -180,9 +182,10 @@ const ensureProjectExists = async (
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${uiAccountDescription(
-              accountId
-            )}. Would you like to create it?`,
+            message: i18n(`${i18nKey}.createPrompt`, {
+              projectName,
+              accountIdentifier,
+            }),
             type: 'confirm',
           },
         ]);
@@ -191,7 +194,11 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          return createProject(accountId, projectName);
+          await createProject(accountId, projectName);
+          logger.success(
+            i18n(`${i18nKey}.createSuccess`, { projectName, accountIdentifier })
+          );
+          return true;
         } catch (err) {
           return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
@@ -200,7 +207,7 @@ const ensureProjectExists = async (
           logger.log(
             `Your project ${chalk.bold(
               projectName
-            )} could not be found in ${chalk.bold(accountId)}.`
+            )} could not be found in ${chalk.bold(accountIdentifier)}.`
           );
         }
         return false;
@@ -298,6 +305,16 @@ const handleProjectUpload = async (
   callbackFunc
 ) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
+  const srcDir = path.resolve(projectDir, projectConfig.srcDir);
+
+  const filenames = fs.readdirSync(srcDir);
+  if (!filenames || filenames.length === 0) {
+    logger.log(
+      i18n(`${i18nKey}.logs.emptySource`, { srcDir: projectConfig.srcDir })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
   logger.debug(
@@ -329,10 +346,8 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(
-    path.resolve(projectDir, projectConfig.srcDir),
-    false,
-    file => (shouldIgnoreFile(file.name) ? false : file)
+  archive.directory(srcDir, false, file =>
+    shouldIgnoreFile(file.name) ? false : file
   );
 
   archive.finalize();
