@@ -139,6 +139,23 @@ async function getBuildStatus(accountId, projectName, buildId) {
 }
 
 /**
+ * Get project build component structure
+ *
+ * @async
+ * @param {number} accountId
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function getBuildStructure(accountId, projectName, buildId) {
+  return http.get(accountId, {
+    uri: `dfs/v1/builds/by-project-name/${encodeURIComponent(
+      projectName
+    )}/builds/${buildId}/structure`,
+  });
+}
+
+/**
  * Deploy project
  *
  * @async
@@ -171,6 +188,23 @@ async function getDeployStatus(accountId, projectName, deployId) {
     uri: `${PROJECTS_DEPLOY_API_PATH}/deploy-status/projects/${encodeURIComponent(
       projectName
     )}/deploys/${deployId}`,
+  });
+}
+
+/**
+ * Get project deploy component structure
+ *
+ * @async
+ * @param {number} accountId
+ * @param {string} projectName
+ * @param {number} buildId
+ * @returns {Promise}
+ */
+async function getDeployStructure(accountId, projectName, deployId) {
+  return http.get(accountId, {
+    uri: `${PROJECTS_DEPLOY_API_PATH}/deploys/by-project-name/${encodeURIComponent(
+      projectName
+    )}/deploys/${deployId}/structure`,
   });
 }
 
@@ -302,7 +336,9 @@ module.exports = {
   fetchProjectSettings,
   fetchDeployComponentsMetadata,
   getBuildStatus,
+  getBuildStructure,
   getDeployStatus,
+  getDeployStructure,
   provisionBuild,
   queueBuild,
   uploadFileToBuild,

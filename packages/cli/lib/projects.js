@@ -22,7 +22,9 @@ const {
 const {
   createProject,
   getBuildStatus,
+  getBuildStructure,
   getDeployStatus,
+  getDeployStructure,
   fetchProject,
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
@@ -367,6 +369,7 @@ const handleProjectUpload = async (
 
 const makePollTaskStatusFunc = ({
   statusFn,
+  structureFn,
   statusText,
   statusStrings,
   linkToHubSpot,
@@ -399,9 +402,19 @@ const makePollTaskStatusFunc = ({
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
-    const initialTaskStatus = await statusFn(accountId, taskName, taskId);
+    const [
+      initialTaskStatus,
+      { topLevelComponentsWithChildren: taskStructure },
+    ] = await Promise.all([
+      statusFn(accountId, taskName, taskId),
+      structureFn(accountId, taskName, taskId),
+    ]);
 
-    const numOfComponents = initialTaskStatus[statusText.SUBTASK_KEY].length;
+    const topLevelSubtasks = initialTaskStatus[statusText.SUBTASK_KEY].filter(
+      ({ id }) => !!taskStructure[id]
+    );
+
+    const numOfComponents = topLevelSubtasks.length;
     const componentCountText = `\nFound ${numOfComponents} component${
       numOfComponents !== 1 ? 's' : ''
     } in this project ...\n`;
@@ -410,7 +423,7 @@ const makePollTaskStatusFunc = ({
       text: `${statusStrings.INITIALIZE(taskName)}${componentCountText}`,
     });
 
-    for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
+    for (let subTask of topLevelSubtasks) {
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
@@ -518,6 +531,7 @@ const pollBuildStatus = makePollTaskStatusFunc({
       getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
+  structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
     INITIALIZE: name => `Building ${chalk.bold(name)}`,
@@ -537,6 +551,7 @@ const pollDeployStatus = makePollTaskStatusFunc({
       getProjectDeployDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getDeployStatus,
+  structureFn: getDeployStructure,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
     INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
