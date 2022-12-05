@@ -47,7 +47,7 @@ function createEndpoint(endpointMethod, filename) {
 
 function createConfig({ endpointPath, endpointMethod, functionFile }) {
   return {
-    runtime: 'nodejs12.x',
+    runtime: 'nodejs18.x',
     version: '1.0',
     environment: {},
     secrets: [],
