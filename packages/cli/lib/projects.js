@@ -22,7 +22,9 @@ const {
 const {
   createProject,
   getBuildStatus,
+  getBuildStructure,
   getDeployStatus,
+  getDeployStructure,
   fetchProject,
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
@@ -169,6 +171,8 @@ const ensureProjectExists = async (
   projectName,
   { forceCreate = false, allowCreate = true, noLogs = false } = {}
 ) => {
+  const i18nKey = 'cli.commands.project.lib.ensureProjectExists';
+  const accountIdentifier = uiAccountDescription(accountId);
   try {
     const project = await fetchProject(accountId, projectName);
     return !!project;
@@ -180,9 +184,10 @@ const ensureProjectExists = async (
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: `The project ${projectName} does not exist in ${uiAccountDescription(
-              accountId
-            )}. Would you like to create it?`,
+            message: i18n(`${i18nKey}.createPrompt`, {
+              projectName,
+              accountIdentifier,
+            }),
             type: 'confirm',
           },
         ]);
@@ -191,7 +196,11 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          return createProject(accountId, projectName);
+          await createProject(accountId, projectName);
+          logger.success(
+            i18n(`${i18nKey}.createSuccess`, { projectName, accountIdentifier })
+          );
+          return true;
         } catch (err) {
           return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
         }
@@ -200,7 +209,7 @@ const ensureProjectExists = async (
           logger.log(
             `Your project ${chalk.bold(
               projectName
-            )} could not be found in ${chalk.bold(accountId)}.`
+            )} could not be found in ${chalk.bold(accountIdentifier)}.`
           );
         }
         return false;
@@ -233,7 +242,12 @@ const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
     accountId
   )}/activity/deploy/${deployId}`;
 };
-const uploadProjectFiles = async (accountId, projectName, filePath) => {
+const uploadProjectFiles = async (
+  accountId,
+  projectName,
+  filePath,
+  uploadMessage
+) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = new Spinnies({
     succeedColor: 'white',
@@ -250,7 +264,12 @@ const uploadProjectFiles = async (accountId, projectName, filePath) => {
   let buildId;
 
   try {
-    const upload = await uploadProject(accountId, projectName, filePath);
+    const upload = await uploadProject(
+      accountId,
+      projectName,
+      filePath,
+      uploadMessage
+    );
 
     buildId = upload.buildId;
 
@@ -295,9 +314,20 @@ const handleProjectUpload = async (
   accountId,
   projectConfig,
   projectDir,
-  callbackFunc
+  callbackFunc,
+  uploadMessage
 ) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
+  const srcDir = path.resolve(projectDir, projectConfig.srcDir);
+
+  const filenames = fs.readdirSync(srcDir);
+  if (!filenames || filenames.length === 0) {
+    logger.log(
+      i18n(`${i18nKey}.logs.emptySource`, { srcDir: projectConfig.srcDir })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
   logger.debug(
@@ -319,7 +349,8 @@ const handleProjectUpload = async (
     const { buildId } = await uploadProjectFiles(
       accountId,
       projectConfig.name,
-      tempFile.name
+      tempFile.name,
+      uploadMessage
     );
 
     if (callbackFunc) {
@@ -329,10 +360,8 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(
-    path.resolve(projectDir, projectConfig.srcDir),
-    false,
-    file => (shouldIgnoreFile(file.name) ? false : file)
+  archive.directory(srcDir, false, file =>
+    shouldIgnoreFile(file.name) ? false : file
   );
 
   archive.finalize();
@@ -340,6 +369,7 @@ const handleProjectUpload = async (
 
 const makePollTaskStatusFunc = ({
   statusFn,
+  structureFn,
   statusText,
   statusStrings,
   linkToHubSpot,
@@ -372,9 +402,19 @@ const makePollTaskStatusFunc = ({
 
     spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
-    const initialTaskStatus = await statusFn(accountId, taskName, taskId);
+    const [
+      initialTaskStatus,
+      { topLevelComponentsWithChildren: taskStructure },
+    ] = await Promise.all([
+      statusFn(accountId, taskName, taskId),
+      structureFn(accountId, taskName, taskId),
+    ]);
 
-    const numOfComponents = initialTaskStatus[statusText.SUBTASK_KEY].length;
+    const topLevelSubtasks = initialTaskStatus[statusText.SUBTASK_KEY].filter(
+      ({ id }) => !!taskStructure[id]
+    );
+
+    const numOfComponents = topLevelSubtasks.length;
     const componentCountText = `\nFound ${numOfComponents} component${
       numOfComponents !== 1 ? 's' : ''
     } in this project ...\n`;
@@ -383,7 +423,7 @@ const makePollTaskStatusFunc = ({
       text: `${statusStrings.INITIALIZE(taskName)}${componentCountText}`,
     });
 
-    for (let subTask of initialTaskStatus[statusText.SUBTASK_KEY]) {
+    for (let subTask of topLevelSubtasks) {
       const subTaskName = subTask[statusText.SUBTASK_NAME_KEY];
 
       spinnies.add(subTaskName, {
@@ -491,6 +531,7 @@ const pollBuildStatus = makePollTaskStatusFunc({
       getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
+  structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
     INITIALIZE: name => `Building ${chalk.bold(name)}`,
@@ -510,6 +551,7 @@ const pollDeployStatus = makePollTaskStatusFunc({
       getProjectDeployDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getDeployStatus,
+  structureFn: getDeployStructure,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
     INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
