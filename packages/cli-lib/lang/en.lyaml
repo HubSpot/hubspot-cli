@@ -149,13 +149,8 @@ en:
               pathExists: "The {{ path }} path already exists"
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
           template:
-            debug:
-              creatingPath: "Making {{ path }} if needed"
             errors:
               nameRequired: "The \"name\" argument is required when creating a Template."
-              pathExists: "The {{ path }} path already exists"
-            log:
-              creatingFile: "Creating file at {{ path }}"
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
@@ -973,3 +968,14 @@ en:
         options:
           options:
             describe: "Options to pass to javascript fields files"
+      errors:
+        templates:
+          pathExists: "The {{ path }} path already exists"
+      logging:
+        templates:
+          creatingFile: "Creating file at {{ path }}"
+      debug:
+        templates:
+          creatingPath: "Making {{ path }} if needed"
+
+
