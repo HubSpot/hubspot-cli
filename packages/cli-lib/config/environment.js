@@ -1,4 +1,4 @@
-const { logger } = require('../../logger');
+const { logger } = require('../logger');
 const {
   ENVIRONMENTS,
   ENVIRONMENT_VARIABLES,
@@ -6,7 +6,7 @@ const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_SCOPES,
-} = require('../constants');
+} = require('../lib/constants');
 const generateNewConfig = require('./generateNewConfig');
 
 /**

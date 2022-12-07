@@ -1,6 +1,6 @@
-const legacyConfig = require('./config/legacyConfig');
+const legacyConfig = require('../config/legacyConfig');
 const CLIConfiguration = require('./models/CLIConfiguration');
-const { configFileExists, getConfigFilePath } = require('./config/configFile');
+const { configFileExists, getConfigFilePath } = require('../config/configFile');
 
 const CLIConfig = new CLIConfiguration();
 

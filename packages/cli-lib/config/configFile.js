@@ -2,15 +2,15 @@ const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
 const yaml = require('js-yaml');
-const { logger } = require('../../logger');
+const { logger } = require('../logger');
 const {
   logFileSystemErrorInstance,
-} = require('../../errorHandlers/fileSystemErrors');
-const { logErrorInstance } = require('../../errorHandlers/standardErrors');
+} = require('../errorHandlers/fileSystemErrors');
+const { logErrorInstance } = require('../errorHandlers/standardErrors');
 const {
   HUBSPOT_CONFIGURATION_FILE,
   HUBSPOT_CONFIGURATION_FOLDER,
-} = require('../constants');
+} = require('../lib/constants');
 
 const getConfigFilePath = () => {
   return path.join(

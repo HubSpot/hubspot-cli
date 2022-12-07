@@ -2,7 +2,7 @@ const {
   updateDefaultAccount,
   CLIConfig,
 } = require('@hubspot/cli-lib/lib/config');
-const { configFileExists } = require('@hubspot/cli-lib/lib/config/configFile');
+const { configFileExists } = require('@hubspot/cli-lib/config/configFile');
 const { addConfigOptions } = require('../../lib/commonOpts');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');

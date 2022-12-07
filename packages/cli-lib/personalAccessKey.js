@@ -7,7 +7,7 @@ const {
   updateDefaultAccount,
   writeConfig,
 } = require('./lib/config');
-const { getValidEnv } = require('./lib/config/environment');
+const { getValidEnv } = require('./config/environment');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
   ENVIRONMENTS,

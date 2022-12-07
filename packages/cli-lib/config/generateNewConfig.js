@@ -1,9 +1,9 @@
-const { logger } = require('../../logger');
+const { logger } = require('../logger');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('../constants');
+} = require('../lib/constants');
 
 const generatePersonalAccessKeyConfig = ({
   accountId,

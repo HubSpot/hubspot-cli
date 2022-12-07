@@ -2,14 +2,14 @@ const { logger } = require('../../logger');
 const {
   getValidEnv,
   loadConfigFromEnvironment,
-} = require('../config/environment');
+} = require('../../config/environment');
 const {
   loadConfigFromFile,
   writeConfigToFile,
   configFileExists,
   configFileIsBlank,
   deleteConfigFile,
-} = require('../config/configFile');
+} = require('../../config/configFile');
 const { commaSeparatedValues } = require('../text');
 const { Mode, MIN_HTTP_TIMEOUT } = require('../constants');
 
