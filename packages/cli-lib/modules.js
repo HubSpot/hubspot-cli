@@ -2,6 +2,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const { getCwd, getExt, splitHubSpotPath, splitLocalPath } = require('./path');
 const { walk } = require('./lib/walk');
+const { logger } = require('./logger');
+const { i18n } = require('./lib/lang');
 const { MODULE_EXTENSION } = require('./lib/constants');
 
 // Matches files named module.html
@@ -171,6 +173,79 @@ const isModuleHTMLFile = filePath => MODULE_HTML_EXTENSION_REGEX.test(filePath);
  */
 const isModuleCSSFile = filePath => MODULE_CSS_EXTENSION_REGEX.test(filePath);
 
+const createModule = (
+  moduleDefinition,
+  name,
+  dest,
+  options = {
+    allowExistingDir: false,
+  }
+) => {
+  const i18nKey = 'cli.commands.create.subcommands.module';
+  const writeModuleMeta = ({ contentTypes, moduleLabel, global }, dest) => {
+    const metaData = {
+      label: moduleLabel,
+      css_assets: [],
+      external_js: [],
+      global: global,
+      help_text: '',
+      host_template_types: contentTypes,
+      js_assets: [],
+      other_assets: [],
+      smart_type: 'NOT_SMART',
+      tags: [],
+      is_available_for_new_content: false,
+    };
+
+    fs.writeJSONSync(dest, metaData, { spaces: 2 });
+  };
+
+  const moduleFileFilter = (src, dest) => {
+    const emailEnabled = moduleDefinition.contentTypes.includes('EMAIL');
+
+    switch (path.basename(src)) {
+      case 'meta.json':
+        writeModuleMeta(moduleDefinition, dest);
+        return false;
+      case 'module.js':
+      case 'module.css':
+        if (emailEnabled) {
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const assetPath = path.resolve(__dirname, './defaults/Sample.module');
+  const folderName =
+    !name || name.endsWith('.module') ? name : `${name}.module`;
+  const destPath = path.join(dest, folderName);
+  if (!options.allowExistingDir && fs.existsSync(destPath)) {
+    logger.error(
+      i18n(`${i18nKey}.errors.pathExists`, {
+        path: destPath,
+      })
+    );
+    return;
+  } else {
+    logger.log(
+      i18n(`${i18nKey}.creatingPath`, {
+        path: destPath,
+      })
+    );
+    fs.ensureDirSync(destPath);
+  }
+
+  logger.log(
+    i18n(`${i18nKey}.creatingModule`, {
+      path: destPath,
+    })
+  );
+  fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
+};
+
 module.exports = {
   isModuleFolder,
   isModuleFolderChild,
@@ -178,4 +253,5 @@ module.exports = {
   ValidationIds,
   isModuleHTMLFile,
   isModuleCSSFile,
+  createModule,
 };

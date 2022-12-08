@@ -248,6 +248,8 @@ const loadConfigFromFile = (path, options = {}) => {
     logger.debug('Initializing an empty config');
     setConfig({ portals: [] });
   }
+
+  return getConfig();
 };
 
 const loadConfig = (
@@ -265,6 +267,8 @@ const loadConfig = (
     loadConfigFromFile(path, options);
     environmentVariableConfigLoaded = false;
   }
+
+  return getConfig();
 };
 
 const isTrackingAllowed = () => {
@@ -563,6 +567,31 @@ const renameAccount = async (currentName, newName) => {
   return writeConfig();
 };
 
+/**
+ * @throws {Error}
+ */
+const deleteAccount = async accountName => {
+  const config = getAndLoadConfigIfNeeded();
+  let accounts = getConfigAccounts(config);
+  const accountIdToDelete = getAccountId(accountName);
+
+  if (!accountIdToDelete) {
+    throw new Error(`Cannot find account with identifier ${accountName}`);
+  }
+
+  setConfig({
+    ...config,
+    defaultPortal:
+      config.defaultPortal === accountName ||
+      config.defaultPortal === accountIdToDelete
+        ? null
+        : config.defaultPortal,
+    portals: accounts.filter(account => account.portalId !== accountIdToDelete),
+  });
+
+  return writeConfig();
+};
+
 const setDefaultConfigPathIfUnset = () => {
   if (!_configPath) {
     setDefaultConfigPath();
@@ -596,9 +625,11 @@ const createEmptyConfigFile = ({ path } = {}) => {
 };
 
 const deleteEmptyConfigFile = () => {
-  return (
-    configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
-  );
+  return configFileIsBlank() && deleteConfigFile();
+};
+
+const deleteConfigFile = () => {
+  return configFileExists() && fs.unlinkSync(_configPath);
 };
 
 const loadEnvironmentVariableConfig = () => {
@@ -627,34 +658,36 @@ const isConfigFlagEnabled = flag => {
 };
 
 module.exports = {
+  accountNameExistsInConfig,
+  createEmptyConfigFile,
+  deleteAccount,
+  deleteConfigFile,
+  deleteEmptyConfigFile,
+  findConfig,
+  getAccountConfig,
+  getAccountId,
   getAndLoadConfigIfNeeded,
-  getEnv,
   getConfig,
+  getConfigAccountId,
   getConfigAccounts,
   getConfigDefaultAccount,
-  getConfigAccountId,
   getConfigPath,
+  getEnv,
   getOrderedAccount,
   getOrderedConfig,
   isConfigFlagEnabled,
+  isTrackingAllowed,
+  loadConfig,
+  loadConfigFromEnvironment,
+  removeSandboxAccountFromConfig,
+  renameAccount,
   setConfig,
   setConfigPath,
-  loadConfig,
-  findConfig,
-  loadConfigFromEnvironment,
-  getAccountConfig,
-  getAccountId,
-  removeSandboxAccountFromConfig,
   updateAccountConfig,
+  updateAllowUsageTracking,
   updateDefaultAccount,
   updateDefaultMode,
   updateHttpTimeout,
-  updateAllowUsageTracking,
-  renameAccount,
-  createEmptyConfigFile,
-  deleteEmptyConfigFile,
-  isTrackingAllowed,
   validateConfig,
   writeConfig,
-  accountNameExistsInConfig,
 };

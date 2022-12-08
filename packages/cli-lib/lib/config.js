@@ -1,6 +1,6 @@
 const legacyConfig = require('../config/legacyConfig');
 const CLIConfiguration = require('./models/CLIConfiguration');
-const { configFileExists, getConfigFilePath } = require('../config/configFile');
+const configFile = require('../config/configFile');
 
 const CLIConfig = new CLIConfiguration();
 
@@ -31,7 +31,7 @@ const withPortals = config => {
 
 // Prioritize using the new config if it exists
 const loadConfig = (path, options = {}) => {
-  if (configFileExists()) {
+  if (configFile.configFileExists()) {
     return CLIConfig.init(options);
   }
   return legacyConfig.loadConfig(path, options);
@@ -90,7 +90,7 @@ const writeConfig = (options = {}) => {
 
 const getConfigPath = () => {
   if (CLIConfig.active) {
-    return getConfigFilePath();
+    return configFile.getConfigFilePath();
   }
   return legacyConfig.getConfigPath();
 };
@@ -144,6 +144,13 @@ const removeSandboxAccountFromConfig = nameOrId => {
   return legacyConfig.removeSandboxAccountFromConfig(nameOrId);
 };
 
+const deleteAccount = accountName => {
+  if (CLIConfig.active) {
+    return CLIConfig.removeAccountFromConfig(accountName);
+  }
+  return legacyConfig.deleteAccount(accountName);
+};
+
 const updateHttpTimeout = timeout => {
   if (CLIConfig.active) {
     return CLIConfig.updateHttpTimeout(timeout);
@@ -156,6 +163,13 @@ const updateAllowUsageTracking = isEnabled => {
     return CLIConfig.updateAllowUsageTracking(isEnabled);
   }
   return legacyConfig.updateAllowUsageTracking(isEnabled);
+};
+
+const deleteConfigFile = () => {
+  if (CLIConfig.active) {
+    return configFile.deleteConfigFile();
+  }
+  return legacyConfig.deleteConfigFile();
 };
 
 module.exports = {
@@ -171,6 +185,7 @@ module.exports = {
   getAndLoadConfigIfNeeded,
   getConfig,
   getConfigPath,
+  deleteAccount,
   loadConfig,
   loadConfigFromEnvironment,
   removeSandboxAccountFromConfig,
@@ -181,6 +196,7 @@ module.exports = {
   updateHttpTimeout,
   validateConfig,
   writeConfig,
+  deleteConfigFile,
 };
 
 // Keeping track of exports that require overrides
@@ -212,6 +228,8 @@ module.exports = {
 //   updateAccountConfig, <DONE>
 //   updateHttpTimeout, <DONE>
 //   updateAllowUsageTracking, <DONE>
+//   deleteConfigFile, <DONE>
+//   deleteAccount, <DONE>
 //   isConfigFlagEnabled,
 //   isTrackingAllowed,
 //   getEnv,

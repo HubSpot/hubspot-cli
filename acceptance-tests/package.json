@@ -1,6 +1,6 @@
 {
   "name": "acceptance-tests",
-  "version": "4.0.1-beta.3",
+  "version": "4.1.4-beta.2",
   "description": "Acceptance tests for cli",
   "private": true,
   "author": "Mike Talley <mtalley@hubspot.com>",
