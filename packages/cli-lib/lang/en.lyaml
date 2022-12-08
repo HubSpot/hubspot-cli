@@ -819,9 +819,6 @@ en:
             authCommand:
               command: "hs auth"
               message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
-            createCommand:
-              command: "hs create"
-              message: "Add new components to your project with {{ command }}"
             feedbackCommand:
               command: "hs feedback"
               message: "Run {{ command }} to report a bug or leave feedback"
