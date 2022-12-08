@@ -11,7 +11,7 @@ const {
   deleteConfigFile,
 } = require('../../config/configFile');
 const { commaSeparatedValues } = require('../text');
-const { Mode, MIN_HTTP_TIMEOUT } = require('../constants');
+const { Mode, MIN_HTTP_TIMEOUT, ENVIRONMENTS } = require('../constants');
 
 class CLIConfiguration {
   constructor(options = {}) {
@@ -143,6 +143,12 @@ class CLIConfiguration {
   /*
    * Config Lookup Utils
    */
+  getConfigFlagValue(flag, defaultValue = false) {
+    if (this.config && typeof this.config[flag] !== 'undefined') {
+      return this.config[flag];
+    }
+    return defaultValue;
+  }
 
   getAccountId(nameOrId) {
     let name;
@@ -184,8 +190,14 @@ class CLIConfiguration {
     return this.config ? this.config.defaultAccount : null;
   }
 
-  // TODO a util that returns account, respecting the values set in "defaultAccountOverrides"
+  // TODO a util that returns the account to use, respecting the values set in
+  // "defaultAccountOverrides"
+  // Example "defaultAccountOverrides":
+  //  - /src/brodgers/customer-project: customer-account1
+  // "/src/brodgers/customer-project" is the path to the project dir
+  // "customer-account1" is the name of the account to use as the default for the specified dir
   getResolvedAccountForCWD(nameOrId) {
+    // NOTE none of the actual logic is coded into this yet
     return this.getAccountId(nameOrId);
   }
 
@@ -205,6 +217,23 @@ class CLIConfiguration {
 
   isAccountNameInConfig(name) {
     return this.config && this.config.accounts && !!this.getAccountId(name);
+  }
+
+  getEnv(nameOrId) {
+    const accountId = this.getAccountId(nameOrId);
+
+    if (accountId) {
+      const accountConfig = this.getConfigForAccount(accountId);
+      if (accountConfig.env) {
+        return accountConfig.env;
+      }
+    } else {
+      const env = this.getConfigFlagValue('env', null);
+      if (env) {
+        return env;
+      }
+    }
+    return ENVIRONMENTS.PROD;
   }
 
   /*

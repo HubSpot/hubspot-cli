@@ -31,10 +31,19 @@ const withPortals = config => {
 
 // Prioritize using the new config if it exists
 const loadConfig = (path, options = {}) => {
+  // Attempt to load the root config
   if (configFile.configFileExists()) {
     return CLIConfig.init(options);
   }
-  return legacyConfig.loadConfig(path, options);
+  const deprecatedConfig = legacyConfig.loadConfig(path, options);
+
+  if (deprecatedConfig) {
+    return deprecatedConfig;
+  }
+
+  // There are no config files, set the CLIConfig to active so
+  // we use the new behavior by default.
+  return CLIConfig.init(options);
 };
 
 const getAndLoadConfigIfNeeded = options => {
@@ -172,6 +181,27 @@ const deleteConfigFile = () => {
   return legacyConfig.deleteConfigFile();
 };
 
+const isConfigFlagEnabled = flag => {
+  if (CLIConfig.active) {
+    return configFile.getConfigFlagValue(flag);
+  }
+  return legacyConfig.isConfigFlagEnabled(flag);
+};
+
+const isTrackingAllowed = () => {
+  if (CLIConfig.active) {
+    return configFile.getConfigFlagValue('allowUsageTracking', true);
+  }
+  return legacyConfig.isTrackingAllowed();
+};
+
+const getEnv = nameOrId => {
+  if (CLIConfig.active) {
+    return configFile.getEnv(nameOrId);
+  }
+  return legacyConfig.getEnv(nameOrId);
+};
+
 module.exports = {
   ...legacyConfig,
   CLIConfig,
@@ -179,13 +209,17 @@ module.exports = {
   // Override legacy config exports
   accountNameExistsInConfig,
   createEmptyConfigFile,
+  deleteAccount,
+  deleteConfigFile,
   deleteEmptyConfigFile,
   getAccountConfig,
   getAccountId,
   getAndLoadConfigIfNeeded,
   getConfig,
   getConfigPath,
-  deleteAccount,
+  getEnv,
+  isConfigFlagEnabled,
+  isTrackingAllowed,
   loadConfig,
   loadConfigFromEnvironment,
   removeSandboxAccountFromConfig,
@@ -196,41 +230,4 @@ module.exports = {
   updateHttpTimeout,
   validateConfig,
   writeConfig,
-  deleteConfigFile,
 };
-
-// Keeping track of exports that require overrides
-// {
-//   getConfig, <DONE>
-//   getConfigAccounts, <N/A>
-//   getConfigDefaultAccount, <N/A>
-//   getConfigAccountId, <N/A>
-//   getConfigPath, <DONE>
-//   getOrderedAccount, <N/A>
-//   getOrderedConfig, <N/A>
-//   setConfigPath, <N/A>
-//   loadConfig, <DONE>
-//   findConfig, <N/A>
-//   loadConfigFromEnvironment, <DONE>
-//   getAccountConfig, <DONE>
-//   updateDefaultMode, <DONE>
-//   accountNameExistsInConfig, <DONE>
-//   validateConfig, <DONE>
-//   renameAccount, <DONE>
-//   setConfig, <N/A>
-//   updateDefaultAccount, <DONE>
-//   writeConfig, <DONE>
-//   getAccountId, <DONE>
-//   getAndLoadConfigIfNeeded, <DONE>
-//   removeSandboxAccountFromConfig, <DONE>
-//   createEmptyConfigFile, <DONE>
-//   deleteEmptyConfigFile, <DONE>
-//   updateAccountConfig, <DONE>
-//   updateHttpTimeout, <DONE>
-//   updateAllowUsageTracking, <DONE>
-//   deleteConfigFile, <DONE>
-//   deleteAccount, <DONE>
-//   isConfigFlagEnabled,
-//   isTrackingAllowed,
-//   getEnv,
-// };
