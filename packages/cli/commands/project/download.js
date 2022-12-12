@@ -58,7 +58,7 @@ exports.handler = async options => {
   const projectConfigCreated = await createProjectConfig(
     absoluteDestPath,
     projectName,
-    'none'
+    'no-template'
   );
 
   if (!projectConfigCreated) {
