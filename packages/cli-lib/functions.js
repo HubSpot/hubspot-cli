@@ -117,7 +117,10 @@ function updateExistingConfig(
 
 function createFunction(
   { functionsFolder, filename, endpointPath, endpointMethod },
-  dest
+  dest,
+  options = {
+    allowExistingFile: false,
+  }
 ) {
   const ancestorFunctionsConfig = findup('serverless.json', {
     cwd: getCwd(),
@@ -148,7 +151,7 @@ function createFunction(
   const functionFilePath = path.join(destPath, functionFile);
   const configFilePath = path.join(destPath, 'serverless.json');
 
-  if (fs.existsSync(functionFilePath)) {
+  if (!options.allowExistingFile && fs.existsSync(functionFilePath)) {
     logger.error(`The JavaScript file at "${functionFilePath}" already exists`);
     return;
   }
