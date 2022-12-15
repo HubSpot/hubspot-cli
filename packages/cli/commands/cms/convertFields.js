@@ -27,7 +27,10 @@ const invalidPath = src => {
 
 exports.handler = async options => {
   const src = path.resolve(getCwd(), options.src);
-  const projectRoot = path.dirname(getThemeJSONPath(src));
+  const themeJSONPath = getThemeJSONPath(src);
+  const projectRoot = themeJSONPath
+    ? path.dirname(themeJSONPath)
+    : path.dirname(getCwd());
   let stats;
   try {
     stats = fs.statSync(src);
