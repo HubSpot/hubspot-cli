@@ -16,7 +16,11 @@ const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
-const { convertToUnixPath, isAllowedExtension } = require('../path');
+const {
+  convertToUnixPath,
+  convertToImportPath,
+  isAllowedExtension,
+} = require('../path');
 const { triggerNotify } = require('./notify');
 const { getThemePreviewUrl } = require('./files');
 const spawn = require('./spawnFunction');
@@ -66,7 +70,7 @@ async function uploadFile(accountId, file, dest, options) {
     // So this spawns a new node process that calls `hs upload` with the same options as watch was called with.
     // More context: https://github.com/HubSpot/hubspot-cli/pull/712#discussion_r945056954
     const uploadCommandPath = require.resolve('@hubspot/cli/commands/upload');
-    const fieldsJsProcessCode = `require('${convertToUnixPath(
+    const fieldsJsProcessCode = `require('${convertToImportPath(
       uploadCommandPath
     )}').handler(${parsedOptions})`;
     spawn(fieldsJsProcessCode);
