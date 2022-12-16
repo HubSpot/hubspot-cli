@@ -66,7 +66,9 @@ async function uploadFile(accountId, file, dest, options) {
     // So this spawns a new node process that calls `hs upload` with the same options as watch was called with.
     // More context: https://github.com/HubSpot/hubspot-cli/pull/712#discussion_r945056954
     const uploadCommandPath = require.resolve('@hubspot/cli/commands/upload');
-    const fieldsJsProcessCode = `require('${uploadCommandPath}').handler(${parsedOptions})`;
+    const fieldsJsProcessCode = `require('${convertToUnixPath(
+      uploadCommandPath
+    )}').handler(${parsedOptions})`;
     spawn(fieldsJsProcessCode);
     return;
   }
