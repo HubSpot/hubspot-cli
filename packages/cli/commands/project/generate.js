@@ -1,12 +1,15 @@
 const {loadAndValidateOptions} = require('../../lib/validation');
 const {i18n} = require('@hubspot/cli-lib/lib/lang');
 const {generateProjectPrompt} = require('../../lib/prompts/generateProjectPrompt');
-const {getQuestionAnswers, copyAndParseDir} = require("../../lib/boilerplateGenerator");
+const {copyAndParseDir, readGeneratorFile, downloadGithubRepo, cleanUpTempDir} = require("../../lib/boilerplateGenerator");
 const {generateQuestionPrompt} = require("../../lib/prompts/generateQuestionPrompt");
 
 const i18nKey = 'cli.commands.project.subcommands.generate';
 
-const choices = [{name: 'basic App', value: 'url1'}, {name: 'basic App 2', value: 'url2'}];
+const choices = [
+    {name: 'Basic App', value: 'https://github.com/camden11/hs-generate-templates/tree/main/basic-app'},
+    {name: 'App With Form', value: 'https://github.com/camden11/hs-generate-templates/tree/main/app-with-form'}
+];
 
 exports.command = 'generate';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -14,17 +17,20 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
     await loadAndValidateOptions(options);
 
-    console.log(options);
-
+    let url;
     if (!options.url) {
         const {component} = await generateProjectPrompt(choices);
-        console.log(component);
+        url = component;
+    } else {
+        url = options.url;
     }
 
-    const tempComponentLocation = ""; //call github n get stuff, library routine, return back temp location of the component file we stored
-    const generatorObject = { questions: [], componentRoot: "" }  // Get the generate.json and return it as js object
-    const answers = generateQuestionPrompt(generatorObject.questions);
-    copyAndParseDir(tempComponentLocation, ".", generatorObject.componentRoot, answers);
+    const tempComponentLocation = await downloadGithubRepo(url);
+    const generatorObject = readGeneratorFile(tempComponentLocation); // TODO need file validation
+    const answers = await generateQuestionPrompt(generatorObject.questions);
+    console.log(tempComponentLocation)
+    copyAndParseDir(tempComponentLocation, "../test-component-boilerplate", generatorObject.componentRoot, answers);
+    cleanUpTempDir(tempComponentLocation);
 }
 
 exports.builder = yargs => {

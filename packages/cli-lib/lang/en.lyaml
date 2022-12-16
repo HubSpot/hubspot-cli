@@ -600,6 +600,13 @@ en:
                 describe: "Open Github issues in your browser to report a bug."
               general:
                 describe: "Open the projects feedback form in your browser."
+          generate:
+            describe: "Generates a boilerplate component for a project"
+            examples:
+              default: "Generates a boilerplate component for a project in the current directory"
+            options:
+              url:
+                describe: "The github URL of of a component to generate"
         lib:
           ensureProjectExists:
             createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"

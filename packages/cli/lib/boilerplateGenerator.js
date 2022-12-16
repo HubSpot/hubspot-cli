@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const {Octokit} = require("@octokit/rest");
 
 const {logger} = require('@hubspot/cli-lib/logger');
-const {generateQuestionPrompt} = require("./prompts/generateQuestionPrompt");
+const os = require("os");
+const fetch = require('node-fetch')
 
 
 const copyDir = (source, dest) => {
@@ -105,7 +107,118 @@ function copyAndParseDir(src, dest, componentRoot, values) {
     }
 }
 
+function parseGithubUrl(url) {
+    // TODO: This regex doesn't work if the content is not in a sub directory
+    const regex = /https:\/\/github.com\/(.*)\/(.*)\/tree\/(.*)\/(.*)/;
+    const matches = url.match(regex);
+    if (matches === null) {
+        throw new Error('Invalid GitHub URL');
+    }
+
+    return {
+        owner: matches[1],
+        repo: matches[2],
+        branch: matches[3],
+        filePath: matches[4],
+    }
+}
+
+const octokit = new Octokit({
+    auth: "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",
+})
+
+async function downloadFileAsBuffer(url) {
+    // Send a GET request to the GitHub API to retrieve the code from the URL
+    // eslint-disable-next-line no-undef
+    const response = await fetch(url);
+
+    // Check if the request was successful
+    if (response.ok) {
+        // If the request was successful, return the code as a Buffer object
+        return response.arrayBuffer();
+    } else {
+        // If the request was not successful, throw an error
+        throw new Error(`Could not download code from ${url}: ${response.status} ${response.statusText}`);
+    }
+}
+
+async function downloadBoilerplateComponent(owner, repo, path, branch) {
+    const response = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: branch
+    });
+
+    const files = response.data.map(async (fileInfo) => {
+        if (fileInfo.type === "file") {
+            return  {
+                name: fileInfo.name,
+                content: await downloadFileAsBuffer(fileInfo.download_url),// download it
+                filePath: fileInfo.path,
+                fileType: fileInfo.type
+            }
+        } else {
+            return downloadBoilerplateComponent(owner, repo, fileInfo.path, branch);
+        }
+    });
+
+    return Promise.all(files);
+}
+
+function cleanAndValidateFiles(generatorFileDir, files) {
+    files.forEach((file) => {
+        if (file instanceof Array) {
+            cleanAndValidateFiles(generatorFileDir, file);
+        } else {
+            file.filePath = file.filePath.replace(generatorFileDir, '');
+            if (file.filePath.startsWith('/')) {
+                file.filePath = file.filePath.slice(1);
+            }
+        }
+    });
+
+    return files;
+}
+
+function downloadFilesToTmpDir(files, tmpDir) {
+    files.forEach((file) => {
+        if (file.fileType === 'file') {
+            const filePath = path.join(tmpDir, file.filePath);
+            fs.mkdirSync(path.dirname(filePath), { recursive: true });
+            fs.writeFileSync(filePath, Buffer.from(file.content));
+        } else {
+            downloadFilesToTmpDir(file, tmpDir);
+        }
+    });
+}
+
+async function downloadGithubRepo(url) {
+    const {owner, repo, branch, filePath} = parseGithubUrl(url);
+    const files = await downloadBoilerplateComponent(owner, repo, filePath, branch).then((files) => {
+        // Check if generator.json exist
+        const generatorFile = files.find((file) => file.name === 'generator.json')
+        if (!generatorFile) {
+            throw new Error('No generator.json file found in the repo.')
+        }
+
+        const generatorFileDir = path.dirname(generatorFile.filePath);
+        return cleanAndValidateFiles(generatorFileDir, files);
+    });
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hs-project-generate-' + Date.now()));
+    downloadFilesToTmpDir(files, tmpDir);
+    logger.info(`Finished downloading files from ${url}`)
+    return tmpDir;
+}
+
+function cleanUpTempDir(tmpdir) {
+    fs.rmdirSync(tmpdir, {recursive: true})
+}
+
 module.exports = {
     readGeneratorFile,
-    copyAndParseDir
+    copyAndParseDir,
+    downloadGithubRepo,
+    cleanUpTempDir
 }
