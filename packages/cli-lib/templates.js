@@ -63,13 +63,19 @@ const ASSET_PATHS = {
     './defaults/blog-post-template.html'
   ),
   'search-template': path.resolve(__dirname, './defaults/search-template.html'),
+  section: path.resolve(__dirname, './defaults/section.html'),
 };
 
-const createTemplate = (name, dest, type = 'page-template') => {
+const createTemplate = (
+  name,
+  dest,
+  type = 'page-template',
+  options = { allowExisting: false }
+) => {
   const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
-  if (fs.existsSync(filePath)) {
+  if (!options.allowExisting && fs.existsSync(filePath)) {
     logger.error(
       i18n('cli.lib.errors.templates.pathExists', {
         path: filePath,
