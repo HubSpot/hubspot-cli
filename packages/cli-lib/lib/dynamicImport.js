@@ -1,4 +1,5 @@
 const semver = require('semver');
+const { pathToFileURL } = require('url');
 const { getExt } = require('../path');
 const { logger } = require('../logger');
 // This is pulled into it's own file because it must be added to the esignore. Dynamics imports cause eslint _parser_ errors, which cannot be ignored.
@@ -10,7 +11,9 @@ const { logger } = require('../logger');
  */
 async function dynamicImport(filePath) {
   if (semver.gte(process.version, '13.2.0')) {
-    const exported = await import(filePath).then(content => content.default);
+    const exported = await import(pathToFileURL(filePath)).then(
+      content => content.default
+    );
     return exported;
   } else {
     if (getExt(filePath) == 'mjs') {
