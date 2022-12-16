@@ -124,7 +124,7 @@ function parseGithubUrl(url) {
 }
 
 const octokit = new Octokit({
-    auth: "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",
+    auth: "",
 })
 
 async function downloadFileAsBuffer(url) {
