@@ -80,7 +80,9 @@ exports.handler = async options => {
   }
   // Check for theme.json file and determine the root path for the project based on it if it exists
   const themeJsonPath = getThemeJSONPath(absoluteSrcPath);
-  const projectRoot = themeJsonPath && path.dirname(themeJsonPath);
+  const projectRoot = themeJsonPath
+    ? path.dirname(themeJsonPath)
+    : path.dirname(getCwd());
   const convertFields =
     projectRoot &&
     isConvertableFieldJs(projectRoot, absoluteSrcPath, options.convertFields);
