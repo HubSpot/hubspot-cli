@@ -99,7 +99,7 @@ const MARKETPLACE_FOLDER = '@marketplace';
 
 const FOLDER_DOT_EXTENSIONS = ['functions', 'module'];
 
-const POLLING_DELAY = 5000;
+const POLLING_DELAY = 2500;
 
 const GITHUB_RELEASE_TYPES = {
   RELEASE: 'release',
