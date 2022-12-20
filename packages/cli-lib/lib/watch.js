@@ -10,20 +10,15 @@ const {
   logApiUploadErrorInstance,
   logErrorInstance,
 } = require('../errorHandlers');
-const { isConvertableFieldJs } = require('./handleFieldsJs');
+const { isConvertableFieldJs, FieldsJs } = require('./handleFieldsJs');
 const { uploadFolder } = require('./uploadFolder');
 const { shouldIgnoreFile, ignoreFile } = require('../ignoreRules');
 const { getFileMapperQueryValues } = require('../fileMapper');
 const { upload, deleteFile } = require('../api/fileMapper');
 const escapeRegExp = require('./escapeRegExp');
-const {
-  convertToUnixPath,
-  convertToImportPath,
-  isAllowedExtension,
-} = require('../path');
+const { convertToUnixPath, isAllowedExtension, getCwd } = require('../path');
 const { triggerNotify } = require('./notify');
-const { getThemePreviewUrl } = require('./files');
-const spawn = require('./spawnFunction');
+const { getThemePreviewUrl, getThemeJSONPath } = require('./files');
 
 const queue = new PQueue({
   concurrency: 10,
@@ -43,6 +38,13 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const src = options.src;
+  //todo: this shouldn't happen for every file:
+  let absoluteSrcPath = path.resolve(getCwd(), file);
+  const themeJsonPath = getThemeJSONPath(absoluteSrcPath);
+  const projectRoot = themeJsonPath
+    ? path.dirname(themeJsonPath)
+    : path.dirname(getCwd());
+
   const convertFields = isConvertableFieldJs(
     src,
     file,
@@ -57,24 +59,19 @@ async function uploadFile(accountId, file, dest, options) {
     logger.debug(`Skipping ${file} due to an ignore rule`);
     return;
   }
-  if (convertFields) {
-    const parsedOptions = JSON.stringify({
-      ...options.commandOptions,
-      src: file,
-      dest: path.join(path.dirname(dest), 'fields.json'),
-      mode: options.mode,
-      _: ['upload'],
-    });
 
-    // Because we cannot clear ES Modules from the cache, we need to load them in a separate process.
-    // So this spawns a new node process that calls `hs upload` with the same options as watch was called with.
-    // More context: https://github.com/HubSpot/hubspot-cli/pull/712#discussion_r945056954
-    const uploadCommandPath = require.resolve('@hubspot/cli/commands/upload');
-    const fieldsJsProcessCode = `require('${convertToImportPath(
-      uploadCommandPath
-    )}').handler(${parsedOptions})`;
-    spawn(fieldsJsProcessCode);
-    return;
+  let fieldsJs;
+  if (convertFields) {
+    fieldsJs = await new FieldsJs(
+      projectRoot,
+      absoluteSrcPath,
+      undefined,
+      options.fieldOptions
+    ).init();
+    if (fieldsJs.rejected) return;
+    // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
+    file = fieldsJs.outputPath;
+    dest = path.join(path.dirname(dest), 'fields.json');
   }
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);

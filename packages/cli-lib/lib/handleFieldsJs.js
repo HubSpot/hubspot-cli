@@ -1,13 +1,13 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
+const child_process = require('child_process');
 const escapeRegExp = require('./escapeRegExp');
-const { dynamicImport } = require('./dynamicImport');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
 const { getCwd } = require('../path');
 const { i18n } = require('./lang');
-const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
+const { logFieldsJsError } = require('../errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
 /**
@@ -62,53 +62,35 @@ class FieldsJs {
     );
 
     try {
-      // Switch CWD to the dir of the fieldsjs. This is so that any calls to the file system that are written relatively will resolve properly.
-      process.chdir(dirName);
-
-      /*
-       * How this works: dynamicImport() will always return either a Promise or undefined.
-       * In the case when it's a Promise, its expected that it will resolve to a function.
-       * This function has optional return type of Promise<Array> | Array. In order to have uniform handling,
-       * we wrap the return value of the function in a Promise.resolve(), and then process.
-       */
-
-      const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
-
-      return fieldsPromise
-        .then(fieldsFunc => {
-          const fieldsFuncType = typeof fieldsFunc;
-          if (fieldsFuncType !== 'function') {
-            this.rejected = true;
-            logError(FieldErrors.IsNotFunction, {
-              returned: fieldsFuncType,
-            });
-            return;
+      logger.log('FORKING PROCESS NOW');
+      return new Promise((resolve, reject) => {
+        const child = child_process.fork(
+          path.join(__dirname, './processFieldsJs.js'),
+          [],
+          {
+            env: {
+              dirName,
+              cwd,
+              fieldOptions: this.fieldOptions,
+              filePath,
+              writeDir,
+            },
           }
-          return Promise.resolve(fieldsFunc(this.fieldOptions)).then(fields => {
-            if (!Array.isArray(fields)) {
-              this.rejected = true;
-              logError(FieldErrors.DoesNotReturnArray, {
-                returned: typeof fields,
-              });
-              return;
-            }
-            const finalPath = path.join(writeDir, '/fields.json');
-            return fieldsArrayToJson(fields).then(json => {
-              fs.outputFileSync(finalPath, json);
-              logger.success(
-                i18n(`${i18nKey}.converted`, {
-                  src: dirName + `/${baseName}`,
-                  dest: dirName + '/fields.json',
-                })
-              );
-              return finalPath;
-            });
-          });
-        })
-        .finally(() => {
-          // Switch back to the original directory.
-          process.chdir(cwd);
+        );
+        child.on('message', function(message) {
+          switch (message.action) {
+            case 'ERROR':
+              reject(logger.error(message.message));
+              break;
+            case 'INFO':
+              logger.log(message.message);
+              break;
+            case 'COMPLETE':
+              logger.info('Conversion compelte');
+              resolve(message.finalPath);
+          }
         });
+      });
     } catch (e) {
       errorCatch(e);
     }
