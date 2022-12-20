@@ -1,4 +1,6 @@
 const request = require('request-promise-native');
+const path = require('path');
+const fs = require('fs-extra');
 
 const { logger } = require('./logger');
 const { logErrorInstance } = require('./errorHandlers');
@@ -117,7 +119,62 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
+async function getGitHubRepoContentsAtPath(repoName, path) {
+  const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
+
+  return request.get(contentsRequestUrl, {
+    encoding: null,
+    headers: { ...DEFAULT_USER_AGENT_HEADERS },
+  });
+}
+
+async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
+  const resp = await request.get(downloadUrl);
+
+  console.log('writing to: ', dest);
+
+  fs.writeFileSync(dest, resp, 'utf8');
+
+  console.log('resp: ', resp);
+}
+
+/**
+ * Writes files from a HubSpot public repository to the destination folder
+ * @param {String} dest - Dir to write contents to
+ * @param {String} repoName - Name of GitHub repository to fetch contents from
+ * @param {String} path - Path to obtain contents from within repository
+ * @returns {Boolean} `true` if successful, `false` otherwise.
+ */
+async function downloadGitHubRepoContentsAtPath(dest, repoName, contentPath) {
+  fs.ensureDirSync(dest);
+  const contentsResp = await getGitHubRepoContentsAtPath(repoName, contentPath);
+
+  console.log('contentsResp: ', JSON.parse(contentsResp));
+
+  await JSON.parse(contentsResp).map(async contentPiece => {
+    const { path: contentPiecePath, encoding, download_url } = contentPiece;
+    console.log('contentPiece: ', contentPiece);
+    const downloadPath = path.join(
+      dest,
+      contentPiecePath.replace(contentPath, '')
+    );
+
+    return fetchGitHubRepoContentFromDownloadUrl(
+      downloadPath,
+      download_url,
+      encoding
+    );
+  });
+}
+
+// await downloadGitHubRepoContentsAtPath(
+//   './tmp/githubDownloads',
+//   'hubspot-cli',
+//   'packages/cli-lib/defaults/Sample.module'
+// );
+
 module.exports = {
   cloneGitHubRepo,
+  downloadGitHubRepoContentsAtPath,
   fetchJsonFromRepository,
 };
