@@ -60,8 +60,8 @@ return fieldsPromise
       // TODO: Include this fn
       return fieldsArrayToJson(fields).then(json => {
         process.send({
-          action: 'INFO',
-          message: 'Successfully converted fields to JSON',
+          action: 'DEBUG',
+          message: `Successfully converted fields to JSON ${filePath} to ${writeDir}`,
         });
         if (!fs.existsSync(writeDir)) {
           fs.mkdirSync(writeDir, { recursive: true });

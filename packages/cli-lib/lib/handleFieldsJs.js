@@ -1,13 +1,13 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
-const child_process = require('child_process');
+const { fork } = require('child_process');
 const escapeRegExp = require('./escapeRegExp');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
 const { getCwd } = require('../path');
 const { i18n } = require('./lang');
-const { logFieldsJsError } = require('../errorHandlers');
+// const { logFieldsJsError } = require('../errorHandlers');
 const i18nKey = 'cli.commands.upload';
 
 /**
@@ -46,54 +46,49 @@ class FieldsJs {
     const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
     const cwd = getCwd();
-    const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
-    const errorCatch = e => {
-      this.rejected = true;
-      process.chdir(cwd);
-      logError(e);
-      // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
-      logger.error(e);
-    };
+    // TODO: Can we still use this here?
+    // const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
+    // const errorCatch = e => {
+    //   logError(e);
+    //   // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
+    //   logger.error(e);
+    // };
     logger.info(
       i18n(`${i18nKey}.converting`, {
         src: dirName + `/${baseName}`,
         dest: dirName + '/fields.json',
       })
     );
-
-    try {
-      logger.log('FORKING PROCESS NOW');
-      return new Promise((resolve, reject) => {
-        const child = child_process.fork(
-          path.join(__dirname, './processFieldsJs.js'),
-          [],
-          {
-            env: {
-              dirName,
-              cwd,
-              fieldOptions: this.fieldOptions,
-              filePath,
-              writeDir,
-            },
-          }
-        );
-        child.on('message', function(message) {
-          switch (message.action) {
-            case 'ERROR':
-              reject(logger.error(message.message));
-              break;
-            case 'INFO':
-              logger.log(message.message);
-              break;
-            case 'COMPLETE':
-              logger.info('Conversion compelte');
-              resolve(message.finalPath);
-          }
-        });
+    return new Promise((resolve, reject) => {
+      const convertFieldsProcess = fork(
+        path.join(__dirname, './processFieldsJs.js'),
+        [],
+        {
+          env: {
+            dirName,
+            cwd,
+            fieldOptions: this.fieldOptions,
+            filePath,
+            writeDir,
+          },
+        }
+      );
+      convertFieldsProcess.on('message', function(message) {
+        switch (message.action) {
+          case 'ERROR':
+            reject(logger.error(message.message));
+            break;
+          case 'DEBUG':
+            logger.debug(message.message);
+            break;
+          case 'COMPLETE':
+            resolve(message.finalPath);
+        }
       });
-    } catch (e) {
-      errorCatch(e);
-    }
+    }).catch(e => {
+      logger.error(`There was an error converting '${filePath}'`);
+      logger.error(e);
+    });
   }
 
   /**
