@@ -4,19 +4,17 @@ const fs = require('fs');
 const semver = require('semver');
 const { pathToFileURL } = require('url');
 const { getExt } = require('../path');
-const { logger } = require('../logger');
+const { logger, setLogLevel } = require('../logger');
 const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
 const { i18n } = require('./lang');
 
 const i18nKey = 'cli.commands.upload';
 
-const dirName = process.env.dirName;
-const cwd = process.env.cwd;
-const fieldOptions = process.env.fieldOptions;
-const filePath = process.env.filePath;
-const writeDir = process.env.writeDir;
-
+const { dirName, fieldOptions, filePath, writeDir, logLevel } = process.env;
 const baseName = path.basename(filePath);
+
+// We need to carry over the log level from the parent instance
+setLogLevel(Number(logLevel));
 
 const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
 const errorCatch = e => {
@@ -47,27 +45,14 @@ return fieldsPromise.then(fieldsFunc => {
     logError(FieldErrors.IsNotFunction, {
       returned: fieldsFuncType,
     });
-
-    // process.send({
-    //   action: 'ERROR',
-    //   message: 'Is not function',
-    // });
-
-    // SEND ERROR
-    // this.rejected = true;
-
     return;
   }
-  // PARAM: fieldOptions
   return Promise.resolve(fieldsFunc(fieldOptions)).then(fields => {
     if (!Array.isArray(fields)) {
       logError(FieldErrors.DoesNotReturnArray, {
         returned: typeof fields,
       });
-      process.send({
-        action: 'ERROR',
-        message: 'Does not return array',
-      });
+      return;
     }
 
     const finalPath = path.join(writeDir, '/fields.json');
@@ -104,7 +89,11 @@ function flattenArray(arr) {
   }, []);
 }
 
-//Transform fields array to JSON
+/**
+ * Converts an array of field objects to JSON
+ * @param {array} fields - Array of field objects
+ * @returns {string} - Returns converted JSON
+ */
 async function fieldsArrayToJson(fields) {
   fields = await Promise.all(flattenArray(fields));
   fields = fields.map(field => {
@@ -112,8 +101,6 @@ async function fieldsArrayToJson(fields) {
   });
   return JSON.stringify(fields, null, 2);
 }
-
-// This is pulled into it's own file because it must be added to the esignore. Dynamics imports cause eslint _parser_ errors, which cannot be ignored.
 
 /**
  * Takes in a path to a javascript file and either dynamically imports it or requires it, and returns, depending on node version.

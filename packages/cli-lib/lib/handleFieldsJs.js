@@ -4,8 +4,7 @@ const path = require('path');
 const { fork } = require('child_process');
 const escapeRegExp = require('./escapeRegExp');
 const { isModuleFolderChild } = require('../modules');
-const { logger } = require('../logger');
-const { getCwd } = require('../path');
+const { logger, getLogLevel } = require('../logger');
 
 /**
  * FieldsJS Class.
@@ -41,7 +40,6 @@ class FieldsJs {
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
     const dirName = path.dirname(filePath);
-    const cwd = getCwd();
 
     return new Promise((resolve, reject) => {
       const convertFieldsProcess = fork(
@@ -51,24 +49,28 @@ class FieldsJs {
           cwd: dirName,
           env: {
             dirName,
-            cwd,
             fieldOptions: this.fieldOptions,
             filePath,
             writeDir,
+            logLevel: getLogLevel(),
           },
         }
       );
+      logger.debug(
+        `Creating child process with pid ${convertFieldsProcess.pid}`
+      );
       convertFieldsProcess.on('message', function(message) {
-        switch (message.action) {
-          case 'ERROR':
-            reject(logger.error(message.message));
-            break;
-          case 'DEBUG':
-            logger.debug(message.message);
-            break;
-          case 'COMPLETE':
-            resolve(message.finalPath);
+        if (message.action === 'ERROR') {
+          reject(logger.error(message.message));
+        } else if (message.action === 'COMPLETE') {
+          resolve(message.finalPath);
         }
+      });
+
+      convertFieldsProcess.on('close', () => {
+        logger.debug(
+          `Child process with pid ${convertFieldsProcess.pid} has been terminated`
+        );
       });
     }).catch(e => {
       logger.error(`There was an error converting '${filePath}'`);
