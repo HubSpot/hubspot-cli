@@ -5,6 +5,7 @@ const { walk } = require('./lib/walk');
 const { logger } = require('./logger');
 const { i18n } = require('./lib/lang');
 const { MODULE_EXTENSION } = require('./lib/constants');
+const { downloadGitHubRepoContents } = require('./github');
 
 // Matches files named module.html
 const MODULE_HTML_EXTENSION_REGEX = new RegExp(
@@ -173,7 +174,7 @@ const isModuleHTMLFile = filePath => MODULE_HTML_EXTENSION_REGEX.test(filePath);
  */
 const isModuleCSSFile = filePath => MODULE_CSS_EXTENSION_REGEX.test(filePath);
 
-const createModule = (
+const createModule = async (
   moduleDefinition,
   name,
   dest,
@@ -218,7 +219,6 @@ const createModule = (
     }
   };
 
-  const assetPath = path.resolve(__dirname, './defaults/Sample.module');
   const folderName =
     !name || name.endsWith('.module') ? name : `${name}.module`;
   const destPath = path.join(dest, folderName);
@@ -243,7 +243,14 @@ const createModule = (
       path: destPath,
     })
   );
-  fs.copySync(assetPath, destPath, { filter: moduleFileFilter });
+
+  await downloadGitHubRepoContents(
+    'hubspot-cli',
+    // TODO - Update to packages/cli-assets/defaults/Sample.module
+    'packages/cli-lib/defaults/Sample.module',
+    destPath,
+    { filter: moduleFileFilter }
+  );
 };
 
 module.exports = {

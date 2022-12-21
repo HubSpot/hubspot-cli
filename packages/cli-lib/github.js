@@ -122,10 +122,30 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
 async function getGitHubRepoContentsAtPath(repoName, path) {
   const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
 
-  return request.get(contentsRequestUrl, {
-    encoding: null,
-    headers: { ...DEFAULT_USER_AGENT_HEADERS },
-  });
+  try {
+    const contentsResp = await request.get(contentsRequestUrl, {
+      encoding: null,
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+    });
+
+    console.log('contentsResp: ', JSON.parse(contentsResp));
+
+    return JSON.parse(contentsResp);
+  } catch (e) {
+    if (e.statusCode === 404) {
+      const parsedError = JSON.parse(e.error);
+
+      if (parsedError.message) {
+        throw new Error(
+          `Failed to fetch contents from ${contentsRequestUrl}: ${parsedError.message}`
+        );
+      }
+    }
+
+    throw new Error(
+      `Failed to fetch contents from ${contentsRequestUrl}: ${e.statusCode}`
+    );
+  }
 }
 
 async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
@@ -145,19 +165,30 @@ async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
  * @param {String} path - Path to obtain contents from within repository
  * @returns {Boolean} `true` if successful, `false` otherwise.
  */
-async function downloadGitHubRepoContentsAtPath(dest, repoName, contentPath) {
+async function downloadGitHubRepoContents(
+  repoName,
+  contentPath,
+  dest,
+  options = {
+    filter: false,
+  }
+) {
   fs.ensureDirSync(dest);
   const contentsResp = await getGitHubRepoContentsAtPath(repoName, contentPath);
 
-  console.log('contentsResp: ', JSON.parse(contentsResp));
-
-  await JSON.parse(contentsResp).map(async contentPiece => {
+  await contentsResp.map(async contentPiece => {
     const { path: contentPiecePath, encoding, download_url } = contentPiece;
-    console.log('contentPiece: ', contentPiece);
     const downloadPath = path.join(
       dest,
       contentPiecePath.replace(contentPath, '')
     );
+
+    if (
+      typeof options.filter === 'function' &&
+      !options.filter(contentPiecePath, downloadPath)
+    ) {
+      return Promise.resolve(null);
+    }
 
     return fetchGitHubRepoContentFromDownloadUrl(
       downloadPath,
@@ -167,14 +198,8 @@ async function downloadGitHubRepoContentsAtPath(dest, repoName, contentPath) {
   });
 }
 
-// await downloadGitHubRepoContentsAtPath(
-//   './tmp/githubDownloads',
-//   'hubspot-cli',
-//   'packages/cli-lib/defaults/Sample.module'
-// );
-
 module.exports = {
   cloneGitHubRepo,
-  downloadGitHubRepoContentsAtPath,
+  downloadGitHubRepoContents,
   fetchJsonFromRepository,
 };
