@@ -50,16 +50,15 @@ const getAnnotationsFromSource = source => {
  */
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
-// TODO - Update to packages/cli-assets/templates/...
 const ASSET_PATHS = {
-  'page-template': 'packages/cli-lib/defaults/page-template.html',
-  partial: 'packages/cli-lib/defaults/partial.html',
-  'global-partial': 'packages/cli-lib/defaults/global-partial.html',
-  'email-template': 'packages/cli-lib/defaults/email-template.html',
+  'page-template': 'packages/cli-assets/templates/page-template.html',
+  partial: 'packages/cli-assets/templates/partial.html',
+  'global-partial': 'packages/cli-assets/templates/global-partial.html',
+  'email-template': 'packages/cli-assets/templates/email-template.html',
   'blog-listing-template':
-    'packages/cli-lib/defaults/blog-listing-template.html',
-  'blog-post-template': 'packages/cli-lib/defaults/blog-post-template.html',
-  'search-template': 'packages/cli-lib/defaults/search-template.html',
+    'packages/cli-assets/templates/blog-listing-template.html',
+  'blog-post-template': 'packages/cli-assets/templates/blog-post-template.html',
+  'search-template': 'packages/cli-assets/templates/search-template.html',
 };
 
 const createTemplate = async (name, dest, type = 'page-template') => {
