@@ -50,22 +50,6 @@ const getAnnotationsFromSource = source => {
  */
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
-// const ASSET_PATHS = {
-//   'page-template': path.resolve(__dirname, './defaults/page-template.html'),
-//   partial: path.resolve(__dirname, './defaults/partial.html'),
-//   'global-partial': path.resolve(__dirname, './defaults/global-partial.html'),
-//   'email-template': path.resolve(__dirname, './defaults/email-template.html'),
-//   'blog-listing-template': path.resolve(
-//     __dirname,
-//     './defaults/blog-listing-template.html'
-//   ),
-//   'blog-post-template': path.resolve(
-//     __dirname,
-//     './defaults/blog-post-template.html'
-//   ),
-//   'search-template': path.resolve(__dirname, './defaults/search-template.html'),
-// };
-
 // TODO - Update to packages/cli-assets/templates/...
 const ASSET_PATHS = {
   'page-template': 'packages/cli-lib/defaults/page-template.html',
