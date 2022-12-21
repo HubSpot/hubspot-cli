@@ -122,36 +122,16 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
 async function getGitHubRepoContentsAtPath(repoName, path) {
   const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
 
-  try {
-    const contentsResp = await request.get(contentsRequestUrl, {
-      encoding: null,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
-    });
-
-    return JSON.parse(contentsResp);
-  } catch (e) {
-    if (e.statusCode === 404) {
-      const parsedError = JSON.parse(e.error);
-
-      if (parsedError.message) {
-        throw new Error(
-          `Failed to fetch contents from ${contentsRequestUrl}: ${parsedError.message}`
-        );
-      }
-    }
-
-    throw new Error(
-      `Failed to fetch contents from ${contentsRequestUrl}: ${e.statusCode}`
-    );
-  }
+  return request.get(contentsRequestUrl, {
+    json: true,
+    headers: { ...DEFAULT_USER_AGENT_HEADERS },
+  });
 }
 
-async function fetchGitHubRepoContentFromDownloadUrl(
-  dest,
-  downloadUrl,
-  options = {}
-) {
-  const resp = await request.get(downloadUrl, options);
+async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
+  const resp = await request.get(downloadUrl, {
+    headers: { ...DEFAULT_USER_AGENT_HEADERS },
+  });
 
   fs.writeFileSync(dest, resp, 'utf8');
 }
@@ -172,32 +152,46 @@ async function downloadGitHubRepoContents(
   }
 ) {
   fs.ensureDirSync(path.dirname(dest));
-  const contentsResp = await getGitHubRepoContentsAtPath(repoName, contentPath);
-  const downloadContent = async contentPiece => {
-    const { path: contentPiecePath, encoding, download_url } = contentPiece;
-    const downloadPath = path.join(
-      dest,
-      contentPiecePath.replace(contentPath, '')
+
+  try {
+    const contentsResp = await getGitHubRepoContentsAtPath(
+      repoName,
+      contentPath
     );
 
-    if (
-      typeof options.filter === 'function' &&
-      !options.filter(contentPiecePath, downloadPath)
-    ) {
-      return Promise.resolve(null);
+    const downloadContent = async contentPiece => {
+      const { path: contentPiecePath, download_url } = contentPiece;
+      const downloadPath = path.join(
+        dest,
+        contentPiecePath.replace(contentPath, '')
+      );
+
+      if (
+        typeof options.filter === 'function' &&
+        !options.filter(contentPiecePath, downloadPath)
+      ) {
+        return Promise.resolve(null);
+      }
+
+      return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
+        headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      });
+    };
+
+    if (contentsResp.download_url) {
+      return downloadContent(contentsResp);
     }
 
-    return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
-      encoding,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
-    });
-  };
+    return await contentsResp.map(downloadContent);
+  } catch (e) {
+    if (e.statusCode === 404) {
+      if (e.error.message) {
+        throw new Error(`Failed to fetch contents: ${e.error.message}`);
+      }
+    }
 
-  if (contentsResp.download_url) {
-    return downloadContent(contentsResp);
+    throw new Error(`Failed to fetch contents: ${e.error.message}`);
   }
-
-  await contentsResp.map(downloadContent);
 }
 
 module.exports = {
