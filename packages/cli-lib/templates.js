@@ -50,16 +50,16 @@ const getAnnotationsFromSource = source => {
  */
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
-// TODO - Update these paths to cli-assets in subsequent PR that removes old files
 const ASSET_PATHS = {
-  'page-template': 'packages/cli-lib/defaults/page-template.html',
-  partial: 'packages/cli-lib/defaults/partial.html',
-  'global-partial': 'packages/cli-lib/defaults/global-partial.html',
-  'email-template': 'packages/cli-lib/defaults/email-template.html',
+  'page-template': 'packages/cli-assets/cms/templates/page-template.html',
+  partial: 'packages/cli-assets/cms/templates/partial.html',
+  'global-partial': 'packages/cli-assets/cms/templates/global-partial.html',
+  'email-template': 'packages/cli-assets/cms/templates/email-template.html',
   'blog-listing-template':
-    'packages/cli-lib/defaults/blog-listing-template.html',
-  'blog-post-template': 'packages/cli-lib/defaults/blog-post-template.html',
-  'search-template': 'packages/cli-lib/defaults/search-template.html',
+    'packages/cli-assets/cms/templates/blog-listing-template.html',
+  'blog-post-template':
+    'packages/cli-assets/cms/templates/blog-post-template.html',
+  'search-template': 'packages/cli-assets/cms/templates/search-template.html',
 };
 
 const createTemplate = async (name, dest, type = 'page-template') => {

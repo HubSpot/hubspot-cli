@@ -246,8 +246,7 @@ const createModule = async (
 
   await downloadGitHubRepoContents(
     'hubspot-cli',
-    // TODO - Update this path to cli-assets in subsequent PR that removes old files
-    'packages/cli-lib/defaults/Sample.module',
+    'packages/cli-assets/cms/modules/Sample.module',
     destPath,
     { filter: moduleFileFilter }
   );
