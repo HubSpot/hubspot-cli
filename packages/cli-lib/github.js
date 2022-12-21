@@ -9,6 +9,11 @@ const { extractZipArchive } = require('./archive');
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
+const GITHUB_AUTH_HEADERS = {
+  authorization:
+    global && global.githubToken ? `Bearer ${global.githubToken}` : '',
+};
+
 /**
  * @param {String} filePath - path where config file is stored
  * @param {String} repoName - name of the github repository
@@ -21,7 +26,7 @@ async function fetchJsonFromRepository(repoName, filePath) {
 
     return request.get(URI, {
       json: true,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
   } catch (err) {
     logger.error('An error occured fetching JSON file.');
@@ -45,7 +50,7 @@ async function fetchReleaseData(repoName, tag = '') {
     : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
     return await request.get(URI, {
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
       json: true,
     });
   } catch (err) {
@@ -87,7 +92,7 @@ async function downloadGithubRepoZip(
     }
     const zip = await request.get(zipUrl, {
       encoding: null,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
     logger.debug('Completed project fetch.');
     return zip;
@@ -124,13 +129,13 @@ async function getGitHubRepoContentsAtPath(repoName, path) {
 
   return request.get(contentsRequestUrl, {
     json: true,
-    headers: { ...DEFAULT_USER_AGENT_HEADERS },
+    headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
   });
 }
 
 async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
   const resp = await request.get(downloadUrl, {
-    headers: { ...DEFAULT_USER_AGENT_HEADERS },
+    headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
   });
 
   fs.writeFileSync(dest, resp, 'utf8');
@@ -174,7 +179,7 @@ async function downloadGitHubRepoContents(
       }
 
       return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
-        headers: { ...DEFAULT_USER_AGENT_HEADERS },
+        headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
       });
     };
 
