@@ -146,8 +146,12 @@ async function getGitHubRepoContentsAtPath(repoName, path) {
   }
 }
 
-async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
-  const resp = await request.get(downloadUrl);
+async function fetchGitHubRepoContentFromDownloadUrl(
+  dest,
+  downloadUrl,
+  options = {}
+) {
+  const resp = await request.get(downloadUrl, options);
 
   fs.writeFileSync(dest, resp, 'utf8');
 }
@@ -183,11 +187,10 @@ async function downloadGitHubRepoContents(
       return Promise.resolve(null);
     }
 
-    return fetchGitHubRepoContentFromDownloadUrl(
-      downloadPath,
-      download_url,
-      encoding
-    );
+    return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
+      encoding,
+      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+    });
   };
 
   if (contentsResp.download_url) {
