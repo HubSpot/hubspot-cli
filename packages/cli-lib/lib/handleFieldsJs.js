@@ -64,6 +64,7 @@ class FieldsJs {
         path.join(__dirname, './processFieldsJs.js'),
         [],
         {
+          cwd: dirName,
           env: {
             dirName,
             cwd,

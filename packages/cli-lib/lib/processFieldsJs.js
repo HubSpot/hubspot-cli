@@ -10,10 +10,6 @@ const fieldOptions = process.env.fieldOptions;
 const filePath = process.env.filePath;
 const writeDir = process.env.writeDir;
 
-// TODO: I think we can just give the process this dirName
-// Switch CWD to the dir of the fieldsjs. This is so that any calls to the file system that are written relatively will resolve properly.
-process.chdir(dirName);
-
 /*
  * How this works: dynamicImport() will always return either a Promise or undefined.
  * In the case when it's a Promise, its expected that it will resolve to a function.
@@ -23,68 +19,63 @@ process.chdir(dirName);
 
 const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
 
-return fieldsPromise
-  .then(fieldsFunc => {
-    const fieldsFuncType = typeof fieldsFunc;
-    if (fieldsFuncType !== 'function') {
+return fieldsPromise.then(fieldsFunc => {
+  const fieldsFuncType = typeof fieldsFunc;
+  if (fieldsFuncType !== 'function') {
+    process.send({
+      action: 'ERROR',
+      message: 'Is not function',
+    });
+
+    // SEND ERROR
+    // this.rejected = true;
+    // logError(FieldErrors.IsNotFunction, {
+    //   returned: fieldsFuncType,
+    // });
+    return;
+  }
+  // PARAM: fieldOptions
+  return Promise.resolve(fieldsFunc(fieldOptions)).then(fields => {
+    if (!Array.isArray(fields)) {
       process.send({
         action: 'ERROR',
-        message: 'Is not function',
+        message: 'Does not return array',
       });
 
       // SEND ERROR
       // this.rejected = true;
-      // logError(FieldErrors.IsNotFunction, {
-      //   returned: fieldsFuncType,
+      // logError(FieldErrors.DoesNotReturnArray, {
+      //   returned: typeof fields,
       // });
-      return;
+      // return;
     }
-    // PARAM: fieldOptions
-    return Promise.resolve(fieldsFunc(fieldOptions)).then(fields => {
-      if (!Array.isArray(fields)) {
-        process.send({
-          action: 'ERROR',
-          message: 'Does not return array',
-        });
 
-        // SEND ERROR
-        // this.rejected = true;
-        // logError(FieldErrors.DoesNotReturnArray, {
-        //   returned: typeof fields,
-        // });
-        // return;
+    // PARAM: writeDir
+    const finalPath = path.join(writeDir, '/fields.json');
+    // TODO: Include this fn
+    return fieldsArrayToJson(fields).then(json => {
+      process.send({
+        action: 'DEBUG',
+        message: `Successfully converted fields to JSON ${filePath} to ${writeDir}`,
+      });
+      if (!fs.existsSync(writeDir)) {
+        fs.mkdirSync(writeDir, { recursive: true });
       }
-
-      // PARAM: writeDir
-      const finalPath = path.join(writeDir, '/fields.json');
-      // TODO: Include this fn
-      return fieldsArrayToJson(fields).then(json => {
-        process.send({
-          action: 'DEBUG',
-          message: `Successfully converted fields to JSON ${filePath} to ${writeDir}`,
-        });
-        if (!fs.existsSync(writeDir)) {
-          fs.mkdirSync(writeDir, { recursive: true });
-        }
-        fs.writeFileSync(finalPath, json);
-        // logger.success(
-        //   i18n(`${i18nKey}.converted`, {
-        //     src: dirName + `/${baseName}`,
-        //     dest: dirName + '/fields.json',
-        //   })
-        // );
-        // return finalPath;
-        process.send({
-          action: 'COMPLETE',
-          finalPath,
-        });
+      fs.writeFileSync(finalPath, json);
+      // logger.success(
+      //   i18n(`${i18nKey}.converted`, {
+      //     src: dirName + `/${baseName}`,
+      //     dest: dirName + '/fields.json',
+      //   })
+      // );
+      // return finalPath;
+      process.send({
+        action: 'COMPLETE',
+        finalPath,
       });
     });
-  })
-  .finally(() => {
-    // Switch back to the original directory.
-    process.chdir(cwd);
   });
+});
 
 /*
  * Polyfill for `Array.flat(Infinity)` since the `flat` is only available for Node v11+
