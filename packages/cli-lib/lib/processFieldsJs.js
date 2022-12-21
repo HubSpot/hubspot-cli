@@ -3,12 +3,34 @@ const path = require('path');
 const fs = require('fs');
 const semver = require('semver');
 const { pathToFileURL } = require('url');
+const { getExt } = require('../path');
+const { logger } = require('../logger');
+const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
+const { i18n } = require('./lang');
+
+const i18nKey = 'cli.commands.upload';
 
 const dirName = process.env.dirName;
 const cwd = process.env.cwd;
 const fieldOptions = process.env.fieldOptions;
 const filePath = process.env.filePath;
 const writeDir = process.env.writeDir;
+
+const baseName = path.basename(filePath);
+
+const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
+const errorCatch = e => {
+  logError(e);
+  // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
+  logger.error(e);
+};
+
+logger.info(
+  i18n(`${i18nKey}.converting`, {
+    src: dirName + `/${baseName}`,
+    dest: dirName + '/fields.json',
+  })
+);
 
 /*
  * How this works: dynamicImport() will always return either a Promise or undefined.
@@ -22,21 +44,26 @@ const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
 return fieldsPromise.then(fieldsFunc => {
   const fieldsFuncType = typeof fieldsFunc;
   if (fieldsFuncType !== 'function') {
-    process.send({
-      action: 'ERROR',
-      message: 'Is not function',
+    logError(FieldErrors.IsNotFunction, {
+      returned: fieldsFuncType,
     });
+
+    // process.send({
+    //   action: 'ERROR',
+    //   message: 'Is not function',
+    // });
 
     // SEND ERROR
     // this.rejected = true;
-    // logError(FieldErrors.IsNotFunction, {
-    //   returned: fieldsFuncType,
-    // });
+
     return;
   }
   // PARAM: fieldOptions
   return Promise.resolve(fieldsFunc(fieldOptions)).then(fields => {
     if (!Array.isArray(fields)) {
+      logError(FieldErrors.DoesNotReturnArray, {
+        returned: typeof fields,
+      });
       process.send({
         action: 'ERROR',
         message: 'Does not return array',
@@ -44,9 +71,7 @@ return fieldsPromise.then(fieldsFunc => {
 
       // SEND ERROR
       // this.rejected = true;
-      // logError(FieldErrors.DoesNotReturnArray, {
-      //   returned: typeof fields,
-      // });
+
       // return;
     }
 
@@ -62,12 +87,12 @@ return fieldsPromise.then(fieldsFunc => {
         fs.mkdirSync(writeDir, { recursive: true });
       }
       fs.writeFileSync(finalPath, json);
-      // logger.success(
-      //   i18n(`${i18nKey}.converted`, {
-      //     src: dirName + `/${baseName}`,
-      //     dest: dirName + '/fields.json',
-      //   })
-      // );
+      logger.success(
+        i18n(`${i18nKey}.converted`, {
+          src: dirName + `/${baseName}`,
+          dest: dirName + '/fields.json',
+        })
+      );
       // return finalPath;
       process.send({
         action: 'COMPLETE',
@@ -98,9 +123,6 @@ async function fieldsArrayToJson(fields) {
   return JSON.stringify(fields, null, 2);
 }
 
-// REMOVE THESE
-const { getExt } = require('../path');
-const { logger } = require('../logger');
 // This is pulled into it's own file because it must be added to the esignore. Dynamics imports cause eslint _parser_ errors, which cannot be ignored.
 
 /**

@@ -6,9 +6,6 @@ const escapeRegExp = require('./escapeRegExp');
 const { isModuleFolderChild } = require('../modules');
 const { logger } = require('../logger');
 const { getCwd } = require('../path');
-const { i18n } = require('./lang');
-// const { logFieldsJsError } = require('../errorHandlers');
-const i18nKey = 'cli.commands.upload';
 
 /**
  * FieldsJS Class.
@@ -43,22 +40,9 @@ class FieldsJs {
    */
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
-    const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
     const cwd = getCwd();
-    // TODO: Can we still use this here?
-    // const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
-    // const errorCatch = e => {
-    //   logError(e);
-    //   // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
-    //   logger.error(e);
-    // };
-    logger.info(
-      i18n(`${i18nKey}.converting`, {
-        src: dirName + `/${baseName}`,
-        dest: dirName + '/fields.json',
-      })
-    );
+
     return new Promise((resolve, reject) => {
       const convertFieldsProcess = fork(
         path.join(__dirname, './processFieldsJs.js'),
