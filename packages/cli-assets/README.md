@@ -1,11 +1,3 @@
 # `@hubspot/cli-assets`
 
-> TODO: description
-
-## Usage
-
-```
-const cliAssets = require('@hubspot/cli-assets');
-
-// TODO: DEMONSTRATE API
-```
+Storage of assets for use with the CLI.
