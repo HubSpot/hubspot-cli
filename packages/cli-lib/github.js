@@ -128,8 +128,6 @@ async function getGitHubRepoContentsAtPath(repoName, path) {
       headers: { ...DEFAULT_USER_AGENT_HEADERS },
     });
 
-    console.log('contentsResp: ', JSON.parse(contentsResp));
-
     return JSON.parse(contentsResp);
   } catch (e) {
     if (e.statusCode === 404) {
@@ -151,11 +149,7 @@ async function getGitHubRepoContentsAtPath(repoName, path) {
 async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
   const resp = await request.get(downloadUrl);
 
-  console.log('writing to: ', dest);
-
   fs.writeFileSync(dest, resp, 'utf8');
-
-  console.log('resp: ', resp);
 }
 
 /**
@@ -173,10 +167,9 @@ async function downloadGitHubRepoContents(
     filter: false,
   }
 ) {
-  fs.ensureDirSync(dest);
+  fs.ensureDirSync(path.dirname(dest));
   const contentsResp = await getGitHubRepoContentsAtPath(repoName, contentPath);
-
-  await contentsResp.map(async contentPiece => {
+  const downloadContent = async contentPiece => {
     const { path: contentPiecePath, encoding, download_url } = contentPiece;
     const downloadPath = path.join(
       dest,
@@ -195,7 +188,13 @@ async function downloadGitHubRepoContents(
       download_url,
       encoding
     );
-  });
+  };
+
+  if (contentsResp.download_url) {
+    return downloadContent(contentsResp);
+  }
+
+  await contentsResp.map(downloadContent);
 }
 
 module.exports = {

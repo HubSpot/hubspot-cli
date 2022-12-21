@@ -246,7 +246,7 @@ const createModule = async (
 
   await downloadGitHubRepoContents(
     'hubspot-cli',
-    // TODO - Update to packages/cli-assets/defaults/Sample.module
+    // TODO - Update to packages/cli-assets/cms/modules/Sample.module
     'packages/cli-lib/defaults/Sample.module',
     destPath,
     { filter: moduleFileFilter }
