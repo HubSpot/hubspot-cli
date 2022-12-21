@@ -68,32 +68,22 @@ return fieldsPromise.then(fieldsFunc => {
         action: 'ERROR',
         message: 'Does not return array',
       });
-
-      // SEND ERROR
-      // this.rejected = true;
-
-      // return;
     }
 
-    // PARAM: writeDir
     const finalPath = path.join(writeDir, '/fields.json');
-    // TODO: Include this fn
+
     return fieldsArrayToJson(fields).then(json => {
-      process.send({
-        action: 'DEBUG',
-        message: `Successfully converted fields to JSON ${filePath} to ${writeDir}`,
-      });
       if (!fs.existsSync(writeDir)) {
         fs.mkdirSync(writeDir, { recursive: true });
       }
       fs.writeFileSync(finalPath, json);
+
       logger.success(
         i18n(`${i18nKey}.converted`, {
           src: dirName + `/${baseName}`,
           dest: dirName + '/fields.json',
         })
       );
-      // return finalPath;
       process.send({
         action: 'COMPLETE',
         finalPath,
