@@ -39,7 +39,7 @@ logger.info(
 
 const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
 
-return fieldsPromise.then(fieldsFunc => {
+fieldsPromise.then(fieldsFunc => {
   const fieldsFuncType = typeof fieldsFunc;
   if (fieldsFuncType !== 'function') {
     logError(FieldErrors.IsNotFunction, {
