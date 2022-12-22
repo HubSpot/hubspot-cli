@@ -70,15 +70,14 @@ async function uploadFile(accountId, file, dest, options) {
     ).init();
     if (fieldsJs.rejected) return;
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
-    file = fieldsJs.outputPath;
     dest = path.join(path.dirname(dest), 'fields.json');
   }
+  const fileToUpload = convertFields ? fieldsJs.outputPath : file;
 
   logger.debug('Attempting to upload file "%s" to "%s"', file, dest);
   const apiOptions = getFileMapperQueryValues(options);
-
   return queue.add(() => {
-    return upload(accountId, file, dest, apiOptions)
+    return upload(accountId, fileToUpload, dest, apiOptions)
       .then(() => {
         logger.log(`Uploaded file ${file} to ${dest}`);
         notifyOfThemePreview(file, accountId);
