@@ -6,24 +6,24 @@ const {
 const fs = require('fs-extra');
 const child_process = require('child_process');
 
-jest.mock('fs-extra', () => {
-  const original = jest.requireActual('fs-extra');
-  return {
-    ...original,
-    outputFileSync: () => jest.fn(),
-  };
-});
+// jest.mock('fs-extra', () => {
+//   const original = jest.requireActual('fs-extra');
+//   return {
+//     ...original,
+//     outputFileSync: () => jest.fn(),
+//   };
+// });
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
 jest.mock('child_process');
-jest.mock('@hubspot/cli-lib/path', () => {
-  const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
-  return {
-    ...cliLibPath,
-    getCwd: jest.fn().mockReturnValue('test-cwd'),
-  };
-});
+// jest.mock('@hubspot/cli-lib/path', () => {
+//   const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
+//   return {
+//     ...cliLibPath,
+//     getCwd: jest.fn().mockReturnValue('test-cwd'),
+//   };
+// });
 
 describe('handleFieldsJs', () => {
   describe('FieldsJs', () => {
