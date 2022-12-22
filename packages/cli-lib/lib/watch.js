@@ -70,7 +70,7 @@ async function uploadFile(accountId, file, dest, options) {
     ).init();
     if (fieldsJs.rejected) return;
     // Ensures that the dest path is a .json. The user might pass '.js' accidentally - this ensures it just works.
-    dest = path.join(path.dirname(dest), 'fields.json');
+    dest = convertToUnixPath(path.join(path.dirname(dest), 'fields.json'));
   }
   const fileToUpload = convertFields ? fieldsJs.outputPath : file;
 
