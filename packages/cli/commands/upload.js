@@ -40,7 +40,7 @@ const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {
   FieldsJs,
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
   cleanupTmpDirSync,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
@@ -80,16 +80,14 @@ exports.handler = async options => {
   }
   // Check for theme.json file and determine the root path for the project based on it if it exists
   const themeJsonPath = getThemeJSONPath(absoluteSrcPath);
-  const projectRoot = themeJsonPath && path.dirname(themeJsonPath);
-  const processFieldsJs =
+  const projectRoot = themeJsonPath
+    ? path.dirname(themeJsonPath)
+    : path.dirname(getCwd());
+  const convertFields =
     projectRoot &&
-    isProcessableFieldsJs(
-      projectRoot,
-      absoluteSrcPath,
-      options.processFieldsJs
-    );
+    isConvertableFieldJs(projectRoot, absoluteSrcPath, options.convertFields);
   let fieldsJs;
-  if (processFieldsJs) {
+  if (convertFields) {
     fieldsJs = await new FieldsJs(
       projectRoot,
       absoluteSrcPath,
@@ -137,7 +135,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.WARNING);
   }
   if (stats.isFile()) {
-    if (!isAllowedExtension(src) && !processFieldsJs) {
+    if (!isAllowedExtension(src) && !convertFields) {
       logger.error(
         i18n(`${i18nKey}.errors.invalidPath`, {
           path: src,
@@ -188,7 +186,7 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.WARNING);
       })
       .finally(() => {
-        if (!processFieldsJs) return;
+        if (!convertFields) return;
         if (saveOutput) {
           fieldsJs.saveOutput();
         }
@@ -206,7 +204,7 @@ exports.handler = async options => {
     // Generate the first-pass file list in here, and pass to uploadFolder.
     const filePaths = await getUploadableFileList(
       absoluteSrcPath,
-      options.processFieldsJs
+      options.convertFields
     );
     uploadFolder(
       accountId,
@@ -252,9 +250,9 @@ exports.handler = async options => {
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.
- * If processFieldsJs is true then will check for any JS fields conflicts (i.e., JS fields file and fields.json file) and prompt to resolve
+ * If convertFields is true then will check for any JS fields conflicts (i.e., JS fields file and fields.json file) and prompt to resolve
  */
-const getUploadableFileList = async (src, processFieldsJs) => {
+const getUploadableFileList = async (src, convertFields) => {
   const filePaths = await walk(src);
   const allowedFiles = filePaths
     .filter(file => {
@@ -264,7 +262,7 @@ const getUploadableFileList = async (src, processFieldsJs) => {
       return true;
     })
     .filter(createIgnoreFilter());
-  if (!processFieldsJs) {
+  if (!convertFields) {
     return allowedFiles;
   }
 
@@ -273,8 +271,8 @@ const getUploadableFileList = async (src, processFieldsJs) => {
   for (const filePath of allowedFiles) {
     const fileName = path.basename(filePath);
     if (skipFiles.includes(filePath)) continue;
-    const isProcessable = isProcessableFieldsJs(src, filePath, processFieldsJs);
-    if (isProcessable || fileName == 'fields.json') {
+    const isConvertable = isConvertableFieldJs(src, filePath, convertFields);
+    if (isConvertable || fileName == 'fields.json') {
       // This prompt checks if there are multiple field files in the folder and gets user to choose.
       const [choice, updatedSkipFiles] = await fieldsJsPrompt(
         filePath,

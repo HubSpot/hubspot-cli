@@ -41,7 +41,6 @@ exports.handler = async options => {
   logger.log('');
   logger.log(chalk.bold(i18n(`${i18nKey}.logs.welcomeMessage`)));
   uiFeatureHighlight([
-    'createCommand',
     'projectUploadCommand',
     'projectDeployCommand',
     'projectHelpCommand',

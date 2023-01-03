@@ -8,10 +8,10 @@ const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const {
   FieldsJs,
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
-const { trackProcessFieldsUsage } = require('../../lib/usageTracking');
+const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const i18nKey = 'cli.commands.convertFields';
 
 exports.command = 'convert-fields';
@@ -27,7 +27,10 @@ const invalidPath = src => {
 
 exports.handler = async options => {
   const src = path.resolve(getCwd(), options.src);
-  const projectRoot = path.dirname(getThemeJSONPath(src));
+  const themeJSONPath = getThemeJSONPath(src);
+  const projectRoot = themeJSONPath
+    ? path.dirname(themeJSONPath)
+    : path.dirname(getCwd());
   let stats;
   try {
     stats = fs.statSync(src);
@@ -39,7 +42,7 @@ exports.handler = async options => {
     invalidPath(src);
   }
 
-  trackProcessFieldsUsage('process');
+  trackConvertFieldsUsage('process');
 
   if (stats.isFile()) {
     const fieldsJs = await new FieldsJs(
@@ -61,7 +64,7 @@ exports.handler = async options => {
       })
       .filter(createIgnoreFilter());
     for (const filePath of allowedFilePaths) {
-      if (isProcessableFieldsJs(projectRoot, filePath, true)) {
+      if (isConvertableFieldJs(projectRoot, filePath, true)) {
         const fieldsJs = await new FieldsJs(
           projectRoot,
           filePath,

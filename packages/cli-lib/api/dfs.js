@@ -43,12 +43,18 @@ async function createProject(accountId, name) {
  * @param {string} projectFile
  * @returns {Promise}
  */
-async function uploadProject(accountId, projectName, projectFile) {
+async function uploadProject(
+  accountId,
+  projectName,
+  projectFile,
+  uploadMessage
+) {
   return http.post(accountId, {
     uri: `${PROJECTS_API_PATH}/upload/${encodeURIComponent(projectName)}`,
     timeout: 60000,
     formData: {
       file: fs.createReadStream(projectFile),
+      uploadMessage,
     },
   });
 }

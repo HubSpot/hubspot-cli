@@ -149,13 +149,8 @@ en:
               pathExists: "The {{ path }} path already exists"
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
           template:
-            debug:
-              creatingPath: "Making {{ path }} if needed"
             errors:
               nameRequired: "The \"name\" argument is required when creating a Template."
-              pathExists: "The {{ path }} path already exists"
-            log:
-              creatingFile: "Creating file at {{ path }}"
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
@@ -521,9 +516,13 @@ en:
               feedbackHeader: "We'd love to hear your feedback!"
               feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
               projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
+              emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
+
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"
+              message:
+                describe: "Add a message when you upload your project and create a build"
             positionals:
               path:
                 describe: "Path to a project folder"
@@ -601,6 +600,11 @@ en:
                 describe: "Open Github issues in your browser to report a bug."
               general:
                 describe: "Open the projects feedback form in your browser."
+        lib:
+          ensureProjectExists:
+            createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
+            createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+            notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
 
       remove:
         describe: "Delete a file or folder from HubSpot."
@@ -815,9 +819,6 @@ en:
             authCommand:
               command: "hs auth"
               message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
-            createCommand:
-              command: "hs create"
-              message: "Add new components to your project with {{ command }}"
             feedbackCommand:
               command: "hs feedback"
               message: "Run {{ command }} to report a bug or leave feedback"
@@ -964,3 +965,14 @@ en:
         options:
           options:
             describe: "Options to pass to javascript fields files"
+      errors:
+        templates:
+          pathExists: "The {{ path }} path already exists"
+      logging:
+        templates:
+          creatingFile: "Creating file at {{ path }}"
+      debug:
+        templates:
+          creatingPath: "Making {{ path }} if needed"
+
+

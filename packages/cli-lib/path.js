@@ -11,6 +11,18 @@ const convertToWindowsPath = _path => {
   return path.normalize(_path).replace(rgx, path.win32.sep);
 };
 
+/**
+ * Converts a Win32 path to Posix, retaining the drive letter (ex. 'c:')
+ *
+ * @param {string} _path
+ */
+const convertToImportPath = _path => {
+  if (path.sep === path.win32.sep) {
+    return _path.split(path.win32.sep).join(path.posix.sep);
+  }
+  return _path;
+};
+
 const convertToLocalFileSystemPath = _path => {
   switch (path.sep) {
     case path.posix.sep:
@@ -101,6 +113,7 @@ const isRelativePath = _path => !path.isAbsolute(_path);
 module.exports = {
   convertToUnixPath,
   convertToWindowsPath,
+  convertToImportPath,
   convertToLocalFileSystemPath,
   getAllowedExtensions,
   getAbsoluteFilePath,

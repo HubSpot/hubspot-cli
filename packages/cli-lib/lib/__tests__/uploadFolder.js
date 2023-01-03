@@ -5,7 +5,7 @@ const { walk, listFilesInDir } = require('../walk');
 const { createIgnoreFilter } = require('../../ignoreRules');
 const {
   FieldsJs,
-  isProcessableFieldsJs,
+  isConvertableFieldJs,
   cleanupTmpDirSync,
   createTmpDirSync,
 } = require('../handleFieldsJs');
@@ -38,7 +38,7 @@ const defaultFieldsJsImplementation = jest.fn((src, filePath, rootWriteDir) => {
 });
 FieldsJs.mockImplementation(defaultFieldsJsImplementation);
 
-isProcessableFieldsJs.mockImplementation((src, filePath) => {
+isConvertableFieldJs.mockImplementation((src, filePath) => {
   const fileName = path.basename(filePath);
   return fileName === 'fields.js';
 });
@@ -72,7 +72,7 @@ describe('uploadFolder', () => {
       'folder',
       'folder',
       { mode: 'publish' },
-      { saveOutput: true, processFieldsJs: false },
+      { saveOutput: true, convertFields: false },
     ];
 
     it('uploads files in the correct order', async () => {
@@ -120,10 +120,10 @@ describe('uploadFolder', () => {
       expect(logApiUploadErrorInstance).toHaveBeenCalled();
     });
 
-    it('does not create a temp directory if --processFieldsJs is false', async () => {
+    it('does not create a temp directory if --convertFields is false', async () => {
       const tmpDirSpy = createTmpDirSync.mockImplementation(() => {});
       const params = [...defaultParams];
-      params[4] = { saveOutput: true, processFieldsJs: true };
+      params[4] = { saveOutput: true, convertFields: true };
 
       upload.mockImplementation(() => Promise.resolve());
 
@@ -134,7 +134,7 @@ describe('uploadFolder', () => {
     it('tries to save output of each fields file', async () => {
       const saveOutputSpy = jest.spyOn(FieldsJs.prototype, 'saveOutput');
       const params = [...defaultParams];
-      params[4] = { saveOutput: true, processFieldsJs: true };
+      params[4] = { saveOutput: true, convertFields: true };
 
       createTmpDirSync.mockReturnValue('folder');
       upload.mockImplementation(() => Promise.resolve());
@@ -149,7 +149,7 @@ describe('uploadFolder', () => {
     it('deletes the temporary directory', async () => {
       const deleteDirSpy = cleanupTmpDirSync.mockImplementation(() => {});
       const params = [...defaultParams];
-      params[4] = { saveOutput: true, processFieldsJs: true };
+      params[4] = { saveOutput: true, convertFields: true };
 
       upload.mockImplementation(() => Promise.resolve());
 
@@ -177,11 +177,11 @@ describe('uploadFolder', () => {
       FieldsJs.mockClear();
       jest.resetModules();
     });
-    it('outputs getFilesByType with no processing if processFieldsJs is false', async () => {
+    it('outputs getFilesByType with no processing if convertFields is false', async () => {
       let files = [...filesProto];
       files.push('folder/sample.module/fields.js');
       const [filesByType] = await getFilesByType(files, 'folder', 'folder', {
-        processFieldsJs: false,
+        convertFields: false,
       });
 
       expect(filesByType).toEqual({
@@ -213,7 +213,7 @@ describe('uploadFolder', () => {
         files,
         'folder',
         'folder',
-        { processFieldsJs: true }
+        { convertFields: true }
       );
 
       filesByType = Object.values(filesByType);
@@ -234,7 +234,7 @@ describe('uploadFolder', () => {
       const files = ['folder/fields.js', 'folder/fields.json'];
       listFilesInDir.mockReturnValue(['fields.json', 'fields.js']);
       const [filesByType] = await getFilesByType(files, 'folder', 'folder', {
-        processFieldsJs: true,
+        convertFields: true,
       });
       expect(filesByType).not.toMatchObject({
         [FileTypes.json]: ['folder/fields.json'],
@@ -247,7 +247,7 @@ describe('uploadFolder', () => {
         files,
         'folder',
         'folder',
-        { processFieldsJs: true }
+        { convertFields: true }
       );
       expect(filesByType).toMatchObject({
         [FileTypes.json]: [convertedFilePath],
@@ -264,7 +264,7 @@ describe('uploadFolder', () => {
         files,
         'folder',
         'folder',
-        { processFieldsJs: true }
+        { convertFields: true }
       );
 
       expect(filesByType).toMatchObject({
