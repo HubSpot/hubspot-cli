@@ -38,7 +38,7 @@ const notifyOfThemePreview = debounce(_notifyOfThemePreview, 1000);
 
 async function uploadFile(accountId, file, dest, options) {
   const src = options.src;
-  //todo: this shouldn't happen for every file:
+
   let absoluteSrcPath = path.resolve(getCwd(), file);
   const themeJsonPath = getThemeJSONPath(absoluteSrcPath);
   const projectRoot = themeJsonPath
