@@ -18,6 +18,7 @@ const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
+  PROJECT_TASK_TYPES,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   createProject,
@@ -374,6 +375,8 @@ const makePollTaskStatusFunc = ({
   statusStrings,
   linkToHubSpot,
 }) => {
+  const i18nKey = 'cli.commands.project.lib.makePollTaskStatusFunc';
+
   const isTaskComplete = task => {
     if (
       !task[statusText.SUBTASK_KEY].length ||
@@ -410,7 +413,12 @@ const makePollTaskStatusFunc = ({
       structureFn(accountId, taskName, taskId),
     ]);
 
-    const flatTaskList = initialTaskStatus[statusText.SUBTASK_KEY];
+    const flatTaskList = initialTaskStatus[statusText.SUBTASK_KEY].filter(
+      task => {
+        const type = task[statusText.TYPE_KEY];
+        return type !== 'APP_ID' && type !== 'SERVERLESS_PKG';
+      }
+    );
 
     const tasksById = flatTaskList.reduce((acc, task) => {
       acc[task.id] = task;
@@ -420,33 +428,47 @@ const makePollTaskStatusFunc = ({
     const structuredTasks = Object.keys(taskStructure).map(key => {
       return {
         ...tasksById[key],
-        subtasks: taskStructure[key].map(taskId => tasksById[taskId]),
+        subtasks: taskStructure[key]
+          .filter(taskId => Boolean(tasksById[taskId]))
+          .map(taskId => tasksById[taskId]),
       };
     });
 
-    const numOfComponents = flatTaskList.length;
-    const componentCountText = `\nFound ${numOfComponents} component${
-      numOfComponents !== 1 ? 's' : ''
-    } in this project ...\n`;
+    const numComponents = flatTaskList.length;
+    const componentCountText = i18n(
+      numComponents === 1
+        ? `${i18nKey}.componentCountSingular`
+        : `${i18nKey}.componentCount`,
+      { numComponents }
+    );
 
     spinnies.update('overallTaskStatus', {
-      text: `${statusStrings.INITIALIZE(taskName)}${componentCountText}`,
+      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}\n`,
     });
 
-    const addTaskSpinner = (task, indent) => {
+    const getTaskText = (task, newline) => {
       const taskName = task[statusText.SUBTASK_NAME_KEY];
+      const taskType = task[statusText.TYPE_KEY];
+      const formattedTaskType = PROJECT_TASK_TYPES[taskType]
+        ? `[${PROJECT_TASK_TYPES[taskType]}]`
+        : '';
+      return `${statusText.STATUS_TEXT} ${chalk.bold(
+        taskName
+      )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
+    };
 
+    const addTaskSpinner = (task, indent, newline) => {
       spinnies.add(task.id, {
-        text: `${chalk.bold(taskName)} ${
-          statusText.STATUS_TEXT[statusText.STATES.ENQUEUED]
-        }\n`,
+        text: getTaskText(task, newline),
         indent,
       });
     };
 
     structuredTasks.forEach(task => {
-      addTaskSpinner(task, 2);
-      task.subtasks.forEach(task => addTaskSpinner(task, 4));
+      addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
+      task.subtasks.forEach((subtask, i) =>
+        addTaskSpinner(subtask, 4, i === task.subtasks.length - 1)
+      );
     });
 
     return new Promise((resolve, reject) => {
@@ -459,25 +481,38 @@ const makePollTaskStatusFunc = ({
 
         if (spinnies.hasActiveSpinners()) {
           subTaskStatus.forEach(subTask => {
-            const { id, [statusText.SUBTASK_NAME_KEY]: subTaskName } = subTask;
+            const { id } = subTask;
 
-            if (!spinnies.pick(id)) {
+            const spinner = spinnies.pick(id);
+
+            if (!spinner) {
               return;
             }
 
-            const updatedText = `${chalk.bold(subTaskName)} ${
-              statusText.STATUS_TEXT[subTask.status]
-            }\n`;
+            const getUpdatedText = () => {
+              const taskStatusText =
+                subTask.status === statusText.STATES.SUCCESS
+                  ? 'DONE'
+                  : 'FAILED';
+              const hasNewline = spinner.text.includes('\n');
+              const updatedText = `${spinner.text.replace(
+                '\n',
+                ''
+              )} ${taskStatusText}`;
+
+              return hasNewline ? `${updatedText}\n` : updatedText;
+            };
 
             switch (subTask.status) {
               case statusText.STATES.SUCCESS:
-                spinnies.succeed(id, { text: updatedText });
+                spinnies.succeed(id, {
+                  text: getUpdatedText(),
+                });
                 break;
               case statusText.STATES.FAILURE:
-                spinnies.fail(id, { text: updatedText });
+                spinnies.fail(id, { text: getUpdatedText() });
                 break;
               default:
-                spinnies.update(id, { text: updatedText });
                 break;
             }
           });

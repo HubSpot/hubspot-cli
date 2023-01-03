@@ -186,28 +186,24 @@ const PROJECT_DEPLOY_STATES = {
 
 const PROJECT_BUILD_TEXT = {
   STATES: { ...PROJECT_BUILD_STATES },
-  STATUS_TEXT: {
-    [PROJECT_BUILD_STATES.BUILDING]: 'is building',
-    [PROJECT_BUILD_STATES.ENQUEUED]: 'is queued',
-    [PROJECT_BUILD_STATES.FAILURE]: 'failed to build',
-    [PROJECT_BUILD_STATES.PENDING]: 'is pending',
-    [PROJECT_BUILD_STATES.SUCCESS]: 'built successfully',
-  },
+  STATUS_TEXT: 'Building',
   SUBTASK_KEY: 'subbuildStatuses',
+  TYPE_KEY: 'buildType',
   SUBTASK_NAME_KEY: 'buildName',
 };
 
 const PROJECT_DEPLOY_TEXT = {
   STATES: { ...PROJECT_DEPLOY_STATES },
-  STATUS_TEXT: {
-    [PROJECT_DEPLOY_STATES.BUILDING]: 'is deploying',
-    [PROJECT_DEPLOY_STATES.FAILURE]: 'failed to deploy',
-    [PROJECT_DEPLOY_STATES.PENDING]: 'is pending',
-    [PROJECT_DEPLOY_STATES.DEPLOYING]: 'is deploying',
-    [PROJECT_DEPLOY_STATES.SUCCESS]: 'deployed successfully',
-  },
+  STATUS_TEXT: 'Deploying',
   SUBTASK_KEY: 'subdeployStatuses',
+  TYPE_KEY: 'deployType',
   SUBTASK_NAME_KEY: 'deployName',
+};
+
+const PROJECT_TASK_TYPES = {
+  PRIVATE_APP: 'private app',
+  APP_FUNCTION: 'function',
+  CRM_CARD_V2: 'crm card',
 };
 
 const FEEDBACK_OPTIONS = {
@@ -261,6 +257,7 @@ module.exports = {
   PROJECT_TEMPLATES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
+  PROJECT_TASK_TYPES,
   SCOPE_GROUPS,
   TEMPLATE_TYPES,
 };

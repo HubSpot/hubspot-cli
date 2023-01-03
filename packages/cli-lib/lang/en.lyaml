@@ -605,6 +605,9 @@ en:
             createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
             createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
             notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+          makePollTaskStatusFunc:
+            componentCountSingular: "Found 1 component in this project"
+            componentCount: "Found {{ numComponents }} components in this project"
 
       remove:
         describe: "Delete a file or folder from HubSpot."
