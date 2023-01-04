@@ -50,16 +50,14 @@ const getAnnotationsFromSource = source => {
  */
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
-// TODO - Update these paths to cli-assets in subsequent PR that removes old files
 const ASSET_PATHS = {
-  'page-template': 'packages/cli-lib/defaults/page-template.html',
-  partial: 'packages/cli-lib/defaults/partial.html',
-  'global-partial': 'packages/cli-lib/defaults/global-partial.html',
-  'email-template': 'packages/cli-lib/defaults/email-template.html',
-  'blog-listing-template':
-    'packages/cli-lib/defaults/blog-listing-template.html',
-  'blog-post-template': 'packages/cli-lib/defaults/blog-post-template.html',
-  'search-template': 'packages/cli-lib/defaults/search-template.html',
+  'page-template': 'templates/page-template.html',
+  partial: 'templates/partial.html',
+  'global-partial': 'templates/global-partial.html',
+  'email-template': 'templates/email-template.html',
+  'blog-listing-template': 'templates/blog-listing-template.html',
+  'blog-post-template': 'templates/blog-post-template.html',
+  'search-template': 'templates/search-template.html',
 };
 
 const createTemplate = async (name, dest, type = 'page-template') => {
@@ -85,7 +83,7 @@ const createTemplate = async (name, dest, type = 'page-template') => {
       path: filePath,
     })
   );
-  await downloadGitHubRepoContents('hubspot-cli', assetPath, filePath);
+  await downloadGitHubRepoContents('cms-sample-assets', assetPath, filePath);
 };
 
 module.exports = {
