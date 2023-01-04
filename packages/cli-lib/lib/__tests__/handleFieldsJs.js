@@ -4,42 +4,30 @@ const {
   isConvertableFieldJs,
 } = require('../handleFieldsJs');
 const fs = require('fs-extra');
-const dynamicImport = require('../dynamicImport');
+const child_process = require('child_process');
 
-jest.mock('fs-extra', () => {
-  const original = jest.requireActual('fs-extra');
-  return {
-    ...original,
-    outputFileSync: () => jest.fn(),
-  };
-});
 jest.mock('../walk');
 jest.mock('../../api/fileMapper');
 jest.mock('../../ignoreRules');
-jest.mock('@hubspot/cli-lib/path', () => {
-  const cliLibPath = jest.requireActual('@hubspot/cli-lib/path');
-  return {
-    ...cliLibPath,
-    getCwd: jest.fn().mockReturnValue('test-cwd'),
-  };
-});
-jest.mock('../dynamicImport');
-const dynamicImportSpy = jest.spyOn(dynamicImport, 'dynamicImport');
+jest.mock('child_process');
+
 describe('handleFieldsJs', () => {
   describe('FieldsJs', () => {
     beforeEach(() => {
-      dynamicImportSpy.mockImplementation(() => {
-        return Promise.resolve(() => []);
+      child_process.fork.mockImplementation(() => {
+        return {
+          pid: 123,
+          on: () => {
+            return {};
+          },
+        };
       });
-      chDirSpy.mockClear();
       jest.resetModules();
     });
 
-    const testCwd = 'test-cwd';
     const projectRoot = 'folder';
     const filePath = 'folder/sample.module/fields.js';
     const defaultFieldsJs = new FieldsJs(projectRoot, filePath);
-    const chDirSpy = jest.spyOn(process, 'chdir').mockImplementation(() => {});
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     test('getOutputPathPromise() resolves to the correct path', async () => {
@@ -88,41 +76,6 @@ describe('handleFieldsJs', () => {
       const returned = defaultFieldsJs.convertFieldsJs('');
       expect(returned).toBeInstanceOf(Promise);
     });
-
-    test('convertFieldsJs changes the directory properly', async () => {
-      await defaultFieldsJs.convertFieldsJs('temp-dir');
-      expect(chDirSpy.mock.calls).toEqual([
-        ['folder/sample.module'],
-        [testCwd],
-      ]);
-    });
-
-    test('convertFieldsJs sets the final path correctly', async () => {
-      const writeDir = 'test-dir/sample.module';
-      const returned = await defaultFieldsJs.convertFieldsJs(writeDir);
-      expect(returned).toBe('test-dir/sample.module/fields.json');
-    });
-
-    test('convertFieldsJs errors if no function returned', async () => {
-      dynamicImportSpy.mockReset();
-      jest.spyOn(dynamicImport, 'dynamicImport').mockImplementation(() => {
-        return Promise.resolve(null);
-      });
-      await defaultFieldsJs.convertFieldsJs('temp-dir');
-      expect(defaultFieldsJs.rejected).toBe(true);
-    });
-
-    test('convertFieldsJs errors if no array returned', async () => {
-      dynamicImportSpy.mockReset();
-      jest.spyOn(dynamicImport, 'dynamicImport').mockImplementation(() => {
-        return Promise.resolve(() => 'string');
-      });
-      await defaultFieldsJs.convertFieldsJs('temp-dir');
-      expect(defaultFieldsJs.rejected).toBe(true);
-    });
-
-    // Not sure of a good way to do this ATM - mocking the require(filePath) is tricky.
-    test.todo('convertFieldsJs throws SyntaxError if no array is given');
   });
 
   describe('fieldsArrayToJson()', () => {
