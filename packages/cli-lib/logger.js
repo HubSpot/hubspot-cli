@@ -88,6 +88,20 @@ const shouldLog = level => {
   return currentLogLevel & level;
 };
 
+const getLogLevel = () => {
+  switch (currentLogLevel) {
+    case LOG_LEVEL.DEBUG | LOG_LEVEL.LOG | LOG_LEVEL.WARN | LOG_LEVEL.ERROR:
+      return LOG_LEVEL.DEBUG;
+    case LOG_LEVEL.LOG | LOG_LEVEL.WARN | LOG_LEVEL.ERROR:
+      return LOG_LEVEL.LOG;
+    case LOG_LEVEL.WARN | LOG_LEVEL.ERROR:
+      return LOG_LEVEL.WARN;
+    case LOG_LEVEL.ERROR:
+      return LOG_LEVEL.ERROR;
+    default:
+      return LOG_LEVEL.NONE;
+  }
+};
 const logger = {
   error(...args) {
     if (shouldLog(LOG_LEVEL.ERROR)) {
@@ -132,5 +146,6 @@ module.exports = {
   Styles,
   setLogger,
   setLogLevel,
+  getLogLevel,
   logger,
 };
