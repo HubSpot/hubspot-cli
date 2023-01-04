@@ -19,6 +19,7 @@ const {
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
+  SPINNER_STATUS,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
   createProject,
@@ -434,7 +435,7 @@ const makePollTaskStatusFunc = ({
       };
     });
 
-    const numComponents = flatTaskList.length;
+    const numComponents = structuredTasks.length;
     const componentCountText = i18n(
       numComponents === 1
         ? `${i18nKey}.componentCountSingular`
@@ -446,20 +447,18 @@ const makePollTaskStatusFunc = ({
       text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}\n`,
     });
 
-    const getTaskText = (task, newline) => {
+    const addTaskSpinner = (task, indent, newline) => {
       const taskName = task[statusText.SUBTASK_NAME_KEY];
       const taskType = task[statusText.TYPE_KEY];
       const formattedTaskType = PROJECT_TASK_TYPES[taskType]
         ? `[${PROJECT_TASK_TYPES[taskType]}]`
         : '';
-      return `${statusText.STATUS_TEXT} ${chalk.bold(
+      const text = `${statusText.STATUS_TEXT} ${chalk.bold(
         taskName
       )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
-    };
 
-    const addTaskSpinner = (task, indent, newline) => {
       spinnies.add(task.id, {
-        text: getTaskText(task, newline),
+        text,
         indent,
       });
     };
@@ -481,60 +480,43 @@ const makePollTaskStatusFunc = ({
 
         if (spinnies.hasActiveSpinners()) {
           subTaskStatus.forEach(subTask => {
-            const { id } = subTask;
-
-            const topLevelTask = structuredTasks.find(t => t.id == id);
-            const isTopLevel = Boolean(topLevelTask);
-
+            const { id, status } = subTask;
             const spinner = spinnies.pick(id);
 
-            if (!spinner || spinner.status !== 'spinning') {
+            if (!spinner || spinner.status !== SPINNER_STATUS.SPINNING) {
               return;
             }
 
-            const getUpdatedText = () => {
+            const topLevelTask = structuredTasks.find(t => t.id == id);
+
+            if (
+              status === statusText.STATES.SUCCESS ||
+              status === statusText.STATES.FAILURE
+            ) {
               const taskStatusText =
                 subTask.status === statusText.STATES.SUCCESS
-                  ? 'DONE'
-                  : 'FAILED';
-              const hasNewline = spinner.text.includes('\n') || isTopLevel;
+                  ? i18n(`${i18nKey}.successStatusText`)
+                  : i18n(`${i18nKey}.failedStatusText`);
+              const hasNewline =
+                spinner.text.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner.text.replace(
                 '\n',
                 ''
-              )} ${taskStatusText}`;
+              )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
 
-              return hasNewline ? `${updatedText}\n` : updatedText;
-            };
+              status === statusText.STATES.SUCCESS
+                ? spinnies.succeed(id, { text: updatedText })
+                : spinnies.fail(id, { text: updatedText });
 
-            const removeSubtaskSpinnersForTopLevelTasks = () => {
-              if (isTopLevel) {
+              if (topLevelTask) {
                 topLevelTask.subtasks.forEach(currentSubtask =>
                   spinnies.remove(currentSubtask.id)
                 );
               }
-            };
-
-            switch (subTask.status) {
-              case statusText.STATES.SUCCESS:
-                spinnies.succeed(id, {
-                  text: getUpdatedText(),
-                });
-                removeSubtaskSpinnersForTopLevelTasks();
-                break;
-              case statusText.STATES.FAILURE:
-                spinnies.fail(id, { text: getUpdatedText() });
-                removeSubtaskSpinnersForTopLevelTasks();
-                break;
-              default:
-                break;
             }
           });
 
           if (isTaskComplete(taskStatus)) {
-            // subTaskStatus.forEach(subTask => {
-            //   spinnies.remove(subTask[statusText.SUBTASK_NAME_KEY]);
-            // });
-
             if (status === statusText.STATES.SUCCESS) {
               spinnies.succeed('overallTaskStatus', {
                 text: statusStrings.SUCCESS(taskName),

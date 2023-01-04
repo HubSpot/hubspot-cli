@@ -225,6 +225,10 @@ const ERROR_TYPES = {
   BUILD_NOT_IN_PROGRESS: 'BuildPipelineErrorType.BUILD_NOT_IN_PROGRESS',
 };
 
+const SPINNER_STATUS = {
+  SPINNING: 'spinning',
+};
+
 module.exports = {
   ConfigFlags,
   Mode,
@@ -259,5 +263,6 @@ module.exports = {
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,
   SCOPE_GROUPS,
+  SPINNER_STATUS,
   TEMPLATE_TYPES,
 };

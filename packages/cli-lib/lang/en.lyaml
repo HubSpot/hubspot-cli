@@ -608,6 +608,8 @@ en:
           makePollTaskStatusFunc:
             componentCountSingular: "Found 1 component in this project"
             componentCount: "Found {{ numComponents }} components in this project"
+            successStatusText: "DONE"
+            failedStatusText: "FAILED"
 
       remove:
         describe: "Delete a file or folder from HubSpot."
