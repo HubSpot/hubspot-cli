@@ -483,9 +483,12 @@ const makePollTaskStatusFunc = ({
           subTaskStatus.forEach(subTask => {
             const { id } = subTask;
 
+            const topLevelTask = structuredTasks.find(t => t.id == id);
+            const isTopLevel = Boolean(topLevelTask);
+
             const spinner = spinnies.pick(id);
 
-            if (!spinner) {
+            if (!spinner || spinner.status !== 'spinning') {
               return;
             }
 
@@ -494,7 +497,7 @@ const makePollTaskStatusFunc = ({
                 subTask.status === statusText.STATES.SUCCESS
                   ? 'DONE'
                   : 'FAILED';
-              const hasNewline = spinner.text.includes('\n');
+              const hasNewline = spinner.text.includes('\n') || isTopLevel;
               const updatedText = `${spinner.text.replace(
                 '\n',
                 ''
@@ -503,14 +506,24 @@ const makePollTaskStatusFunc = ({
               return hasNewline ? `${updatedText}\n` : updatedText;
             };
 
+            const removeSubtaskSpinnersForTopLevelTasks = () => {
+              if (isTopLevel) {
+                topLevelTask.subtasks.forEach(currentSubtask =>
+                  spinnies.remove(currentSubtask.id)
+                );
+              }
+            };
+
             switch (subTask.status) {
               case statusText.STATES.SUCCESS:
                 spinnies.succeed(id, {
                   text: getUpdatedText(),
                 });
+                removeSubtaskSpinnersForTopLevelTasks();
                 break;
               case statusText.STATES.FAILURE:
                 spinnies.fail(id, { text: getUpdatedText() });
+                removeSubtaskSpinnersForTopLevelTasks();
                 break;
               default:
                 break;
@@ -531,7 +544,7 @@ const makePollTaskStatusFunc = ({
                 text: statusStrings.FAIL(taskName),
               });
 
-              const failedSubtask = subTaskStatus.filter(
+              const failedSubtasks = subTaskStatus.filter(
                 subtask => subtask.status === 'FAILURE'
               );
 
@@ -539,19 +552,19 @@ const makePollTaskStatusFunc = ({
               logger.log(
                 `${statusStrings.SUBTASK_FAIL(
                   displayId,
-                  failedSubtask.length === 1
-                    ? failedSubtask[0][statusText.SUBTASK_NAME_KEY]
-                    : failedSubtask.length + ' components'
+                  failedSubtasks.length === 1
+                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtasks.length + ' components'
                 )}\n`
               );
               logger.log('See below for a summary of errors.');
               uiLine();
 
-              failedSubtask.forEach(subTask => {
+              failedSubtasks.forEach(subTask => {
                 logger.log(
-                  `\n--- ${chalk.bold(subTask[statusText.SUBTASK_NAME_KEY])} ${
-                    statusText.STATUS_TEXT[subTask.status]
-                  } with the following error ---`
+                  `\n--- ${chalk.bold(
+                    subTask[statusText.SUBTASK_NAME_KEY]
+                  )} failed with the following error ---`
                 );
                 logger.error(subTask.errorMessage);
 
