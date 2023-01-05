@@ -17,6 +17,6 @@ module.exports = {
   },
   execute: async ({ name, dest }) => {
     const moduleDefinition = await createModulePrompt();
-    createModule(moduleDefinition, name, dest);
+    await createModule(moduleDefinition, name, dest);
   },
 };

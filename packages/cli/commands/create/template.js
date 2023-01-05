@@ -19,7 +19,7 @@ module.exports = {
   },
   execute: async ({ name, dest }) => {
     const { templateType } = await createTemplatePrompt();
-    createTemplate(name, dest, templateType);
+    await createTemplate(name, dest, templateType);
     return { templateType };
   },
 };

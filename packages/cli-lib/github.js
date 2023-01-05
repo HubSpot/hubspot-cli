@@ -178,6 +178,10 @@ async function downloadGitHubRepoContents(
         return Promise.resolve(null);
       }
 
+      logger.debug(
+        `Downloading content piece: ${contentPiecePath} from ${download_url} to ${downloadPath}`
+      );
+
       return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
         headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
       });
@@ -187,7 +191,9 @@ async function downloadGitHubRepoContents(
       return downloadContent(contentsResp);
     }
 
-    return await contentsResp.map(downloadContent);
+    const contentPromises = contentsResp.map(downloadContent);
+
+    return Promise.all(contentPromises);
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
