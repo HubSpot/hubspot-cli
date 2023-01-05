@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli-lib",
-  "version": "4.1.5-beta.2",
+  "version": "4.1.5-beta.3",
   "description": "Library for creating scripts for working with HubSpot",
   "license": "Apache-2.0",
   "main": "index.js",
