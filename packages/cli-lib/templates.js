@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const { i18n } = require('./lib/lang');
 const { logger } = require('./logger');
+const { downloadGitHubRepoContents } = require('./github');
 
 // Matches the .html file extension, excluding module.html
 const TEMPLATE_EXTENSION_REGEX = new RegExp(/(?<!module)\.html$/);
@@ -50,22 +51,16 @@ const getAnnotationsFromSource = source => {
 const isCodedFile = filePath => TEMPLATE_EXTENSION_REGEX.test(filePath);
 
 const ASSET_PATHS = {
-  'page-template': path.resolve(__dirname, './defaults/page-template.html'),
-  partial: path.resolve(__dirname, './defaults/partial.html'),
-  'global-partial': path.resolve(__dirname, './defaults/global-partial.html'),
-  'email-template': path.resolve(__dirname, './defaults/email-template.html'),
-  'blog-listing-template': path.resolve(
-    __dirname,
-    './defaults/blog-listing-template.html'
-  ),
-  'blog-post-template': path.resolve(
-    __dirname,
-    './defaults/blog-post-template.html'
-  ),
-  'search-template': path.resolve(__dirname, './defaults/search-template.html'),
+  'page-template': 'templates/page-template.html',
+  partial: 'templates/partial.html',
+  'global-partial': 'templates/global-partial.html',
+  'email-template': 'templates/email-template.html',
+  'blog-listing-template': 'templates/blog-listing-template.html',
+  'blog-post-template': 'templates/blog-post-template.html',
+  'search-template': 'templates/search-template.html',
 };
 
-const createTemplate = (name, dest, type = 'page-template') => {
+const createTemplate = async (name, dest, type = 'page-template') => {
   const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
@@ -88,7 +83,7 @@ const createTemplate = (name, dest, type = 'page-template') => {
       path: filePath,
     })
   );
-  fs.copySync(assetPath, filePath);
+  await downloadGitHubRepoContents('cms-sample-assets', assetPath, filePath);
 };
 
 module.exports = {
