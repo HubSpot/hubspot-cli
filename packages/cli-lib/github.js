@@ -11,7 +11,7 @@ const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 const GITHUB_AUTH_HEADERS = {
   authorization:
-    global && global.githubToken ? `Bearer ${global.githubToken}` : '',
+    global && global.githubToken ? `Bearer ${global.githubToken}` : null,
 };
 
 /**
