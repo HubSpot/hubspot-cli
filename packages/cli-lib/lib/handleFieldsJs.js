@@ -1,14 +1,10 @@
 const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
+const { fork } = require('child_process');
 const escapeRegExp = require('./escapeRegExp');
-const { dynamicImport } = require('./dynamicImport');
 const { isModuleFolderChild } = require('../modules');
-const { logger } = require('../logger');
-const { getCwd } = require('../path');
-const { i18n } = require('./lang');
-const { FieldErrors, logFieldsJsError } = require('../errorHandlers');
-const i18nKey = 'cli.commands.upload';
+const { logger, getLogLevel } = require('../logger');
 
 /**
  * FieldsJS Class.
@@ -43,75 +39,43 @@ class FieldsJs {
    */
   convertFieldsJs(writeDir) {
     const filePath = this.filePath;
-    const baseName = path.basename(filePath);
     const dirName = path.dirname(filePath);
-    const cwd = getCwd();
-    const logError = (err, info = {}) => logFieldsJsError(err, filePath, info);
-    const errorCatch = e => {
-      this.rejected = true;
-      process.chdir(cwd);
-      logError(e);
-      // Errors caught by this could be caused by the users javascript, so just print the whole error for them.
+
+    return new Promise((resolve, reject) => {
+      const convertFieldsProcess = fork(
+        path.join(__dirname, './processFieldsJs.js'),
+        [],
+        {
+          cwd: dirName,
+          env: {
+            dirName,
+            fieldOptions: this.fieldOptions,
+            filePath,
+            writeDir,
+            logLevel: getLogLevel(),
+          },
+        }
+      );
+      logger.debug(
+        `Creating child process with pid ${convertFieldsProcess.pid}`
+      );
+      convertFieldsProcess.on('message', function(message) {
+        if (message.action === 'ERROR') {
+          reject(logger.error(message.message));
+        } else if (message.action === 'COMPLETE') {
+          resolve(message.finalPath);
+        }
+      });
+
+      convertFieldsProcess.on('close', () => {
+        logger.debug(
+          `Child process with pid ${convertFieldsProcess.pid} has been terminated`
+        );
+      });
+    }).catch(e => {
+      logger.error(`There was an error converting '${filePath}'`);
       logger.error(e);
-    };
-    logger.info(
-      i18n(`${i18nKey}.converting`, {
-        src: dirName + `/${baseName}`,
-        dest: dirName + '/fields.json',
-      })
-    );
-
-    try {
-      // Switch CWD to the dir of the fieldsjs. This is so that any calls to the file system that are written relatively will resolve properly.
-      process.chdir(dirName);
-
-      /*
-       * How this works: dynamicImport() will always return either a Promise or undefined.
-       * In the case when it's a Promise, its expected that it will resolve to a function.
-       * This function has optional return type of Promise<Array> | Array. In order to have uniform handling,
-       * we wrap the return value of the function in a Promise.resolve(), and then process.
-       */
-
-      const fieldsPromise = dynamicImport(filePath).catch(e => errorCatch(e));
-
-      return fieldsPromise
-        .then(fieldsFunc => {
-          const fieldsFuncType = typeof fieldsFunc;
-          if (fieldsFuncType !== 'function') {
-            this.rejected = true;
-            logError(FieldErrors.IsNotFunction, {
-              returned: fieldsFuncType,
-            });
-            return;
-          }
-          return Promise.resolve(fieldsFunc(this.fieldOptions)).then(fields => {
-            if (!Array.isArray(fields)) {
-              this.rejected = true;
-              logError(FieldErrors.DoesNotReturnArray, {
-                returned: typeof fields,
-              });
-              return;
-            }
-            const finalPath = path.join(writeDir, '/fields.json');
-            return fieldsArrayToJson(fields).then(json => {
-              fs.outputFileSync(finalPath, json);
-              logger.success(
-                i18n(`${i18nKey}.converted`, {
-                  src: dirName + `/${baseName}`,
-                  dest: dirName + '/fields.json',
-                })
-              );
-              return finalPath;
-            });
-          });
-        })
-        .finally(() => {
-          // Switch back to the original directory.
-          process.chdir(cwd);
-        });
-    } catch (e) {
-      errorCatch(e);
-    }
+    });
   }
 
   /**

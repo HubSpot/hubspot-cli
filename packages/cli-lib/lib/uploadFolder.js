@@ -143,22 +143,33 @@ async function uploadFolder(
   );
   filesByType = Object.values(filesByType);
   if (fieldsJsObjects.length) {
-    fieldsJsPaths = fieldsJsObjects.map(fieldsJs => fieldsJs.outputPath);
+    fieldsJsPaths = fieldsJsObjects.map(fieldsJs => {
+      return { outputPath: fieldsJs.outputPath, filePath: fieldsJs.filePath };
+    });
     tmpDirRegex = new RegExp(`^${escapeRegExp(tmpDir)}`);
   }
 
   const uploadFile = file => {
+    const fieldsJsFileInfo = fieldsJsPaths.find(f => f.outputPath === file);
+    const originalFilePath = fieldsJsFileInfo
+      ? fieldsJsFileInfo.filePath
+      : file;
+
     // files in fieldsJsPaths always belong to the tmp directory.
     const relativePath = file.replace(
-      fieldsJsPaths.includes(file) ? tmpDirRegex : regex,
+      fieldsJsFileInfo ? tmpDirRegex : regex,
       ''
     );
     const destPath = convertToUnixPath(path.join(dest, relativePath));
     return async () => {
-      logger.debug('Attempting to upload file "%s" to "%s"', file, destPath);
+      logger.debug(
+        'Attempting to upload file "%s" to "%s"',
+        originalFilePath,
+        destPath
+      );
       try {
         await upload(accountId, file, destPath, apiOptions);
-        logger.log('Uploaded file "%s" to "%s"', file, destPath);
+        logger.log('Uploaded file "%s" to "%s"', originalFilePath, destPath);
       } catch (error) {
         if (isFatalError(error)) {
           throw error;

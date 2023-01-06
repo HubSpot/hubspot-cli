@@ -38,8 +38,7 @@ const setArgsOverrides = args => {
   args.cliPath && (localOverrides.cliPath = args.cliPath);
   args.personalAccessKey &&
     (localOverrides.personalAccessKey = args.personalAccessKey);
-  args.clientId && (localOverrides.clientId = args.clientId);
-  args.clientSecret && (localOverrides.clientSecret = args.clientSecret);
+  args.githubToken && (localOverrides.githubToken = args.githubToken);
   localOverrides.qa = args.qa;
   localOverrides.debug = args.debug;
   localOverrides.headless = !!args.headless;
@@ -49,8 +48,7 @@ const envOverrides = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
-  clientId: getEnvValue('CLIENT_ID'),
-  clientSecret: getEnvValue('CLIENT_SECRET'),
+  githubToken: getEnvValue('GITHUB_TOKEN'),
 });
 
 const getTestConfig = () => {
@@ -64,7 +62,7 @@ const getTestConfig = () => {
 
   if (!config.portalId)
     throw new Error(
-      'accountId must be defined.  Either set the ACCOUNT_ID environment variables, or use the --accountId flag to pass it in.'
+      'accountId must be defined.  Either set the ACCOUNT_ID environment variable, or use the --accountId flag to pass it in.'
     );
 
   if (!config.cliPath)
@@ -77,9 +75,9 @@ const getTestConfig = () => {
       'No valid auth for personalAccessKey was found. Set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
 
-  if (!(config.clientId && config.clientSecret))
+  if (!config.githubToken)
     throw new Error(
-      'No valid auth combination for oauth2 was found. Set the CLIENT_ID and CLIENT_SECRET environment variables or use the --clientId and --clientSecret flags to pass them in.'
+      'githubToken must be defined.  Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
     );
 
   return config;

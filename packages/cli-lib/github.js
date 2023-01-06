@@ -1,4 +1,6 @@
 const request = require('request-promise-native');
+const path = require('path');
+const fs = require('fs-extra');
 
 const { logger } = require('./logger');
 const { logErrorInstance } = require('./errorHandlers');
@@ -6,6 +8,11 @@ const { extractZipArchive } = require('./archive');
 
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
+
+const GITHUB_AUTH_HEADERS = {
+  authorization:
+    global && global.githubToken ? `Bearer ${global.githubToken}` : null,
+};
 
 /**
  * @param {String} filePath - path where config file is stored
@@ -19,7 +26,7 @@ async function fetchJsonFromRepository(repoName, filePath) {
 
     return request.get(URI, {
       json: true,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
   } catch (err) {
     logger.error('An error occured fetching JSON file.');
@@ -43,7 +50,7 @@ async function fetchReleaseData(repoName, tag = '') {
     : `https://api.github.com/repos/HubSpot/${repoName}/releases/latest`;
   try {
     return await request.get(URI, {
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
       json: true,
     });
   } catch (err) {
@@ -85,7 +92,7 @@ async function downloadGithubRepoZip(
     }
     const zip = await request.get(zipUrl, {
       encoding: null,
-      headers: { ...DEFAULT_USER_AGENT_HEADERS },
+      headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
     logger.debug('Completed project fetch.');
     return zip;
@@ -117,7 +124,89 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
+async function getGitHubRepoContentsAtPath(repoName, path) {
+  const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
+
+  return request.get(contentsRequestUrl, {
+    json: true,
+    headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
+  });
+}
+
+async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
+  const resp = await request.get(downloadUrl, {
+    headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
+  });
+
+  fs.writeFileSync(dest, resp, 'utf8');
+}
+
+/**
+ * Writes files from a HubSpot public repository to the destination folder
+ * @param {String} dest - Dir to write contents to
+ * @param {String} repoName - Name of GitHub repository to fetch contents from
+ * @param {String} path - Path to obtain contents from within repository
+ * @returns {Boolean} `true` if successful, `false` otherwise.
+ */
+async function downloadGitHubRepoContents(
+  repoName,
+  contentPath,
+  dest,
+  options = {
+    filter: false,
+  }
+) {
+  fs.ensureDirSync(path.dirname(dest));
+
+  try {
+    const contentsResp = await getGitHubRepoContentsAtPath(
+      repoName,
+      contentPath
+    );
+
+    const downloadContent = async contentPiece => {
+      const { path: contentPiecePath, download_url } = contentPiece;
+      const downloadPath = path.join(
+        dest,
+        contentPiecePath.replace(contentPath, '')
+      );
+
+      if (
+        typeof options.filter === 'function' &&
+        !options.filter(contentPiecePath, downloadPath)
+      ) {
+        return Promise.resolve(null);
+      }
+
+      logger.debug(
+        `Downloading content piece: ${contentPiecePath} from ${download_url} to ${downloadPath}`
+      );
+
+      return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
+        headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
+      });
+    };
+
+    if (contentsResp.download_url) {
+      return downloadContent(contentsResp);
+    }
+
+    const contentPromises = contentsResp.map(downloadContent);
+
+    return Promise.all(contentPromises);
+  } catch (e) {
+    if (e.statusCode === 404) {
+      if (e.error.message) {
+        throw new Error(`Failed to fetch contents: ${e.error.message}`);
+      }
+    }
+
+    throw new Error(`Failed to fetch contents: ${e.error.message}`);
+  }
+}
+
 module.exports = {
   cloneGitHubRepo,
+  downloadGitHubRepoContents,
   fetchJsonFromRepository,
 };
