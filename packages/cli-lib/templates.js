@@ -58,13 +58,19 @@ const ASSET_PATHS = {
   'blog-listing-template': 'templates/blog-listing-template.html',
   'blog-post-template': 'templates/blog-post-template.html',
   'search-template': 'templates/search-template.html',
+  section: 'templates/section.html',
 };
 
-const createTemplate = async (name, dest, type = 'page-template') => {
+const createTemplate = async (
+  name,
+  dest,
+  type = 'page-template',
+  options = { allowExisting: false }
+) => {
   const assetPath = ASSET_PATHS[type];
   const filename = name.endsWith('.html') ? name : `${name}.html`;
   const filePath = path.join(dest, filename);
-  if (fs.existsSync(filePath)) {
+  if (!options.allowExisting && fs.existsSync(filePath)) {
     logger.error(
       i18n('cli.lib.errors.templates.pathExists', {
         path: filePath,
