@@ -6,15 +6,17 @@ const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
 
-const mapAccountChoices = portals =>
-  portals.map(p => {
-    const isSandbox = p.sandboxAccountType !== null;
-    const sandboxName = `[${getSandboxType(p.sandboxAccountType)} sandbox] `;
-    return {
-      name: `${p.name} ${isSandbox ? sandboxName : ''}(${p.portalId})`,
-      value: p.name || p.portalId,
-    };
-  });
+const mapSandboxAccountChoices = portals =>
+  portals
+    .filter(p => p.sandboxAccountType !== null)
+    .map(p => {
+      const isSandbox = p.sandboxAccountType !== null;
+      const sandboxName = `[${getSandboxType(p.sandboxAccountType)} sandbox] `;
+      return {
+        name: `${p.name} ${isSandbox ? sandboxName : ''}(${p.portalId})`,
+        value: p.name || p.portalId,
+      };
+    });
 
 const createSandboxPrompt = () => {
   return promptUser([
@@ -44,7 +46,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       type: 'list',
       look: false,
       pageSize: 20,
-      choices: mapAccountChoices(config.portals),
+      choices: mapSandboxAccountChoices(config.portals),
       default: config.defaultPortal,
     },
   ]);
@@ -54,5 +56,4 @@ module.exports = {
   createSandboxPrompt,
   deleteSandboxPrompt,
   getSandboxType,
-  mapAccountChoices,
 };
