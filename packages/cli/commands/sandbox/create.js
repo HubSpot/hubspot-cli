@@ -10,7 +10,10 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const Spinnies = require('spinnies');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const {
+  createSandboxPrompt,
+  getSandboxType,
+} = require('../../lib/prompts/sandboxesPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
@@ -121,6 +124,18 @@ exports.handler = async options => {
   });
 
   trackCommandUsage('sandbox-create', null, accountId);
+
+  if (accountConfig.sandboxAccountType !== null) {
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+
+    logger.error(
+      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
+        sandboxType: getSandboxType(accountConfig.sandboxAccountType),
+      })
+    );
+
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   let namePrompt;
 
