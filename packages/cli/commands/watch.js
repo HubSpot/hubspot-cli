@@ -17,6 +17,7 @@ const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getUploadableFileList } = require('../lib/upload');
 
 const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -66,6 +67,8 @@ exports.handler = async options => {
     return;
   }
 
+  let filesToUpload = [];
+
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
   } else {
@@ -76,6 +79,13 @@ exports.handler = async options => {
     }
   }
 
+  if (initialUpload) {
+    filesToUpload = await getUploadableFileList(
+      absoluteSrcPath,
+      options.convertFields
+    );
+  }
+
   trackCommandUsage('watch', { mode }, accountId);
   watch(accountId, absoluteSrcPath, dest, {
     mode,
@@ -83,6 +93,7 @@ exports.handler = async options => {
     disableInitial: initialUpload ? false : true,
     notify,
     commandOptions: options,
+    filePaths: filesToUpload,
   });
 };
 
@@ -117,7 +128,6 @@ exports.builder = yargs => {
     type: 'boolean',
   });
   yargs.option('disable-initial', {
-    alias: 'd',
     describe: i18n(`${i18nKey}.options.disableInitial.describe`),
     type: 'boolean',
     hidden: true,
