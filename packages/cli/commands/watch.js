@@ -17,6 +17,7 @@ const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getUploadableFileList } = require('../lib/upload');
 
 const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -66,8 +67,14 @@ exports.handler = async options => {
     return;
   }
 
+  let filesToUpload = [];
+
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
+    filesToUpload = await getUploadableFileList(
+      absoluteSrcPath,
+      options.convertFields
+    );
   } else {
     logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
 
@@ -83,6 +90,7 @@ exports.handler = async options => {
     disableInitial: initialUpload ? false : true,
     notify,
     commandOptions: options,
+    filePaths: filesToUpload,
   });
 };
 
