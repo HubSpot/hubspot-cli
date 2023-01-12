@@ -150,7 +150,7 @@ function watch(
 
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
-    uploadFolder(accountId, src, dest, { mode }, {}, filePaths)
+    uploadFolder(accountId, src, dest, { mode }, commandOptions, filePaths)
       .then(() => {
         logger.success(
           `Completed uploading files in ${src} to ${dest} in ${accountId}`
