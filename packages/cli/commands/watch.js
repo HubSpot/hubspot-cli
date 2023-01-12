@@ -71,16 +71,19 @@ exports.handler = async options => {
 
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
-    filesToUpload = await getUploadableFileList(
-      absoluteSrcPath,
-      options.convertFields
-    );
   } else {
     logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
 
     if (!initialUpload) {
       logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
     }
+  }
+
+  if (initialUpload) {
+    filesToUpload = await getUploadableFileList(
+      absoluteSrcPath,
+      options.convertFields
+    );
   }
 
   trackCommandUsage('watch', { mode }, accountId);
@@ -125,7 +128,6 @@ exports.builder = yargs => {
     type: 'boolean',
   });
   yargs.option('disable-initial', {
-    alias: 'd',
     describe: i18n(`${i18nKey}.options.disableInitial.describe`),
     type: 'boolean',
     hidden: true,
