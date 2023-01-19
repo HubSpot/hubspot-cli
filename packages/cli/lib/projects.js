@@ -414,17 +414,16 @@ const makePollTaskStatusFunc = ({
       structureFn(accountId, taskName, taskId),
     ]);
 
-    const flatTaskList = initialTaskStatus[statusText.SUBTASK_KEY].filter(
-      task => {
+    const tasksById = initialTaskStatus[statusText.SUBTASK_KEY].reduce(
+      (acc, task) => {
         const type = task[statusText.TYPE_KEY];
-        return type !== 'APP_ID' && type !== 'SERVERLESS_PKG';
-      }
+        if (type !== 'APP_ID' && type !== 'SERVERLESS_PKG') {
+          acc[task.id] = task;
+        }
+        return acc;
+      },
+      {}
     );
-
-    const tasksById = flatTaskList.reduce((acc, task) => {
-      acc[task.id] = task;
-      return acc;
-    }, {});
 
     const structuredTasks = Object.keys(taskStructure).map(key => {
       return {
