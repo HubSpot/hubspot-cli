@@ -125,7 +125,10 @@ exports.handler = async options => {
 
   trackCommandUsage('sandbox-create', null, accountId);
 
-  if (accountConfig.sandboxAccountType !== null) {
+  if (
+    accountConfig.sandboxAccountType &&
+    accountConfig.sandboxAccountType !== null
+  ) {
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
 
     logger.error(
