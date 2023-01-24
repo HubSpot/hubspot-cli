@@ -7,7 +7,7 @@ const getSandboxType = type =>
 
 const mapAccountChoices = portals =>
   portals.map(p => {
-    const isSandbox = p.sandboxAccountType !== null;
+    const isSandbox = p.sandboxAccountType && p.sandboxAccountType !== null;
     const sandboxName = `[${getSandboxType(p.sandboxAccountType)} sandbox] `;
     return {
       name: `${p.name} ${isSandbox ? sandboxName : ''}(${p.portalId})`,
