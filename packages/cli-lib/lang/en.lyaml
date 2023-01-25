@@ -641,6 +641,7 @@ en:
             success:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
+              creatingWithinSandbox: "Development sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run `hs auth` to connect a production account or `hs accounts use` to switch to your production account, then try again."
               scopes:
                 message: "The personal access key you provided doesn't include sandbox permissions."
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
