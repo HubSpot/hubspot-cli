@@ -78,7 +78,7 @@ async function validateAccount(options) {
     return false;
   }
 
-  if (accountOption && loadConfigFromEnvironment()) {
+  if (accountOption && loadConfigFromEnvironment({ silent: true })) {
     throw new Error(
       'Cannot specify an account when environment variables are supplied. Please unset the environment variables or do not use the "--account" flag.'
     );
