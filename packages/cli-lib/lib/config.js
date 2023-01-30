@@ -711,11 +711,8 @@ const loadConfigFromEnvironment = () => {
     refreshToken,
     env,
   } = getConfigVariablesFromEnv();
-  const unableToLoadEnvConfigError =
-    'Unable to load config from environment variables.';
 
   if (!portalId) {
-    logger.error(unableToLoadEnvConfigError);
     return;
   }
 
@@ -733,7 +730,6 @@ const loadConfigFromEnvironment = () => {
   } else if (apiKey) {
     return generateApiKeyConfig(portalId, apiKey, env);
   } else {
-    logger.error(unableToLoadEnvConfigError);
     return;
   }
 };
