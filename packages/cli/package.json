@@ -21,7 +21,7 @@
     "ora": "^4.0.3",
     "spinnies": "^0.5.1",
     "tmp": "^0.2.1",
-    "update-notifier": "^5.1.0",
+    "update-notifier": "^6.0.1",
     "yargs": "15.4.1"
   },
   "devDependencies": {
