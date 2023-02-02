@@ -12,7 +12,6 @@ const ignoreList = [
   '*.log', // Error log for npm
   '*.swp', // Swap file for vim state
   '.env', // Dotenv file
-  'package-lock.json', // Temporary solution to improve serverless beta: https://git.hubteam.com/HubSpot/cms-devex-super-repo/issues/2
 
   // # macOS
   'Icon\\r', // Custom Finder icon: http://superuser.com/questions/298785/icon-file-on-os-x-desktop
