@@ -7,7 +7,7 @@ const {
   initiateSync: _initiateSync,
   fetchTaskStatus: _fetchTaskStatus,
   fetchTypes: _fetchTypes,
-} = require('./api/sandbox-hubs');
+} = require('./api/sandboxes-sync');
 
 /**
  * Creates a new Sandbox portal instance.
@@ -67,22 +67,26 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   } catch (err) {
     throw err;
   }
-
+  console.log('RESPONSE for sync: ', resp);
   return {
+    fromHubId,
+    toHubId,
+    id: resp.id,
     ...resp,
   };
 }
 
 /**
- * Deletes a Sandbox portal instance.
+ * Fetches a task.
+ * @param {String} accountId - Parent account ID.
  * @param {String} taskId - Sync task ID.
  * @returns {200}
  */
-async function fetchTaskStatus(taskId) {
+async function fetchTaskStatus(accountId, taskId) {
   let resp;
 
   try {
-    resp = await _fetchTaskStatus(taskId);
+    resp = await _fetchTaskStatus(accountId, taskId);
   } catch (err) {
     throw err;
   }
@@ -93,7 +97,7 @@ async function fetchTaskStatus(taskId) {
 }
 
 /**
- * Deletes a Sandbox portal instance.
+ * Fetches available sync types for a specified portal.
  * @param {Number} toHubId - Portal ID to fetch available types.
  * @returns {200}
  */

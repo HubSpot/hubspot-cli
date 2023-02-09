@@ -5,10 +5,10 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+// const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const Spinnies = require('spinnies');
-// const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
+const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -30,6 +30,14 @@ function getAccountName(config) {
     config.sandboxAccountType && config.sandboxAccountType !== null;
   const sandboxName = `[${getSandboxType(config.sandboxAccountType)} sandbox] `;
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
+}
+
+function getSyncTasks(config) {
+  if (config.sandboxAccountType === 'DEVELOPER') {
+    return [{ type: 'object-schemas' }];
+  }
+  // TODO: fetch types for standard sandbox sync
+  return null;
 }
 
 exports.command = 'sync';
@@ -134,28 +142,30 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.loading.syncing`),
     });
 
-    console.log("it'll run a sync here");
-    // result = await initiateSync(accountId);
+    const tasks = await getSyncTasks(accountConfig);
+
+    result = await initiateSync(parentAccountId, accountId, tasks, accountId);
 
     logger.log('');
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
   } catch (err) {
+    console.log('error with sync: ', err);
     debugErrorAndContext(err);
 
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+    // trackCommandUsage('sandbox-sync', { successful: false }, accountId);
 
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
 
-    logger.error(err.error.message);
+    // logger.error(err.error && err.error.message);
     process.exit(EXIT_CODES.ERROR);
   }
   try {
-    console.log('result: ', result);
-    process.exit(EXIT_CODES.SUCCESS);
+    // polling here
+    console.log('RESULT HERE: ', result);
   } catch (err) {
     logErrorInstance(err);
     process.exit(EXIT_CODES.ERROR);
