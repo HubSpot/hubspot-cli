@@ -167,7 +167,11 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
-      logger.error(err.error.message);
+      if (err.message) {
+        logger.error(err.message);
+      } else {
+        logger.error(err.error && err.error.message);
+      }
     }
     process.exit(EXIT_CODES.ERROR);
   }

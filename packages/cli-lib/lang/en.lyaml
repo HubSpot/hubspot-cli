@@ -630,7 +630,7 @@ en:
             debug:
               error: "Error creating sandbox:"
             info:
-              auth: "Run \"hs auth\" to authenticate with the new sandbox account."
+              auth: "Run `hs auth` to authenticate with the new sandbox account."
             options:
               name:
                 describe: "Name to use for created sandbox"
@@ -665,6 +665,31 @@ en:
             options:
               account:
                 describe: "Account name or id to delete"
+          sync:
+            describe: "Sync to a sandbox account"
+            debug:
+              syncing: "Syncing sandbox account \"{{ account }}\"."
+              error: "Error syncing sandbox account."
+            examples:
+              default: "Initiates a sync to a sandbox account."
+            info:
+              developmentSandbox: "This will sync CRM object definitions."
+              sync: "\nSync direction:
+                \n- Target sandbox: {{#bold}}{{ sandboxName }}{{/bold}}
+                \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
+                \n\nRun `{{#bold}}hs accounts use{{/bold}}` to change your default account and sync to a different target sandbox."
+            warning: "All object definitions in that sandbox will be overwritten except for the ones that were originally created in your sandbox and not synced from production."
+            confirm:
+              developmentSandbox: "Sync CRM object definitions to {{#bold}}{{ sandboxName }}{{/bold}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+            loading:
+              syncing: "Syncing sandbox..."
+              fail: "Failed to sync sandbox."
+              succeed: "Successfully synced sandbox."
+            failure:
+              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `hs auth` to connect your sandbox account to the CLI or `hs accounts use` to change your default account, then try again."
+              missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
+                \n- Run `hs auth` to connect that account to your terminal, then try again.
+                \n- Run `hs accounts use` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
