@@ -17,28 +17,26 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getSandboxType } = require('../../lib/prompts/sandboxesPrompt');
 const { getAccountConfig, getConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine } = require('../../lib/ui');
+const { getAccountName, getSyncTasks } = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
-function getAccountName(config) {
-  const isSandbox =
-    config.sandboxAccountType && config.sandboxAccountType !== null;
-  const sandboxName = `[${getSandboxType(config.sandboxAccountType)} sandbox] `;
-  return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
-}
-
-function getSyncTasks(config) {
-  if (config.sandboxAccountType === 'DEVELOPER') {
-    return [{ type: 'object-schemas' }];
-  }
-  // TODO: fetch types for standard sandbox sync
-  return null;
-}
+// const pollForSyncTaskUpdates = (accountId, taskId) => {
+//   return fetchTaskStatus(accountId, taskId)
+//     .then(task => {
+//       if (isTaskActive(task)) {
+//         setTimeout(
+//           () => pollForSyncTaskUpdates(accountId, taskId),
+//           ACTIVE_TASK_POLL_INTERVAL
+//         );
+//       }
+//     })
+//     .catch(e => logger.error(e));
+// };
 
 exports.command = 'sync';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -135,16 +133,34 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let result;
-
   try {
     spinnies.add('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.syncing`),
+      text: i18n(`${i18nKey}.loading.startSync`),
     });
 
     const tasks = await getSyncTasks(accountConfig);
 
-    result = await initiateSync(parentAccountId, accountId, tasks, accountId);
+    const result = await initiateSync(
+      parentAccountId,
+      accountId,
+      tasks,
+      accountId
+    );
+
+    logger.log(
+      i18n(`${i18nKey}.info.syncStatus`, {
+        url: result.links.status,
+      })
+    );
+    logger.log('');
+
+    if (result) {
+      console.log('result: ', result);
+    }
+
+    spinnies.update('sandboxSync', {
+      text: i18n(`${i18nKey}.loading.syncing`),
+    });
 
     logger.log('');
     spinnies.succeed('sandboxSync', {
@@ -165,7 +181,7 @@ exports.handler = async options => {
   }
   try {
     // polling here
-    console.log('RESULT HERE: ', result);
+    console.log('it is done');
   } catch (err) {
     logErrorInstance(err);
     process.exit(EXIT_CODES.ERROR);

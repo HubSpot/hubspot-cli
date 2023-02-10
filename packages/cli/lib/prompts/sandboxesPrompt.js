@@ -1,10 +1,8 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getSandboxType } = require('../sandboxes');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
-
-const getSandboxType = type =>
-  type === 'DEVELOPER' ? 'development' : 'standard';
 
 const mapSandboxAccountChoices = portals =>
   portals

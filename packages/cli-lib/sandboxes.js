@@ -67,11 +67,10 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   } catch (err) {
     throw err;
   }
-  console.log('RESPONSE for sync: ', resp);
+
   return {
     fromHubId,
     toHubId,
-    id: resp.id,
     ...resp,
   };
 }

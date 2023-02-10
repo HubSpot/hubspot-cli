@@ -678,10 +678,13 @@ en:
                 \n- Target sandbox: {{#bold}}{{ sandboxName }}{{/bold}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
                 \n\nRun `{{#bold}}hs accounts use{{/bold}}` to change your default account and sync to a different target sandbox."
+              syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
             warning: "All object definitions in that sandbox will be overwritten except for the ones that were originally created in your sandbox and not synced from production."
             confirm:
               developmentSandbox: "Sync CRM object definitions to {{#bold}}{{ sandboxName }}{{/bold}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+              backgroundSync: "Syncing may take some time. Hit enter to exit and continue the sync in the background."
             loading:
+              startSync: "Starting sync..."
               syncing: "Syncing sandbox..."
               fail: "Failed to sync sandbox."
               succeed: "Successfully synced sandbox."

@@ -10,10 +10,8 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const Spinnies = require('spinnies');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  createSandboxPrompt,
-  getSandboxType,
-} = require('../../lib/prompts/sandboxesPrompt');
+const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const { getSandboxType } = require('../../lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {

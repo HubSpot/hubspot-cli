@@ -1,7 +1,7 @@
 const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getSandboxType } = require('./sandboxesPrompt');
+const { getSandboxType } = require('../sandboxes');
 
 const mapAccountChoices = portals =>
   portals.map(p => {
