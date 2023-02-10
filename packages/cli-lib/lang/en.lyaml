@@ -684,10 +684,13 @@ en:
               developmentSandbox: "Sync CRM object definitions to {{#bold}}{{ sandboxName }}{{/bold}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               backgroundSync: "Syncing may take some time. Hit enter to exit and continue the sync in the background."
             loading:
-              startSync: "Starting sync..."
-              syncing: "Syncing sandbox..."
+              startSync: "Initiating sync..."
               fail: "Failed to sync sandbox."
-              succeed: "Successfully synced sandbox."
+              succeed: "Sandbox sync initiated."
+            polling:
+              syncing: "Syncing sandbox..."
+              fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
+              succeed: "Sandbox sync complete."
             failure:
               notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `hs auth` to connect your sandbox account to the CLI or `hs accounts use` to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.

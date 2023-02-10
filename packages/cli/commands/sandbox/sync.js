@@ -25,19 +25,6 @@ const { getAccountName, getSyncTasks } = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
-// const pollForSyncTaskUpdates = (accountId, taskId) => {
-//   return fetchTaskStatus(accountId, taskId)
-//     .then(task => {
-//       if (isTaskActive(task)) {
-//         setTimeout(
-//           () => pollForSyncTaskUpdates(accountId, taskId),
-//           ACTIVE_TASK_POLL_INTERVAL
-//         );
-//       }
-//     })
-//     .catch(e => logger.error(e));
-// };
-
 exports.command = 'sync';
 exports.describe = i18n(`${i18nKey}.describe`);
 
@@ -48,7 +35,6 @@ exports.handler = async options => {
   const config = getConfig();
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  // const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
@@ -115,6 +101,7 @@ exports.handler = async options => {
     logger.warn(i18n(`${i18nKey}.warning`));
     uiLine();
 
+    logger.log('');
     const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
       {
         name: 'confirmSandboxSyncPrompt',
@@ -133,41 +120,34 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  let result;
+
   try {
+    logger.log('');
     spinnies.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
     });
 
     const tasks = await getSyncTasks(accountConfig);
 
-    const result = await initiateSync(
-      parentAccountId,
-      accountId,
-      tasks,
-      accountId
-    );
+    result = await initiateSync(parentAccountId, accountId, tasks, accountId);
 
+    uiLine();
+    const baseUrl = getHubSpotWebsiteOrigin(
+      getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    );
     logger.log(
       i18n(`${i18nKey}.info.syncStatus`, {
-        url: result.links.status,
+        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
       })
     );
+    uiLine();
+
     logger.log('');
-
-    if (result) {
-      console.log('result: ', result);
-    }
-
     spinnies.update('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.syncing`),
-    });
-
-    logger.log('');
-    spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
   } catch (err) {
-    console.log('error with sync: ', err);
     debugErrorAndContext(err);
 
     // trackCommandUsage('sandbox-sync', { successful: false }, accountId);
@@ -181,9 +161,25 @@ exports.handler = async options => {
   }
   try {
     // polling here
-    console.log('it is done');
+    spinnies.update('sandboxSync', {
+      text: i18n(`${i18nKey}.polling.syncing`),
+    });
+    if (result) {
+      // console.log('result: ', result);
+      await new Promise(res => setTimeout(res, 4000));
+    }
+    spinnies.succeed('sandboxSync', {
+      text: i18n(`${i18nKey}.polling.succeed`),
+    });
   } catch (err) {
     logErrorInstance(err);
+
+    spinnies.fail('sandboxSync', {
+      text: i18n(`${i18nKey}.polling.fail`, {
+        url: '',
+      }),
+    });
+
     process.exit(EXIT_CODES.ERROR);
   }
 };

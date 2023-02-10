@@ -11,101 +11,24 @@ const Spinnies = require('spinnies');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
-const { getSandboxType } = require('../../lib/sandboxes');
+const {
+  getSandboxType,
+  sandboxCreatePersonalAccessKeyFlow,
+} = require('../../lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
   debugErrorAndContext,
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const {
-  ENVIRONMENTS,
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-} = require('@hubspot/cli-lib/lib/constants');
-const {
-  personalAccessKeyPrompt,
-} = require('../../lib/prompts/personalAccessKeyPrompt');
-const {
-  updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  getConfig,
-  writeConfig,
-  updateAccountConfig,
-  getAccountConfig,
-} = require('@hubspot/cli-lib');
-const {
-  enterAccountNamePrompt,
-} = require('../../lib/prompts/enterAccountNamePrompt');
-const {
-  setAsDefaultAccountPrompt,
-} = require('../../lib/prompts/setAsDefaultAccountPrompt');
+const { getAccountConfig } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { uiFeatureHighlight } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
-
-const personalAccessKeyFlow = async (env, account, name) => {
-  const configData = await personalAccessKeyPrompt({ env, account });
-  const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
-
-  if (!updatedConfig) {
-    process.exit(EXIT_CODES.SUCCESS);
-  }
-
-  let validName = updatedConfig.name;
-
-  if (!updatedConfig.name) {
-    const nameForConfig = name
-      .toLowerCase()
-      .split(' ')
-      .join('-');
-    const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
-    validName = promptName;
-  }
-
-  updateAccountConfig({
-    ...updatedConfig,
-    environment: updatedConfig.env,
-    tokenInfo: updatedConfig.auth.tokenInfo,
-    name: validName,
-  });
-  writeConfig();
-
-  const setAsDefault = await setAsDefaultAccountPrompt(validName);
-
-  logger.log('');
-  if (setAsDefault) {
-    logger.success(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-        accountName: validName,
-      })
-    );
-  } else {
-    const config = getConfig();
-    logger.info(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
-      })
-    );
-  }
-  logger.success(
-    i18n(`${i18nKey}.success.configFileUpdated`, {
-      configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-      account: validName,
-    })
-  );
-  uiFeatureHighlight([
-    'accountsUseCommand',
-    'accountOption',
-    'accountsListCommand',
-  ]);
-};
 
 exports.command = 'create [--name]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -198,7 +121,11 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
   try {
-    await personalAccessKeyFlow(env, result.sandboxHubId, result.name);
+    await sandboxCreatePersonalAccessKeyFlow(
+      env,
+      result.sandboxHubId,
+      result.name
+    );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);

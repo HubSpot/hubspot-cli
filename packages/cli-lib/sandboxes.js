@@ -68,11 +68,7 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
     throw err;
   }
 
-  return {
-    fromHubId,
-    toHubId,
-    ...resp,
-  };
+  return resp;
 }
 
 /**
@@ -90,9 +86,7 @@ async function fetchTaskStatus(accountId, taskId) {
     throw err;
   }
 
-  return {
-    ...resp,
-  };
+  return resp;
 }
 
 /**
@@ -109,10 +103,7 @@ async function fetchTypes(toHubId) {
     throw err;
   }
 
-  return {
-    toHubId,
-    ...resp,
-  };
+  return resp;
 }
 
 module.exports = {
