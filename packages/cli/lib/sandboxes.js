@@ -21,6 +21,7 @@ const {
   setAsDefaultAccountPrompt,
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('./ui');
+const { fetchTaskStatus } = require('@hubspot/cli-lib/sandboxes');
 
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
@@ -98,9 +99,34 @@ const sandboxCreatePersonalAccessKeyFlow = async (env, account, name) => {
   ]);
 };
 
+const ACTIVE_TASK_POLL_INTERVAL = 1000;
+
+const isTaskComplete = task => {
+  if (!task) {
+    return false;
+  }
+  return task.status === 'COMPLETE';
+};
+
+function pollSyncStatus(accountId, taskId) {
+  console.log('STARTING POLL');
+  return new Promise((resolve, reject) => {
+    const pollInterval = setInterval(async () => {
+      console.log('its polling');
+      const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
+      console.log('task result in poll: ', taskResult);
+      if (isTaskComplete(taskResult)) {
+        clearInterval(pollInterval);
+        resolve(taskResult);
+      }
+    }, ACTIVE_TASK_POLL_INTERVAL);
+  });
+}
+
 module.exports = {
   getSandboxType,
   getAccountName,
   getSyncTasks,
   sandboxCreatePersonalAccessKeyFlow,
+  pollSyncStatus,
 };

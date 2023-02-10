@@ -81,8 +81,10 @@ async function fetchTaskStatus(accountId, taskId) {
   let resp;
 
   try {
+    console.log('fetching task status here: ', accountId, taskId);
     resp = await _fetchTaskStatus(accountId, taskId);
   } catch (err) {
+    console.log('error here in fetch task status: ', err);
     throw err;
   }
 

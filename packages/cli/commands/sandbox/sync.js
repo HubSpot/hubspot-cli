@@ -21,7 +21,11 @@ const { getAccountConfig, getConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine } = require('../../lib/ui');
-const { getAccountName, getSyncTasks } = require('../../lib/sandboxes');
+const {
+  getAccountName,
+  getSyncTasks,
+  pollSyncStatus,
+} = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -120,7 +124,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  let result;
+  let initiateSyncResponse;
 
   try {
     logger.log('');
@@ -130,7 +134,12 @@ exports.handler = async options => {
 
     const tasks = await getSyncTasks(accountConfig);
 
-    result = await initiateSync(parentAccountId, accountId, tasks, accountId);
+    initiateSyncResponse = await initiateSync(
+      parentAccountId,
+      accountId,
+      tasks,
+      accountId
+    );
 
     uiLine();
     const baseUrl = getHubSpotWebsiteOrigin(
@@ -164,9 +173,9 @@ exports.handler = async options => {
     spinnies.update('sandboxSync', {
       text: i18n(`${i18nKey}.polling.syncing`),
     });
-    if (result) {
-      // console.log('result: ', result);
-      await new Promise(res => setTimeout(res, 4000));
+    if (initiateSyncResponse) {
+      // console.log('initiateSyncResponse: ', initiateSyncResponse);
+      await pollSyncStatus(parentAccountId, initiateSyncResponse.id);
     }
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.polling.succeed`),
