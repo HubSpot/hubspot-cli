@@ -109,12 +109,9 @@ const isTaskComplete = task => {
 };
 
 function pollSyncStatus(accountId, taskId) {
-  console.log('STARTING POLL');
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
-      console.log('its polling');
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
-      console.log('task result in poll: ', taskResult);
       if (isTaskComplete(taskResult)) {
         clearInterval(pollInterval);
         resolve(taskResult);

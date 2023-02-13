@@ -165,29 +165,40 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.loading.fail`),
     });
 
-    // logger.error(err.error && err.error.message);
+    if (err.message) {
+      logger.error(err.message);
+    } else {
+      logger.error(err.error && err.error.message);
+    }
+
     process.exit(EXIT_CODES.ERROR);
   }
   try {
-    // polling here
     spinnies.update('sandboxSync', {
       text: i18n(`${i18nKey}.polling.syncing`),
     });
-    if (initiateSyncResponse) {
-      // console.log('initiateSyncResponse: ', initiateSyncResponse);
-      await pollSyncStatus(parentAccountId, initiateSyncResponse.id);
-    }
+
+    await pollSyncStatus(parentAccountId, initiateSyncResponse.id);
+
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.polling.succeed`),
     });
   } catch (err) {
     logErrorInstance(err);
 
+    // If polling fails at this point, we do not track a failed sync since it is running in the background.
+
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.polling.fail`, {
         url: '',
       }),
     });
+
+    if (err.message) {
+      logger.error(err.message);
+    } else {
+      logger.error(err.error && err.error.message);
+    }
 
     process.exit(EXIT_CODES.ERROR);
   }
