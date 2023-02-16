@@ -5,7 +5,7 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-// const { trackCommandUsage } = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const Spinnies = require('spinnies');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
@@ -35,7 +35,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  // const { force } = options;
+  // TODO: add scripting options
   const config = getConfig();
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
@@ -43,13 +43,13 @@ exports.handler = async options => {
     succeedColor: 'white',
   });
 
-  // trackCommandUsage('sandbox-sync', null, accountId);
+  trackCommandUsage('sandbox-sync', null, accountId);
 
   if (
     accountConfig.sandboxAccountType === undefined ||
     accountConfig.sandboxAccountType === null
   ) {
-    // trackCommandUsage('sandbox-sync', { successful: false }, accountId);
+    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
 
     logger.error(i18n(`${i18nKey}.failure.notSandbox`));
 
@@ -127,6 +127,7 @@ exports.handler = async options => {
   let initiateSyncResponse;
 
   try {
+    // TODO: use cli progress here instead of spinnies
     logger.log('');
     spinnies.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
@@ -159,7 +160,7 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
-    // trackCommandUsage('sandbox-sync', { successful: false }, accountId);
+    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
 
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
