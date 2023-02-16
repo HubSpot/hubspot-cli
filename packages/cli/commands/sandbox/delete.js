@@ -11,7 +11,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   debugErrorAndContext,
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getConfig, getEnv } = require('@hubspot/cli-lib');
@@ -167,11 +167,7 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
-      if (err.message) {
-        logger.error(err.message);
-      } else {
-        logger.error(err.error && err.error.message);
-      }
+      logErrorInstance(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }

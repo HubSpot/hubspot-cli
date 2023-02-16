@@ -12,9 +12,6 @@ const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
-const {
-  debugErrorAndContext,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getConfig, getEnv } = require('@hubspot/cli-lib');
@@ -73,22 +70,12 @@ exports.handler = async options => {
   }
 
   if (!getAccountId({ account: parentAccountId })) {
-    const baseUrl = getHubSpotWebsiteOrigin(
-      getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    );
-    const url = `${baseUrl}/sandboxes/${parentAccountId}`;
-    const command = `hs auth ${
-      getEnv(accountId) === 'qa' ? '--qa' : ''
-    } --account=${parentAccountId}`;
     logger.log('');
     logger.error(
-      i18n(`${i18nKey}.missingParentPortal`, {
-        parentAccountId,
-        url,
-        command,
+      i18n(`${i18nKey}.failure.missingParentPortal`, {
+        sandboxName: getAccountName(accountConfig),
       })
     );
-    logger.log('');
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -124,6 +111,10 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
   let initiateSyncResponse;
 
   try {
@@ -143,9 +134,6 @@ exports.handler = async options => {
     );
 
     uiLine();
-    const baseUrl = getHubSpotWebsiteOrigin(
-      getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    );
     logger.log(
       i18n(`${i18nKey}.info.syncStatus`, {
         url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
@@ -158,19 +146,13 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
   } catch (err) {
-    debugErrorAndContext(err);
+    logErrorInstance(err);
 
     trackCommandUsage('sandbox-sync', { successful: false }, accountId);
 
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
-
-    if (err.message) {
-      logger.error(err.message);
-    } else {
-      logger.error(err.error && err.error.message);
-    }
 
     process.exit(EXIT_CODES.ERROR);
   }
@@ -191,15 +173,9 @@ exports.handler = async options => {
 
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.polling.fail`, {
-        url: '',
+        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
       }),
     });
-
-    if (err.message) {
-      logger.error(err.message);
-    } else {
-      logger.error(err.error && err.error.message);
-    }
 
     process.exit(EXIT_CODES.ERROR);
   }
