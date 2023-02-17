@@ -75,7 +75,7 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
  * Fetches a task.
  * @param {String} accountId - Parent account ID.
  * @param {String} taskId - Sync task ID.
- * @returns {200}
+ * @returns {Object} a sync task instance.
  */
 async function fetchTaskStatus(accountId, taskId) {
   let resp;
@@ -92,18 +92,18 @@ async function fetchTaskStatus(accountId, taskId) {
 /**
  * Fetches available sync types for a specified portal.
  * @param {Number} toHubId - Portal ID to fetch available types.
- * @returns {200}
+ * @returns {Object} a list of available sync types
  */
-async function fetchTypes(toHubId) {
+async function fetchTypes(accountId, toHubId) {
   let resp;
 
   try {
-    resp = await _fetchTypes(toHubId);
+    resp = await _fetchTypes(accountId, toHubId);
   } catch (err) {
     throw err;
   }
 
-  return resp;
+  return resp.results;
 }
 
 module.exports = {

@@ -22,9 +22,9 @@ async function fetchTaskStatus(accountId, taskId) {
   });
 }
 
-async function fetchTypes(toHubId) {
-  return http.get(toHubId, {
-    uri: `${SANDBOXES_SYNC_API_PATH}/types/${
+async function fetchTypes(accountId, toHubId) {
+  return http.get(accountId, {
+    uri: `${SANDBOXES_SYNC_API_PATH}/types${
       toHubId ? `?toHubId=${toHubId}` : ''
     }`,
   });

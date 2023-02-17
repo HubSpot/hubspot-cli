@@ -21,7 +21,7 @@ const {
   setAsDefaultAccountPrompt,
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('./ui');
-const { fetchTaskStatus } = require('@hubspot/cli-lib/sandboxes');
+const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
 
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
@@ -33,11 +33,16 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
-function getSyncTasks(config) {
+async function getSyncTypes(parentAccountConfig, config) {
   if (config.sandboxAccountType === 'DEVELOPER') {
     return [{ type: 'object-schemas' }];
   }
-  // TODO: fetch types for standard sandbox sync
+  if (config.sandboxAccountType === 'STANDARD') {
+    const parentPortalId = parentAccountConfig.portalId;
+    const portalId = config.portalId;
+    const syncTypes = await fetchTypes(parentPortalId, portalId);
+    return syncTypes.map(t => ({ type: t.name }));
+  }
   return null;
 }
 
@@ -123,7 +128,7 @@ function pollSyncStatus(accountId, taskId) {
 module.exports = {
   getSandboxType,
   getAccountName,
-  getSyncTasks,
+  getSyncTypes,
   sandboxCreatePersonalAccessKeyFlow,
   pollSyncStatus,
 };
