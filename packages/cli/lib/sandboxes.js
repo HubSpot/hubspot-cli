@@ -1,3 +1,4 @@
+const cliProgress = require('cli-progress');
 const {
   getConfig,
   writeConfig,
@@ -114,12 +115,39 @@ const isTaskComplete = task => {
 };
 
 function pollSyncStatus(accountId, taskId) {
+  const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
+  const multibar = new cliProgress.MultiBar(
+    {
+      hideCursor: true,
+      format: '[{bar}] {percentage}% | {taskType}',
+    },
+    cliProgress.Presets.rect
+  );
+  const barInstances = {};
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
+      if (taskResult.tasks) {
+        for (const task of taskResult.tasks) {
+          if (!barInstances[task.type]) {
+            barInstances[task.type] = multibar.create(100, 0, {
+              taskType: i18n(`${i18nKey}.${task.type}.label`),
+            });
+          } else if (barInstances[task.type] && task.status === 'COMPLETE') {
+            barInstances[task.type].update(100, {
+              taskType: i18n(`${i18nKey}.${task.type}.label`),
+            });
+          } else {
+            barInstances[task.type].increment(Math.floor(Math.random() * 3), {
+              taskType: i18n(`${i18nKey}.${task.type}.label`),
+            });
+          }
+        }
+      }
       if (isTaskComplete(taskResult)) {
         clearInterval(pollInterval);
         resolve(taskResult);
+        multibar.stop();
       }
     }, ACTIVE_TASK_POLL_INTERVAL);
   });

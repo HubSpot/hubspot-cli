@@ -698,6 +698,29 @@ en:
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
                 \n- Run `{{#bold}}hs auth{{/bold}}` to connect that account to your terminal, then try again.
                 \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+            types:
+              parcels:
+                label: "Account tools and features"
+              super-admins:
+                label: "Super Admins"
+              object-schemas:
+                label: "Object definitions"
+              object-records:
+                label: "Contacts and associated records"
+              cms-developer-assets:
+                label: "Themes, templates, and modules"
+              object-pipelines:
+                label: "Pipelines"
+              object-lists:
+                label: "Lists"
+              workflows:
+                label: "Workflows"
+              forms:
+                label: "Forms"
+              lead-flows:
+                label: "Lead Flows"
+              marketing-email:
+                label: "Marketing emails"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:

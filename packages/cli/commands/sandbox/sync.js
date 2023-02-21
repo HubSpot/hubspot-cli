@@ -174,7 +174,7 @@ exports.handler = async options => {
     uiLine();
 
     logger.log('');
-    spinnies.update('sandboxSync', {
+    spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
   } catch (err) {
@@ -190,21 +190,25 @@ exports.handler = async options => {
   }
 
   try {
-    spinnies.update('sandboxSync', {
-      text: i18n(`${i18nKey}.polling.syncing`),
-    });
-
+    logger.log('');
+    logger.log('Sync progress:');
     await pollSyncStatus(parentAccountId, initiateSyncResponse.id);
 
-    spinnies.succeed('sandboxSync', {
+    logger.log('');
+    spinnies.add('syncComplete', {
+      text: i18n(`${i18nKey}.polling.syncing`),
+    });
+    spinnies.succeed('syncComplete', {
       text: i18n(`${i18nKey}.polling.succeed`),
     });
   } catch (err) {
     logErrorInstance(err);
 
     // If polling fails at this point, we do not track a failed sync since it is running in the background.
-
-    spinnies.fail('sandboxSync', {
+    spinnies.add('syncComplete', {
+      text: i18n(`${i18nKey}.polling.syncing`),
+    });
+    spinnies.fail('syncComplete', {
       text: i18n(`${i18nKey}.polling.fail`, {
         url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
       }),
