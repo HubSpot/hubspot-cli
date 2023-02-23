@@ -61,7 +61,6 @@ exports.handler = async options => {
       }
     }
   }
-
   if (!getAccountId({ account: parentAccountId })) {
     logger.log('');
     logger.error(
@@ -154,10 +153,6 @@ exports.handler = async options => {
 
     const tasks = await getSyncTypes(parentAccountConfig, accountConfig);
 
-    if (!tasks) {
-      throw new Error('Failed to fetch sync types.');
-    }
-
     initiateSyncResponse = await initiateSync(
       parentAccountId,
       accountId,
@@ -178,13 +173,25 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
   } catch (err) {
-    logErrorInstance(err);
-
     trackCommandUsage('sandbox-sync', { successful: false }, accountId);
 
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
+
+    logger.log('');
+    if (err.statusCode === 403 && err.error.category === 'MISSING_SCOPES') {
+      logger.error(i18n(`${i18nKey}.failure.missingScopes`));
+    } else if (err.statusCode === 429 && err.error.category === 'RATE_LIMITS') {
+      logger.error(
+        i18n(`${i18nKey}.failure.syncInProgress`, {
+          url: `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`,
+        })
+      );
+    } else {
+      logErrorInstance(err);
+    }
+    logger.log('');
 
     process.exit(EXIT_CODES.ERROR);
   }

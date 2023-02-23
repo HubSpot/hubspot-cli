@@ -35,16 +35,10 @@ function getAccountName(config) {
 }
 
 async function getSyncTypes(parentAccountConfig, config) {
-  if (config.sandboxAccountType === 'DEVELOPER') {
-    return [{ type: 'object-schemas' }];
-  }
-  if (config.sandboxAccountType === 'STANDARD') {
-    const parentPortalId = parentAccountConfig.portalId;
-    const portalId = config.portalId;
-    const syncTypes = await fetchTypes(parentPortalId, portalId);
-    return syncTypes.map(t => ({ type: t.name }));
-  }
-  return null;
+  const parentPortalId = parentAccountConfig.portalId;
+  const portalId = config.portalId;
+  const syncTypes = await fetchTypes(parentPortalId, portalId);
+  return syncTypes.map(t => ({ type: t.name }));
 }
 
 const sandboxCreatePersonalAccessKeyFlow = async (env, account, name) => {
@@ -123,23 +117,46 @@ function pollSyncStatus(accountId, taskId) {
     },
     cliProgress.Presets.rect
   );
+  const mergeTasks = {
+    'lead-flows': 'forms', // Since UI only shows forms, merge lead-flows into forms progress
+  };
   const barInstances = {};
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
       if (taskResult.tasks) {
         for (const task of taskResult.tasks) {
-          if (!barInstances[task.type]) {
-            barInstances[task.type] = multibar.create(100, 0, {
-              taskType: i18n(`${i18nKey}.${task.type}.label`),
+          const taskType = task.type;
+          if (!barInstances[taskType] && !mergeTasks[taskType]) {
+            // skip creation of lead-flows bar
+            barInstances[taskType] = multibar.create(100, 0, {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
-          } else if (barInstances[task.type] && task.status === 'COMPLETE') {
-            barInstances[task.type].update(100, {
-              taskType: i18n(`${i18nKey}.${task.type}.label`),
+          } else if (mergeTasks[taskType]) {
+            // Its a lead-flow
+            const formsTask = taskResult.tasks.filter(
+              t => t.type === mergeTasks[taskType]
+            )[0];
+            const formsTaskStatus = formsTask.status;
+            const leadFlowsTaskStatus = task.status;
+            if (
+              formsTaskStatus !== 'COMPLETE' ||
+              leadFlowsTaskStatus !== 'COMPLETE'
+            ) {
+              barInstances[mergeTasks[taskType]].increment(
+                Math.floor(Math.random() * 3),
+                {
+                  taskType: i18n(`${i18nKey}.${mergeTasks[taskType]}.label`),
+                }
+              );
+            }
+          } else if (barInstances[taskType] && task.status === 'COMPLETE') {
+            barInstances[taskType].update(100, {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
-          } else {
-            barInstances[task.type].increment(Math.floor(Math.random() * 3), {
-              taskType: i18n(`${i18nKey}.${task.type}.label`),
+          } else if (barInstances[taskType]) {
+            barInstances[taskType].increment(Math.floor(Math.random() * 3), {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           }
         }

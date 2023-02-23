@@ -698,6 +698,8 @@ en:
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
                 \n- Run `{{#bold}}hs auth{{/bold}}` to connect that account to your terminal, then try again.
                 \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+              missingScopes: "Couldn’t run the sync because there are scopes missing. To update scopes, deactivate your current personal access key, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+              syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the status of your sync, visit your sync activity log: {{ url }}."
             types:
               parcels:
                 label: "Account tools and features"
