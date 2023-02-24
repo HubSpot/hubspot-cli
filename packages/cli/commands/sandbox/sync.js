@@ -35,7 +35,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  // TODO: add scripting options
+  const { force } = options;
   const config = getConfig();
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
@@ -89,18 +89,20 @@ exports.handler = async options => {
     uiLine();
     logger.log('');
 
-    const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
-      {
-        name: 'confirmSandboxSyncPrompt',
-        type: 'confirm',
-        message: i18n(`${i18nKey}.confirm.developmentSandbox`, {
-          parentAccountName: getAccountName(parentAccountConfig),
-          sandboxName: getAccountName(accountConfig),
-        }),
-      },
-    ]);
-    if (!confirmed) {
-      process.exit(EXIT_CODES.SUCCESS);
+    if (!force) {
+      const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
+        {
+          name: 'confirmSandboxSyncPrompt',
+          type: 'confirm',
+          message: i18n(`${i18nKey}.confirm.developmentSandbox`, {
+            parentAccountName: getAccountName(parentAccountConfig),
+            sandboxName: getAccountName(accountConfig),
+          }),
+        },
+      ]);
+      if (!confirmed) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     }
   } else if (accountConfig.sandboxAccountType === 'STANDARD') {
     const standardSyncUrl = `${getHubSpotWebsiteOrigin(
@@ -123,18 +125,20 @@ exports.handler = async options => {
     uiLine();
     logger.log('');
 
-    const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
-      {
-        name: 'confirmSandboxSyncPrompt',
-        type: 'confirm',
-        message: i18n(`${i18nKey}.confirm.standardSandbox`, {
-          parentAccountName: getAccountName(parentAccountConfig),
-          sandboxName: getAccountName(accountConfig),
-        }),
-      },
-    ]);
-    if (!confirmed) {
-      process.exit(EXIT_CODES.SUCCESS);
+    if (!force) {
+      const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
+        {
+          name: 'confirmSandboxSyncPrompt',
+          type: 'confirm',
+          message: i18n(`${i18nKey}.confirm.standardSandbox`, {
+            parentAccountName: getAccountName(parentAccountConfig),
+            sandboxName: getAccountName(accountConfig),
+          }),
+        },
+      ]);
+      if (!confirmed) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     }
   } else {
     logger.error('Sync must be run in a sandbox account.');
@@ -148,7 +152,6 @@ exports.handler = async options => {
   );
 
   try {
-    // TODO: use cli progress here instead of spinnies
     logger.log('');
     spinnies.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
@@ -233,6 +236,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  yargs.option('force', {
+    type: 'boolean',
+  });
+
   yargs.example([['$0 sandbox sync', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs, true);
