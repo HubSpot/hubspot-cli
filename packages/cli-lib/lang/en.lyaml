@@ -674,6 +674,7 @@ en:
               default: "Initiates a sync to a sandbox account."
             info:
               developmentSandbox: "This will sync CRM object definitions."
+              standardSandbox: "This will sync all supported assets. To sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
               sync: "\nSync direction:
                 \n- Target sandbox: {{#bold}}{{ sandboxName }}{{/bold}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
@@ -682,6 +683,7 @@ en:
             warning: "All object definitions in that sandbox will be overwritten except for the ones that were originally created in your sandbox and not synced from production."
             confirm:
               developmentSandbox: "Sync CRM object definitions to {{#bold}}{{ sandboxName }}{{/bold}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+              standardSandbox: "Sync all supported assets to {{#bold}}{{ sandboxName }}{{/bold}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               backgroundSync: "Syncing may take some time. Hit enter to exit and continue the sync in the background."
             loading:
               startSync: "Initiating sync..."
@@ -692,10 +694,35 @@ en:
               fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
               succeed: "Sandbox sync complete."
             failure:
-              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `hs auth` to connect your sandbox account to the CLI or `hs accounts use` to change your default account, then try again."
+              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `{{#bold}}hs auth{{/bold}}` to connect your sandbox account to the CLI or `{{#bold}}hs accounts use{{/bold}}` to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
-                \n- Run `hs auth` to connect that account to your terminal, then try again.
-                \n- Run `hs accounts use` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+                \n- Run `{{#bold}}hs auth{{/bold}}` to connect that account to your terminal, then try again.
+                \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+              missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+              syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+            types:
+              parcels:
+                label: "Account tools and features"
+              super-admins:
+                label: "Super Admins"
+              object-schemas:
+                label: "Object definitions"
+              object-records:
+                label: "Contacts and associated records"
+              cms-developer-assets:
+                label: "Themes, templates, and modules"
+              object-pipelines:
+                label: "Pipelines"
+              object-lists:
+                label: "Lists"
+              workflows:
+                label: "Workflows"
+              forms:
+                label: "Forms"
+              lead-flows:
+                label: "Lead Flows"
+              marketing-email:
+                label: "Marketing emails"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:

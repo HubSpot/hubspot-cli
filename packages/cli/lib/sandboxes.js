@@ -1,3 +1,4 @@
+const cliProgress = require('cli-progress');
 const {
   getConfig,
   writeConfig,
@@ -21,7 +22,7 @@ const {
   setAsDefaultAccountPrompt,
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('./ui');
-const { fetchTaskStatus } = require('@hubspot/cli-lib/sandboxes');
+const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
 
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
@@ -33,12 +34,11 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
-function getSyncTasks(config) {
-  if (config.sandboxAccountType === 'DEVELOPER') {
-    return [{ type: 'object-schemas' }];
-  }
-  // TODO: fetch types for standard sandbox sync
-  return null;
+async function getSyncTypes(parentAccountConfig, config) {
+  const parentPortalId = parentAccountConfig.portalId;
+  const portalId = config.portalId;
+  const syncTypes = await fetchTypes(parentPortalId, portalId);
+  return syncTypes.map(t => ({ type: t.name }));
 }
 
 const sandboxCreatePersonalAccessKeyFlow = async (env, account, name) => {
@@ -109,12 +109,62 @@ const isTaskComplete = task => {
 };
 
 function pollSyncStatus(accountId, taskId) {
+  const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
+  const multibar = new cliProgress.MultiBar(
+    {
+      hideCursor: true,
+      format: '[{bar}] {percentage}% | {taskType}',
+    },
+    cliProgress.Presets.rect
+  );
+  const mergeTasks = {
+    'lead-flows': 'forms', // Since UI only shows forms, merge lead-flows into forms progress
+  };
+  const barInstances = {};
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
+      if (taskResult.tasks) {
+        for (const task of taskResult.tasks) {
+          const taskType = task.type;
+          if (!barInstances[taskType] && !mergeTasks[taskType]) {
+            // skip creation of lead-flows bar
+            barInstances[taskType] = multibar.create(100, 0, {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
+            });
+          } else if (mergeTasks[taskType]) {
+            // Its a lead-flow
+            const formsTask = taskResult.tasks.filter(
+              t => t.type === mergeTasks[taskType]
+            )[0];
+            const formsTaskStatus = formsTask.status;
+            const leadFlowsTaskStatus = task.status;
+            if (
+              formsTaskStatus !== 'COMPLETE' ||
+              leadFlowsTaskStatus !== 'COMPLETE'
+            ) {
+              barInstances[mergeTasks[taskType]].increment(
+                Math.floor(Math.random() * 3),
+                {
+                  taskType: i18n(`${i18nKey}.${mergeTasks[taskType]}.label`),
+                }
+              );
+            }
+          } else if (barInstances[taskType] && task.status === 'COMPLETE') {
+            barInstances[taskType].update(100, {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
+            });
+          } else if (barInstances[taskType]) {
+            barInstances[taskType].increment(Math.floor(Math.random() * 3), {
+              taskType: i18n(`${i18nKey}.${taskType}.label`),
+            });
+          }
+        }
+      }
       if (isTaskComplete(taskResult)) {
         clearInterval(pollInterval);
         resolve(taskResult);
+        multibar.stop();
       }
     }, ACTIVE_TASK_POLL_INTERVAL);
   });
@@ -123,7 +173,7 @@ function pollSyncStatus(accountId, taskId) {
 module.exports = {
   getSandboxType,
   getAccountName,
-  getSyncTasks,
+  getSyncTypes,
   sandboxCreatePersonalAccessKeyFlow,
   pollSyncStatus,
 };
