@@ -23,6 +23,9 @@ const {
   getSyncTypes,
   pollSyncStatus,
 } = require('../../lib/sandboxes');
+const {
+  isMissingScopeError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -180,8 +183,12 @@ exports.handler = async options => {
     });
 
     logger.log('');
-    if (err.statusCode === 403 && err.error.category === 'MISSING_SCOPES') {
-      logger.error(i18n(`${i18nKey}.failure.missingScopes`));
+    if (isMissingScopeError(err)) {
+      logger.error(
+        i18n(`${i18nKey}.failure.missingScopes`, {
+          accountName: getAccountName(parentAccountConfig),
+        })
+      );
     } else if (err.statusCode === 429 && err.error.category === 'RATE_LIMITS') {
       logger.error(
         i18n(`${i18nKey}.failure.syncInProgress`, {
@@ -209,9 +216,9 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.polling.succeed`),
     });
   } catch (err) {
+    // If polling fails at this point, we do not track a failed sync since it is running in the background.
     logErrorInstance(err);
 
-    // If polling fails at this point, we do not track a failed sync since it is running in the background.
     spinnies.add('syncComplete', {
       text: i18n(`${i18nKey}.polling.syncing`),
     });
