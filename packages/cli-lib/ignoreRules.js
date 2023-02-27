@@ -12,8 +12,6 @@ const ignoreList = [
   '*.log', // Error log for npm
   '*.swp', // Swap file for vim state
   '.env', // Dotenv file
-  'package-lock.json', // Temporary solution to improve serverless beta: https://git.hubteam.com/HubSpot/cms-devex-super-repo/issues/2
-
   // # macOS
   'Icon\\r', // Custom Finder icon: http://superuser.com/questions/298785/icon-file-on-os-x-desktop
   '__MACOSX', // Resource fork
@@ -35,10 +33,17 @@ const ignoreRules = ignore().add(ignoreList);
 
 let searchDomain = null;
 let loaded = false;
-function loadIgnoreConfig() {
+function loadIgnoreConfig(isInProject = false) {
   if (loaded) {
     return;
   }
+
+  // Temporary solution to improve serverless beta: https://git.hubteam.com/HubSpot/cms-devex-super-repo/issues/2
+  // Do not do this when in a developer project b/c we want the package-lock.json file uploaded.
+  if (!isInProject) {
+    ignoreRules.add('package-lock.json');
+  }
+
   const file = findup('.hsignore');
   if (file) {
     if (fs.existsSync(file)) {
@@ -49,16 +54,16 @@ function loadIgnoreConfig() {
   loaded = true;
 }
 
-function shouldIgnoreFile(file) {
-  loadIgnoreConfig();
+function shouldIgnoreFile(file, isInProject) {
+  loadIgnoreConfig(isInProject);
   const relativeTo = searchDomain || '/';
   const relativePath = path.relative(relativeTo, file);
 
   return !!relativePath && ignoreRules.ignores(relativePath);
 }
 
-function createIgnoreFilter() {
-  loadIgnoreConfig();
+function createIgnoreFilter(isInProject) {
+  loadIgnoreConfig(isInProject);
   return file => !shouldIgnoreFile(file);
 }
 

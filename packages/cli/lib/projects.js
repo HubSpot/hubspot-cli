@@ -363,7 +363,7 @@ const handleProjectUpload = async (
   archive.pipe(output);
 
   archive.directory(srcDir, false, file =>
-    shouldIgnoreFile(file.name) ? false : file
+    shouldIgnoreFile(file.name, true) ? false : file
   );
 
   archive.finalize();
