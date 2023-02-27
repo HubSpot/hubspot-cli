@@ -34,6 +34,7 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
+// Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = parentAccountConfig.portalId;
   const portalId = config.portalId;
@@ -108,7 +109,7 @@ const isTaskComplete = task => {
   return task.status === 'COMPLETE';
 };
 
-// Polls a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
+// Returns a promise to poll a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
 function pollSyncTaskStatus(accountId, taskId) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
   const multibar = new cliProgress.MultiBar(

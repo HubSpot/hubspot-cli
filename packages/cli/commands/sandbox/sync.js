@@ -35,7 +35,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { force } = options;
+  const { force } = options; // For scripting purposes
   const config = getConfig();
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
@@ -93,6 +93,7 @@ exports.handler = async options => {
     logger.log('');
 
     if (!force) {
+      // Skip confirmation if force flag is present.
       const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
         {
           name: 'confirmSandboxSyncPrompt',
@@ -129,6 +130,7 @@ exports.handler = async options => {
     logger.log('');
 
     if (!force) {
+      // Skip confirmation if force flag is present.
       const { confirmSandboxSyncPrompt: confirmed } = await promptUser([
         {
           name: 'confirmSandboxSyncPrompt',
