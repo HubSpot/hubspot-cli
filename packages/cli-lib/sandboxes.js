@@ -9,11 +9,6 @@ const {
   fetchTypes: _fetchTypes,
 } = require('./api/sandboxes-sync');
 
-/**
- * Creates a new Sandbox portal instance.
- * @param {String} name - Name to use for the sandbox.
- * @returns {Object} A new Sandbox portal instance.
- */
 async function createSandbox(accountId, name) {
   let resp;
 
@@ -29,12 +24,6 @@ async function createSandbox(accountId, name) {
   };
 }
 
-/**
- * Deletes a Sandbox portal instance.
- * @param {Number} parentAccountId - Parent portal ID.
- * @param {Number} sandboxAccountId - Sandbox portal ID.
- * @returns {200}
- */
 async function deleteSandbox(parentAccountId, sandboxAccountId) {
   let resp;
 
@@ -51,14 +40,6 @@ async function deleteSandbox(parentAccountId, sandboxAccountId) {
   };
 }
 
-/**
- * Initiate a sync to a Sandbox portal.
- * @param {Number} fromHubId - Source account for the sync
- * @param {Number} toHubId - Target account for the sync
- * @param {Array} tasks - Array of objects containing a type {Name} and portableKeys {Array}
- * @param {Number} sandboxHubId - Sandbox portal ID for the sync
- * @returns {Object} A new Sandbox portal instance.
- */
 async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   let resp;
 
@@ -71,12 +52,6 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   return resp;
 }
 
-/**
- * Fetches a task.
- * @param {String} accountId - Parent account ID.
- * @param {String} taskId - Sync task ID.
- * @returns {Object} a sync task instance.
- */
 async function fetchTaskStatus(accountId, taskId) {
   let resp;
 
@@ -89,11 +64,6 @@ async function fetchTaskStatus(accountId, taskId) {
   return resp;
 }
 
-/**
- * Fetches available sync types for a specified portal.
- * @param {Number} toHubId - Portal ID to fetch available types.
- * @returns {Object} a list of available sync types
- */
 async function fetchTypes(accountId, toHubId) {
   let resp;
 

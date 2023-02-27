@@ -20,8 +20,8 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine } = require('../../lib/ui');
 const {
   getAccountName,
-  getSyncTypes,
-  pollSyncStatus,
+  getAvailableSyncTypes,
+  pollSyncTaskStatus,
 } = require('../../lib/sandboxes');
 const {
   isMissingScopeError,
@@ -46,6 +46,8 @@ exports.handler = async options => {
   trackCommandUsage('sandbox-sync', null, accountId);
 
   if (
+    // Check if default account is a sandbox, otherwise exit
+    // sandboxAccountType is null for non-sandbox portals, and one of 'DEVELOPER' or 'STANDARD' for sandbox portals. Undefined is to handle older config entries.
     accountConfig.sandboxAccountType === undefined ||
     accountConfig.sandboxAccountType === null
   ) {
@@ -56,6 +58,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  // Verify parent account exists in the config
   let parentAccountId;
   for (const portal of config.portals) {
     if (portal.portalId === accountId) {
@@ -157,7 +160,11 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.loading.startSync`),
     });
 
-    const tasks = await getSyncTypes(parentAccountConfig, accountConfig);
+    // Fetches sync types based on default account. Parent account required for fetch
+    const tasks = await getAvailableSyncTypes(
+      parentAccountConfig,
+      accountConfig
+    );
 
     initiateSyncResponse = await initiateSync(
       parentAccountId,
@@ -209,7 +216,8 @@ exports.handler = async options => {
   try {
     logger.log('');
     logger.log('Sync progress:');
-    await pollSyncStatus(parentAccountId, initiateSyncResponse.id);
+    // Poll sync task status to show progress bars
+    await pollSyncTaskStatus(parentAccountId, initiateSyncResponse.id);
 
     logger.log('');
     spinnies.add('syncComplete', {

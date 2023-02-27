@@ -34,7 +34,7 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
-async function getSyncTypes(parentAccountConfig, config) {
+async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = parentAccountConfig.portalId;
   const portalId = config.portalId;
   const syncTypes = await fetchTypes(parentPortalId, portalId);
@@ -108,7 +108,8 @@ const isTaskComplete = task => {
   return task.status === 'COMPLETE';
 };
 
-function pollSyncStatus(accountId, taskId) {
+// Polls a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
+function pollSyncTaskStatus(accountId, taskId) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
   const multibar = new cliProgress.MultiBar(
     {
@@ -118,22 +119,24 @@ function pollSyncStatus(accountId, taskId) {
     cliProgress.Presets.rect
   );
   const mergeTasks = {
-    'lead-flows': 'forms', // Since UI only shows forms, merge lead-flows into forms progress
+    'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
   const barInstances = {};
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
       if (taskResult.tasks) {
+        // Array of sync tasks, eg: workflows, pipelines, object-schemas, etc. with each task containing a status of 'PENDING', 'IN_PROGRESS', 'COMPLETE', and 'FAILURE'
         for (const task of taskResult.tasks) {
+          // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
           const taskType = task.type;
           if (!barInstances[taskType] && !mergeTasks[taskType]) {
-            // skip creation of lead-flows bar
+            // skip creation of lead-flows bar because we're combining lead-flows into the forms bar
             barInstances[taskType] = multibar.create(100, 0, {
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           } else if (mergeTasks[taskType]) {
-            // Its a lead-flow
+            // If its a lead-flow, merge status into the forms progress bar
             const formsTask = taskResult.tasks.filter(
               t => t.type === mergeTasks[taskType]
             )[0];
@@ -156,10 +159,15 @@ function pollSyncStatus(accountId, taskId) {
             });
           } else if (barInstances[taskType]) {
             barInstances[taskType].increment(Math.floor(Math.random() * 3), {
+              // Randomly increment bar by 0 - 3 while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           }
         }
+      } else {
+        clearInterval(pollInterval);
+        reject();
+        multibar.stop();
       }
       if (isTaskComplete(taskResult)) {
         clearInterval(pollInterval);
@@ -173,7 +181,7 @@ function pollSyncStatus(accountId, taskId) {
 module.exports = {
   getSandboxType,
   getAccountName,
-  getSyncTypes,
+  getAvailableSyncTypes,
   sandboxCreatePersonalAccessKeyFlow,
-  pollSyncStatus,
+  pollSyncTaskStatus,
 };

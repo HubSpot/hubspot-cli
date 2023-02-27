@@ -1,7 +1,14 @@
 const http = require('../http');
 const SANDBOXES_SYNC_API_PATH = 'sandboxes-sync/v1';
 
-// fromHubId is the parent portal here, which is required as the first param. Parent account key can only run the sync
+/**
+ * Initiate a sync to a Sandbox portal.
+ * @param {Number} fromHubId - Source account for the sync
+ * @param {Number} toHubId - Target account for the sync
+ * @param {Array} tasks - Array of objects containing a type {Name} and portableKeys {Array}
+ * @param {Number} sandboxHubId - Sandbox portal ID for the sync, required by API
+ * @returns {Object} A new Sandbox portal instance.
+ */
 async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   return http.post(fromHubId, {
     body: {
@@ -16,12 +23,24 @@ async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
   });
 }
 
+/**
+ * Fetches a task.
+ * @param {String} accountId - Parent account ID.
+ * @param {String} taskId - Sync task ID.
+ * @returns {Object} a sync task instance.
+ */
 async function fetchTaskStatus(accountId, taskId) {
   return http.get(accountId, {
     uri: `${SANDBOXES_SYNC_API_PATH}/tasks/${taskId}`,
   });
 }
 
+/**
+ * Fetches available sync types for a specified portal (toHubId).
+ * @param {Number} accountId - Parent portal ID needed to satisfy endpoint requirements.
+ * @param {Number} toHubId - Portal ID to fetch available types.
+ * @returns {Object} a list of available sync types
+ */
 async function fetchTypes(accountId, toHubId) {
   return http.get(accountId, {
     uri: `${SANDBOXES_SYNC_API_PATH}/types${
