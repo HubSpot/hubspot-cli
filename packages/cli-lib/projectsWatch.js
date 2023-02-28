@@ -99,7 +99,7 @@ const queueFileOrFolder = async (
     logger.debug(i18n(`${i18nKey}.debug.extensionNotAllowed`, { filePath }));
     return;
   }
-  if (shouldIgnoreFile(filePath)) {
+  if (shouldIgnoreFile(filePath, true)) {
     logger.debug(i18n(`${i18nKey}.debug.ignored`, { filePath }));
     return;
   }
