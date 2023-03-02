@@ -732,6 +732,13 @@ en:
             options:
               json:
                 describe: "Output raw json data"
+            results:
+              required: "Required validation results:"
+              recommended: "Recommended validation results:"  
+              warnings:
+                file: "File: {{ file }}"
+                lineNumber: "Line number: {{ line }}"
+              noErrors: "No errors"
             positionals:
               src:
                 describe: "Path to the module within the Design Manager."
