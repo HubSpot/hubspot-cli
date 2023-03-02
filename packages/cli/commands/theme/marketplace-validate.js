@@ -14,7 +14,7 @@ const {
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} = require('@hubspot/cli/lib/marketplace-validate');
+} = require('../../lib/marketplace-validate');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';

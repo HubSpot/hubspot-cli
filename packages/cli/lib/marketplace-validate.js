@@ -7,7 +7,7 @@ const {
   getValidationResults,
 } = require('@hubspot/cli-lib/api/marketplaceValidation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { EXIT_CODES } = require('@hubspot/cli/lib/enums/exitCodes');
+const { EXIT_CODES } = require('./enums/exitCodes');
 
 const SLEEP_TIME = 2000;
 
