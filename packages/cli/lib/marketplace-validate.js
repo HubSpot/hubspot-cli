@@ -121,12 +121,11 @@ const displayValidationResults = (i18nKey, validationResults) => {
     return null;
   };
 
-  logger.log(chalk.bold(i18n(`${i18nKey}.results.required`)));
-  displayResults(validationResults.results['REQUIRED']);
-  logger.log();
-  logger.log(chalk.bold(i18n(`${i18nKey}.results.recommended`)));
-  displayResults(validationResults.results['RECOMMENDED']);
-  logger.log();
+  Object.keys(validationResults.results).forEach(type => {
+    logger.log(chalk.bold(i18n(`${i18nKey}.results.${type.toLowerCase()}`)));
+    displayResults(validationResults.results[type]);
+    logger.log();
+  });
 };
 
 module.exports = {

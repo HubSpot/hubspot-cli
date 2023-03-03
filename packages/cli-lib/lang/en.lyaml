@@ -724,7 +724,7 @@ en:
         describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
           marketplaceValidate:
-            describe: "Validate a module for the marketplace"
+            describe: "Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager."
             errors:
               invalidPath: "The path \"{{ path }}\" is not a path to a module within the Design Manager."
             logs:
