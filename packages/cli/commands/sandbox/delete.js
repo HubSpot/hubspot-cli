@@ -18,6 +18,7 @@ const { getConfig, getEnv } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   removeSandboxAccountFromConfig,
+  updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
@@ -46,6 +47,7 @@ exports.handler = async options => {
     if (!force) {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
+      // Account is required, throw error if force flag is present and no account is specified
       logger.error(i18n(`${i18nKey}.failure.noAccount`));
       process.exit(EXIT_CODES.ERROR);
     }
@@ -113,17 +115,19 @@ exports.handler = async options => {
   }
 
   try {
-    const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
-      {
-        name: 'confirmSandboxDeletePrompt',
-        type: 'confirm',
-        message: i18n(`${i18nKey}.confirm`, {
-          account: account || accountPrompt.account,
-        }),
-      },
-    ]);
-    if (!confirmed) {
-      process.exit(EXIT_CODES.SUCCESS);
+    if (!force) {
+      const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
+        {
+          name: 'confirmSandboxDeletePrompt',
+          type: 'confirm',
+          message: i18n(`${i18nKey}.confirm`, {
+            account: account || accountPrompt.account,
+          }),
+        },
+      ]);
+      if (!confirmed) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     }
 
     await deleteSandbox(parentAccountId, sandboxAccountId);
@@ -143,8 +147,11 @@ exports.handler = async options => {
     const promptDefaultAccount = removeSandboxAccountFromConfig(
       sandboxAccountId
     );
-    if (promptDefaultAccount) {
+    if (promptDefaultAccount && !force) {
       await selectAndSetAsDefaultAccountPrompt(getConfig());
+    } else {
+      // If force is specified, skip prompt and set the parent account id as the default account
+      updateDefaultAccount(parentAccountId);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -172,8 +179,11 @@ exports.handler = async options => {
       const promptDefaultAccount = removeSandboxAccountFromConfig(
         sandboxAccountId
       );
-      if (promptDefaultAccount) {
+      if (promptDefaultAccount && !force) {
         await selectAndSetAsDefaultAccountPrompt(getConfig());
+      } else {
+        // If force is specified, skip prompt and set the parent account id as the default account
+        updateDefaultAccount(parentAccountId);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
