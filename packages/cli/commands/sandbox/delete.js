@@ -38,12 +38,17 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account } = options;
+  const { account, force } = options;
   const config = getConfig();
 
   let accountPrompt;
   if (!account) {
-    accountPrompt = await deleteSandboxPrompt(config);
+    if (!force) {
+      accountPrompt = await deleteSandboxPrompt(config);
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.noAccount`));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
@@ -54,31 +59,36 @@ exports.handler = async options => {
 
   trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
   let parentAccountId;
   for (const portal of config.portals) {
     if (portal.portalId === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
-      } else {
+      } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(config, true);
         parentAccountId = getAccountId({
           account: parentAccountPrompt.account,
         });
+      } else {
+        logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+        process.exit(EXIT_CODES.ERROR);
       }
     }
   }
 
+  const url = `${baseUrl}/sandboxes/${parentAccountId}`;
+  const command = `hs auth ${
+    getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
+  } --account=${parentAccountId}`;
+
   if (!getAccountId({ account: parentAccountId })) {
-    const baseUrl = getHubSpotWebsiteOrigin(
-      getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    );
-    const url = `${baseUrl}/sandboxes/${parentAccountId}`;
-    const command = `hs auth ${
-      getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
-    } --account=${parentAccountId}`;
     logger.log('');
     logger.error(
-      i18n(`${i18nKey}.noParentPortalAvailable`, {
+      i18n(`${i18nKey}.failure.noParentPortalAvailable`, {
         parentAccountId,
         url,
         command,
@@ -153,7 +163,7 @@ exports.handler = async options => {
     ) {
       logger.log('');
       logger.warn(
-        i18n(`${i18nKey}.objectNotFound`, {
+        i18n(`${i18nKey}.failure.objectNotFound`, {
           account: account || accountPrompt.account,
         })
       );
@@ -177,6 +187,9 @@ exports.builder = yargs => {
   yargs.option('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
+  });
+  yargs.option('force', {
+    type: 'boolean',
   });
 
   yargs.example([

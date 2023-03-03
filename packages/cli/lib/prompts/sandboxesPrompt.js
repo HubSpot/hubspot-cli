@@ -17,6 +17,18 @@ const mapSandboxAccountChoices = portals =>
       };
     });
 
+const mapNonSandboxAccountChoices = portals =>
+  portals
+    .filter(
+      p => p.sandboxAccountType === null || p.sandboxAccountType === undefined
+    )
+    .map(p => {
+      return {
+        name: `${p.name} (${p.portalId})`,
+        value: p.name || p.portalId,
+      };
+    });
+
 const createSandboxPrompt = () => {
   return promptUser([
     {
@@ -45,7 +57,9 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       type: 'list',
       look: false,
       pageSize: 20,
-      choices: mapSandboxAccountChoices(config.portals),
+      choices: promptParentAccount
+        ? mapNonSandboxAccountChoices(config.portals)
+        : mapSandboxAccountChoices(config.portals),
       default: config.defaultPortal,
     },
   ]);
