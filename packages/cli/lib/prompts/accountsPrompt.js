@@ -51,4 +51,5 @@ const selectAndSetAsDefaultAccountPrompt = async config => {
 module.exports = {
   selectAndSetAsDefaultAccountPrompt,
   selectAccountFromConfig,
+  mapAccountChoices,
 };

@@ -1,5 +1,6 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { mapAccountChoices } = require('./accountsPrompt');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
@@ -13,18 +14,6 @@ const mapSandboxAccountChoices = portals =>
       const sandboxName = `[${getSandboxType(p.sandboxAccountType)} sandbox] `;
       return {
         name: `${p.name} ${sandboxName}(${p.portalId})`,
-        value: p.name || p.portalId,
-      };
-    });
-
-const mapNonSandboxAccountChoices = portals =>
-  portals
-    .filter(
-      p => p.sandboxAccountType === null || p.sandboxAccountType === undefined
-    )
-    .map(p => {
-      return {
-        name: `${p.name} (${p.portalId})`,
         value: p.name || p.portalId,
       };
     });
@@ -58,7 +47,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       look: false,
       pageSize: 20,
       choices: promptParentAccount
-        ? mapNonSandboxAccountChoices(config.portals)
+        ? mapAccountChoices(config.portals)
         : mapSandboxAccountChoices(config.portals),
       default: config.defaultPortal,
     },
