@@ -88,7 +88,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    logger.warn(i18n(`${i18nKey}.warning`));
+    logger.warn(i18n(`${i18nKey}.warning.developmentSandbox`));
     uiLine();
     logger.log('');
 
@@ -125,7 +125,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    logger.warn(i18n(`${i18nKey}.warning`));
+    logger.warn(i18n(`${i18nKey}.warning.standardSandbox`));
     uiLine();
     logger.log('');
 
