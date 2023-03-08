@@ -672,6 +672,7 @@ en:
               error: "Error syncing sandbox account."
             examples:
               default: "Initiates a sync to a sandbox account."
+              force: "Skips all confirmation prompts when initiating a sync."
             info:
               developmentSandbox: "This will sync CRM object definitions."
               standardSandbox: "This will sync all supported assets. To sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
@@ -702,6 +703,7 @@ en:
                 \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
               missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
               syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+              notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
             types:
               parcels:
                 label: "Account tools and features"

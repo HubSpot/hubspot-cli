@@ -207,6 +207,18 @@ exports.handler = async options => {
           url: `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`,
         })
       );
+    } else if (
+      err.statusCode === 403 &&
+      err.error.category === 'BANNED' &&
+      err.error.subCategory ===
+        'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USERID'
+    ) {
+      // This will only trigger if a user is not a super admin of the target account.
+      logger.error(
+        i18n(`${i18nKey}.failure.notSuperAdmin`, {
+          account: getAccountName(accountConfig),
+        })
+      );
     } else {
       logErrorInstance(err);
     }
@@ -263,8 +275,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('force', {
+  yargs.option('f', {
     type: 'boolean',
+    alias: 'force',
+    describe: i18n(`${i18nKey}.examples.force`),
   });
 
   yargs.example([['$0 sandbox sync', i18n(`${i18nKey}.examples.default`)]]);
