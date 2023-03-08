@@ -198,8 +198,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
-  yargs.option('force', {
+  yargs.option('f', {
     type: 'boolean',
+    alias: 'force',
+    describe: i18n(`${i18nKey}.examples.force`),
   });
 
   yargs.example([
