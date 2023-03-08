@@ -216,6 +216,21 @@ exports.handler = async options => {
   }
 
   try {
+    // Handle manual exit for return key and ctrl+c
+    process.stdin.resume();
+    process.stdin.on('keypress', function(chunk, key) {
+      if (
+        (key && key.ctrl && key.name == 'c') ||
+        key.name === 'enter' ||
+        key.name === 'return'
+      ) {
+        logger.log('');
+        logger.log('');
+        logger.log('Exiting, sync will continue in the background.');
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+    });
+
     logger.log('');
     logger.log('Sync progress:');
     // Poll sync task status to show progress bars
@@ -228,6 +243,8 @@ exports.handler = async options => {
     spinnies.succeed('syncComplete', {
       text: i18n(`${i18nKey}.polling.succeed`),
     });
+
+    process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     // If polling fails at this point, we do not track a failed sync since it is running in the background.
     logErrorInstance(err);
