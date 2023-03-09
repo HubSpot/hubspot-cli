@@ -683,8 +683,8 @@ en:
               syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}\n
                 \nSyncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
             warning:
-              developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
-              standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
+              developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. \nObject definitions that were created in your sandbox will stay the same."
+              standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. \nStandard sandboxes are usually shared with other Super Admins."
             confirm:
               developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
@@ -697,13 +697,13 @@ en:
               fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
               succeed: "Sandbox sync complete."
             failure:
-              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `{{#bold}}hs auth{{/bold}}` to connect your sandbox account to the CLI or `{{#bold}}hs accounts use{{/bold}}` to change your default account, then try again."
+              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. \nRun `{{#bold}}hs auth{{/bold}}` to connect your sandbox account to the CLI or `{{#bold}}hs accounts use{{/bold}}` to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
                 \n- Run `{{#bold}}hs auth{{/bold}}` to connect that account to your terminal, then try again.
                 \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
-              missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-              syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
-              notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
+              missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. \nTo update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. \nThen run `hs auth` to update the CLI with the new key."
+              syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. \nTo check the sync status, visit the sync activity log: {{ url }}."
+              notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. \nAsk the account owner for super admin access to the sandbox."
             types:
               parcels:
                 label: "Account tools and features"

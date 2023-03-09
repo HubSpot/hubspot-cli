@@ -25,6 +25,7 @@ const {
 } = require('../../lib/sandboxes');
 const {
   isMissingScopeError,
+  isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 
@@ -194,17 +195,26 @@ exports.handler = async options => {
           accountName: getAccountName(parentAccountConfig),
         })
       );
-    } else if (err.statusCode === 429 && err.error.category === 'RATE_LIMITS') {
+    } else if (
+      isSpecifiedError(
+        err,
+        429,
+        'RATE_LIMITS',
+        'sandboxes-sync-api.SYNC_IN_PROGRESS'
+      )
+    ) {
       logger.error(
         i18n(`${i18nKey}.failure.syncInProgress`, {
           url: `${baseUrl}/sandboxes-developer/${parentAccountId}/syncactivitylog`,
         })
       );
     } else if (
-      err.statusCode === 403 &&
-      err.error.category === 'BANNED' &&
-      err.error.subCategory ===
+      isSpecifiedError(
+        err,
+        403,
+        'BANNED',
         'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USERID'
+      )
     ) {
       // This will only trigger if a user is not a super admin of the target account.
       logger.error(
