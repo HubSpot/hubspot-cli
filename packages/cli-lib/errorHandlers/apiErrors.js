@@ -30,15 +30,16 @@ const isMissingScopeError = err =>
 
 const isSpecifiedError = (
   err,
-  statusCode,
+  statusCode = undefined,
   category = undefined,
   subCategory = undefined
 ) => {
+  const statusCodeErr = statusCode && err.statusCode === statusCode;
   const categoryErr = category && err.error.category === category;
   const subCategoryErr = subCategory && err.error.subCategory === subCategory;
   return (
     err.name === 'StatusCodeError' &&
-    err.statusCode === statusCode &&
+    statusCodeErr &&
     categoryErr &&
     subCategoryErr
   );

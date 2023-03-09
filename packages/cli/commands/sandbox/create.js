@@ -116,7 +116,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logger.error(err.error.message);
+      logErrorInstance(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
