@@ -14,7 +14,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig, getConfig, getEnv } = require('@hubspot/cli-lib');
+const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine } = require('../../lib/ui');
@@ -37,7 +37,6 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const { force } = options; // For scripting purposes
-  const config = getConfig();
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const spinnies = new Spinnies({
@@ -60,14 +59,7 @@ exports.handler = async options => {
   }
 
   // Verify parent account exists in the config
-  let parentAccountId;
-  for (const portal of config.portals) {
-    if (portal.portalId === accountId) {
-      if (portal.parentAccountId) {
-        parentAccountId = portal.parentAccountId;
-      }
-    }
-  }
+  let parentAccountId = accountConfig.parentAccountId || '';
   if (!getAccountId({ account: parentAccountId })) {
     logger.log('');
     logger.error(
