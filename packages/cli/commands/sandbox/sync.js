@@ -27,7 +27,6 @@ const {
   isMissingScopeError,
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -231,24 +230,6 @@ exports.handler = async options => {
   }
 
   try {
-    // Handle manual exit for return key and ctrl+c
-    const onTerminate = () => {
-      logger.log('');
-      logger.log('');
-      logger.log('Exiting, sync will continue in the background.');
-      process.exit(EXIT_CODES.SUCCESS);
-    };
-    handleExit(onTerminate);
-    handleKeypress(key => {
-      if (
-        (key && key.ctrl && key.name == 'c') ||
-        key.name === 'enter' ||
-        key.name === 'return'
-      ) {
-        onTerminate();
-      }
-    });
-
     logger.log('');
     logger.log('Sync progress:');
     // Poll sync task status to show progress bars

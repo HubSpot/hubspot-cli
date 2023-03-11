@@ -23,6 +23,7 @@ const {
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('./ui');
 const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
+const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
@@ -116,6 +117,7 @@ function pollSyncTaskStatus(accountId, taskId) {
     {
       hideCursor: true,
       format: '[{bar}] {percentage}% | {taskType}',
+      gracefulExit: true,
     },
     cliProgress.Presets.rect
   );
@@ -175,6 +177,24 @@ function pollSyncTaskStatus(accountId, taskId) {
         resolve(taskResult);
         multibar.stop();
       }
+      // Handle manual exit for return key and ctrl+c
+      const onTerminate = () => {
+        clearInterval(pollInterval);
+        multibar.stop();
+        logger.log('');
+        logger.log('Exiting, sync will continue in the background.');
+        process.exit(EXIT_CODES.SUCCESS);
+      };
+      handleExit(onTerminate);
+      handleKeypress(key => {
+        if (
+          (key && key.ctrl && key.name == 'c') ||
+          key.name === 'enter' ||
+          key.name === 'return'
+        ) {
+          onTerminate();
+        }
+      });
     }, ACTIVE_TASK_POLL_INTERVAL);
   });
 }
