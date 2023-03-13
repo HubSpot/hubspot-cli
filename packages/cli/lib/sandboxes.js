@@ -116,9 +116,6 @@ const isTaskComplete = task => {
 // Returns a promise to poll a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
 function pollSyncTaskStatus(accountId, taskId) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
-  const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-  );
   const multibar = new cliProgress.MultiBar(
     {
       hideCursor: true,
@@ -134,6 +131,9 @@ function pollSyncTaskStatus(accountId, taskId) {
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
   const onTerminate = () => {
+    const baseUrl = getHubSpotWebsiteOrigin(
+      getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    );
     clearInterval(pollInterval);
     multibar.stop();
     logger.log('');
