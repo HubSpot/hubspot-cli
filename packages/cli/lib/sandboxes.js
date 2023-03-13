@@ -125,8 +125,27 @@ function pollSyncTaskStatus(accountId, taskId) {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
   const barInstances = {};
+  let pollInterval;
+  // Handle manual exit for return key and ctrl+c
+  const onTerminate = () => {
+    clearInterval(pollInterval);
+    multibar.stop();
+    logger.log('');
+    logger.log('Exiting, sync will continue in the background.');
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+  handleExit(onTerminate);
+  handleKeypress(key => {
+    if (
+      (key && key.ctrl && key.name == 'c') ||
+      key.name === 'enter' ||
+      key.name === 'return'
+    ) {
+      onTerminate();
+    }
+  });
   return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
+    pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
       if (taskResult.tasks) {
         // Array of sync tasks, eg: workflows, pipelines, object-schemas, etc. with each task containing a status of 'PENDING', 'IN_PROGRESS', 'COMPLETE', and 'FAILURE'
@@ -156,7 +175,8 @@ function pollSyncTaskStatus(accountId, taskId) {
                 }
               );
             }
-          } else if (barInstances[taskType] && task.status === 'COMPLETE') {
+          }
+          if (barInstances[taskType] && task.status === 'COMPLETE') {
             barInstances[taskType].update(100, {
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
@@ -177,24 +197,6 @@ function pollSyncTaskStatus(accountId, taskId) {
         resolve(taskResult);
         multibar.stop();
       }
-      // Handle manual exit for return key and ctrl+c
-      const onTerminate = () => {
-        clearInterval(pollInterval);
-        multibar.stop();
-        logger.log('');
-        logger.log('Exiting, sync will continue in the background.');
-        process.exit(EXIT_CODES.SUCCESS);
-      };
-      handleExit(onTerminate);
-      handleKeypress(key => {
-        if (
-          (key && key.ctrl && key.name == 'c') ||
-          key.name === 'enter' ||
-          key.name === 'return'
-        ) {
-          onTerminate();
-        }
-      });
     }, ACTIVE_TASK_POLL_INTERVAL);
   });
 }
