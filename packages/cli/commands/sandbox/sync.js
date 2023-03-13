@@ -59,8 +59,8 @@ exports.handler = async options => {
   }
 
   // Verify parent account exists in the config
-  let parentAccountId = accountConfig.parentAccountId || '';
-  if (!getAccountId({ account: parentAccountId })) {
+  let parentAccountId = accountConfig.parentAccountId || undefined;
+  if (!parentAccountId || !getAccountId({ account: parentAccountId })) {
     logger.log('');
     logger.error(
       i18n(`${i18nKey}.failure.missingParentPortal`, {
@@ -169,11 +169,7 @@ exports.handler = async options => {
     );
 
     uiLine();
-    logger.log(
-      i18n(`${i18nKey}.info.syncStatus`, {
-        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
-      })
-    );
+    logger.log(i18n(`${i18nKey}.info.earlyExit`));
     uiLine();
 
     logger.log('');
@@ -242,6 +238,12 @@ exports.handler = async options => {
     spinnies.succeed('syncComplete', {
       text: i18n(`${i18nKey}.polling.succeed`),
     });
+    logger.log('');
+    logger.log(
+      i18n(`${i18nKey}.info.syncStatus`, {
+        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
+      })
+    );
 
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {

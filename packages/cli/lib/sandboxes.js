@@ -3,10 +3,12 @@ const {
   getConfig,
   writeConfig,
   updateAccountConfig,
+  getEnv,
 } = require('@hubspot/cli-lib');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
+  ENVIRONMENTS,
 } = require('@hubspot/cli-lib/lib/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -24,6 +26,7 @@ const {
 const { uiFeatureHighlight } = require('./ui');
 const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
 const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
@@ -113,6 +116,9 @@ const isTaskComplete = task => {
 // Returns a promise to poll a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
 function pollSyncTaskStatus(accountId, taskId) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
   const multibar = new cliProgress.MultiBar(
     {
       hideCursor: true,
@@ -132,6 +138,12 @@ function pollSyncTaskStatus(accountId, taskId) {
     multibar.stop();
     logger.log('');
     logger.log('Exiting, sync will continue in the background.');
+    logger.log('');
+    logger.log(
+      i18n('cli.commands.sandbox.subcommands.sync.info.syncStatus', {
+        url: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   };
   handleExit(onTerminate);

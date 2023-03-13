@@ -680,8 +680,8 @@ en:
                 \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
                 \n\nRun `{{#bold}}hs accounts use{{/bold}}` to change your default account and sync to a different target sandbox."
-              syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}\n
-                \nSyncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
+              syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
+              earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
             warning:
               developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
               standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
