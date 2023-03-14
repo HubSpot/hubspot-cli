@@ -663,7 +663,7 @@ en:
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
             failure:
               noAccount: "No account specified. Specify an account by using the --account flag."
-              noSandboxAccounts: "No sandbox accounts available."
+              noSandboxAccounts: "No sandbox accounts to delete."
               noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
               objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
               noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
