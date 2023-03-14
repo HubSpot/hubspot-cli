@@ -222,6 +222,19 @@ exports.handler = async options => {
           account: getAccountName(accountConfig),
         })
       );
+    } else if (
+      isSpecifiedError(
+        err,
+        404,
+        'OBJECT_NOT_FOUND',
+        'SandboxErrors.SANDBOX_NOT_FOUND'
+      )
+    ) {
+      logger.error(
+        i18n(`${i18nKey}.failure.objectNotFound`, {
+          account: getAccountName(accountConfig),
+        })
+      );
     } else {
       logErrorInstance(err);
     }

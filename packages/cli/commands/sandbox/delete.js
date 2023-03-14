@@ -26,11 +26,11 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
-
-const SANDBOX_NOT_FOUND = 'SandboxErrors.SANDBOX_NOT_FOUND';
-const OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND';
 
 exports.command = 'delete [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -147,9 +147,12 @@ exports.handler = async options => {
     );
 
     if (
-      err.error &&
-      err.error.category === OBJECT_NOT_FOUND &&
-      err.error.subCategory === SANDBOX_NOT_FOUND
+      isSpecifiedError(
+        err,
+        404,
+        'OBJECT_NOT_FOUND',
+        'SandboxErrors.SANDBOX_NOT_FOUND'
+      )
     ) {
       logger.log('');
       logger.warn(
