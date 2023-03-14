@@ -259,7 +259,7 @@ const loadConfig = (
     useEnv: false,
   }
 ) => {
-  if (options.useEnv && loadEnvironmentVariableConfig()) {
+  if (options.useEnv && loadEnvironmentVariableConfig(options)) {
     logger.debug('Loaded environment variable config');
     environmentVariableConfigLoaded = true;
   } else {
@@ -701,7 +701,7 @@ const generateApiKeyConfig = (portalId, apiKey, env) => {
   };
 };
 
-const loadConfigFromEnvironment = () => {
+const loadConfigFromEnvironment = ({ useEnv = false } = {}) => {
   const {
     apiKey,
     clientId,
@@ -715,7 +715,7 @@ const loadConfigFromEnvironment = () => {
     'Unable to load config from environment variables.';
 
   if (!portalId) {
-    logger.error(unableToLoadEnvConfigError);
+    useEnv && logger.error(unableToLoadEnvConfigError);
     return;
   }
 
@@ -733,13 +733,13 @@ const loadConfigFromEnvironment = () => {
   } else if (apiKey) {
     return generateApiKeyConfig(portalId, apiKey, env);
   } else {
-    logger.error(unableToLoadEnvConfigError);
+    useEnv && logger.error(unableToLoadEnvConfigError);
     return;
   }
 };
 
-const loadEnvironmentVariableConfig = () => {
-  const envConfig = loadConfigFromEnvironment();
+const loadEnvironmentVariableConfig = options => {
+  const envConfig = loadConfigFromEnvironment(options);
 
   if (!envConfig) {
     return;

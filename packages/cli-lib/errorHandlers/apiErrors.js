@@ -28,6 +28,23 @@ const isMissingScopeError = err =>
   err.statusCode === 403 &&
   err.error.category === 'MISSING_SCOPES';
 
+const isSpecifiedError = (
+  err,
+  statusCode = undefined,
+  category = undefined,
+  subCategory = undefined
+) => {
+  const statusCodeErr = statusCode && err.statusCode === statusCode;
+  const categoryErr = category && err.error.category === category;
+  const subCategoryErr = subCategory && err.error.subCategory === subCategory;
+  return (
+    err.name === 'StatusCodeError' &&
+    statusCodeErr &&
+    categoryErr &&
+    subCategoryErr
+  );
+};
+
 const contactSupportString =
   'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
@@ -277,4 +294,5 @@ module.exports = {
   logApiUploadErrorInstance,
   logServerlessFunctionApiErrorInstance,
   isMissingScopeError,
+  isSpecifiedError,
 };

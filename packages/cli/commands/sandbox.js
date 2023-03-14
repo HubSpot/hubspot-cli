@@ -1,6 +1,7 @@
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const create = require('./sandbox/create');
 const del = require('./sandbox/delete');
+const sync = require('./sandbox/sync');
 
 // const i18nKey = 'cli.commands.sandbox';
 
@@ -14,6 +15,7 @@ exports.builder = yargs => {
   yargs
     .command(create)
     .command(del)
+    .command(sync)
     .demandCommand(1, '');
 
   return yargs;
