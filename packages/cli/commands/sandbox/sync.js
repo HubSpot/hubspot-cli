@@ -71,8 +71,10 @@ exports.handler = async options => {
   }
 
   const parentAccountConfig = getAccountConfig(parentAccountId);
+  const isDevelopmentSandbox = accountConfig.sandboxAccountType === 'DEVELOPER';
+  const isStandardSandbox = accountConfig.sandboxAccountType === 'STANDARD';
 
-  if (accountConfig.sandboxAccountType === 'DEVELOPER') {
+  if (isDevelopmentSandbox) {
     logger.log(i18n(`${i18nKey}.info.developmentSandbox`));
     logger.log(
       i18n(`${i18nKey}.info.sync`, {
@@ -101,7 +103,7 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
-  } else if (accountConfig.sandboxAccountType === 'STANDARD') {
+  } else if (isStandardSandbox) {
     const standardSyncUrl = `${getHubSpotWebsiteOrigin(
       getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
     )}/sandboxes-developer/${parentAccountId}/sync?step=select_sync_path&id=${parentAccountId}_${accountId}`;
@@ -148,6 +150,9 @@ exports.handler = async options => {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
+  const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${
+    isDevelopmentSandbox ? 'developer' : 'standard'
+  }`;
 
   try {
     logger.log('');
@@ -229,7 +234,11 @@ exports.handler = async options => {
     logger.log('');
     logger.log('Sync progress:');
     // Poll sync task status to show progress bars
-    await pollSyncTaskStatus(parentAccountId, initiateSyncResponse.id);
+    await pollSyncTaskStatus(
+      parentAccountId,
+      initiateSyncResponse.id,
+      syncStatusUrl
+    );
 
     logger.log('');
     spinnies.add('syncComplete', {
@@ -241,7 +250,7 @@ exports.handler = async options => {
     logger.log('');
     logger.log(
       i18n(`${i18nKey}.info.syncStatus`, {
-        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
+        url: syncStatusUrl,
       })
     );
 
@@ -255,7 +264,7 @@ exports.handler = async options => {
     });
     spinnies.fail('syncComplete', {
       text: i18n(`${i18nKey}.polling.fail`, {
-        url: `${baseUrl}/sandboxes-developer/${parentAccountId}/development`,
+        url: syncStatusUrl,
       }),
     });
 
