@@ -48,10 +48,17 @@ exports.handler = async options => {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
       // Account is required, throw error if force flag is present and no account is specified
+      logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noAccount`));
       process.exit(EXIT_CODES.ERROR);
     }
+    if (!accountPrompt) {
+      logger.log('');
+      logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
+
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
   });

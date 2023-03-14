@@ -44,6 +44,12 @@ const createSandboxPrompt = () => {
 };
 
 const deleteSandboxPrompt = (config, promptParentAccount = false) => {
+  const choices = promptParentAccount
+    ? mapNonSandboxAccountChoices(config.portals)
+    : mapSandboxAccountChoices(config.portals);
+  if (!choices.length) {
+    return undefined;
+  }
   return promptUser([
     {
       name: 'account',
@@ -55,9 +61,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       type: 'list',
       look: false,
       pageSize: 20,
-      choices: promptParentAccount
-        ? mapNonSandboxAccountChoices(config.portals)
-        : mapSandboxAccountChoices(config.portals),
+      choices,
       default: config.defaultPortal,
     },
   ]);
