@@ -173,10 +173,7 @@ exports.handler = async options => {
       accountId
     );
 
-    uiLine();
     logger.log(i18n(`${i18nKey}.info.earlyExit`));
-    uiLine();
-
     logger.log('');
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),
