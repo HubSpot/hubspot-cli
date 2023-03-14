@@ -151,7 +151,7 @@ exports.handler = async options => {
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${
-    isDevelopmentSandbox ? 'developer' : 'standard'
+    isDevelopmentSandbox ? 'development' : 'standard'
   }`;
 
   try {
