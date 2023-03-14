@@ -26,6 +26,7 @@ const { getAccountConfig } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
+  isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
@@ -115,6 +116,18 @@ exports.handler = async options => {
           url,
         })
       );
+    } else if (
+      isSpecifiedError(
+        err,
+        400,
+        'VALIDATION_ERROR',
+        'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR'
+      ) &&
+      err.error &&
+      err.error.message
+    ) {
+      logger.log('');
+      logger.error(err.error.message);
     } else {
       logErrorInstance(err);
     }
