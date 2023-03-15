@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const Spinnies = require('spinnies');
 
 const {
   addConfigOptions,
@@ -9,17 +9,15 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
-  logValidatorResults,
-} = require('../../lib/validators/logValidatorResults');
-const {
-  applyRelativeValidators,
-} = require('../../lib/validators/applyValidators');
-const MARKETPLACE_VALIDATORS = require('../../lib/validators');
-const { VALIDATION_RESULT } = require('../../lib/validators/constants');
+  kickOffValidation,
+  pollForValidationFinish,
+  fetchValidationResults,
+  processValidationErrors,
+  displayValidationResults,
+} = require('../../lib/marketplace-validate');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.module.subcommands.marketplaceValidate';
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -31,31 +29,29 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  if (!options.json) {
-    logger.log(
-      i18n(`${i18nKey}.logs.validatingModule`, {
-        path: src,
-      })
-    );
-  }
   trackCommandUsage('validate', null, accountId);
 
-  applyRelativeValidators(
-    MARKETPLACE_VALIDATORS.module,
-    src,
-    src,
-    accountId
-  ).then(groupedResults => {
-    logValidatorResults(groupedResults, { logAsJson: options.json });
-
-    if (
-      groupedResults
-        .flat()
-        .some(result => result.result === VALIDATION_RESULT.FATAL)
-    ) {
-      process.exit(EXIT_CODES.WARNING);
-    }
+  const spinnies = new Spinnies();
+  spinnies.add('marketplaceValidation', {
+    text: i18n(`${i18nKey}.logs.validatingModule`, {
+      path: src,
+    }),
   });
+
+  const assetType = 'MODULE';
+  const validationId = await kickOffValidation(accountId, assetType, src);
+  await pollForValidationFinish(accountId, validationId);
+
+  spinnies.remove('marketplaceValidation');
+
+  const validationResults = await fetchValidationResults(
+    accountId,
+    validationId
+  );
+  processValidationErrors(validationResults);
+  displayValidationResults(i18nKey, validationResults);
+
+  process.exit();
 };
 
 exports.builder = yargs => {
@@ -63,12 +59,6 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
 
-  yargs.options({
-    json: {
-      describe: i18n(`${i18nKey}.options.json.describe`),
-      type: 'boolean',
-    },
-  });
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
