@@ -654,14 +654,19 @@ en:
               error: "Error deleting sandbox account:"
             examples:
               default: "Deletes the sandbox account named MySandboxAccount."
+              force: "Skips all confirmation prompts when deleting a sandbox account."
             confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
             defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
             success:
               delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully."
               deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
-            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+            failure:
+              noAccount: "No account specified. Specify an account by using the --account flag."
+              noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
+              noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
+              objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
+              noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             options:
               account:
                 describe: "Account name or id to delete"

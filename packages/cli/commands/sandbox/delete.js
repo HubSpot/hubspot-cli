@@ -18,6 +18,7 @@ const { getConfig, getEnv } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   removeSandboxAccountFromConfig,
+  updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
@@ -38,13 +39,26 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account } = options;
+  const { account, force } = options;
   const config = getConfig();
 
   let accountPrompt;
   if (!account) {
-    accountPrompt = await deleteSandboxPrompt(config);
+    if (!force) {
+      accountPrompt = await deleteSandboxPrompt(config);
+    } else {
+      // Account is required, throw error if force flag is present and no account is specified
+      logger.log('');
+      logger.error(i18n(`${i18nKey}.failure.noAccount`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+    if (!accountPrompt) {
+      logger.log('');
+      logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
+
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
   });
@@ -54,31 +68,36 @@ exports.handler = async options => {
 
   trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
   let parentAccountId;
   for (const portal of config.portals) {
     if (portal.portalId === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
-      } else {
+      } else if (!force) {
         const parentAccountPrompt = await deleteSandboxPrompt(config, true);
         parentAccountId = getAccountId({
           account: parentAccountPrompt.account,
         });
+      } else {
+        logger.error(i18n(`${i18nKey}.failure.noParentAccount`));
+        process.exit(EXIT_CODES.ERROR);
       }
     }
   }
 
+  const url = `${baseUrl}/sandboxes/${parentAccountId}`;
+  const command = `hs auth ${
+    getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
+  } --account=${parentAccountId}`;
+
   if (!getAccountId({ account: parentAccountId })) {
-    const baseUrl = getHubSpotWebsiteOrigin(
-      getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-    );
-    const url = `${baseUrl}/sandboxes/${parentAccountId}`;
-    const command = `hs auth ${
-      getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
-    } --account=${parentAccountId}`;
     logger.log('');
     logger.error(
-      i18n(`${i18nKey}.noParentPortalAvailable`, {
+      i18n(`${i18nKey}.failure.noParentPortalAvailable`, {
         parentAccountId,
         url,
         command,
@@ -103,17 +122,19 @@ exports.handler = async options => {
   }
 
   try {
-    const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
-      {
-        name: 'confirmSandboxDeletePrompt',
-        type: 'confirm',
-        message: i18n(`${i18nKey}.confirm`, {
-          account: account || accountPrompt.account,
-        }),
-      },
-    ]);
-    if (!confirmed) {
-      process.exit(EXIT_CODES.SUCCESS);
+    if (!force) {
+      const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
+        {
+          name: 'confirmSandboxDeletePrompt',
+          type: 'confirm',
+          message: i18n(`${i18nKey}.confirm`, {
+            account: account || accountPrompt.account,
+          }),
+        },
+      ]);
+      if (!confirmed) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     }
 
     await deleteSandbox(parentAccountId, sandboxAccountId);
@@ -133,8 +154,11 @@ exports.handler = async options => {
     const promptDefaultAccount = removeSandboxAccountFromConfig(
       sandboxAccountId
     );
-    if (promptDefaultAccount) {
+    if (promptDefaultAccount && !force) {
       await selectAndSetAsDefaultAccountPrompt(getConfig());
+    } else {
+      // If force is specified, skip prompt and set the parent account id as the default account
+      updateDefaultAccount(parentAccountId);
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
@@ -156,7 +180,7 @@ exports.handler = async options => {
     ) {
       logger.log('');
       logger.warn(
-        i18n(`${i18nKey}.objectNotFound`, {
+        i18n(`${i18nKey}.failure.objectNotFound`, {
           account: account || accountPrompt.account,
         })
       );
@@ -165,8 +189,11 @@ exports.handler = async options => {
       const promptDefaultAccount = removeSandboxAccountFromConfig(
         sandboxAccountId
       );
-      if (promptDefaultAccount) {
+      if (promptDefaultAccount && !force) {
         await selectAndSetAsDefaultAccountPrompt(getConfig());
+      } else {
+        // If force is specified, skip prompt and set the parent account id as the default account
+        updateDefaultAccount(parentAccountId);
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
@@ -180,6 +207,11 @@ exports.builder = yargs => {
   yargs.option('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
+  });
+  yargs.option('f', {
+    type: 'boolean',
+    alias: 'force',
+    describe: i18n(`${i18nKey}.examples.force`),
   });
 
   yargs.example([
