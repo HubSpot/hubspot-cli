@@ -58,6 +58,56 @@ const logThemePreview = (filePath, accountId) => {
 };
 
 exports.handler = async options => {
+  async function uploadFiles(
+    accountId,
+    absoluteSrcPath,
+    dest,
+    {
+      mode,
+    },
+    options,
+    filePaths) {
+    return uploadFolder(
+      accountId,
+      absoluteSrcPath,
+      dest,
+      {
+        mode,
+      },
+      options,
+      filePaths
+    )
+      .then(results => {
+        if (!hasUploadErrors(results)) {
+          logger.success(
+            i18n(`${i18nKey}.success.uploadComplete`, {
+              dest,
+            })
+          );
+          logThemePreview(src, accountId);
+        } else {
+          logger.error(
+            i18n(`${i18nKey}.errors.someFilesFailed`, {
+              dest,
+            })
+          );
+          process.exit(EXIT_CODES.WARNING);
+        }
+      })
+      .catch(error => {
+        logger.error(
+          i18n(`${i18nKey}.errors.uploadFailed`, {
+            dest,
+            src,
+          })
+        );
+        logErrorInstance(error, {
+          accountId,
+        });
+        process.exit(EXIT_CODES.WARNING);
+      });
+  }
+
   await loadAndValidateOptions(options);
 
   if (!validateMode(options)) {
@@ -204,7 +254,9 @@ exports.handler = async options => {
       absoluteSrcPath,
       options.convertFields
     );
-    uploadFolder(
+
+    const noModules = filePaths.filter(path => !path.includes('/modules/'));
+    await uploadFiles(
       accountId,
       absoluteSrcPath,
       dest,
@@ -212,37 +264,20 @@ exports.handler = async options => {
         mode,
       },
       options,
-      filePaths
-    )
-      .then(results => {
-        if (!hasUploadErrors(results)) {
-          logger.success(
-            i18n(`${i18nKey}.success.uploadComplete`, {
-              dest,
-            })
-          );
-          logThemePreview(src, accountId);
-        } else {
-          logger.error(
-            i18n(`${i18nKey}.errors.someFilesFailed`, {
-              dest,
-            })
-          );
-          process.exit(EXIT_CODES.WARNING);
-        }
-      })
-      .catch(error => {
-        logger.error(
-          i18n(`${i18nKey}.errors.uploadFailed`, {
-            dest,
-            src,
-          })
-        );
-        logErrorInstance(error, {
-          accountId,
-        });
-        process.exit(EXIT_CODES.WARNING);
-      });
+      noModules
+    );
+
+    const onlyModules = filePaths.filter(path => path.includes('/modules/'));
+    uploadFiles(
+      accountId,
+      absoluteSrcPath,
+      dest,
+      {
+        mode,
+      },
+      options,
+      onlyModules
+    );
   }
 };
 
