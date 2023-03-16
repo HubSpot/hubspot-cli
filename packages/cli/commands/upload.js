@@ -62,11 +62,10 @@ exports.handler = async options => {
     accountId,
     absoluteSrcPath,
     dest,
-    {
-      mode,
-    },
+    { mode },
     options,
-    filePaths) {
+    filePaths
+  ) {
     return uploadFolder(
       accountId,
       absoluteSrcPath,
