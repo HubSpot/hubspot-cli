@@ -15,14 +15,14 @@ const mapAccountChoices = portals =>
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 
-const selectAccountFromConfig = async config => {
+const selectAccountFromConfig = async (config, prompt) => {
   const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
       look: false,
       name: 'default',
       pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
+      message: prompt || i18n(`${i18nKey}.promptMessage`),
       choices: mapAccountChoices(config.portals),
       default: config.defaultPortal,
     },
