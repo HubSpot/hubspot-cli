@@ -14,6 +14,8 @@ const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   getSandboxType,
   sandboxCreatePersonalAccessKeyFlow,
+  getHasDevelopmentSandboxes,
+  getDevSandboxLimit,
 } = require('../../lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -22,7 +24,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
@@ -127,7 +129,29 @@ exports.handler = async options => {
       err.error.message
     ) {
       logger.log('');
-      logger.error(err.error.message);
+      // logger.error(err.error.message);
+      const devSandboxLimitString = getDevSandboxLimit(err.error.message);
+      const hasDevelopmentSandboxes = getHasDevelopmentSandboxes(accountConfig);
+      if (hasDevelopmentSandboxes) {
+        logger.error(
+          i18n(`${i18nKey}.failure.alreadyInConfig`, {
+            accountName: accountConfig.name || accountId,
+            limit: devSandboxLimitString,
+          })
+        );
+      } else {
+        const baseUrl = getHubSpotWebsiteOrigin(
+          getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+        );
+        logger.error(
+          i18n(`${i18nKey}.failure.limit`, {
+            accountName: accountConfig.name || accountId,
+            limit: devSandboxLimitString,
+            devSandboxesLink: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+          })
+        );
+      }
+      logger.log('');
     } else {
       logErrorInstance(err);
     }

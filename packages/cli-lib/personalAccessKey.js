@@ -14,7 +14,7 @@ const {
 } = require('./lib/constants');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
-const { fetchHubData } = require('./api/hubs');
+const { fetchSandboxHubData } = require('./api/hubs');
 
 const refreshRequests = new Map();
 
@@ -148,7 +148,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 
   let hubInfo;
   try {
-    hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
+    hubInfo = await fetchSandboxHubData(accessToken, portalId, accountEnv);
   } catch (err) {
     // Ignore error, returns 404 if account is not a sandbox
   }

@@ -35,6 +35,30 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
+function getHasDevelopmentSandboxes(parentAccountConfig) {
+  const config = getConfig();
+  const parentPortalId = parentAccountConfig.portalId;
+  for (const portal of config.portals) {
+    if (
+      (portal.parentAccountId !== null ||
+        portal.parentAccountId !== undefined) &&
+      portal.parentAccountId === parentPortalId &&
+      portal.sandboxAccountType &&
+      portal.sandboxAccountType === 'DEVELOPER'
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getDevSandboxLimit(message) {
+  // Return the word after the matched sentence, in this case the number
+  const regex = /(?<=\breached your limit of\s)(\w+)/;
+  const match = message.match(regex);
+  return match[0];
+}
+
 // Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = parentAccountConfig.portalId;
@@ -211,6 +235,8 @@ function pollSyncTaskStatus(accountId, taskId, syncStatusUrl) {
 module.exports = {
   getSandboxType,
   getAccountName,
+  getHasDevelopmentSandboxes,
+  getDevSandboxLimit,
   getAvailableSyncTypes,
   sandboxCreatePersonalAccessKeyFlow,
   pollSyncTaskStatus,
