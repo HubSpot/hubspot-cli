@@ -444,6 +444,17 @@ en:
                 describe: "Project name (cannot be changed)"
               template:
                 describe: "The starting template"
+          components:
+            describe: "Create a new component within a project"
+            options:
+              name:
+                describe: "Component name"
+              location:
+                describe: "Directory within the project where component should be created"
+              template:
+                describe: "The starting template"
+            examples:
+              default: "Create a component within your project"
           deploy:
             describe: "Deploy a project build"
             debug:
@@ -802,7 +813,7 @@ en:
                 describe: "Output raw json data"
             results:
               required: "Required validation results:"
-              recommended: "Recommended validation results:"  
+              recommended: "Recommended validation results:"
               warnings:
                 file: "File: {{ file }}"
                 lineNumber: "Line number: {{ line }}"
@@ -1009,6 +1020,14 @@ en:
           errors:
             nameRequired: "A project name is required"
             locationRequired: "A project location is required"
+            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+        projectComponentsPrompt:
+          enterName: "[--name] Give your component a name: "
+          enterLocation: "[--location] Where should the component be created within the project?"
+          selectTemplate: "[--template] Start from a template?"
+          errors:
+            nameRequired: "A component name is required"
+            locationRequired: "A component location is required"
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
         secretPrompt:
           enterValue: "Enter a value for your secret: "

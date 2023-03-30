@@ -618,6 +618,16 @@ const logFeedbackMessage = buildId => {
   }
 };
 
+const createProjectComponent = async (
+  componentName,
+  componentPath,
+  template
+) => {
+  console.log('componentName', componentName);
+  console.log('path', componentPath);
+  console.log('template', template);
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -631,4 +641,5 @@ module.exports = {
   pollDeployStatus,
   ensureProjectExists,
   logFeedbackMessage,
+  createProjectComponent,
 };
