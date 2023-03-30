@@ -129,7 +129,6 @@ exports.handler = async options => {
       err.error.message
     ) {
       logger.log('');
-      // logger.error(err.error.message);
       const devSandboxLimitString = getDevSandboxLimit(err.error.message);
       const hasDevelopmentSandboxes = getHasDevelopmentSandboxes(accountConfig);
       if (hasDevelopmentSandboxes) {
