@@ -14,7 +14,7 @@ const {
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getConfig, getEnv } = require('@hubspot/cli-lib');
+const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   removeSandboxAccountFromConfig,
@@ -30,6 +30,8 @@ const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
+const { getAccountName } = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -62,7 +64,7 @@ exports.handler = async options => {
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
   });
-
+  const accountConfig = getAccountConfig(sandboxAccountId);
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
 
@@ -89,12 +91,13 @@ exports.handler = async options => {
     }
   }
 
+  const parentAccount = getAccountConfig(parentAccountId);
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
   const command = `hs auth ${
     getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
   } --account=${parentAccountId}`;
 
-  if (!getAccountId({ account: parentAccountId })) {
+  if (parentAccountId && !getAccountId({ account: parentAccountId })) {
     logger.log('');
     logger.error(
       i18n(`${i18nKey}.failure.noParentPortalAvailable`, {
@@ -109,14 +112,14 @@ exports.handler = async options => {
 
   logger.debug(
     i18n(`${i18nKey}.debug.deleting`, {
-      account: account || accountPrompt.account,
+      account: getAccountName(accountConfig),
     })
   );
 
   if (isDefaultAccount) {
     logger.log(
       i18n(`${i18nKey}.defaultAccountWarning`, {
-        account: account || accountPrompt.account,
+        account: getAccountName(accountConfig),
       })
     );
   }
@@ -128,7 +131,7 @@ exports.handler = async options => {
           name: 'confirmSandboxDeletePrompt',
           type: 'confirm',
           message: i18n(`${i18nKey}.confirm`, {
-            account: account || accountPrompt.account,
+            account: getAccountName(accountConfig),
           }),
         },
       ]);
@@ -145,7 +148,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: account || accountPrompt.account,
+        account: getAccountConfig(accountConfig),
         sandboxHubId: sandboxAccountId,
       })
     );
@@ -170,7 +173,20 @@ exports.handler = async options => {
       sandboxAccountId
     );
 
-    if (
+    if (err instanceof HubSpotAuthError) {
+      // Intercept invalid key error
+      // This command uses the parent portal PAK to delete a sandbox, so we must specify which account needs a new key
+      const regex = /\bYour personal access key is invalid\b/;
+      const match = err.message.match(regex);
+      if (match && match[0]) {
+        logger.log('');
+        logger.error(
+          i18n(`${i18nKey}.failure.invalidKey`, {
+            account: getAccountName(parentAccount),
+          })
+        );
+      }
+    } else if (
       isSpecifiedError(
         err,
         404,
@@ -181,7 +197,7 @@ exports.handler = async options => {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: account || accountPrompt.account,
+          account: getAccountName(accountConfig),
         })
       );
       logger.log('');

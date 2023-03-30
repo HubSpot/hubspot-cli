@@ -56,7 +56,7 @@ function getDevSandboxLimit(message) {
   // Return the word after the matched sentence, in this case the number
   const regex = /(?<=\breached your limit of\s)(\w+)/;
   const match = message.match(regex);
-  return match[0];
+  return match && match[0];
 }
 
 // Fetches available sync types for a given sandbox portal
