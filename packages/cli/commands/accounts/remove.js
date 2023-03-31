@@ -13,9 +13,9 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
 
-const i18nKey = 'cli.commands.accounts.subcommands.delete';
+const i18nKey = 'cli.commands.accounts.subcommands.remove';
 
-exports.command = 'delete [--account]';
+exports.command = 'remove [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -23,43 +23,43 @@ exports.handler = async options => {
 
   let config = getConfig();
 
-  let accountToDelete = options.account;
+  let accountToRemove = options.account;
 
-  if (accountToDelete && !getAccountIdFromConfig(accountToDelete)) {
+  if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
-        specifiedAccount: accountToDelete,
+        specifiedAccount: accountToRemove,
         configPath: getConfigPath(),
       })
     );
   }
 
-  if (!accountToDelete || !getAccountIdFromConfig(accountToDelete)) {
-    accountToDelete = await selectAccountFromConfig(
+  if (!accountToRemove || !getAccountIdFromConfig(accountToRemove)) {
+    accountToRemove = await selectAccountFromConfig(
       config,
       i18n(`${i18nKey}.prompts.selectAccountToRemove`)
     );
   }
 
   trackCommandUsage(
-    'accounts-delete',
+    'accounts-remove',
     null,
-    getAccountIdFromConfig(accountToDelete)
+    getAccountIdFromConfig(accountToRemove)
   );
 
   const currentDefaultAccount = getConfigDefaultAccount();
 
-  await deleteAccount(accountToDelete);
+  await deleteAccount(accountToRemove);
   logger.success(
-    i18n(`${i18nKey}.success.accountDeleted`, {
-      accountName: accountToDelete,
+    i18n(`${i18nKey}.success.accountRemoved`, {
+      accountName: accountToRemove,
     })
   );
 
   // Get updated version of the config
   config = getConfig();
 
-  if (accountToDelete === currentDefaultAccount) {
+  if (accountToRemove === currentDefaultAccount) {
     logger.log();
     logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
     const newDefaultAccount = await selectAccountFromConfig(config);
@@ -73,9 +73,9 @@ exports.builder = yargs => {
     type: 'string',
   });
   yargs.example([
-    ['$0 accounts delete', i18n(`${i18nKey}.examples.default`)],
+    ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
     [
-      '$0 accounts delete --account=MyAccount',
+      '$0 accounts remove --account=MyAccount',
       i18n(`${i18nKey}.examples.byName`),
     ],
   ]);
