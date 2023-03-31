@@ -56,7 +56,7 @@ function getDevSandboxLimit(message) {
   // Return the first grouping of digits, in this case the count from the string
   const regex = /\d+/;
   const match = message.match(regex);
-  return match && match[0];
+  return match && parseInt(match[0], 10);
 }
 
 // Fetches available sync types for a given sandbox portal
