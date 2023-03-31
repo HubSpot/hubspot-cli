@@ -39,6 +39,23 @@ en:
             promptMessage: "Select an account to use as the default"
             success:
               defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
+          remove:
+            describe: "Remove an account from the config."
+            logs:
+              replaceDefaultAccount: "The removed account was the default account."
+            prompts:
+              selectAccountToRemove: "Select an account to remove from the config"
+            errors:
+              accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+            examples:
+              default: "Select a HubSpot account to remove from the config"
+              byName: "Remove the account \"MyAccount\" from the config"
+            options:
+              account:
+                describe: "Account name or id to remove"
+            promptMessage: "Select an account to remove"
+            success:
+              accountRemoved: "Account \"{{ accountName }}\" removed from the config"
           info:
             accountId: "Account ID: {{ accountId }}"
             describe: "Print information about the default account, or about the account specified with the \"--account\" option."
@@ -802,7 +819,7 @@ en:
                 describe: "Output raw json data"
             results:
               required: "Required validation results:"
-              recommended: "Recommended validation results:"  
+              recommended: "Recommended validation results:"
               warnings:
                 file: "File: {{ file }}"
                 lineNumber: "Line number: {{ line }}"

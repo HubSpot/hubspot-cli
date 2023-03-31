@@ -4,6 +4,7 @@ const list = require('./accounts/list');
 const rename = require('./accounts/rename');
 const use = require('./accounts/use');
 const info = require('./accounts/info');
+const remove = require('./accounts/remove');
 
 const i18nKey = 'cli.commands.accounts';
 
@@ -22,6 +23,7 @@ exports.builder = yargs => {
     .command(rename)
     .command(use)
     .command(info)
+    .command(remove)
     .demandCommand(1, '');
 
   return yargs;
