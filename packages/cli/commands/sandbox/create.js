@@ -130,20 +130,24 @@ exports.handler = async options => {
     ) {
       logger.log('');
       const devSandboxLimitString = getDevSandboxLimit(err.error.message);
+      const plural = devSandboxLimitString !== 'one';
       const hasDevelopmentSandboxes = getHasDevelopmentSandboxes(accountConfig);
       if (hasDevelopmentSandboxes) {
         logger.error(
-          i18n(`${i18nKey}.failure.alreadyInConfig`, {
-            accountName: accountConfig.name || accountId,
-            limit: devSandboxLimitString,
-          })
+          i18n(
+            `${i18nKey}.failure.alreadyInConfig.${plural ? 'other' : 'one'}`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: devSandboxLimitString,
+            }
+          )
         );
       } else {
         const baseUrl = getHubSpotWebsiteOrigin(
           getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
         );
         logger.error(
-          i18n(`${i18nKey}.failure.limit`, {
+          i18n(`${i18nKey}.failure.limit.${plural ? 'other' : 'one'}`, {
             accountName: accountConfig.name || accountId,
             limit: devSandboxLimitString,
             devSandboxesLink: `${baseUrl}/sandboxes-developer/${accountId}/development`,
