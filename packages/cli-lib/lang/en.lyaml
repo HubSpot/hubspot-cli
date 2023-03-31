@@ -643,10 +643,10 @@ en:
             failure:
               creatingWithinSandbox: "Development sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run {{#bold}}hs auth{{/bold}} to connect a production account or {{#bold}}hs accounts use{{/bold}} to switch to your production account, then try again."
               limit:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of one development sandbox per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
                 other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
               alreadyInConfig:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of one development sandbox per account.
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
                 \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
                 \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
                 other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.

@@ -129,8 +129,8 @@ exports.handler = async options => {
       err.error.message
     ) {
       logger.log('');
-      const devSandboxLimitString = getDevSandboxLimit(err.error.message);
-      const plural = devSandboxLimitString !== 'one';
+      const devSandboxLimit = getDevSandboxLimit(err.error.message);
+      const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasDevelopmentSandboxes(accountConfig);
       if (hasDevelopmentSandboxes) {
         logger.error(
@@ -138,7 +138,7 @@ exports.handler = async options => {
             `${i18nKey}.failure.alreadyInConfig.${plural ? 'other' : 'one'}`,
             {
               accountName: accountConfig.name || accountId,
-              limit: devSandboxLimitString,
+              limit: devSandboxLimit,
             }
           )
         );
@@ -149,7 +149,7 @@ exports.handler = async options => {
         logger.error(
           i18n(`${i18nKey}.failure.limit.${plural ? 'other' : 'one'}`, {
             accountName: accountConfig.name || accountId,
-            limit: devSandboxLimitString,
+            limit: devSandboxLimit,
             devSandboxesLink: `${baseUrl}/sandboxes-developer/${accountId}/development`,
           })
         );

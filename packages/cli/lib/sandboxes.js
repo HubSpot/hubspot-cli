@@ -53,8 +53,8 @@ function getHasDevelopmentSandboxes(parentAccountConfig) {
 }
 
 function getDevSandboxLimit(message) {
-  // Return the word after the matched sentence, in this case the number
-  const regex = /(?<=\breached your limit of\s)(\w+)/;
+  // Return the first grouping of digits, in this case the count from the string
+  const regex = /\d+/;
   const match = message.match(regex);
   return match && match[0];
 }
