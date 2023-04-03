@@ -1,6 +1,7 @@
 const path = require('path');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./promptUtils');
+const { getIsInProject } = require('../projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.lib.prompts.projectComponentsPrompt';
@@ -36,6 +37,9 @@ const projectComponentsPrompt = (promptOptions = {}) => {
       validate: input => {
         if (!input) {
           return i18n(`${i18nKey}.errors.locationRequired`);
+        }
+        if (!getIsInProject(input)) {
+          return i18n(`${i18nKey}.errors.locationInProject`);
         }
         return true;
       },

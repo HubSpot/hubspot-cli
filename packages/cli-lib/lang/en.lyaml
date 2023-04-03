@@ -453,6 +453,8 @@ en:
                 describe: "Directory within the project where component should be created"
               template:
                 describe: "The starting template"
+            success:
+              message: "Successfully created a component within your project"
             examples:
               default: "Create a component within your project"
           deploy:
@@ -1028,6 +1030,7 @@ en:
           errors:
             nameRequired: "A component name is required"
             locationRequired: "A component location is required"
+            locationInProject: "The component location must be within a project folder"
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
         secretPrompt:
           enterValue: "Enter a value for your secret: "

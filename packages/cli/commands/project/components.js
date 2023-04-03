@@ -2,6 +2,7 @@ const path = require('path');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getAccountId } = require('@hubspot/cli-lib/lib/config');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
@@ -27,12 +28,16 @@ exports.handler = async options => {
 
   trackCommandUsage('project-components', null, accountId);
 
-  await createProjectComponent(
-    path.resolve(getCwd(), options.location || location),
-    options.template || template
-  );
+  try {
+    await createProjectComponent(
+      path.resolve(getCwd(), options.location || location),
+      options.template || template
+    );
+  } catch (error) {
+    logErrorInstance(error);
+  }
 
-  logger.log('Success!');
+  logger.log(i18n(`${i18nKey}.success.message`));
 };
 
 exports.builder = yargs => {
