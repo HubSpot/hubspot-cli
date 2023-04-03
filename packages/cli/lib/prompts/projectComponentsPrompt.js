@@ -2,16 +2,21 @@ const path = require('path');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./promptUtils');
 const { getIsInProject } = require('../projects');
+const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.lib.prompts.projectComponentsPrompt';
 
-const COMPONENT_TEMPLATES = [
-  { name: 'component1.md', label: 'Component1' },
-  { name: 'component2.md', label: 'Component2' },
-];
+const createTemplateOptions = async () => {
+  const config = await fetchJsonFromRepository(
+    'hubspot-project-components',
+    'main/config.json'
+  );
+  return config.components;
+};
 
-const projectComponentsPrompt = (promptOptions = {}) => {
+const projectComponentsPrompt = async (promptOptions = {}) => {
+  const componentTemplates = await createTemplateOptions();
   return promptUser([
     {
       name: 'name',
@@ -48,7 +53,7 @@ const projectComponentsPrompt = (promptOptions = {}) => {
       name: 'template',
       message: () => {
         return promptOptions.template &&
-          !COMPONENT_TEMPLATES.find(t => t.name === promptOptions.template)
+          !componentTemplates.find(t => t.path === promptOptions.template)
           ? i18n(`${i18nKey}.errors.invalidTemplate`, {
               template: promptOptions.template,
             })
@@ -56,12 +61,12 @@ const projectComponentsPrompt = (promptOptions = {}) => {
       },
       when:
         !promptOptions.template ||
-        !COMPONENT_TEMPLATES.find(t => t.name === promptOptions.template),
+        !componentTemplates.find(t => t.path === promptOptions.template),
       type: 'list',
-      choices: COMPONENT_TEMPLATES.map(template => {
+      choices: componentTemplates.map(template => {
         return {
           name: template.label,
-          value: template.name,
+          value: template.path,
         };
       }),
     },

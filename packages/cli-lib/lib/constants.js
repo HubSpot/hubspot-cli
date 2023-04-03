@@ -124,6 +124,11 @@ const PROJECT_TEMPLATES = [
   },
 ];
 
+const PROJECT_COMPONENT_TEMPLATES = [
+  { path: 'component1.md', label: 'Component 1' },
+  { path: 'component2.md', label: 'Component 2' },
+];
+
 const TEMPLATE_TYPES = {
   unmapped: 0,
   email_base_template: 1,
@@ -259,6 +264,7 @@ module.exports = {
   POLLING_DELAY,
   PROJECT_CONFIG_FILE,
   PROJECT_TEMPLATES,
+  PROJECT_COMPONENT_TEMPLATES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,
