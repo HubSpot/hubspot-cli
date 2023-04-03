@@ -23,12 +23,11 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const { name, template, location } = await projectComponentsPrompt(options);
+  const { template, location } = await projectComponentsPrompt(options);
 
   trackCommandUsage('project-components', null, accountId);
 
   await createProjectComponent(
-    options.name || name,
     path.resolve(getCwd(), options.location || location),
     options.template || template
   );

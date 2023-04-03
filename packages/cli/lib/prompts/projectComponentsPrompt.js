@@ -6,8 +6,8 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.lib.prompts.projectComponentsPrompt';
 
 const COMPONENT_TEMPLATES = [
-  { name: 'Component1', label: 'Component1' },
-  { name: 'Component2', label: 'Component2' },
+  { name: 'component1.md', label: 'Component1' },
+  { name: 'component2.md', label: 'Component2' },
 ];
 
 const projectComponentsPrompt = (promptOptions = {}) => {
@@ -28,7 +28,10 @@ const projectComponentsPrompt = (promptOptions = {}) => {
       message: i18n(`${i18nKey}.enterLocation`),
       when: !promptOptions.location,
       default: answers => {
-        return path.resolve(getCwd(), answers.name || promptOptions.name);
+        return path.resolve(
+          getCwd(),
+          `${answers.name}.md` || `${promptOptions.name}.md`
+        );
       },
       validate: input => {
         if (!input) {

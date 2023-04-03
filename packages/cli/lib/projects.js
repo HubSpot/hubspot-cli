@@ -36,6 +36,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -618,14 +619,12 @@ const logFeedbackMessage = buildId => {
   }
 };
 
-const createProjectComponent = async (
-  componentName,
-  componentPath,
-  template
-) => {
-  console.log('componentName', componentName);
-  console.log('path', componentPath);
-  console.log('template', template);
+const createProjectComponent = async (componentPath, template) => {
+  await downloadGitHubRepoContents(
+    'hubspot-project-components',
+    template,
+    componentPath
+  );
 };
 
 module.exports = {
