@@ -108,7 +108,6 @@ exports.handler = async options => {
       );
     } else {
       logApiErrorInstance(
-        accountId,
         e,
         new ApiErrorContext({ accountId, request: functionPath })
       );

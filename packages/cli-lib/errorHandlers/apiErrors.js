@@ -167,6 +167,11 @@ function logApiStatusCodeError(error, context) {
         errorMessage.push(`The ${messageDetail} was not found.`);
       }
       break;
+    case 429:
+      errorMessage.push(
+        `The ${messageDetail} surpassed the rate limit. Retry in one minute.`
+      );
+      break;
     case 503:
       errorMessage.push(
         `The ${messageDetail} could not be handled at this time. ${contactSupportString}`

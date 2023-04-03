@@ -36,7 +36,7 @@ exports.handler = async options => {
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
   const routesResp = await getRoutes(accountId).catch(async e => {
-    await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
+    await logApiErrorInstance(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.SUCCESS);
   });
 
