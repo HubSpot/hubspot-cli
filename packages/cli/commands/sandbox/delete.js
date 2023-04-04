@@ -148,7 +148,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: getAccountConfig(accountConfig),
+        account: account || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );
