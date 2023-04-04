@@ -131,7 +131,8 @@ function watch(
   accountId,
   src,
   dest,
-  { mode, remove, disableInitial, notify, commandOptions, filePaths }
+  { mode, remove, disableInitial, notify, commandOptions, filePaths },
+  postInitialUploadCallback = null
 ) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   if (notify) {
@@ -163,6 +164,11 @@ function watch(
         logErrorInstance(error, {
           accountId,
         });
+      })
+      .finally(() => {
+        if (postInitialUploadCallback) {
+          postInitialUploadCallback();
+        }
       });
   }
 
