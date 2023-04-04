@@ -52,11 +52,10 @@ function getHasDevelopmentSandboxes(parentAccountConfig) {
   return false;
 }
 
-function getDevSandboxLimit(message) {
-  // Return the first grouping of digits, in this case the count from the string
-  const regex = /\d+/;
-  const match = message.match(regex);
-  return match && parseInt(match[0], 10);
+function getDevSandboxLimit(error) {
+  // Error context should contain a limit property with a list of one number. That number is the current limit
+  const limit = error.context && error.context.limit && error.context.limit[0];
+  return limit ? parseInt(limit, 10) : 1; // Default to 1
 }
 
 // Fetches available sync types for a given sandbox portal
