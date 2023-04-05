@@ -34,6 +34,8 @@ async function getAccessToken(
     if (e.response) {
       const errorOutput = `Error while retrieving new access token: ${e.response.body.message}.`;
       if (e.response.statusCode === 401) {
+        // Before adjusting the error message below, please verify that changes do not break regex match in cli/commands/sandbox/delete.js
+        // For future changes: if response.statusCode is passed into the new error below, sandboxes can skip the regex check and pull the statusCode instead
         throw new HubSpotAuthError(
           `${errorOutput} \nYour personal access key is invalid. Please run "hs auth personalaccesskey" to reauthenticate. See https://designers.hubspot.com/docs/personal-access-keys for more information.`
         );
