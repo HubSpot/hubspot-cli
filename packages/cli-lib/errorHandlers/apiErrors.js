@@ -26,6 +26,7 @@ const isApiUploadValidationError = err =>
 const isMissingScopeError = err =>
   err.name === 'StatusCodeError' &&
   err.statusCode === 403 &&
+  err.error &&
   err.error.category === 'MISSING_SCOPES';
 
 const isSpecifiedError = (
@@ -35,8 +36,9 @@ const isSpecifiedError = (
   subCategory = undefined
 ) => {
   const statusCodeErr = statusCode && err.statusCode === statusCode;
-  const categoryErr = category && err.error.category === category;
-  const subCategoryErr = subCategory && err.error.subCategory === subCategory;
+  const categoryErr = category && err.error && err.error.category === category;
+  const subCategoryErr =
+    subCategory && err.error && err.error.subCategory === subCategory;
   return (
     err.name === 'StatusCodeError' &&
     statusCodeErr &&

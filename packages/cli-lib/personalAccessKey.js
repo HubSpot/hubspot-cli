@@ -14,7 +14,7 @@ const {
 } = require('./lib/constants');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { fetchAccessToken } = require('./api/localDevAuth/unauthenticated');
-const { fetchHubData } = require('./api/hubs');
+const { fetchSandboxHubData } = require('./api/hubs');
 
 const refreshRequests = new Map();
 
@@ -34,6 +34,8 @@ async function getAccessToken(
     if (e.response) {
       const errorOutput = `Error while retrieving new access token: ${e.response.body.message}.`;
       if (e.response.statusCode === 401) {
+        // Before adjusting the error message below, please verify that changes do not break regex match in cli/commands/sandbox/delete.js
+        // For future changes: if response.statusCode is passed into the new error below, sandboxes can skip the regex check and pull the statusCode instead
         throw new HubSpotAuthError(
           `${errorOutput} \nYour personal access key is invalid. Please run "hs auth personalaccesskey" to reauthenticate. See https://designers.hubspot.com/docs/personal-access-keys for more information.`
         );
@@ -148,7 +150,7 @@ const updateConfigWithPersonalAccessKey = async (configData, makeDefault) => {
 
   let hubInfo;
   try {
-    hubInfo = await fetchHubData(accessToken, portalId, accountEnv);
+    hubInfo = await fetchSandboxHubData(accessToken, portalId, accountEnv);
   } catch (err) {
     // Ignore error, returns 404 if account is not a sandbox
   }

@@ -1,13 +1,17 @@
 const request = require('request-promise-native');
 const { getRequestOptions } = require('../http/requestOptions');
 const { ENVIRONMENTS } = require('../lib/constants');
-const HUBS_API_PATH = 'sandbox-hubs/v1/self';
+const SANDBOX_HUBS_API_PATH = 'sandbox-hubs/v1/self';
 
-async function fetchHubData(accessToken, portalId, env = ENVIRONMENTS.PROD) {
+async function fetchSandboxHubData(
+  accessToken,
+  portalId,
+  env = ENVIRONMENTS.PROD
+) {
   const requestOptions = getRequestOptions(
     { env },
     {
-      uri: `${HUBS_API_PATH}`,
+      uri: `${SANDBOX_HUBS_API_PATH}`,
       qs: { portalId },
     }
   );
@@ -23,5 +27,5 @@ async function fetchHubData(accessToken, portalId, env = ENVIRONMENTS.PROD) {
 }
 
 module.exports = {
-  fetchHubData,
+  fetchSandboxHubData,
 };

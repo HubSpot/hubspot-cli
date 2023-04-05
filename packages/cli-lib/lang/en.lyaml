@@ -658,12 +658,22 @@ en:
             success:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
-              creatingWithinSandbox: "Development sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run `hs auth` to connect a production account or `hs accounts use` to switch to your production account, then try again."
+              creatingWithinSandbox: "Development sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run {{#bold}}hs auth{{/bold}} to connect a production account or {{#bold}}hs accounts use{{/bold}} to switch to your production account, then try again."
+              limit:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              alreadyInConfig:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
               scopes:
                 message: "The personal access key you provided doesn't include sandbox permissions."
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
                   \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
-                  \n- Update the CLI config for this account by running `hs auth` and entering the new key.\n"
+                  \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
           delete:
             describe: "Delete a sandbox account"
             debug:
@@ -684,6 +694,7 @@ en:
               noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
               objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
               noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+              invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
             options:
               account:
                 describe: "Account name or id to delete"
@@ -701,7 +712,7 @@ en:
               sync: "\nSync direction:
                 \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
-                \n\nRun `{{#bold}}hs accounts use{{/bold}}` to change your default account and sync to a different target sandbox."
+                \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
               syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
               earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
             warning:
@@ -719,10 +730,10 @@ en:
               fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
               succeed: "Sandbox sync complete."
             failure:
-              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run `{{#bold}}hs auth{{/bold}}` to connect your sandbox account to the CLI or `{{#bold}}hs accounts use{{/bold}}` to change your default account, then try again."
+              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
-                \n- Run `{{#bold}}hs auth{{/bold}}` to connect that account to your terminal, then try again.
-                \n- Run `{{#bold}}hs accounts use{{/bold}}` to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+                \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
+                \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
               missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
               syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
               notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
