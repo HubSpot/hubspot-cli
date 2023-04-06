@@ -4,7 +4,6 @@ const archiver = require('archiver');
 const tmp = require('tmp');
 const chalk = require('chalk');
 const findup = require('findup-sync');
-const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
@@ -40,6 +39,9 @@ const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const SpinniesManager = require('./SpinniesManager');
+
+const i18nKey = 'cli.lib.projects';
 
 const writeProjectConfig = (configPath, config) => {
   try {
@@ -251,9 +253,7 @@ const uploadProjectFiles = async (
   uploadMessage
 ) => {
   const i18nKey = 'cli.commands.project.subcommands.upload';
-  const spinnies = new Spinnies({
-    succeedColor: 'white',
-  });
+  const spinnies = SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
 
   spinnies.add('upload', {
@@ -261,6 +261,7 @@ const uploadProjectFiles = async (
       accountIdentifier,
       projectName,
     }),
+    succeedColor: 'white',
   });
 
   let buildId;
@@ -312,6 +313,76 @@ const uploadProjectFiles = async (
   return { buildId };
 };
 
+const pollProjectBuildAndDeploy = async (
+  accountId,
+  projectConfig,
+  tempFile,
+  buildId,
+  silenceLogs = false
+) => {
+  const {
+    autoDeployId,
+    isAutoDeployEnabled,
+    deployStatusTaskLocator,
+    status,
+  } = await pollBuildStatus(accountId, projectConfig.name, buildId, null, true);
+  // autoDeployId of 0 indicates a skipped deploy
+  const isDeploying =
+    isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
+
+  if (!silenceLogs) {
+    uiLine();
+  }
+
+  const result = {
+    succeeded: true,
+    buildId,
+    buildSucceeded: true,
+    autodeployEnabled: isAutoDeployEnabled,
+  };
+
+  if (status === 'FAILURE') {
+    result.buildSucceeded = false;
+    result.succeeded = false;
+    return result;
+  } else if (isDeploying) {
+    if (!silenceLogs) {
+      logger.log(
+        i18n(
+          `${i18nKey}.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
+          {
+            accountIdentifier: uiAccountDescription(accountId),
+            buildId,
+          }
+        )
+      );
+    }
+    const { status } = await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployStatusTaskLocator.id,
+      buildId,
+      true
+    );
+    if (status === 'FAILURE') {
+      result.succeeded = false;
+    }
+  }
+
+  try {
+    tempFile.removeCallback();
+    logger.debug(
+      i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
+        path: tempFile.name,
+      })
+    );
+  } catch (e) {
+    logger.error(e);
+  }
+
+  return result;
+};
+
 const handleProjectUpload = async (
   accountId,
   projectConfig,
@@ -341,24 +412,34 @@ const handleProjectUpload = async (
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  output.on('close', async function() {
-    logger.debug(
-      i18n(`${i18nKey}.debug.compressed`, {
-        byteCount: archive.pointer(),
-      })
-    );
+  const result = new Promise(resolve =>
+    output.on('close', async function() {
+      let result = {};
 
-    const { buildId } = await uploadProjectFiles(
-      accountId,
-      projectConfig.name,
-      tempFile.name,
-      uploadMessage
-    );
+      logger.debug(
+        i18n(`${i18nKey}.debug.compressed`, {
+          byteCount: archive.pointer(),
+        })
+      );
 
-    if (callbackFunc) {
-      callbackFunc(tempFile, buildId);
-    }
-  });
+      const { buildId } = await uploadProjectFiles(
+        accountId,
+        projectConfig.name,
+        tempFile.name,
+        uploadMessage
+      );
+
+      if (callbackFunc) {
+        result = await callbackFunc(
+          accountId,
+          projectConfig,
+          tempFile,
+          buildId
+        );
+      }
+      resolve(result);
+    })
+  );
 
   archive.pipe(output);
 
@@ -367,6 +448,8 @@ const handleProjectUpload = async (
   );
 
   archive.finalize();
+
+  return result;
 };
 
 const makePollTaskStatusFunc = ({
@@ -389,22 +472,31 @@ const makePollTaskStatusFunc = ({
     }
   };
 
-  return async (accountId, taskName, taskId, deployedBuildId = null) => {
+  return async (
+    accountId,
+    taskName,
+    taskId,
+    deployedBuildId = null,
+    silenceLogs = false
+  ) => {
     const displayId = deployedBuildId || taskId;
 
-    if (linkToHubSpot) {
+    if (linkToHubSpot && !silenceLogs) {
       logger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
     }
 
-    const spinnies = new Spinnies({
+    const spinnies = SpinniesManager.init();
+
+    const overallTaskSpinniesKey = `overallTaskStatus-${statusText.STATUS_TEXT}`;
+
+    spinnies.add(overallTaskSpinniesKey, {
+      text: 'Beginning',
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
     });
-
-    spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
     const [
       initialTaskStatus,
@@ -435,15 +527,17 @@ const makePollTaskStatusFunc = ({
     });
 
     const numComponents = structuredTasks.length;
-    const componentCountText = i18n(
-      numComponents === 1
-        ? `${i18nKey}.componentCountSingular`
-        : `${i18nKey}.componentCount`,
-      { numComponents }
-    );
+    const componentCountText = silenceLogs
+      ? ''
+      : i18n(
+          numComponents === 1
+            ? `${i18nKey}.componentCountSingular`
+            : `${i18nKey}.componentCount`,
+          { numComponents }
+        ) + '\n';
 
-    spinnies.update('overallTaskStatus', {
-      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}\n`,
+    spinnies.update(overallTaskSpinniesKey, {
+      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
     });
 
     const addTaskSpinner = (task, indent, newline) => {
@@ -459,6 +553,8 @@ const makePollTaskStatusFunc = ({
       spinnies.add(task.id, {
         text,
         indent,
+        succeedColor: 'white',
+        failColor: 'white',
       });
     };
 
@@ -517,48 +613,49 @@ const makePollTaskStatusFunc = ({
 
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
-              spinnies.succeed('overallTaskStatus', {
+              spinnies.succeed(overallTaskSpinniesKey, {
                 text: statusStrings.SUCCESS(taskName),
               });
             } else if (status === statusText.STATES.FAILURE) {
-              spinnies.fail('overallTaskStatus', {
+              spinnies.fail(overallTaskSpinniesKey, {
                 text: statusStrings.FAIL(taskName),
               });
 
-              const failedSubtasks = subTaskStatus.filter(
-                subtask => subtask.status === 'FAILURE'
-              );
-
-              uiLine();
-              logger.log(
-                `${statusStrings.SUBTASK_FAIL(
-                  displayId,
-                  failedSubtasks.length === 1
-                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
-                    : failedSubtasks.length + ' components'
-                )}\n`
-              );
-              logger.log('See below for a summary of errors.');
-              uiLine();
-
-              failedSubtasks.forEach(subTask => {
-                logger.log(
-                  `\n--- ${chalk.bold(
-                    subTask[statusText.SUBTASK_NAME_KEY]
-                  )} failed with the following error ---`
+              if (!silenceLogs) {
+                const failedSubtasks = subTaskStatus.filter(
+                  subtask => subtask.status === 'FAILURE'
                 );
-                logger.error(subTask.errorMessage);
 
-                // Log nested errors
-                if (subTask.standardError && subTask.standardError.errors) {
-                  logger.log();
-                  subTask.standardError.errors.forEach(error => {
-                    logger.log(error.message);
-                  });
-                }
-              });
+                uiLine();
+                logger.log(
+                  `${statusStrings.SUBTASK_FAIL(
+                    displayId,
+                    failedSubtasks.length === 1
+                      ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
+                      : failedSubtasks.length + ' components'
+                  )}\n`
+                );
+                logger.log('See below for a summary of errors.');
+                uiLine();
+
+                failedSubtasks.forEach(subTask => {
+                  logger.log(
+                    `\n--- ${chalk.bold(
+                      subTask[statusText.SUBTASK_NAME_KEY]
+                    )} failed with the following error ---`
+                  );
+                  logger.error(subTask.errorMessage);
+
+                  // Log nested errors
+                  if (subTask.standardError && subTask.standardError.errors) {
+                    logger.log();
+                    subTask.standardError.errors.forEach(error => {
+                      logger.log(error.message);
+                    });
+                  }
+                });
+              }
             }
-
             clearInterval(pollInterval);
             resolve(taskStatus);
           }
@@ -609,12 +706,11 @@ const pollDeployStatus = makePollTaskStatusFunc({
 });
 
 const logFeedbackMessage = buildId => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
   if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.feedbackHeader`));
+    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackHeader`));
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.feedbackMessage`));
+    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackMessage`));
   }
 };
 
@@ -622,6 +718,7 @@ module.exports = {
   writeProjectConfig,
   getProjectConfig,
   getIsInProject,
+  pollProjectBuildAndDeploy,
   handleProjectUpload,
   createProjectConfig,
   validateProjectConfig,

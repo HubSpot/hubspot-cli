@@ -448,6 +448,24 @@ en:
         selectLink: "Select a link to open"
       project:
         subcommands:
+          dev:
+            describe: "Start local dev for the current project"
+            logs:
+              introHeader: "HubSpot projects local development (beta)"
+              introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
+              introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
+              placeholderAccountSelection: "Using default account as target account (for now)"
+              prodAccountWarning: "Targeting a production account is risky. This command will upload incomplete changes to the target account. We recommend picking a sandbox account."
+              startupMessage: "Running {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountName }}{{/bold}} in dev mode ...\n"
+              projectNotInAccount: "This project does not exist yet in the target account"
+              projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
+            prompt:
+              account: "[--account] Choose a sandbox to test with:"
+              createProject: "[--silent] Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+            errors:
+              noProjectConfig: "No project detected"
+            examples:
+              default: "Start local dev for the current project"
           create:
             describe: "Create a new project"
             logs:
@@ -514,7 +532,6 @@ en:
           upload:
             debug:
               buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
-              cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
               compressed: "Project files compressed: {{ byteCount }} bytes"
               compressing: "Compressing build files to \"{{ path }}\""
             describe: "Upload your project files and create a new build"
@@ -522,19 +539,15 @@ en:
               default: "Upload a project"
             loading:
               upload:
-                add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-                fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-                succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+                add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
+                fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
+                succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
             logs:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
-              buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
-              feedbackHeader: "We'd love to hear your feedback!"
-              feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
               projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
               emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
-
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"
@@ -909,6 +922,13 @@ en:
             describe: "Options to pass to javascript fields files"
 
     lib:
+      projects:
+        pollProjectBuildAndDeploy:
+          buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
+          cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+        logFeedbackMessage:
+          feedbackHeader: "We'd love to hear your feedback!"
+          feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
       ui:
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
