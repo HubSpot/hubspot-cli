@@ -9,15 +9,13 @@ const {
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const {
-  projectComponentsPrompt,
-} = require('../../lib/prompts/projectCOmponentsPrompt');
+const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
 const { createProjectComponent } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 
-const i18nKey = 'cli.commands.project.subcommands.components';
+const i18nKey = 'cli.commands.project.subcommands.add';
 
-exports.command = 'components';
+exports.command = 'add';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -25,9 +23,9 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const { template, location } = await projectComponentsPrompt(options);
+  const { template, location } = await projectAddPrompt(options);
 
-  trackCommandUsage('project-components', null, accountId);
+  trackCommandUsage('project-add', null, accountId);
 
   try {
     await createProjectComponent(
@@ -58,9 +56,7 @@ exports.builder = yargs => {
     },
   });
 
-  yargs.example([
-    ['$0 project components', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project add', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;
 };

@@ -5,7 +5,7 @@ const { getIsInProject } = require('../projects');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
-const i18nKey = 'cli.lib.prompts.projectComponentsPrompt';
+const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 
 const createTemplateOptions = async () => {
   const config = await fetchJsonFromRepository(
@@ -15,7 +15,7 @@ const createTemplateOptions = async () => {
   return config.components;
 };
 
-const projectComponentsPrompt = async (promptOptions = {}) => {
+const projectAddPrompt = async (promptOptions = {}) => {
   const componentTemplates = await createTemplateOptions();
   return promptUser([
     {
@@ -74,5 +74,5 @@ const projectComponentsPrompt = async (promptOptions = {}) => {
 };
 
 module.exports = {
-  projectComponentsPrompt,
+  projectAddPrompt,
 };
