@@ -152,10 +152,13 @@ function watch(
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
     uploadFolder(accountId, src, dest, { mode }, commandOptions, filePaths)
-      .then(() => {
+      .then(result => {
         logger.success(
           `Completed uploading files in ${src} to ${dest} in ${accountId}`
         );
+        if (postInitialUploadCallback) {
+          postInitialUploadCallback(result);
+        }
       })
       .catch(error => {
         logger.error(
@@ -164,11 +167,6 @@ function watch(
         logErrorInstance(error, {
           accountId,
         });
-      })
-      .finally(() => {
-        if (postInitialUploadCallback) {
-          postInitialUploadCallback();
-        }
       });
   }
 
