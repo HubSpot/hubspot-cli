@@ -124,25 +124,40 @@ const PROJECT_TEMPLATES = [
   },
 ];
 
+const PROJECT_COMPONENT_TYPES = {
+  PRIVATE_APP: 'PRIVATE_APP',
+  APP_FUNCTION: 'APP_FUNCTION',
+  CRM_CARD_V2: 'CRM_CARD_V2',
+};
+
 const PROJECT_COMPONENT_TEMPLATES = [
-  { path: 'app', label: 'App', insertPath: './', isFile: false },
+  {
+    path: 'app',
+    label: 'App',
+    insertPath: './',
+    isFile: false,
+    type: PROJECT_COMPONENT_TYPES.PRIVATE_APP,
+  },
   {
     path: 'example.functions',
     label: 'Serverless function',
     insertPath: './',
     isFile: false,
+    type: PROJECT_COMPONENT_TYPES.APP_FUNCTION,
   },
   {
     path: 'crm-card-side.js',
     label: 'CRM card (side panel)',
     insertPath: './',
     isFile: true,
+    type: PROJECT_COMPONENT_TYPES.CRM_CARD_V2,
   },
   {
     path: 'crm-card-middle.js',
     label: 'CRM card (middle panel)',
     insertPath: './',
     isFile: true,
+    type: PROJECT_COMPONENT_TYPES.CRM_CARD_V2,
   },
 ];
 
@@ -282,6 +297,7 @@ module.exports = {
   PROJECT_CONFIG_FILE,
   PROJECT_TEMPLATES,
   PROJECT_COMPONENT_TEMPLATES,
+  PROJECT_COMPONENT_TYPES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,

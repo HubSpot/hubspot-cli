@@ -15,6 +15,7 @@ const {
   ERROR_TYPES,
   POLLING_DELAY,
   PROJECT_TEMPLATES,
+  PROJECT_COMPONENT_TYPES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
@@ -619,17 +620,27 @@ const logFeedbackMessage = buildId => {
   }
 };
 
-const createProjectComponent = async (type, name) => {
-  if (!type.isFile) {
-    if (!fs.existsSync(name)) {
-      fs.mkdirSync(name);
+const createProjectComponent = async (component, name) => {
+  let componentName = name;
+
+  if (component.type === PROJECT_COMPONENT_TYPES.APP_FUNCTION) {
+    componentName = `${name}.functions`;
+  }
+
+  if (component.type === PROJECT_COMPONENT_TYPES.CRM_CARD_V2) {
+    componentName = `${name}.js`;
+  }
+
+  if (!component.isFile) {
+    if (!fs.existsSync(componentName)) {
+      fs.mkdirSync(componentName);
     }
   }
 
   await downloadGitHubRepoContents(
     'hubspot-project-components',
-    type.path,
-    path.resolve(getCwd(), `${type.insertPath}${name}`)
+    component.path,
+    path.resolve(getCwd(), `${component.insertPath}${componentName}`)
   );
 };
 

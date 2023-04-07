@@ -13,13 +13,13 @@ const createTypeOptions = async () => {
 };
 
 const projectAddPrompt = async (promptOptions = {}) => {
-  const componentTypes = await createTypeOptions();
+  const components = await createTypeOptions();
   return promptUser([
     {
       name: 'type',
       message: () => {
         return promptOptions.type &&
-          !componentTypes.find(t => t.path === promptOptions.type)
+          !components.find(t => t.path === promptOptions.type.path)
           ? i18n(`${i18nKey}.errors.invalidType`, {
               type: promptOptions.type,
             })
@@ -27,9 +27,9 @@ const projectAddPrompt = async (promptOptions = {}) => {
       },
       when:
         !promptOptions.type ||
-        !componentTypes.find(t => t.path === promptOptions.type),
+        !components.find(t => t.path === promptOptions.type.path),
       type: 'list',
-      choices: componentTypes.map(type => {
+      choices: components.map(type => {
         return {
           name: type.label,
           value: type,
