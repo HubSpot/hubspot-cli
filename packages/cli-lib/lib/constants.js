@@ -125,8 +125,25 @@ const PROJECT_TEMPLATES = [
 ];
 
 const PROJECT_COMPONENT_TEMPLATES = [
-  { path: 'component1.md', label: 'Component 1' },
-  { path: 'component2.md', label: 'Component 2' },
+  { path: 'app', label: 'App', insertPath: './', isFile: false },
+  {
+    path: 'example.functions',
+    label: 'Serverless function',
+    insertPath: './',
+    isFile: false,
+  },
+  {
+    path: 'crm-card-side.js',
+    label: 'CRM card (side panel)',
+    insertPath: './',
+    isFile: true,
+  },
+  {
+    path: 'crm-card-middle.js',
+    label: 'CRM card (middle panel)',
+    insertPath: './',
+    isFile: true,
+  },
 ];
 
 const TEMPLATE_TYPES = {

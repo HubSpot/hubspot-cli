@@ -449,10 +449,8 @@ en:
             options:
               name:
                 describe: "Component name"
-              location:
-                describe: "Directory within the project where component should be created"
-              template:
-                describe: "The starting template"
+              type:
+                describe: "The type of component"
             success:
               message: "Successfully created a component within your project"
             examples:
@@ -1024,14 +1022,11 @@ en:
             locationRequired: "A project location is required"
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
         projectAddPrompt:
+          selectType: "[--type] Select your component type:"
           enterName: "[--name] Give your component a name: "
-          enterLocation: "[--location] Where should the component be created within the project?"
-          selectTemplate: "[--template] Start from a template?"
           errors:
             nameRequired: "A component name is required"
-            locationRequired: "A component location is required"
-            locationInProject: "The component location must be within a project folder"
-            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+            invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
         secretPrompt:
           enterValue: "Enter a value for your secret: "
           errors:

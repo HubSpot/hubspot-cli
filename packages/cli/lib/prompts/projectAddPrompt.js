@@ -1,13 +1,10 @@
-const path = require('path');
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { promptUser } = require('./promptUtils');
-const { getIsInProject } = require('../projects');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 
-const createTemplateOptions = async () => {
+const createTypeOptions = async () => {
   const config = await fetchJsonFromRepository(
     'hubspot-project-components',
     'main/config.json'
@@ -16,8 +13,29 @@ const createTemplateOptions = async () => {
 };
 
 const projectAddPrompt = async (promptOptions = {}) => {
-  const componentTemplates = await createTemplateOptions();
+  const componentTypes = await createTypeOptions();
   return promptUser([
+    {
+      name: 'type',
+      message: () => {
+        return promptOptions.type &&
+          !componentTypes.find(t => t.path === promptOptions.type)
+          ? i18n(`${i18nKey}.errors.invalidType`, {
+              type: promptOptions.type,
+            })
+          : i18n(`${i18nKey}.selectType`);
+      },
+      when:
+        !promptOptions.type ||
+        !componentTypes.find(t => t.path === promptOptions.type),
+      type: 'list',
+      choices: componentTypes.map(type => {
+        return {
+          name: type.label,
+          value: type,
+        };
+      }),
+    },
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -28,47 +46,6 @@ const projectAddPrompt = async (promptOptions = {}) => {
         }
         return true;
       },
-    },
-    {
-      name: 'location',
-      message: i18n(`${i18nKey}.enterLocation`),
-      when: !promptOptions.location,
-      default: answers => {
-        return path.resolve(
-          getCwd(),
-          `${answers.name}.md` || `${promptOptions.name}.md`
-        );
-      },
-      validate: input => {
-        if (!input) {
-          return i18n(`${i18nKey}.errors.locationRequired`);
-        }
-        if (!getIsInProject(input)) {
-          return i18n(`${i18nKey}.errors.locationInProject`);
-        }
-        return true;
-      },
-    },
-    {
-      name: 'template',
-      message: () => {
-        return promptOptions.template &&
-          !componentTemplates.find(t => t.path === promptOptions.template)
-          ? i18n(`${i18nKey}.errors.invalidTemplate`, {
-              template: promptOptions.template,
-            })
-          : i18n(`${i18nKey}.selectTemplate`);
-      },
-      when:
-        !promptOptions.template ||
-        !componentTemplates.find(t => t.path === promptOptions.template),
-      type: 'list',
-      choices: componentTemplates.map(template => {
-        return {
-          name: template.label,
-          value: template.path,
-        };
-      }),
     },
   ]);
 };

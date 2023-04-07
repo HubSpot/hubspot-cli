@@ -1,5 +1,3 @@
-const path = require('path');
-const { getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getAccountId } = require('@hubspot/cli-lib/lib/config');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -23,15 +21,12 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const { template, location } = await projectAddPrompt(options);
+  const { type, name } = await projectAddPrompt(options);
 
   trackCommandUsage('project-add', null, accountId);
 
   try {
-    await createProjectComponent(
-      path.resolve(getCwd(), options.location || location),
-      options.template || template
-    );
+    await createProjectComponent(options.type || type, options.name || name);
   } catch (error) {
     logErrorInstance(error);
   }
@@ -41,18 +36,14 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.options({
+    type: {
+      describe: i18n(`${i18nKey}.options.type.describe`),
+      type: 'string',
+      choices: PROJECT_COMPONENT_TEMPLATES.map(type => type.label),
+    },
     name: {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
-    },
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
-      type: 'string',
-    },
-    template: {
-      describe: i18n(`${i18nKey}.options.template.describe`),
-      type: 'string',
-      choices: PROJECT_COMPONENT_TEMPLATES.map(template => template.label),
     },
   });
 

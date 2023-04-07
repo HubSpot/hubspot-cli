@@ -619,11 +619,17 @@ const logFeedbackMessage = buildId => {
   }
 };
 
-const createProjectComponent = async (componentPath, template) => {
+const createProjectComponent = async (type, name) => {
+  if (!type.isFile) {
+    if (!fs.existsSync(name)) {
+      fs.mkdirSync(name);
+    }
+  }
+
   await downloadGitHubRepoContents(
     'hubspot-project-components',
-    template,
-    componentPath
+    type.path,
+    path.resolve(getCwd(), `${type.insertPath}${name}`)
   );
 };
 
