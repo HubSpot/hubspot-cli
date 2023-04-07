@@ -451,8 +451,10 @@ en:
                 describe: "Component name"
               type:
                 describe: "The type of component"
+            creatingComponent:
+              message: "Adding a new component to your project"
             success:
-              message: "Successfully created a component within your project"
+              message: "{{ componentName }} was added to your project"
             examples:
               default: "Create a component within your project"
           deploy:

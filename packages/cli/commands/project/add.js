@@ -21,17 +21,23 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.creatingComponent.message`));
+  logger.log('');
   const { type, name } = await projectAddPrompt(options);
 
   trackCommandUsage('project-add', null, accountId);
 
   try {
     await createProjectComponent(options.type || type, options.name || name);
+    logger.log(
+      i18n(`${i18nKey}.success.message`, {
+        componentName: options.name || name,
+      })
+    );
   } catch (error) {
     logErrorInstance(error);
   }
-
-  logger.log(i18n(`${i18nKey}.success.message`));
 };
 
 exports.builder = yargs => {
