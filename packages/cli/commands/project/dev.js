@@ -19,6 +19,9 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiAccountDescription, uiLine } = require('../../lib/ui');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const {
+  selectTargetAccountPrompt,
+} = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -47,27 +50,8 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { targetAccountId } = await promptUser([
-    {
-      name: 'targetAccountId',
-      type: 'list',
-      message: i18n(`${i18nKey}.prompt.account`),
-      choices: [
-        {
-          name: '<create a new sandbox account>',
-          value: null,
-        },
-        {
-          name: '[sandbox] my-dev-sandbox-1',
-          value: null,
-        },
-        {
-          name: `[non-sandbox] ${uiAccountDescription(accountId)}`,
-          value: accountId,
-        },
-      ],
-    },
-  ]);
+  const { targetAccountId } = selectTargetAccountPrompt(accountId);
+
   logger.log();
 
   // Show a warning if the user chooses a non-sandbox account

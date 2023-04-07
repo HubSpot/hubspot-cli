@@ -175,7 +175,6 @@ const ensureProjectExists = async (
   projectName,
   { forceCreate = false, allowCreate = true, noLogs = false } = {}
 ) => {
-  const i18nKey = 'cli.commands.project.lib.ensureProjectExists';
   const accountIdentifier = uiAccountDescription(accountId);
   try {
     const project = await fetchProject(accountId, projectName);
@@ -188,7 +187,7 @@ const ensureProjectExists = async (
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: i18n(`${i18nKey}.createPrompt`, {
+            message: i18n(`${i18nKey}.ensureProjectExists.createPrompt`, {
               projectName,
               accountIdentifier,
             }),
@@ -202,7 +201,10 @@ const ensureProjectExists = async (
         try {
           await createProject(accountId, projectName);
           logger.success(
-            i18n(`${i18nKey}.createSuccess`, { projectName, accountIdentifier })
+            i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
+              projectName,
+              accountIdentifier,
+            })
           );
           return true;
         } catch (err) {
@@ -211,9 +213,10 @@ const ensureProjectExists = async (
       } else {
         if (!noLogs) {
           logger.log(
-            `Your project ${chalk.bold(
-              projectName
-            )} could not be found in ${chalk.bold(accountIdentifier)}.`
+            i18n(`${i18nKey}.ensureProjectExists.notFound`, {
+              projectName,
+              accountIdentifier,
+            })
           );
         }
         return false;
@@ -246,18 +249,18 @@ const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
     accountId
   )}/activity/deploy/${deployId}`;
 };
+
 const uploadProjectFiles = async (
   accountId,
   projectName,
   filePath,
   uploadMessage
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
   const spinnies = SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
 
   spinnies.add('upload', {
-    text: i18n(`${i18nKey}.loading.upload.add`, {
+    text: i18n(`${i18nKey}.uploadProjectFiles.add`, {
       accountIdentifier,
       projectName,
     }),
@@ -277,21 +280,21 @@ const uploadProjectFiles = async (
     buildId = upload.buildId;
 
     spinnies.succeed('upload', {
-      text: i18n(`${i18nKey}.loading.upload.succeed`, {
+      text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
         accountIdentifier,
         projectName,
       }),
     });
 
     logger.debug(
-      i18n(`${i18nKey}.debug.buildCreated`, {
+      i18n(`${i18nKey}.uploadProjectFiles.buildCreated`, {
         buildId,
         projectName,
       })
     );
   } catch (err) {
     spinnies.fail('upload', {
-      text: i18n(`${i18nKey}.loading.upload.fail`, {
+      text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {
         accountIdentifier,
         projectName,
       }),
@@ -305,7 +308,7 @@ const uploadProjectFiles = async (
       })
     );
     if (err.error.subCategory === ERROR_TYPES.PROJECT_LOCKED) {
-      logger.log(i18n(`${i18nKey}.logs.projectLockedError`));
+      logger.log(i18n(`${i18nKey}.uploadProjectFiles.projectLockedError`));
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -390,13 +393,14 @@ const handleProjectUpload = async (
   callbackFunc,
   uploadMessage
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
   const filenames = fs.readdirSync(srcDir);
   if (!filenames || filenames.length === 0) {
     logger.log(
-      i18n(`${i18nKey}.logs.emptySource`, { srcDir: projectConfig.srcDir })
+      i18n(`${i18nKey}.handleProjectUpload.emptySource`, {
+        srcDir: projectConfig.srcDir,
+      })
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -404,7 +408,7 @@ const handleProjectUpload = async (
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
   logger.debug(
-    i18n(`${i18nKey}.debug.compressing`, {
+    i18n(`${i18nKey}.handleProjectUpload.compressing`, {
       path: tempFile.name,
     })
   );
@@ -417,7 +421,7 @@ const handleProjectUpload = async (
       let result = {};
 
       logger.debug(
-        i18n(`${i18nKey}.debug.compressed`, {
+        i18n(`${i18nKey}.handleProjectUpload.compressed`, {
           byteCount: archive.pointer(),
         })
       );
@@ -459,8 +463,6 @@ const makePollTaskStatusFunc = ({
   statusStrings,
   linkToHubSpot,
 }) => {
-  const i18nKey = 'cli.commands.project.lib.makePollTaskStatusFunc';
-
   const isTaskComplete = task => {
     if (
       !task[statusText.SUBTASK_KEY].length ||
@@ -531,8 +533,8 @@ const makePollTaskStatusFunc = ({
       ? ''
       : i18n(
           numComponents === 1
-            ? `${i18nKey}.componentCountSingular`
-            : `${i18nKey}.componentCount`,
+            ? `${i18nKey}.makePollTaskStatusFunc.componentCountSingular`
+            : `${i18nKey}.makePollTaskStatusFunc.componentCount`,
           { numComponents }
         ) + '\n';
 
@@ -590,8 +592,8 @@ const makePollTaskStatusFunc = ({
             ) {
               const taskStatusText =
                 subTask.status === statusText.STATES.SUCCESS
-                  ? i18n(`${i18nKey}.successStatusText`)
-                  : i18n(`${i18nKey}.failedStatusText`);
+                  ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
+                  : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
               const hasNewline =
                 spinner.text.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner.text.replace(
