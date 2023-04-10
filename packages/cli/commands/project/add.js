@@ -30,6 +30,7 @@ exports.handler = async options => {
 
   try {
     await createProjectComponent(options.type || type, options.name || name);
+    logger.log('');
     logger.log(
       i18n(`${i18nKey}.success.message`, {
         componentName: options.name || name,
