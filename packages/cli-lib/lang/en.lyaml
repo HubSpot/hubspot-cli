@@ -945,6 +945,15 @@ en:
             projectUploadCommand:
               command: "hs project upload"
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            projectDevCommand:
+              command: "hs project dev"
+              message: "Run {{ command }} to start testing your project locally."
+            sandboxSyncDevelopmentCommand:
+              command: "hs sandbox sync"
+              message: "Run {{ command }} to to update CRM object definitions in your sandbox."
+            sandboxSyncStandardCommand:
+              command: "hs sandbox sync"
+              message: "Run {{ command }} to to update all supported assets to your sandbox from production."
       commonOpts:
         options:
           portal:

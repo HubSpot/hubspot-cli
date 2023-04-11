@@ -34,6 +34,7 @@ const i18nKey = 'cli.commands.sandbox.subcommands.create';
  * @param {String} type - Standard or development sandbox type
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
+ * @returns {Object} sandboxConfigName string and sandbox instance from API
  */
 const buildSandbox = async ({ name, type, accountConfig, env }) => {
   const spinnies = new Spinnies({
@@ -43,18 +44,17 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
 
   trackCommandUsage('sandbox-create', null, accountId);
 
+  // Default account is not a production portal
   if (
     accountConfig.sandboxAccountType &&
     accountConfig.sandboxAccountType !== null
   ) {
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
-
     logger.error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
       })
     );
-
     throw new Error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
@@ -84,7 +84,7 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
       }),
     });
 
-    const sandboxApiType = sandboxApiTypeMap[sandboxType]; // API expects type as 1 or 2
+    const sandboxApiType = sandboxApiTypeMap[sandboxType]; // API expects sandbox type as 1 or 2
     result = await createSandbox(accountId, sandboxName, sandboxApiType);
 
     logger.log('');
@@ -95,7 +95,6 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
       }),
     });
   } catch (err) {
-    console.log('ERROR: ', err);
     debugErrorAndContext(err);
 
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
@@ -162,13 +161,23 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
     }
     throw err;
   }
+
+  // If creating standard sandbox, prompt user to sync assets
+
+  let sandboxConfigName;
+
   try {
     // Response contains PAK, save to config here
-    await saveSandboxToConfig(env, result);
+    sandboxConfigName = await saveSandboxToConfig(env, result);
   } catch (err) {
     logErrorInstance(err);
     throw err;
   }
+
+  return {
+    sandboxConfigName,
+    result,
+  };
 };
 
 module.exports = {

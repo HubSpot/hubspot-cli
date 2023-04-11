@@ -4,10 +4,6 @@ const {
   writeConfig,
   updateAccountConfig,
 } = require('@hubspot/cli-lib');
-const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/cli-lib/lib/constants');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -15,13 +11,16 @@ const {
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
-const {
-  setAsDefaultAccountPrompt,
-} = require('./prompts/setAsDefaultAccountPrompt');
-const { uiFeatureHighlight } = require('./ui');
 const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
 const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const {
+  personalAccessKeyPrompt,
+} = require('./prompts/personalAccessKeyPrompt');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/cli-lib/lib/constants');
 
 const sandboxTypeMap = {
   DEV: 'development',
@@ -82,12 +81,20 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
   return syncTypes.map(t => ({ type: t.name }));
 }
 
+/**
+ * @param {String} env - Environment (QA/Prod)
+ * @param {Object} result - Sandbox instance returned from API
+ * @returns {String} validName saved into config
+ */
 const saveSandboxToConfig = async (env, result) => {
-  console.log('result in save to config: ', result);
-  const configData = { env, personalAccessKey: result.personalAccessKey };
+  // const configData = { env, personalAccessKey: result.personalAccessKey };
+  const configData = await personalAccessKeyPrompt({
+    env,
+    account: result.sandbox.sandboxHubId,
+  }); // TODO: Temporary, remove
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
   if (!updatedConfig) {
-    process.exit(EXIT_CODES.SUCCESS);
+    process.exit(EXIT_CODES.ERROR);
   }
 
   let validName = updatedConfig.name;
@@ -104,7 +111,7 @@ const saveSandboxToConfig = async (env, result) => {
       : true;
     const { name: promptName } = !validAccountName
       ? await enterAccountNamePrompt(nameForConfig)
-      : { promptName: nameForConfig };
+      : { name: nameForConfig };
     validName = promptName;
   }
   updateAccountConfig({
@@ -115,23 +122,7 @@ const saveSandboxToConfig = async (env, result) => {
   });
   writeConfig();
 
-  const setAsDefault = await setAsDefaultAccountPrompt(validName);
-
   logger.log('');
-  if (setAsDefault) {
-    logger.success(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-        accountName: validName,
-      })
-    );
-  } else {
-    const config = getConfig();
-    logger.info(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
-      })
-    );
-  }
   logger.success(
     i18n('cli.commands.sandbox.subcommands.create.success.configFileUpdated', {
       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -139,12 +130,67 @@ const saveSandboxToConfig = async (env, result) => {
       account: validName,
     })
   );
-  uiFeatureHighlight([
-    'accountsUseCommand',
-    'accountOption',
-    'accountsListCommand',
-  ]);
+  logger.log('');
+  return validName;
 };
+
+// const sandboxCreatePersonalAccessKeyFlow = async (env, account, name) => {
+//   const configData = await personalAccessKeyPrompt({ env, account });
+//   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+//   if (!updatedConfig) {
+//     process.exit(EXIT_CODES.SUCCESS);
+//   }
+
+//   let validName = updatedConfig.name;
+
+//   if (!updatedConfig.name) {
+//     const nameForConfig = name
+//       .toLowerCase()
+//       .split(' ')
+//       .join('-');
+//     const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
+//     validName = promptName;
+//   }
+
+//   updateAccountConfig({
+//     ...updatedConfig,
+//     environment: updatedConfig.env,
+//     tokenInfo: updatedConfig.auth.tokenInfo,
+//     name: validName,
+//   });
+//   writeConfig();
+
+//   const setAsDefault = await setAsDefaultAccountPrompt(validName);
+
+//   logger.log('');
+//   if (setAsDefault) {
+//     logger.success(
+//       i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+//         accountName: validName,
+//       })
+//     );
+//   } else {
+//     const config = getConfig();
+//     logger.info(
+//       i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+//         accountName: config.defaultPortal,
+//       })
+//     );
+//   }
+//   logger.success(
+//     i18n('cli.commands.sandbox.subcommands.create.success.configFileUpdated', {
+//       configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+//       authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+//       account: validName,
+//     })
+//   );
+//   uiFeatureHighlight([
+//     'accountsUseCommand',
+//     'accountOption',
+//     'accountsListCommand',
+//   ]);
+// };
 
 const ACTIVE_TASK_POLL_INTERVAL = 1000;
 
@@ -156,7 +202,12 @@ const isTaskComplete = task => {
 };
 
 // Returns a promise to poll a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
-function pollSyncTaskStatus(accountId, taskId, syncStatusUrl) {
+function pollSyncTaskStatus(
+  accountId,
+  taskId,
+  syncStatusUrl,
+  allowEarlyTermination = true
+) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
   const multibar = new cliProgress.MultiBar(
     {
@@ -173,6 +224,9 @@ function pollSyncTaskStatus(accountId, taskId, syncStatusUrl) {
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
   const onTerminate = () => {
+    if (!allowEarlyTermination) {
+      return;
+    }
     clearInterval(pollInterval);
     multibar.stop();
     logger.log('');
