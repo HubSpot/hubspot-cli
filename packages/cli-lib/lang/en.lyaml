@@ -651,6 +651,8 @@ en:
             options:
               name:
                 describe: "Name to use for created sandbox"
+              type:
+                describe: "Type of sandbox to create (standard | development)"
             loading:
               add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
               fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
@@ -1043,11 +1045,16 @@ en:
           errors:
             invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
-          enterName: "Enter a name to use for the development sandbox: "
-          errors:
-            invalidName: "You entered an invalid name. Please try again."
-          selectAccountName: "Select the sandbox account you want to delete"
-          selectParentAccountName: "Select the account that the sandbox belongs to"
+          name:
+            message: "Enter a name to use for the development sandbox: "
+            errors:
+              invalidName: "You entered an invalid name. Please try again."
+            selectAccountName: "Select the sandbox account you want to delete"
+            selectParentAccountName: "Select the account that the sandbox belongs to"
+          type:
+            message: "What type of sandbox would you like to create?"
+            developer: "Development sandbox (Isolated environment for developers)"
+            standard: "Standard sandbox (Testing environment for all Super Admins)"
         uploadPrompt:
           enterDest: "[--dest] Enter the destination path: "
           enterSrc: "[--src] Enter the source path: "

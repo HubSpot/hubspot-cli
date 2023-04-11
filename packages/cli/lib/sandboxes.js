@@ -16,22 +16,38 @@ const {
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const {
-  personalAccessKeyPrompt,
-} = require('./prompts/personalAccessKeyPrompt');
-const {
   setAsDefaultAccountPrompt,
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('./ui');
 const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
 const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
+const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 
-const getSandboxType = type =>
+const sandboxTypeMap = {
+  DEV: 'development',
+  dev: 'development',
+  DEVELOPER: 'development',
+  developer: 'development',
+  DEVELOPMENT: 'development',
+  development: 'development',
+  STANDARD: 'standard',
+  standard: 'standard',
+};
+
+const sandboxApiTypeMap = {
+  standard: 1,
+  development: 2,
+};
+
+const getSandboxTypeAsString = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
 
 function getAccountName(config) {
   const isSandbox =
     config.sandboxAccountType && config.sandboxAccountType !== null;
-  const sandboxName = `[${getSandboxType(config.sandboxAccountType)} sandbox] `;
+  const sandboxName = `[${getSandboxTypeAsString(
+    config.sandboxAccountType
+  )} sandbox] `;
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
@@ -66,25 +82,31 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
   return syncTypes.map(t => ({ type: t.name }));
 }
 
-const sandboxCreatePersonalAccessKeyFlow = async (env, account, name) => {
-  const configData = await personalAccessKeyPrompt({ env, account });
+const saveSandboxToConfig = async (env, result) => {
+  console.log('result in save to config: ', result);
+  const configData = { env, personalAccessKey: result.personalAccessKey };
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
-
   if (!updatedConfig) {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
   let validName = updatedConfig.name;
-
   if (!updatedConfig.name) {
-    const nameForConfig = name
+    const nameForConfig = result.sandbox.name
       .toLowerCase()
       .split(' ')
       .join('-');
-    const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
+    const validAccountName = (await accountNameExistsInConfig(nameForConfig))
+      ? i18n(
+          `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
+          { name: nameForConfig }
+        )
+      : true;
+    const { name: promptName } = !validAccountName
+      ? await enterAccountNamePrompt(nameForConfig)
+      : { promptName: nameForConfig };
     validName = promptName;
   }
-
   updateAccountConfig({
     ...updatedConfig,
     environment: updatedConfig.env,
@@ -232,11 +254,14 @@ function pollSyncTaskStatus(accountId, taskId, syncStatusUrl) {
 }
 
 module.exports = {
-  getSandboxType,
+  sandboxTypeMap,
+  sandboxApiTypeMap,
+  getSandboxTypeAsString,
   getAccountName,
+  saveSandboxToConfig,
   getHasDevelopmentSandboxes,
   getDevSandboxLimit,
   getAvailableSyncTypes,
-  sandboxCreatePersonalAccessKeyFlow,
+  // sandboxCreatePersonalAccessKeyFlow,
   pollSyncTaskStatus,
 };

@@ -9,11 +9,11 @@ const {
   fetchTypes: _fetchTypes,
 } = require('./api/sandboxes-sync');
 
-async function createSandbox(accountId, name) {
+async function createSandbox(accountId, name, type) {
   let resp;
 
   try {
-    resp = await _createSandbox(accountId, name);
+    resp = await _createSandbox(accountId, name, type);
   } catch (err) {
     throw err;
   }
