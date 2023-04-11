@@ -460,7 +460,6 @@ en:
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
             prompt:
-              account: "[--account] Choose a sandbox to test with:"
               createProject: "[--silent] Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
             errors:
               noProjectConfig: "No project detected"
@@ -977,6 +976,8 @@ en:
           useEnv:
             describe: "Use environment variable config"
       prompts:
+        projectDevTargetAccountPrompt:
+          account: "[--account] Choose a sandbox to test with:"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

@@ -50,7 +50,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { targetAccountId } = selectTargetAccountPrompt(accountId);
+  const { targetAccountId } = await selectTargetAccountPrompt(accountId);
 
   logger.log();
 
