@@ -620,22 +620,33 @@ const logFeedbackMessage = buildId => {
 };
 
 const createProjectComponent = async (component, name) => {
+  const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
   if (component.extension) {
     componentName = `${name}.${component.extension}`;
   }
 
+  const componentPath = path.resolve(
+    getCwd(),
+    `${component.insertPath}${componentName}`
+  );
+
+  if (!getIsInProject(componentPath)) {
+    logger.error(i18n(`${i18nKey}.error.locationInProject`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   if (!component.isFile) {
     if (!fs.existsSync(componentName)) {
-      fs.mkdirSync(componentName);
+      fs.mkdirSync(componentPath);
     }
   }
 
   await downloadGitHubRepoContents(
     'hubspot-project-components',
     component.path,
-    path.resolve(getCwd(), `${component.insertPath}${componentName}`)
+    componentPath
   );
 };
 

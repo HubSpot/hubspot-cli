@@ -455,6 +455,8 @@ en:
               message: "Adding a new component to your project"
             success:
               message: "{{ componentName }} was added to your project"
+            error:
+              locationInProject: "The component location must be within a project folder"
             examples:
               default: "Create a component within your project"
           deploy:
