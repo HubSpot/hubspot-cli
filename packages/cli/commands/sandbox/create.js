@@ -9,14 +9,10 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig, getConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig } = require('@hubspot/cli-lib');
 const { buildSandbox } = require('../../lib/sandbox-create');
-const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  setAsDefaultAccountPrompt,
-} = require('../../lib/prompts/setAsDefaultAccountPrompt');
 const { uiFeatureHighlight } = require('../../lib/ui');
-const { sandboxTypeMap } = require('../../lib/sandboxes');
+const { sandboxTypeMap, DEVELOPER_SANDBOX } = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -32,37 +28,17 @@ exports.handler = async options => {
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   try {
-    const { result, sandboxConfigName } = await buildSandbox({
+    const { result } = await buildSandbox({
       name,
       type,
       accountConfig,
       env,
     });
 
-    const setAsDefault = await setAsDefaultAccountPrompt(sandboxConfigName);
-
-    logger.log('');
-    if (setAsDefault) {
-      logger.success(
-        i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-          accountName: sandboxConfigName,
-        })
-      );
-    } else {
-      const config = getConfig();
-      logger.info(
-        i18n(
-          `cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`,
-          {
-            accountName: config.defaultPortal,
-          }
-        )
-      );
-    }
     const sandboxType = sandboxTypeMap[result.sandbox.type];
     uiFeatureHighlight([
       'projectDevCommand',
-      sandboxType === 'development'
+      sandboxType === DEVELOPER_SANDBOX
         ? 'sandboxSyncDevelopmentCommand'
         : 'sandboxSyncStandardCommand',
     ]);

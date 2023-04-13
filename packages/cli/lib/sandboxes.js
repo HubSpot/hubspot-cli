@@ -22,20 +22,23 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cli-lib/lib/constants');
 
+const STANDARD_SANDBOX = 'standard';
+const DEVELOPER_SANDBOX = 'developer';
+
 const sandboxTypeMap = {
-  DEV: 'development',
-  dev: 'development',
-  DEVELOPER: 'development',
-  developer: 'development',
-  DEVELOPMENT: 'development',
-  development: 'development',
-  STANDARD: 'standard',
-  standard: 'standard',
+  DEV: DEVELOPER_SANDBOX,
+  dev: DEVELOPER_SANDBOX,
+  DEVELOPER: DEVELOPER_SANDBOX,
+  developer: DEVELOPER_SANDBOX,
+  DEVELOPMENT: DEVELOPER_SANDBOX,
+  development: DEVELOPER_SANDBOX,
+  STANDARD: STANDARD_SANDBOX,
+  standard: STANDARD_SANDBOX,
 };
 
 const sandboxApiTypeMap = {
   standard: 1,
-  development: 2,
+  developer: 2,
 };
 
 const getSandboxTypeAsString = type =>
@@ -88,10 +91,11 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  */
 const saveSandboxToConfig = async (env, result) => {
   // const configData = { env, personalAccessKey: result.personalAccessKey };
+  // TODO: Temporary, remove
   const configData = await personalAccessKeyPrompt({
     env,
     account: result.sandbox.sandboxHubId,
-  }); // TODO: Temporary, remove
+  });
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
   if (!updatedConfig) {
     process.exit(EXIT_CODES.ERROR);
@@ -103,16 +107,18 @@ const saveSandboxToConfig = async (env, result) => {
       .toLowerCase()
       .split(' ')
       .join('-');
-    const validAccountName = (await accountNameExistsInConfig(nameForConfig))
-      ? i18n(
+    validName = nameForConfig;
+    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
+    if (invalidAccountName) {
+      logger.log(
+        i18n(
           `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
           { name: nameForConfig }
         )
-      : true;
-    const { name: promptName } = !validAccountName
-      ? await enterAccountNamePrompt(nameForConfig)
-      : { name: nameForConfig };
-    validName = promptName;
+      );
+      const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
+      validName = promptName;
+    }
   }
   updateAccountConfig({
     ...updatedConfig,
@@ -224,9 +230,6 @@ function pollSyncTaskStatus(
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
   const onTerminate = () => {
-    if (!allowEarlyTermination) {
-      return;
-    }
     clearInterval(pollInterval);
     multibar.stop();
     logger.log('');
@@ -239,16 +242,18 @@ function pollSyncTaskStatus(
     );
     process.exit(EXIT_CODES.SUCCESS);
   };
-  handleExit(onTerminate);
-  handleKeypress(key => {
-    if (
-      (key && key.ctrl && key.name == 'c') ||
-      key.name === 'enter' ||
-      key.name === 'return'
-    ) {
-      onTerminate();
-    }
-  });
+  if (!allowEarlyTermination) {
+    handleExit(onTerminate);
+    handleKeypress(key => {
+      if (
+        (key && key.ctrl && key.name == 'c') ||
+        key.name === 'enter' ||
+        key.name === 'return'
+      ) {
+        onTerminate();
+      }
+    });
+  }
   return new Promise((resolve, reject) => {
     pollInterval = setInterval(async () => {
       const taskResult = await fetchTaskStatus(accountId, taskId).catch(reject);
@@ -308,6 +313,8 @@ function pollSyncTaskStatus(
 }
 
 module.exports = {
+  STANDARD_SANDBOX,
+  DEVELOPER_SANDBOX,
   sandboxTypeMap,
   sandboxApiTypeMap,
   getSandboxTypeAsString,

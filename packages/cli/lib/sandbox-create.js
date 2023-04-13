@@ -10,6 +10,8 @@ const {
   saveSandboxToConfig,
   sandboxApiTypeMap,
   getSandboxTypeAsString,
+  getAccountName,
+  STANDARD_SANDBOX,
 } = require('./sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -24,8 +26,15 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
-const { getEnv } = require('@hubspot/cli-lib');
+const { getEnv, getAccountConfig, getConfig } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
+const { promptUser } = require('./prompts/promptUtils');
+const { EXIT_CODES } = require('./enums/exitCodes');
+const { syncSandbox } = require('./sandbox-sync');
+const {
+  setAsDefaultAccountPrompt,
+} = require('./prompts/setAsDefaultAccountPrompt');
+const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -34,9 +43,18 @@ const i18nKey = 'cli.commands.sandbox.subcommands.create';
  * @param {String} type - Standard or development sandbox type
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
+ * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @param {Boolean} skipDefaultAccountPrompt - Option to skip prompt and auto set account as default
  * @returns {Object} sandboxConfigName string and sandbox instance from API
  */
-const buildSandbox = async ({ name, type, accountConfig, env }) => {
+const buildSandbox = async ({
+  name,
+  type,
+  accountConfig,
+  env,
+  allowEarlyTermination = true,
+  skipDefaultAccountPrompt = false,
+}) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
@@ -162,8 +180,6 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
     throw err;
   }
 
-  // If creating standard sandbox, prompt user to sync assets
-
   let sandboxConfigName;
 
   try {
@@ -172,6 +188,90 @@ const buildSandbox = async ({ name, type, accountConfig, env }) => {
   } catch (err) {
     logErrorInstance(err);
     throw err;
+  }
+
+  if (skipDefaultAccountPrompt) {
+    updateDefaultAccount(sandboxConfigName);
+  } else {
+    const setAsDefault = await setAsDefaultAccountPrompt(sandboxConfigName);
+    logger.log('');
+    if (setAsDefault) {
+      logger.success(
+        i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+          accountName: sandboxConfigName,
+        })
+      );
+    } else {
+      const config = getConfig();
+      logger.info(
+        i18n(
+          `cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`,
+          {
+            accountName: config.defaultPortal,
+          }
+        )
+      );
+    }
+  }
+
+  // If creating standard sandbox, prompt user to sync assets
+  if (sandboxType === STANDARD_SANDBOX) {
+    try {
+      const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
+      const sandboxAccountConfig = getAccountConfig(
+        result.sandbox.sandboxHubId
+      );
+      const standardSyncUrl = `${getHubSpotWebsiteOrigin(
+        env
+      )}/sandboxes-developer/${accountId}/sync?step=select_sync_path&id=${accountId}_${
+        result.sandbox.sandboxHubId
+      }`;
+      const { sandboxSyncPrompt } = await promptUser([
+        {
+          name: 'sandboxSyncPrompt',
+          type: 'confirm',
+          message: i18n(`${syncI18nKey}.confirm.standardSandboxCreateFlow`, {
+            parentAccountName: getAccountName(accountConfig),
+            sandboxName: getAccountName(sandboxAccountConfig),
+          }),
+        },
+      ]);
+      if (!sandboxSyncPrompt) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+      logger.log('');
+      logger.log(
+        i18n(`${syncI18nKey}.info.standardSandbox`, {
+          url: standardSyncUrl,
+        })
+      );
+      logger.log('');
+      const { confirmSandboxSyncPrompt } = await promptUser([
+        {
+          name: 'confirmSandboxSyncPrompt',
+          type: 'confirm',
+          message: i18n(
+            `${syncI18nKey}.confirm.standardSandboxCreateFlowReconfirm`,
+            {
+              parentAccountName: getAccountName(accountConfig),
+              sandboxName: getAccountName(sandboxAccountConfig),
+            }
+          ),
+        },
+      ]);
+      if (!confirmSandboxSyncPrompt) {
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+      await syncSandbox({
+        accountConfig: sandboxAccountConfig,
+        parentAccountConfig: accountConfig,
+        env,
+        allowEarlyTermination,
+      });
+    } catch (err) {
+      logErrorInstance(err);
+      throw err;
+    }
   }
 
   return {

@@ -710,7 +710,8 @@ en:
               force: "Skips all confirmation prompts when initiating a sync."
             info:
               developmentSandbox: "This will sync CRM object definitions."
-              standardSandbox: "This will sync all supported assets. To sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
+              standardSandbox: "This will sync all supported assets.
+                \nTo sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
               sync: "\nSync direction:
                 \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
@@ -723,6 +724,8 @@ en:
             confirm:
               developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+              standardSandboxCreateFlow: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}? Syncing may take some time"
+              standardSandboxCreateFlowReconfirm: "Confirm the sync of all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             loading:
               startSync: "Initiating sync..."
               fail: "Failed to sync sandbox."

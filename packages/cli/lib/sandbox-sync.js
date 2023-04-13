@@ -16,6 +16,13 @@ const {
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
+/**
+ * @param {Object} accountConfig - Account config of sandbox portal
+ * @param {Object} parentAccountConfig - Account config of parent portal
+ * @param {String} env - Environment (QA/Prod)
+ * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @returns
+ */
 const syncSandbox = async ({
   accountConfig,
   parentAccountConfig,
@@ -54,7 +61,9 @@ const syncSandbox = async ({
       accountId
     );
 
-    logger.log(i18n(`${i18nKey}.info.earlyExit`));
+    if (allowEarlyTermination) {
+      logger.log(i18n(`${i18nKey}.info.earlyExit`));
+    }
     logger.log('');
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),

@@ -15,7 +15,12 @@ const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine } = require('../../lib/ui');
-const { getAccountName } = require('../../lib/sandboxes');
+const {
+  getAccountName,
+  sandboxTypeMap,
+  DEVELOPER_SANDBOX,
+  STANDARD_SANDBOX,
+} = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
@@ -58,8 +63,10 @@ exports.handler = async options => {
   }
 
   const parentAccountConfig = getAccountConfig(parentAccountId);
-  const isDevelopmentSandbox = accountConfig.sandboxAccountType === 'DEVELOPER';
-  const isStandardSandbox = accountConfig.sandboxAccountType === 'STANDARD';
+  const isDevelopmentSandbox =
+    sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX;
+  const isStandardSandbox =
+    sandboxTypeMap[accountConfig.sandboxAccountType] === STANDARD_SANDBOX;
 
   if (isDevelopmentSandbox) {
     logger.log(i18n(`${i18nKey}.info.developmentSandbox`));
