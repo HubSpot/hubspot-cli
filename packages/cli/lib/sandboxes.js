@@ -17,10 +17,6 @@ const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
-const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/cli-lib/lib/constants');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -53,7 +49,7 @@ function getAccountName(config) {
   return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
 }
 
-function getHasDevelopmentSandboxes(parentAccountConfig) {
+function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
   const parentPortalId = parentAccountConfig.portalId;
   for (const portal of config.portals) {
@@ -62,7 +58,7 @@ function getHasDevelopmentSandboxes(parentAccountConfig) {
         portal.parentAccountId !== undefined) &&
       portal.parentAccountId === parentPortalId &&
       portal.sandboxAccountType &&
-      portal.sandboxAccountType === 'DEVELOPER'
+      sandboxTypeMap[portal.sandboxAccountType] === type
     ) {
       return true;
     }
@@ -70,7 +66,7 @@ function getHasDevelopmentSandboxes(parentAccountConfig) {
   return false;
 }
 
-function getDevSandboxLimit(error) {
+function getSandboxLimit(error) {
   // Error context should contain a limit property with a list of one number. That number is the current limit
   const limit = error.context && error.context.limit && error.context.limit[0];
   return limit ? parseInt(limit, 10) : 1; // Default to 1
@@ -128,14 +124,13 @@ const saveSandboxToConfig = async (env, result) => {
   });
   writeConfig();
 
-  logger.log('');
-  logger.success(
-    i18n('cli.commands.sandbox.subcommands.create.success.configFileUpdated', {
-      configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-      account: validName,
-    })
-  );
+  // logger.success(
+  //   i18n('cli.commands.sandbox.subcommands.create.success.configFileUpdated', {
+  //     configFilename: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  //     authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+  //     account: validName,
+  //   })
+  // );
   logger.log('');
   return validName;
 };
@@ -320,9 +315,8 @@ module.exports = {
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
-  getHasDevelopmentSandboxes,
-  getDevSandboxLimit,
+  getHasSandboxesByType,
+  getSandboxLimit,
   getAvailableSyncTypes,
-  // sandboxCreatePersonalAccessKeyFlow,
   pollSyncTaskStatus,
 };

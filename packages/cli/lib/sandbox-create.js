@@ -5,13 +5,14 @@ const {
 } = require('./prompts/sandboxesPrompt');
 const {
   sandboxTypeMap,
-  getDevSandboxLimit,
-  getHasDevelopmentSandboxes,
+  getSandboxLimit,
+  getHasSandboxesByType,
   saveSandboxToConfig,
   sandboxApiTypeMap,
   getSandboxTypeAsString,
   getAccountName,
   STANDARD_SANDBOX,
+  DEVELOPER_SANDBOX,
 } = require('./sandboxes');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -80,24 +81,25 @@ const buildSandbox = async ({
     );
   }
 
-  let namePrompt;
   let typePrompt;
+  let namePrompt;
 
-  if (!name) {
-    namePrompt = await sandboxNamePrompt();
-  }
   if ((type && !sandboxTypeMap[type]) || !type) {
     typePrompt = await sandboxTypePrompt();
+  }
+  if (!name) {
+    namePrompt = await sandboxNamePrompt();
   }
 
   const sandboxName = name || namePrompt.name;
   const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
 
   let result;
+  const spinniesI18nKey = `${i18nKey}.loading.${sandboxType}`;
 
   try {
     spinnies.add('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.add`, {
+      text: i18n(`${spinniesI18nKey}.add`, {
         sandboxName,
       }),
     });
@@ -105,9 +107,8 @@ const buildSandbox = async ({
     const sandboxApiType = sandboxApiTypeMap[sandboxType]; // API expects sandbox type as 1 or 2
     result = await createSandbox(accountId, sandboxName, sandboxApiType);
 
-    logger.log('');
     spinnies.succeed('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.succeed`, {
+      text: i18n(`${spinniesI18nKey}.succeed`, {
         name: result.name,
         sandboxHubId: result.sandboxHubId,
       }),
@@ -118,7 +119,7 @@ const buildSandbox = async ({
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
 
     spinnies.fail('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.fail`, {
+      text: i18n(`${spinniesI18nKey}.fail`, {
         sandboxName,
       }),
     });
@@ -148,13 +149,18 @@ const buildSandbox = async ({
       err.error.message
     ) {
       logger.log('');
-      const devSandboxLimit = getDevSandboxLimit(err.error);
+      const devSandboxLimit = getSandboxLimit(err.error);
       const plural = devSandboxLimit !== 1;
-      const hasDevelopmentSandboxes = getHasDevelopmentSandboxes(accountConfig);
+      const hasDevelopmentSandboxes = getHasSandboxesByType(
+        accountConfig,
+        DEVELOPER_SANDBOX
+      );
       if (hasDevelopmentSandboxes) {
         logger.error(
           i18n(
-            `${i18nKey}.failure.alreadyInConfig.${plural ? 'other' : 'one'}`,
+            `${i18nKey}.failure.alreadyInConfig.developer.${
+              plural ? 'other' : 'one'
+            }`,
             {
               accountName: accountConfig.name || accountId,
               limit: devSandboxLimit,
@@ -166,11 +172,59 @@ const buildSandbox = async ({
           getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
         );
         logger.error(
-          i18n(`${i18nKey}.failure.limit.${plural ? 'other' : 'one'}`, {
-            accountName: accountConfig.name || accountId,
-            limit: devSandboxLimit,
-            devSandboxesLink: `${baseUrl}/sandboxes-developer/${accountId}/development`,
-          })
+          i18n(
+            `${i18nKey}.failure.limit.developer.${plural ? 'other' : 'one'}`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: devSandboxLimit,
+              link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+            }
+          )
+        );
+      }
+      logger.log('');
+    } else if (
+      isSpecifiedError(
+        err,
+        400,
+        'VALIDATION_ERROR',
+        'SandboxErrors.NUM_STANDARD_SANDBOXES_LIMIT_EXCEEDED_ERROR'
+      ) &&
+      err.error &&
+      err.error.message
+    ) {
+      logger.log('');
+      const standardSandboxLimit = getSandboxLimit(err.error);
+      const plural = standardSandboxLimit !== 1;
+      const hasStandardSandboxes = getHasSandboxesByType(
+        accountConfig,
+        STANDARD_SANDBOX
+      );
+      if (hasStandardSandboxes) {
+        logger.error(
+          i18n(
+            `${i18nKey}.failure.alreadyInConfig.standard.${
+              plural ? 'other' : 'one'
+            }`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: standardSandboxLimit,
+            }
+          )
+        );
+      } else {
+        const baseUrl = getHubSpotWebsiteOrigin(
+          getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+        );
+        logger.error(
+          i18n(
+            `${i18nKey}.failure.limit.standard.${plural ? 'other' : 'one'}`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: standardSandboxLimit,
+              link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
+            }
+          )
         );
       }
       logger.log('');
@@ -194,7 +248,6 @@ const buildSandbox = async ({
     updateDefaultAccount(sandboxConfigName);
   } else {
     const setAsDefault = await setAsDefaultAccountPrompt(sandboxConfigName);
-    logger.log('');
     if (setAsDefault) {
       logger.success(
         i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
@@ -221,11 +274,12 @@ const buildSandbox = async ({
       const sandboxAccountConfig = getAccountConfig(
         result.sandbox.sandboxHubId
       );
-      const standardSyncUrl = `${getHubSpotWebsiteOrigin(
-        env
-      )}/sandboxes-developer/${accountId}/sync?step=select_sync_path&id=${accountId}_${
-        result.sandbox.sandboxHubId
-      }`;
+      // const standardSyncUrl = `${getHubSpotWebsiteOrigin(
+      //   env
+      // )}/sandboxes-developer/${accountId}/sync?step=select_sync_path&id=${accountId}_${
+      //   result.sandbox.sandboxHubId
+      // }`;
+      logger.log('');
       const { sandboxSyncPrompt } = await promptUser([
         {
           name: 'sandboxSyncPrompt',
@@ -239,29 +293,29 @@ const buildSandbox = async ({
       if (!sandboxSyncPrompt) {
         process.exit(EXIT_CODES.SUCCESS);
       }
-      logger.log('');
-      logger.log(
-        i18n(`${syncI18nKey}.info.standardSandbox`, {
-          url: standardSyncUrl,
-        })
-      );
-      logger.log('');
-      const { confirmSandboxSyncPrompt } = await promptUser([
-        {
-          name: 'confirmSandboxSyncPrompt',
-          type: 'confirm',
-          message: i18n(
-            `${syncI18nKey}.confirm.standardSandboxCreateFlowReconfirm`,
-            {
-              parentAccountName: getAccountName(accountConfig),
-              sandboxName: getAccountName(sandboxAccountConfig),
-            }
-          ),
-        },
-      ]);
-      if (!confirmSandboxSyncPrompt) {
-        process.exit(EXIT_CODES.SUCCESS);
-      }
+      // logger.log('');
+      // logger.log(
+      //   i18n(`${syncI18nKey}.info.standardSandbox`, {
+      //     url: standardSyncUrl,
+      //   })
+      // );
+      // logger.log('');
+      // const { confirmSandboxSyncPrompt } = await promptUser([
+      //   {
+      //     name: 'confirmSandboxSyncPrompt',
+      //     type: 'confirm',
+      //     message: i18n(
+      //       `${syncI18nKey}.confirm.standardSandboxCreateFlowReconfirm`,
+      //       {
+      //         parentAccountName: getAccountName(accountConfig),
+      //         sandboxName: getAccountName(sandboxAccountConfig),
+      //       }
+      //     ),
+      //   },
+      // ]);
+      // if (!confirmSandboxSyncPrompt) {
+      //   process.exit(EXIT_CODES.SUCCESS);
+      // }
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,

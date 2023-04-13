@@ -641,7 +641,6 @@ en:
         subcommands:
           create:
             describe: "Create a sandbox account"
-            sandboxLimitation: "The CLI only supports creation of development sandboxes at this time."
             examples:
               default: "Creates a sandbox account named MySandboxAccount."
             debug:
@@ -654,23 +653,40 @@ en:
               type:
                 describe: "Type of sandbox to create (standard | development)"
             loading:
-              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+              developer:
+                add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+                fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+                succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+              standard:
+                add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+                fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+                succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
             success:
               configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
             failure:
-              creatingWithinSandbox: "Development sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run {{#bold}}hs auth{{/bold}} to connect a production account or {{#bold}}hs accounts use{{/bold}} to switch to your production account, then try again."
+              creatingWithinSandbox: "Sandboxes must be created from a production account. You’re using a {{ sandboxType }} sandbox right now. Run {{#bold}}hs auth{{/bold}} to connect a production account or {{#bold}}hs accounts use{{/bold}} to switch to your production account, then try again."
               limit:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ devSandboxesLink }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                developer:
+                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                standard:
+                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
               alreadyInConfig:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
-                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
-                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                developer:
+                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
+                  \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
+                  \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                standard:
+                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
+                  \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
+                  \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
               scopes:
                 message: "The personal access key you provided doesn't include sandbox permissions."
                 instructions: "To update CLI permissions for \"{{ accountName }}\":
@@ -1058,7 +1074,7 @@ en:
             invalidValue: "You entered an invalid value. Please try again."
         sandboxesPrompt:
           name:
-            message: "Enter a name to use for the development sandbox: "
+            message: "Name your sandbox"
             errors:
               invalidName: "You entered an invalid name. Please try again."
             selectAccountName: "Select the sandbox account you want to delete"
