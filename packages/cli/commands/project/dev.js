@@ -27,7 +27,7 @@ const SpinniesManager = require('../../lib/SpinniesManager');
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
 exports.command = 'dev';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
