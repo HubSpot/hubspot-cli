@@ -328,7 +328,13 @@ const pollProjectBuildAndDeploy = async (
     isAutoDeployEnabled,
     deployStatusTaskLocator,
     status,
-  } = await pollBuildStatus(accountId, projectConfig.name, buildId, null, true);
+  } = await pollBuildStatus(
+    accountId,
+    projectConfig.name,
+    buildId,
+    null,
+    silenceLogs
+  );
   // autoDeployId of 0 indicates a skipped deploy
   const isDeploying =
     isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
@@ -365,7 +371,7 @@ const pollProjectBuildAndDeploy = async (
       projectConfig.name,
       deployStatusTaskLocator.id,
       buildId,
-      true
+      silenceLogs
     );
     if (status === 'FAILURE') {
       result.succeeded = false;
