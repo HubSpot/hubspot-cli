@@ -1,6 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getSandboxTypeAsString } = require('../sandboxes');
+const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
@@ -37,8 +38,12 @@ const sandboxNamePrompt = () => {
       validate(val) {
         if (typeof val !== 'string') {
           return i18n(`${i18nKey}.name.errors.invalidName`);
+        } else if (!val.length) {
+          return i18n(`${i18nKey}.name.errors.nameRequired`);
         }
-        return true;
+        return accountNameExistsInConfig(val)
+          ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
+          : true;
       },
       default: 'New sandbox',
     },

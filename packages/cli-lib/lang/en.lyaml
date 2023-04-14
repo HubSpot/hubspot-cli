@@ -1077,6 +1077,8 @@ en:
             message: "Name your sandbox"
             errors:
               invalidName: "You entered an invalid name. Please try again."
+              nameRequired: "The name may not be blank. Please try again."
+              accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
             selectAccountName: "Select the sandbox account you want to delete"
             selectParentAccountName: "Select the account that the sandbox belongs to"
           type:
