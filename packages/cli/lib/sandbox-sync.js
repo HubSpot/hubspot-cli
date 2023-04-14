@@ -13,6 +13,7 @@ const {
   isSpecifiedError,
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { getSandboxTypeAsString } = require('./sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -34,13 +35,12 @@ const syncSandbox = async ({
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
-  const isDevelopmentSandbox = accountConfig.sandboxAccountType === 'DEVELOPER';
   let initiateSyncResponse;
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
-  const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${
-    isDevelopmentSandbox ? 'development' : 'standard'
-  }`;
+  const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
+    accountConfig.sandboxAccountType
+  )}`;
 
   try {
     logger.log('');
