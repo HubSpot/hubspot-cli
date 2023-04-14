@@ -54,6 +54,7 @@ const buildSandbox = async ({
   env,
   allowEarlyTermination = true,
   skipDefaultAccountPrompt = false,
+  skipSyncStandardSandbox = false,
   force = false,
 }) => {
   const spinnies = new Spinnies({
@@ -291,23 +292,27 @@ const buildSandbox = async ({
     };
     try {
       logger.log('');
-      if (!force) {
-        // Skip prompt if force flag is passed
-        const { sandboxSyncPrompt } = await promptUser([
-          {
-            name: 'sandboxSyncPrompt',
-            type: 'confirm',
-            message: i18n(`${syncI18nKey}.confirm.standardSandboxCreateFlow`, {
-              parentAccountName: getAccountName(accountConfig),
-              sandboxName: getAccountName(sandboxAccountConfig),
-            }),
-          },
-        ]);
-        if (sandboxSyncPrompt) {
+      if (!skipSyncStandardSandbox) {
+        if (!force) {
+          const { sandboxSyncPrompt } = await promptUser([
+            {
+              name: 'sandboxSyncPrompt',
+              type: 'confirm',
+              message: i18n(
+                `${syncI18nKey}.confirm.standardSandboxCreateFlow`,
+                {
+                  parentAccountName: getAccountName(accountConfig),
+                  sandboxName: getAccountName(sandboxAccountConfig),
+                }
+              ),
+            },
+          ]);
+          if (sandboxSyncPrompt) {
+            await handleSyncSandbox();
+          }
+        } else {
           await handleSyncSandbox();
         }
-      } else {
-        await handleSyncSandbox();
       }
     } catch (err) {
       logErrorInstance(err);
