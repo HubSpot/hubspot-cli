@@ -274,11 +274,6 @@ const buildSandbox = async ({
       const sandboxAccountConfig = getAccountConfig(
         result.sandbox.sandboxHubId
       );
-      // const standardSyncUrl = `${getHubSpotWebsiteOrigin(
-      //   env
-      // )}/sandboxes-developer/${accountId}/sync?step=select_sync_path&id=${accountId}_${
-      //   result.sandbox.sandboxHubId
-      // }`;
       logger.log('');
       const { sandboxSyncPrompt } = await promptUser([
         {
@@ -293,29 +288,6 @@ const buildSandbox = async ({
       if (!sandboxSyncPrompt) {
         process.exit(EXIT_CODES.SUCCESS);
       }
-      // logger.log('');
-      // logger.log(
-      //   i18n(`${syncI18nKey}.info.standardSandbox`, {
-      //     url: standardSyncUrl,
-      //   })
-      // );
-      // logger.log('');
-      // const { confirmSandboxSyncPrompt } = await promptUser([
-      //   {
-      //     name: 'confirmSandboxSyncPrompt',
-      //     type: 'confirm',
-      //     message: i18n(
-      //       `${syncI18nKey}.confirm.standardSandboxCreateFlowReconfirm`,
-      //       {
-      //         parentAccountName: getAccountName(accountConfig),
-      //         sandboxName: getAccountName(sandboxAccountConfig),
-      //       }
-      //     ),
-      //   },
-      // ]);
-      // if (!confirmSandboxSyncPrompt) {
-      //   process.exit(EXIT_CODES.SUCCESS);
-      // }
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,
