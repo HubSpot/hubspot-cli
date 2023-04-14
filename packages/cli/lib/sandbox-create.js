@@ -30,7 +30,6 @@ const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getEnv, getAccountConfig, getConfig } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { promptUser } = require('./prompts/promptUtils');
-const { EXIT_CODES } = require('./enums/exitCodes');
 const { syncSandbox } = require('./sandbox-sync');
 const {
   setAsDefaultAccountPrompt,
@@ -55,6 +54,7 @@ const buildSandbox = async ({
   env,
   allowEarlyTermination = true,
   skipDefaultAccountPrompt = false,
+  force = false,
 }) => {
   const spinnies = new Spinnies({
     succeedColor: 'white',
@@ -85,10 +85,20 @@ const buildSandbox = async ({
   let namePrompt;
 
   if ((type && !sandboxTypeMap[type]) || !type) {
-    typePrompt = await sandboxTypePrompt();
+    if (!force) {
+      typePrompt = await sandboxTypePrompt();
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
+      throw new Error(i18n(`${i18nKey}.failure.optionMissing.type`));
+    }
   }
   if (!name) {
-    namePrompt = await sandboxNamePrompt();
+    if (!force) {
+      namePrompt = await sandboxNamePrompt();
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
+      throw new Error(i18n(`${i18nKey}.failure.optionMissing.name`));
+    }
   }
 
   const sandboxName = name || namePrompt.name;
@@ -238,13 +248,13 @@ const buildSandbox = async ({
 
   try {
     // Response contains PAK, save to config here
-    sandboxConfigName = await saveSandboxToConfig(env, result);
+    sandboxConfigName = await saveSandboxToConfig(env, result, force);
   } catch (err) {
     logErrorInstance(err);
     throw err;
   }
 
-  if (skipDefaultAccountPrompt) {
+  if (skipDefaultAccountPrompt || force) {
     updateDefaultAccount(sandboxConfigName);
   } else {
     const setAsDefault = await setAsDefaultAccountPrompt(sandboxConfigName);
@@ -269,31 +279,36 @@ const buildSandbox = async ({
 
   // If creating standard sandbox, prompt user to sync assets
   if (sandboxType === STANDARD_SANDBOX) {
-    try {
-      const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
-      const sandboxAccountConfig = getAccountConfig(
-        result.sandbox.sandboxHubId
-      );
-      logger.log('');
-      const { sandboxSyncPrompt } = await promptUser([
-        {
-          name: 'sandboxSyncPrompt',
-          type: 'confirm',
-          message: i18n(`${syncI18nKey}.confirm.standardSandboxCreateFlow`, {
-            parentAccountName: getAccountName(accountConfig),
-            sandboxName: getAccountName(sandboxAccountConfig),
-          }),
-        },
-      ]);
-      if (!sandboxSyncPrompt) {
-        process.exit(EXIT_CODES.SUCCESS);
-      }
+    const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
+    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    const handleSyncSandbox = async () => {
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,
         env,
         allowEarlyTermination,
       });
+    };
+    try {
+      logger.log('');
+      if (!force) {
+        // Skip prompt if force flag is passed
+        const { sandboxSyncPrompt } = await promptUser([
+          {
+            name: 'sandboxSyncPrompt',
+            type: 'confirm',
+            message: i18n(`${syncI18nKey}.confirm.standardSandboxCreateFlow`, {
+              parentAccountName: getAccountName(accountConfig),
+              sandboxName: getAccountName(sandboxAccountConfig),
+            }),
+          },
+        ]);
+        if (sandboxSyncPrompt) {
+          await handleSyncSandbox();
+        }
+      } else {
+        await handleSyncSandbox();
+      }
     } catch (err) {
       logErrorInstance(err);
       throw err;

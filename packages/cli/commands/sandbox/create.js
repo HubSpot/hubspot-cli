@@ -22,7 +22,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name, type } = options;
+  const { name, type, force } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
@@ -33,6 +33,7 @@ exports.handler = async options => {
       type,
       accountConfig,
       env,
+      force,
     });
 
     const sandboxType = sandboxTypeMap[result.sandbox.type];
@@ -49,6 +50,11 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  yargs.option('f', {
+    type: 'boolean',
+    alias: 'force',
+    describe: i18n(`${i18nKey}.examples.force`),
+  });
   yargs.option('name', {
     describe: i18n(`${i18nKey}.options.name.describe`),
     type: 'string',

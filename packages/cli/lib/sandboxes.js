@@ -85,7 +85,7 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  * @param {Object} result - Sandbox instance returned from API
  * @returns {String} validName saved into config
  */
-const saveSandboxToConfig = async (env, result) => {
+const saveSandboxToConfig = async (env, result, force = false) => {
   // const configData = { env, personalAccessKey: result.personalAccessKey };
   // TODO: Temporary, remove
   const configData = await personalAccessKeyPrompt({
@@ -95,7 +95,7 @@ const saveSandboxToConfig = async (env, result) => {
   // End temporary section
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
   if (!updatedConfig) {
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error('Failed to update config with personal access key.');
   }
 
   let validName = updatedConfig.name;
@@ -107,14 +107,21 @@ const saveSandboxToConfig = async (env, result) => {
     validName = nameForConfig;
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
     if (invalidAccountName) {
-      logger.log(
-        i18n(
-          `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
-          { name: nameForConfig }
-        )
-      );
-      const { name: promptName } = await enterAccountNamePrompt(nameForConfig);
-      validName = promptName;
+      if (!force) {
+        logger.log(
+          i18n(
+            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
+            { name: nameForConfig }
+          )
+        );
+        const { name: promptName } = await enterAccountNamePrompt(
+          nameForConfig
+        );
+        validName = promptName;
+      } else {
+        // Basic invalid name handling when force flag is passed
+        validName = nameForConfig + Math.floor(Math.random() * 10);
+      }
     }
   }
   updateAccountConfig({
