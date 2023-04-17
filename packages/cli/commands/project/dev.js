@@ -9,7 +9,9 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
 const { createProject } = require('@hubspot/cli-lib/api/dfs');
+const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
 const {
   getProjectConfig,
   ensureProjectExists,
@@ -23,10 +25,11 @@ const {
   selectTargetAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
+const LocalDevManager = require('../../lib/LocalDevManager');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev';
+exports.command = 'dev [--account]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -50,30 +53,39 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { targetAccountId } = await selectTargetAccountPrompt(accountId);
+  const accounts = getConfigAccounts();
+  let targetAccountId = options.accountId;
+
+  if (!targetAccountId) {
+    const {
+      targetAccountId: promptTargetAccountId,
+    } = await selectTargetAccountPrompt(accounts);
+
+    targetAccountId = promptTargetAccountId;
+  }
 
   logger.log();
 
-  // Show a warning if the user chooses a non-sandbox account
-  if (targetAccountId) {
+  // Show a warning if the user chooses a non-sandbox account (false)
+  if (targetAccountId === false) {
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
     uiLine();
     logger.log();
+    const {
+      targetAccountId: promptNonSandboxTargetAccountId,
+    } = await selectTargetAccountPrompt(accounts, true);
+
+    targetAccountId = promptNonSandboxTargetAccountId;
+  } else if (targetAccountId === true) {
+    logger.log('[PLACEHOLDER] - create new sandbox account here');
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const spinnies = SpinniesManager.init();
 
-  spinnies.add('localDevInitialization', {
-    text: i18n(`${i18nKey}.logs.startupMessage`, {
-      projectName: projectConfig.name,
-      accountName: uiAccountDescription(accountId),
-    }),
-    isParent: true,
-  });
-
   const projectExists = await ensureProjectExists(
-    accountId,
+    targetAccountId,
     projectConfig.name,
     {
       allowCreate: false,
@@ -92,14 +104,20 @@ exports.handler = async options => {
         name: 'shouldCreateProject',
         type: 'confirm',
         message: i18n(`${i18nKey}.prompt.createProject`, {
-          accountName: uiAccountDescription(accountId),
+          accountName: uiAccountDescription(targetAccountId),
         }),
       },
     ]);
 
     if (shouldCreateProject) {
       try {
-        await createProject(accountId, projectConfig.name);
+        spinnies.add('createProject', {
+          text: 'Creating project in account',
+        });
+        await createProject(targetAccountId, projectConfig.name);
+        spinnies.succeed('createProject', {
+          text: 'Created project in account',
+        });
       } catch (err) {
         process.exit(EXIT_CODES.ERROR);
       }
@@ -108,8 +126,16 @@ exports.handler = async options => {
     }
   }
 
+  spinnies.add('localDevInitialization', {
+    text: i18n(`${i18nKey}.logs.startupMessage`, {
+      projectName: projectConfig.name,
+      accountName: uiAccountDescription(targetAccountId),
+    }),
+    isParent: true,
+  });
+
   const result = await handleProjectUpload(
-    accountId,
+    targetAccountId,
     projectConfig,
     projectDir,
     (...args) => pollProjectBuildAndDeploy(...args, true),
@@ -125,8 +151,19 @@ exports.handler = async options => {
     spinnies.remove('localDevInitialization');
   }
 
-  spinnies.add('localDevServerRunning', {
-    text: 'Local dev server running. Waiting for project file changes ...',
+  const LocalDev = new LocalDevManager({
+    targetAccountId,
+    projectConfig,
+    projectDir,
+  });
+
+  await LocalDev.start();
+
+  handleExit(LocalDev.stop);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      LocalDev.stop();
+    }
   });
 };
 

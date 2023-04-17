@@ -451,7 +451,7 @@ en:
           dev:
             describe: "Start local dev for the current project"
             logs:
-              introHeader: "HubSpot projects local development (beta)"
+              introHeader: "{{#bold}}HubSpot projects local development (beta){{/bold}}"
               introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
@@ -898,6 +898,11 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      LocalDevManager:
+        running: "{{#bold}}{{#cyan}}[HubSpot Dev Mode Running]{{/cyan}}{{/bold}}"
+        quitHelper: "Press {{#bold}}'q'{{/bold}} to exit"
+        exitingStart: "Exiting Dev Mode"
+        exitingEnd: "Successfully exited"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
@@ -977,7 +982,10 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectDevTargetAccountPrompt:
-          account: "[--account] Choose a sandbox to test with:"
+          createNewSandboxOption: "<< Create a new sandbox account >>"
+          chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
+          chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
+          chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

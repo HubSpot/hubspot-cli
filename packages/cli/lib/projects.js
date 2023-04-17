@@ -379,12 +379,14 @@ const pollProjectBuildAndDeploy = async (
   }
 
   try {
-    tempFile.removeCallback();
-    logger.debug(
-      i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
-        path: tempFile.name,
-      })
-    );
+    if (tempFile) {
+      tempFile.removeCallback();
+      logger.debug(
+        i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
+          path: tempFile.name,
+        })
+      );
+    }
   } catch (e) {
     logger.error(e);
   }
@@ -548,30 +550,32 @@ const makePollTaskStatusFunc = ({
       text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
     });
 
-    const addTaskSpinner = (task, indent, newline) => {
-      const taskName = task[statusText.SUBTASK_NAME_KEY];
-      const taskType = task[statusText.TYPE_KEY];
-      const formattedTaskType = PROJECT_TASK_TYPES[taskType]
-        ? `[${PROJECT_TASK_TYPES[taskType]}]`
-        : '';
-      const text = `${statusText.STATUS_TEXT} ${chalk.bold(
-        taskName
-      )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
+    if (!silenceLogs) {
+      const addTaskSpinner = (task, indent, newline) => {
+        const taskName = task[statusText.SUBTASK_NAME_KEY];
+        const taskType = task[statusText.TYPE_KEY];
+        const formattedTaskType = PROJECT_TASK_TYPES[taskType]
+          ? `[${PROJECT_TASK_TYPES[taskType]}]`
+          : '';
+        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+          taskName
+        )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
-      spinnies.add(task.id, {
-        text,
-        indent,
-        succeedColor: 'white',
-        failColor: 'white',
+        spinnies.add(task.id, {
+          text,
+          indent,
+          succeedColor: 'white',
+          failColor: 'white',
+        });
+      };
+
+      structuredTasks.forEach(task => {
+        addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
+        task.subtasks.forEach((subtask, i) =>
+          addTaskSpinner(subtask, 4, i === task.subtasks.length - 1)
+        );
       });
-    };
-
-    structuredTasks.forEach(task => {
-      addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
-      task.subtasks.forEach((subtask, i) =>
-        addTaskSpinner(subtask, 4, i === task.subtasks.length - 1)
-      );
-    });
+    }
 
     return new Promise((resolve, reject) => {
       const pollInterval = setInterval(async () => {

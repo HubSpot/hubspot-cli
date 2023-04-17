@@ -28,11 +28,14 @@ const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 const getSandboxType = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
 
+const isSandbox = config =>
+  config.sandboxAccountType && config.sandboxAccountType !== null;
+
 function getAccountName(config) {
-  const isSandbox =
-    config.sandboxAccountType && config.sandboxAccountType !== null;
   const sandboxName = `[${getSandboxType(config.sandboxAccountType)} sandbox] `;
-  return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
+  return `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
+    config.portalId
+  })`;
 }
 
 function getHasDevelopmentSandboxes(parentAccountConfig) {
@@ -232,6 +235,7 @@ function pollSyncTaskStatus(accountId, taskId, syncStatusUrl) {
 }
 
 module.exports = {
+  isSandbox,
   getSandboxType,
   getAccountName,
   getHasDevelopmentSandboxes,

@@ -4,7 +4,7 @@ const Spinnies = require('spinnies');
 class SpinniesManager {
   constructor() {
     this.spinnies = null;
-    this.indentNext = false;
+    this.parentKey = null;
   }
 
   init(options) {
@@ -15,7 +15,8 @@ class SpinniesManager {
     return {
       add: this.add.bind(this),
       pick: this.spinnies.pick.bind(this.spinnies),
-      remove: this.spinnies.remove.bind(this.spinnies),
+      remove: this.remove.bind(this),
+      removeAll: this.removeAll.bind(this),
       update: this.spinnies.update.bind(this.spinnies),
       succeed: this.spinnies.succeed.bind(this.spinnies),
       fail: this.spinnies.fail.bind(this.spinnies),
@@ -30,11 +31,30 @@ class SpinniesManager {
 
     this.spinnies.add(key, {
       ...rest,
-      indent: this.indentNext ? originalIndent + 1 : originalIndent,
+      indent: this.parentKey ? originalIndent + 1 : originalIndent,
     });
 
     if (isParent) {
-      this.indentNext = true;
+      this.parentKey = key;
+    }
+  }
+
+  remove(key) {
+    if (this.spinnies) {
+      if (key === this.parentKey) {
+        this.parentKey = null;
+      }
+      this.spinnies.remove(key);
+    }
+  }
+
+  removeAll(allowedKeys = []) {
+    if (this.spinnies) {
+      Object.keys(this.spinnies.spinners).forEach(key => {
+        if (!allowedKeys.includes(key)) {
+          this.remove(key);
+        }
+      });
     }
   }
 }
