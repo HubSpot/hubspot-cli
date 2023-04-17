@@ -83,6 +83,7 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
 /**
  * @param {String} env - Environment (QA/Prod)
  * @param {Object} result - Sandbox instance returned from API
+ * @param {Boolean} force - Force flag to skip prompt
  * @returns {String} validName saved into config
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
@@ -145,7 +146,13 @@ const isTaskComplete = task => {
   return task.status === 'COMPLETE';
 };
 
-// Returns a promise to poll a sync task with taskId. Interval runs until sync task status is equal to 'COMPLETE'
+/**
+ * @param {Number} accountId - Parent portal ID (needs sandbox scopes)
+ * @param {String} taksId - Task ID to poll
+ * @param {String} syncStatusUrl - Link to UI to check polling status
+ * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @returns {Promise} Interval runs until sync task status is equal to 'COMPLETE'
+ */
 function pollSyncTaskStatus(
   accountId,
   taskId,
@@ -153,6 +160,7 @@ function pollSyncTaskStatus(
   allowEarlyTermination = true
 ) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
+  // TODO: Extract cli progress into util
   const multibar = new cliProgress.MultiBar(
     {
       hideCursor: true,

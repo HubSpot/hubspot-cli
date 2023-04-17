@@ -40,12 +40,12 @@ const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
 /**
  * @param {String} name - Name of sandbox
- * @param {String} type - Standard or development sandbox type
+ * @param {String} type - Sandbox type to be created (standard/developer)
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
- * @param {Boolean} skipDefaultAccountPrompt - Option to skip prompt and auto set account as default
- * @returns {Object} sandboxConfigName string and sandbox instance from API
+ * @param {Boolean} skipDefaultAccountPrompt - Option to skip default account prompt and auto set new sandbox account as default
+ * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
  */
 const buildSandbox = async ({
   name,
@@ -73,11 +73,13 @@ const buildSandbox = async ({
     logger.error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
+        sandboxName: accountConfig.name,
       })
     );
     throw new Error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
+        sandboxName: accountConfig.name,
       })
     );
   }
