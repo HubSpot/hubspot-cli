@@ -77,6 +77,8 @@ exports.handler = async options => {
     } = await selectTargetAccountPrompt(accounts, true);
 
     targetAccountId = promptNonSandboxTargetAccountId;
+
+    logger.log();
   } else if (targetAccountId === true) {
     logger.log('[PLACEHOLDER] - create new sandbox account here');
     process.exit(EXIT_CODES.SUCCESS);
@@ -126,10 +128,10 @@ exports.handler = async options => {
     }
   }
 
-  spinnies.add('localDevInitialization', {
+  spinnies.add('devModeSetup', {
     text: i18n(`${i18nKey}.logs.startupMessage`, {
       projectName: projectConfig.name,
-      accountName: uiAccountDescription(targetAccountId),
+      accountIdentifier: uiAccountDescription(targetAccountId),
     }),
     isParent: true,
   });
@@ -143,18 +145,19 @@ exports.handler = async options => {
   );
 
   if (!result.succeeded) {
-    spinnies.fail('localDevInitialization', {
+    spinnies.fail('devModeSetup', {
       text: 'failed to start up dev mode',
     });
     process.exit(EXIT_CODES.ERROR);
   } else {
-    spinnies.remove('localDevInitialization');
+    spinnies.remove('devModeSetup');
   }
 
   const LocalDev = new LocalDevManager({
     targetAccountId,
     projectConfig,
     projectDir,
+    debug: options.debug,
   });
 
   await LocalDev.start();

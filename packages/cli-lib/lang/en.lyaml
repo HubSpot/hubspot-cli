@@ -456,7 +456,7 @@ en:
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
               prodAccountWarning: "Targeting a production account is risky. This command will upload incomplete changes to the target account. We recommend picking a sandbox account."
-              startupMessage: "Running {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountName }}{{/bold}} in dev mode ...\n"
+              startupMessage: "Setting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
             prompt:
@@ -899,10 +899,15 @@ en:
             describe: "Options to pass to javascript fields files"
     lib:
       LocalDevManager:
-        running: "{{#bold}}{{#cyan}}[HubSpot Dev Mode Running]{{/cyan}}{{/bold}}"
-        quitHelper: "Press {{#bold}}'q'{{/bold}} to exit"
+        running: "{{#cyan}}[Running Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{ accountIdentifier }}]{{/cyan}}"
+        quitHelper: "\nPress {{#bold}}'q'{{/bold}} to exit"
         exitingStart: "Exiting Dev Mode"
         exitingEnd: "Successfully exited"
+        status:
+          clean: "{{#bold}}Status:{{/bold}} {{#green}}Up to date{{/green}}"
+          dirty: "{{#bold}}Status:{{/bold}} {{#yellow}}Recent changes require upload{{/yellow}}"
+        upload:
+          uploadingChanges: "{{#bold}}Uploading recent changes{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"

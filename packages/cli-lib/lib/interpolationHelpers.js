@@ -11,6 +11,9 @@ module.exports = {
   yellow: function(stringValue) {
     return chalk.reset.yellow(stringValue);
   },
+  green: function(stringValue) {
+    return chalk.reset.green(stringValue);
+  },
   cyan: function(stringValue) {
     return chalk.cyan(stringValue);
   },

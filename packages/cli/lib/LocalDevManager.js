@@ -15,6 +15,7 @@ const {
 const SpinniesManager = require('./SpinniesManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { pollProjectBuildAndDeploy } = require('./projects');
+const { uiAccountDescription } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
@@ -32,6 +33,7 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.debug = options.debug || false;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -58,9 +60,11 @@ class LocalDevManager {
 
     this.uploadQueue = new PQueue({ concurrency: 10 });
 
-    this.uploadQueue.on('error', error => {
-      logger.debug(error);
-    });
+    if (this.debug) {
+      this.uploadQueue.on('error', error => {
+        logger.debug(error);
+      });
+    }
 
     this.startUploadQueue();
     await this.startServers();
@@ -106,8 +110,16 @@ class LocalDevManager {
 
     this.spinnies.removeAll();
     this.spinnies.add('devModeRunning', {
-      text: i18n(`${i18nKey}.running`),
+      text: i18n(`${i18nKey}.running`, {
+        projectName: this.projectConfig.name,
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
       isParent: true,
+    });
+    this.spinnies.add('devModeStatus', {
+      text: i18n(`${i18nKey}.status.clean`),
+      status: 'non-spinnable',
+      indent: 1,
     });
     this.spinnies.add('quitMessage', {
       text: i18n(`${i18nKey}.quitHelper`),
@@ -116,14 +128,22 @@ class LocalDevManager {
     });
   }
 
+  updateDevModeStatus(langKey) {
+    this.spinnies.update('devModeStatus', {
+      text: i18n(`${i18nKey}.status.${langKey}`),
+      status: 'non-spinnable',
+    });
+  }
+
   async pauseUploadQueue() {
     logger.debug('Pausing upload queue');
 
     this.spinnies.removeAll();
     this.spinnies.add('uploading', {
-      text: 'Uploading recent changes ...',
+      text: i18n(`${i18nKey}.upload.uploadingChanges`),
       isParent: true,
     });
+
     this.uploadQueue.pause();
     await this.uploadQueue.onIdle();
   }
@@ -176,6 +196,16 @@ class LocalDevManager {
     };
 
     const isSupportedChange = await this.notifyServers(changeInfo);
+
+    if (this.debug) {
+      this.spinnies.add(filePath, {
+        text: `${
+          isSupportedChange ? 'Supported' : 'Unsupported'
+        } change for ${filePath}`,
+        status: 'non-spinnable',
+        indent: 1,
+      });
+    }
 
     if (isSupportedChange) {
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
@@ -248,6 +278,8 @@ class LocalDevManager {
   }
 
   debounceQueueBuild() {
+    this.updateDevModeStatus('dirty');
+
     if (this.debouncedBuild) {
       clearTimeout(this.debouncedBuild);
     }
@@ -289,6 +321,8 @@ class LocalDevManager {
 
       if (this.hasAnyUnsupportedStandbyChanges()) {
         this.flushStandbyChanges();
+      } else {
+        this.updateDevModeStatus('clean');
       }
     }, BUILD_DEBOUNCE_TIME);
   }
@@ -319,7 +353,10 @@ class LocalDevManager {
   }
 
   async notifyServers() {
-    // TODO alert local dev servers of file change
+    // TODO alert local dev servers of file change (randomly return true or false for now)
+    if (this.debug) {
+      return Math.random() < 0.5;
+    }
     return false;
   }
 }
