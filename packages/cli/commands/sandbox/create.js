@@ -16,7 +16,7 @@ const { sandboxTypeMap, DEVELOPER_SANDBOX } = require('../../lib/sandboxes');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
-exports.command = 'create [--name]';
+exports.command = 'create [--name] [--type]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
