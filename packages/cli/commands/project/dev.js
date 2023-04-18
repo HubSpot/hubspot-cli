@@ -72,15 +72,30 @@ exports.handler = async options => {
     logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
     uiLine();
     logger.log();
-    const {
-      targetAccountId: promptNonSandboxTargetAccountId,
-    } = await selectTargetAccountPrompt(accounts, true);
 
-    targetAccountId = promptNonSandboxTargetAccountId;
+    const { targetNonSandboxAccount } = await promptUser([
+      {
+        name: 'targetNonSandboxAccount',
+        type: 'confirm',
+        default: true,
+        message: i18n(`${i18nKey}.prompt.targetNonSandbox`),
+      },
+    ]);
 
-    logger.log();
+    if (targetNonSandboxAccount) {
+      const {
+        targetAccountId: promptNonSandboxTargetAccountId,
+      } = await selectTargetAccountPrompt(accounts, true);
+
+      targetAccountId = promptNonSandboxTargetAccountId;
+      logger.log();
+    } else {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   } else if (targetAccountId === true) {
-    logger.log('[PLACEHOLDER] - create new sandbox account here');
+    logger.log(
+      'Creating new sandboxes is not supported yet. Use "hs sandbox create" and then run this command again.'
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 

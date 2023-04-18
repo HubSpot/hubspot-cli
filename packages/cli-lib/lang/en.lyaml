@@ -460,7 +460,8 @@ en:
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
             prompt:
-              createProject: "[--silent] Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+              createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+              targetNonSandbox: "Continue testing in a non-sandbox account?"
             errors:
               noProjectConfig: "No project detected"
             examples:
