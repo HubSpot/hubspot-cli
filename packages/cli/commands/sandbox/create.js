@@ -68,7 +68,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 sandbox create --name=MySandboxAccount',
+      '$0 sandbox create --name=MySandboxAccount --type=STANDARD',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);

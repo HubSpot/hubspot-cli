@@ -642,7 +642,7 @@ en:
           create:
             describe: "Create a sandbox account"
             examples:
-              default: "Creates a sandbox account named MySandboxAccount."
+              default: "Creates a standard sandbox account named MySandboxAccount."
               force: "Skips all confirmation prompts when creating a sandbox account."
             debug:
               error: "Error creating sandbox:"
