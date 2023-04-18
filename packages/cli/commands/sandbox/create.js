@@ -38,7 +38,8 @@ exports.handler = async options => {
 
     const sandboxType = sandboxTypeMap[result.sandbox.type];
     uiFeatureHighlight([
-      'projectDevCommand',
+      // 'projectDevCommand',
+      'projectUploadCommand',
       sandboxType === DEVELOPER_SANDBOX
         ? 'sandboxSyncDevelopmentCommand'
         : 'sandboxSyncStandardCommand',
