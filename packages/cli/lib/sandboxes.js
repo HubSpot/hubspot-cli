@@ -146,6 +146,10 @@ const isTaskComplete = task => {
   return task.status === 'COMPLETE';
 };
 
+const incrementBy = (value, multiplier = 3) => {
+  return Math.min(value + Math.floor(Math.random() * multiplier), 99);
+};
+
 /**
  * @param {Number} accountId - Parent portal ID (needs sandbox scopes)
  * @param {String} taksId - Task ID to poll
@@ -173,6 +177,7 @@ function pollSyncTaskStatus(
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
   const barInstances = {};
+  let progressCounter = {};
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
   const onTerminate = () => {
@@ -188,7 +193,7 @@ function pollSyncTaskStatus(
     );
     process.exit(EXIT_CODES.SUCCESS);
   };
-  if (!allowEarlyTermination) {
+  if (allowEarlyTermination) {
     handleExit(onTerminate);
     handleKeypress(key => {
       if (
@@ -209,12 +214,16 @@ function pollSyncTaskStatus(
           // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
           const taskType = task.type;
           if (!barInstances[taskType] && !mergeTasks[taskType]) {
-            // skip creation of lead-flows bar because we're combining lead-flows into the forms bar
+            // skip creation of lead-flows bar because we're combining lead-flows into the forms bar, otherwise create a bar instance for the type
+            progressCounter[taskType] = 0;
             barInstances[taskType] = multibar.create(100, 0, {
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           } else if (mergeTasks[taskType]) {
-            // If its a lead-flow, merge status into the forms progress bar
+            // It's a lead-flow here, merge status into the forms progress bar
+            if (!progressCounter[mergeTasks[taskType]]) {
+              progressCounter[mergeTasks[taskType]] = 0;
+            }
             const formsTask = taskResult.tasks.filter(
               t => t.type === mergeTasks[taskType]
             )[0];
@@ -224,8 +233,12 @@ function pollSyncTaskStatus(
               formsTaskStatus !== 'COMPLETE' ||
               leadFlowsTaskStatus !== 'COMPLETE'
             ) {
-              barInstances[mergeTasks[taskType]].increment(
-                Math.floor(Math.random() * 3),
+              // Randomly increment bar while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
+              progressCounter[mergeTasks[taskType]] = incrementBy(
+                progressCounter[mergeTasks[taskType]]
+              );
+              barInstances[mergeTasks[taskType]].update(
+                progressCounter[mergeTasks[taskType]],
                 {
                   taskType: i18n(`${i18nKey}.${mergeTasks[taskType]}.label`),
                 }
@@ -237,9 +250,13 @@ function pollSyncTaskStatus(
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           } else if (barInstances[taskType] && task.status === 'PROCESSING') {
-            // Do not increment for tasks still in PENDING state
-            barInstances[taskType].increment(Math.floor(Math.random() * 3), {
-              // Randomly increment bar by 0 - 2 while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
+            // Do not start incrementing for tasks still in PENDING state
+            // Randomly increment bar while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
+            progressCounter[taskType] = incrementBy(
+              progressCounter[taskType],
+              taskType === 'object-records' ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
+            );
+            barInstances[taskType].update(progressCounter[taskType], {
               taskType: i18n(`${i18nKey}.${taskType}.label`),
             });
           }

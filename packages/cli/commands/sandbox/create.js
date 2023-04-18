@@ -43,6 +43,7 @@ exports.handler = async options => {
         ? 'sandboxSyncDevelopmentCommand'
         : 'sandboxSyncStandardCommand',
     ]);
+    process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
     // Errors are logged in buildSandbox
     process.exit(EXIT_CODES.ERROR);
