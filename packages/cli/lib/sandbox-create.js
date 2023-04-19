@@ -26,7 +26,6 @@ const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getEnv, getAccountConfig, getConfig } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { promptUser } = require('./prompts/promptUtils');
@@ -35,6 +34,7 @@ const {
   setAsDefaultAccountPrompt,
 } = require('./prompts/setAsDefaultAccountPrompt');
 const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -181,9 +181,7 @@ const buildSandbox = async ({
           )
         );
       } else {
-        const baseUrl = getHubSpotWebsiteOrigin(
-          getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        );
+        const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
         logger.error(
           i18n(
             `${i18nKey}.failure.limit.developer.${plural ? 'other' : 'one'}`,
@@ -226,9 +224,7 @@ const buildSandbox = async ({
           )
         );
       } else {
-        const baseUrl = getHubSpotWebsiteOrigin(
-          getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-        );
+        const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
         logger.error(
           i18n(
             `${i18nKey}.failure.limit.standard.${plural ? 'other' : 'one'}`,
