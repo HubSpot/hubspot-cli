@@ -44,6 +44,7 @@ const i18nKey = 'cli.commands.sandbox.subcommands.create';
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @param {Boolean} allowSyncAssets - Option to allow user to sync assets after creation
  * @param {Boolean} skipDefaultAccountPrompt - Option to skip default account prompt and auto set new sandbox account as default
  * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
  */
@@ -53,8 +54,8 @@ const buildSandbox = async ({
   accountConfig,
   env,
   allowEarlyTermination = true,
+  allowSyncAssets = true,
   skipDefaultAccountPrompt = false,
-  skipSyncStandardSandbox = false,
   force = false,
 }) => {
   const spinnies = new Spinnies({
@@ -277,20 +278,22 @@ const buildSandbox = async ({
   }
 
   // If creating standard sandbox, prompt user to sync assets
-  if (sandboxType === STANDARD_SANDBOX) {
-    const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
-    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
-    const handleSyncSandbox = async () => {
-      await syncSandbox({
-        accountConfig: sandboxAccountConfig,
-        parentAccountConfig: accountConfig,
-        env,
-        allowEarlyTermination,
-      });
-    };
-    try {
-      logger.log('');
-      if (!skipSyncStandardSandbox) {
+  if (allowSyncAssets) {
+    if (sandboxType === STANDARD_SANDBOX) {
+      const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
+      const sandboxAccountConfig = getAccountConfig(
+        result.sandbox.sandboxHubId
+      );
+      const handleSyncSandbox = async () => {
+        await syncSandbox({
+          accountConfig: sandboxAccountConfig,
+          parentAccountConfig: accountConfig,
+          env,
+          allowEarlyTermination,
+        });
+      };
+      try {
+        logger.log('');
         if (!force) {
           const { sandboxSyncPrompt } = await promptUser([
             {
@@ -311,10 +314,10 @@ const buildSandbox = async ({
         } else {
           await handleSyncSandbox();
         }
+      } catch (err) {
+        logErrorInstance(err);
+        throw err;
       }
-    } catch (err) {
-      logErrorInstance(err);
-      throw err;
     }
   }
 
