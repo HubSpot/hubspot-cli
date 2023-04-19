@@ -1,4 +1,5 @@
-const cliProgress = require('cli-progress');
+// https://github.com/npkgz/cli-progress/blob/master/README.md
+const ProgressMultibarManager = require('cli-progress');
 
 class CliProgressMultibarManager {
   constructor() {
@@ -8,14 +9,14 @@ class CliProgressMultibarManager {
 
   init(options) {
     if (!this.multibar) {
-      this.multibar = new cliProgress.MultiBar(
+      this.multibar = new ProgressMultibarManager.MultiBar(
         {
           hideCursor: true,
           format: '[{bar}] {percentage}% | {label}',
           gracefulExit: true,
           ...options,
         },
-        cliProgress.Presets.rect
+        ProgressMultibarManager.Presets.rect
       );
     }
 

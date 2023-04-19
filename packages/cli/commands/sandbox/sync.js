@@ -9,7 +9,6 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
@@ -22,6 +21,7 @@ const {
   STANDARD_SANDBOX,
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandbox-sync');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -34,7 +34,7 @@ exports.handler = async options => {
   const { force } = options; // For scripting purposes
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const env = getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const env = getValidEnv(getEnv(accountId));
 
   trackCommandUsage('sandbox-sync', null, accountId);
 

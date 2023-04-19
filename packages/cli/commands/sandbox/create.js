@@ -7,12 +7,12 @@ const {
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const { sandboxTypeMap, DEVELOPER_SANDBOX } = require('../../lib/sandboxes');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -25,7 +25,7 @@ exports.handler = async options => {
   const { name, type, force } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  const env = getValidEnv(getEnv(accountId));
 
   try {
     const { result } = await buildSandbox({
