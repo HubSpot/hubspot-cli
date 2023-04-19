@@ -14,6 +14,7 @@ const {
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
+const { getAccountId } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -30,8 +31,8 @@ const syncSandbox = async ({
   env,
   allowEarlyTermination = true,
 }) => {
-  const accountId = accountConfig.portalId;
-  const parentAccountId = parentAccountConfig.portalId;
+  const accountId = getAccountId(accountConfig.portalId);
+  const parentAccountId = getAccountId(parentAccountConfig.portalId);
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });

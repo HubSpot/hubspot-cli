@@ -2,6 +2,7 @@ const {
   getConfig,
   writeConfig,
   updateAccountConfig,
+  getAccountId,
 } = require('@hubspot/cli-lib');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -51,7 +52,7 @@ function getAccountName(config) {
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
-  const parentPortalId = parentAccountConfig.portalId;
+  const parentPortalId = getAccountId(parentAccountConfig.portalId);
   for (const portal of config.portals) {
     if (
       (portal.parentAccountId !== null ||
@@ -74,8 +75,8 @@ function getSandboxLimit(error) {
 
 // Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
-  const parentPortalId = parentAccountConfig.portalId;
-  const portalId = config.portalId;
+  const parentPortalId = getAccountId(parentAccountConfig.portalId);
+  const portalId = getAccountId(config.portalId);
   const syncTypes = await fetchTypes(parentPortalId, portalId);
   return syncTypes.map(t => ({ type: t.name }));
 }

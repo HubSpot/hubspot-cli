@@ -26,7 +26,12 @@ const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { getEnv, getAccountConfig, getConfig } = require('@hubspot/cli-lib');
+const {
+  getEnv,
+  getAccountConfig,
+  getConfig,
+  getAccountId,
+} = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { promptUser } = require('./prompts/promptUtils');
 const { syncSandbox } = require('./sandbox-sync');
@@ -61,7 +66,7 @@ const buildSandbox = async ({
   const spinnies = new Spinnies({
     succeedColor: 'white',
   });
-  const accountId = accountConfig.portalId;
+  const accountId = getAccountId(accountConfig.portalId);
 
   trackCommandUsage('sandbox-create', null, accountId);
 
