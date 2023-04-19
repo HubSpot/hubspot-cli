@@ -122,7 +122,7 @@ const saveSandboxToConfig = async (env, result, force = false) => {
         validName = promptName;
       } else {
         // Basic invalid name handling when force flag is passed
-        validName = nameForConfig + Math.floor(Math.random() * 10);
+        validName = nameForConfig + `_${Date.now()}`;
       }
     }
   }
