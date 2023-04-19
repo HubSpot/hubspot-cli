@@ -1,4 +1,3 @@
-const cliProgress = require('cli-progress');
 const {
   getConfig,
   writeConfig,
@@ -17,6 +16,7 @@ const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
+const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -165,24 +165,16 @@ function pollSyncTaskStatus(
 ) {
   const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
   // TODO: Extract cli progress into util
-  const multibar = new cliProgress.MultiBar(
-    {
-      hideCursor: true,
-      format: '[{bar}] {percentage}% | {taskType}',
-      gracefulExit: true,
-    },
-    cliProgress.Presets.rect
-  );
+  const progressBar = CliProgressMultibarManager.init();
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
-  const barInstances = {};
   let progressCounter = {};
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
   const onTerminate = () => {
     clearInterval(pollInterval);
-    multibar.stop();
+    progressBar.stop();
     logger.log('');
     logger.log('Exiting, sync will continue in the background.');
     logger.log('');
@@ -213,11 +205,11 @@ function pollSyncTaskStatus(
         for (const task of taskResult.tasks) {
           // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
           const taskType = task.type;
-          if (!barInstances[taskType] && !mergeTasks[taskType]) {
+          if (!progressBar.get(taskType) && !mergeTasks[taskType]) {
             // skip creation of lead-flows bar because we're combining lead-flows into the forms bar, otherwise create a bar instance for the type
             progressCounter[taskType] = 0;
-            barInstances[taskType] = multibar.create(100, 0, {
-              taskType: i18n(`${i18nKey}.${taskType}.label`),
+            progressBar.create(taskType, 100, 0, {
+              label: i18n(`${i18nKey}.${taskType}.label`),
             });
           } else if (mergeTasks[taskType]) {
             // It's a lead-flow here, merge status into the forms progress bar
@@ -237,39 +229,43 @@ function pollSyncTaskStatus(
               progressCounter[mergeTasks[taskType]] = incrementBy(
                 progressCounter[mergeTasks[taskType]]
               );
-              barInstances[mergeTasks[taskType]].update(
+              progressBar.update(
+                mergeTasks[taskType],
                 progressCounter[mergeTasks[taskType]],
                 {
-                  taskType: i18n(`${i18nKey}.${mergeTasks[taskType]}.label`),
+                  label: i18n(`${i18nKey}.${mergeTasks[taskType]}.label`),
                 }
               );
             }
           }
-          if (barInstances[taskType] && task.status === 'COMPLETE') {
-            barInstances[taskType].update(100, {
-              taskType: i18n(`${i18nKey}.${taskType}.label`),
+          if (progressBar.get(taskType) && task.status === 'COMPLETE') {
+            progressBar.update(taskType, 100, {
+              label: i18n(`${i18nKey}.${taskType}.label`),
             });
-          } else if (barInstances[taskType] && task.status === 'PROCESSING') {
+          } else if (
             // Do not start incrementing for tasks still in PENDING state
+            progressBar.get(taskType) &&
+            task.status === 'PROCESSING'
+          ) {
             // Randomly increment bar while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
             progressCounter[taskType] = incrementBy(
               progressCounter[taskType],
               taskType === 'object-records' ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
             );
-            barInstances[taskType].update(progressCounter[taskType], {
-              taskType: i18n(`${i18nKey}.${taskType}.label`),
+            progressBar.update(taskType, progressCounter[taskType], {
+              label: i18n(`${i18nKey}.${taskType}.label`),
             });
           }
         }
       } else {
         clearInterval(pollInterval);
         reject();
-        multibar.stop();
+        progressBar.stop();
       }
       if (isTaskComplete(taskResult)) {
         clearInterval(pollInterval);
         resolve(taskResult);
-        multibar.stop();
+        progressBar.stop();
       }
     }, ACTIVE_TASK_POLL_INTERVAL);
   });
