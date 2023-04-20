@@ -41,7 +41,7 @@ const {
 const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
-const i18nKey = 'cli.commands.sandbox.subcommands.create';
+const i18nKey = 'cli.lib.sandbox.create';
 
 /**
  * @param {String} name - Name of sandbox
@@ -285,7 +285,7 @@ const buildSandbox = async ({
   // If creating standard sandbox, prompt user to sync assets
   if (allowSyncAssets) {
     if (sandboxType === STANDARD_SANDBOX) {
-      const syncI18nKey = 'cli.commands.sandbox.subcommands.sync';
+      const syncI18nKey = 'cli.lib.sandbox.sync';
       const sandboxAccountConfig = getAccountConfig(
         result.sandbox.sandboxHubId
       );

@@ -164,8 +164,7 @@ function pollSyncTaskStatus(
   syncStatusUrl,
   allowEarlyTermination = true
 ) {
-  const i18nKey = 'cli.commands.sandbox.subcommands.sync.types';
-  // TODO: Extract cli progress into util
+  const i18nKey = 'cli.lib.sandbox.sync.types';
   const progressBar = CliProgressMultibarManager.init();
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.

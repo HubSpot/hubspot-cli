@@ -653,51 +653,6 @@ en:
                 describe: "Name to use for created sandbox"
               type:
                 describe: "Type of sandbox to create (standard | development)"
-            loading:
-              developer:
-                add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-                fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-                succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
-              standard:
-                add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-                fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-                succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
-            success:
-              configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
-            failure:
-              optionMissing:
-                type: "Invalid or missing sandbox --type option in command. Please try again."
-                name: "Invalid or missing sandbox --name option in command. Please try again."
-              creatingWithinSandbox: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ sandboxName }}{{/bold}} is a {{ sandboxType }} sandbox.
-                \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
-                \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
-              limit:
-                developer:
-                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                standard:
-                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-              alreadyInConfig:
-                developer:
-                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
-                  \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
-                  \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                standard:
-                  one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
-                  \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                  other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
-                  \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                  \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-              scopes:
-                message: "The personal access key you provided doesn't include sandbox permissions."
-                instructions: "To update CLI permissions for \"{{ accountName }}\":
-                  \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
-                  \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
           delete:
             describe: "Delete a sandbox account"
             debug:
@@ -724,9 +679,6 @@ en:
                 describe: "Account name or id to delete"
           sync:
             describe: "Sync to a sandbox account"
-            debug:
-              syncing: "Syncing sandbox account \"{{ account }}\"."
-              error: "Error syncing sandbox account."
             examples:
               default: "Initiates a sync to a sandbox account."
               force: "Skips all confirmation prompts when initiating a sync."
@@ -738,56 +690,17 @@ en:
                 \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
                 \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
                 \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
-              syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
-              earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
             warning:
               developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
               standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
             confirm:
               developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-              standardSandboxCreateFlow: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}? Syncing may take some time"
-              standardSandboxCreateFlowReconfirm: "Confirm the sync of all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-            loading:
-              startSync: "Initiating sync..."
-              fail: "Failed to sync sandbox."
-              succeed: "Sandbox sync initiated."
-            polling:
-              syncing: "Syncing sandbox..."
-              fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
-              succeed: "Sandbox sync complete."
             failure:
               notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
                 \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
                 \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
-              missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-              syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
-              notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
-              objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
-            types:
-              parcels:
-                label: "Account tools and features"
-              super-admins:
-                label: "Super Admins"
-              object-schemas:
-                label: "Object definitions"
-              object-records:
-                label: "Contacts and associated records"
-              cms-developer-assets:
-                label: "Themes, templates, and modules"
-              object-pipelines:
-                label: "Pipelines"
-              object-lists:
-                label: "Lists"
-              workflows:
-                label: "Workflows"
-              forms:
-                label: "Forms"
-              lead-flows:
-                label: "Lead Flows"
-              marketing-email:
-                label: "Marketing emails"
       secrets:
         describe: "Manage HubSpot secrets."
         subcommands:
@@ -1126,5 +1039,97 @@ en:
       debug:
         templates:
           creatingPath: "Making {{ path }} if needed"
+      sandbox:
+        create:
+          loading:
+            developer:
+              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            standard:
+              add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+          success:
+            configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+          failure:
+            optionMissing:
+              type: "Invalid or missing sandbox --type option in command. Please try again."
+              name: "Invalid or missing sandbox --name option in command. Please try again."
+            creatingWithinSandbox: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ sandboxName }}{{/bold}} is a {{ sandboxType }} sandbox.
+              \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
+              \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+            limit:
+              developer:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              standard:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+            alreadyInConfig:
+              developer:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+              standard:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
+                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
+                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+            scopes:
+              message: "The personal access key you provided doesn't include sandbox permissions."
+              instructions: "To update CLI permissions for \"{{ accountName }}\":
+                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
+        sync:
+          info:
+            syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
+            earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
+          confirm:
+            standardSandboxCreateFlow: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}? Syncing may take some time"
+          loading:
+            startSync: "Initiating sync..."
+            fail: "Failed to sync sandbox."
+            succeed: "Sandbox sync initiated."
+          polling:
+            syncing: "Syncing sandbox..."
+            fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
+            succeed: "Sandbox sync complete."
+          failure:
+              \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
+              \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+            missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+            syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+            notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
+            objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
+          types:
+            parcels:
+              label: "Account tools and features"
+            super-admins:
+              label: "Super Admins"
+            object-schemas:
+              label: "Object definitions"
+            object-records:
+              label: "Contacts and associated records"
+            cms-developer-assets:
+              label: "Themes, templates, and modules"
+            object-pipelines:
+              label: "Pipelines"
+            object-lists:
+              label: "Lists"
+            workflows:
+              label: "Workflows"
+            forms:
+              label: "Forms"
+            lead-flows:
+              label: "Lead Flows"
+            marketing-email:
+              label: "Marketing emails"
+
 
 
