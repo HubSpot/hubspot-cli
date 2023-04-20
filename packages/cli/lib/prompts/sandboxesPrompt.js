@@ -1,6 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getSandboxType } = require('../sandboxes');
+const { getSandboxTypeAsString } = require('../sandboxes');
+const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
@@ -8,7 +9,9 @@ const mapSandboxAccountChoices = portals =>
   portals
     .filter(p => p.sandboxAccountType && p.sandboxAccountType !== null)
     .map(p => {
-      const sandboxName = `[${getSandboxType(p.sandboxAccountType)} sandbox] `;
+      const sandboxName = `[${getSandboxTypeAsString(
+        p.sandboxAccountType
+      )} sandbox] `;
       return {
         name: `${p.name} ${sandboxName}(${p.portalId})`,
         value: p.name || p.portalId,
@@ -27,18 +30,46 @@ const mapNonSandboxAccountChoices = portals =>
       };
     });
 
-const createSandboxPrompt = () => {
+const sandboxNamePrompt = () => {
   return promptUser([
     {
       name: 'name',
-      message: i18n(`${i18nKey}.enterName`),
+      message: i18n(`${i18nKey}.name.message`),
       validate(val) {
         if (typeof val !== 'string') {
-          return i18n(`${i18nKey}.errors.invalidName`);
+          return i18n(`${i18nKey}.name.errors.invalidName`);
+        } else if (!val.length) {
+          return i18n(`${i18nKey}.name.errors.nameRequired`);
         }
-        return true;
+        return accountNameExistsInConfig(val)
+          ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
+          : true;
       },
       default: 'New sandbox',
+    },
+  ]);
+};
+
+const sandboxTypeChoices = [
+  {
+    name: i18n(`${i18nKey}.type.developer`),
+    value: 'DEVELOPER',
+  },
+  {
+    name: i18n(`${i18nKey}.type.standard`),
+    value: 'STANDARD',
+  },
+];
+
+const sandboxTypePrompt = () => {
+  return promptUser([
+    {
+      name: 'type',
+      message: i18n(`${i18nKey}.type.message`),
+      type: 'list',
+      look: false,
+      choices: sandboxTypeChoices,
+      default: 'DEVELOPER',
     },
   ]);
 };
@@ -55,8 +86,8 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       name: 'account',
       message: i18n(
         promptParentAccount
-          ? `${i18nKey}.selectParentAccountName`
-          : `${i18nKey}.selectAccountName`
+          ? `${i18nKey}.name.selectParentAccountName`
+          : `${i18nKey}.name.selectAccountName`
       ),
       type: 'list',
       look: false,
@@ -68,7 +99,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
 };
 
 module.exports = {
-  createSandboxPrompt,
+  sandboxNamePrompt,
+  sandboxTypePrompt,
   deleteSandboxPrompt,
-  getSandboxType,
 };
