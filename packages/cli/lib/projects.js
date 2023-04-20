@@ -623,10 +623,6 @@ const createProjectComponent = async (component, name) => {
   const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
-  if (component.extension) {
-    componentName = `${name}.${component.extension}`;
-  }
-
   const componentPath = path.resolve(
     getCwd(),
     `${component.insertPath}${componentName}`
@@ -637,10 +633,8 @@ const createProjectComponent = async (component, name) => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!component.isFile) {
-    if (!fs.existsSync(componentName)) {
-      fs.mkdirSync(componentPath);
-    }
+  if (!fs.existsSync(componentName)) {
+    fs.mkdirSync(componentPath);
   }
 
   await downloadGitHubRepoContents(

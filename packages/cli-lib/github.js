@@ -138,7 +138,7 @@ async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
     headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
   });
 
-  fs.writeFileSync(dest, resp, 'utf8');
+  fs.outputFileSync(dest, resp, 'utf8');
 }
 
 /**
@@ -187,13 +187,25 @@ async function downloadGitHubRepoContents(
       });
     };
 
+    const downloadDirectoriesContent = async directoryContent => {
+      const contentPath = directoryContent.path;
+      const innerDirContent = await getGitHubRepoContentsAtPath(
+        repoName,
+        contentPath
+      );
+      return innerDirContent.map(downloadContent);
+    };
+
     if (contentsResp.download_url) {
       return downloadContent(contentsResp);
     }
 
-    const contentPromises = contentsResp.map(downloadContent);
+    const directories = contentsResp.filter(content => content.type === 'dir');
+    const files = contentsResp.filter(content => content.type !== 'dir');
+    const directoryPromises = directories.map(downloadDirectoriesContent);
+    const contentPromises = files.map(downloadContent);
 
-    return Promise.all(contentPromises);
+    return Promise.all([directoryPromises, contentPromises]);
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
