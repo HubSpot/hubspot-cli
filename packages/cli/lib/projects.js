@@ -623,19 +623,20 @@ const createProjectComponent = async (component, name) => {
   const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
-  const componentPath = path.resolve(
-    getCwd(),
-    `${component.insertPath}${componentName}`
-  );
+  const directoryPath = path.resolve(getCwd());
+  const configInfo = await getProjectConfig(directoryPath);
 
-  if (!getIsInProject(componentPath)) {
+  if (!configInfo.projectDir && !configInfo.projectConfig) {
     logger.error(i18n(`${i18nKey}.error.locationInProject`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!fs.existsSync(componentName)) {
-    fs.mkdirSync(componentPath);
-  }
+  const src = `${configInfo.projectConfig.srcDir}/`;
+
+  const componentPath = path.resolve(
+    getCwd(),
+    `${component.insertPath}${src}${componentName}`
+  );
 
   await downloadGitHubRepoContents(
     'hubspot-project-components',
