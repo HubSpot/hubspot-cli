@@ -29,16 +29,13 @@ const isMissingScopeError = err =>
   err.error &&
   err.error.category === 'MISSING_SCOPES';
 
-const isSpecifiedError = (
-  err,
-  statusCode = undefined,
-  category = undefined,
-  subCategory = undefined
-) => {
-  const statusCodeErr = statusCode && err.statusCode === statusCode;
-  const categoryErr = category && err.error && err.error.category === category;
+const isSpecifiedError = (err, { statusCode, category, subCategory } = {}) => {
+  const statusCodeErr = !statusCode || err.statusCode === statusCode;
+  const categoryErr =
+    !category || (err.error && err.error.category === category);
   const subCategoryErr =
-    subCategory && err.error && err.error.subCategory === subCategory;
+    !subCategory || (err.error && err.error.subCategory === subCategory);
+
   return (
     err.name === 'StatusCodeError' &&
     statusCodeErr &&

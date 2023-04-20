@@ -3,6 +3,14 @@ const path = require('path');
 const { default: PQueue } = require('p-queue');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
+const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
@@ -33,6 +41,7 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.preventUploads = options.preventUploads;
     this.debug = options.debug || false;
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -80,28 +89,41 @@ class LocalDevManager {
 
     await this.stopWatching();
 
+    await this.cleanupServers();
+
     let exitCode = EXIT_CODES.SUCCESS;
 
     if (this.currentStagedBuildId) {
       try {
         await cancelStagedBuild(this.targetAccountId, this.projectConfig.name);
       } catch (err) {
-        logger.debug(err);
-        // if (err.error.subCategory === ERROR_TYPES.BUILD_NOT_IN_PROGRESS) {
-        //   process.exit(EXIT_CODES.SUCCESS);
-        // } else {
-        //   logApiErrorInstance(
-        //     err,
-        //     new ApiErrorContext({ accountId, projectName: projectName })
-        //   );
-        //   process.exit(EXIT_CODES.ERROR);
-        // }
+        if (
+          !isSpecifiedError(err, {
+            subCategory: ERROR_TYPES.BUILD_NOT_IN_PROGRESS,
+          })
+        ) {
+          logApiErrorInstance(
+            err,
+            new ApiErrorContext({
+              accountId: this.targetAccountId,
+              projectName: this.projectConfig.name,
+            })
+          );
+          exitCode = EXIT_CODES.ERROR;
+        }
       }
     }
 
-    this.spinnies.succeed('cleanupMessage', {
-      text: i18n(`${i18nKey}.exitingEnd`),
-    });
+    if (exitCode === EXIT_CODES.SUCCESS) {
+      this.spinnies.succeed('cleanupMessage', {
+        text: i18n(`${i18nKey}.exitingSucceed`),
+      });
+    } else {
+      this.spinnies.fail('cleanupMessage', {
+        text: i18n(`${i18nKey}.exitingFail`),
+      });
+    }
+
     process.exit(exitCode);
   }
 
@@ -136,8 +158,6 @@ class LocalDevManager {
   }
 
   async pauseUploadQueue() {
-    logger.debug('Pausing upload queue');
-
     this.spinnies.removeAll();
     this.spinnies.add('uploading', {
       text: i18n(`${i18nKey}.upload.uploadingChanges`),
@@ -154,7 +174,6 @@ class LocalDevManager {
 
   async createNewStagingBuild() {
     try {
-      logger.debug(`Creating new staging build`);
       const { buildId } = await provisionBuild(
         this.targetAccountId,
         this.projectConfig.name
@@ -162,17 +181,18 @@ class LocalDevManager {
       this.currentStagedBuildId = buildId;
     } catch (err) {
       logger.debug(err);
-      // logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-      // if (err.error.subCategory !== ERROR_TYPES.PROJECT_LOCKED) {
-      //   await cancelStagedBuild(accountId, projectName);
-      //   logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
-      // }
+      if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
+        await cancelStagedBuild(this.targetAccountId, this.projectConfig.name);
+        logger.log(i18n(`${i18nKey}.previousStagingBuildCancelled`));
+      }
       process.exit(EXIT_CODES.ERROR);
     }
   }
 
   async startWatching() {
-    await this.createNewStagingBuild();
+    if (!this.preventUploads) {
+      await this.createNewStagingBuild();
+    }
 
     this.watcher.on('add', async filePath => {
       this.handleWatchEvent(filePath, WATCH_EVENTS.add);
@@ -197,18 +217,11 @@ class LocalDevManager {
 
     const isSupportedChange = await this.notifyServers(changeInfo);
 
-    if (this.debug) {
-      this.spinnies.add(filePath, {
-        text: `${
-          isSupportedChange ? 'Supported' : 'Unsupported'
-        } change for ${filePath}`,
-        status: 'non-spinnable',
-        indent: 1,
-      });
-    }
-
     if (isSupportedChange) {
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
+      return;
+    } else if (this.preventUploads) {
+      this.updateDevModeStatus('uploadPrevented');
       return;
     }
 
@@ -226,7 +239,6 @@ class LocalDevManager {
       if (!this.uploadQueue.isPaused) {
         this.debounceQueueBuild();
       }
-      logger.debug(`Adding change to upload queue: ${changeInfo.filePath}`);
 
       return this.uploadQueue.add(async () => {
         await this.sendChanges(changeInfo);
@@ -270,9 +282,7 @@ class LocalDevManager {
           remotePath
         );
       }
-      logger.debug(`Successfully sent changes for ${filePath}`);
     } catch (err) {
-      logger.debug(`Failed to send changes for ${filePath}`);
       logger.debug(err);
     }
   }
@@ -289,21 +299,24 @@ class LocalDevManager {
 
       try {
         await queueBuild(this.targetAccountId, this.projectConfig.name);
-        logger.debug(`Queued new build for ${this.projectConfig.name}`);
       } catch (err) {
         logger.debug(err);
-        // if (
-        //   err.error &&
-        //   err.error.subCategory === ERROR_TYPES.MISSING_PROJECT_PROVISION
-        // ) {
-        //   logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
-        //   process.exit(0);
-        // } else {
-        //   logApiErrorInstance(
-        //     err,
-        //     new ApiErrorContext({ accountId, projectName })
-        //   );
-        // }
+        if (
+          isSpecifiedError(err, {
+            subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+          })
+        ) {
+          logger.log(i18n(`${i18nKey}.logs.cancelledFromUI`));
+          this.stop();
+        } else {
+          logApiErrorInstance(
+            err,
+            new ApiErrorContext({
+              accountId: this.targetAccountId,
+              projectName: this.projectConfig.name,
+            })
+          );
+        }
         return;
       }
 
@@ -358,6 +371,11 @@ class LocalDevManager {
       return Math.random() < 0.5;
     }
     return false;
+  }
+
+  async cleanupServers() {
+    // TODO tell servers to cleanup
+    return;
   }
 }
 

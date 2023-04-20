@@ -459,9 +459,12 @@ en:
               startupMessage: "Setting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
+              preventUploadExplanation: "We recommend preventing uploads for all non-sandbox accounts."
+              unableToCreateProject: "Unable to create project in the target account because uploads are prevented."
             prompt:
               createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
+              preventUploads: "Prevent the CLI from uploading any changes?"
             errors:
               noProjectConfig: "No project detected"
             examples:
@@ -903,10 +906,14 @@ en:
         running: "{{#cyan}}[Running Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{ accountIdentifier }}]{{/cyan}}"
         quitHelper: "\nPress {{#bold}}'q'{{/bold}} to exit"
         exitingStart: "Exiting Dev Mode"
-        exitingEnd: "Successfully exited"
+        exitingSucceed: "Successfully exited"
+        exitingFail: "Failed to clean up before exiting"
+        previousStagingBuildCancelled: "Failed to create a staging build because the project was alreayd locked. It is now unlocked. Run the command again."
+        cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
         status:
           clean: "{{#bold}}Status:{{/bold}} {{#green}}Up to date{{/green}}"
           dirty: "{{#bold}}Status:{{/bold}} {{#yellow}}Recent changes require upload{{/yellow}}"
+          uploadPrevented: "{{#bold}}Status:{{/bold}} {{#red}}Upload prevented{{/red}}"
         upload:
           uploadingChanges: "{{#bold}}Uploading recent changes{{/bold}}"
       projects:

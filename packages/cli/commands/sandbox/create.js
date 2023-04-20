@@ -119,12 +119,12 @@ exports.handler = async options => {
         })
       );
     } else if (
-      isSpecifiedError(
-        err,
-        400,
-        'VALIDATION_ERROR',
-        'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR'
-      ) &&
+      isSpecifiedError(err, {
+        statusCode: 400,
+        category: 'VALIDATION_ERROR',
+        subCategory:
+          'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR',
+      }) &&
       err.error &&
       err.error.message
     ) {

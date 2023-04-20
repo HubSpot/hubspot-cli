@@ -20,7 +20,7 @@ const {
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiAccountDescription, uiLine } = require('../../lib/ui');
-const { promptUser } = require('../../lib/prompts/promptUtils');
+const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
@@ -73,16 +73,11 @@ exports.handler = async options => {
     uiLine();
     logger.log();
 
-    const { targetNonSandboxAccount } = await promptUser([
-      {
-        name: 'targetNonSandboxAccount',
-        type: 'confirm',
-        default: true,
-        message: i18n(`${i18nKey}.prompt.targetNonSandbox`),
-      },
-    ]);
+    const shouldTargetNonSandboxAccount = await confirmPrompt(
+      i18n(`${i18nKey}.prompt.targetNonSandbox`)
+    );
 
-    if (targetNonSandboxAccount) {
+    if (shouldTargetNonSandboxAccount) {
       const {
         targetAccountId: promptNonSandboxTargetAccountId,
       } = await selectTargetAccountPrompt(accounts, true);
@@ -97,6 +92,22 @@ exports.handler = async options => {
       'Creating new sandboxes is not supported yet. Use "hs sandbox create" and then run this command again.'
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  // TODO programatically determine this
+  const isProdAccount = false;
+
+  let preventUploads = false;
+
+  if (isProdAccount) {
+    uiLine();
+    logger.warn(i18n(`${i18nKey}.logs.preventUploadExplanation`));
+    uiLine();
+    logger.log();
+
+    preventUploads = await confirmPrompt(
+      i18n(`${i18nKey}.prompt.preventUploads`)
+    );
   }
 
   const spinnies = SpinniesManager.init();
@@ -116,15 +127,16 @@ exports.handler = async options => {
     logger.log(i18n(`${i18nKey}.logs.projectMustExistExplanation`));
     uiLine();
 
-    const { shouldCreateProject } = await promptUser([
-      {
-        name: 'shouldCreateProject',
-        type: 'confirm',
-        message: i18n(`${i18nKey}.prompt.createProject`, {
-          accountName: uiAccountDescription(targetAccountId),
-        }),
-      },
-    ]);
+    if (preventUploads) {
+      logger.log(i18n(`${i18nKey}.logs.unableToCreateProject`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    const shouldCreateProject = await confirmPrompt(
+      i18n(`${i18nKey}.prompt.createProject`, {
+        accountName: uiAccountDescription(targetAccountId),
+      })
+    );
 
     if (shouldCreateProject) {
       try {
@@ -151,15 +163,18 @@ exports.handler = async options => {
     isParent: true,
   });
 
-  const result = await handleProjectUpload(
-    targetAccountId,
-    projectConfig,
-    projectDir,
-    (...args) => pollProjectBuildAndDeploy(...args, true),
-    'HubSpot Local Dev Server Startup'
-  );
+  let result;
+  if (!preventUploads) {
+    result = await handleProjectUpload(
+      targetAccountId,
+      projectConfig,
+      projectDir,
+      (...args) => pollProjectBuildAndDeploy(...args, true),
+      'HubSpot Local Dev Server Startup'
+    );
+  }
 
-  if (!result.succeeded) {
+  if (result && !result.succeeded) {
     spinnies.fail('devModeSetup', {
       text: 'failed to start up dev mode',
     });
@@ -172,6 +187,7 @@ exports.handler = async options => {
     targetAccountId,
     projectConfig,
     projectDir,
+    preventUploads,
     debug: options.debug,
   });
 
