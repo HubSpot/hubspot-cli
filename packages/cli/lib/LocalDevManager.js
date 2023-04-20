@@ -217,11 +217,13 @@ class LocalDevManager {
 
     const isSupportedChange = await this.notifyServers(changeInfo);
 
+    if (this.preventUploads) {
+      this.updateDevModeStatus('uploadPrevented');
+      return;
+    }
+
     if (isSupportedChange) {
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
-      return;
-    } else if (this.preventUploads) {
-      this.updateDevModeStatus('uploadPrevented');
       return;
     }
 
