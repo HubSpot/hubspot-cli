@@ -117,11 +117,12 @@ exports.handler = async options => {
   );
 
   if (isDefaultAccount) {
-    logger.log(
+    logger.info(
       i18n(`${i18nKey}.defaultAccountWarning`, {
         account: getAccountName(accountConfig),
       })
     );
+    logger.log('');
   }
 
   try {
