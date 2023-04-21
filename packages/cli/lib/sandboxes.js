@@ -22,6 +22,10 @@ const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
 
+const syncTypes = {
+  OBJECT_RECORDS: 'object-records',
+};
+
 const sandboxTypeMap = {
   DEV: DEVELOPER_SANDBOX,
   dev: DEVELOPER_SANDBOX,
@@ -250,7 +254,7 @@ function pollSyncTaskStatus(
             // Randomly increment bar while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
             progressCounter[taskType] = incrementBy(
               progressCounter[taskType],
-              taskType === 'object-records' ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
+              taskType === syncTypes.OBJECT_RECORDS ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
             );
             progressBar.update(taskType, progressCounter[taskType], {
               label: i18n(`${i18nKey}.${taskType}.label`),
@@ -276,6 +280,7 @@ module.exports = {
   DEVELOPER_SANDBOX,
   sandboxTypeMap,
   sandboxApiTypeMap,
+  syncTypes,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,

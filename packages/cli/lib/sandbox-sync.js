@@ -6,6 +6,7 @@ const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
   getAccountName,
+  syncTypes,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -13,8 +14,9 @@ const {
   isSpecifiedError,
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { getSandboxTypeAsString } = require('./sandboxes');
+const { getSandboxTypeAsString, sandboxTypeMap } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
+const { promptUser } = require('./prompts/promptUtils');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -23,6 +25,7 @@ const i18nKey = 'cli.lib.sandbox.sync';
  * @param {Object} parentAccountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @param {Boolean} allowContactRecordsSyncPrompt - Option to show prompt for syncing contact records, otherwise sync automatically
  * @returns
  */
 const syncSandbox = async ({
@@ -30,6 +33,7 @@ const syncSandbox = async ({
   parentAccountConfig,
   env,
   allowEarlyTermination = true,
+  allowContactRecordsSyncPrompt = true,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
@@ -37,6 +41,7 @@ const syncSandbox = async ({
     succeedColor: 'white',
   });
   let initiateSyncResponse;
+  let availableSyncTasks;
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
@@ -44,21 +49,45 @@ const syncSandbox = async ({
   )}`;
 
   try {
-    logger.log('');
-    spinnies.add('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.startSync`),
-    });
-
     // Fetches sync types based on default account. Parent account required for fetch
     const tasks = await getAvailableSyncTypes(
       parentAccountConfig,
       accountConfig
     );
+    availableSyncTasks = tasks;
+
+    if (
+      tasks &&
+      tasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
+      allowContactRecordsSyncPrompt
+    ) {
+      const { contactRecordsSymcPrompt } = await promptUser([
+        {
+          name: 'contactRecordsSymcPrompt',
+          type: 'confirm',
+          message: i18n(
+            `${i18nKey}.confirm.syncContactRecords.${
+              sandboxTypeMap[accountConfig.sandboxAccountType]
+            }`
+          ),
+        },
+      ]);
+      if (!contactRecordsSymcPrompt) {
+        availableSyncTasks = tasks.filter(
+          t => t.type !== syncTypes.OBJECT_RECORDS
+        );
+      }
+    }
+
+    logger.log('');
+    spinnies.add('sandboxSync', {
+      text: i18n(`${i18nKey}.loading.startSync`),
+    });
 
     initiateSyncResponse = await initiateSync(
       parentAccountId,
       accountId,
-      tasks,
+      availableSyncTasks,
       accountId
     );
 

@@ -1091,7 +1091,12 @@ en:
             syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
             earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
           confirm:
-            standardSandboxCreateFlow: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}? Syncing may take some time"
+            createFlow:
+              standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+              developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+            syncContactRecords:
+              standard: "Do you want the sync to include up to 5000 contact records and associations? Syncing may take some time"
+              developer: "Do you want the sync to include up to 100 contact records and associations?"
           loading:
             startSync: "Initiating sync..."
             fail: "Failed to sync sandbox."
