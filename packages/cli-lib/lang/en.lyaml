@@ -451,16 +451,20 @@ en:
           dev:
             describe: "Start local dev for the current project"
             logs:
-              introHeader: "HubSpot projects local development (beta)"
+              introHeader: "{{#bold}}HubSpot projects local development (beta){{/bold}}"
               introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
               prodAccountWarning: "Targeting a production account is risky. This command will upload incomplete changes to the target account. We recommend picking a sandbox account."
-              startupMessage: "Running {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountName }}{{/bold}} in dev mode ...\n"
+              startupMessage: "Setting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
+              preventUploadExplanation: "We recommend preventing uploads for all non-sandbox accounts."
+              unableToCreateProject: "Unable to create project in the target account because uploads are prevented."
             prompt:
-              createProject: "[--silent] Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+              createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+              targetNonSandbox: "Continue testing in a non-sandbox account?"
+              preventUploads: "Prevent the CLI from uploading any changes?"
             errors:
               noProjectConfig: "No project detected"
             examples:
@@ -898,6 +902,20 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      LocalDevManager:
+        running: "{{#cyan}}[Running Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{ accountIdentifier }}]{{/cyan}}"
+        quitHelper: "\nPress {{#bold}}'q'{{/bold}} to exit"
+        exitingStart: "Exiting Dev Mode"
+        exitingSucceed: "Successfully exited"
+        exitingFail: "Failed to clean up before exiting"
+        previousStagingBuildCancelled: "Failed to create a staging build because the project was alreayd locked. It is now unlocked. Run the command again."
+        cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
+        status:
+          clean: "{{#bold}}Status:{{/bold}} {{#green}}Up to date{{/green}}"
+          dirty: "{{#bold}}Status:{{/bold}} {{#yellow}}Recent changes require upload{{/yellow}}"
+          uploadPrevented: "{{#bold}}Status:{{/bold}} {{#red}}Upload prevented{{/red}}"
+        upload:
+          uploadingChanges: "{{#bold}}Uploading recent changes{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
@@ -977,7 +995,10 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectDevTargetAccountPrompt:
-          account: "[--account] Choose a sandbox to test with:"
+          createNewSandboxOption: "<< Create a new sandbox account >>"
+          chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
+          chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
+          chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

@@ -187,12 +187,11 @@ exports.handler = async options => {
         );
       }
     } else if (
-      isSpecifiedError(
-        err,
-        404,
-        'OBJECT_NOT_FOUND',
-        'SandboxErrors.SANDBOX_NOT_FOUND'
-      )
+      isSpecifiedError(err, {
+        statusCode: 404,
+        category: 'OBJECT_NOT_FOUND',
+        subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
+      })
     ) {
       logger.log('');
       logger.warn(
