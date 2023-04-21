@@ -1,20 +1,17 @@
 const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { PROJECT_COMPONENT_TYPES } = require('@hubspot/cli-lib/lib/constants');
 
 const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 
 const createTypeOptions = async () => {
-  const topLevelConfig = await fetchJsonFromRepository(
+  const config = await fetchJsonFromRepository(
     'hubspot-project-components',
     'main/config.json'
   );
 
-  const config = await fetchJsonFromRepository(
-    'hubspot-project-components',
-    `main/${topLevelConfig.configPath}/config.json`
-  );
-  return config[topLevelConfig.configKey];
+  return config[PROJECT_COMPONENT_TYPES.COMPONENTS];
 };
 
 const projectAddPrompt = async (promptOptions = {}) => {
