@@ -23,6 +23,7 @@ const { uiAccountDescription, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
+  SPECIAL_PROMPT_VALUES,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
@@ -67,7 +68,7 @@ exports.handler = async options => {
   logger.log();
 
   // Show a warning if the user chooses a non-sandbox account (false)
-  if (targetAccountId === false) {
+  if (targetAccountId === SPECIAL_PROMPT_VALUES.NON_SANDBOX) {
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
     uiLine();
@@ -87,27 +88,32 @@ exports.handler = async options => {
     } else {
       process.exit(EXIT_CODES.SUCCESS);
     }
-  } else if (targetAccountId === true) {
+  } else if (targetAccountId === SPECIAL_PROMPT_VALUES.CREATE_SANDBOX) {
     logger.log(
       'Creating new sandboxes is not supported yet. Use "hs sandbox create" and then run this command again.'
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  // TODO programatically determine this
-  const isProdAccount = false;
+  // TODO programatically determine these values
+  const isNonSandboxAccount = false;
+  const isProjectUsingGitIntegration = false;
 
   let preventUploads = false;
 
-  if (isProdAccount) {
+  if (isProjectUsingGitIntegration || isNonSandboxAccount) {
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.preventUploadExplanation`));
     uiLine();
     logger.log();
 
-    preventUploads = await confirmPrompt(
-      i18n(`${i18nKey}.prompt.preventUploads`)
-    );
+    if (isProjectUsingGitIntegration) {
+      preventUploads = true;
+    } else {
+      preventUploads = await confirmPrompt(
+        i18n(`${i18nKey}.prompt.preventUploads`)
+      );
+    }
   }
 
   const spinnies = SpinniesManager.init();

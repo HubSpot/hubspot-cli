@@ -6,6 +6,11 @@ const { getAccountId } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
+const SPECIAL_PROMPT_VALUES = {
+  CREATE_SANDBOX: true,
+  NON_SANDBOX: false,
+};
+
 const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
   let choices;
 
@@ -23,7 +28,7 @@ const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
     choices = [
       {
         name: i18n(`${i18nKey}.createNewSandboxOption`),
-        value: true,
+        value: SPECIAL_PROMPT_VALUES.CREATE_SANDBOX,
       },
       ...accounts.filter(isSandbox).map(accountConfig => {
         const accountId = getAccountId(accountConfig.name);
@@ -34,7 +39,7 @@ const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
       }),
       {
         name: i18n(`${i18nKey}.chooseNonSandboxOption`),
-        value: false,
+        value: SPECIAL_PROMPT_VALUES.NON_SANDBOX,
       },
     ];
   }
@@ -52,4 +57,5 @@ const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
 
 module.exports = {
   selectTargetAccountPrompt,
+  SPECIAL_PROMPT_VALUES,
 };
