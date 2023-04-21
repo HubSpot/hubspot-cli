@@ -164,7 +164,7 @@ async function downloadGitHubRepoContents(
       contentPath
     );
 
-    const downloadContent = async contentPiece => {
+    const downloadContentRecursively = async contentPiece => {
       const { path: contentPiecePath, download_url } = contentPiece;
       const downloadPath = path.join(
         dest,
@@ -182,30 +182,30 @@ async function downloadGitHubRepoContents(
         `Downloading content piece: ${contentPiecePath} from ${download_url} to ${downloadPath}`
       );
 
-      return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
-        headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
-      });
+      if (contentPiece.type === 'dir') {
+        const contentPath = contentPiece.path;
+        const innerDirContent = await getGitHubRepoContentsAtPath(
+          repoName,
+          contentPath
+        );
+        return innerDirContent.map(downloadContentRecursively);
+      } else {
+        return fetchGitHubRepoContentFromDownloadUrl(
+          downloadPath,
+          download_url,
+          {
+            headers: {
+              ...DEFAULT_USER_AGENT_HEADERS,
+              ...GITHUB_AUTH_HEADERS,
+            },
+          }
+        );
+      }
     };
 
-    const downloadDirectoriesContent = async directoryContent => {
-      const contentPath = directoryContent.path;
-      const innerDirContent = await getGitHubRepoContentsAtPath(
-        repoName,
-        contentPath
-      );
-      return innerDirContent.map(downloadContent);
-    };
+    const contentPromises = contentsResp.map(downloadContentRecursively);
 
-    if (contentsResp.download_url) {
-      return downloadContent(contentsResp);
-    }
-
-    const directories = contentsResp.filter(content => content.type === 'dir');
-    const files = contentsResp.filter(content => content.type !== 'dir');
-    const directoryPromises = directories.map(downloadDirectoriesContent);
-    const contentPromises = files.map(downloadContent);
-
-    return Promise.all([directoryPromises, contentPromises]);
+    return Promise.all([contentPromises]);
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
