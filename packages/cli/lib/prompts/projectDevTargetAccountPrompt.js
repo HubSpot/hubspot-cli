@@ -6,12 +6,7 @@ const { getAccountId } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
-const SPECIAL_PROMPT_VALUES = {
-  CREATE_SANDBOX: true,
-  NON_SANDBOX: false,
-};
-
-const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
+const selectTargetAccountPrompt = async (accounts, nonSandbox = false) => {
   let choices;
 
   if (nonSandbox) {
@@ -21,31 +16,47 @@ const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
         const accountId = getAccountId(accountConfig.name);
         return {
           name: uiAccountDescription(accountId),
-          value: accountId,
+          value: {
+            targetAccountId: accountId,
+            chooseNonSandbox: false,
+            createNewSandbox: false,
+          },
         };
       });
   } else {
     choices = [
       {
         name: i18n(`${i18nKey}.createNewSandboxOption`),
-        value: SPECIAL_PROMPT_VALUES.CREATE_SANDBOX,
+        value: {
+          targetAccountId: null,
+          chooseNonSandbox: false,
+          createNewSandbox: true,
+        },
       },
       ...accounts.filter(isSandbox).map(accountConfig => {
         const accountId = getAccountId(accountConfig.name);
         return {
           name: uiAccountDescription(accountId),
-          value: accountId,
+          value: {
+            targetAccountId: accountId,
+            chooseNonSandbox: false,
+            createNewSandbox: false,
+          },
         };
       }),
       {
         name: i18n(`${i18nKey}.chooseNonSandboxOption`),
-        value: SPECIAL_PROMPT_VALUES.NON_SANDBOX,
+        value: {
+          targetAccountId: null,
+          chooseNonSandbox: true,
+          createNewSandbox: false,
+        },
       },
     ];
   }
-  return promptUser([
+  const { targetAccountInfo } = await promptUser([
     {
-      name: 'targetAccountId',
+      name: 'targetAccountInfo',
       type: 'list',
       message: nonSandbox
         ? i18n(`${i18nKey}.chooseNonSandboxAccount`)
@@ -53,9 +64,10 @@ const selectTargetAccountPrompt = (accounts, nonSandbox = false) => {
       choices,
     },
   ]);
+
+  return targetAccountInfo;
 };
 
 module.exports = {
   selectTargetAccountPrompt,
-  SPECIAL_PROMPT_VALUES,
 };
