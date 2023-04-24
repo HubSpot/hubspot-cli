@@ -203,9 +203,14 @@ async function downloadGitHubRepoContents(
       }
     };
 
-    const contentPromises = contentsResp.map(downloadContentRecursively);
-
-    return Promise.all(contentPromises);
+    let contentPromises;
+    if (Array.isArray(contentsResp)) {
+      contentPromises = contentsResp.map(downloadContentRecursively);
+      return Promise.all(contentPromises);
+    } else {
+      contentPromises = downloadContentRecursively(contentsResp);
+      return Promise.resolve(contentPromises);
+    }
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
@@ -213,7 +218,7 @@ async function downloadGitHubRepoContents(
       }
     }
 
-    throw new Error(`Failed to fetch contents: ${e.error.message}`);
+    throw new Error(e);
   }
 }
 
