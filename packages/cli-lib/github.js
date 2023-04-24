@@ -205,7 +205,7 @@ async function downloadGitHubRepoContents(
 
     const contentPromises = contentsResp.map(downloadContentRecursively);
 
-    return Promise.all([contentPromises]);
+    return Promise.all(contentPromises);
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
