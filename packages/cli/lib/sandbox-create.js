@@ -26,19 +26,10 @@ const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const {
-  getEnv,
-  getAccountConfig,
-  getConfig,
-  getAccountId,
-} = require('@hubspot/cli-lib');
+const { getEnv, getAccountConfig, getAccountId } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { promptUser } = require('./prompts/promptUtils');
 const { syncSandbox } = require('./sandbox-sync');
-const {
-  setAsDefaultAccountPrompt,
-} = require('./prompts/setAsDefaultAccountPrompt');
-const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.lib.sandbox.create';
@@ -51,7 +42,6 @@ const i18nKey = 'cli.lib.sandbox.create';
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
  * @param {Boolean} allowSyncAssets - Option to allow user to sync assets after creation
  * @param {Boolean} allowContactRecordsSyncPrompt - Option to show prompt for syncing contact records, otherwise sync automatically
- * @param {Boolean} skipDefaultAccountPrompt - Option to skip default account prompt and auto set new sandbox account as default
  * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
  */
 const buildSandbox = async ({
@@ -62,7 +52,6 @@ const buildSandbox = async ({
   allowEarlyTermination = true,
   allowSyncAssets = true,
   allowContactRecordsSyncPrompt = true,
-  skipDefaultAccountPrompt = false,
   force = false,
 }) => {
   const spinnies = new Spinnies({
@@ -259,29 +248,6 @@ const buildSandbox = async ({
   } catch (err) {
     logErrorInstance(err);
     throw err;
-  }
-
-  if (skipDefaultAccountPrompt || force) {
-    updateDefaultAccount(sandboxConfigName);
-  } else {
-    const setAsDefault = await setAsDefaultAccountPrompt(sandboxConfigName);
-    if (setAsDefault) {
-      logger.success(
-        i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
-          accountName: sandboxConfigName,
-        })
-      );
-    } else {
-      const config = getConfig();
-      logger.info(
-        i18n(
-          `cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`,
-          {
-            accountName: config.defaultPortal,
-          }
-        )
-      );
-    }
   }
 
   // If creating standard sandbox, prompt user to sync assets

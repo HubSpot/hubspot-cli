@@ -26,6 +26,7 @@ const i18nKey = 'cli.lib.sandbox.sync';
  * @param {String} env - Environment (QA/Prod)
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
  * @param {Boolean} allowContactRecordsSyncPrompt - Option to show prompt for syncing contact records, otherwise sync automatically
+ * @param {Boolean} skipPolling - Option to skip progress bars for polling and let sync run in background
  * @returns
  */
 const syncSandbox = async ({
@@ -34,6 +35,7 @@ const syncSandbox = async ({
   env,
   allowEarlyTermination = true,
   allowContactRecordsSyncPrompt = true,
+  skipPolling = false,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
@@ -157,44 +159,46 @@ const syncSandbox = async ({
     throw err;
   }
 
-  try {
-    logger.log('');
-    logger.log('Sync progress:');
-    // Poll sync task status to show progress bars
-    await pollSyncTaskStatus(
-      parentAccountId,
-      initiateSyncResponse.id,
-      syncStatusUrl,
-      allowEarlyTermination
-    );
+  if (!skipPolling) {
+    try {
+      logger.log('');
+      logger.log('Sync progress:');
+      // Poll sync task status to show progress bars
+      await pollSyncTaskStatus(
+        parentAccountId,
+        initiateSyncResponse.id,
+        syncStatusUrl,
+        allowEarlyTermination
+      );
 
-    logger.log('');
-    spinnies.add('syncComplete', {
-      text: i18n(`${i18nKey}.polling.syncing`),
-    });
-    spinnies.succeed('syncComplete', {
-      text: i18n(`${i18nKey}.polling.succeed`),
-    });
-    logger.log('');
-    logger.log(
-      i18n(`${i18nKey}.info.syncStatus`, {
-        url: syncStatusUrl,
-      })
-    );
-  } catch (err) {
-    // If polling fails at this point, we do not track a failed sync since it is running in the background.
-    logErrorInstance(err);
+      logger.log('');
+      spinnies.add('syncComplete', {
+        text: i18n(`${i18nKey}.polling.syncing`),
+      });
+      spinnies.succeed('syncComplete', {
+        text: i18n(`${i18nKey}.polling.succeed`),
+      });
+      logger.log('');
+      logger.log(
+        i18n(`${i18nKey}.info.syncStatus`, {
+          url: syncStatusUrl,
+        })
+      );
+    } catch (err) {
+      // If polling fails at this point, we do not track a failed sync since it is running in the background.
+      logErrorInstance(err);
 
-    spinnies.add('syncComplete', {
-      text: i18n(`${i18nKey}.polling.syncing`),
-    });
-    spinnies.fail('syncComplete', {
-      text: i18n(`${i18nKey}.polling.fail`, {
-        url: syncStatusUrl,
-      }),
-    });
+      spinnies.add('syncComplete', {
+        text: i18n(`${i18nKey}.polling.syncing`),
+      });
+      spinnies.fail('syncComplete', {
+        text: i18n(`${i18nKey}.polling.fail`, {
+          url: syncStatusUrl,
+        }),
+      });
 
-    throw err;
+      throw err;
+    }
   }
 };
 
