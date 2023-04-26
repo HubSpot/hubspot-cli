@@ -221,7 +221,7 @@ function pollSyncTaskStatus(
     logger.log('Exiting, sync will continue in the background.');
     logger.log('');
     logger.log(
-      i18n('cli.commands.sandbox.subcommands.sync.info.syncStatus', {
+      i18n('cli.lib.sandbox.sync.info.syncStatus', {
         url: syncStatusUrl,
       })
     );

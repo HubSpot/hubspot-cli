@@ -18,6 +18,8 @@ const {
   getAccountName,
   getAvailableSyncTypes,
   syncTypes,
+  STANDARD_SANDBOX,
+  getHasSandboxesByType,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -29,6 +31,8 @@ const {
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { getSandboxUsageLimits } = require('@hubspot/cli-lib/sandboxes');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -57,12 +61,7 @@ exports.handler = async options => {
         sandboxName: accountConfig.name,
       })
     );
-    throw new Error(
-      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
-        sandboxName: accountConfig.name,
-      })
-    );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   let typePrompt;
@@ -73,20 +72,113 @@ exports.handler = async options => {
       typePrompt = await sandboxTypePrompt();
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
-      throw new Error(i18n(`${i18nKey}.failure.optionMissing.type`));
+      trackCommandUsage('sandbox-create', { successful: false }, accountId);
+      process.exit(EXIT_CODES.ERROR);
     }
   }
+  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
+
+  // Check usage limits and exit if parent portal has no available sandboxes for the selected type
+  try {
+    const usage = await getSandboxUsageLimits(accountId);
+    if (sandboxType === DEVELOPER_SANDBOX) {
+      if (usage['DEVELOPER'].available === 0) {
+        const devSandboxLimit = usage['DEVELOPER'].limit;
+        const plural = devSandboxLimit !== 1;
+        const hasDevelopmentSandboxes = getHasSandboxesByType(
+          accountConfig,
+          DEVELOPER_SANDBOX
+        );
+        if (hasDevelopmentSandboxes) {
+          logger.error(
+            i18n(
+              `cli.lib.sandbox.create.failure.alreadyInConfig.developer.${
+                plural ? 'other' : 'one'
+              }`,
+              {
+                accountName: accountConfig.name || accountId,
+                limit: devSandboxLimit,
+              }
+            )
+          );
+        } else {
+          const baseUrl = getHubSpotWebsiteOrigin(
+            getValidEnv(getEnv(accountId))
+          );
+          logger.error(
+            i18n(
+              `cli.lib.sandbox.create.failure.limit.developer.${
+                plural ? 'other' : 'one'
+              }`,
+              {
+                accountName: accountConfig.name || accountId,
+                limit: devSandboxLimit,
+                link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+              }
+            )
+          );
+        }
+        trackCommandUsage('sandbox-create', { successful: false }, accountId);
+        process.exit(EXIT_CODES.ERROR);
+      }
+    }
+    if (sandboxType === STANDARD_SANDBOX) {
+      if (usage['STANDARD'].available === 0) {
+        const standardSandboxLimit = usage['STANDARD'].limit;
+        const plural = standardSandboxLimit !== 1;
+        const hasStandardSandboxes = getHasSandboxesByType(
+          accountConfig,
+          STANDARD_SANDBOX
+        );
+        if (hasStandardSandboxes) {
+          logger.error(
+            i18n(
+              `cli.lib.sandbox.create.failure.alreadyInConfig.standard.${
+                plural ? 'other' : 'one'
+              }`,
+              {
+                accountName: accountConfig.name || accountId,
+                limit: standardSandboxLimit,
+              }
+            )
+          );
+        } else {
+          const baseUrl = getHubSpotWebsiteOrigin(
+            getValidEnv(getEnv(accountId))
+          );
+          logger.error(
+            i18n(
+              `cli.lib.sandbox.create.failure.limit.standard.${
+                plural ? 'other' : 'one'
+              }`,
+              {
+                accountName: accountConfig.name || accountId,
+                limit: standardSandboxLimit,
+                link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
+              }
+            )
+          );
+        }
+        trackCommandUsage('sandbox-create', { successful: false }, accountId);
+        process.exit(EXIT_CODES.ERROR);
+      }
+    }
+  } catch (err) {
+    logErrorInstance(err);
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   if (!name) {
     if (!force) {
       namePrompt = await sandboxNamePrompt();
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
-      throw new Error(i18n(`${i18nKey}.failure.optionMissing.name`));
+      trackCommandUsage('sandbox-create', { successful: false }, accountId);
+      process.exit(EXIT_CODES.ERROR);
     }
   }
-
   const sandboxName = name || namePrompt.name;
-  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
 
   let sandboxSyncPromptResult = true;
   let contactRecordsSyncPromptResult = true;

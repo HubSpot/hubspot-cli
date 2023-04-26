@@ -61,7 +61,6 @@ const syncSandbox = async ({
       );
     }
 
-    logger.log('');
     spinnies.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
     });
