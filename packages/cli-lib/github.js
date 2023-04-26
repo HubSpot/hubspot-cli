@@ -165,7 +165,11 @@ async function downloadGitHubRepoContents(
     );
 
     const downloadContentRecursively = async contentPiece => {
-      const { path: contentPiecePath, download_url } = contentPiece;
+      const {
+        path: contentPiecePath,
+        download_url,
+        type: contentPieceType,
+      } = contentPiece;
       const downloadPath = path.join(
         dest,
         contentPiecePath.replace(contentPath, '')
@@ -182,13 +186,12 @@ async function downloadGitHubRepoContents(
         `Downloading content piece: ${contentPiecePath} from ${download_url} to ${downloadPath}`
       );
 
-      if (contentPiece.type === 'dir') {
-        const contentPath = contentPiece.path;
+      if (contentPieceType === 'dir') {
         const innerDirContent = await getGitHubRepoContentsAtPath(
           repoName,
-          contentPath
+          contentPiecePath
         );
-        return innerDirContent.map(downloadContentRecursively);
+        return Promise.all(innerDirContent.map(downloadContentRecursively));
       } else {
         return fetchGitHubRepoContentFromDownloadUrl(
           downloadPath,

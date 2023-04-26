@@ -620,19 +620,18 @@ const createProjectComponent = async (component, name) => {
   const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
-  const directoryPath = path.resolve(getCwd());
-  const configInfo = await getProjectConfig(directoryPath);
+  const configInfo = await getProjectConfig();
 
   if (!configInfo.projectDir && !configInfo.projectConfig) {
     logger.error(i18n(`${i18nKey}.error.locationInProject`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const src = `${configInfo.projectConfig.srcDir}/`;
-
-  const componentPath = path.resolve(
-    getCwd(),
-    `${component.insertPath}${src}${componentName}`
+  const componentPath = path.join(
+    configInfo.projectDir,
+    configInfo.projectConfig.srcDir,
+    component.insertPath,
+    componentName
   );
 
   await downloadGitHubRepoContents(
