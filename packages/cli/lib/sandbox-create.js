@@ -1,16 +1,9 @@
 const Spinnies = require('spinnies');
 const {
-  sandboxNamePrompt,
-  sandboxTypePrompt,
-} = require('./prompts/sandboxesPrompt');
-const {
-  sandboxTypeMap,
   getSandboxLimit,
   getHasSandboxesByType,
   saveSandboxToConfig,
   sandboxApiTypeMap,
-  getSandboxTypeAsString,
-  getAccountName,
   STANDARD_SANDBOX,
   DEVELOPER_SANDBOX,
 } = require('./sandboxes');
@@ -20,16 +13,13 @@ const {
   debugErrorAndContext,
   logErrorInstance,
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const { trackCommandUsage } = require('./usageTracking');
 const {
   isMissingScopeError,
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { getEnv, getAccountConfig, getAccountId } = require('@hubspot/cli-lib');
+const { getEnv, getAccountId } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
-const { promptUser } = require('./prompts/promptUtils');
-const { syncSandbox } = require('./sandbox-sync');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.lib.sandbox.create';
@@ -39,9 +29,6 @@ const i18nKey = 'cli.lib.sandbox.create';
  * @param {String} type - Sandbox type to be created (standard/developer)
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
- * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
- * @param {Boolean} allowSyncAssets - Option to allow user to sync assets after creation
- * @param {Boolean} allowContactRecordsSyncPrompt - Option to show prompt for syncing contact records, otherwise sync automatically
  * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
  */
 const buildSandbox = async ({
@@ -49,9 +36,6 @@ const buildSandbox = async ({
   type,
   accountConfig,
   env,
-  allowEarlyTermination = true,
-  allowSyncAssets = true,
-  allowContactRecordsSyncPrompt = true,
   force = false,
 }) => {
   const spinnies = new Spinnies({
@@ -59,63 +43,18 @@ const buildSandbox = async ({
   });
   const accountId = getAccountId(accountConfig.portalId);
 
-  trackCommandUsage('sandbox-create', null, accountId);
-
-  // Default account is not a production portal
-  if (
-    accountConfig.sandboxAccountType &&
-    accountConfig.sandboxAccountType !== null
-  ) {
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
-    logger.error(
-      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
-        sandboxName: accountConfig.name,
-      })
-    );
-    throw new Error(
-      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
-        sandboxName: accountConfig.name,
-      })
-    );
-  }
-
-  let typePrompt;
-  let namePrompt;
-
-  if ((type && !sandboxTypeMap[type]) || !type) {
-    if (!force) {
-      typePrompt = await sandboxTypePrompt();
-    } else {
-      logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
-      throw new Error(i18n(`${i18nKey}.failure.optionMissing.type`));
-    }
-  }
-  if (!name) {
-    if (!force) {
-      namePrompt = await sandboxNamePrompt();
-    } else {
-      logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
-      throw new Error(i18n(`${i18nKey}.failure.optionMissing.name`));
-    }
-  }
-
-  const sandboxName = name || namePrompt.name;
-  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
-
   let result;
-  const spinniesI18nKey = `${i18nKey}.loading.${sandboxType}`;
+  const spinniesI18nKey = `${i18nKey}.loading.${type}`;
 
   try {
     spinnies.add('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.add`, {
-        sandboxName,
+        sandboxName: name,
       }),
     });
 
-    const sandboxApiType = sandboxApiTypeMap[sandboxType]; // API expects sandbox type as 1 or 2
-    result = await createSandbox(accountId, sandboxName, sandboxApiType);
+    const sandboxApiType = sandboxApiTypeMap[type]; // API expects sandbox type as 1 or 2
+    result = await createSandbox(accountId, name, sandboxApiType);
 
     spinnies.succeed('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.succeed`, {
@@ -126,11 +65,9 @@ const buildSandbox = async ({
   } catch (err) {
     debugErrorAndContext(err);
 
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
-
     spinnies.fail('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.fail`, {
-        sandboxName,
+        sandboxName: name,
       }),
     });
 
@@ -248,44 +185,6 @@ const buildSandbox = async ({
   } catch (err) {
     logErrorInstance(err);
     throw err;
-  }
-
-  // If creating standard sandbox, prompt user to sync assets
-  if (allowSyncAssets) {
-    const syncI18nKey = 'cli.lib.sandbox.sync';
-    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
-    const handleSyncSandbox = async () => {
-      await syncSandbox({
-        accountConfig: sandboxAccountConfig,
-        parentAccountConfig: accountConfig,
-        env,
-        allowEarlyTermination,
-        allowContactRecordsSyncPrompt,
-      });
-    };
-    try {
-      if (!force) {
-        logger.log('');
-        const { sandboxSyncPrompt } = await promptUser([
-          {
-            name: 'sandboxSyncPrompt',
-            type: 'confirm',
-            message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
-              parentAccountName: getAccountName(accountConfig),
-              sandboxName: getAccountName(sandboxAccountConfig),
-            }),
-          },
-        ]);
-        if (sandboxSyncPrompt) {
-          await handleSyncSandbox();
-        }
-      } else {
-        await handleSyncSandbox();
-      }
-    } catch (err) {
-      logErrorInstance(err);
-      throw err;
-    }
   }
 
   return {

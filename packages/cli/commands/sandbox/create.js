@@ -11,8 +11,24 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { uiFeatureHighlight } = require('../../lib/ui');
-const { sandboxTypeMap, DEVELOPER_SANDBOX } = require('../../lib/sandboxes');
+const {
+  sandboxTypeMap,
+  DEVELOPER_SANDBOX,
+  getSandboxTypeAsString,
+  getAccountName,
+  getAvailableSyncTypes,
+  syncTypes,
+} = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  sandboxTypePrompt,
+  sandboxNamePrompt,
+} = require('../../lib/prompts/sandboxesPrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
+const { syncSandbox } = require('../../lib/sandbox-sync');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -27,18 +43,124 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const env = getValidEnv(getEnv(accountId));
 
+  trackCommandUsage('sandbox-create', null, accountId);
+
+  // Default account is not a production portal
+  if (
+    accountConfig.sandboxAccountType &&
+    accountConfig.sandboxAccountType !== null
+  ) {
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+    logger.error(
+      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
+        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
+        sandboxName: accountConfig.name,
+      })
+    );
+    throw new Error(
+      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
+        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
+        sandboxName: accountConfig.name,
+      })
+    );
+  }
+
+  let typePrompt;
+  let namePrompt;
+
+  if ((type && !sandboxTypeMap[type]) || !type) {
+    if (!force) {
+      typePrompt = await sandboxTypePrompt();
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
+      throw new Error(i18n(`${i18nKey}.failure.optionMissing.type`));
+    }
+  }
+  if (!name) {
+    if (!force) {
+      namePrompt = await sandboxNamePrompt();
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
+      throw new Error(i18n(`${i18nKey}.failure.optionMissing.name`));
+    }
+  }
+
+  const sandboxName = name || namePrompt.name;
+  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
+
+  let sandboxSyncPromptResult = true;
+  let contactRecordsSyncPromptResult = true;
+  if (!force) {
+    const syncI18nKey = 'cli.lib.sandbox.sync';
+    const { sandboxSyncPrompt } = await promptUser([
+      {
+        name: 'sandboxSyncPrompt',
+        type: 'confirm',
+        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
+          parentAccountName: getAccountName(accountConfig),
+          sandboxName,
+        }),
+      },
+    ]);
+    sandboxSyncPromptResult = sandboxSyncPrompt;
+    // We can prompt for contact records before fetching types since we're starting with a fresh sandbox in create
+    if (sandboxSyncPrompt) {
+      const { contactRecordsSyncPrompt } = await promptUser([
+        {
+          name: 'contactRecordsSyncPrompt',
+          type: 'confirm',
+          message: i18n(
+            `${syncI18nKey}.confirm.syncContactRecords.${sandboxType}`
+          ),
+        },
+      ]);
+      contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
+    }
+  }
+
   try {
     const { result } = await buildSandbox({
-      name,
-      type,
+      name: sandboxName,
+      type: sandboxType,
       accountConfig,
       env,
       force,
     });
 
-    const sandboxType = sandboxTypeMap[result.sandbox.type];
+    // Prompt user to sync assets after sandbox creation
+    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    const handleSyncSandbox = async syncTasks => {
+      await syncSandbox({
+        accountConfig: sandboxAccountConfig,
+        parentAccountConfig: accountConfig,
+        env,
+        syncTasks,
+      });
+    };
+    try {
+      let availableSyncTasks = await getAvailableSyncTypes(
+        accountConfig,
+        sandboxAccountConfig
+      );
+      if (!contactRecordsSyncPromptResult) {
+        availableSyncTasks = availableSyncTasks.filter(
+          t => t.type !== syncTypes.OBJECT_RECORDS
+        );
+      }
+      if (!force) {
+        if (sandboxSyncPromptResult) {
+          await handleSyncSandbox(availableSyncTasks);
+        }
+      } else {
+        await handleSyncSandbox(availableSyncTasks);
+      }
+    } catch (err) {
+      logErrorInstance(err);
+      throw err;
+    }
+
     uiFeatureHighlight([
-      // 'projectDevCommand',
+      'accountsUseCommand',
       'projectUploadCommand',
       sandboxType === DEVELOPER_SANDBOX
         ? 'sandboxSyncDevelopmentCommand'
@@ -46,7 +168,8 @@ exports.handler = async options => {
     ]);
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
-    // Errors are logged in buildSandbox
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
+    // Errors are logged in util functions
     process.exit(EXIT_CODES.ERROR);
   }
 };

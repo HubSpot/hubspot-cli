@@ -6,7 +6,6 @@ const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
   getAccountName,
-  syncTypes,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -14,9 +13,8 @@ const {
   isSpecifiedError,
   isMissingScopeError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { getSandboxTypeAsString, sandboxTypeMap } = require('./sandboxes');
+const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
-const { promptUser } = require('./prompts/promptUtils');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -24,8 +22,8 @@ const i18nKey = 'cli.lib.sandbox.sync';
  * @param {Object} accountConfig - Account config of sandbox portal
  * @param {Object} parentAccountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
+ * @param {Array} syncTasks - Array of available sync tasks
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
- * @param {Boolean} allowContactRecordsSyncPrompt - Option to show prompt for syncing contact records, otherwise sync automatically
  * @param {Boolean} skipPolling - Option to skip progress bars for polling and let sync run in background
  * @returns
  */
@@ -33,8 +31,8 @@ const syncSandbox = async ({
   accountConfig,
   parentAccountConfig,
   env,
+  syncTasks,
   allowEarlyTermination = true,
-  allowContactRecordsSyncPrompt = true,
   skipPolling = false,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
@@ -43,7 +41,7 @@ const syncSandbox = async ({
     succeedColor: 'white',
   });
   let initiateSyncResponse;
-  let availableSyncTasks;
+  let availableSyncTasks = syncTasks;
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
@@ -51,34 +49,16 @@ const syncSandbox = async ({
   )}`;
 
   try {
-    // Fetches sync types based on default account. Parent account required for fetch
-    const tasks = await getAvailableSyncTypes(
-      parentAccountConfig,
-      accountConfig
-    );
-    availableSyncTasks = tasks;
-
+    // If no sync tasks exist, fetch sync types based on default account. Parent account required for fetch
     if (
-      tasks &&
-      tasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
-      allowContactRecordsSyncPrompt
+      !availableSyncTasks ||
+      (typeof availableSyncTasks === 'object' &&
+        availableSyncTasks.length === 0)
     ) {
-      const { contactRecordsSymcPrompt } = await promptUser([
-        {
-          name: 'contactRecordsSymcPrompt',
-          type: 'confirm',
-          message: i18n(
-            `${i18nKey}.confirm.syncContactRecords.${
-              sandboxTypeMap[accountConfig.sandboxAccountType]
-            }`
-          ),
-        },
-      ]);
-      if (!contactRecordsSymcPrompt) {
-        availableSyncTasks = tasks.filter(
-          t => t.type !== syncTypes.OBJECT_RECORDS
-        );
-      }
+      availableSyncTasks = await getAvailableSyncTypes(
+        parentAccountConfig,
+        accountConfig
+      );
     }
 
     logger.log('');

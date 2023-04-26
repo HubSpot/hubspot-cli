@@ -18,6 +18,7 @@ const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
+const { promptUser } = require('./prompts/promptUtils');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -86,6 +87,43 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
 }
 
 /**
+ * @param {Object} accountConfig - Account config of sandbox portal
+ * @param {Array} availableSyncTasks - Array of available sync tasks
+ * @param {Boolean} skipPrompt - Option to skip contact records prompt and return all available sync tasks
+ * @returns {Array} Adjusted available sync task items
+ */
+const getSyncTypesWithContactRecordsPrompt = async (
+  accountConfig,
+  availableSyncTasks,
+  skipPrompt = false
+) => {
+  // Fetches sync types based on default account. Parent account required for fetch
+  let syncTasks = availableSyncTasks;
+
+  if (
+    syncTasks &&
+    syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
+    !skipPrompt
+  ) {
+    const { contactRecordsSyncPrompt } = await promptUser([
+      {
+        name: 'contactRecordsSyncPrompt',
+        type: 'confirm',
+        message: i18n(
+          `cli.lib.sandbox.sync.confirm.syncContactRecords.${
+            sandboxTypeMap[accountConfig.sandboxAccountType]
+          }`
+        ),
+      },
+    ]);
+    if (!contactRecordsSyncPrompt) {
+      syncTasks = syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
+    }
+  }
+  return syncTasks;
+};
+
+/**
  * @param {String} env - Environment (QA/Prod)
  * @param {Object} result - Sandbox instance returned from API
  * @param {Boolean} force - Force flag to skip prompt
@@ -93,7 +131,7 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
   // const configData = { env, personalAccessKey: result.personalAccessKey };
-  // TODO: Temporary, remove
+  // TODO: Temporary, remove once PAK is generated on BE
   const configData = await personalAccessKeyPrompt({
     env,
     account: result.sandbox.sandboxHubId,
@@ -287,5 +325,6 @@ module.exports = {
   getHasSandboxesByType,
   getSandboxLimit,
   getAvailableSyncTypes,
+  getSyncTypesWithContactRecordsPrompt,
   pollSyncTaskStatus,
 };
