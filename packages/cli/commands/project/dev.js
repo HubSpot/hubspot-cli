@@ -137,7 +137,7 @@ exports.handler = async options => {
         env,
         syncTasks,
         allowEarlyTermination: false, // Don't let user terminate early in this flow
-        skipPolling: true,
+        skipPolling: true, // Skip polling, sync will run and complete in the background
       });
     } catch (err) {
       logErrorInstance(err);
