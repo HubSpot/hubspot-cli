@@ -66,7 +66,7 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
 
         if (deployedBuild && deployedBuild.subbuildStatuses) {
           return deployedBuild.subbuildStatuses
-            .filter(subbuild => subbuild.buildType === 'APP')
+            .filter(subbuild => subbuild.buildType === 'PRIVATE_APP')
             .map(subbuild => ({
               name: subbuild.buildName,
               value: subbuild.buildName,

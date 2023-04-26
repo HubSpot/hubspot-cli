@@ -4,7 +4,7 @@ Provides an `hs` command for interacting with HubSpot. [Learn more about buildin
 
 ## Getting started
 
-For more information on using these tools, see [Local Development Tooling: Getting Started](https://designers.hubspot.com/tutorials/getting-started-with-local-development)
+For more information on using these tools, see [Local Development Tooling: Getting Started](https://developers.hubspot.com/docs/cms/guides/getting-started-with-local-development)
 
 ### Installation
 
@@ -33,7 +33,7 @@ and copying the output to either your `.bashrc` or `.zshrc`, and then sourcing t
 
 ## Commands
 
-A full breakdown of the commands can be found on the [local development tools reference page](https://designers.hubspot.com/docs/developer-reference/local-development-cli).
+A full breakdown of the commands can be found on the [local development tools reference page](https://developers.hubspot.com/docs/cms/developer-reference/local-development-cli).
 
 **Note:** When `@hubspot/cli` is installed local to a project, the commands need to be prefixed with either `yarn` if using `yarn` or `npx` if using `npm`.
 
