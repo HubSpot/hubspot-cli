@@ -75,7 +75,6 @@ const syncSandbox = async ({
     if (allowEarlyTermination) {
       logger.log(i18n(`${i18nKey}.info.earlyExit`));
     }
-    logger.log('');
     spinnies.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`),
     });
