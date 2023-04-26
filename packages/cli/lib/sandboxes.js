@@ -46,13 +46,16 @@ const sandboxApiTypeMap = {
 const getSandboxTypeAsString = type =>
   type === 'DEVELOPER' ? 'development' : 'standard';
 
+const isSandbox = config =>
+  config.sandboxAccountType && config.sandboxAccountType !== null;
+
 function getAccountName(config) {
-  const isSandbox =
-    config.sandboxAccountType && config.sandboxAccountType !== null;
   const sandboxName = `[${getSandboxTypeAsString(
     config.sandboxAccountType
   )} sandbox] `;
-  return `${config.name} ${isSandbox ? sandboxName : ''}(${config.portalId})`;
+  return `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
+    config.portalId
+  })`;
 }
 
 function getHasSandboxesByType(parentAccountConfig, type) {
@@ -316,6 +319,7 @@ function pollSyncTaskStatus(
 module.exports = {
   STANDARD_SANDBOX,
   DEVELOPER_SANDBOX,
+  isSandbox,
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,

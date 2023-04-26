@@ -1,22 +1,21 @@
-const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { uiLine, uiAccountDescription } = require('../../lib/ui');
+const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { uiLine } = require('../../lib/ui');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   ensureProjectExists,
   getProjectConfig,
   handleProjectUpload,
   logFeedbackMessage,
-  pollBuildStatus,
-  pollDeployStatus,
   validateProjectConfig,
+  pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
@@ -43,81 +42,34 @@ exports.handler = async options => {
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
-  const startPolling = async (tempFile, buildId) => {
-    let exitCode = EXIT_CODES.SUCCESS;
-
-    const {
-      autoDeployId,
-      isAutoDeployEnabled,
-      deployStatusTaskLocator,
-      status,
-    } = await pollBuildStatus(accountId, projectConfig.name, buildId);
-    // autoDeployId of 0 indicates a skipped deploy
-    const isDeploying =
-      isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
-
-    uiLine();
-
-    if (status === 'FAILURE') {
-      exitCode = EXIT_CODES.ERROR;
-      return;
-    } else if (isDeploying) {
-      logger.log(
-        i18n(`${i18nKey}.logs.buildSucceededAutomaticallyDeploying`, {
-          accountIdentifier: uiAccountDescription(accountId),
-          buildId,
-        })
-      );
-      const { status } = await pollDeployStatus(
-        accountId,
-        projectConfig.name,
-        deployStatusTaskLocator.id,
-        buildId
-      );
-      if (status === 'FAILURE') {
-        exitCode = EXIT_CODES.ERROR;
-      }
-    } else {
-      uiLine();
-      logger.log(
-        chalk.bold(
-          i18n(`${i18nKey}.logs.buildSucceeded`, {
-            buildId,
-          })
-        )
-      );
-      logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
-      logger.log(
-        i18n(`${i18nKey}.logs.runCommand`, {
-          command: chalk.hex('f5c26b')('hs project deploy'),
-        })
-      );
-      uiLine();
-    }
-
-    try {
-      tempFile.removeCallback();
-      logger.debug(
-        i18n(`${i18nKey}.debug.cleanedUpTempFile`, {
-          path: tempFile.name,
-        })
-      );
-    } catch (e) {
-      logger.error(e);
-    }
-
-    logFeedbackMessage(buildId);
-
-    process.exit(exitCode);
-  };
-
-  await handleProjectUpload(
+  const result = await handleProjectUpload(
     accountId,
     projectConfig,
     projectDir,
-    startPolling,
+    pollProjectBuildAndDeploy,
     message
   );
+
+  if (result.buildSucceeded && !result.autodeployEnabled) {
+    uiLine();
+    logger.log(
+      chalk.bold(
+        i18n(`${i18nKey}.logs.buildSucceeded`, {
+          buildId: result.buildId,
+        })
+      )
+    );
+    logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
+    logger.log(
+      i18n(`${i18nKey}.logs.runCommand`, {
+        command: chalk.hex('f5c26b')('hs project deploy'),
+      })
+    );
+    uiLine();
+  }
+
+  logFeedbackMessage(result.buildId);
+  process.exit(result.succeeded ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
 };
 
 exports.builder = yargs => {
