@@ -455,11 +455,11 @@ en:
               introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
-              prodAccountWarning: "Targeting a production account is risky. This command will upload incomplete changes to the target account. We recommend picking a sandbox account."
-              startupMessage: "Setting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
+              prodAccountWarning: "Targeting a production account is risky because this command will upload changes to the target account. We recommend picking a sandbox account."
+              startupMessage: "Starting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
-              preventUploadExplanation: "We recommend preventing uploads for all non-sandbox accounts."
+              preventUploadExplanation: "We recommend preventing uploads for all non-sandbox accounts. This prevents the CLI from uploading any changes to the target account."
               unableToCreateProject: "Unable to create project in the target account because uploads are prevented."
             prompt:
               createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
@@ -910,17 +910,19 @@ en:
         exitingFail: "Failed to clean up before exiting"
         previousStagingBuildCancelled: "Failed to create a staging build because the project was alreayd locked. It is now unlocked. Run the command again."
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
+        preventUploadsBanner: "{{#yellow}}------- In Safe Mode (uploads prevented) --------{{/yellow}}"
         status:
           clean: "{{#bold}}Status:{{/bold}} {{#green}}Up to date{{/green}}"
           dirty: "{{#bold}}Status:{{/bold}} {{#yellow}}Recent changes require upload{{/yellow}}"
           uploadPrevented: "{{#bold}}Status:{{/bold}} {{#red}}Upload prevented{{/red}}"
+          supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
         upload:
           uploadingChanges: "{{#bold}}Uploading recent changes{{/bold}}"
       projects:
         uploadProjectFiles:
-          add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
-          fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
-          succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}\n"
+          add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+          fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+          succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
           projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
         handleProjectUpload:

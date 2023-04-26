@@ -26,12 +26,12 @@ class SpinniesManager {
   }
 
   add(key, options = {}) {
-    const { isParent, ...rest } = options;
+    const { isParent, noIndent, ...rest } = options;
     const originalIndent = rest.indent || 0;
 
     this.spinnies.add(key, {
       ...rest,
-      indent: this.parentKey ? originalIndent + 1 : originalIndent,
+      indent: this.parentKey && !noIndent ? originalIndent + 1 : originalIndent,
     });
 
     if (isParent) {

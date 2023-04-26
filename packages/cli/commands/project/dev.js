@@ -29,7 +29,7 @@ const LocalDevManager = require('../../lib/LocalDevManager');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account]';
+exports.command = 'dev [--account] [--mockServers]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -73,13 +73,14 @@ exports.handler = async options => {
   logger.log();
 
   // Show a warning if the user chooses a non-sandbox account (false)
+  let shouldTargetNonSandboxAccount;
   if (chooseNonSandbox) {
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
     uiLine();
     logger.log();
 
-    const shouldTargetNonSandboxAccount = await confirmPrompt(
+    shouldTargetNonSandboxAccount = await confirmPrompt(
       i18n(`${i18nKey}.prompt.targetNonSandbox`)
     );
 
@@ -101,7 +102,7 @@ exports.handler = async options => {
   }
 
   // TODO programatically determine these values
-  const isNonSandboxAccount = false;
+  const isNonSandboxAccount = shouldTargetNonSandboxAccount;
   const isProjectUsingGitIntegration = false;
 
   let preventUploads = false;

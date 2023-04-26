@@ -1,5 +1,6 @@
 const chokidar = require('chokidar');
 const path = require('path');
+const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -42,7 +43,7 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.preventUploads = options.preventUploads;
-    this.debug = options.debug || false;
+    this.mockServers = options.mockServers || false;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -138,6 +139,13 @@ class LocalDevManager {
       }),
       isParent: true,
     });
+    if (this.preventUploads) {
+      this.spinnies.add('preventUploadsBanner', {
+        text: i18n(`${i18nKey}.preventUploadsBanner`),
+        status: 'non-spinnable',
+        indent: 1,
+      });
+    }
     this.spinnies.add('devModeStatus', {
       text: i18n(`${i18nKey}.status.clean`),
       status: 'non-spinnable',
@@ -148,12 +156,18 @@ class LocalDevManager {
       status: 'non-spinnable',
       indent: 1,
     });
+    this.spinnies.add('lineSeparator', {
+      text: '-'.repeat(50),
+      status: 'non-spinnable',
+      noIndent: true,
+    });
   }
 
   updateDevModeStatus(langKey) {
     this.spinnies.update('devModeStatus', {
       text: i18n(`${i18nKey}.status.${langKey}`),
       status: 'non-spinnable',
+      noIndent: true,
     });
   }
 
@@ -217,13 +231,22 @@ class LocalDevManager {
 
     const isSupportedChange = await this.notifyServers(changeInfo);
 
-    if (this.preventUploads) {
-      this.updateDevModeStatus('uploadPrevented');
+    if (isSupportedChange) {
+      this.updateDevModeStatus('supportedChange');
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
       return;
     }
 
-    if (isSupportedChange) {
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
+    if (this.preventUploads) {
+      this.updateDevModeStatus('uploadPrevented');
+      this.spinnies.add(filePath, {
+        text: `${chalk.yellow('[WARNING]')} Upload prevented for ${
+          changeInfo.remotePath
+        }`,
+        status: 'non-spinnable',
+        indent: 1,
+      });
+
       return;
     }
 
@@ -266,6 +289,11 @@ class LocalDevManager {
   }
 
   async sendChanges({ event, filePath, remotePath }) {
+    this.spinnies.add(filePath, {
+      text: `Uploading change for ${remotePath}`,
+      status: 'non-spinnable',
+      indent: 1,
+    });
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
         return uploadFileToBuild(
@@ -368,10 +396,7 @@ class LocalDevManager {
   }
 
   async notifyServers() {
-    // TODO alert local dev servers of file change (randomly return true or false for now)
-    if (this.debug) {
-      return Math.random() < 0.5;
-    }
+    // TODO notify servers of the change
     return false;
   }
 
