@@ -130,7 +130,7 @@ const buildSandbox = async ({
       logger.log('');
     } else if (
       isSpecifiedError(err, {
-        statusCoe: 400,
+        statusCode: 400,
         category: 'VALIDATION_ERROR',
         subCategory:
           'SandboxErrors.NUM_STANDARD_SANDBOXES_LIMIT_EXCEEDED_ERROR',

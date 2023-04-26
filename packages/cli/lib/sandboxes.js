@@ -409,10 +409,10 @@ function pollSyncTaskStatus(
 module.exports = {
   STANDARD_SANDBOX,
   DEVELOPER_SANDBOX,
-  isSandbox,
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,
+  isSandbox,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
