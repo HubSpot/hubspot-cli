@@ -173,10 +173,9 @@ exports.handler = async options => {
 
     uiFeatureHighlight([
       'accountsUseCommand',
-      'projectUploadCommand',
       sandboxType === DEVELOPER_SANDBOX
-        ? 'sandboxSyncDevelopmentCommand'
-        : 'sandboxSyncStandardCommand',
+        ? 'projectDevCommand'
+        : 'projectUploadCommand',
     ]);
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
