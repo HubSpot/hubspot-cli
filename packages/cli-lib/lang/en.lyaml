@@ -1039,6 +1039,7 @@ en:
         sandboxesPrompt:
           name:
             message: "Name your sandbox"
+            developmentSandboxMessage: "Name your development sandbox"
             errors:
               invalidName: "You entered an invalid name. Please try again."
               nameRequired: "The name may not be blank. Please try again."
