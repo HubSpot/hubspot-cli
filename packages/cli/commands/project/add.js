@@ -11,7 +11,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const i18nKey = 'cli.commands.project.subcommands.add';
 
 exports.command = 'add';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
