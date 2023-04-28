@@ -7,14 +7,12 @@ const findup = require('findup-sync');
 const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
-const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   FEEDBACK_INTERVAL,
   ERROR_TYPES,
   POLLING_DELAY,
-  PROJECT_TEMPLATES,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
@@ -36,6 +34,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -121,7 +120,7 @@ const createProjectConfig = async (projectPath, projectName, template) => {
     }`
   );
 
-  if (template === 'no-template') {
+  if (template.name === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
 
     writeProjectConfig(projectConfigPath, {
@@ -129,11 +128,10 @@ const createProjectConfig = async (projectPath, projectName, template) => {
       srcDir: 'src',
     });
   } else {
-    await cloneGitHubRepo(
-      projectPath,
-      'project',
-      PROJECT_TEMPLATES.find(t => t.name === template).repo,
-      ''
+    await downloadGitHubRepoContents(
+      'hubspot-project-components',
+      template.path,
+      projectPath
     );
     const _config = JSON.parse(fs.readFileSync(projectConfigPath));
     writeProjectConfig(projectConfigPath, {
@@ -618,6 +616,31 @@ const logFeedbackMessage = buildId => {
   }
 };
 
+const createProjectComponent = async (component, name) => {
+  const i18nKey = 'cli.commands.project.subcommands.add';
+  let componentName = name;
+
+  const configInfo = await getProjectConfig();
+
+  if (!configInfo.projectDir && !configInfo.projectConfig) {
+    logger.error(i18n(`${i18nKey}.error.locationInProject`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const componentPath = path.join(
+    configInfo.projectDir,
+    configInfo.projectConfig.srcDir,
+    component.insertPath,
+    componentName
+  );
+
+  await downloadGitHubRepoContents(
+    'hubspot-project-components',
+    component.path,
+    componentPath
+  );
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -631,4 +654,5 @@ module.exports = {
   pollDeployStatus,
   ensureProjectExists,
   logFeedbackMessage,
+  createProjectComponent,
 };
