@@ -22,18 +22,24 @@ const {
   ensureProjectExists,
 } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const {
+  downloadProjectPrompt,
+} = require('../../lib/prompts/downloadProjectPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download <name> [dest]';
+exports.command = 'download';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name: projectName, dest, buildNumber } = options;
+  const { name, dest, buildNumber } = options;
+  const { name: promptedProjectName } = await downloadProjectPrompt(options);
+  const projectName = promptedProjectName || name;
+
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-download', null, accountId);
@@ -119,23 +125,27 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
+  yargs.options({
+    name: {
+      describe: i18n(`${i18nKey}.options.name.describe`),
+      type: 'string',
+    },
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
+      type: 'string',
+    },
+    buildNumber: {
+      describe: i18n(`${i18nKey}.options.buildNumber.describe`),
+      type: 'number',
+    },
   });
-  yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
-    type: 'string',
-  });
-  yargs.option('buildNumber', {
-    describe: i18n(`${i18nKey}.options.buildNumber.describe`),
-    type: 'number',
-  });
+
   yargs.example([
     [
       '$0 project download myProject myProjectFolder',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);
+
   return yargs;
 };
