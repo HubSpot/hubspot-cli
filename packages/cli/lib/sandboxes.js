@@ -21,6 +21,9 @@ const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const {
+  personalAccessKeyPrompt,
+} = require('./prompts/personalAccessKeyPrompt');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -220,7 +223,13 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
  * @returns {String} validName saved into config
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
-  const configData = { env, personalAccessKey: result.personalAccessKey };
+  let configData = { env, personalAccessKey: result.personalAccessKey };
+  if (!result.personalAccessKey) {
+    configData = await personalAccessKeyPrompt({
+      env,
+      account: result.sandbox.sandboxHubId,
+    });
+  }
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
   if (!updatedConfig) {
     throw new Error('Failed to update config with personal access key.');
