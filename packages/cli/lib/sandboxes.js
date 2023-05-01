@@ -91,6 +91,11 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = getAccountId(parentAccountConfig.portalId);
   const portalId = getAccountId(config.portalId);
   const syncTypes = await fetchTypes(parentPortalId, portalId);
+  if (!syncTypes) {
+    throw new Error(
+      'Unable to fetch available sandbox sync types. Please try again.'
+    );
+  }
   return syncTypes.map(t => ({ type: t.name }));
 }
 
@@ -140,6 +145,9 @@ const getSyncTypesWithContactRecordsPrompt = async (
 const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   const accountId = getAccountId(accountConfig.portalId);
   const usage = await getSandboxUsageLimits(accountId);
+  if (!usage) {
+    throw new Error('Unable to fetch sandbox usage limits. Please try again.');
+  }
   if (sandboxType === DEVELOPER_SANDBOX) {
     if (usage['DEVELOPER'].available === 0) {
       const devSandboxLimit = usage['DEVELOPER'].limit;
