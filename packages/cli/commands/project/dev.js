@@ -11,7 +11,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
 const { createProject } = require('@hubspot/cli-lib/api/dfs');
-const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const {
   getProjectConfig,
   ensureProjectExists,
@@ -105,22 +105,7 @@ exports.handler = async options => {
   const isNonSandboxAccount = shouldTargetNonSandboxAccount;
   const isProjectUsingGitIntegration = false;
 
-  let preventUploads = false;
-
-  if (isProjectUsingGitIntegration || isNonSandboxAccount) {
-    uiLine();
-    logger.warn(i18n(`${i18nKey}.logs.preventUploadExplanation`));
-    uiLine();
-    logger.log();
-
-    if (isProjectUsingGitIntegration) {
-      preventUploads = true;
-    } else {
-      preventUploads = await confirmPrompt(
-        i18n(`${i18nKey}.prompt.preventUploads`)
-      );
-    }
-  }
+  const preventUploads = isProjectUsingGitIntegration || isNonSandboxAccount;
 
   const spinnies = SpinniesManager.init();
 
@@ -206,11 +191,6 @@ exports.handler = async options => {
   await LocalDev.start();
 
   handleExit(LocalDev.stop);
-  handleKeypress(key => {
-    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
-      LocalDev.stop();
-    }
-  });
 };
 
 exports.builder = yargs => {

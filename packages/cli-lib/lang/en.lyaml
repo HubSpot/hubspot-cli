@@ -459,12 +459,10 @@ en:
               startupMessage: "Starting Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{#bold}}{{ accountIdentifier }}{{/bold}}"
               projectNotInAccount: "This project does not exist yet in the target account"
               projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
-              preventUploadExplanation: "We recommend preventing uploads for all non-sandbox accounts. This prevents the CLI from uploading any changes to the target account."
               unableToCreateProject: "Unable to create project in the target account because uploads are prevented."
             prompt:
               createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
-              preventUploads: "Prevent the CLI from uploading any changes?"
             errors:
               noProjectConfig: "No project detected"
             examples:
@@ -905,19 +903,23 @@ en:
       LocalDevManager:
         running: "{{#cyan}}[Running Dev Mode for {{#bold}}{{ projectName }}{{/bold}} on {{ accountIdentifier }}]{{/cyan}}"
         quitHelper: "\nPress {{#bold}}'q'{{/bold}} to exit"
+        quitAndUploadHelper: "\nPress {{#bold}}'q'{{/bold}} to exit\nPress {{#bold}}'u'{{/bold}} to manually upload changes"
+        viewInHubSpot: "View project in HubSpot"
         exitingStart: "Exiting Dev Mode"
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to clean up before exiting"
-        previousStagingBuildCancelled: "Failed to create a staging build because the project was alreayd locked. It is now unlocked. Run the command again."
+        previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
-        preventUploadsBanner: "{{#yellow}}------- In Safe Mode (uploads prevented) --------{{/yellow}}"
         status:
           clean: "{{#bold}}Status:{{/bold}} {{#green}}Up to date{{/green}}"
           dirty: "{{#bold}}Status:{{/bold}} {{#yellow}}Recent changes require upload{{/yellow}}"
           uploadPrevented: "{{#bold}}Status:{{/bold}} {{#red}}Upload prevented{{/red}}"
           supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
+          manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading prevented changes{{/green}}"
         upload:
-          uploadingChanges: "{{#bold}}Uploading recent changes{{/bold}}"
+          uploadPrevented: "{{#yellow}}[WARNING]{{/yellow}} Upload prevented for {{ filePath }}"
+          uploadingChange: "Uploading {{ filePath }}"
+          uploadingChanges: "{{#bold}}Uploading recent changes to {{ accountIdendifier }}{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
