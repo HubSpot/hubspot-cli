@@ -50,7 +50,7 @@ async function getSandboxUsageLimits(parentAccountId, sandboxAccountId) {
     throw err;
   }
 
-  return resp.usage;
+  return resp && resp.results;
 }
 
 async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
@@ -86,7 +86,7 @@ async function fetchTypes(accountId, toHubId) {
     throw err;
   }
 
-  return resp.results;
+  return resp && resp.results;
 }
 
 module.exports = {
