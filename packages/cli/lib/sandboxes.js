@@ -4,6 +4,7 @@ const {
   updateAccountConfig,
   getAccountId,
 } = require('@hubspot/cli-lib');
+const chalk = require('chalk');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -58,9 +59,9 @@ function getAccountName(config) {
   const sandboxName = `[${getSandboxTypeAsString(
     config.sandboxAccountType
   )} sandbox] `;
-  return `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
-    config.portalId
-  })`;
+  return chalk.bold(
+    `${config.name} ${isSandbox(config) ? sandboxName : ''}(${config.portalId})`
+  );
 }
 
 function getHasSandboxesByType(parentAccountConfig, type) {
@@ -232,7 +233,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
   let configData = { env, personalAccessKey: result.personalAccessKey };
-  if (!result.personalAccessKey) {
+  if (!result.personalAccessKey || result.personalAccessKey === 'test') {
     configData = await personalAccessKeyPrompt({
       env,
       account: result.sandbox.sandboxHubId,

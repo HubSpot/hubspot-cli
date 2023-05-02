@@ -951,7 +951,7 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectDevTargetAccountPrompt:
-          createNewSandboxOption: "<< Create a new sandbox account >>"
+          createNewSandboxOption: "<< Create a new development sandbox account >>"
           chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
           chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
           chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
@@ -1135,8 +1135,8 @@ en:
               standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             syncContactRecords:
-              standard: "Include 5000 most recent contact records and associations in this sync?"
-              developer: "Include 100 most recent contact records and associations in this sync?"
+              standard: "Include up to 5000 contact records and associations in this sync? Syncing contact records may take some time"
+              developer: "Include up to 100 contact records and associations in this sync? Syncing contact records may take some time"
           loading:
             startSync: "Initiating sync..."
             fail: "Failed to sync sandbox."
