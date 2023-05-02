@@ -108,11 +108,10 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  */
 const getSyncTypesWithContactRecordsPrompt = async (
   accountConfig,
-  availableSyncTasks,
+  syncTasks,
   skipPrompt = false
 ) => {
   // Fetches sync types based on default account. Parent account required for fetch
-  let syncTasks = availableSyncTasks;
 
   if (
     syncTasks &&
@@ -131,7 +130,7 @@ const getSyncTypesWithContactRecordsPrompt = async (
       },
     ]);
     if (!contactRecordsSyncPrompt) {
-      syncTasks = syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
+      return syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
     }
   }
   return syncTasks;
