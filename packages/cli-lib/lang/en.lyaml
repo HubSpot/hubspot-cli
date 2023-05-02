@@ -1101,11 +1101,19 @@ en:
           failure:
             limit:
               developer:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
               standard:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account. View sandbox details at {{ link }}. To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
             alreadyInConfig:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
