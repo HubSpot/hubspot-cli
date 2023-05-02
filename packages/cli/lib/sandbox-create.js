@@ -59,8 +59,8 @@ const buildSandbox = async ({
 
     spinnies.succeed('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.succeed`, {
-        name: result.name,
-        sandboxHubId: result.sandboxHubId,
+        name: result.sandbox.name,
+        sandboxHubId: result.sandbox.sandboxHubId,
       }),
     });
   } catch (err) {
