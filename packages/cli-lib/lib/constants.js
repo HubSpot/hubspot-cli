@@ -206,6 +206,11 @@ const PROJECT_TASK_TYPES = {
   CRM_CARD_V2: 'crm card',
 };
 
+const PROJECT_COMPONENT_TYPES = {
+  PROJECTS: 'projects',
+  COMPONENTS: 'components',
+};
+
 const FEEDBACK_OPTIONS = {
   BUG: 'bug',
   GENERAL: 'general',
@@ -262,6 +267,7 @@ module.exports = {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,
+  PROJECT_COMPONENT_TYPES,
   SCOPE_GROUPS,
   SPINNER_STATUS,
   TEMPLATE_TYPES,
