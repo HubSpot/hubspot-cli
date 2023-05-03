@@ -68,6 +68,10 @@ const getTextValue = lookupDotNotation => {
 };
 
 const i18n = (lookupDotNotation, options = {}) => {
+  if (!languageObj) {
+    loadLanguageFromYaml();
+  }
+
   if (typeof lookupDotNotation !== 'string') {
     throw new Error(
       `i18n must be passed a string value for lookupDotNotation, received ${typeof lookupDotNotation}`
@@ -80,8 +84,12 @@ const i18n = (lookupDotNotation, options = {}) => {
   return shouldInterpolate ? interpolate(textValue, options) : textValue;
 };
 
-loadLanguageFromYaml();
+const setLangData = (newLocale, newLangObj) => {
+  locale = newLocale;
+  languageObj = newLangObj;
+};
 
 module.exports = {
   i18n,
+  setLangData,
 };
