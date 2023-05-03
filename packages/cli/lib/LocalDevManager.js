@@ -23,7 +23,10 @@ const {
 } = require('@hubspot/cli-lib/api/dfs');
 const SpinniesManager = require('./SpinniesManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getProjectHomeUrl, pollProjectBuildAndDeploy } = require('./projects');
+const {
+  getProjectDetailUrl,
+  pollProjectBuildAndDeploy,
+} = require('./projects');
 const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
@@ -43,6 +46,7 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.preventUploads = options.preventUploads;
+    this.debug = options.debug || false;
     this.mockServers = options.mockServers || false;
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -78,14 +82,16 @@ class LocalDevManager {
 
     console.clear();
 
-    this.startUploadQueue();
+    this.uploadQueue.start();
+
+    this.logConsoleHeader();
     await this.startServers();
     await this.startWatching();
     this.updateKeypressListeners();
   }
 
   async stop() {
-    this.spinnies.removeAll();
+    this.clearConsoleContent();
 
     this.spinnies.add('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingStart`),
@@ -131,59 +137,74 @@ class LocalDevManager {
     process.exit(exitCode);
   }
 
-  startUploadQueue() {
-    this.uploadQueue.start();
-
+  logConsoleHeader() {
     this.spinnies.removeAll();
     this.spinnies.add('devModeRunning', {
-      text: i18n(`${i18nKey}.running`, {
-        projectName: this.projectConfig.name,
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
+      text: i18n(`${i18nKey}.running`),
       isParent: true,
+      category: 'header',
     });
     this.spinnies.add('devModeStatus', {
       text: i18n(`${i18nKey}.status.clean`),
       status: 'non-spinnable',
       indent: 1,
-    });
-    this.spinnies.add('spacer-1', {
-      text: ' ',
-      status: 'non-spinnable',
+      category: 'header',
     });
     // TODO long urls break the spinnies output
-    // const projectDetailUrl = getProjectDetailUrl(
-    //   this.projectConfig.name,
-    //   this.targetAccountId
-    // );
-    const projectDetailUrl = getProjectHomeUrl(this.targetAccountId);
+    const projectDetailUrl = getProjectDetailUrl(
+      this.projectConfig.name,
+      this.targetAccountId
+    );
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl),
       status: 'non-spinnable',
       indent: 1,
+      category: 'header',
+    });
+    this.spinnies.add('spacer-1', {
+      text: ' ',
+      status: 'non-spinnable',
+      category: 'header',
     });
     this.spinnies.add('keypressMessage', {
       text: i18n(`${i18nKey}.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
+      category: 'header',
     });
     this.spinnies.add('lineSeparator', {
       text: '-'.repeat(50),
       status: 'non-spinnable',
       noIndent: true,
+      category: 'header',
     });
+  }
+
+  clearConsoleContent() {
+    this.spinnies.removeAll({ preserveCategory: 'header' });
   }
 
   updateKeypressListeners() {
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
-      } else if (key.name === 'u') {
+      } else if (key.name === 'y') {
         if (this.preventUploads && this.hasAnyUnsupportedStandbyChanges()) {
+          this.clearConsoleContent();
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
           await this.flushStandbyChanges();
           await this.queueBuild();
+        }
+      } else if (key.name === 'n') {
+        if (this.preventUploads && this.hasAnyUnsupportedStandbyChanges()) {
+          this.clearConsoleContent();
+          this.spinnies.add('manualUploadSkipped', {
+            text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
+            status: 'fail',
+            failColor: 'white',
+            noIndent: true,
+          });
         }
       }
     });
@@ -198,12 +219,11 @@ class LocalDevManager {
   }
 
   async pauseUploadQueue() {
-    this.spinnies.removeAll();
     this.spinnies.add('uploading', {
       text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
       }),
-      isParent: true,
+      noIndent: true,
     });
 
     this.uploadQueue.pause();
@@ -292,20 +312,29 @@ class LocalDevManager {
   }
 
   handlePreventedUpload(changeInfo) {
+    this.clearConsoleContent();
     this.updateDevModeStatus('uploadPrevented');
 
     this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
-    this.spinnies.update('keypressMessage', {
-      text: i18n(`${i18nKey}.quitAndUploadHelper`),
+    this.spinnies.add('manualUploadRequired', {
+      text: i18n(`${i18nKey}.upload.manualUploadRequired`),
+      status: 'fail',
+      failColor: 'white',
+      noIndent: true,
+    });
+    this.spinnies.add('manualUploadExplanation1', {
+      text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
       status: 'non-spinnable',
       indent: 1,
     });
-
-    this.spinnies.add(changeInfo.filePath, {
-      text: i18n(`${i18nKey}.upload.uploadPrevented`, {
-        filePath: changeInfo.remotePath,
-      }),
+    this.spinnies.add('manualUploadExplanation2', {
+      text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
+      status: 'non-spinnable',
+      indent: 1,
+    });
+    this.spinnies.add('manualUploadPrompt', {
+      text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
       status: 'non-spinnable',
       indent: 1,
     });
@@ -334,7 +363,6 @@ class LocalDevManager {
         filePath: changeInfo.remotePath,
       }),
       status: 'non-spinnable',
-      indent: 1,
     });
     try {
       if (
@@ -364,7 +392,7 @@ class LocalDevManager {
 
   debounceQueueBuild() {
     if (!this.preventUploads) {
-      this.updateDevModeStatus('dirty');
+      this.updateDevModeStatus('uploadPending');
     }
 
     if (this.debouncedBuild) {
@@ -415,7 +443,8 @@ class LocalDevManager {
       await this.createNewStagingBuild();
     }
 
-    this.startUploadQueue();
+    this.uploadQueue.start();
+    this.clearConsoleContent();
 
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();

@@ -155,7 +155,6 @@ exports.handler = async options => {
   spinnies.add('devModeSetup', {
     text: i18n(`${i18nKey}.logs.startupMessage`, {
       projectName: projectConfig.name,
-      accountIdentifier: uiAccountDescription(targetAccountId),
     }),
     isParent: true,
   });
@@ -186,6 +185,7 @@ exports.handler = async options => {
     projectDir,
     preventUploads,
     debug: options.debug,
+    mockServers: options.mockServers,
   });
 
   await LocalDev.start();
@@ -199,6 +199,11 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
+  yargs.option('mockServers', {
+    describe: 'mock servers',
+    type: 'boolean',
+    default: false,
+  });
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;

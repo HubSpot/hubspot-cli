@@ -5,6 +5,7 @@ class SpinniesManager {
   constructor() {
     this.spinnies = null;
     this.parentKey = null;
+    this.categories = {};
   }
 
   init(options) {
@@ -25,9 +26,34 @@ class SpinniesManager {
     };
   }
 
+  addKeyToCategory(key, category) {
+    if (!this.categories[category]) {
+      this.categories[category] = [];
+    }
+    this.categories[category].push(key);
+  }
+
+  getCategoryForKey(key) {
+    return Object.keys(this.categories).find(category =>
+      this.categories[category].find(k => k === key)
+    );
+  }
+
+  removeKeyFromCategory(key) {
+    const category = this.getCategoryForKey(key);
+    if (category) {
+      const index = this.categories[category].indexOf(key);
+      this.categories[category].splice(index, 1);
+    }
+  }
+
   add(key, options = {}) {
-    const { isParent, noIndent, ...rest } = options;
+    const { category, isParent, noIndent, ...rest } = options;
     const originalIndent = rest.indent || 0;
+
+    if (category) {
+      this.addKeyToCategory(key, category);
+    }
 
     this.spinnies.add(key, {
       ...rest,
@@ -44,14 +70,22 @@ class SpinniesManager {
       if (key === this.parentKey) {
         this.parentKey = null;
       }
+      this.removeKeyFromCategory(key);
       this.spinnies.remove(key);
     }
   }
 
-  removeAll(allowedKeys = []) {
+  /**
+   * Removes all spinnies instances
+   * @param {string} preserveCategory - do not remove spinnies with a matching category
+   */
+  removeAll({ preserveCategory = null } = {}) {
     if (this.spinnies) {
       Object.keys(this.spinnies.spinners).forEach(key => {
-        if (!allowedKeys.includes(key)) {
+        if (
+          !preserveCategory ||
+          this.getCategoryForKey(key) !== preserveCategory
+        ) {
           this.remove(key);
         }
       });
