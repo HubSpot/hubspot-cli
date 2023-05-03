@@ -29,7 +29,19 @@ async function deleteSandbox(parentAccountId, sandboxAccountId) {
   });
 }
 
+/**
+ * Fetch sandbox usage limits
+ * @param {Number} parentAccountId - Parent portal ID.
+ * @returns {Object} Object containing limits for each sandbox type
+ */
+async function getSandboxUsageLimits(parentAccountId) {
+  return http.get(parentAccountId, {
+    uri: `${SANDBOX_API_PATH}/parent/${parentAccountId}/usage`,
+  });
+}
+
 module.exports = {
   createSandbox,
   deleteSandbox,
+  getSandboxUsageLimits,
 };
