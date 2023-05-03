@@ -18,9 +18,14 @@ const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
+const { promptUser } = require('./prompts/promptUtils');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
+
+const syncTypes = {
+  OBJECT_RECORDS: 'object-records',
+};
 
 const sandboxTypeMap = {
   DEV: DEVELOPER_SANDBOX,
@@ -85,6 +90,43 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
 }
 
 /**
+ * @param {Object} accountConfig - Account config of sandbox portal
+ * @param {Array} availableSyncTasks - Array of available sync tasks
+ * @param {Boolean} skipPrompt - Option to skip contact records prompt and return all available sync tasks
+ * @returns {Array} Adjusted available sync task items
+ */
+const getSyncTypesWithContactRecordsPrompt = async (
+  accountConfig,
+  availableSyncTasks,
+  skipPrompt = false
+) => {
+  // Fetches sync types based on default account. Parent account required for fetch
+  let syncTasks = availableSyncTasks;
+
+  if (
+    syncTasks &&
+    syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
+    !skipPrompt
+  ) {
+    const { contactRecordsSyncPrompt } = await promptUser([
+      {
+        name: 'contactRecordsSyncPrompt',
+        type: 'confirm',
+        message: i18n(
+          `cli.lib.sandbox.sync.confirm.syncContactRecords.${
+            sandboxTypeMap[accountConfig.sandboxAccountType]
+          }`
+        ),
+      },
+    ]);
+    if (!contactRecordsSyncPrompt) {
+      syncTasks = syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
+    }
+  }
+  return syncTasks;
+};
+
+/**
  * @param {String} env - Environment (QA/Prod)
  * @param {Object} result - Sandbox instance returned from API
  * @param {Boolean} force - Force flag to skip prompt
@@ -92,7 +134,7 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
   // const configData = { env, personalAccessKey: result.personalAccessKey };
-  // TODO: Temporary, remove
+  // TODO: Temporary, remove once PAK is generated on BE
   const configData = await personalAccessKeyPrompt({
     env,
     account: result.sandbox.sandboxHubId,
@@ -182,7 +224,7 @@ function pollSyncTaskStatus(
     logger.log('Exiting, sync will continue in the background.');
     logger.log('');
     logger.log(
-      i18n('cli.commands.sandbox.subcommands.sync.info.syncStatus', {
+      i18n('cli.lib.sandbox.sync.info.syncStatus', {
         url: syncStatusUrl,
       })
     );
@@ -253,7 +295,7 @@ function pollSyncTaskStatus(
             // Randomly increment bar while sync is in progress. Sandboxes currently does not have an accurate measurement for progress.
             progressCounter[taskType] = incrementBy(
               progressCounter[taskType],
-              taskType === 'object-records' ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
+              taskType === syncTypes.OBJECT_RECORDS ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
             );
             progressBar.update(taskType, progressCounter[taskType], {
               label: i18n(`${i18nKey}.${taskType}.label`),
@@ -280,11 +322,13 @@ module.exports = {
   sandboxTypeMap,
   sandboxApiTypeMap,
   isSandbox,
+  syncTypes,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
   getHasSandboxesByType,
   getSandboxLimit,
   getAvailableSyncTypes,
+  getSyncTypesWithContactRecordsPrompt,
   pollSyncTaskStatus,
 };

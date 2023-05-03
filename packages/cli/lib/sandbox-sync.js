@@ -22,14 +22,18 @@ const i18nKey = 'cli.lib.sandbox.sync';
  * @param {Object} accountConfig - Account config of sandbox portal
  * @param {Object} parentAccountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
+ * @param {Array} syncTasks - Array of available sync tasks
  * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
+ * @param {Boolean} skipPolling - Option to skip progress bars for polling and let sync run in background
  * @returns
  */
 const syncSandbox = async ({
   accountConfig,
   parentAccountConfig,
   env,
+  syncTasks,
   allowEarlyTermination = true,
+  skipPolling = false,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
@@ -37,6 +41,7 @@ const syncSandbox = async ({
     succeedColor: 'white',
   });
   let initiateSyncResponse;
+  let availableSyncTasks = syncTasks;
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
@@ -44,21 +49,26 @@ const syncSandbox = async ({
   )}`;
 
   try {
-    logger.log('');
+    // If no sync tasks exist, fetch sync types based on default account. Parent account required for fetch
+    if (
+      !availableSyncTasks ||
+      (typeof availableSyncTasks === 'object' &&
+        availableSyncTasks.length === 0)
+    ) {
+      availableSyncTasks = await getAvailableSyncTypes(
+        parentAccountConfig,
+        accountConfig
+      );
+    }
+
     spinnies.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
     });
 
-    // Fetches sync types based on default account. Parent account required for fetch
-    const tasks = await getAvailableSyncTypes(
-      parentAccountConfig,
-      accountConfig
-    );
-
     initiateSyncResponse = await initiateSync(
       parentAccountId,
       accountId,
-      tasks,
+      availableSyncTasks,
       accountId
     );
 
@@ -125,44 +135,46 @@ const syncSandbox = async ({
     throw err;
   }
 
-  try {
-    logger.log('');
-    logger.log('Sync progress:');
-    // Poll sync task status to show progress bars
-    await pollSyncTaskStatus(
-      parentAccountId,
-      initiateSyncResponse.id,
-      syncStatusUrl,
-      allowEarlyTermination
-    );
+  if (!skipPolling) {
+    try {
+      logger.log('');
+      logger.log('Sync progress:');
+      // Poll sync task status to show progress bars
+      await pollSyncTaskStatus(
+        parentAccountId,
+        initiateSyncResponse.id,
+        syncStatusUrl,
+        allowEarlyTermination
+      );
 
-    logger.log('');
-    spinnies.add('syncComplete', {
-      text: i18n(`${i18nKey}.polling.syncing`),
-    });
-    spinnies.succeed('syncComplete', {
-      text: i18n(`${i18nKey}.polling.succeed`),
-    });
-    logger.log('');
-    logger.log(
-      i18n(`${i18nKey}.info.syncStatus`, {
-        url: syncStatusUrl,
-      })
-    );
-  } catch (err) {
-    // If polling fails at this point, we do not track a failed sync since it is running in the background.
-    logErrorInstance(err);
+      logger.log('');
+      spinnies.add('syncComplete', {
+        text: i18n(`${i18nKey}.polling.syncing`),
+      });
+      spinnies.succeed('syncComplete', {
+        text: i18n(`${i18nKey}.polling.succeed`),
+      });
+      logger.log('');
+      logger.log(
+        i18n(`${i18nKey}.info.syncStatus`, {
+          url: syncStatusUrl,
+        })
+      );
+    } catch (err) {
+      // If polling fails at this point, we do not track a failed sync since it is running in the background.
+      logErrorInstance(err);
 
-    spinnies.add('syncComplete', {
-      text: i18n(`${i18nKey}.polling.syncing`),
-    });
-    spinnies.fail('syncComplete', {
-      text: i18n(`${i18nKey}.polling.fail`, {
-        url: syncStatusUrl,
-      }),
-    });
+      spinnies.add('syncComplete', {
+        text: i18n(`${i18nKey}.polling.syncing`),
+      });
+      spinnies.fail('syncComplete', {
+        text: i18n(`${i18nKey}.polling.fail`, {
+          url: syncStatusUrl,
+        }),
+      });
 
-    throw err;
+      throw err;
+    }
   }
 };
 

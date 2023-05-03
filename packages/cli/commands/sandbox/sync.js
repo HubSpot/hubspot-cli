@@ -19,6 +19,8 @@ const {
   sandboxTypeMap,
   DEVELOPER_SANDBOX,
   STANDARD_SANDBOX,
+  getAvailableSyncTypes,
+  getSyncTypesWithContactRecordsPrompt,
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
@@ -143,12 +145,24 @@ exports.handler = async options => {
   }
 
   try {
+    const availableSyncTasks = await getAvailableSyncTypes(
+      parentAccountConfig,
+      accountConfig
+    );
+    const syncTasks = await getSyncTypesWithContactRecordsPrompt(
+      accountConfig,
+      availableSyncTasks,
+      force
+    );
+
     await syncSandbox({
       accountConfig,
       parentAccountConfig,
       env,
+      syncTasks,
       allowEarlyTermination: true,
     });
+
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
     trackCommandUsage('sandbox-sync', { successful: false }, accountId);
