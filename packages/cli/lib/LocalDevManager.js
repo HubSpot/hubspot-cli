@@ -150,13 +150,14 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    // TODO long urls break the spinnies output
     const projectDetailUrl = getProjectDetailUrl(
       this.projectConfig.name,
       this.targetAccountId
     );
     this.spinnies.add('viewInHubSpotLink', {
-      text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl),
+      text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl, {
+        inSpinnies: true,
+      }),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
@@ -399,10 +400,7 @@ class LocalDevManager {
       clearTimeout(this.debouncedBuild);
     }
 
-    this.debouncedBuild = setTimeout(
-      this.queueBuild.bind(this),
-      BUILD_DEBOUNCE_TIME
-    );
+    this.debouncedBuild = setTimeout(this.queueBuild, BUILD_DEBOUNCE_TIME);
   }
 
   async queueBuild() {
