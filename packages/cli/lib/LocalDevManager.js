@@ -22,6 +22,7 @@ const {
   queueBuild,
 } = require('@hubspot/cli-lib/api/dfs');
 const SpinniesManager = require('./SpinniesManager');
+const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const {
   getProjectDetailUrl,
@@ -278,11 +279,18 @@ class LocalDevManager {
       remotePath: path.relative(this.projectSourceDir, filePath),
     };
 
-    const isSupportedChange = await this.notifyServers(changeInfo);
+    if (changeInfo.filePath.includes('dist')) {
+      return;
+    }
 
-    if (isSupportedChange) {
+    const notifyResponse = await this.notifyServers(changeInfo);
+
+    if (!notifyResponse.uploadRequired) {
       this.updateDevModeStatus('supportedChange');
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
+
+      await this.executeServers(notifyResponse, changeInfo);
+
       return;
     }
 
@@ -400,7 +408,10 @@ class LocalDevManager {
       clearTimeout(this.debouncedBuild);
     }
 
-    this.debouncedBuild = setTimeout(this.queueBuild, BUILD_DEBOUNCE_TIME);
+    this.debouncedBuild = setTimeout(
+      this.queueBuild.bind(this),
+      BUILD_DEBOUNCE_TIME
+    );
   }
 
   async queueBuild() {
@@ -472,21 +483,29 @@ class LocalDevManager {
   }
 
   async startServers() {
-    // TODO spin up local dev servers
-    return true;
+    await DevServerManager.start({
+      projectConfig: this.projectConfig,
+      projectSourceDir: this.projectSourceDir,
+    });
   }
 
   async notifyServers(changeInfo) {
-    // TODO notify servers of the change
     if (this.mockServers) {
-      return !changeInfo.remotePath.endsWith('app.json');
+      return { uploadRequired: changeInfo.remotePath.endsWith('app.json') };
     }
-    return false;
+    const notifyResponse = await DevServerManager.notify(changeInfo);
+    return notifyResponse;
+  }
+
+  async executeServers(notifyResponse, changeInfo) {
+    if (this.mockServers) {
+      return;
+    }
+    await DevServerManager.execute(notifyResponse, changeInfo);
   }
 
   async cleanupServers() {
-    // TODO tell servers to cleanup
-    return;
+    await DevServerManager.cleanup();
   }
 }
 
