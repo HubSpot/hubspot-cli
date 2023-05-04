@@ -30,15 +30,15 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download';
+exports.command = 'download [--project]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name, dest, buildNumber } = options;
-  const { name: promptedProjectName } = await downloadProjectPrompt(options);
-  const projectName = promptedProjectName || name;
+  const { project, dest, buildNumber } = options;
+  let { project: promptedProjectName } = await downloadProjectPrompt(options);
+  let projectName = promptedProjectName || project;
 
   const accountId = getAccountId(options);
 
@@ -56,7 +56,8 @@ exports.handler = async options => {
         accountId: chalk.bold(accountId),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    let { name: promptedProjectName } = await downloadProjectPrompt(options);
+    let projectName = promptedProjectName || project;
   }
 
   const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
@@ -126,8 +127,8 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
   yargs.options({
-    name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
+    project: {
+      describe: i18n(`${i18nKey}.options.project.describe`),
       type: 'string',
     },
     dest: {
@@ -142,7 +143,7 @@ exports.builder = yargs => {
 
   yargs.example([
     [
-      '$0 project download myProject myProjectFolder',
+      '$0 project download --project=myProject --dest=myProjectFolder',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);

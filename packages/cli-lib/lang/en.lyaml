@@ -611,7 +611,7 @@ en:
             options:
               buildNumber:
                 describe: "The build number to download"
-              name:
+              project:
                 describe: "The name of the project to download"
               dest:
                 describe: "Destination folder for the project"
@@ -1004,7 +1004,7 @@ en:
         downloadProjectPrompt:
           selectProject: "Select a project to download:"
           errors:
-            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
         projectAddPrompt:
           selectType: "[--type] Select your component type:"
           enterName: "[--name] Give your component a name: "

@@ -15,19 +15,19 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
 
   return promptUser([
     {
-      name: 'name',
+      name: 'project',
       message: () => {
-        return promptOptions.name &&
+        return promptOptions.project &&
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
-              projectName: promptOptions.name,
+              projectName: promptOptions.project,
               accountId: getAccountId(),
             })
           : i18n(`${i18nKey}.selectProject`);
       },
       when:
-        !promptOptions.name ||
-        !projectsList.find(p => p.name === promptOptions.name),
+        !promptOptions.project ||
+        !projectsList.find(p => p.name === promptOptions.project),
       type: 'list',
       choices: projectsList.map(project => {
         return {
