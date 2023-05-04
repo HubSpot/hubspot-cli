@@ -6,6 +6,8 @@ const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
   getAccountName,
+  DEVELOPER_SANDBOX,
+  sandboxTypeMap,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -15,6 +17,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
+const { uiAccountDescription } = require('./ui');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -76,8 +79,17 @@ const syncSandbox = async ({
       logger.log(i18n(`${i18nKey}.info.earlyExit`));
     }
     spinnies.succeed('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.succeed`),
+      text: i18n(`${i18nKey}.loading.succeed`, {
+        accountName: uiAccountDescription(accountId),
+      }),
     });
+    if (
+      skipPolling &&
+      sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX
+    ) {
+      logger.log(i18n(`${i18nKey}.loading.skipPolling`));
+      logger.log('');
+    }
   } catch (err) {
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),

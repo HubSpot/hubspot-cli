@@ -1158,18 +1158,19 @@ en:
         sync:
           info:
             syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
-            earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background."
+            earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
           confirm:
             createFlow:
               standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             syncContactRecords:
-              standard: "Include up to 5000 contact records and associations in this sync? Syncing contact records may take some time"
-              developer: "Include up to 100 contact records and associations in this sync? Syncing contact records may take some time"
+              standard: "Include up to 5000 most recent contact records and associations in this sync? Syncing contact records may take some time"
+              developer: "Include up to 100 most recent contact records and associations in this sync? Syncing contact records may take some time"
           loading:
             startSync: "Initiating sync..."
             fail: "Failed to sync sandbox."
-            succeed: "Sandbox sync initiated."
+            succeed: "Sandbox sync initiated to {{ accountName }}."
+            skipPolling: "Syncing CRM object definitions and up to 100 most recent contacts and associated records."
           polling:
             syncing: "Syncing sandbox..."
             fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
