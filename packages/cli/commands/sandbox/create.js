@@ -26,7 +26,6 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   sandboxTypePrompt,
   sandboxNamePrompt,
-  developmentSandboxNamePrompt,
 } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandbox-sync');
@@ -87,11 +86,7 @@ exports.handler = async options => {
 
   if (!name) {
     if (!force) {
-      if (sandboxType === DEVELOPER_SANDBOX) {
-        namePrompt = await developmentSandboxNamePrompt();
-      } else {
-        namePrompt = await sandboxNamePrompt();
-      }
+      namePrompt = await sandboxNamePrompt(sandboxType);
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
       trackCommandUsage('sandbox-create', { successful: false }, accountId);

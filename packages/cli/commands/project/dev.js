@@ -27,9 +27,7 @@ const {
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
-const {
-  developmentSandboxNamePrompt,
-} = require('../../lib/prompts/sandboxesPrompt');
+const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
   DEVELOPER_SANDBOX,
@@ -116,7 +114,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     try {
-      const { name } = await developmentSandboxNamePrompt();
+      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
       const { result } = await buildSandbox({
         name,
         type: DEVELOPER_SANDBOX,

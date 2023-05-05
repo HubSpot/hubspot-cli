@@ -1,6 +1,10 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getSandboxTypeAsString } = require('../sandboxes');
+const {
+  getSandboxTypeAsString,
+  STANDARD_SANDBOX,
+  DEVELOPER_SANDBOX,
+} = require('../sandboxes');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
@@ -30,11 +34,15 @@ const mapNonSandboxAccountChoices = portals =>
       };
     });
 
-const sandboxNamePrompt = () => {
+const sandboxNamePrompt = (type = STANDARD_SANDBOX) => {
+  const isDeveloperSandbox = type === DEVELOPER_SANDBOX;
+  const namePromptMessage = isDeveloperSandbox
+    ? `${i18nKey}.name.developmentSandboxMessage`
+    : `${i18nKey}.name.message`;
   return promptUser([
     {
       name: 'name',
-      message: i18n(`${i18nKey}.name.message`),
+      message: i18n(namePromptMessage),
       validate(val) {
         if (typeof val !== 'string') {
           return i18n(`${i18nKey}.name.errors.invalidName`);
@@ -45,27 +53,7 @@ const sandboxNamePrompt = () => {
           ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
           : true;
       },
-      default: 'New sandbox',
-    },
-  ]);
-};
-
-const developmentSandboxNamePrompt = () => {
-  return promptUser([
-    {
-      name: 'name',
-      message: i18n(`${i18nKey}.name.developmentSandboxMessage`),
-      validate(val) {
-        if (typeof val !== 'string') {
-          return i18n(`${i18nKey}.name.errors.invalidName`);
-        } else if (!val.length) {
-          return i18n(`${i18nKey}.name.errors.nameRequired`);
-        }
-        return accountNameExistsInConfig(val)
-          ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
-          : true;
-      },
-      default: 'New development sandbox',
+      default: `New ${isDeveloperSandbox ? 'development ' : ''}sandbox`,
     },
   ]);
 };
@@ -122,5 +110,4 @@ module.exports = {
   sandboxNamePrompt,
   sandboxTypePrompt,
   deleteSandboxPrompt,
-  developmentSandboxNamePrompt,
 };
