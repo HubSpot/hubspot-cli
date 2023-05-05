@@ -232,7 +232,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
   let configData = { env, personalAccessKey: result.personalAccessKey };
-  if (!result.personalAccessKey || result.personalAccessKey === 'test') {
+  if (!result.personalAccessKey) {
     configData = await personalAccessKeyPrompt({
       env,
       account: result.sandbox.sandboxHubId,
