@@ -127,7 +127,7 @@ exports.handler = async options => {
       const sandboxAccountConfig = getAccountConfig(
         result.sandbox.sandboxHubId
       );
-      let syncTasks = await getAvailableSyncTypes(
+      const syncTasks = await getAvailableSyncTypes(
         accountConfig,
         sandboxAccountConfig
       );
