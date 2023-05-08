@@ -1170,7 +1170,8 @@ en:
             startSync: "Initiating sync..."
             fail: "Failed to sync sandbox."
             succeed: "Sandbox sync initiated to {{ accountName }}."
-            skipPolling: "Syncing CRM object definitions and up to 100 most recent contacts and associated records."
+            skipPolling: "Syncing CRM object definitions."
+            skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recent contacts and associated records."
           polling:
             syncing: "Syncing sandbox..."
             fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"

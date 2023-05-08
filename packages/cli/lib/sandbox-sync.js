@@ -8,6 +8,7 @@ const {
   getAccountName,
   DEVELOPER_SANDBOX,
   sandboxTypeMap,
+  syncTypes,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
@@ -87,7 +88,11 @@ const syncSandbox = async ({
       skipPolling &&
       sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX
     ) {
-      logger.log(i18n(`${i18nKey}.loading.skipPolling`));
+      if (syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS)) {
+        logger.log(i18n(`${i18nKey}.loading.skipPollingWithContacts`));
+      } else {
+        logger.log(i18n(`${i18nKey}.loading.skipPolling`));
+      }
       logger.log('');
     }
   } catch (err) {
