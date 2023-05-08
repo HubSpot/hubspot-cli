@@ -455,7 +455,7 @@ en:
               introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
-              prodAccountWarning: "Targeting a production account is risky because this command will upload changes to the target account. We recommend picking a sandbox account."
+              prodAccountWarning: "Targeting a non-sandbox account is risky because this command will upload changes to the target account. We recommend picking a sandbox account for any work that has not been finalized or is undergoing testing prior to deploying to production."
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
