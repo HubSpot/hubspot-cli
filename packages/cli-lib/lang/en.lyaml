@@ -456,12 +456,17 @@ en:
               introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
               prodAccountWarning: "Targeting a production account is risky because this command will upload changes to the target account. We recommend picking a sandbox account."
+              projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
+              choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
+              initialUploadMessage: "HubSpot Local Dev Server Startup"
+            status:
+              creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
+              createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
+              failedToCreateProject: "Failed to create project in the target account."
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
-              projectNotInAccount: "This project does not exist yet in the target account"
-              projectMustExistExplanation: "[placeholder copy] It is required for the project to exist in the target account"
-              unableToCreateProject: "Unable to create project in the target account because uploads are prevented."
+              startupFailed: "Failed to initialize local dev server"
             prompt:
-              createProject: "Create new project in {{#bold}}[{{ accountName }}]{{/bold}}?"
+              createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
             errors:
               noProjectConfig: "No project detected"

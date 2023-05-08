@@ -146,8 +146,8 @@ exports.handler = async options => {
     }
   }
 
-  // TODO programatically determine these values
   const isNonSandboxAccount = shouldTargetNonSandboxAccount;
+  // TODO programatically determine this
   const isProjectUsingGitIntegration = false;
 
   const preventUploads = isProjectUsingGitIntegration || isNonSandboxAccount;
@@ -158,47 +158,56 @@ exports.handler = async options => {
     targetAccountId,
     projectConfig.name,
     {
-      allowCreate: true,
+      allowCreate: false,
       noLogs: true,
     }
   );
 
   if (!projectExists) {
-    logger.log(i18n(`${i18nKey}.logs.projectNotInAccount`));
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.projectMustExistExplanation`));
+    logger.warn(
+      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      })
+    );
     uiLine();
-
-    if (preventUploads) {
-      logger.log(i18n(`${i18nKey}.logs.unableToCreateProject`));
-      process.exit(EXIT_CODES.ERROR);
-    }
 
     const shouldCreateProject = await confirmPrompt(
       i18n(`${i18nKey}.prompt.createProject`, {
-        accountName: uiAccountDescription(targetAccountId),
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
       })
     );
 
     if (shouldCreateProject) {
       try {
         spinnies.add('createProject', {
-          text: 'Creating project in account',
+          text: i18n(`${i18nKey}.status.creatingProject`, {
+            accountIdentifier: uiAccountDescription(targetAccountId),
+            projectName: projectConfig.name,
+          }),
         });
         await createProject(targetAccountId, projectConfig.name);
         spinnies.succeed('createProject', {
-          text: 'Created project in account',
+          text: i18n(`${i18nKey}.status.createdProject`, {
+            accountIdentifier: uiAccountDescription(targetAccountId),
+            projectName: projectConfig.name,
+          }),
         });
       } catch (err) {
+        logger.log(i18n(`${i18nKey}.logs.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
+      // We cannot continue if the project does not exist in the target account
+      logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
 
   spinnies.add('devModeSetup', {
-    text: i18n(`${i18nKey}.logs.startupMessage`, {
+    text: i18n(`${i18nKey}.status.startupMessage`, {
       projectName: projectConfig.name,
     }),
     isParent: true,
@@ -211,13 +220,13 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       (...args) => pollProjectBuildAndDeploy(...args, true),
-      'HubSpot Local Dev Server Startup'
+      i18n(`${i18nKey}.logs.initialUploadMessage`)
     );
   }
 
   if (result && !result.succeeded) {
     spinnies.fail('devModeSetup', {
-      text: 'failed to start up dev mode',
+      text: i18n(`${i18nKey}.status.startupFailed`),
     });
     process.exit(EXIT_CODES.ERROR);
   } else {
