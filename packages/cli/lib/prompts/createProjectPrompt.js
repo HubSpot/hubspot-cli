@@ -7,17 +7,22 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
 
-const createTemplateOptions = async () => {
+const createTemplateOptions = async repoPath => {
+  const repoName = repoPath ? repoPath : 'hubspot-project-components';
+  const isCustomRepo = !!repoPath;
   const config = await fetchJsonFromRepository(
-    'hubspot-project-components',
-    'main/config.json'
+    repoName,
+    'main/config.json',
+    isCustomRepo
   );
 
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };
 
 const createProjectPrompt = async (promptOptions = {}) => {
-  const projectTemplates = await createTemplateOptions();
+  const projectTemplates = await createTemplateOptions(
+    promptOptions.customRepo
+  );
 
   return promptUser([
     {

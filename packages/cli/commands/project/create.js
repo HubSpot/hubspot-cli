@@ -61,6 +61,10 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
     },
+    customRepo: {
+      describe: i18n(`${i18nKey}.options.customRepo.describe`),
+      type: 'string',
+    },
   });
 
   yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
