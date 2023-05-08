@@ -400,7 +400,10 @@ class LocalDevManager {
       clearTimeout(this.debouncedBuild);
     }
 
-    this.debouncedBuild = setTimeout(this.queueBuild, BUILD_DEBOUNCE_TIME);
+    this.debouncedBuild = setTimeout(
+      this.queueBuild.bind(this),
+      BUILD_DEBOUNCE_TIME
+    );
   }
 
   async queueBuild() {
