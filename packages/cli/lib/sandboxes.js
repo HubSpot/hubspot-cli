@@ -4,6 +4,7 @@ const {
   updateAccountConfig,
   getAccountId,
 } = require('@hubspot/cli-lib');
+const chalk = require('chalk');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -11,14 +12,19 @@ const {
 } = require('@hubspot/cli-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
-const { fetchTaskStatus, fetchTypes } = require('@hubspot/cli-lib/sandboxes');
+const {
+  fetchTaskStatus,
+  fetchTypes,
+  getSandboxUsageLimits,
+} = require('@hubspot/cli-lib/sandboxes');
 const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const CliProgressMultibarManager = require('./CliProgressMultibarManager');
+const { promptUser } = require('./prompts/promptUtils');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
-const CliProgressMultibarManager = require('./CliProgressMultibarManager');
-const { promptUser } = require('./prompts/promptUtils');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -53,9 +59,9 @@ function getAccountName(config) {
   const sandboxName = `[${getSandboxTypeAsString(
     config.sandboxAccountType
   )} sandbox] `;
-  return `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
-    config.portalId
-  })`;
+  return chalk.bold(
+    `${config.name} ${isSandbox(config) ? sandboxName : ''}(${config.portalId})`
+  );
 }
 
 function getHasSandboxesByType(parentAccountConfig, type) {
@@ -86,6 +92,11 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = getAccountId(parentAccountConfig.portalId);
   const portalId = getAccountId(config.portalId);
   const syncTypes = await fetchTypes(parentPortalId, portalId);
+  if (!syncTypes) {
+    throw new Error(
+      'Unable to fetch available sandbox sync types. Please try again.'
+    );
+  }
   return syncTypes.map(t => ({ type: t.name }));
 }
 
@@ -97,11 +108,10 @@ async function getAvailableSyncTypes(parentAccountConfig, config) {
  */
 const getSyncTypesWithContactRecordsPrompt = async (
   accountConfig,
-  availableSyncTasks,
+  syncTasks,
   skipPrompt = false
 ) => {
   // Fetches sync types based on default account. Parent account required for fetch
-  let syncTasks = availableSyncTasks;
 
   if (
     syncTasks &&
@@ -120,10 +130,98 @@ const getSyncTypesWithContactRecordsPrompt = async (
       },
     ]);
     if (!contactRecordsSyncPrompt) {
-      syncTasks = syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
+      return syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
     }
   }
   return syncTasks;
+};
+
+/**
+ * @param {Object} accountConfig - Account config of sandbox portal
+ * @param {String} sandboxType - Sandbox type for limit validation
+ * @param {String} env - Environment
+ * @returns {null}
+ */
+const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
+  const accountId = getAccountId(accountConfig.portalId);
+  const usage = await getSandboxUsageLimits(accountId);
+  if (!usage) {
+    throw new Error('Unable to fetch sandbox usage limits. Please try again.');
+  }
+  if (sandboxType === DEVELOPER_SANDBOX) {
+    if (usage['DEVELOPER'].available === 0) {
+      const devSandboxLimit = usage['DEVELOPER'].limit;
+      const plural = devSandboxLimit !== 1;
+      const hasDevelopmentSandboxes = getHasSandboxesByType(
+        accountConfig,
+        DEVELOPER_SANDBOX
+      );
+      if (hasDevelopmentSandboxes) {
+        throw new Error(
+          i18n(
+            `cli.lib.sandbox.create.failure.alreadyInConfig.developer.${
+              plural ? 'other' : 'one'
+            }`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: devSandboxLimit,
+            }
+          )
+        );
+      } else {
+        const baseUrl = getHubSpotWebsiteOrigin(env);
+        throw new Error(
+          i18n(
+            `cli.lib.sandbox.create.failure.limit.developer.${
+              plural ? 'other' : 'one'
+            }`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: devSandboxLimit,
+              link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+            }
+          )
+        );
+      }
+    }
+  }
+  if (sandboxType === STANDARD_SANDBOX) {
+    if (usage['STANDARD'].available === 0) {
+      const standardSandboxLimit = usage['STANDARD'].limit;
+      const plural = standardSandboxLimit !== 1;
+      const hasStandardSandboxes = getHasSandboxesByType(
+        accountConfig,
+        STANDARD_SANDBOX
+      );
+      if (hasStandardSandboxes) {
+        throw new Error(
+          i18n(
+            `cli.lib.sandbox.create.failure.alreadyInConfig.standard.${
+              plural ? 'other' : 'one'
+            }`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: standardSandboxLimit,
+            }
+          )
+        );
+      } else {
+        const baseUrl = getHubSpotWebsiteOrigin(env);
+        throw new Error(
+          i18n(
+            `cli.lib.sandbox.create.failure.limit.standard.${
+              plural ? 'other' : 'one'
+            }`,
+            {
+              accountName: accountConfig.name || accountId,
+              limit: standardSandboxLimit,
+              link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
+            }
+          )
+        );
+      }
+    }
+  }
 };
 
 /**
@@ -133,13 +231,13 @@ const getSyncTypesWithContactRecordsPrompt = async (
  * @returns {String} validName saved into config
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
-  // const configData = { env, personalAccessKey: result.personalAccessKey };
-  // TODO: Temporary, remove once PAK is generated on BE
-  const configData = await personalAccessKeyPrompt({
-    env,
-    account: result.sandbox.sandboxHubId,
-  });
-  // End temporary section
+  let configData = { env, personalAccessKey: result.personalAccessKey };
+  if (!result.personalAccessKey) {
+    configData = await personalAccessKeyPrompt({
+      env,
+      account: result.sandbox.sandboxHubId,
+    });
+  }
   const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
   if (!updatedConfig) {
     throw new Error('Failed to update config with personal access key.');
@@ -321,13 +419,14 @@ module.exports = {
   DEVELOPER_SANDBOX,
   sandboxTypeMap,
   sandboxApiTypeMap,
-  isSandbox,
   syncTypes,
+  isSandbox,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
   getHasSandboxesByType,
   getSandboxLimit,
+  validateSandboxUsageLimits,
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
   pollSyncTaskStatus,

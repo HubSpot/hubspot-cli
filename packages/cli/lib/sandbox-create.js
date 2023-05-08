@@ -47,6 +47,7 @@ const buildSandbox = async ({
   const spinniesI18nKey = `${i18nKey}.loading.${type}`;
 
   try {
+    logger.log('');
     spinnies.add('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.add`, {
         sandboxName: name,
@@ -58,8 +59,8 @@ const buildSandbox = async ({
 
     spinnies.succeed('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.succeed`, {
-        name: result.name,
-        sandboxHubId: result.sandboxHubId,
+        name: result.sandbox.name,
+        sandboxHubId: result.sandbox.sandboxHubId,
       }),
     });
   } catch (err) {
