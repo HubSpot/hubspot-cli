@@ -613,14 +613,13 @@ en:
             errors:
               downloadFailed: "Something went wrong downloading the project"
               projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
-            positionals:
-              name:
-                describe: "The name of the project to download"
-              dest:
-                describe: "Destination folder for the project"
             options:
               buildNumber:
                 describe: "The build number to download"
+              project:
+                describe: "The name of the project to download"
+              dest:
+                describe: "Destination folder for the project"
           open:
             describe: "Open available projects for the specified account"
             options:
@@ -1047,6 +1046,10 @@ en:
             nameRequired: "A project name is required"
             locationRequired: "A project location is required"
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+        downloadProjectPrompt:
+          selectProject: "Select a project to download:"
+          errors:
+            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
         projectAddPrompt:
           selectType: "[--type] Select your component type:"
           enterName: "[--name] Give your component a name: "
