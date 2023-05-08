@@ -1,12 +1,16 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { uiAccountDescription } = require('../ui');
-const { isSandbox } = require('../sandboxes');
+const { isSandbox, getAccountName } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
-const selectTargetAccountPrompt = async (accounts, nonSandbox = false) => {
+const selectTargetAccountPrompt = async (
+  accounts,
+  defaultAccountConfig,
+  nonSandbox = false
+) => {
   let choices;
 
   if (nonSandbox) {
@@ -25,18 +29,10 @@ const selectTargetAccountPrompt = async (accounts, nonSandbox = false) => {
       });
   } else {
     choices = [
-      {
-        name: i18n(`${i18nKey}.createNewSandboxOption`),
-        value: {
-          targetAccountId: null,
-          chooseNonSandbox: false,
-          createNewSandbox: true,
-        },
-      },
       ...accounts.filter(isSandbox).map(accountConfig => {
         const accountId = getAccountId(accountConfig.name);
         return {
-          name: uiAccountDescription(accountId),
+          name: getAccountName(accountConfig),
           value: {
             targetAccountId: accountId,
             chooseNonSandbox: false,
@@ -53,6 +49,16 @@ const selectTargetAccountPrompt = async (accounts, nonSandbox = false) => {
         },
       },
     ];
+    if (!isSandbox(defaultAccountConfig)) {
+      choices.unshift({
+        name: i18n(`${i18nKey}.createNewSandboxOption`),
+        value: {
+          targetAccountId: null,
+          chooseNonSandbox: false,
+          createNewSandbox: true,
+        },
+      });
+    }
   }
   const { targetAccountInfo } = await promptUser([
     {

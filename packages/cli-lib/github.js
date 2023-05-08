@@ -138,7 +138,7 @@ async function fetchGitHubRepoContentFromDownloadUrl(dest, downloadUrl) {
     headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
   });
 
-  fs.writeFileSync(dest, resp, 'utf8');
+  fs.outputFileSync(dest, resp, 'utf8');
 }
 
 /**
@@ -164,8 +164,12 @@ async function downloadGitHubRepoContents(
       contentPath
     );
 
-    const downloadContent = async contentPiece => {
-      const { path: contentPiecePath, download_url } = contentPiece;
+    const downloadContentRecursively = async contentPiece => {
+      const {
+        path: contentPiecePath,
+        download_url,
+        type: contentPieceType,
+      } = contentPiece;
       const downloadPath = path.join(
         dest,
         contentPiecePath.replace(contentPath, '')
@@ -182,18 +186,34 @@ async function downloadGitHubRepoContents(
         `Downloading content piece: ${contentPiecePath} from ${download_url} to ${downloadPath}`
       );
 
-      return fetchGitHubRepoContentFromDownloadUrl(downloadPath, download_url, {
-        headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
-      });
+      if (contentPieceType === 'dir') {
+        const innerDirContent = await getGitHubRepoContentsAtPath(
+          repoName,
+          contentPiecePath
+        );
+        return Promise.all(innerDirContent.map(downloadContentRecursively));
+      } else {
+        return fetchGitHubRepoContentFromDownloadUrl(
+          downloadPath,
+          download_url,
+          {
+            headers: {
+              ...DEFAULT_USER_AGENT_HEADERS,
+              ...GITHUB_AUTH_HEADERS,
+            },
+          }
+        );
+      }
     };
 
-    if (contentsResp.download_url) {
-      return downloadContent(contentsResp);
+    let contentPromises;
+    if (Array.isArray(contentsResp)) {
+      contentPromises = contentsResp.map(downloadContentRecursively);
+      return Promise.all(contentPromises);
+    } else {
+      contentPromises = downloadContentRecursively(contentsResp);
+      return Promise.resolve(contentPromises);
     }
-
-    const contentPromises = contentsResp.map(downloadContent);
-
-    return Promise.all(contentPromises);
   } catch (e) {
     if (e.statusCode === 404) {
       if (e.error.message) {
@@ -201,7 +221,7 @@ async function downloadGitHubRepoContents(
       }
     }
 
-    throw new Error(`Failed to fetch contents: ${e.error.message}`);
+    throw new Error(e);
   }
 }
 

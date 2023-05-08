@@ -26,6 +26,17 @@ const {
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
+const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
+const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
+const {
+  validateSandboxUsageLimits,
+  DEVELOPER_SANDBOX,
+  getAvailableSyncTypes,
+} = require('../../lib/sandboxes');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { buildSandbox } = require('../../lib/sandbox-create');
+const { syncSandbox } = require('../../lib/sandbox-sync');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -35,6 +46,8 @@ exports.describe = null; //i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
   const accountId = getAccountId(options);
+  const accountConfig = getAccountConfig(accountId);
+  const env = getValidEnv(getEnv(accountId));
 
   trackCommandUsage('project-dev', null, accountId);
 
@@ -63,7 +76,7 @@ exports.handler = async options => {
       targetAccountId: promptTargetAccountId,
       chooseNonSandbox: promptChooseNonSandbox,
       createNewSandbox: promptCreateNewSandbox,
-    } = await selectTargetAccountPrompt(accounts);
+    } = await selectTargetAccountPrompt(accounts, accountConfig, false);
 
     targetAccountId = promptTargetAccountId;
     chooseNonSandbox = promptChooseNonSandbox;
@@ -87,7 +100,7 @@ exports.handler = async options => {
     if (shouldTargetNonSandboxAccount) {
       const {
         targetAccountId: promptNonSandboxTargetAccountId,
-      } = await selectTargetAccountPrompt(accounts, true);
+      } = await selectTargetAccountPrompt(accounts, accountConfig, true);
 
       targetAccountId = promptNonSandboxTargetAccountId;
       logger.log();
@@ -95,10 +108,42 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } else if (createNewSandbox) {
-    logger.log(
-      'Creating new sandboxes is not supported yet. Use "hs sandbox create" and then run this command again.'
-    );
-    process.exit(EXIT_CODES.SUCCESS);
+    try {
+      await validateSandboxUsageLimits(accountConfig, DEVELOPER_SANDBOX, env);
+    } catch (err) {
+      logErrorInstance(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
+    try {
+      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+      const { result } = await buildSandbox({
+        name,
+        type: DEVELOPER_SANDBOX,
+        accountConfig,
+        env,
+      });
+
+      targetAccountId = result.sandbox.sandboxHubId;
+
+      const sandboxAccountConfig = getAccountConfig(
+        result.sandbox.sandboxHubId
+      );
+      const syncTasks = await getAvailableSyncTypes(
+        accountConfig,
+        sandboxAccountConfig
+      );
+      await syncSandbox({
+        accountConfig: sandboxAccountConfig,
+        parentAccountConfig: accountConfig,
+        env,
+        syncTasks,
+        allowEarlyTermination: false, // Don't let user terminate early in this flow
+        skipPolling: true, // Skip polling, sync will run and complete in the background
+      });
+    } catch (err) {
+      logErrorInstance(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
   // TODO programatically determine these values
@@ -113,7 +158,7 @@ exports.handler = async options => {
     targetAccountId,
     projectConfig.name,
     {
-      allowCreate: false,
+      allowCreate: true,
       noLogs: true,
     }
   );

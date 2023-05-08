@@ -131,7 +131,8 @@ function watch(
   accountId,
   src,
   dest,
-  { mode, remove, disableInitial, notify, commandOptions, filePaths }
+  { mode, remove, disableInitial, notify, commandOptions, filePaths },
+  postInitialUploadCallback = null
 ) {
   const regex = new RegExp(`^${escapeRegExp(src)}`);
   if (notify) {
@@ -151,10 +152,13 @@ function watch(
   if (!disableInitial) {
     // Use uploadFolder so that failures of initial upload are retried
     uploadFolder(accountId, src, dest, { mode }, commandOptions, filePaths)
-      .then(() => {
+      .then(result => {
         logger.success(
           `Completed uploading files in ${src} to ${dest} in ${accountId}`
         );
+        if (postInitialUploadCallback) {
+          postInitialUploadCallback(result);
+        }
       })
       .catch(error => {
         logger.error(

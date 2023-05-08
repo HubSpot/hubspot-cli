@@ -26,12 +26,12 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
 const { getAccountName } = require('../../lib/sandboxes');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -71,7 +71,7 @@ exports.handler = async options => {
   trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
@@ -117,11 +117,12 @@ exports.handler = async options => {
   );
 
   if (isDefaultAccount) {
-    logger.log(
+    logger.info(
       i18n(`${i18nKey}.defaultAccountWarning`, {
         account: getAccountName(accountConfig),
       })
     );
+    logger.log('');
   }
 
   try {
