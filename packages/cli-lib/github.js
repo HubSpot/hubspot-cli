@@ -133,8 +133,17 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
-async function getGitHubRepoContentsAtPath(repoName, path) {
-  const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
+async function getGitHubRepoContentsAtPath(
+  repoName,
+  path,
+  customRepoPath = ''
+) {
+  let contentsRequestUrl;
+  if (customRepoPath) {
+    contentsRequestUrl = `https://api.github.com/repos/${customRepoPath}/contents/${path}`;
+  } else {
+    contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
+  }
 
   return request.get(contentsRequestUrl, {
     json: true,
@@ -163,6 +172,7 @@ async function downloadGitHubRepoContents(
   dest,
   options = {
     filter: false,
+    customRepoPath: '',
   }
 ) {
   fs.ensureDirSync(path.dirname(dest));
@@ -170,7 +180,8 @@ async function downloadGitHubRepoContents(
   try {
     const contentsResp = await getGitHubRepoContentsAtPath(
       repoName,
-      contentPath
+      contentPath,
+      options.customRepoPath
     );
 
     const downloadContentRecursively = async contentPiece => {
