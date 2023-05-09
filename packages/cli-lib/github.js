@@ -19,14 +19,10 @@ const GITHUB_AUTH_HEADERS = {
  * @param {String} repoName - name of the github repository
  * @returns {Buffer|Null} Zip data buffer
  */
-async function fetchJsonFromRepository(
-  repoName,
-  filePath,
-  customRepoPath = false
-) {
+async function fetchJsonFromRepository(repoName, filePath, repoPath = false) {
   try {
     let URI;
-    if (customRepoPath) {
+    if (repoPath) {
       URI = `https://raw.githubusercontent.com/${repoName}/${filePath}`;
     } else {
       URI = `https://raw.githubusercontent.com/HubSpot/${repoName}/${filePath}`;
@@ -133,14 +129,10 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
-async function getGitHubRepoContentsAtPath(
-  repoName,
-  path,
-  customRepoPath = ''
-) {
+async function getGitHubRepoContentsAtPath(repoName, path, repoPath = '') {
   let contentsRequestUrl;
-  if (customRepoPath) {
-    contentsRequestUrl = `https://api.github.com/repos/${customRepoPath}/contents/${path}`;
+  if (repoPath) {
+    contentsRequestUrl = `https://api.github.com/repos/${repoPath}/contents/${path}`;
   } else {
     contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
   }
@@ -172,7 +164,7 @@ async function downloadGitHubRepoContents(
   dest,
   options = {
     filter: false,
-    customRepoPath: '',
+    repoPath: '',
   }
 ) {
   fs.ensureDirSync(path.dirname(dest));
@@ -181,7 +173,7 @@ async function downloadGitHubRepoContents(
     const contentsResp = await getGitHubRepoContentsAtPath(
       repoName,
       contentPath,
-      options.customRepoPath
+      options.repoPath
     );
 
     const downloadContentRecursively = async contentPiece => {

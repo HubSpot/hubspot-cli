@@ -88,7 +88,7 @@ const createProjectConfig = async (
   projectPath,
   projectName,
   template,
-  customRepoPath = ''
+  repoPath = ''
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -137,7 +137,7 @@ const createProjectConfig = async (
       'hubspot-project-components',
       template.path,
       projectPath,
-      { customRepoPath }
+      { repoPath }
     );
     const _config = JSON.parse(fs.readFileSync(projectConfigPath));
     writeProjectConfig(projectConfigPath, {

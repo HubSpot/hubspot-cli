@@ -35,7 +35,7 @@ exports.handler = async options => {
     path.resolve(getCwd(), options.location || location),
     options.name || name,
     options.template || template,
-    options.customRepoPath
+    options.repoPath
   );
 
   logger.log('');
@@ -62,8 +62,8 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.template.describe`),
       type: 'string',
     },
-    customRepoPath: {
-      describe: i18n(`${i18nKey}.options.customRepoPath.describe`),
+    repoPath: {
+      describe: i18n(`${i18nKey}.options.repoPath.describe`),
       type: 'string',
     },
   });
