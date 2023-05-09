@@ -469,7 +469,7 @@ en:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
             errors:
-              noProjectConfig: "No project detected"
+              noProjectConfig: "No project detected. Please run this command again from a project directory."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -878,10 +878,12 @@ en:
         status:
           clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
           uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
-          uploadPrevented: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
+          noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
+          manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
           supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
           manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading prevented changes{{/green}}"
         upload:
+          noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
           manualUploadSkipped: "Manual upload skipped. Some changes may not be visible."
           manualUploadRequired: "Project config files changed, manual upload and deploy is needed ..."
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
