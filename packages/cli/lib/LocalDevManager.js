@@ -342,48 +342,46 @@ class LocalDevManager {
   }
 
   addChangeToStandbyQueue(changeInfo) {
-    if (
-      changeInfo.event === WATCH_EVENTS.add ||
-      changeInfo.event === WATCH_EVENTS.change
-    ) {
-      if (!isAllowedExtension(changeInfo.filePath)) {
-        logger.debug(`Extension not allowed: ${changeInfo.filePath}`);
+    const { event, filePath } = changeInfo;
+
+    if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
+      if (!isAllowedExtension(filePath)) {
+        logger.debug(`Extension not allowed: ${filePath}`);
         return;
       }
     }
-    if (shouldIgnoreFile(changeInfo.filePath, true)) {
-      logger.debug(`File ignored: ${changeInfo.filePath}`);
+    if (shouldIgnoreFile(filePath, true)) {
+      logger.debug(`File ignored: ${filePath}`);
       return;
     }
     this.standbyChanges.push(changeInfo);
   }
 
   async sendChanges(changeInfo) {
-    this.spinnies.add(changeInfo.filePath, {
+    const { event, filePath, remotePath } = changeInfo;
+
+    this.spinnies.add(filePath, {
       text: i18n(`${i18nKey}.upload.uploadingChange`, {
-        filePath: changeInfo.remotePath,
+        filePath: remotePath,
       }),
       status: 'non-spinnable',
     });
     try {
-      if (
-        changeInfo.event === WATCH_EVENTS.add ||
-        changeInfo.event === WATCH_EVENTS.change
-      ) {
+      if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
         await uploadFileToBuild(
           this.targetAccountId,
           this.projectConfig.name,
-          changeInfo.filePath,
-          changeInfo.remotePath
+          filePath,
+          remotePath
         );
       } else if (
-        changeInfo.event === WATCH_EVENTS.unlink ||
-        changeInfo.event === WATCH_EVENTS.unlinkDir
+        event === WATCH_EVENTS.unlink ||
+        event === WATCH_EVENTS.unlinkDir
       ) {
         await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
-          changeInfo.remotePath
+          remotePath
         );
       }
     } catch (err) {
@@ -480,9 +478,11 @@ class LocalDevManager {
   }
 
   async notifyServers(changeInfo) {
+    const { remotePath } = changeInfo;
+
     // TODO notify servers of the change
     if (this.mockServers) {
-      return !changeInfo.remotePath.endsWith('app.json');
+      return !remotePath.endsWith('app.json');
     }
     return false;
   }
