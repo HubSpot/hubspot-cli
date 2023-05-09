@@ -168,6 +168,35 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
+const pollFetchProject = (accountId, projectName) => {
+  // Temporary solution for gating slowness. Retry on 403 statusCode
+  return new Promise((resolve, reject) => {
+    let pollCount = 0;
+    const spinnies = SpinniesManager.init();
+    spinnies.add('pollFetchProject', {
+      text: 'Fetching project status',
+    });
+    const pollInterval = setInterval(async () => {
+      try {
+        const project = await fetchProject(accountId, projectName);
+        if (project) {
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          resolve(project);
+        }
+      } catch (err) {
+        // Poll up to max 30s, throw immediately if 404
+        if (err.statusCode === 404 || pollCount >= 15) {
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          reject(err);
+        }
+        pollCount += 1;
+      }
+    }, 2000);
+  });
+};
+
 const ensureProjectExists = async (
   accountId,
   projectName,
@@ -175,7 +204,8 @@ const ensureProjectExists = async (
 ) => {
   const accountIdentifier = uiAccountDescription(accountId);
   try {
-    const project = await fetchProject(accountId, projectName);
+    // const project = await fetchProject(accountId, projectName);
+    const project = await pollFetchProject(accountId, projectName);
     return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
