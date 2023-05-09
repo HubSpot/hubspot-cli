@@ -37,7 +37,7 @@ async function fetchJsonFromRepository(
     logger.error('An error occured fetching JSON file.');
     if (repoPath && err.statusCode === 404) {
       return logger.error(
-        i18n(`cli.lib.prompts.createProjectPrompt.errors.failedtofetchJson`)
+        i18n(`cli.lib.prompts.createProjectPrompt.errors.failedToFetchJson`)
       );
     }
     logErrorInstance(err);
