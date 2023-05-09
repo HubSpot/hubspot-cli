@@ -3,8 +3,19 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { uiAccountDescription } = require('../ui');
 const { isSandbox, getAccountName } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
+const { getSandboxUsageLimits } = require('@hubspot/cli-lib/sandboxes');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
+
+const mapSandboxAccount = accountConfig => ({
+  name: getAccountName(accountConfig),
+  value: {
+    targetAccountId: getAccountId(accountConfig.name),
+    chooseNonSandbox: false,
+    createNewSandbox: false,
+  },
+});
 
 const selectTargetAccountPrompt = async (
   accounts,
@@ -28,18 +39,34 @@ const selectTargetAccountPrompt = async (
         };
       });
   } else {
+    let sandboxUsage = {};
+    try {
+      const accountId = getAccountId(defaultAccountConfig.portalId);
+      sandboxUsage = await getSandboxUsageLimits(accountId);
+    } catch (err) {
+      logger.debug('Unable to fetch sandbox usage limits: ', err);
+    }
+    const sandboxAccounts = accounts.reverse().filter(isSandbox);
+    // Order choices by Create new -> Developer Sandbox -> Standard Sandbox -> Non sandbox
     choices = [
-      ...accounts.filter(isSandbox).map(accountConfig => {
-        const accountId = getAccountId(accountConfig.name);
-        return {
-          name: getAccountName(accountConfig),
-          value: {
-            targetAccountId: accountId,
-            chooseNonSandbox: false,
-            createNewSandbox: false,
-          },
-        };
-      }),
+      {
+        name: i18n(`${i18nKey}.createNewSandboxOption`),
+        value: {
+          targetAccountId: null,
+          chooseNonSandbox: false,
+          createNewSandbox: true,
+        },
+        disabled:
+          isSandbox(defaultAccountConfig) ||
+          (sandboxUsage['DEVELOPER'] &&
+            sandboxUsage['DEVELOPER'].available === 0),
+      },
+      ...sandboxAccounts
+        .filter(a => a.sandboxAccountType === 'DEVELOPER')
+        .map(mapSandboxAccount),
+      ...sandboxAccounts
+        .filter(a => a.sandboxAccountType === 'STANDARD')
+        .map(mapSandboxAccount),
       {
         name: i18n(`${i18nKey}.chooseNonSandboxOption`),
         value: {
@@ -49,16 +76,6 @@ const selectTargetAccountPrompt = async (
         },
       },
     ];
-    if (!isSandbox(defaultAccountConfig)) {
-      choices.unshift({
-        name: i18n(`${i18nKey}.createNewSandboxOption`),
-        value: {
-          targetAccountId: null,
-          chooseNonSandbox: false,
-          createNewSandbox: true,
-        },
-      });
-    }
   }
   const { targetAccountInfo } = await promptUser([
     {
