@@ -147,7 +147,7 @@ exports.handler = async options => {
   }
 
   const isNonSandboxAccount = shouldTargetNonSandboxAccount;
-  // TODO programatically determine this
+  // TODO programatically determine whether the project is using a github integration
   const isProjectUsingGitIntegration = false;
 
   const preventUploads = isProjectUsingGitIntegration || isNonSandboxAccount;
