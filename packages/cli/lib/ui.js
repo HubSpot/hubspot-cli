@@ -1,3 +1,4 @@
+const process = require('process');
 const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
@@ -35,7 +36,7 @@ const getTerminalUISupport = () => {
  * @param {object} options
  * @returns {string}
  */
-const uiLink = (linkText, url) => {
+const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
   if (terminalUISupport.hyperlinks) {
@@ -46,12 +47,20 @@ const uiLink = (linkText, url) => {
       linkText,
       '\u001B]8;;\u0007',
     ].join('');
-    return terminalUISupport.color ? chalk.cyan(result) : result;
-  } else {
-    return terminalUISupport.color
-      ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
-      : `${linkText}: ${encodedUrl}`;
+
+    // Required b/c spinnies will break long lines
+    // See https://github.com/jbcarpanelli/spinnies/blob/d672dedcab8c8ce0f6de0bb26ca5582bf602afd7/utils.js#L68-L74
+    const columns = process.stderr.columns || 95;
+    const validLength = !inSpinnies || result.length < columns;
+
+    if (validLength) {
+      return terminalUISupport.color ? chalk.cyan(result) : result;
+    }
   }
+
+  return terminalUISupport.color
+    ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
+    : `${linkText}: ${encodedUrl}`;
 };
 
 /**

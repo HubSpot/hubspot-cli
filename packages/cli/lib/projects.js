@@ -225,14 +225,17 @@ const ensureProjectExists = async (
   }
 };
 
-const getProjectDetailUrl = (projectName, accountId) => {
-  if (!projectName) return;
-
+const getProjectHomeUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
-  return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
+  return `${baseUrl}/developer-projects/${accountId}`;
+};
+
+const getProjectDetailUrl = (projectName, accountId) => {
+  if (!projectName) return;
+  return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 };
 
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
@@ -757,6 +760,7 @@ module.exports = {
   handleProjectUpload,
   createProjectConfig,
   validateProjectConfig,
+  getProjectHomeUrl,
   getProjectDetailUrl,
   getProjectBuildDetailUrl,
   pollBuildStatus,
