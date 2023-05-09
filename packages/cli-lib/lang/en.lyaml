@@ -981,6 +981,8 @@ en:
           chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
           chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
           chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
+          defaultAccountNotProd: "Option unavailable because your default account must be a production account."
+          sandboxLimit: "Option unavailable because you’ve reached the limit of {{ limit }} development sandboxes."
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"
