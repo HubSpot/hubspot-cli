@@ -10,7 +10,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
-const { createProject } = require('@hubspot/cli-lib/api/dfs');
+const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const {
   getProjectConfig,
@@ -25,7 +25,10 @@ const {
   selectTargetAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
-const LocalDevManager = require('../../lib/LocalDevManager');
+const {
+  LocalDevManager,
+  UPLOAD_PERMISSIONS,
+} = require('../../lib/LocalDevManager');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
@@ -146,14 +149,6 @@ exports.handler = async options => {
     }
   }
 
-  const isNonSandboxAccount = shouldTargetNonSandboxAccount;
-  // TODO programatically determine whether the project is using a github integration
-  const isProjectUsingGitIntegration = false;
-
-  const preventUploads = isProjectUsingGitIntegration || isNonSandboxAccount;
-
-  const spinnies = SpinniesManager.init();
-
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,
@@ -162,6 +157,24 @@ exports.handler = async options => {
       noLogs: true,
     }
   );
+
+  const isNonSandboxAccount = shouldTargetNonSandboxAccount;
+
+  let uploadPermission = isNonSandboxAccount
+    ? UPLOAD_PERMISSIONS.manual
+    : UPLOAD_PERMISSIONS.always;
+
+  if (projectExists) {
+    const { sourceIntegration } = await fetchProject(
+      targetAccountId,
+      projectConfig.name
+    );
+    if (sourceIntegration) {
+      uploadPermission = UPLOAD_PERMISSIONS.never;
+    }
+  }
+
+  const spinnies = SpinniesManager.init();
 
   if (!projectExists) {
     uiLine();
@@ -214,7 +227,7 @@ exports.handler = async options => {
   });
 
   let result;
-  if (!preventUploads) {
+  if (uploadPermission === UPLOAD_PERMISSIONS.always) {
     result = await handleProjectUpload(
       targetAccountId,
       projectConfig,
@@ -234,11 +247,11 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
-    targetAccountId,
+    debug: options.debug,
     projectConfig,
     projectDir,
-    preventUploads,
-    debug: options.debug,
+    targetAccountId,
+    uploadPermission,
   });
 
   await LocalDev.start();
