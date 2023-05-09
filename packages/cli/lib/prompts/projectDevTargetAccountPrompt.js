@@ -47,22 +47,17 @@ const selectTargetAccountPrompt = async (
       logger.debug('Unable to fetch sandbox usage limits: ', err);
     }
     const sandboxAccounts = accounts.reverse().filter(isSandbox);
-    const createSandboxDisabled =
-      isSandbox(defaultAccountConfig) ||
-      (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0);
     let disabledMessage = false;
-    if (createSandboxDisabled) {
-      if (isSandbox(defaultAccountConfig)) {
-        disabledMessage = i18n(`${i18nKey}.defaultAccountNotProd`);
-      }
-      if (
-        sandboxUsage['DEVELOPER'] &&
-        sandboxUsage['DEVELOPER'].available === 0
-      ) {
-        disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
-          limit: sandboxUsage['DEVELOPER'].limit,
-        });
-      }
+    if (isSandbox(defaultAccountConfig)) {
+      disabledMessage = i18n(`${i18nKey}.defaultAccountNotProd`);
+    }
+    if (
+      sandboxUsage['DEVELOPER'] &&
+      sandboxUsage['DEVELOPER'].available === 0
+    ) {
+      disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
+        limit: sandboxUsage['DEVELOPER'].limit,
+      });
     }
     // Order choices by Create new -> Developer Sandbox -> Standard Sandbox -> Non sandbox
     choices = [
