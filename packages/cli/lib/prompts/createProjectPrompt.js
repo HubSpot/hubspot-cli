@@ -1,11 +1,23 @@
 const path = require('path');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const { PROJECT_COMPONENT_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  PROJECT_COMPONENT_TYPES,
+  PROJECT_PROPERTIES,
+} = require('@hubspot/cli-lib/lib/constants');
 const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
+
+const hasAllProperties = projectList => {
+  return projectList.every(config =>
+    PROJECT_PROPERTIES.every(p =>
+      Object.prototype.hasOwnProperty.call(config, p)
+    )
+  );
+};
 
 const createTemplateOptions = async repoPath => {
   const isRepoPath = !!repoPath;
@@ -14,6 +26,14 @@ const createTemplateOptions = async repoPath => {
     'main/config.json',
     isRepoPath
   );
+
+  if (!config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
+    return logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
+  }
+
+  if (!hasAllProperties(config[PROJECT_COMPONENT_TYPES.PROJECTS])) {
+    return logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
+  }
 
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };

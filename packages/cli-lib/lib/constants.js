@@ -124,6 +124,8 @@ const PROJECT_TEMPLATES = [
   },
 ];
 
+const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
+
 const TEMPLATE_TYPES = {
   unmapped: 0,
   email_base_template: 1,
@@ -268,6 +270,7 @@ module.exports = {
   PROJECT_DEPLOY_TEXT,
   PROJECT_TASK_TYPES,
   PROJECT_COMPONENT_TYPES,
+  PROJECT_PROPERTIES,
   SCOPE_GROUPS,
   SPINNER_STATUS,
   TEMPLATE_TYPES,
