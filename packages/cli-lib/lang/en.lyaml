@@ -1010,6 +1010,8 @@ en:
             nameRequired: "A project name is required"
             locationRequired: "A project location is required"
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+            failedtofetchJson: "Please ensure that the repo path you've entered is correct.
+            \n Please also ensure that the config.json file is located in the root of your repo."
         downloadProjectPrompt:
           selectProject: "Select a project to download:"
           errors:

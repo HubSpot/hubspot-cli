@@ -1,6 +1,7 @@
 const request = require('request-promise-native');
 const path = require('path');
 const fs = require('fs-extra');
+const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const { logger } = require('./logger');
 const { logErrorInstance } = require('./errorHandlers');
@@ -29,12 +30,17 @@ async function fetchJsonFromRepository(repoName, filePath, repoPath = false) {
     }
     logger.debug(`Fetching ${URI}...`);
 
-    return request.get(URI, {
+    return await request.get(URI, {
       json: true,
       headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
   } catch (err) {
     logger.error('An error occured fetching JSON file.');
+    if (repoPath && err.statusCode === 404) {
+      return logger.error(
+        i18n(`cli.lib.prompts.createProjectPrompt.errors.failedtofetchJson`)
+      );
+    }
     logErrorInstance(err);
   }
   return null;
