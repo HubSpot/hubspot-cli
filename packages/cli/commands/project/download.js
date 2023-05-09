@@ -22,18 +22,24 @@ const {
   ensureProjectExists,
 } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const {
+  downloadProjectPrompt,
+} = require('../../lib/prompts/downloadProjectPrompt');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download <name> [dest]';
+exports.command = 'download [--project]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name: projectName, dest, buildNumber } = options;
+  const { project, dest, buildNumber } = options;
+  let { project: promptedProjectName } = await downloadProjectPrompt(options);
+  let projectName = promptedProjectName || project;
+
   const accountId = getAccountId(options);
 
   trackCommandUsage('project-download', null, accountId);
@@ -50,7 +56,8 @@ exports.handler = async options => {
         accountId: chalk.bold(accountId),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    let { name: promptedProjectName } = await downloadProjectPrompt(options);
+    let projectName = promptedProjectName || project;
   }
 
   const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
@@ -58,7 +65,7 @@ exports.handler = async options => {
   const projectConfigCreated = await createProjectConfig(
     absoluteDestPath,
     projectName,
-    'no-template'
+    { name: 'no-template' }
   );
 
   if (!projectConfigCreated) {
@@ -119,23 +126,27 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
 
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
+  yargs.options({
+    project: {
+      describe: i18n(`${i18nKey}.options.project.describe`),
+      type: 'string',
+    },
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
+      type: 'string',
+    },
+    buildNumber: {
+      describe: i18n(`${i18nKey}.options.buildNumber.describe`),
+      type: 'number',
+    },
   });
-  yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
-    type: 'string',
-  });
-  yargs.option('buildNumber', {
-    describe: i18n(`${i18nKey}.options.buildNumber.describe`),
-    type: 'number',
-  });
+
   yargs.example([
     [
-      '$0 project download myProject myProjectFolder',
+      '$0 project download --project=myProject --dest=myProjectFolder',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);
+
   return yargs;
 };

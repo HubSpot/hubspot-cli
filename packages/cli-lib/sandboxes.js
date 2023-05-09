@@ -2,6 +2,7 @@
 const {
   createSandbox: _createSandbox,
   deleteSandbox: _deleteSandbox,
+  getSandboxUsageLimits: _getSandboxUsageLimits,
 } = require('./api/sandbox-hubs');
 const {
   initiateSync: _initiateSync,
@@ -9,11 +10,11 @@ const {
   fetchTypes: _fetchTypes,
 } = require('./api/sandboxes-sync');
 
-async function createSandbox(accountId, name) {
+async function createSandbox(accountId, name, type) {
   let resp;
 
   try {
-    resp = await _createSandbox(accountId, name);
+    resp = await _createSandbox(accountId, name, type);
   } catch (err) {
     throw err;
   }
@@ -38,6 +39,18 @@ async function deleteSandbox(parentAccountId, sandboxAccountId) {
     sandboxAccountId,
     ...resp,
   };
+}
+
+async function getSandboxUsageLimits(parentAccountId, sandboxAccountId) {
+  let resp;
+
+  try {
+    resp = await _getSandboxUsageLimits(parentAccountId, sandboxAccountId);
+  } catch (err) {
+    throw err;
+  }
+
+  return resp && resp.usage;
 }
 
 async function initiateSync(fromHubId, toHubId, tasks, sandboxHubId) {
@@ -73,12 +86,13 @@ async function fetchTypes(accountId, toHubId) {
     throw err;
   }
 
-  return resp.results;
+  return resp && resp.results;
 }
 
 module.exports = {
   createSandbox,
   deleteSandbox,
+  getSandboxUsageLimits,
   initiateSync,
   fetchTaskStatus,
   fetchTypes,
