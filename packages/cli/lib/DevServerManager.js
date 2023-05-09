@@ -1,6 +1,3 @@
-const fs = require('fs-extra');
-const path = require('path');
-const yaml = require('js-yaml');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/cliInterface');
 
@@ -21,32 +18,23 @@ class DevServerManager {
     }
   }
 
-  //TODO we should not keep this around long-term
-  async loadAppConfigFromPath(projectSourceDir) {
+  async getProjectFiles(projectSourceDir) {
     const projectFiles = await walk(projectSourceDir);
-    const appConfigPath = projectFiles.find(file => file.endsWith('app.json'));
-    if (appConfigPath) {
-      try {
-        const source = fs.readFileSync(appConfigPath);
-        const parsed = yaml.load(source);
-        return { appConfigPath, parsed };
-      } catch (e) {
-        console.log(e);
-      }
-    }
-    return { appConfigPath: null, parsed: null };
+    return projectFiles;
   }
 
-  async start({ projectConfig, projectSourceDir }) {
-    const appConfig = await this.loadAppConfigFromPath(projectSourceDir);
+  async start({ projectConfig, projectSourceDir, spinnies }) {
+    const projectFiles = await this.getProjectFiles(projectSourceDir);
 
     await this.iterateServers(async (serverInterface, serverKey) => {
-      await serverInterface.start(serverKey, {
-        projectConfig,
-        projectSourceDir,
-        appConfig: appConfig.parsed,
-        appPath: path.dirname(appConfig.appConfigPath),
-      });
+      if (serverInterface.start) {
+        await serverInterface.start(serverKey, {
+          projectConfig,
+          projectSourceDir,
+          projectFiles,
+          spinnies,
+        });
+      }
     });
   }
 
@@ -54,7 +42,12 @@ class DevServerManager {
     let notifyResponse = { uploadRequired: true };
 
     await this.iterateServers(async (serverInterface, serverKey) => {
-      const isSupportedByServer = await serverInterface.notify(changeInfo);
+      let isSupportedByServer = false;
+
+      if (serverInterface.notify) {
+        isSupportedByServer = await serverInterface.notify(changeInfo);
+      }
+
       if (isSupportedByServer) {
         notifyResponse[serverKey] = true;
 
@@ -69,7 +62,7 @@ class DevServerManager {
 
   async execute(notifyResponse, changeInfo) {
     await this.iterateServers(async (serverInterface, serverKey) => {
-      if (notifyResponse[serverKey]) {
+      if (notifyResponse[serverKey] && serverInterface.execute) {
         await serverInterface.execute(changeInfo);
       }
     });
@@ -77,7 +70,9 @@ class DevServerManager {
 
   async cleanup() {
     await this.iterateServers(async serverInterface => {
-      await serverInterface.cleanup();
+      if (serverInterface.cleanup) {
+        await serverInterface.cleanup();
+      }
     });
   }
 }

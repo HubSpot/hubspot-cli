@@ -483,6 +483,7 @@ class LocalDevManager {
     await DevServerManager.start({
       projectConfig: this.projectConfig,
       projectSourceDir: this.projectSourceDir,
+      spinnies: this.spinnies,
     });
   }
 

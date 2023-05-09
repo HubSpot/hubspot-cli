@@ -40,7 +40,7 @@ const { syncSandbox } = require('../../lib/sandbox-sync');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account] [--mockServers]';
+exports.command = 'dev [--account]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -239,7 +239,6 @@ exports.handler = async options => {
     projectDir,
     preventUploads,
     debug: options.debug,
-    mockServers: options.mockServers,
   });
 
   await LocalDev.start();
@@ -253,11 +252,6 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
-  yargs.option('mockServers', {
-    describe: 'mock servers',
-    type: 'boolean',
-    default: false,
-  });
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;
