@@ -8,6 +8,7 @@ const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
 
@@ -27,12 +28,14 @@ const createTemplateOptions = async repoPath => {
     isRepoPath
   );
 
-  if (!config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
-    return logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
+  if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
+    logger.error(i18n(`${i18nKey}.errors.noProjectsInConfig`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   if (!hasAllProperties(config[PROJECT_COMPONENT_TYPES.PROJECTS])) {
-    return logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
+    logger.error(i18n(`${i18nKey}.errors.missingPropertiesInConfig`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];

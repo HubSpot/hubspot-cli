@@ -34,11 +34,13 @@ async function fetchJsonFromRepository(
       headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
   } catch (err) {
-    logger.error('An error occured fetching JSON file.');
     if (repoPath && err.statusCode === 404) {
-      return logger.error(
+      logger.error(
         i18n(`cli.lib.prompts.createProjectPrompt.errors.failedToFetchJson`)
       );
+      process.exit(1);
+    } else {
+      logger.error('An error occured fetching JSON file.');
     }
     logErrorInstance(err);
   }
