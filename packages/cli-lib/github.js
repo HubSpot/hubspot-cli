@@ -20,14 +20,13 @@ const GITHUB_AUTH_HEADERS = {
  * @param {String} repoName - name of the github repository
  * @returns {Buffer|Null} Zip data buffer
  */
-async function fetchJsonFromRepository(repoName, filePath, repoPath = false) {
+async function fetchJsonFromRepository(
+  repoName = 'HubSpot/hubspot-project-components',
+  filePath,
+  repoPath = false
+) {
   try {
-    let URI;
-    if (repoPath) {
-      URI = `https://raw.githubusercontent.com/${repoName}/${filePath}`;
-    } else {
-      URI = `https://raw.githubusercontent.com/HubSpot/${repoName}/${filePath}`;
-    }
+    const URI = `https://raw.githubusercontent.com/${repoName}/${filePath}`;
     logger.debug(`Fetching ${URI}...`);
 
     return await request.get(URI, {
