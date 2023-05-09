@@ -11,7 +11,7 @@ const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
 const { createProject } = require('@hubspot/cli-lib/api/dfs');
-const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const {
   getProjectConfig,
   ensureProjectExists,
@@ -40,7 +40,7 @@ const { syncSandbox } = require('../../lib/sandbox-sync');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account]';
+exports.command = 'dev [--account] [--mockServers]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -86,13 +86,14 @@ exports.handler = async options => {
   logger.log();
 
   // Show a warning if the user chooses a non-sandbox account (false)
+  let shouldTargetNonSandboxAccount;
   if (chooseNonSandbox) {
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
     uiLine();
     logger.log();
 
-    const shouldTargetNonSandboxAccount = await confirmPrompt(
+    shouldTargetNonSandboxAccount = await confirmPrompt(
       i18n(`${i18nKey}.prompt.targetNonSandbox`)
     );
 
@@ -145,26 +146,11 @@ exports.handler = async options => {
     }
   }
 
-  // TODO programatically determine these values
-  const isNonSandboxAccount = false;
+  const isNonSandboxAccount = shouldTargetNonSandboxAccount;
+  // TODO programatically determine whether the project is using a github integration
   const isProjectUsingGitIntegration = false;
 
-  let preventUploads = false;
-
-  if (isProjectUsingGitIntegration || isNonSandboxAccount) {
-    uiLine();
-    logger.warn(i18n(`${i18nKey}.logs.preventUploadExplanation`));
-    uiLine();
-    logger.log();
-
-    if (isProjectUsingGitIntegration) {
-      preventUploads = true;
-    } else {
-      preventUploads = await confirmPrompt(
-        i18n(`${i18nKey}.prompt.preventUploads`)
-      );
-    }
-  }
+  const preventUploads = isProjectUsingGitIntegration || isNonSandboxAccount;
 
   const spinnies = SpinniesManager.init();
 
@@ -172,49 +158,57 @@ exports.handler = async options => {
     targetAccountId,
     projectConfig.name,
     {
-      allowCreate: true,
+      allowCreate: false,
       noLogs: true,
     }
   );
 
   if (!projectExists) {
-    logger.log(i18n(`${i18nKey}.logs.projectNotInAccount`));
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.projectMustExistExplanation`));
+    logger.warn(
+      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      })
+    );
     uiLine();
-
-    if (preventUploads) {
-      logger.log(i18n(`${i18nKey}.logs.unableToCreateProject`));
-      process.exit(EXIT_CODES.ERROR);
-    }
 
     const shouldCreateProject = await confirmPrompt(
       i18n(`${i18nKey}.prompt.createProject`, {
-        accountName: uiAccountDescription(targetAccountId),
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
       })
     );
 
     if (shouldCreateProject) {
       try {
         spinnies.add('createProject', {
-          text: 'Creating project in account',
+          text: i18n(`${i18nKey}.status.creatingProject`, {
+            accountIdentifier: uiAccountDescription(targetAccountId),
+            projectName: projectConfig.name,
+          }),
         });
         await createProject(targetAccountId, projectConfig.name);
         spinnies.succeed('createProject', {
-          text: 'Created project in account',
+          text: i18n(`${i18nKey}.status.createdProject`, {
+            accountIdentifier: uiAccountDescription(targetAccountId),
+            projectName: projectConfig.name,
+          }),
         });
       } catch (err) {
+        logger.log(i18n(`${i18nKey}.logs.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
+      // We cannot continue if the project does not exist in the target account
+      logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
 
   spinnies.add('devModeSetup', {
-    text: i18n(`${i18nKey}.logs.startupMessage`, {
+    text: i18n(`${i18nKey}.status.startupMessage`, {
       projectName: projectConfig.name,
-      accountIdentifier: uiAccountDescription(targetAccountId),
     }),
     isParent: true,
   });
@@ -226,13 +220,13 @@ exports.handler = async options => {
       projectConfig,
       projectDir,
       (...args) => pollProjectBuildAndDeploy(...args, true),
-      'HubSpot Local Dev Server Startup'
+      i18n(`${i18nKey}.logs.initialUploadMessage`)
     );
   }
 
   if (result && !result.succeeded) {
     spinnies.fail('devModeSetup', {
-      text: 'failed to start up dev mode',
+      text: i18n(`${i18nKey}.status.startupFailed`),
     });
     process.exit(EXIT_CODES.ERROR);
   } else {
@@ -245,16 +239,12 @@ exports.handler = async options => {
     projectDir,
     preventUploads,
     debug: options.debug,
+    mockServers: options.mockServers,
   });
 
   await LocalDev.start();
 
   handleExit(LocalDev.stop);
-  handleKeypress(key => {
-    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
-      LocalDev.stop();
-    }
-  });
 };
 
 exports.builder = yargs => {
@@ -263,6 +253,11 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
+  yargs.option('mockServers', {
+    describe: 'mock servers',
+    type: 'boolean',
+    default: false,
+  });
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;

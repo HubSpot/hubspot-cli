@@ -6,6 +6,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -22,8 +23,11 @@ const {
 } = require('@hubspot/cli-lib/api/dfs');
 const SpinniesManager = require('./SpinniesManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { pollProjectBuildAndDeploy } = require('./projects');
-const { uiAccountDescription } = require('./ui');
+const {
+  getProjectDetailUrl,
+  pollProjectBuildAndDeploy,
+} = require('./projects');
+const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
@@ -43,6 +47,7 @@ class LocalDevManager {
     this.projectDir = options.projectDir;
     this.preventUploads = options.preventUploads;
     this.debug = options.debug || false;
+    this.mockServers = options.mockServers || false;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -75,13 +80,18 @@ class LocalDevManager {
       });
     }
 
-    this.startUploadQueue();
+    console.clear();
+
+    this.uploadQueue.start();
+
+    this.logConsoleHeader();
     await this.startServers();
     await this.startWatching();
+    this.updateKeypressListeners();
   }
 
   async stop() {
-    this.spinnies.removeAll();
+    this.clearConsoleContent();
 
     this.spinnies.add('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingStart`),
@@ -127,26 +137,77 @@ class LocalDevManager {
     process.exit(exitCode);
   }
 
-  startUploadQueue() {
-    this.uploadQueue.start();
-
+  logConsoleHeader() {
     this.spinnies.removeAll();
     this.spinnies.add('devModeRunning', {
-      text: i18n(`${i18nKey}.running`, {
-        projectName: this.projectConfig.name,
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
+      text: i18n(`${i18nKey}.running`),
       isParent: true,
+      category: 'header',
     });
     this.spinnies.add('devModeStatus', {
       text: i18n(`${i18nKey}.status.clean`),
       status: 'non-spinnable',
       indent: 1,
+      category: 'header',
     });
-    this.spinnies.add('quitMessage', {
+    const projectDetailUrl = getProjectDetailUrl(
+      this.projectConfig.name,
+      this.targetAccountId
+    );
+    this.spinnies.add('viewInHubSpotLink', {
+      text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl, {
+        inSpinnies: true,
+      }),
+      status: 'non-spinnable',
+      indent: 1,
+      category: 'header',
+    });
+    this.spinnies.add('spacer-1', {
+      text: ' ',
+      status: 'non-spinnable',
+      category: 'header',
+    });
+    this.spinnies.add('keypressMessage', {
       text: i18n(`${i18nKey}.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
+      category: 'header',
+    });
+    this.spinnies.add('lineSeparator', {
+      text: '-'.repeat(50),
+      status: 'non-spinnable',
+      noIndent: true,
+      category: 'header',
+    });
+  }
+
+  clearConsoleContent() {
+    this.spinnies.removeAll({ preserveCategory: 'header' });
+  }
+
+  updateKeypressListeners() {
+    handleKeypress(async key => {
+      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+        this.stop();
+      } else if (key.name === 'y') {
+        if (this.preventUploads && this.hasAnyUnsupportedStandbyChanges()) {
+          this.clearConsoleContent();
+          this.updateDevModeStatus('manualUpload');
+          await this.createNewStagingBuild();
+          await this.flushStandbyChanges();
+          await this.queueBuild();
+        }
+      } else if (key.name === 'n') {
+        if (this.preventUploads && this.hasAnyUnsupportedStandbyChanges()) {
+          this.clearConsoleContent();
+          this.spinnies.add('manualUploadSkipped', {
+            text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
+            status: 'fail',
+            failColor: 'white',
+            noIndent: true,
+          });
+        }
+      }
     });
   }
 
@@ -154,14 +215,16 @@ class LocalDevManager {
     this.spinnies.update('devModeStatus', {
       text: i18n(`${i18nKey}.status.${langKey}`),
       status: 'non-spinnable',
+      noIndent: true,
     });
   }
 
   async pauseUploadQueue() {
-    this.spinnies.removeAll();
     this.spinnies.add('uploading', {
-      text: i18n(`${i18nKey}.upload.uploadingChanges`),
-      isParent: true,
+      text: i18n(`${i18nKey}.upload.uploadingChanges`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
+      noIndent: true,
     });
 
     this.uploadQueue.pause();
@@ -217,13 +280,14 @@ class LocalDevManager {
 
     const isSupportedChange = await this.notifyServers(changeInfo);
 
-    if (this.preventUploads) {
-      this.updateDevModeStatus('uploadPrevented');
+    if (isSupportedChange) {
+      this.updateDevModeStatus('supportedChange');
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
       return;
     }
 
-    if (isSupportedChange) {
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
+    if (this.preventUploads) {
+      this.handlePreventedUpload(changeInfo);
       return;
     }
 
@@ -248,27 +312,63 @@ class LocalDevManager {
     }
   }
 
+  handlePreventedUpload(changeInfo) {
+    this.clearConsoleContent();
+    this.updateDevModeStatus('uploadPrevented');
+
+    this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+
+    this.spinnies.add('manualUploadRequired', {
+      text: i18n(`${i18nKey}.upload.manualUploadRequired`),
+      status: 'fail',
+      failColor: 'white',
+      noIndent: true,
+    });
+    this.spinnies.add('manualUploadExplanation1', {
+      text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
+      status: 'non-spinnable',
+      indent: 1,
+    });
+    this.spinnies.add('manualUploadExplanation2', {
+      text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
+      status: 'non-spinnable',
+      indent: 1,
+    });
+    this.spinnies.add('manualUploadPrompt', {
+      text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
+      status: 'non-spinnable',
+      indent: 1,
+    });
+  }
+
   addChangeToStandbyQueue(changeInfo) {
-    if (
-      changeInfo.event === WATCH_EVENTS.add ||
-      changeInfo.event === WATCH_EVENTS.change
-    ) {
-      if (!isAllowedExtension(changeInfo.filePath)) {
-        logger.debug(`Extension not allowed: ${changeInfo.filePath}`);
+    const { event, filePath } = changeInfo;
+
+    if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
+      if (!isAllowedExtension(filePath)) {
+        logger.debug(`Extension not allowed: ${filePath}`);
         return;
       }
     }
-    if (shouldIgnoreFile(changeInfo.filePath, true)) {
-      logger.debug(`File ignored: ${changeInfo.filePath}`);
+    if (shouldIgnoreFile(filePath, true)) {
+      logger.debug(`File ignored: ${filePath}`);
       return;
     }
     this.standbyChanges.push(changeInfo);
   }
 
-  async sendChanges({ event, filePath, remotePath }) {
+  async sendChanges(changeInfo) {
+    const { event, filePath, remotePath } = changeInfo;
+
+    this.spinnies.add(filePath, {
+      text: i18n(`${i18nKey}.upload.uploadingChange`, {
+        filePath: remotePath,
+      }),
+      status: 'non-spinnable',
+    });
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
-        return uploadFileToBuild(
+        await uploadFileToBuild(
           this.targetAccountId,
           this.projectConfig.name,
           filePath,
@@ -278,7 +378,7 @@ class LocalDevManager {
         event === WATCH_EVENTS.unlink ||
         event === WATCH_EVENTS.unlinkDir
       ) {
-        return deleteFileFromBuild(
+        await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
           remotePath
@@ -290,56 +390,66 @@ class LocalDevManager {
   }
 
   debounceQueueBuild() {
-    this.updateDevModeStatus('dirty');
+    if (!this.preventUploads) {
+      this.updateDevModeStatus('uploadPending');
+    }
 
     if (this.debouncedBuild) {
       clearTimeout(this.debouncedBuild);
     }
 
-    this.debouncedBuild = setTimeout(async () => {
-      await this.pauseUploadQueue();
+    this.debouncedBuild = setTimeout(
+      this.queueBuild.bind(this),
+      BUILD_DEBOUNCE_TIME
+    );
+  }
 
-      try {
-        await queueBuild(this.targetAccountId, this.projectConfig.name);
-      } catch (err) {
-        logger.debug(err);
-        if (
-          isSpecifiedError(err, {
-            subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
-          })
-        ) {
-          logger.log(i18n(`${i18nKey}.logs.cancelledFromUI`));
-          this.stop();
-        } else {
-          logApiErrorInstance(
-            err,
-            new ApiErrorContext({
-              accountId: this.targetAccountId,
-              projectName: this.projectConfig.name,
-            })
-          );
-        }
-        return;
-      }
+  async queueBuild() {
+    await this.pauseUploadQueue();
 
-      await pollProjectBuildAndDeploy(
-        this.targetAccountId,
-        this.projectConfig,
-        null,
-        this.currentStagedBuildId,
-        true
-      );
-
-      await this.createNewStagingBuild();
-
-      this.startUploadQueue();
-
-      if (this.hasAnyUnsupportedStandbyChanges()) {
-        this.flushStandbyChanges();
+    try {
+      await queueBuild(this.targetAccountId, this.projectConfig.name);
+    } catch (err) {
+      logger.debug(err);
+      if (
+        isSpecifiedError(err, {
+          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+        })
+      ) {
+        logger.log(i18n(`${i18nKey}.cancelledFromUI`));
+        this.stop();
       } else {
-        this.updateDevModeStatus('clean');
+        logApiErrorInstance(
+          err,
+          new ApiErrorContext({
+            accountId: this.targetAccountId,
+            projectName: this.projectConfig.name,
+          })
+        );
       }
-    }, BUILD_DEBOUNCE_TIME);
+      return;
+    }
+
+    await pollProjectBuildAndDeploy(
+      this.targetAccountId,
+      this.projectConfig,
+      null,
+      this.currentStagedBuildId,
+      true
+    );
+
+    if (!this.preventUploads) {
+      await this.createNewStagingBuild();
+    }
+
+    this.uploadQueue.start();
+    this.clearConsoleContent();
+
+    if (this.hasAnyUnsupportedStandbyChanges()) {
+      this.flushStandbyChanges();
+    } else {
+      this.updateDevModeStatus('clean');
+    }
   }
 
   async flushStandbyChanges() {
@@ -347,10 +457,10 @@ class LocalDevManager {
       await this.uploadQueue.addAll(
         this.standbyChanges.map(changeInfo => {
           return async () => {
-            if (!this.uploadQueue.isPaused) {
+            if (!this.preventUploads && !this.uploadQueue.isPaused) {
               this.debounceQueueBuild();
             }
-            this.sendChanges(changeInfo);
+            await this.sendChanges(changeInfo);
           };
         })
       );
@@ -367,10 +477,12 @@ class LocalDevManager {
     return true;
   }
 
-  async notifyServers() {
-    // TODO alert local dev servers of file change (randomly return true or false for now)
-    if (this.debug) {
-      return Math.random() < 0.5;
+  async notifyServers(changeInfo) {
+    const { remotePath } = changeInfo;
+
+    // TODO notify servers of the change
+    if (this.mockServers) {
+      return !remotePath.endsWith('app.json');
     }
     return false;
   }
