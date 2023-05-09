@@ -88,7 +88,7 @@ const createProjectConfig = async (
   projectPath,
   projectName,
   template,
-  repoPath = ''
+  repoPath
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -133,12 +133,7 @@ const createProjectConfig = async (
       srcDir: 'src',
     });
   } else {
-    await downloadGitHubRepoContents(
-      'hubspot-project-components',
-      template.path,
-      projectPath,
-      { repoPath }
-    );
+    await downloadGitHubRepoContents(repoPath, template.path, projectPath);
     const _config = JSON.parse(fs.readFileSync(projectConfigPath));
     writeProjectConfig(projectConfigPath, {
       ..._config,
@@ -641,7 +636,7 @@ const createProjectComponent = async (component, name) => {
   );
 
   await downloadGitHubRepoContents(
-    'hubspot-project-components',
+    'HubSpot/hubspot-project-components',
     component.path,
     componentPath
   );
