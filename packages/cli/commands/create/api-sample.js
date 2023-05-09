@@ -39,7 +39,7 @@ module.exports = {
     const downloadSpinner = ora(i18n(`${i18nKey}.loading.apiSamples`));
     downloadSpinner.start();
     const samplesConfig = await fetchJsonFromRepository(
-      'sample-apps-list',
+      'HubSpot/sample-apps-list',
       'main/samples.json'
     );
     downloadSpinner.stop();

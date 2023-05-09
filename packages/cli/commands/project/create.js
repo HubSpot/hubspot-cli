@@ -34,7 +34,8 @@ exports.handler = async options => {
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    options.template || template
+    options.template || template,
+    options.repoPath
   );
 
   logger.log('');
@@ -59,6 +60,10 @@ exports.builder = yargs => {
     },
     template: {
       describe: i18n(`${i18nKey}.options.template.describe`),
+      type: 'string',
+    },
+    repoPath: {
+      describe: i18n(`${i18nKey}.options.repoPath.describe`),
       type: 'string',
     },
   });

@@ -7,7 +7,7 @@ const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 
 const createTypeOptions = async () => {
   const config = await fetchJsonFromRepository(
-    'hubspot-project-components',
+    'HubSpot/hubspot-project-components',
     'main/config.json'
   );
 

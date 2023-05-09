@@ -7,6 +7,7 @@ const { logErrorInstance } = require('./errorHandlers');
 const { extractZipArchive } = require('./archive');
 
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
+const { i18n } = require('./lib/lang');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 const GITHUB_AUTH_HEADERS = {
@@ -19,17 +20,28 @@ const GITHUB_AUTH_HEADERS = {
  * @param {String} repoName - name of the github repository
  * @returns {Buffer|Null} Zip data buffer
  */
-async function fetchJsonFromRepository(repoName, filePath) {
+async function fetchJsonFromRepository(
+  repoName = 'HubSpot/hubspot-project-components',
+  filePath,
+  repoPath = false
+) {
   try {
-    const URI = `https://raw.githubusercontent.com/HubSpot/${repoName}/${filePath}`;
+    const URI = `https://raw.githubusercontent.com/${repoName}/${filePath}`;
     logger.debug(`Fetching ${URI}...`);
 
-    return request.get(URI, {
+    return await request.get(URI, {
       json: true,
       headers: { ...DEFAULT_USER_AGENT_HEADERS, ...GITHUB_AUTH_HEADERS },
     });
   } catch (err) {
-    logger.error('An error occured fetching JSON file.');
+    if (repoPath && err.statusCode === 404) {
+      logger.error(
+        i18n(`cli.lib.prompts.createProjectPrompt.errors.failedToFetchJson`)
+      );
+      process.exit(1);
+    } else {
+      logger.error('An error occured fetching JSON file.');
+    }
     logErrorInstance(err);
   }
   return null;
@@ -124,8 +136,11 @@ async function cloneGitHubRepo(dest, type, repoName, sourceDir, options = {}) {
   return success;
 }
 
-async function getGitHubRepoContentsAtPath(repoName, path) {
-  const contentsRequestUrl = `https://api.github.com/repos/HubSpot/${repoName}/contents/${path}`;
+async function getGitHubRepoContentsAtPath(
+  repoPath = 'HubSpot/hubspot-project-components',
+  path
+) {
+  const contentsRequestUrl = `https://api.github.com/repos/${repoPath}/contents/${path}`;
 
   return request.get(contentsRequestUrl, {
     json: true,
