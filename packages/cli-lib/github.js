@@ -1,13 +1,13 @@
 const request = require('request-promise-native');
 const path = require('path');
 const fs = require('fs-extra');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
 
 const { logger } = require('./logger');
 const { logErrorInstance } = require('./errorHandlers');
 const { extractZipArchive } = require('./archive');
 
 const { GITHUB_RELEASE_TYPES } = require('./lib/constants');
+const { i18n } = require('./lib/lang');
 const { DEFAULT_USER_AGENT_HEADERS } = require('./http/requestOptions');
 
 const GITHUB_AUTH_HEADERS = {
