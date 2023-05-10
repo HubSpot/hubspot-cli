@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/cli-lib/lib/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { fetchThemes } = require('@hubspot/cli-lib/api/designManager');
 const {
   requestLighthouseScore,

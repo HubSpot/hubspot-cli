@@ -3,7 +3,7 @@ const {
   updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const { promptUser } = require('./promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.prompts.setAsDefaultAccountPrompt';
 

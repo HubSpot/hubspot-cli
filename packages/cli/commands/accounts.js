@@ -1,5 +1,5 @@
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const list = require('./accounts/list');
 const rename = require('./accounts/rename');
 const use = require('./accounts/use');

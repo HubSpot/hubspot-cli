@@ -13,7 +13,7 @@ const {
 } = require('../lib/usageTracking');
 const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');

@@ -6,7 +6,7 @@ const {
   addTestingOptions,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { buildSandbox } = require('../../lib/sandbox-create');

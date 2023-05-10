@@ -6,7 +6,7 @@ const {
   DEFAULT_MODE,
   Mode,
 } = require('@hubspot/cli-lib');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 
 const i18nKey = 'cli.lib.commonOpts';
 const { LOG_LEVEL } = Logger;

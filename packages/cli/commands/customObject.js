@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { uiBetaWarning } = require('../lib/ui');
 

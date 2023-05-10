@@ -31,7 +31,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { tailLogs } = require('../../lib/serverlessLogs');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.logs';

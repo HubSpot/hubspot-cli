@@ -33,7 +33,7 @@ const {
   getThemePreviewUrl,
   getThemeJSONPath,
 } = require('@hubspot/cli-lib/lib/files');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {

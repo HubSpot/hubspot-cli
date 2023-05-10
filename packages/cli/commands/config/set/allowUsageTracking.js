@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/cli-lib/lib/config');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../../lib/lang');
 
 const i18nKey =
   'cli.commands.config.subcommands.set.options.allowUsageTracking';

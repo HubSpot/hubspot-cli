@@ -3,7 +3,7 @@ const { getAccountId } = require('@hubspot/cli-lib/lib/config');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
 const { createProjectComponent } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');

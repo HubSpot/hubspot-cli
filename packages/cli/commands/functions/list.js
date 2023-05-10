@@ -18,7 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.functions.subcommands.list';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
