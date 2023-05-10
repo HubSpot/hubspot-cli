@@ -146,7 +146,10 @@ class LocalDevManager {
   logConsoleHeader() {
     this.spinnies.removeAll();
     this.spinnies.add('devModeRunning', {
-      text: i18n(`${i18nKey}.header.running`),
+      text: i18n(`${i18nKey}.header.running`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+        projectName: this.projectConfig.name,
+      }),
       isParent: true,
       category: 'header',
     });

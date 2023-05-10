@@ -876,7 +876,7 @@ en:
         previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
         header:
-          running: "Local dev server running, waiting for project file changes ..."
+          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
           status:
