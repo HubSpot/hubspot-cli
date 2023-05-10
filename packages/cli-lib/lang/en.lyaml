@@ -484,7 +484,8 @@ en:
               deploying: "Deploying project at path: {{ path }}"
             errors:
               deploy: "Deploy error: {{ details }}"
-              noBuildId: "No latest build ID was found."
+              noBuilds: "Deploy error: no builds for this project were found."
+              noBuildId: "You must specify a build to deploy"
             examples:
               default: "Deploy the latest build of the current project"
               withOptions: "Deploy build 5 of the project my-project"
@@ -1059,6 +1060,11 @@ en:
             general: "[--general] Tell us about your experience with HubSpot's developer tools"
           bugPrompt: "Create an issue on Github in your browser?"
           generalPrompt: "Open the projects feedback form in your browser?"
+        buildIdPrompt:
+          enterBuildId: "[--build] Deploy which build?"
+          errors:
+            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
+            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
       convertFields:
         positionals:
           src:
