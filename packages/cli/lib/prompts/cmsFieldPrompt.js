@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { promptUser } = require('./promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 const escapeRegExp = require('@hubspot/cli-lib/lib/escapeRegExp');
 const i18nKey = 'cli.lib.prompts.uploadPrompt';
 const FIELDS_FILES = ['fields.json', 'fields.js', 'fields.cjs', 'fields.mjs'];

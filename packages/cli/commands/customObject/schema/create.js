@@ -14,7 +14,7 @@ const {
   createSchema: createSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../../lib/lang');
 
 const i18nKey =
   'cli.commands.customObject.subcommands.schema.subcommands.create';

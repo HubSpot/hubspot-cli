@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { updateHttpTimeout } = require('@hubspot/cli-lib/lib/config');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../../lib/lang');
 
 const i18nKey = 'cli.commands.config.subcommands.set.options.httpTimeout';
 

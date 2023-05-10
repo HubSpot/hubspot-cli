@@ -16,7 +16,7 @@ const {
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
 
 const i18nKey = 'cli.commands.watch';

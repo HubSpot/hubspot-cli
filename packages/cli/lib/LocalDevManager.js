@@ -1,7 +1,7 @@
 const chokidar = require('chokidar');
 const path = require('path');
 const { default: PQueue } = require('p-queue');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   isSpecifiedError,

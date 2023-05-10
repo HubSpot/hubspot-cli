@@ -1,6 +1,6 @@
 const open = require('open');
 
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const {
   FEEDBACK_OPTIONS,
   FEEDBACK_URLS,

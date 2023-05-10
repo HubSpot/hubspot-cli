@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('@hubspot/cli-lib/lib/config');
 const { fetchProjects } = require('@hubspot/cli-lib/api/dfs');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.prompts.downloadProjectPrompt';
 

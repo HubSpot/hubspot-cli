@@ -1,4 +1,4 @@
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const lighthouseScore = require('./cms/lighthouseScore');
 const convertFields = require('./cms/convertFields');

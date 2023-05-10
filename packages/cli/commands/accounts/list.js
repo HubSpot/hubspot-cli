@@ -13,7 +13,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getSandboxTypeAsString } = require('../../lib/sandboxes');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.accounts.subcommands.list';
 

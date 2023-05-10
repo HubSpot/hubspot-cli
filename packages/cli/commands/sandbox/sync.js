@@ -8,7 +8,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');

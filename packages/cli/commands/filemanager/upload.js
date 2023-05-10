@@ -21,7 +21,7 @@ const {
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.filemanager.subcommands.upload';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
