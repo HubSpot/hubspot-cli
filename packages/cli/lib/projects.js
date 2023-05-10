@@ -39,6 +39,9 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const SpinniesManager = require('./SpinniesManager');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.lib.projects';
 
@@ -170,14 +173,6 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 
 const pollFetchProject = async (accountId, projectName) => {
   // Temporary solution for gating slowness. Retry on 403 statusCode
-  try {
-    const project = await fetchProject(accountId, projectName);
-    return project;
-  } catch (error) {
-    if (error.statusCode === 404) {
-      throw error;
-    }
-  }
   return new Promise((resolve, reject) => {
     let pollCount = 0;
     const spinnies = SpinniesManager.init();
@@ -193,13 +188,24 @@ const pollFetchProject = async (accountId, projectName) => {
           resolve(project);
         }
       } catch (err) {
-        // Poll up to max 30s
-        if (err.statusCode === 404 || pollCount >= 15) {
+        if (
+          isSpecifiedError(err, {
+            statusCode: 403,
+            category: 'GATED',
+            subCategory: 'BuildPipelineErrorType.PORTAL_GATED',
+          })
+        ) {
+          pollCount += 1;
+        } else if (pollCount >= 15) {
+          // Poll up to max 30s
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          reject(err);
+        } else {
           spinnies.remove('pollFetchProject');
           clearInterval(pollInterval);
           reject(err);
         }
-        pollCount += 1;
       }
     }, POLLING_DELAY);
   });
@@ -208,11 +214,18 @@ const pollFetchProject = async (accountId, projectName) => {
 const ensureProjectExists = async (
   accountId,
   projectName,
-  { forceCreate = false, allowCreate = true, noLogs = false } = {}
+  {
+    forceCreate = false,
+    allowCreate = true,
+    noLogs = false,
+    withPolling = false,
+  } = {}
 ) => {
   const accountIdentifier = uiAccountDescription(accountId);
   try {
-    const project = await pollFetchProject(accountId, projectName);
+    const project = withPolling
+      ? await pollFetchProject(accountId, projectName)
+      : await fetchProject(accountId, projectName);
     return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
