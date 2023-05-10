@@ -4,7 +4,6 @@ const archiver = require('archiver');
 const tmp = require('tmp');
 const chalk = require('chalk');
 const findup = require('findup-sync');
-const Spinnies = require('spinnies');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
@@ -39,6 +38,12 @@ const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const SpinniesManager = require('./SpinniesManager');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+
+const i18nKey = 'cli.lib.projects';
 
 const writeProjectConfig = (configPath, config) => {
   try {
@@ -167,15 +172,61 @@ const validateProjectConfig = (projectConfig, projectDir) => {
   }
 };
 
+const pollFetchProject = async (accountId, projectName) => {
+  // Temporary solution for gating slowness. Retry on 403 statusCode
+  return new Promise((resolve, reject) => {
+    let pollCount = 0;
+    const spinnies = SpinniesManager.init();
+    spinnies.add('pollFetchProject', {
+      text: 'Fetching project status',
+    });
+    const pollInterval = setInterval(async () => {
+      try {
+        const project = await fetchProject(accountId, projectName);
+        if (project) {
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          resolve(project);
+        }
+      } catch (err) {
+        if (
+          isSpecifiedError(err, {
+            statusCode: 403,
+            category: 'GATED',
+            subCategory: 'BuildPipelineErrorType.PORTAL_GATED',
+          })
+        ) {
+          pollCount += 1;
+        } else if (pollCount >= 15) {
+          // Poll up to max 30s
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          reject(err);
+        } else {
+          spinnies.remove('pollFetchProject');
+          clearInterval(pollInterval);
+          reject(err);
+        }
+      }
+    }, POLLING_DELAY);
+  });
+};
+
 const ensureProjectExists = async (
   accountId,
   projectName,
-  { forceCreate = false, allowCreate = true, noLogs = false } = {}
+  {
+    forceCreate = false,
+    allowCreate = true,
+    noLogs = false,
+    withPolling = false,
+  } = {}
 ) => {
-  const i18nKey = 'cli.commands.project.lib.ensureProjectExists';
   const accountIdentifier = uiAccountDescription(accountId);
   try {
-    const project = await fetchProject(accountId, projectName);
+    const project = withPolling
+      ? await pollFetchProject(accountId, projectName)
+      : await fetchProject(accountId, projectName);
     return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
@@ -185,7 +236,7 @@ const ensureProjectExists = async (
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: i18n(`${i18nKey}.createPrompt`, {
+            message: i18n(`${i18nKey}.ensureProjectExists.createPrompt`, {
               projectName,
               accountIdentifier,
             }),
@@ -199,7 +250,10 @@ const ensureProjectExists = async (
         try {
           await createProject(accountId, projectName);
           logger.success(
-            i18n(`${i18nKey}.createSuccess`, { projectName, accountIdentifier })
+            i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
+              projectName,
+              accountIdentifier,
+            })
           );
           return true;
         } catch (err) {
@@ -208,9 +262,10 @@ const ensureProjectExists = async (
       } else {
         if (!noLogs) {
           logger.log(
-            `Your project ${chalk.bold(
-              projectName
-            )} could not be found in ${chalk.bold(accountIdentifier)}.`
+            i18n(`${i18nKey}.ensureProjectExists.notFound`, {
+              projectName,
+              accountIdentifier,
+            })
           );
         }
         return false;
@@ -221,14 +276,17 @@ const ensureProjectExists = async (
   }
 };
 
-const getProjectDetailUrl = (projectName, accountId) => {
-  if (!projectName) return;
-
+const getProjectHomeUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
     getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
-  return `${baseUrl}/developer-projects/${accountId}/project/${projectName}`;
+  return `${baseUrl}/developer-projects/${accountId}`;
+};
+
+const getProjectDetailUrl = (projectName, accountId) => {
+  if (!projectName) return;
+  return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 };
 
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
@@ -243,23 +301,22 @@ const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
     accountId
   )}/activity/deploy/${deployId}`;
 };
+
 const uploadProjectFiles = async (
   accountId,
   projectName,
   filePath,
   uploadMessage
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
-  const spinnies = new Spinnies({
-    succeedColor: 'white',
-  });
+  const spinnies = SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
 
   spinnies.add('upload', {
-    text: i18n(`${i18nKey}.loading.upload.add`, {
+    text: i18n(`${i18nKey}.uploadProjectFiles.add`, {
       accountIdentifier,
       projectName,
     }),
+    succeedColor: 'white',
   });
 
   let buildId;
@@ -275,21 +332,21 @@ const uploadProjectFiles = async (
     buildId = upload.buildId;
 
     spinnies.succeed('upload', {
-      text: i18n(`${i18nKey}.loading.upload.succeed`, {
+      text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
         accountIdentifier,
         projectName,
       }),
     });
 
     logger.debug(
-      i18n(`${i18nKey}.debug.buildCreated`, {
+      i18n(`${i18nKey}.uploadProjectFiles.buildCreated`, {
         buildId,
         projectName,
       })
     );
   } catch (err) {
     spinnies.fail('upload', {
-      text: i18n(`${i18nKey}.loading.upload.fail`, {
+      text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {
         accountIdentifier,
         projectName,
       }),
@@ -303,12 +360,90 @@ const uploadProjectFiles = async (
       })
     );
     if (err.error.subCategory === ERROR_TYPES.PROJECT_LOCKED) {
-      logger.log(i18n(`${i18nKey}.logs.projectLockedError`));
+      logger.log(i18n(`${i18nKey}.uploadProjectFiles.projectLockedError`));
     }
     process.exit(EXIT_CODES.ERROR);
   }
 
   return { buildId };
+};
+
+const pollProjectBuildAndDeploy = async (
+  accountId,
+  projectConfig,
+  tempFile,
+  buildId,
+  silenceLogs = false
+) => {
+  const {
+    autoDeployId,
+    isAutoDeployEnabled,
+    deployStatusTaskLocator,
+    status,
+  } = await pollBuildStatus(
+    accountId,
+    projectConfig.name,
+    buildId,
+    null,
+    silenceLogs
+  );
+  // autoDeployId of 0 indicates a skipped deploy
+  const isDeploying =
+    isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
+
+  if (!silenceLogs) {
+    uiLine();
+  }
+
+  const result = {
+    succeeded: true,
+    buildId,
+    buildSucceeded: true,
+    autodeployEnabled: isAutoDeployEnabled,
+  };
+
+  if (status === 'FAILURE') {
+    result.buildSucceeded = false;
+    result.succeeded = false;
+    return result;
+  } else if (isDeploying) {
+    if (!silenceLogs) {
+      logger.log(
+        i18n(
+          `${i18nKey}.pollProjectBuildAndDeploy.buildSucceededAutomaticallyDeploying`,
+          {
+            accountIdentifier: uiAccountDescription(accountId),
+            buildId,
+          }
+        )
+      );
+    }
+    const { status } = await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployStatusTaskLocator.id,
+      buildId,
+      silenceLogs
+    );
+    if (status === 'FAILURE') {
+      result.succeeded = false;
+    }
+  }
+
+  try {
+    if (tempFile) {
+      tempFile.removeCallback();
+      logger.debug(
+        i18n(`${i18nKey}.pollProjectBuildAndDeploy.cleanedUpTempFile`, {
+          path: tempFile.name,
+        })
+      );
+    }
+  } catch (e) {
+    logger.error(e);
+  }
+
+  return result;
 };
 
 const handleProjectUpload = async (
@@ -318,13 +453,14 @@ const handleProjectUpload = async (
   callbackFunc,
   uploadMessage
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
   const srcDir = path.resolve(projectDir, projectConfig.srcDir);
 
   const filenames = fs.readdirSync(srcDir);
   if (!filenames || filenames.length === 0) {
     logger.log(
-      i18n(`${i18nKey}.logs.emptySource`, { srcDir: projectConfig.srcDir })
+      i18n(`${i18nKey}.handleProjectUpload.emptySource`, {
+        srcDir: projectConfig.srcDir,
+      })
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -332,7 +468,7 @@ const handleProjectUpload = async (
   const tempFile = tmp.fileSync({ postfix: '.zip' });
 
   logger.debug(
-    i18n(`${i18nKey}.debug.compressing`, {
+    i18n(`${i18nKey}.handleProjectUpload.compressing`, {
       path: tempFile.name,
     })
   );
@@ -340,24 +476,34 @@ const handleProjectUpload = async (
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  output.on('close', async function() {
-    logger.debug(
-      i18n(`${i18nKey}.debug.compressed`, {
-        byteCount: archive.pointer(),
-      })
-    );
+  const result = new Promise(resolve =>
+    output.on('close', async function() {
+      let result = {};
 
-    const { buildId } = await uploadProjectFiles(
-      accountId,
-      projectConfig.name,
-      tempFile.name,
-      uploadMessage
-    );
+      logger.debug(
+        i18n(`${i18nKey}.handleProjectUpload.compressed`, {
+          byteCount: archive.pointer(),
+        })
+      );
 
-    if (callbackFunc) {
-      callbackFunc(tempFile, buildId);
-    }
-  });
+      const { buildId } = await uploadProjectFiles(
+        accountId,
+        projectConfig.name,
+        tempFile.name,
+        uploadMessage
+      );
+
+      if (callbackFunc) {
+        result = await callbackFunc(
+          accountId,
+          projectConfig,
+          tempFile,
+          buildId
+        );
+      }
+      resolve(result);
+    })
+  );
 
   archive.pipe(output);
 
@@ -366,6 +512,8 @@ const handleProjectUpload = async (
   );
 
   archive.finalize();
+
+  return result;
 };
 
 const makePollTaskStatusFunc = ({
@@ -375,8 +523,6 @@ const makePollTaskStatusFunc = ({
   statusStrings,
   linkToHubSpot,
 }) => {
-  const i18nKey = 'cli.commands.project.lib.makePollTaskStatusFunc';
-
   const isTaskComplete = task => {
     if (
       !task[statusText.SUBTASK_KEY].length ||
@@ -388,22 +534,31 @@ const makePollTaskStatusFunc = ({
     }
   };
 
-  return async (accountId, taskName, taskId, deployedBuildId = null) => {
+  return async (
+    accountId,
+    taskName,
+    taskId,
+    deployedBuildId = null,
+    silenceLogs = false
+  ) => {
     const displayId = deployedBuildId || taskId;
 
-    if (linkToHubSpot) {
+    if (linkToHubSpot && !silenceLogs) {
       logger.log(
         `\n${linkToHubSpot(accountId, taskName, taskId, deployedBuildId)}\n`
       );
     }
 
-    const spinnies = new Spinnies({
+    const spinnies = SpinniesManager.init();
+
+    const overallTaskSpinniesKey = `overallTaskStatus-${statusText.STATUS_TEXT}`;
+
+    spinnies.add(overallTaskSpinniesKey, {
+      text: 'Beginning',
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
     });
-
-    spinnies.add('overallTaskStatus', { text: 'Beginning' });
 
     const [
       initialTaskStatus,
@@ -434,39 +589,45 @@ const makePollTaskStatusFunc = ({
     });
 
     const numComponents = structuredTasks.length;
-    const componentCountText = i18n(
-      numComponents === 1
-        ? `${i18nKey}.componentCountSingular`
-        : `${i18nKey}.componentCount`,
-      { numComponents }
-    );
+    const componentCountText = silenceLogs
+      ? ''
+      : i18n(
+          numComponents === 1
+            ? `${i18nKey}.makePollTaskStatusFunc.componentCountSingular`
+            : `${i18nKey}.makePollTaskStatusFunc.componentCount`,
+          { numComponents }
+        ) + '\n';
 
-    spinnies.update('overallTaskStatus', {
-      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}\n`,
+    spinnies.update(overallTaskSpinniesKey, {
+      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
     });
 
-    const addTaskSpinner = (task, indent, newline) => {
-      const taskName = task[statusText.SUBTASK_NAME_KEY];
-      const taskType = task[statusText.TYPE_KEY];
-      const formattedTaskType = PROJECT_TASK_TYPES[taskType]
-        ? `[${PROJECT_TASK_TYPES[taskType]}]`
-        : '';
-      const text = `${statusText.STATUS_TEXT} ${chalk.bold(
-        taskName
-      )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
+    if (!silenceLogs) {
+      const addTaskSpinner = (task, indent, newline) => {
+        const taskName = task[statusText.SUBTASK_NAME_KEY];
+        const taskType = task[statusText.TYPE_KEY];
+        const formattedTaskType = PROJECT_TASK_TYPES[taskType]
+          ? `[${PROJECT_TASK_TYPES[taskType]}]`
+          : '';
+        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+          taskName
+        )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
-      spinnies.add(task.id, {
-        text,
-        indent,
+        spinnies.add(task.id, {
+          text,
+          indent,
+          succeedColor: 'white',
+          failColor: 'white',
+        });
+      };
+
+      structuredTasks.forEach(task => {
+        addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
+        task.subtasks.forEach((subtask, i) =>
+          addTaskSpinner(subtask, 4, i === task.subtasks.length - 1)
+        );
       });
-    };
-
-    structuredTasks.forEach(task => {
-      addTaskSpinner(task, 2, !task.subtasks || task.subtasks.length === 0);
-      task.subtasks.forEach((subtask, i) =>
-        addTaskSpinner(subtask, 4, i === task.subtasks.length - 1)
-      );
-    });
+    }
 
     return new Promise((resolve, reject) => {
       const pollInterval = setInterval(async () => {
@@ -493,8 +654,8 @@ const makePollTaskStatusFunc = ({
             ) {
               const taskStatusText =
                 subTask.status === statusText.STATES.SUCCESS
-                  ? i18n(`${i18nKey}.successStatusText`)
-                  : i18n(`${i18nKey}.failedStatusText`);
+                  ? i18n(`${i18nKey}.makePollTaskStatusFunc.successStatusText`)
+                  : i18n(`${i18nKey}.makePollTaskStatusFunc.failedStatusText`);
               const hasNewline =
                 spinner.text.includes('\n') || Boolean(topLevelTask);
               const updatedText = `${spinner.text.replace(
@@ -516,48 +677,49 @@ const makePollTaskStatusFunc = ({
 
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
-              spinnies.succeed('overallTaskStatus', {
+              spinnies.succeed(overallTaskSpinniesKey, {
                 text: statusStrings.SUCCESS(taskName),
               });
             } else if (status === statusText.STATES.FAILURE) {
-              spinnies.fail('overallTaskStatus', {
+              spinnies.fail(overallTaskSpinniesKey, {
                 text: statusStrings.FAIL(taskName),
               });
 
-              const failedSubtasks = subTaskStatus.filter(
-                subtask => subtask.status === 'FAILURE'
-              );
-
-              uiLine();
-              logger.log(
-                `${statusStrings.SUBTASK_FAIL(
-                  displayId,
-                  failedSubtasks.length === 1
-                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
-                    : failedSubtasks.length + ' components'
-                )}\n`
-              );
-              logger.log('See below for a summary of errors.');
-              uiLine();
-
-              failedSubtasks.forEach(subTask => {
-                logger.log(
-                  `\n--- ${chalk.bold(
-                    subTask[statusText.SUBTASK_NAME_KEY]
-                  )} failed with the following error ---`
+              if (!silenceLogs) {
+                const failedSubtasks = subTaskStatus.filter(
+                  subtask => subtask.status === 'FAILURE'
                 );
-                logger.error(subTask.errorMessage);
 
-                // Log nested errors
-                if (subTask.standardError && subTask.standardError.errors) {
-                  logger.log();
-                  subTask.standardError.errors.forEach(error => {
-                    logger.log(error.message);
-                  });
-                }
-              });
+                uiLine();
+                logger.log(
+                  `${statusStrings.SUBTASK_FAIL(
+                    displayId,
+                    failedSubtasks.length === 1
+                      ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
+                      : failedSubtasks.length + ' components'
+                  )}\n`
+                );
+                logger.log('See below for a summary of errors.');
+                uiLine();
+
+                failedSubtasks.forEach(subTask => {
+                  logger.log(
+                    `\n--- ${chalk.bold(
+                      subTask[statusText.SUBTASK_NAME_KEY]
+                    )} failed with the following error ---`
+                  );
+                  logger.error(subTask.errorMessage);
+
+                  // Log nested errors
+                  if (subTask.standardError && subTask.standardError.errors) {
+                    logger.log();
+                    subTask.standardError.errors.forEach(error => {
+                      logger.log(error.message);
+                    });
+                  }
+                });
+              }
             }
-
             clearInterval(pollInterval);
             resolve(taskStatus);
           }
@@ -608,12 +770,11 @@ const pollDeployStatus = makePollTaskStatusFunc({
 });
 
 const logFeedbackMessage = buildId => {
-  const i18nKey = 'cli.commands.project.subcommands.upload';
   if (buildId > 0 && buildId % FEEDBACK_INTERVAL === 0) {
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.feedbackHeader`));
+    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackHeader`));
     uiLine();
-    logger.log(i18n(`${i18nKey}.logs.feedbackMessage`));
+    logger.log(i18n(`${i18nKey}.logFeedbackMessage.feedbackMessage`));
   }
 };
 
@@ -646,9 +807,11 @@ module.exports = {
   writeProjectConfig,
   getProjectConfig,
   getIsInProject,
+  pollProjectBuildAndDeploy,
   handleProjectUpload,
   createProjectConfig,
   validateProjectConfig,
+  getProjectHomeUrl,
   getProjectDetailUrl,
   getProjectBuildDetailUrl,
   pollBuildStatus,

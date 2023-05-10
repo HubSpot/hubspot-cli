@@ -7,6 +7,7 @@ const logs = require('./project/logs');
 const watch = require('./project/watch');
 const download = require('./project/download');
 const open = require('./project/open');
+const dev = require('./project/dev');
 const add = require('./project/add');
 
 exports.command = 'project';
@@ -25,6 +26,7 @@ exports.builder = yargs => {
   yargs.command(logs).demandCommand(1, '');
   yargs.command(download).demandCommand(0, '');
   yargs.command(open).demandCommand(0, '');
+  yargs.command(dev).demandCommand(0, '');
   yargs.command(add).demandCommand(0, '');
 
   return yargs;
