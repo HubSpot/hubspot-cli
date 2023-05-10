@@ -288,10 +288,6 @@ class LocalDevManager {
       remotePath: path.relative(this.projectSourceDir, filePath),
     };
 
-    if (changeInfo.filePath.includes('dist')) {
-      return;
-    }
-
     const notifyResponse = await this.notifyServers(changeInfo);
 
     if (!notifyResponse.uploadRequired) {

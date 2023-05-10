@@ -41,7 +41,7 @@ class DevServerManager {
   }
 
   async notify() {
-    return;
+    return { uploadRequired: true };
   }
 
   async execute() {
