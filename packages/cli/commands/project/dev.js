@@ -155,6 +155,7 @@ exports.handler = async options => {
     {
       allowCreate: false,
       noLogs: true,
+      withPolling: true,
     }
   );
 
