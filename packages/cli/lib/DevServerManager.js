@@ -3,14 +3,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { getProjectDetailUrl } = require('./projects');
 
-const PORT = 8080;
+const DEFAULT_PORT = 8080;
 
 class DevServerManager {
   constructor() {
     this.servers = {};
   }
 
-  startServer(accountId, projectConfig) {
+  startServer(accountId, projectConfig, port) {
     const app = express();
 
     // Install Middleware
@@ -32,12 +32,13 @@ class DevServerManager {
     });
 
     // Start server
-    app.listen(PORT);
+    const server = app.listen(port || DEFAULT_PORT);
+
+    return `http://localhost:${server.address().port}`;
   }
 
-  async start({ projectConfig, accountId }) {
-    this.startServer(accountId, projectConfig);
-    return;
+  async start({ projectConfig, accountId, port }) {
+    return this.startServer(accountId, projectConfig, port);
   }
 
   async notify() {

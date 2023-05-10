@@ -43,7 +43,7 @@ const { syncSandbox } = require('../../lib/sandbox-sync');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account]';
+exports.command = 'dev [--account] [--port]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -155,6 +155,7 @@ exports.handler = async options => {
     {
       allowCreate: false,
       noLogs: true,
+      withPolling: true,
     }
   );
 
@@ -248,10 +249,12 @@ exports.handler = async options => {
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,
+    mockServers: options.mockServers,
     projectConfig,
     projectDir,
     targetAccountId,
     uploadPermission,
+    port: options.port,
   });
 
   await LocalDev.start();
@@ -264,6 +267,11 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
+
+  yargs.option('port', {
+    describe: i18n(`${i18nKey}.options.port.describe`),
+    type: 'number',
+  });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 

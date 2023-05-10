@@ -470,6 +470,9 @@ en:
               targetNonSandbox: "Continue testing in a non-sandbox account?"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
+            options:
+              port:
+                describe: "The port that the running server will listen on"
             examples:
               default: "Start local dev for the current project"
           create:

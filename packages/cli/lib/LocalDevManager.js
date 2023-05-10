@@ -62,6 +62,8 @@ class LocalDevManager {
     this.standbyChanges = [];
     this.debouncedBuild = null;
     this.currentStagedBuildId = null;
+    this.port = options.port;
+    this.serverURL = null;
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
       process.exit(EXIT_CODES.ERROR);
@@ -88,8 +90,9 @@ class LocalDevManager {
 
     this.uploadQueue.start();
 
-    this.logConsoleHeader();
     await this.startServers();
+
+    this.logConsoleHeader();
     await this.startWatching();
     this.updateKeypressListeners();
   }
@@ -157,7 +160,7 @@ class LocalDevManager {
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(
         i18n(`${i18nKey}.viewInHubSpot`),
-        'http://localhost:8080/hs/details',
+        `${this.serverURL}/hs/details`,
         {
           inSpinnies: true,
         }
@@ -503,9 +506,10 @@ class LocalDevManager {
   }
 
   async startServers() {
-    await DevServerManager.start({
+    this.serverURL = await DevServerManager.start({
       accountId: this.targetAccountId,
       projectConfig: this.projectConfig,
+      port: this.port,
     });
   }
 
