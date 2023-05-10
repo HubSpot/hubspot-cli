@@ -5,7 +5,7 @@ const {
   getAccountId,
 } = require('@hubspot/cli-lib');
 const chalk = require('chalk');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,

@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {

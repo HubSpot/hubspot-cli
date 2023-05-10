@@ -18,7 +18,7 @@ const {
 } = require('@hubspot/cli-lib/api/functions');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.functions.subcommands.deploy';
 

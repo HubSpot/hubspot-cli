@@ -7,7 +7,7 @@ const {
   addConfigOptions,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.accounts.subcommands.info';
 exports.describe = i18n(`${i18nKey}.describe`);

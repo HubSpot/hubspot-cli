@@ -3,7 +3,7 @@ const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 /**

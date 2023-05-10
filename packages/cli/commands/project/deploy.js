@@ -15,7 +15,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
