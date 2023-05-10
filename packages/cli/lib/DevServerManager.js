@@ -1,95 +1,55 @@
-const { walk } = require('@hubspot/cli-lib/lib/walk');
-//const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/cliInterface');
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { getProjectDetailUrl } = require('./projects');
 
-let savedLogger;
+const PORT = 8080;
 
-const UIEDevServerInterface = {
-  start: (key, { log }) => {
-    savedLogger = log;
-  },
-  notify: () => {
-    savedLogger('something notified me');
-    return true;
-  },
-  execute: () => {
-    savedLogger('something executed me');
-    return;
-  },
-  cleanup: () => {},
-};
 class DevServerManager {
   constructor() {
-    this.servers = {
-      uie: UIEDevServerInterface,
-    };
+    this.servers = {};
   }
 
-  async iterateServers(callback) {
-    const serverKeys = Object.keys(this.servers);
+  startServer(accountId, projectConfig) {
+    const app = express();
 
-    for (let i = 0; i < serverKeys.length; i++) {
-      const serverKey = serverKeys[i];
-      const serverInterface = this.servers[serverKey];
-      await callback(serverInterface, serverKey, i);
-    }
-  }
+    // Install Middleware
+    app.use(bodyParser.json({ limit: '50mb' }));
+    app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+    app.use(cors());
 
-  async getProjectFiles(projectSourceDir) {
-    const projectFiles = await walk(projectSourceDir);
-    return projectFiles;
-  }
+    // Configure
+    app.set('trust proxy', true);
 
-  async start({ projectConfig, projectSourceDir, log }) {
-    const projectFiles = await this.getProjectFiles(projectSourceDir);
-
-    await this.iterateServers(async (serverInterface, serverKey) => {
-      if (serverInterface.start) {
-        await serverInterface.start(serverKey, {
-          projectConfig,
-          projectSourceDir,
-          projectFiles,
-          log: message => log(serverKey, message),
-        });
-      }
-    });
-  }
-
-  async notify(changeInfo) {
-    let notifyResponse = { uploadRequired: true };
-
-    await this.iterateServers(async (serverInterface, serverKey) => {
-      let isSupportedByServer = false;
-
-      if (serverInterface.notify) {
-        isSupportedByServer = await serverInterface.notify(changeInfo);
-      }
-
-      if (isSupportedByServer) {
-        notifyResponse[serverKey] = true;
-
-        if (notifyResponse.uploadRequired) {
-          notifyResponse.uploadRequired = false;
-        }
-      }
+    // Initialize a base route
+    app.get('/', (req, res) => {
+      res.send('HubSpot local dev server');
     });
 
-    return notifyResponse;
+    // Initialize URL redirects
+    app.get('/hs/details', (req, res) => {
+      res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
+    });
+
+    // Start server
+    app.listen(PORT);
   }
 
-  async execute(notifyResponse, changeInfo) {
-    await this.iterateServers(async (serverInterface, serverKey) => {
-      if (notifyResponse[serverKey] && serverInterface.execute) {
-        await serverInterface.execute(changeInfo);
-      }
-    });
+  async start({ projectConfig, accountId }) {
+    this.startServer(accountId, projectConfig);
+    return;
+  }
+
+  async notify() {
+    return;
+  }
+
+  async execute() {
+    return;
   }
 
   async cleanup() {
-    await this.iterateServers(async serverInterface => {
-      if (serverInterface.cleanup) {
-        await serverInterface.cleanup();
-      }
-    });
+    return;
   }
 }
 

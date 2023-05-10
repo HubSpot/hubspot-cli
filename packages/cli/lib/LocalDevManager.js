@@ -24,10 +24,7 @@ const {
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const {
-  getProjectDetailUrl,
-  pollProjectBuildAndDeploy,
-} = require('./projects');
+const { pollProjectBuildAndDeploy } = require('./projects');
 const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
@@ -47,7 +44,6 @@ const UPLOAD_PERMISSIONS = {
   never: 'never',
 };
 
-const MAIN_CONSOLE_SCREEN = 'main';
 class LocalDevManager {
   constructor(options) {
     this.targetAccountId = options.targetAccountId;
@@ -61,8 +57,6 @@ class LocalDevManager {
       this.projectConfig.srcDir
     );
     this.spinnies = null;
-    this.serverLogs = {};
-    this.activeConsoleScreen = MAIN_CONSOLE_SCREEN;
     this.watcher = null;
     this.uploadQueue = null;
     this.standbyChanges = [];
@@ -94,7 +88,6 @@ class LocalDevManager {
 
     this.uploadQueue.start();
 
-    this.initializeServerLogs();
     this.logConsoleHeader();
     await this.startServers();
     await this.startWatching();
@@ -161,14 +154,14 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    const projectDetailUrl = getProjectDetailUrl(
-      this.projectConfig.name,
-      this.targetAccountId
-    );
     this.spinnies.add('viewInHubSpotLink', {
-      text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl, {
-        inSpinnies: true,
-      }),
+      text: uiLink(
+        i18n(`${i18nKey}.viewInHubSpot`),
+        'http://localhost:8080/hs/details',
+        {
+          inSpinnies: true,
+        }
+      ),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
@@ -184,14 +177,6 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    Object.keys(this.serverLogs).forEach(serverKey => {
-      this.spinnies.add(`keypressMessage-${this.serverLogs[serverKey].id}`, {
-        text: `Press ${this.serverLogs[serverKey].id} to view logs for ${serverKey}`,
-        status: 'non-spinnable',
-        indent: 1,
-        category: 'header',
-      });
-    });
     this.spinnies.add('lineSeparator', {
       text: '-'.repeat(50),
       status: 'non-spinnable',
@@ -201,18 +186,7 @@ class LocalDevManager {
   }
 
   clearConsoleContent() {
-    if (this.activeConsoleScreen === MAIN_CONSOLE_SCREEN) {
-      this.spinnies.removeAll({ preserveCategory: 'header' });
-    }
-  }
-
-  initializeServerLogs() {
-    DevServerManager.iterateServers((serverInterface, key, index) => {
-      this.serverLogs[key] = {
-        id: `${index + 1}`,
-        logs: null,
-      };
-    });
+    this.spinnies.removeAll({ preserveCategory: 'header' });
   }
 
   updateKeypressListeners() {
@@ -243,18 +217,6 @@ class LocalDevManager {
             noIndent: true,
           });
         }
-      } else {
-        Object.keys(this.serverLogs).forEach(serverKey => {
-          if (key.name === this.serverLogs[serverKey].id) {
-            this.activeConsoleScreen = serverKey;
-            this.spinnies.removeAll({ preserveCategory: 'header' });
-            this.spinnies.add(serverKey, {
-              text: this.serverLogs[serverKey].logs,
-              status: 'non-spinnable',
-              noIndent: true,
-            });
-          }
-        });
       }
     });
   }
@@ -544,25 +506,10 @@ class LocalDevManager {
     await this.watcher.close();
   }
 
-  handleServerLog(key, message) {
-    if (!this.serverLogs[key].logs) {
-      this.serverLogs[key].logs = message;
-    } else {
-      this.serverLogs[key].logs += `\n${message}`;
-    }
-
-    if (this.activeConsoleScreen === key) {
-      this.spinnies.update(key, {
-        text: this.serverLogs[key].logs,
-      });
-    }
-  }
-
   async startServers() {
     await DevServerManager.start({
+      accountId: this.targetAccountId,
       projectConfig: this.projectConfig,
-      projectSourceDir: this.projectSourceDir,
-      log: this.handleServerLog.bind(this),
     });
   }
 
