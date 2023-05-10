@@ -1,6 +1,22 @@
 const { walk } = require('@hubspot/cli-lib/lib/walk');
-const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/cliInterface');
+//const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/cliInterface');
 
+let savedLogger;
+
+const UIEDevServerInterface = {
+  start: (key, { log }) => {
+    savedLogger = log;
+  },
+  notify: () => {
+    savedLogger('something notified me');
+    return true;
+  },
+  execute: () => {
+    savedLogger('something executed me');
+    return;
+  },
+  cleanup: () => {},
+};
 class DevServerManager {
   constructor() {
     this.servers = {
@@ -14,7 +30,7 @@ class DevServerManager {
     for (let i = 0; i < serverKeys.length; i++) {
       const serverKey = serverKeys[i];
       const serverInterface = this.servers[serverKey];
-      await callback(serverInterface, serverKey);
+      await callback(serverInterface, serverKey, i);
     }
   }
 
@@ -23,7 +39,7 @@ class DevServerManager {
     return projectFiles;
   }
 
-  async start({ projectConfig, projectSourceDir, spinnies }) {
+  async start({ projectConfig, projectSourceDir, log }) {
     const projectFiles = await this.getProjectFiles(projectSourceDir);
 
     await this.iterateServers(async (serverInterface, serverKey) => {
@@ -32,7 +48,7 @@ class DevServerManager {
           projectConfig,
           projectSourceDir,
           projectFiles,
-          spinnies,
+          log: message => log(serverKey, message),
         });
       }
     });
