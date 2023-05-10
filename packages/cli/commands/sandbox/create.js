@@ -99,8 +99,8 @@ exports.handler = async options => {
       );
     } else {
       logErrorInstance(err);
-      trackCommandUsage('sandbox-create', { successful: false }, accountId);
     }
+    trackCommandUsage('sandbox-create', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
