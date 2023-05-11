@@ -741,6 +741,10 @@ en:
         subcommands:
           generateSelectors:
             describe: "This is a description of the command"
+            errors:
+              fieldsNotFound: "Unable to find theme's fields.json."
+              noSelectorsFound: "No selectors found."
+            success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
             positionals:
               themePath:
                 describe: "This is a description of the themepath arg"

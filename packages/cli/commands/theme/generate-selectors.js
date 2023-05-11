@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   findFieldsJsonPath,
@@ -32,7 +32,7 @@ exports.handler = options => {
 
   const fieldsJsonPath = findFieldsJsonPath(themePath);
   if (!fieldsJsonPath) {
-    logger.error("Could not find theme's fields.json");
+    logger.error(i18n(`${i18nKey}.errors.fieldsNotFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -172,9 +172,7 @@ exports.handler = options => {
   );
 
   if (!Object.keys(finalMap).length) {
-    logger.error(
-      'Could not find any selectors associated with any theme fields.'
-    );
+    logger.error(i18n(`${i18nKey}.errors.noSelectorsFound`));
     process.exit(EXIT_CODES.ERROR);
   }
   Object.keys(finalMap).forEach(themeFieldKey => {
@@ -196,7 +194,10 @@ exports.handler = options => {
   fs.writeFileSync(selectorsPath, `${JSON.stringify(selectorsMap, null, 2)}\n`);
 
   logger.success(
-    `Selectors map generated at ${selectorsPath}. These are best guesses for the selectors for each field and is not exhaustive, please double check before uploading these changes.`
+    i18n(`${i18nKey}.success`, {
+      themePath,
+      selectorsPath,
+    })
   );
 };
 
