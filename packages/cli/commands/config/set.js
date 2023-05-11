@@ -1,5 +1,5 @@
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { getAccountId } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');

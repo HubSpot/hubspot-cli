@@ -89,7 +89,11 @@ const createTemplate = async (
       path: filePath,
     })
   );
-  await downloadGitHubRepoContents('cms-sample-assets', assetPath, filePath);
+  await downloadGitHubRepoContents(
+    'HubSpot/cms-sample-assets',
+    assetPath,
+    filePath
+  );
 };
 
 module.exports = {

@@ -245,7 +245,7 @@ const createModule = async (
   );
 
   await downloadGitHubRepoContents(
-    'cms-sample-assets',
+    'HubSpot/cms-sample-assets',
     'modules/Sample.module',
     destPath,
     { filter: moduleFileFilter }

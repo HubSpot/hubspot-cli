@@ -4,7 +4,7 @@ const fetchAllCommand = require('./schema/fetch-all');
 const deleteCommand = require('./schema/delete');
 const listCommand = require('./schema/list');
 const updateSchema = require('./schema/update');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.customObject.subcommands.schema';
 

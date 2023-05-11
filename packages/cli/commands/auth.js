@@ -6,7 +6,7 @@ const {
   ENVIRONMENTS,
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 } = require('@hubspot/cli-lib/lib/constants');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');

@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/cli-lib/api/results');
 const { tailLogs } = require('../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.logs';
 

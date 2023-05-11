@@ -1,4 +1,4 @@
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { promptUser } = require('./promptUtils');
 const { getProjectConfig, ensureProjectExists } = require('../projects');

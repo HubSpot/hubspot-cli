@@ -25,7 +25,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   downloadProjectPrompt,
 } = require('../../lib/prompts/downloadProjectPrompt');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');

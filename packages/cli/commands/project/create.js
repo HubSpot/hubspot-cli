@@ -13,7 +13,7 @@ const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -34,7 +34,8 @@ exports.handler = async options => {
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    options.template || template
+    options.template || template,
+    options.repoPath
   );
 
   logger.log('');
@@ -59,6 +60,10 @@ exports.builder = yargs => {
     },
     template: {
       describe: i18n(`${i18nKey}.options.template.describe`),
+      type: 'string',
+    },
+    repoPath: {
+      describe: i18n(`${i18nKey}.options.repoPath.describe`),
       type: 'string',
     },
   });

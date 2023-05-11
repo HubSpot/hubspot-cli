@@ -5,7 +5,7 @@ const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
 const { deleteSchema } = require('@hubspot/cli-lib/api/schema');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../../lib/lang');
 
 const i18nKey =
   'cli.commands.customObject.subcommands.schema.subcommands.delete';

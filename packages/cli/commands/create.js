@@ -31,7 +31,7 @@ const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.create';
 
