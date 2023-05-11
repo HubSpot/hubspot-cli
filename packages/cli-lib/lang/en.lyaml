@@ -342,11 +342,6 @@ en:
             positionals:
               path:
                 describe: "Path to local .functions folder"
-      generateThemeFieldSelectors:
-        describe: "This is a description of the command"
-        positionals:
-          themePath:
-            describe: "This is a description of what the themePath argument is"
       hubdb:
         describe: "Manage HubDB tables."
         subcommands:
@@ -766,6 +761,11 @@ en:
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
+          generateSelectors:
+            describe: "This is a description of the command"
+            positionals:
+              themePath:
+                describe: "This is a description of the themepath arg"
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
