@@ -249,7 +249,6 @@ exports.handler = async options => {
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,
-    mockServers: options.mockServers,
     projectConfig,
     projectDir,
     targetAccountId,

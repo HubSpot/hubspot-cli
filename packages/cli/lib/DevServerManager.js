@@ -7,10 +7,21 @@ const DEFAULT_PORT = 8080;
 
 class DevServerManager {
   constructor() {
-    this.servers = {};
+    this.server = null;
+    this.devServers = {};
   }
 
-  startServer(accountId, projectConfig, port) {
+  async iterateDevServers(callback) {
+    const serverKeys = Object.keys(this.devServers);
+
+    for (let i = 0; i < serverKeys.length; i++) {
+      const serverKey = serverKeys[i];
+      const serverInterface = this.devServers[serverKey];
+      await callback(serverInterface, serverKey);
+    }
+  }
+
+  async start({ projectConfig, accountId, port }) {
     const app = express();
 
     // Install Middleware
@@ -27,18 +38,22 @@ class DevServerManager {
     });
 
     // Initialize URL redirects
-    app.get('/hs/details', (req, res) => {
+    app.get('/hs/project', (req, res) => {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
 
+    // Initialize component servers
+    await this.iterateDevServers(async (serverInterface, serverKey) => {
+      if (serverInterface.start) {
+        const serverApp = await serverInterface.start(serverKey);
+        app.use(`/${serverKey}`, serverApp);
+      }
+    });
+
     // Start server
-    const server = app.listen(port || DEFAULT_PORT);
+    this.server = app.listen(port || DEFAULT_PORT);
 
-    return `http://localhost:${server.address().port}`;
-  }
-
-  async start({ projectConfig, accountId, port }) {
-    return this.startServer(accountId, projectConfig, port);
+    return `http://localhost:${this.server.address().port}`;
   }
 
   async notify() {
@@ -50,7 +65,9 @@ class DevServerManager {
   }
 
   async cleanup() {
-    return;
+    if (this.server) {
+      await this.server.close();
+    }
   }
 }
 

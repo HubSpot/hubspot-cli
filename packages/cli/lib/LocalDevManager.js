@@ -63,7 +63,7 @@ class LocalDevManager {
     this.debouncedBuild = null;
     this.currentStagedBuildId = null;
     this.port = options.port;
-    this.serverURL = null;
+    this.devServerPath = null;
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
       process.exit(EXIT_CODES.ERROR);
@@ -160,7 +160,7 @@ class LocalDevManager {
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(
         i18n(`${i18nKey}.viewInHubSpot`),
-        `${this.serverURL}/hs/details`,
+        `${this.devServerPath}/hs/project`,
         {
           inSpinnies: true,
         }
@@ -506,7 +506,7 @@ class LocalDevManager {
   }
 
   async startServers() {
-    this.serverURL = await DevServerManager.start({
+    this.devServerPath = await DevServerManager.start({
       accountId: this.targetAccountId,
       projectConfig: this.projectConfig,
       port: this.port,
