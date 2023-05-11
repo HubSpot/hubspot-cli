@@ -1,10 +1,15 @@
 const fs = require('fs');
+const { EXIT_CODES } = require('./enums/exitCodes');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { i18n } = require('../lib/lang');
 
 const CSS_COMMENTS_REGEX = new RegExp(/\/\*.*\*\//, 'g');
 const CSS_PSEUDO_CLASS_REGEX = new RegExp(
   /:active|:checked|:disabled|:empty|:enabled|:first-of-type|:focus|:hover|:in-range|:invalid|:link|:optional|:out-of-range|:read-only|:read-write|:required|:target|:valid|:visited/,
   'g'
 );
+const i18nKey = 'cli.commands.theme.subcommands.generateSelectors';
+
 let maxFieldsDepth = 0;
 
 function getMaxFieldsDepth() {
@@ -13,6 +18,14 @@ function getMaxFieldsDepth() {
 
 function findFieldsJsonPath(basePath) {
   const _path = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+  if (!fs.existsSync(_path)) {
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        themePath: basePath,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
   const files = fs.readdirSync(_path);
 
   if (files.includes('fields.json')) {
