@@ -40,17 +40,20 @@ const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
   if (terminalUISupport.hyperlinks) {
+    const CLOSE_SEQUENCE = '\u001B]8;;\u0007';
     const result = [
       '\u001B]8;;',
       encodedUrl,
       '\u0007',
       linkText,
-      '\u001B]8;;\u0007',
+      CLOSE_SEQUENCE,
     ].join('');
 
-    // Required b/c spinnies will break long lines
+    // Required b/c spinnies will automatically line-break long lines. "indent" is added to account for indented spinnies
     // See https://github.com/jbcarpanelli/spinnies/blob/d672dedcab8c8ce0f6de0bb26ca5582bf602afd7/utils.js#L68-L74
-    const columns = process.stderr.columns || 95;
+    const indent = 5;
+    const columns =
+      (process.stderr.columns || 95) - CLOSE_SEQUENCE.length - indent;
     const validLength = !inSpinnies || result.length < columns;
 
     if (validLength) {

@@ -449,8 +449,8 @@ en:
             describe: "Start local dev for the current project"
             logs:
               introHeader: "{{#bold}}HubSpot projects local development (beta){{/bold}}"
-              introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
-              introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
+              introBody1: "This command runs a file watcher that works together with a HubSpot account to allow developers to write code locally and test quickly."
+              introBody2: "All project file changes will be reflected in the target account after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
               prodAccountWarning: "Targeting a non-sandbox account is risky because this command will upload changes to the target account. We recommend picking a sandbox account for any work that has not been finalized or is undergoing testing prior to deploying to production."
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
@@ -842,25 +842,26 @@ en:
             describe: "Options to pass to javascript fields files"
     lib:
       LocalDevManager:
-        running: "Local dev server running, waiting for project file changes ..."
-        quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-        viewInHubSpot: "View project in HubSpot"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to clean up before exiting"
         previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
-        status:
-          clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
-          uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
-          noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
-          manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
-          supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
-          manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading prevented changes{{/green}}"
+        header:
+          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
+          quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
+          viewInHubSpotLink: "View in HubSpot"
+          status:
+            clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
+            uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
+            noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
+            manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
+            supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
+            manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
           manualUploadSkipped: "Manual upload skipped. Some changes may not be visible."
-          manualUploadRequired: "Project config files changed, manual upload and deploy is needed ..."
+          manualUploadRequired: "Project files changed, manual upload and deploy is needed ..."
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"

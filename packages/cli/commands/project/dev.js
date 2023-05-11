@@ -248,7 +248,9 @@ exports.handler = async options => {
   });
 
   let result;
-  if (uploadPermission === UPLOAD_PERMISSIONS.always) {
+  // Create an initial build if the project was newly created in the account or if
+  // our upload permission is set to "always"
+  if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
     result = await handleProjectUpload(
       targetAccountId,
       projectConfig,
