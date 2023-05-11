@@ -106,7 +106,7 @@ exports.handler = options => {
    */
   const cssExpressions = (
     cssString.match(CSS_EXPRESSION_REGEX) || []
-  ).map(exp => exp.replace(/\n/g, ' '));
+  ).map(exp => exp.replace(/\r?\n/g, ' '));
 
   const finalMap = cssExpressions.reduce(
     (themeFieldsSelectorMap, cssExpression) => {
