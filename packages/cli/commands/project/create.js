@@ -13,7 +13,7 @@ const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 

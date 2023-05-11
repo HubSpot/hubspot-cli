@@ -1,4 +1,4 @@
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
 const {
   logApiErrorInstance,

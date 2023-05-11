@@ -1,7 +1,7 @@
 const chokidar = require('chokidar');
 const path = require('path');
 const { default: PQueue } = require('p-queue');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   isSpecifiedError,
@@ -146,12 +146,15 @@ class LocalDevManager {
   logConsoleHeader() {
     this.spinnies.removeAll();
     this.spinnies.add('devModeRunning', {
-      text: i18n(`${i18nKey}.running`),
+      text: i18n(`${i18nKey}.header.running`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+        projectName: this.projectConfig.name,
+      }),
       isParent: true,
       category: 'header',
     });
     this.spinnies.add('devModeStatus', {
-      text: i18n(`${i18nKey}.status.clean`),
+      text: i18n(`${i18nKey}.header.status.clean`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
@@ -161,9 +164,13 @@ class LocalDevManager {
       this.targetAccountId
     );
     this.spinnies.add('viewInHubSpotLink', {
-      text: uiLink(i18n(`${i18nKey}.viewInHubSpot`), projectDetailUrl, {
-        inSpinnies: true,
-      }),
+      text: uiLink(
+        i18n(`${i18nKey}.header.viewInHubSpotLink`),
+        projectDetailUrl,
+        {
+          inSpinnies: true,
+        }
+      ),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
@@ -174,7 +181,7 @@ class LocalDevManager {
       category: 'header',
     });
     this.spinnies.add('keypressMessage', {
-      text: i18n(`${i18nKey}.quitHelper`),
+      text: i18n(`${i18nKey}.header.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
@@ -225,7 +232,7 @@ class LocalDevManager {
 
   updateDevModeStatus(langKey) {
     this.spinnies.update('devModeStatus', {
-      text: i18n(`${i18nKey}.status.${langKey}`),
+      text: i18n(`${i18nKey}.header.status.${langKey}`),
       status: 'non-spinnable',
       noIndent: true,
     });

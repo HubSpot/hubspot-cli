@@ -7,7 +7,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
 const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
@@ -40,6 +40,10 @@ const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const {
+  isMissingScopeError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -114,7 +118,23 @@ exports.handler = async options => {
     try {
       await validateSandboxUsageLimits(accountConfig, DEVELOPER_SANDBOX, env);
     } catch (err) {
-      logErrorInstance(err);
+      if (isMissingScopeError(err)) {
+        logger.error(
+          i18n('cli.lib.sandbox.create.failure.scopes.message', {
+            accountName: accountConfig.name || accountId,
+          })
+        );
+        const websiteOrigin = getHubSpotWebsiteOrigin(env);
+        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+        logger.info(
+          i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+            accountName: accountConfig.name || accountId,
+            url,
+          })
+        );
+      } else {
+        logErrorInstance(err);
+      }
       process.exit(EXIT_CODES.ERROR);
     }
     try {
@@ -228,7 +248,9 @@ exports.handler = async options => {
   });
 
   let result;
-  if (uploadPermission === UPLOAD_PERMISSIONS.always) {
+  // Create an initial build if the project was newly created in the account or if
+  // our upload permission is set to "always"
+  if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
     result = await handleProjectUpload(
       targetAccountId,
       projectConfig,

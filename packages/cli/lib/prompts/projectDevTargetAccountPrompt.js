@@ -1,5 +1,5 @@
 const { promptUser } = require('./promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 const { isSandbox, getAccountName } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');

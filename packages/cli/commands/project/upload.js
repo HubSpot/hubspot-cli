@@ -17,7 +17,7 @@ const {
   validateProjectConfig,
   pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 

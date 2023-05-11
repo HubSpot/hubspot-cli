@@ -4,7 +4,7 @@ const addSecretCommand = require('./secrets/addSecret');
 const listSecretsCommand = require('./secrets/listSecrets');
 const deleteSecretCommand = require('./secrets/deleteSecret');
 const updateSecretCommand = require('./secrets/updateSecret');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.secrets';
 

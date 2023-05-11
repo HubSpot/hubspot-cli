@@ -16,7 +16,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.secrets.subcommands.update';
 

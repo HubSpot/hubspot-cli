@@ -160,10 +160,7 @@ en:
             success:
               sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
           module:
-            creatingModule: "Creating module at {{ path }}"
-            creatingPath: "Creating {{ path }}"
             errors:
-              pathExists: "The {{ path }} path already exists"
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
           template:
             errors:
@@ -452,8 +449,8 @@ en:
             describe: "Start local dev for the current project"
             logs:
               introHeader: "{{#bold}}HubSpot projects local development (beta){{/bold}}"
-              introBody1: "This command runs a local development server that works together with a HubSpot account to allow developers to write code locally and test quickly."
-              introBody2: "File updates to JS UIE rendering code will be reflected immediately. All other project file changes will be reflected after a slight delay."
+              introBody1: "This command runs a file watcher that works together with a HubSpot account to allow developers to write code locally and test quickly."
+              introBody2: "All project file changes will be reflected in the target account after a slight delay."
               placeholderAccountSelection: "Using default account as target account (for now)"
               prodAccountWarning: "Targeting a non-sandbox account is risky because this command will upload changes to the target account. We recommend picking a sandbox account for any work that has not been finalized or is undergoing testing prior to deploying to production."
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
@@ -583,26 +580,7 @@ en:
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs:
-              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
-              resuming: "Resuming watcher..."
-              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
-              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
-              previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
               processExited: "Stopping watcher..."
-              watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
-            debug:
-              attemptNewBuild: "Attempting to create a new build"
-              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
-              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
-              pause: "Pausing watcher, attempting to queue build"
-              buildStarted: "Build queued."
-              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
-            errors:
-              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
-              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
             positionals:
               path:
                 describe: "Path to a project folder"
@@ -809,13 +787,9 @@ en:
         errors:
           destinationRequired: "A destination path needs to be passed"
           fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
-          invalidExtension: "The file \"{{ path }}\" does not have a valid extension"
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
-          fieldsJsSyntaxError: "There was an error converting JS file \"{{ path }}\""
-          fieldsJsNotReturnArray: "There was an error loading JS file \"{{ path }}\". Expected type \"Array\" but received type \"{{ returned }}\" . Make sure that your function returns an array"
-          fieldsJsNotFunction:  "There was an error loading JS file \"{{ path }}\". Expected type \"Function\" but received type \"{{ returned }}\". Make sure that your default export is a function."
         options:
           options:
             describe: "Options to pass to javascript fields files"
@@ -833,8 +807,6 @@ en:
           fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
-        converting: "Converting \"{{ src }}\" to \"{{ dest }}\"."
-        converted: "Finished converting \"{{ src }}\" to \"{{ dest }}\"."
         notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
@@ -874,56 +846,362 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      LocalDevManager:
+        exitingStart: "Stopping local dev server ..."
+        exitingSucceed: "Successfully exited"
+        exitingFail: "Failed to clean up before exiting"
+        previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
+        cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
+        header:
+          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
+          quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
+          viewInHubSpotLink: "View in HubSpot"
+          status:
+            clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
+            uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
+            noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
+            manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
+            supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
+            manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
+        upload:
+          noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
+          manualUploadSkipped: "Manual upload skipped. Some changes may not be visible."
+          manualUploadRequired: "Project files changed, manual upload and deploy is needed ..."
+          manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
+          manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
+          manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
+          uploadingChange: "[INFO] Uploading {{ filePath }}"
+          uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
+      projects:
+        uploadProjectFiles:
+          add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+          fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+          succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+          buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
+          projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
+        handleProjectUpload:
+          emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
+          compressed: "Project files compressed: {{ byteCount }} bytes"
+          compressing: "Compressing build files to \"{{ path }}\""
+        ensureProjectExists:
+          createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
+          createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+          notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+        makePollTaskStatusFunc:
+          componentCountSingular: "Found 1 component in this project"
+          componentCount: "Found {{ numComponents }} components in this project"
+          successStatusText: "DONE"
+          failedStatusText: "FAILED"
+        pollProjectBuildAndDeploy:
+          buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
+          cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+        logFeedbackMessage:
+          feedbackHeader: "We'd love to hear your feedback!"
+          feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+      ui:
+        betaWarning:
+          header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
+          footer: "{{#yellow}}******************************************************************{{/yellow}}"
+        featureHighlight:
+          defaultTitle: "What's next?"
+          commandKeys:
+            accountOption:
+              command: "--account"
+              message: "Use the {{ command }} option with any command to override the default account"
+            accountsListCommand:
+              command: hs accounts list
+              message: "Run {{ command }} to see a list of configured HubSpot accounts"
+            accountsUseCommand:
+              command: "hs accounts use"
+              message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+            authCommand:
+              command: "hs auth"
+              message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
+            feedbackCommand:
+              command: "hs feedback"
+              message: "Run {{ command }} to report a bug or leave feedback"
+            helpCommand:
+              command: "hs help"
+              message: "Run {{ command }} to see a list of available commands"
+            projectDeployCommand:
+              command: "hs project deploy"
+              message: "Ready to take your project live? Run {{ command }}"
+            projectHelpCommand:
+              command: "hs project --help"
+              message: "Run {{ command }} to learn more about available project commands"
+            projectUploadCommand:
+              command: "hs project upload"
+              message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+            projectDevCommand:
+              command: "hs project dev"
+              message: "Run {{ command }} to start testing your project locally."
+            sandboxSyncDevelopmentCommand:
+              command: "hs sandbox sync"
+              message: "Run {{ command }} to to update CRM object definitions in your sandbox."
+            sandboxSyncStandardCommand:
+              command: "hs sandbox sync"
+              message: "Run {{ command }} to to update all supported assets to your sandbox from production."
+      commonOpts:
+        options:
+          portal:
+            describe: "HubSpot portal id or name from config"
+          config:
+            describe: "Path to a config file"
+          overwrite:
+            describe: "Overwrite existing files"
+          modes:
+            describe:
+              default: "{{ modes }}"
+              read: "Read from {{ modes }}"
+              write: "Write to {{ modes }}"
+          qa:
+            describe: "Run command in QA mode"
+          useEnv:
+            describe: "Use environment variable config"
       prompts:
-        createProjectPrompt:
+        projectDevTargetAccountPrompt:
+          createNewSandboxOption: "<< Create a new development sandbox account >>"
+          chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
+          chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
+          chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
+          defaultAccountNotProd: "Option unavailable because your default account must be a production account."
+          sandboxLimit: "Option unavailable because you’ve reached the limit of {{ limit }} development sandboxes."
+        projectLogsPrompt:
+          projectName:
+            message: "[--project] Enter the project name:"
+            error: "Project name is required"
+          logType:
+            message: "Select the type of serverless function"
+            function: "App function"
+            endpoint: "Public endpoint"
+          appName: "[--app] Select the app"
+          functionName: "[--function] Enter the app function name:"
+          endpointName: "[--endpoint] Enter the public endpoint path:"
+        setAsDefaultAccountPrompt:
+          setAsDefaultAccountMessage: "Set this account as the default?"
+          setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
+          keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
+        enterAccountNamePrompt:
+          enterAccountName: "Enter a unique name to reference this account in the CLI:"
           errors:
-            failedToFetchJson: "Please ensure that the repo path you've entered is correct, and there is a config.json file in the root of your repo."
-      errors:
-        templates:
-          pathExists: "The {{ path }} path already exists"
-      logging:
-        templates:
-          creatingFile: "Creating file at {{ path }}"
-      debug:
-        templates:
-          creatingPath: "Making {{ path }} if needed"
-    commands:
-      create:
-        subcommands:
-          module:
-            creatingModule: "Creating module at {{ path }}"
-            creatingPath: "Creating {{ path }}"
+            invalidName: "You entered an invalid name. Please try again."
+            nameRequired: "The name may not be blank. Please try again."
+            spacesInName: "The name may not contain spaces. Please try again."
+            accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
+        personalAccessKeyPrompt:
+          enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
+          enterClientId: "Enter your OAuth2 client ID: "
+          enterClientSecret: "Enter your OAuth2 client secret: "
+          enterPersonalAccessKey: "Enter your personal access key: "
+          selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
+          personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
+          personalAccessKeyBrowserOpenPrep: "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key."
+          personalAccessKeyBrowserOpenPrompt: "Open hubspot.com to copy your personal access key?"
+          logs:
+            openingWebBrowser: "Opening {{ url }} in your web browser"
+          errors:
+            invalidAccountId: "You did not enter a valid account ID. Please try again."
+            invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
+            invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
+            invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
+            invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
+            invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
+            invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
+            invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
+        folderOverwritePrompt:
+          overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
+        createTemplatePrompt:
+          selectTemplate: "Select the type of template to create"
+        createModulePrompt:
+          enterLabel: "What should the module label be?"
+          selectContentType: "What types of content will this module be used in?"
+          confirmGlobal: "Is this a global module?"
+          errors:
+            invalidLabel: "You entered an invalid name. Please try again."
+            labelRequired: "The name may not be blank. Please try again."
+            contentTypeRequired: "Please select at least one content type for this module."
+        createFunctionPrompt:
+          enterFolder: "Name of the folder where your function will be created: "
+          enterFilename: "Name of the JavaScript file for your function: "
+          enterEndpointPath: "Path portion of the URL created for the function: "
+          selectEndpointMethod: "Select the HTTP method for the endpoint"
+          errors:
+            invalid: "You entered an invalid name. Please try again."
+            blank: "The name may not be blank. Please try again."
+            space: "The name may not contain spaces. Please try again."
+        createApiSamplePrompt:
+          selectApiSampleApp: "Please, select API sample app"
+          selectLanguage: "Please, select sample app's language"
+          errors:
+            apiSampleAppRequired: "Please select API sample app"
+            languageRequired: "Please select API sample app's language"
+        createProjectPrompt:
+          enterName: "[--name] Give your project a name: "
+          enterLocation: "[--location] Where should the project be created?"
+          selectTemplate: "[--template] Start from a template?"
+          errors:
+            nameRequired: "A project name is required"
+            locationRequired: "A project location is required"
+            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+            noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
+            missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+        downloadProjectPrompt:
+          selectProject: "Select a project to download:"
+          errors:
+            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
+        projectAddPrompt:
+          selectType: "[--type] Select your component type:"
+          enterName: "[--name] Give your component a name: "
+          errors:
+            nameRequired: "A component name is required"
+            invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+        secretPrompt:
+          enterValue: "Enter a value for your secret: "
+          errors:
+            invalidValue: "You entered an invalid value. Please try again."
+        sandboxesPrompt:
+          name:
+            message: "Name your sandbox"
+            developmentSandboxMessage: "Name your development sandbox"
             errors:
-              pathExists: "The {{ path }} path already exists"
-      project:
-        subcommands:
-          watch:
-            debug:
-              pause: "Pausing watcher, attempting to queue build"
-              buildStarted: "Build queued."
-              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
-              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
-              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              attemptNewBuild: "Attempting to create a new build"
-              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
-            logs:
-              watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
-              resuming: "Resuming watcher..."
-              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
-              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
-              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
-              previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
-            errors:
-              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
-              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
-      upload:
-        converting: "Converting \"{{ src }}\" to \"{{ dest }}\"."
-        converted: "Finished converting \"{{ src }}\" to \"{{ dest }}\"."
-        errors:
-          fieldsJsSyntaxError: "There was an error converting JS file \"{{ path }}\""
-          fieldsJsNotReturnArray: "There was an error loading JS file \"{{ path }}\". Expected type \"Array\" but received type \"{{ returned }}\" . Make sure that your function returns an array"
-          fieldsJsNotFunction:  "There was an error loading JS file \"{{ path }}\". Expected type \"Function\" but received type \"{{ returned }}\". Make sure that your default export is a function."
+              invalidName: "You entered an invalid name. Please try again."
+              nameRequired: "The name may not be blank. Please try again."
+              accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
+            selectAccountName: "Select the sandbox account you want to delete"
+            selectParentAccountName: "Select the account that the sandbox belongs to"
+          type:
+            message: "What type of sandbox would you like to create?"
+            developer: "Development sandbox (Isolated environment for developers)"
+            standard: "Standard sandbox (Testing environment for all Super Admins)"
+        uploadPrompt:
+          enterDest: "[--dest] Enter the destination path: "
+          enterSrc: "[--src] Enter the source path: "
+          errors:
+            srcRequired: "You must specify a source directory."
+            destRequired: "You must specify a destination directory."
+          fieldsPrompt: "Multiple fields files located in \"{{ dir }}\". Please choose which to upload: "
+        projectNamePrompt:
+          enterName: "[--project] Enter project name:"
+          errors:
+            invalidName: "You entered an invalid name. Please try again."
+            projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""
+        feedbackPrompt:
+          feedbackType:
+            message: "What type of feedback would you like to leave?"
+            bug: "[--bug] Report a bug"
+            general: "[--general] Tell us about your experience with HubSpot's developer tools"
+          bugPrompt: "Create an issue on Github in your browser?"
+          generalPrompt: "Open the projects feedback form in your browser?"
+        buildIdPrompt:
+          enterBuildId: "[--build] Deploy which build?"
+          errors:
+            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
+            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+      convertFields:
+        positionals:
+          src:
+            describe: Path to JS Fields file or directory containing javascript fields files.
+        options:
+          options:
+            describe: "Options to pass to javascript fields files"
+      sandbox:
+        create:
+          loading:
+            developer:
+              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            standard:
+              add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+              fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+              succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+          success:
+            configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+          failure:
+            limit:
+              developer:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              standard:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes.
+                \n- View sandbox details at {{ link }}
+                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+            alreadyInConfig:
+              developer:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
+                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+              standard:
+                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
+                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
+                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+            scopes:
+              message: "The personal access key you provided doesn't include sandbox permissions."
+              instructions: "To update CLI permissions for \"{{ accountName }}\":
+                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
+        sync:
+          info:
+            syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
+            earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
+          confirm:
+            createFlow:
+              standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+              developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+            syncContactRecords:
+              standard: "Include up to 5000 most recent contact records and associations in this sync? Syncing contact records may take some time"
+              developer: "Include up to 100 most recent contact records and associations in this sync? Syncing contact records may take some time"
+          loading:
+            startSync: "Initiating sync..."
+            fail: "Failed to sync sandbox."
+            succeed: "Sandbox sync initiated to {{ accountName }}."
+            skipPolling: "Syncing CRM object definitions."
+            skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recent contacts and associated records."
+          polling:
+            syncing: "Syncing sandbox..."
+            fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
+            succeed: "Sandbox sync complete."
+          failure:
+            missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+            syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+            notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
+            objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
+          types:
+            parcels:
+              label: "Account tools and features"
+            super-admins:
+              label: "Super Admins"
+            object-schemas:
+              label: "Object definitions"
+            object-records:
+              label: "Contacts and associated records"
+            cms-developer-assets:
+              label: "Themes, templates, and modules"
+            object-pipelines:
+              label: "Pipelines"
+            object-lists:
+              label: "Lists"
+            workflows:
+              label: "Workflows"
+            forms:
+              label: "Forms"
+            lead-flows:
+              label: "Lead Flows"
+            marketing-email:
+              label: "Marketing emails"
+
 
 

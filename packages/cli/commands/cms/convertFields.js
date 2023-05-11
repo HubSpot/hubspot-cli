@@ -5,7 +5,7 @@ const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const {
   FieldsJs,
   isConvertableFieldJs,

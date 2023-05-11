@@ -8,7 +8,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getAccountId } = require('../../lib/commonOpts');
 const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');

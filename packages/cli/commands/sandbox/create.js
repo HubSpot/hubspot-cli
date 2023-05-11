@@ -6,7 +6,7 @@ const {
   addTestingOptions,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { buildSandbox } = require('../../lib/sandbox-create');
@@ -30,6 +30,10 @@ const {
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  isMissingScopeError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -79,7 +83,23 @@ exports.handler = async options => {
   try {
     await validateSandboxUsageLimits(accountConfig, sandboxType, env);
   } catch (err) {
-    logErrorInstance(err);
+    if (isMissingScopeError(err)) {
+      logger.error(
+        i18n('cli.lib.sandbox.create.failure.scopes.message', {
+          accountName: accountConfig.name || accountId,
+        })
+      );
+      const websiteOrigin = getHubSpotWebsiteOrigin(env);
+      const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+      logger.info(
+        i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+          accountName: accountConfig.name || accountId,
+          url,
+        })
+      );
+    } else {
+      logErrorInstance(err);
+    }
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }

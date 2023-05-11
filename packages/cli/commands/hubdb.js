@@ -3,7 +3,7 @@ const createCommand = require('./hubdb/create');
 const fetchCommand = require('./hubdb/fetch');
 const deleteCommand = require('./hubdb/delete');
 const clearCommand = require('./hubdb/clear');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.hubdb';
 
