@@ -5,5 +5,5 @@
     "packages/*",
     "acceptance-tests"
   ],
-  "version": "4.1.8-beta.2"
+  "version": "4.1.8-beta.3"
 }
