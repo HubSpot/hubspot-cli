@@ -163,7 +163,7 @@ class LocalDevManager {
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(
         i18n(`${i18nKey}.header.viewInHubSpotLink`),
-        `${this.devServerPath}/hs/project`,
+        this.generateLocalURL(`/hs/project`),
         {
           inSpinnies: true,
         }
@@ -225,6 +225,10 @@ class LocalDevManager {
         }
       }
     });
+  }
+
+  generateLocalURL(path) {
+    return this.devServerPath ? `${this.devServerPath}${path}` : null;
   }
 
   updateDevModeStatus(langKey) {
