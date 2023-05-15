@@ -465,6 +465,9 @@ en:
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
+            options:
+              port:
+                describe: "The port that the running server will listen on"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
             examples:

@@ -22,11 +22,9 @@ const {
   queueBuild,
 } = require('@hubspot/cli-lib/api/dfs');
 const SpinniesManager = require('./SpinniesManager');
+const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const {
-  getProjectDetailUrl,
-  pollProjectBuildAndDeploy,
-} = require('./projects');
+const { pollProjectBuildAndDeploy } = require('./projects');
 const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
@@ -45,6 +43,7 @@ const UPLOAD_PERMISSIONS = {
   manual: 'manual',
   never: 'never',
 };
+
 class LocalDevManager {
   constructor(options) {
     this.targetAccountId = options.targetAccountId;
@@ -53,7 +52,6 @@ class LocalDevManager {
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
-    this.mockServers = options.mockServers || false;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -64,6 +62,8 @@ class LocalDevManager {
     this.standbyChanges = [];
     this.debouncedBuild = null;
     this.currentStagedBuildId = null;
+    this.port = options.port;
+    this.devServerPath = null;
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
       process.exit(EXIT_CODES.ERROR);
@@ -90,8 +90,9 @@ class LocalDevManager {
 
     this.uploadQueue.start();
 
-    this.logConsoleHeader();
     await this.startServers();
+
+    this.logConsoleHeader();
     await this.startWatching();
     this.updateKeypressListeners();
   }
@@ -159,14 +160,10 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    const projectDetailUrl = getProjectDetailUrl(
-      this.projectConfig.name,
-      this.targetAccountId
-    );
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(
         i18n(`${i18nKey}.header.viewInHubSpotLink`),
-        projectDetailUrl,
+        this.generateLocalURL(`/hs/project`),
         {
           inSpinnies: true,
         }
@@ -228,6 +225,10 @@ class LocalDevManager {
         }
       }
     });
+  }
+
+  generateLocalURL(path) {
+    return this.devServerPath ? `${this.devServerPath}${path}` : null;
   }
 
   updateDevModeStatus(langKey) {
@@ -297,11 +298,13 @@ class LocalDevManager {
       remotePath: path.relative(this.projectSourceDir, filePath),
     };
 
-    const isSupportedChange = await this.notifyServers(changeInfo);
+    const notifyResponse = await this.notifyServers(changeInfo);
 
-    if (isSupportedChange) {
+    if (!notifyResponse.uploadRequired) {
       this.updateDevModeStatus('supportedChange');
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
+
+      await this.executeServers(notifyResponse, changeInfo);
       return;
     }
 
@@ -510,23 +513,24 @@ class LocalDevManager {
   }
 
   async startServers() {
-    // TODO spin up local dev servers
-    return true;
+    this.devServerPath = await DevServerManager.start({
+      accountId: this.targetAccountId,
+      projectConfig: this.projectConfig,
+      port: this.port,
+    });
   }
 
   async notifyServers(changeInfo) {
-    const { remotePath } = changeInfo;
+    const notifyResponse = await DevServerManager.notify(changeInfo);
+    return notifyResponse;
+  }
 
-    // TODO notify servers of the change
-    if (this.mockServers) {
-      return !remotePath.endsWith('app.json');
-    }
-    return false;
+  async executeServers(notifyResponse, changeInfo) {
+    await DevServerManager.execute(notifyResponse, changeInfo);
   }
 
   async cleanupServers() {
-    // TODO tell servers to cleanup
-    return;
+    await DevServerManager.cleanup();
   }
 }
 
