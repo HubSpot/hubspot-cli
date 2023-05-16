@@ -8,7 +8,7 @@ A CLI for HubSpot developers to enable local CMS development and automate their 
 
 See the `@hubspot/cli` [README](./packages/cli/README.md)
 
-See the node.js `cli-lib` library [README](./packages/cli-lib/README.md)
+See the node.js `cli-lib` library [README](https://github.com/HubSpot/cli-lib)
 
 For information on the `hubspot.config.yml` file, see [HubspotConfigFile](./docs/HubspotConfigFile.md)
 
