@@ -74,6 +74,9 @@ class DevServerManager {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
 
+    // Start server
+    this.server = app.listen(port || DEFAULT_PORT);
+
     const projectFiles = await this.getProjectFiles(projectSourceDir);
 
     // Initialize component servers
@@ -82,12 +85,12 @@ class DevServerManager {
         let serverApp;
 
         try {
-          serverApp = await serverInterface.start(serverKey, {
+          serverApp = await serverInterface.start(serverKey, this.server, {
             debug,
-            projectConfig,
-            projectSourceDir,
-            projectFiles,
             logger: this.makeLogger(logger, serverKey),
+            port,
+            projectConfig,
+            projectFiles,
           });
 
           if (serverApp) {
@@ -100,9 +103,6 @@ class DevServerManager {
         }
       }
     });
-
-    // Start server
-    this.server = app.listen(port || DEFAULT_PORT);
 
     this.path = this.server.address()
       ? `http://localhost:${this.server.address().port}`
