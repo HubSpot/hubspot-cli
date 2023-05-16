@@ -105,7 +105,7 @@ class LocalDevManager {
     });
 
     await this.stopWatching();
-
+    logger.log('cleaning up');
     await this.cleanupServers();
 
     let exitCode = EXIT_CODES.SUCCESS;
@@ -304,7 +304,7 @@ class LocalDevManager {
       this.updateDevModeStatus('supportedChange');
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
 
-      await this.executeServers(notifyResponse, changeInfo);
+      await this.executeServers(changeInfo, notifyResponse);
       return;
     }
 
@@ -516,6 +516,7 @@ class LocalDevManager {
     this.devServerPath = await DevServerManager.start({
       accountId: this.targetAccountId,
       projectConfig: this.projectConfig,
+      projectSourceDir: this.projectSourceDir,
       port: this.port,
     });
   }
@@ -525,8 +526,8 @@ class LocalDevManager {
     return notifyResponse;
   }
 
-  async executeServers(notifyResponse, changeInfo) {
-    await DevServerManager.execute(notifyResponse, changeInfo);
+  async executeServers(changeInfo, notifyResponse) {
+    await DevServerManager.execute(changeInfo, notifyResponse);
   }
 
   async cleanupServers() {
