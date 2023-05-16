@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getProjectDetailUrl } = require('./projects');
+const UIEDevModeInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
 
 const DEFAULT_PORT = 8080;
 
@@ -11,7 +12,9 @@ class DevServerManager {
     this.initialized = false;
     this.server = null;
     this.path = null;
-    this.devServers = {};
+    this.devServers = {
+      uie: UIEDevModeInterface,
+    };
   }
 
   async iterateDevServers(callback) {
@@ -64,7 +67,9 @@ class DevServerManager {
           projectSourceDir,
           projectFiles,
         });
-        app.use(`/${serverKey}`, serverApp);
+        if (serverApp) {
+          app.use(`/${serverKey}`, serverApp);
+        }
       }
     });
 
@@ -84,11 +89,14 @@ class DevServerManager {
     if (this.initialized) {
       await this.iterateDevServers(async (serverInterface, serverKey) => {
         let isSupportedByServer = false;
+
         if (serverInterface.notify) {
           isSupportedByServer = await serverInterface.notify(changeInfo);
         }
+
         if (isSupportedByServer) {
           notifyResponse[serverKey] = true;
+
           if (notifyResponse.uploadRequired) {
             notifyResponse.uploadRequired = false;
           }

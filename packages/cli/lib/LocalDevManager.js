@@ -294,6 +294,10 @@ class LocalDevManager {
       remotePath: path.relative(this.projectSourceDir, filePath),
     };
 
+    if (changeInfo.filePath.includes('dist')) {
+      return;
+    }
+
     const notifyResponse = await this.notifyServers(changeInfo);
 
     if (!notifyResponse.uploadRequired) {
@@ -378,7 +382,7 @@ class LocalDevManager {
     const { event, filePath } = changeInfo;
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
-      if (!isAllowedExtension(filePath)) {
+      if (!isAllowedExtension(filePath, ['jsx'])) {
         logger.debug(`Extension not allowed: ${filePath}`);
         return;
       }

@@ -96,13 +96,13 @@ function getExt(filepath) {
   return ext[0] === '.' ? ext.slice(1) : ext;
 }
 
-const getAllowedExtensions = () => {
-  return ALLOWED_EXTENSIONS;
+const getAllowedExtensions = (allowList = []) => {
+  return new Set([...Array.from(ALLOWED_EXTENSIONS), ...allowList]);
 };
 
-const isAllowedExtension = filepath => {
+const isAllowedExtension = (filepath, allowList = []) => {
   const ext = getExt(filepath);
-  const allowedExtensions = getAllowedExtensions();
+  const allowedExtensions = getAllowedExtensions(allowList);
   return allowedExtensions.has(ext);
 };
 
