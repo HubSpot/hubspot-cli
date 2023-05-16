@@ -49,9 +49,11 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.port = options.port;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
+
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -62,10 +64,9 @@ class LocalDevManager {
     this.standbyChanges = [];
     this.debouncedBuild = null;
     this.currentStagedBuildId = null;
-    this.port = options.port;
-    this.devServerPath = null;
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
+      logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -105,7 +106,6 @@ class LocalDevManager {
     });
 
     await this.stopWatching();
-    logger.log('cleaning up');
     await this.cleanupServers();
 
     let exitCode = EXIT_CODES.SUCCESS;
@@ -163,7 +163,7 @@ class LocalDevManager {
     this.spinnies.add('viewInHubSpotLink', {
       text: uiLink(
         i18n(`${i18nKey}.header.viewInHubSpotLink`),
-        this.generateLocalURL(`/hs/project`),
+        DevServerManager.generateURL(`hs/project`),
         {
           inSpinnies: true,
         }
@@ -217,7 +217,7 @@ class LocalDevManager {
         ) {
           this.clearConsoleContent();
           this.spinnies.add('manualUploadSkipped', {
-            text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
+            text: i18n(`${i18nKey}.content.manualUploadSkipped`),
             status: 'fail',
             failColor: 'white',
             noIndent: true,
@@ -225,10 +225,6 @@ class LocalDevManager {
         }
       }
     });
-  }
-
-  generateLocalURL(path) {
-    return this.devServerPath ? `${this.devServerPath}${path}` : null;
   }
 
   updateDevModeStatus(langKey) {
@@ -241,7 +237,7 @@ class LocalDevManager {
 
   async pauseUploadQueue() {
     this.spinnies.add('uploading', {
-      text: i18n(`${i18nKey}.upload.uploadingChanges`, {
+      text: i18n(`${i18nKey}.content.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
       }),
       noIndent: true,
@@ -342,7 +338,7 @@ class LocalDevManager {
       this.updateDevModeStatus('noUploadsAllowed');
 
       this.spinnies.add('noUploadsAllowed', {
-        text: i18n(`${i18nKey}.upload.noUploadsAllowed`, {
+        text: i18n(`${i18nKey}.content.noUploadsAllowed`, {
           filePath: remotePath,
         }),
         status: 'fail',
@@ -355,23 +351,23 @@ class LocalDevManager {
       this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
       this.spinnies.add('manualUploadRequired', {
-        text: i18n(`${i18nKey}.upload.manualUploadRequired`),
+        text: i18n(`${i18nKey}.content.manualUploadRequired`),
         status: 'fail',
         failColor: 'white',
         noIndent: true,
       });
       this.spinnies.add('manualUploadExplanation1', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
+        text: i18n(`${i18nKey}.content.manualUploadExplanation1`),
         status: 'non-spinnable',
         indent: 1,
       });
       this.spinnies.add('manualUploadExplanation2', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
+        text: i18n(`${i18nKey}.content.manualUploadExplanation2`),
         status: 'non-spinnable',
         indent: 1,
       });
       this.spinnies.add('manualUploadPrompt', {
-        text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
+        text: i18n(`${i18nKey}.content.manualUploadPrompt`),
         status: 'non-spinnable',
         indent: 1,
       });
@@ -398,7 +394,7 @@ class LocalDevManager {
     const { event, filePath, remotePath } = changeInfo;
 
     this.spinnies.add(filePath, {
-      text: i18n(`${i18nKey}.upload.uploadingChange`, {
+      text: i18n(`${i18nKey}.content.uploadingChange`, {
         filePath: remotePath,
       }),
       status: 'non-spinnable',
@@ -513,25 +509,68 @@ class LocalDevManager {
   }
 
   async startServers() {
-    this.devServerPath = await DevServerManager.start({
-      accountId: this.targetAccountId,
-      projectConfig: this.projectConfig,
-      projectSourceDir: this.projectSourceDir,
-      port: this.port,
-    });
+    try {
+      await DevServerManager.start({
+        accountId: this.targetAccountId,
+        projectConfig: this.projectConfig,
+        projectSourceDir: this.projectSourceDir,
+        port: this.port,
+      });
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      this.spinnies.add('devServerStartError', {
+        text: i18n(`${i18nKey}.content.devServerStartError`),
+        status: 'non-spinnable',
+      });
+    }
   }
 
   async notifyServers(changeInfo) {
-    const notifyResponse = await DevServerManager.notify(changeInfo);
+    let notifyResponse = { uploadRequired: true };
+
+    try {
+      notifyResponse = await DevServerManager.notify(changeInfo);
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      this.spinnies.add('devServerNotifyError', {
+        text: i18n(`${i18nKey}.content.devServerNotifyError`),
+        status: 'non-spinnable',
+      });
+    }
+
     return notifyResponse;
   }
 
   async executeServers(changeInfo, notifyResponse) {
-    await DevServerManager.execute(changeInfo, notifyResponse);
+    try {
+      await DevServerManager.execute(changeInfo, notifyResponse);
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      this.spinnies.add('devServerExecuteError', {
+        text: i18n(`${i18nKey}.content.devServerExecuteError`),
+        status: 'non-spinnable',
+      });
+    }
   }
 
   async cleanupServers() {
-    await DevServerManager.cleanup();
+    try {
+      await DevServerManager.cleanup();
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      this.spinnies.add('devServerCleanupError', {
+        text: i18n(`${i18nKey}.content.devServerCleanupError`),
+        status: 'non-spinnable',
+      });
+    }
   }
 }
 

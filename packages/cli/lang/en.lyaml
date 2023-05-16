@@ -845,6 +845,7 @@ en:
             describe: "Options to pass to javascript fields files"
     lib:
       LocalDevManager:
+        failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to clean up before exiting"
@@ -861,7 +862,7 @@ en:
             manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
             supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
-        upload:
+        content:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
           manualUploadSkipped: "Manual upload skipped. Some changes may not be visible."
           manualUploadRequired: "Project files changed, manual upload and deploy is needed ..."
@@ -870,6 +871,10 @@ en:
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
           uploadingChange: "[INFO] Uploading {{ filePath }}"
           uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
+          devServerStartError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
+          devServerNotifyError: "{{#red}}[ERROR]{{/red}} Failed to process change locally"
+          devServerExecuteError: "{{#red}}[ERROR]{{/red}} Failed to handle change with local dev server"
+          devServerCleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

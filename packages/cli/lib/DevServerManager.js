@@ -8,7 +8,9 @@ const DEFAULT_PORT = 8080;
 
 class DevServerManager {
   constructor() {
+    this.initialized = false;
     this.server = null;
+    this.path = null;
     this.devServers = {};
   }
 
@@ -20,6 +22,10 @@ class DevServerManager {
       const serverInterface = this.devServers[serverKey];
       await callback(serverInterface, serverKey);
     }
+  }
+
+  generateURL(path) {
+    return this.path ? `${this.path}/${path}` : null;
   }
 
   async getProjectFiles(projectSourceDir) {
@@ -65,49 +71,55 @@ class DevServerManager {
     // Start server
     this.server = app.listen(port || DEFAULT_PORT);
 
-    return this.server.address()
+    this.path = this.server.address()
       ? `http://localhost:${this.server.address().port}`
       : null;
+
+    this.initialized = true;
   }
 
   async notify(changeInfo) {
     let notifyResponse = { uploadRequired: true };
 
-    await this.iterateServers(async (serverInterface, serverKey) => {
-      let isSupportedByServer = false;
-      if (serverInterface.notify) {
-        isSupportedByServer = await serverInterface.notify(changeInfo);
-      }
-      if (isSupportedByServer) {
-        notifyResponse[serverKey] = true;
-        if (notifyResponse.uploadRequired) {
-          notifyResponse.uploadRequired = false;
+    if (this.initialized) {
+      await this.iterateDevServers(async (serverInterface, serverKey) => {
+        let isSupportedByServer = false;
+        if (serverInterface.notify) {
+          isSupportedByServer = await serverInterface.notify(changeInfo);
         }
-      }
-    });
+        if (isSupportedByServer) {
+          notifyResponse[serverKey] = true;
+          if (notifyResponse.uploadRequired) {
+            notifyResponse.uploadRequired = false;
+          }
+        }
+      });
+    }
 
     return notifyResponse;
   }
 
   async execute(changeInfo, notifyResponse) {
-    await this.iterateServers(async (serverInterface, serverKey) => {
-      if (notifyResponse[serverKey] && serverInterface.execute) {
-        await serverInterface.execute(changeInfo);
-      }
-    });
+    if (this.initialized) {
+      await this.iterateDevServers(async (serverInterface, serverKey) => {
+        if (notifyResponse[serverKey] && serverInterface.execute) {
+          await serverInterface.execute(changeInfo);
+        }
+      });
+    }
   }
 
   async cleanup() {
-    await this.iterateServers(async serverInterface => {
-      if (serverInterface.cleanup) {
-        await serverInterface.cleanup();
+    if (this.initialized) {
+      await this.iterateDevServers(async serverInterface => {
+        if (serverInterface.cleanup) {
+          await serverInterface.cleanup();
+        }
+      });
+      if (this.server) {
+        await this.server.close();
       }
-    });
-    console.log('what');
-    if (this.server) {
-      await this.server.close();
     }
-    console.log('server closed');
   }
 }
 
