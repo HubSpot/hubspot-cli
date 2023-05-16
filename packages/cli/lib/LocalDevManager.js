@@ -345,7 +345,6 @@ class LocalDevManager {
   handlePreventedUpload(changeInfo) {
     const { remotePath } = changeInfo;
 
-    this.clearConsoleContent();
     if (this.uploadPermission === UPLOAD_PERMISSIONS.never) {
       this.updateDevModeStatus('noUploadsAllowed');
 
