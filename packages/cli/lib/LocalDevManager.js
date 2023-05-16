@@ -88,14 +88,18 @@ class LocalDevManager {
     }
 
     console.clear();
+    this.spinnies.removeAll();
+    this.updateConsoleHeader();
 
     this.uploadQueue.start();
 
     await this.startServers();
 
-    this.logConsoleHeader();
     await this.startWatching();
     this.updateKeypressListeners();
+
+    // Do this again to pick up latest watch + server states
+    this.updateConsoleHeader();
   }
 
   async stop() {
@@ -144,9 +148,8 @@ class LocalDevManager {
     process.exit(exitCode);
   }
 
-  logConsoleHeader() {
-    this.spinnies.removeAll();
-    this.spinnies.add('devModeRunning', {
+  updateConsoleHeader() {
+    this.spinnies.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
         projectName: this.projectConfig.name,
@@ -154,36 +157,41 @@ class LocalDevManager {
       isParent: true,
       category: 'header',
     });
-    this.spinnies.add('devModeStatus', {
+    this.spinnies.addOrUpdate('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.clean`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.add('viewInHubSpotLink', {
-      text: uiLink(
-        i18n(`${i18nKey}.header.viewInHubSpotLink`),
-        DevServerManager.generateURL(`hs/project`),
-        {
-          inSpinnies: true,
-        }
-      ),
+
+    const viewText = DevServerManager.initialized
+      ? uiLink(
+          i18n(`${i18nKey}.header.viewInHubSpotLink`),
+          DevServerManager.generateURL(`hs/project`),
+          {
+            inSpinnies: true,
+          }
+        )
+      : ' ';
+
+    this.spinnies.addOrUpdate('viewInHubSpotLink', {
+      text: viewText,
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.add('spacer-1', {
+    this.spinnies.addOrUpdate('spacer-1', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
     });
-    this.spinnies.add('keypressMessage', {
+    this.spinnies.addOrUpdate('quitHelper', {
       text: i18n(`${i18nKey}.header.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.add('lineSeparator', {
+    this.spinnies.addOrUpdate('lineSeparator', {
       text: '-'.repeat(50),
       status: 'non-spinnable',
       noIndent: true,
@@ -512,13 +520,22 @@ class LocalDevManager {
     await this.watcher.close();
   }
 
+  handleServerLog(serverKey, args) {
+    this.spinnies.add(null, {
+      text: `[${serverKey}] ${args.join('')}`,
+      status: 'non-spinnable',
+    });
+  }
+
   async startServers() {
     try {
       await DevServerManager.start({
         accountId: this.targetAccountId,
+        debug: this.debug,
+        logger: this.handleServerLog.bind(this),
+        port: this.port,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,
-        port: this.port,
       });
     } catch (e) {
       if (this.debug) {

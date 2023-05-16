@@ -15,6 +15,7 @@ class SpinniesManager {
 
     return {
       add: this.add.bind(this),
+      addOrUpdate: this.addOrUpdate.bind(this),
       pick: this.spinnies.pick.bind(this.spinnies),
       remove: this.remove.bind(this),
       removeAll: this.removeAll.bind(this),
@@ -51,17 +52,30 @@ class SpinniesManager {
     const { category, isParent, noIndent, ...rest } = options;
     const originalIndent = rest.indent || 0;
 
+    // Support adding generic spinnies lines without specifying a key
+    const uniqueKey = key || `${Date.now()}`;
+
     if (category) {
-      this.addKeyToCategory(key, category);
+      this.addKeyToCategory(uniqueKey, category);
     }
 
-    this.spinnies.add(key, {
+    this.spinnies.add(uniqueKey, {
       ...rest,
       indent: this.parentKey && !noIndent ? originalIndent + 1 : originalIndent,
     });
 
     if (isParent) {
-      this.parentKey = key;
+      this.parentKey = uniqueKey;
+    }
+  }
+
+  addOrUpdate(key, options = {}) {
+    const spinner = this.spinnies.pick(key);
+
+    if (spinner) {
+      this.spinnies.update(key, options);
+    } else {
+      this.add(key, options);
     }
   }
 

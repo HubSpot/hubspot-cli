@@ -36,7 +36,24 @@ class DevServerManager {
     return projectFiles;
   }
 
-  async start({ accountId, projectConfig, projectSourceDir, port }) {
+  makeLogger(logger, serverKey) {
+    return {
+      debug: (...args) => logger(serverKey, args),
+      error: (...args) => logger(serverKey, args),
+      info: (...args) => logger(serverKey, args),
+      log: (...args) => logger(serverKey, args),
+      warn: (...args) => logger(serverKey, args),
+    };
+  }
+
+  async start({
+    accountId,
+    logger,
+    debug,
+    projectConfig,
+    projectSourceDir,
+    port,
+  }) {
     const app = express();
 
     // Install Middleware
@@ -62,13 +79,24 @@ class DevServerManager {
     // Initialize component servers
     await this.iterateDevServers(async (serverInterface, serverKey) => {
       if (serverInterface.start) {
-        const serverApp = await serverInterface.start(serverKey, {
-          projectConfig,
-          projectSourceDir,
-          projectFiles,
-        });
-        if (serverApp) {
-          app.use(`/${serverKey}`, serverApp);
+        let serverApp;
+
+        try {
+          serverApp = await serverInterface.start(serverKey, {
+            debug,
+            projectConfig,
+            projectSourceDir,
+            projectFiles,
+            logger: this.makeLogger(logger, serverKey),
+          });
+
+          if (serverApp) {
+            app.use(`/${serverKey}`, serverApp);
+          }
+        } catch (e) {
+          if (debug) {
+            console.log(e);
+          }
         }
       }
     });
