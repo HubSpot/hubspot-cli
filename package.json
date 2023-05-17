@@ -11,7 +11,8 @@
     "lerna": "^4.0.0",
     "lint-staged": "^10.5.4",
     "madge": "^4.0.1",
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "sass": "~1.29.0"
   },
   "workspaces": [
     "packages/*",
