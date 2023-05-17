@@ -6,7 +6,7 @@
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "license": "Apache-2.0",
   "dependencies": {
-    "@hubspot/cli-lib": "^4.1.9",
+    "@hubspot/cli-lib": "^4.1.10",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "chokidar": "^3.4.3",
