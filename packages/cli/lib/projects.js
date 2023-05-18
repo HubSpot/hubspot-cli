@@ -257,7 +257,10 @@ const ensureProjectExists = async (
           );
           return true;
         } catch (err) {
-          return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+          return logApiErrorInstance(
+            err,
+            new ApiErrorContext({ accountId, projectName })
+          );
         }
       } else {
         if (!noLogs) {
@@ -271,7 +274,7 @@ const ensureProjectExists = async (
         return false;
       }
     }
-    logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     return false;
   }
 };

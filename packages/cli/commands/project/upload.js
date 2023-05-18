@@ -18,6 +18,10 @@ const {
   pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
@@ -42,34 +46,39 @@ exports.handler = async options => {
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
-  const result = await handleProjectUpload(
-    accountId,
-    projectConfig,
-    projectDir,
-    pollProjectBuildAndDeploy,
-    message
-  );
+  try {
+    const result = await handleProjectUpload(
+      accountId,
+      projectConfig,
+      projectDir,
+      pollProjectBuildAndDeploy,
+      message
+    );
 
-  if (result.buildSucceeded && !result.autodeployEnabled) {
-    uiLine();
-    logger.log(
-      chalk.bold(
-        i18n(`${i18nKey}.logs.buildSucceeded`, {
-          buildId: result.buildId,
+    if (result.buildSucceeded && !result.autodeployEnabled) {
+      uiLine();
+      logger.log(
+        chalk.bold(
+          i18n(`${i18nKey}.logs.buildSucceeded`, {
+            buildId: result.buildId,
+          })
+        )
+      );
+      logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
+      logger.log(
+        i18n(`${i18nKey}.logs.runCommand`, {
+          command: chalk.hex('f5c26b')('hs project deploy'),
         })
-      )
-    );
-    logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
-    logger.log(
-      i18n(`${i18nKey}.logs.runCommand`, {
-        command: chalk.hex('f5c26b')('hs project deploy'),
-      })
-    );
-    uiLine();
+      );
+      uiLine();
+      logFeedbackMessage(result.buildId);
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  } catch (e) {
+    const projectName = projectConfig.name;
+    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    process.exit(EXIT_CODES.ERROR);
   }
-
-  logFeedbackMessage(result.buildId);
-  process.exit(result.succeeded ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
 };
 
 exports.builder = yargs => {
