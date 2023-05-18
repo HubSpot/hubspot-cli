@@ -19,7 +19,7 @@
     "express": "^4.17.1",
     "findup-sync": "^4.0.0",
     "fs-extra": "^8.1.0",
-    "inquirer": "^8.2.0",
+    "inquirer": "8.2.0",
     "js-yaml": "^4.1.0",
     "moment": "^2.29.1",
     "open": "^7.0.3",
