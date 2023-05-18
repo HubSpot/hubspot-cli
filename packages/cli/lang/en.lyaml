@@ -964,8 +964,7 @@ en:
           createNewSandboxOption: "<Test on a new dev sandbox>"
           chooseDefaultAccountOption: "<{{#bold}}!{{/bold}} Test on this production account {{#bold}}!{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
-          defaultAccountNotProd: "Option unavailable because your default account must be a production account."
-          sandboxLimit: "Option unavailable because you’ve reached the limit of {{ limit }} development sandboxes."
+          sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

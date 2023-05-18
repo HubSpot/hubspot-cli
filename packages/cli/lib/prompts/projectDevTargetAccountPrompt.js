@@ -29,9 +29,6 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   const sandboxAccounts = accounts.reverse().filter(isSandbox);
   let disabledMessage = false;
 
-  if (isSandbox(defaultAccountConfig)) {
-    disabledMessage = i18n(`${i18nKey}.defaultAccountNotProd`);
-  }
   if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
     disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
       limit: sandboxUsage['DEVELOPER'].limit,
