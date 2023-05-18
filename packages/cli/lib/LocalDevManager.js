@@ -222,7 +222,6 @@ class LocalDevManager {
           this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
           this.hasAnyUnsupportedStandbyChanges()
         ) {
-          this.clearConsoleContent();
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
           await this.flushStandbyChanges();
@@ -233,7 +232,6 @@ class LocalDevManager {
           this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
           this.hasAnyUnsupportedStandbyChanges()
         ) {
-          this.clearConsoleContent();
           this.spinnies.add('manualUploadSkipped', {
             text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
             status: 'fail',
@@ -355,7 +353,6 @@ class LocalDevManager {
   handlePreventedUpload(changeInfo) {
     const { remotePath } = changeInfo;
 
-    this.clearConsoleContent();
     if (this.uploadPermission === UPLOAD_PERMISSIONS.never) {
       this.updateDevModeStatus('noUploadsAllowed');
 
@@ -442,6 +439,13 @@ class LocalDevManager {
     } catch (err) {
       logger.debug(err);
     }
+
+    this.spinnies.update(filePath, {
+      text: i18n(`${i18nKey}.upload.uploadedChange`, {
+        filePath: remotePath,
+      }),
+      status: 'non-spinnable',
+    });
   }
 
   debounceQueueBuild() {
@@ -493,12 +497,19 @@ class LocalDevManager {
       true
     );
 
+    this.spinnies.succeed('uploading', {
+      text: i18n(`${i18nKey}.upload.uploadedChanges`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
+      succeedColor: 'white',
+      noIndent: true,
+    });
+
     if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
       await this.createNewStagingBuild();
     }
 
     this.uploadQueue.start();
-    this.clearConsoleContent();
 
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();

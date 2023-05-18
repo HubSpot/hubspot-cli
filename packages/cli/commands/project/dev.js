@@ -181,21 +181,26 @@ exports.handler = async options => {
   const spinnies = SpinniesManager.init();
 
   if (!projectExists) {
-    uiLine();
-    logger.warn(
-      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
-        accountIdentifier: uiAccountDescription(targetAccountId),
-        projectName: projectConfig.name,
-      })
-    );
-    uiLine();
+    // Create the project without prompting if this is a newly created sandbox
+    let shouldCreateProject = createNewSandbox;
 
-    const shouldCreateProject = await confirmPrompt(
-      i18n(`${i18nKey}.prompt.createProject`, {
-        accountIdentifier: uiAccountDescription(targetAccountId),
-        projectName: projectConfig.name,
-      })
-    );
+    if (!shouldCreateProject) {
+      uiLine();
+      logger.warn(
+        i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        })
+      );
+      uiLine();
+
+      shouldCreateProject = await confirmPrompt(
+        i18n(`${i18nKey}.prompt.createProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        })
+      );
+    }
 
     if (shouldCreateProject) {
       try {
@@ -211,6 +216,7 @@ exports.handler = async options => {
             accountIdentifier: uiAccountDescription(targetAccountId),
             projectName: projectConfig.name,
           }),
+          succeedColor: 'white',
         });
       } catch (err) {
         logger.log(i18n(`${i18nKey}.logs.failedToCreateProject`));
