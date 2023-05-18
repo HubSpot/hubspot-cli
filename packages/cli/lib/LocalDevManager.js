@@ -146,6 +146,26 @@ class LocalDevManager {
 
   logConsoleHeader() {
     this.spinnies.removeAll();
+    this.spinnies.add('betaMessage', {
+      text: i18n(`${i18nKey}.header.betaMessage`),
+      category: 'header',
+      status: 'non-spinnable',
+    });
+
+    this.spinnies.add('learnMoreLink', {
+      text: uiLink(
+        i18n(`${i18nKey}.header.learnMoreLink`),
+        this.generateLocalURL(`/hs/learnMore`),
+        { inSpinnies: true }
+      ),
+      category: 'header',
+      status: 'non-spinnable',
+    });
+    this.spinnies.add('spacer-1', {
+      text: ' ',
+      status: 'non-spinnable',
+      category: 'header',
+    });
     this.spinnies.add('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -164,15 +184,13 @@ class LocalDevManager {
       text: uiLink(
         i18n(`${i18nKey}.header.viewInHubSpotLink`),
         this.generateLocalURL(`/hs/project`),
-        {
-          inSpinnies: true,
-        }
+        { inSpinnies: true }
       ),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.add('spacer-1', {
+    this.spinnies.add('spacer-2', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
