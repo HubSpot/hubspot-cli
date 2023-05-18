@@ -39,7 +39,7 @@ yarn link @hubspot/cli
 
 ## Testing
 Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
-see the `engine` entry in the [cli-lib package.json](./packages/cli-lib/package.json).
+see the `engine` entry in the [cli package.json](./packages/cli/package.json).
 
 Using [nvm](https://github.com/nvm-sh/nvm) to switch between versions will help speed up development.
 

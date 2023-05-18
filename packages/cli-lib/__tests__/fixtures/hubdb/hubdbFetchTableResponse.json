@@ -1,9 +1,0 @@
-{
-  "name": "cool-table-name",
-  "allowChildTables": false,
-  "allowPublicApiAccess": false,
-  "columns": [
-    { "name": "first_col", "id": 1 },
-    { "name": "second_col", "id": 2 }
-  ]
-}
