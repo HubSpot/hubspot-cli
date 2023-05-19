@@ -59,13 +59,6 @@ exports.handler = async options => {
   );
 
   if (result.error) {
-    logApiErrorInstance(
-      result.error,
-      new ApiErrorContext({
-        accountId,
-        projectName: projectConfig.name,
-      })
-    );
     if (
       isSpecifiedError(result.error, {
         subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -74,6 +67,14 @@ exports.handler = async options => {
       logger.log();
       logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
       logger.log();
+    } else {
+      logApiErrorInstance(
+        result.error,
+        new ApiErrorContext({
+          accountId,
+          projectName: projectConfig.name,
+        })
+      );
     }
     process.exit(EXIT_CODES.ERROR);
   }

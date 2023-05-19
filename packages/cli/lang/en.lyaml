@@ -837,6 +837,8 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      DevServerManager:
+        portConflict: "The port {{ port }} is already in use."
       LocalDevManager:
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"

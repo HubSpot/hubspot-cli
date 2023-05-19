@@ -39,7 +39,11 @@ const {
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logErrorInstance,
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
@@ -254,15 +258,24 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.status.startupFailed`),
     });
 
-    if (
-      result.error &&
-      isSpecifiedError(result.error, {
-        subCategory: ERROR_TYPES.PROJECT_LOCKED,
-      })
-    ) {
-      logger.log();
-      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
-      logger.log();
+    if (result.error) {
+      if (
+        isSpecifiedError(result.error, {
+          subCategory: ERROR_TYPES.PROJECT_LOCKED,
+        })
+      ) {
+        logger.log();
+        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.log();
+      } else {
+        logApiErrorInstance(
+          result.error,
+          new ApiErrorContext({
+            accountId,
+            projectName: projectConfig.name,
+          })
+        );
+      }
     }
 
     process.exit(EXIT_CODES.ERROR);
