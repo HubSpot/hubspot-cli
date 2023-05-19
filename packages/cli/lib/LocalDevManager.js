@@ -217,22 +217,29 @@ class LocalDevManager {
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
-      } else if (key.name === 'y') {
-        if (
-          this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
-          this.hasAnyUnsupportedStandbyChanges()
-        ) {
+      } else if (
+        (key.name === 'y' || key.name === 'n') &&
+        this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
+        this.hasAnyUnsupportedStandbyChanges()
+      ) {
+        this.spinnies.remove('manualUploadRequired');
+        this.spinnies.remove('manualUploadExplanation1');
+        this.spinnies.remove('manualUploadExplanation2');
+        this.spinnies.remove('manualUploadPrompt');
+
+        if (key.name === 'y') {
+          this.spinnies.add(null, {
+            text: i18n(`${i18nKey}.upload.manualUploadConfirmed`),
+            status: 'succeed',
+            succeedColor: 'white',
+            noIndent: true,
+          });
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
           await this.flushStandbyChanges();
           await this.queueBuild();
-        }
-      } else if (key.name === 'n') {
-        if (
-          this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
-          this.hasAnyUnsupportedStandbyChanges()
-        ) {
-          this.spinnies.add('manualUploadSkipped', {
+        } else if (key.name === 'n') {
+          this.spinnies.add(null, {
             text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
             status: 'fail',
             failColor: 'white',
@@ -256,13 +263,6 @@ class LocalDevManager {
   }
 
   async pauseUploadQueue() {
-    this.spinnies.add('uploading', {
-      text: i18n(`${i18nKey}.upload.uploadingChanges`, {
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
-      noIndent: true,
-    });
-
     this.uploadQueue.pause();
     await this.uploadQueue.onIdle();
   }
@@ -367,7 +367,14 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      if (
+        !this.standbyChanges.find(
+          standbyChangeInfo =>
+            standbyChangeInfo.filePath === changeInfo.filePath
+        )
+      ) {
+        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      }
 
       this.spinnies.add('manualUploadRequired', {
         text: i18n(`${i18nKey}.upload.manualUploadRequired`),
@@ -406,18 +413,20 @@ class LocalDevManager {
       logger.debug(`File ignored: ${filePath}`);
       return;
     }
+
     this.standbyChanges.push(changeInfo);
   }
 
   async sendChanges(changeInfo) {
     const { event, filePath, remotePath } = changeInfo;
 
-    this.spinnies.add(filePath, {
+    const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.upload.uploadingChange`, {
         filePath: remotePath,
       }),
       status: 'non-spinnable',
     });
+
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
         await uploadFileToBuild(
@@ -440,7 +449,7 @@ class LocalDevManager {
       logger.debug(err);
     }
 
-    this.spinnies.update(filePath, {
+    this.spinnies.update(spinniesKey, {
       text: i18n(`${i18nKey}.upload.uploadedChange`, {
         filePath: remotePath,
       }),
@@ -464,6 +473,13 @@ class LocalDevManager {
   }
 
   async queueBuild() {
+    const spinniesKey = this.spinnies.add(null, {
+      text: i18n(`${i18nKey}.upload.uploadingChanges`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
+      noIndent: true,
+    });
+
     await this.pauseUploadQueue();
 
     try {
@@ -497,13 +513,15 @@ class LocalDevManager {
       true
     );
 
-    this.spinnies.succeed('uploading', {
+    this.spinnies.succeed(spinniesKey, {
       text: i18n(`${i18nKey}.upload.uploadedChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
       }),
       succeedColor: 'white',
       noIndent: true,
     });
+
+    this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
 
     if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
       await this.createNewStagingBuild();
