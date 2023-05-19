@@ -29,7 +29,7 @@ const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
-const BUILD_DEBOUNCE_TIME = 2000;
+const BUILD_DEBOUNCE_TIME = 3500;
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -149,6 +149,26 @@ class LocalDevManager {
   }
 
   updateConsoleHeader() {
+    this.spinnies.addOrUpdate('betaMessage', {
+      text: i18n(`${i18nKey}.header.betaMessage`),
+      category: 'header',
+      status: 'non-spinnable',
+    });
+
+    // this.spinnies.addOrUpdate('learnMoreLink', {
+    //   text: uiLink(
+    //     i18n(`${i18nKey}.header.learnMoreLink`),
+    //     this.generateLocalURL(`/hs/learnMore`),
+    //     { inSpinnies: true }
+    //   ),
+    //   category: 'header',
+    //   status: 'non-spinnable',
+    // });
+    this.spinnies.addOrUpdate('spacer-1', {
+      text: ' ',
+      status: 'non-spinnable',
+      category: 'header',
+    });
     this.spinnies.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -180,7 +200,7 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    this.spinnies.addOrUpdate('spacer-1', {
+    this.spinnies.addOrUpdate('spacer-2', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
@@ -207,24 +227,29 @@ class LocalDevManager {
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
-      } else if (key.name === 'y') {
-        if (
-          this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
-          this.hasAnyUnsupportedStandbyChanges()
-        ) {
-          this.clearConsoleContent();
+      } else if (
+        (key.name === 'y' || key.name === 'n') &&
+        this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
+        this.hasAnyUnsupportedStandbyChanges()
+      ) {
+        this.spinnies.remove('manualUploadRequired');
+        this.spinnies.remove('manualUploadExplanation1');
+        this.spinnies.remove('manualUploadExplanation2');
+        this.spinnies.remove('manualUploadPrompt');
+
+        if (key.name === 'y') {
+          this.spinnies.add(null, {
+            text: i18n(`${i18nKey}.content.manualUploadConfirmed`),
+            status: 'succeed',
+            succeedColor: 'white',
+            noIndent: true,
+          });
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
           await this.flushStandbyChanges();
           await this.queueBuild();
-        }
-      } else if (key.name === 'n') {
-        if (
-          this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
-          this.hasAnyUnsupportedStandbyChanges()
-        ) {
-          this.clearConsoleContent();
-          this.spinnies.add('manualUploadSkipped', {
+        } else if (key.name === 'n') {
+          this.spinnies.add(null, {
             text: i18n(`${i18nKey}.content.manualUploadSkipped`),
             status: 'fail',
             failColor: 'white',
@@ -244,13 +269,6 @@ class LocalDevManager {
   }
 
   async pauseUploadQueue() {
-    this.spinnies.add('uploading', {
-      text: i18n(`${i18nKey}.content.uploadingChanges`, {
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
-      noIndent: true,
-    });
-
     this.uploadQueue.pause();
     await this.uploadQueue.onIdle();
   }
@@ -359,7 +377,14 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      if (
+        !this.standbyChanges.find(
+          standbyChangeInfo =>
+            standbyChangeInfo.filePath === changeInfo.filePath
+        )
+      ) {
+        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      }
 
       this.spinnies.add('manualUploadRequired', {
         text: i18n(`${i18nKey}.content.manualUploadRequired`),
@@ -398,18 +423,20 @@ class LocalDevManager {
       logger.debug(`File ignored: ${filePath}`);
       return;
     }
+
     this.standbyChanges.push(changeInfo);
   }
 
   async sendChanges(changeInfo) {
     const { event, filePath, remotePath } = changeInfo;
 
-    this.spinnies.add(filePath, {
+    const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.content.uploadingChange`, {
         filePath: remotePath,
       }),
       status: 'non-spinnable',
     });
+
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
         await uploadFileToBuild(
@@ -431,6 +458,13 @@ class LocalDevManager {
     } catch (err) {
       logger.debug(err);
     }
+
+    this.spinnies.update(spinniesKey, {
+      text: i18n(`${i18nKey}.upload.uploadedChange`, {
+        filePath: remotePath,
+      }),
+      status: 'non-spinnable',
+    });
   }
 
   debounceQueueBuild() {
@@ -449,6 +483,13 @@ class LocalDevManager {
   }
 
   async queueBuild() {
+    const spinniesKey = this.spinnies.add(null, {
+      text: i18n(`${i18nKey}.content.uploadingChanges`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
+      noIndent: true,
+    });
+
     await this.pauseUploadQueue();
 
     try {
@@ -482,12 +523,21 @@ class LocalDevManager {
       true
     );
 
+    this.spinnies.succeed(spinniesKey, {
+      text: i18n(`${i18nKey}.content.uploadedChanges`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+      }),
+      succeedColor: 'white',
+      noIndent: true,
+    });
+
+    this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
+
     if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
       await this.createNewStagingBuild();
     }
 
     this.uploadQueue.start();
-    this.clearConsoleContent();
 
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();
@@ -521,7 +571,7 @@ class LocalDevManager {
 
   handleServerLog(serverKey, args) {
     this.spinnies.add(null, {
-      text: `[${serverKey}] ${args.join('')}`,
+      text: `${args.join('')}`,
       status: 'non-spinnable',
     });
   }

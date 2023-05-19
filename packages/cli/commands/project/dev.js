@@ -29,6 +29,7 @@ const {
   LocalDevManager,
   UPLOAD_PERMISSIONS,
 } = require('../../lib/LocalDevManager');
+const { isSandbox } = require('../../lib/sandboxes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
@@ -37,12 +38,18 @@ const {
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  logErrorInstance,
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
+  isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -60,13 +67,7 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  logger.log(i18n(`${i18nKey}.logs.introHeader`));
-  uiLine();
-  logger.log(i18n(`${i18nKey}.logs.introBody1`));
-  logger.log();
-  logger.log(i18n(`${i18nKey}.logs.introBody2`));
-  uiLine();
-  logger.log();
+  logger.log(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
@@ -74,47 +75,32 @@ exports.handler = async options => {
   }
 
   const accounts = getConfigAccounts();
-  let targetAccountId = options.accountId;
+  let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
-  let chooseNonSandbox = false;
+  const defaultAccountIsSandbox = isSandbox(accountConfig);
 
-  if (!targetAccountId) {
-    const {
-      targetAccountId: promptTargetAccountId,
-      chooseNonSandbox: promptChooseNonSandbox,
-      createNewSandbox: promptCreateNewSandbox,
-    } = await selectTargetAccountPrompt(accounts, accountConfig, false);
-
-    targetAccountId = promptTargetAccountId;
-    chooseNonSandbox = promptChooseNonSandbox;
-    createNewSandbox = promptCreateNewSandbox;
+  if (!targetAccountId && defaultAccountIsSandbox) {
+    targetAccountId = accountId;
   }
 
-  logger.log();
-
-  // Show a warning if the user chooses a non-sandbox account (false)
-  let shouldTargetNonSandboxAccount;
-  if (chooseNonSandbox) {
+  if (!targetAccountId) {
+    //logger.log(i18n(`${i18nKey}.logs.learnMoreLink`));
+    logger.log();
     uiLine();
-    logger.warn(i18n(`${i18nKey}.logs.prodAccountWarning`));
+    logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
     uiLine();
     logger.log();
 
-    shouldTargetNonSandboxAccount = await confirmPrompt(
-      i18n(`${i18nKey}.prompt.targetNonSandbox`)
-    );
+    const {
+      targetAccountId: promptTargetAccountId,
+      createNewSandbox: promptCreateNewSandbox,
+    } = await selectTargetAccountPrompt(accounts, accountConfig);
 
-    if (shouldTargetNonSandboxAccount) {
-      const {
-        targetAccountId: promptNonSandboxTargetAccountId,
-      } = await selectTargetAccountPrompt(accounts, accountConfig, true);
+    targetAccountId = promptTargetAccountId;
+    createNewSandbox = promptCreateNewSandbox;
+  }
 
-      targetAccountId = promptNonSandboxTargetAccountId;
-      logger.log();
-    } else {
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-  } else if (createNewSandbox) {
+  if (createNewSandbox) {
     try {
       await validateSandboxUsageLimits(accountConfig, DEVELOPER_SANDBOX, env);
     } catch (err) {
@@ -179,7 +165,8 @@ exports.handler = async options => {
     }
   );
 
-  const isNonSandboxAccount = shouldTargetNonSandboxAccount;
+  const isNonSandboxAccount =
+    !defaultAccountIsSandbox && targetAccountId === accountId;
 
   let uploadPermission = isNonSandboxAccount
     ? UPLOAD_PERMISSIONS.manual
@@ -198,21 +185,26 @@ exports.handler = async options => {
   const spinnies = SpinniesManager.init();
 
   if (!projectExists) {
-    uiLine();
-    logger.warn(
-      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
-        accountIdentifier: uiAccountDescription(targetAccountId),
-        projectName: projectConfig.name,
-      })
-    );
-    uiLine();
+    // Create the project without prompting if this is a newly created sandbox
+    let shouldCreateProject = createNewSandbox;
 
-    const shouldCreateProject = await confirmPrompt(
-      i18n(`${i18nKey}.prompt.createProject`, {
-        accountIdentifier: uiAccountDescription(targetAccountId),
-        projectName: projectConfig.name,
-      })
-    );
+    if (!shouldCreateProject) {
+      uiLine();
+      logger.warn(
+        i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        })
+      );
+      uiLine();
+
+      shouldCreateProject = await confirmPrompt(
+        i18n(`${i18nKey}.prompt.createProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        })
+      );
+    }
 
     if (shouldCreateProject) {
       try {
@@ -228,9 +220,10 @@ exports.handler = async options => {
             accountIdentifier: uiAccountDescription(targetAccountId),
             projectName: projectConfig.name,
           }),
+          succeedColor: 'white',
         });
       } catch (err) {
-        logger.log(i18n(`${i18nKey}.logs.failedToCreateProject`));
+        logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
@@ -264,6 +257,27 @@ exports.handler = async options => {
     spinnies.fail('devModeSetup', {
       text: i18n(`${i18nKey}.status.startupFailed`),
     });
+
+    if (result.error) {
+      if (
+        isSpecifiedError(result.error, {
+          subCategory: ERROR_TYPES.PROJECT_LOCKED,
+        })
+      ) {
+        logger.log();
+        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.log();
+      } else {
+        logApiErrorInstance(
+          result.error,
+          new ApiErrorContext({
+            accountId,
+            projectName: projectConfig.name,
+          })
+        );
+      }
+    }
+
     process.exit(EXIT_CODES.ERROR);
   } else {
     spinnies.remove('devModeSetup');

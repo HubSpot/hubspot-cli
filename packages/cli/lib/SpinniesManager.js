@@ -67,6 +67,8 @@ class SpinniesManager {
     if (isParent) {
       this.parentKey = uniqueKey;
     }
+
+    return uniqueKey;
   }
 
   addOrUpdate(key, options = {}) {
@@ -93,10 +95,14 @@ class SpinniesManager {
    * Removes all spinnies instances
    * @param {string} preserveCategory - do not remove spinnies with a matching category
    */
-  removeAll({ preserveCategory = null } = {}) {
+  removeAll({ preserveCategory = null, targetCategory = null } = {}) {
     if (this.spinnies) {
       Object.keys(this.spinnies.spinners).forEach(key => {
-        if (
+        if (targetCategory) {
+          if (this.getCategoryForKey(key) === targetCategory) {
+            this.remove(key);
+          }
+        } else if (
           !preserveCategory ||
           this.getCategoryForKey(key) !== preserveCategory
         ) {

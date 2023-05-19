@@ -4,6 +4,11 @@ const cors = require('cors');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getProjectDetailUrl } = require('./projects');
 const UIEDevModeInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
+const { i18n } = require('./lang');
+const { EXIT_CODES } = require('./enums/exitCodes');
+const { logger } = require('@hubspot/cli-lib/logger');
+
+const i18nKey = 'cli.lib.DevServerManager';
 
 const DEFAULT_PORT = 8080;
 
@@ -48,7 +53,7 @@ class DevServerManager {
 
   async start({
     accountId,
-    logger,
+    spinniesLogger,
     debug,
     projectConfig,
     projectSourceDir,
@@ -73,9 +78,21 @@ class DevServerManager {
     app.get('/hs/project', (req, res) => {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
+    app.get('/hs/learnMore', (req, res) => {
+      //TODO link to docs
+      res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
+    });
 
     // Start server
-    this.server = app.listen(port || DEFAULT_PORT);
+    this.server = app.listen(port || DEFAULT_PORT).on('error', err => {
+      if (err.code === 'EADDRINUSE') {
+        logger.error(
+          i18n(`${i18nKey}.portConflict`, { port: port || DEFAULT_PORT })
+        );
+        logger.log();
+        process.exit(EXIT_CODES.ERROR);
+      }
+    });
 
     const projectFiles = await this.getProjectFiles(projectSourceDir);
 
@@ -87,7 +104,7 @@ class DevServerManager {
         try {
           serverApp = await serverInterface.start(serverKey, this.server, {
             debug,
-            logger: this.makeLogger(logger, serverKey),
+            logger: this.makeLogger(spinniesLogger, serverKey),
             port,
             projectConfig,
             projectFiles,
