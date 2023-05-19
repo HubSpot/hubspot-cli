@@ -275,7 +275,7 @@ const ensureProjectExists = async (
       }
     }
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-    return false;
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
