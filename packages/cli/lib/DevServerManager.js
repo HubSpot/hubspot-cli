@@ -43,11 +43,11 @@ class DevServerManager {
 
   makeLogger(logger, serverKey) {
     return {
-      debug: (...args) => logger(serverKey, args),
-      error: (...args) => logger(serverKey, args),
-      info: (...args) => logger(serverKey, args),
-      log: (...args) => logger(serverKey, args),
-      warn: (...args) => logger(serverKey, args),
+      debug: (...args) => logger(serverKey, ...args),
+      error: (...args) => logger(serverKey, ...args),
+      info: (...args) => logger(serverKey, '[INFO]', ...args),
+      log: (...args) => logger(serverKey, '[INFO]', ...args),
+      warn: (...args) => logger(serverKey, ...args),
     };
   }
 

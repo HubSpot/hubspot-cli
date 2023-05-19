@@ -569,7 +569,7 @@ class LocalDevManager {
     await this.watcher.close();
   }
 
-  handleServerLog(serverKey, args) {
+  handleServerLog(serverKey, ...args) {
     this.spinnies.add(null, {
       text: `${args.join('')}`,
       status: 'non-spinnable',
