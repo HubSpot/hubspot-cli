@@ -15,7 +15,6 @@ class SpinniesManager {
 
     return {
       add: this.add.bind(this),
-      addOrUpdate: this.addOrUpdate.bind(this),
       pick: this.spinnies.pick.bind(this.spinnies),
       remove: this.remove.bind(this),
       removeAll: this.removeAll.bind(this),
@@ -69,16 +68,6 @@ class SpinniesManager {
     }
 
     return uniqueKey;
-  }
-
-  addOrUpdate(key, options = {}) {
-    const spinner = this.spinnies.pick(key);
-
-    if (spinner) {
-      this.spinnies.update(key, options);
-    } else {
-      this.add(key, options);
-    }
   }
 
   remove(key) {
