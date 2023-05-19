@@ -41,6 +41,10 @@ class DevServerManager {
     app.get('/hs/project', (req, res) => {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
+    app.get('/hs/learnMore', (req, res) => {
+      //TODO link to docs
+      res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
+    });
 
     // Initialize component servers
     await this.iterateDevServers(async (serverInterface, serverKey) => {
