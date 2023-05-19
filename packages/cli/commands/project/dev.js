@@ -69,7 +69,7 @@ exports.handler = async options => {
   }
 
   const accounts = getConfigAccounts();
-  let targetAccountId = options.accountId;
+  let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
   const defaultAccountIsSandbox = isSandbox(accountConfig);
 
