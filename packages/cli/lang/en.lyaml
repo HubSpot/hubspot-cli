@@ -448,11 +448,10 @@ en:
           dev:
             describe: "Start local dev for the current project"
             logs:
-              introHeader: "{{#bold}}HubSpot projects local development (beta){{/bold}}"
-              introBody1: "This command runs a file watcher that works together with a HubSpot account to allow developers to write code locally and test quickly."
-              introBody2: "All project file changes will be reflected in the target account after a slight delay."
+              betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
+              learnMoreLink: "Learn more about the projects local dev server"
+              nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
               placeholderAccountSelection: "Using default account as target account (for now)"
-              prodAccountWarning: "Targeting a non-sandbox account is risky because this command will upload changes to the target account. We recommend picking a sandbox account for any work that has not been finalized or is undergoing testing prior to deploying to production."
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
@@ -851,6 +850,8 @@ en:
         previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
         header:
+          betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
+          learnMoreLink: "Learn more about the projects local dev server"
           running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
@@ -869,7 +870,9 @@ en:
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
           uploadingChange: "[INFO] Uploading {{ filePath }}"
+          uploadedChange: "[INFO] Uploaded {{ filePath }}"
           uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChanges: "{{#bold}}Built and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -958,12 +961,10 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectDevTargetAccountPrompt:
-          createNewSandboxOption: "<< Create a new development sandbox account >>"
-          chooseNonSandboxOption: "<< Choose a non-sandbox account >>"
-          chooseNonSandboxAccount: "[--account] Choose a non-sandbox account to test with:"
-          chooseSandboxAccount: "[--account] Choose a sandbox account to test with:"
-          defaultAccountNotProd: "Option unavailable because your default account must be a production account."
-          sandboxLimit: "Option unavailable because you’ve reached the limit of {{ limit }} development sandboxes."
+          createNewSandboxOption: "<Test on a new dev sandbox>"
+          chooseDefaultAccountOption: "<{{#bold}}!{{/bold}} Test on this production account {{#bold}}!{{/bold}}>"
+          promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
+          sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

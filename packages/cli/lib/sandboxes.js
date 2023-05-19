@@ -55,13 +55,16 @@ const getSandboxTypeAsString = type =>
 const isSandbox = config =>
   config.sandboxAccountType && config.sandboxAccountType !== null;
 
-function getAccountName(config) {
+function getAccountName(config, bold = true) {
   const sandboxName = `[${getSandboxTypeAsString(
     config.sandboxAccountType
   )} sandbox] `;
-  return chalk.bold(
-    `${config.name} ${isSandbox(config) ? sandboxName : ''}(${config.portalId})`
-  );
+
+  const message = `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
+    config.portalId
+  })`;
+
+  return bold ? chalk.bold(message) : message;
 }
 
 function getHasSandboxesByType(parentAccountConfig, type) {
