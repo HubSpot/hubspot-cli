@@ -469,6 +469,7 @@ en:
                 describe: "The port that the running server will listen on"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
+              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -560,20 +561,13 @@ en:
               buildSucceeded: "Build #{{ buildId }} succeeded\n"
               readyToGoLive: "🚀 Ready to take your project live?"
               runCommand: "Run `{{ command }}`"
+            errors:
+              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             options:
               forceCreate:
                 describe: "Automatically create project if it does not exist"
               message:
                 describe: "Add a message when you upload your project and create a build"
-            positionals:
-              path:
-                describe: "Path to a project folder"
-          unlock:
-            describe: "Unlock a locked project"
-            examples:
-              default: "Unlock a locked project in the myProjectsFolder folder"
-            logs:
-              unlockSucceeded: "Successfully unlocked the project"
             positionals:
               path:
                 describe: "Path to a project folder"
@@ -879,7 +873,6 @@ en:
           fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
-          projectLockedError: "\nYour project may be locked by an active `{{#yellow}}hs project watch{{/yellow}}`. Try stopping the `{{#yellow}}watch{{/yellow}}` process before uploading.\nIf that doesn't work, you may need to start and stop a new `{{#yellow}}watch{{/yellow}}` process to unlock the project."
         handleProjectUpload:
           emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
           compressed: "Project files compressed: {{ byteCount }} bytes"

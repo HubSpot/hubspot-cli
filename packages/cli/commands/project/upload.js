@@ -19,6 +19,14 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
+const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
@@ -50,6 +58,25 @@ exports.handler = async options => {
     message
   );
 
+  if (result.error) {
+    logApiErrorInstance(
+      result.error,
+      new ApiErrorContext({
+        accountId,
+        projectName: projectConfig.name,
+      })
+    );
+    if (
+      isSpecifiedError(result.error, {
+        subCategory: ERROR_TYPES.PROJECT_LOCKED,
+      })
+    ) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+      logger.log();
+    }
+    process.exit(EXIT_CODES.ERROR);
+  }
   if (result.buildSucceeded && !result.autodeployEnabled) {
     uiLine();
     logger.log(

@@ -57,7 +57,9 @@ class DevServerManager {
     // Start server
     this.server = app.listen(port || DEFAULT_PORT);
 
-    return `http://localhost:${this.server.address().port}`;
+    return this.server.address()
+      ? `http://localhost:${this.server.address().port}`
+      : null;
   }
 
   async notify() {
