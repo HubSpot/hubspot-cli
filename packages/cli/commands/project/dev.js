@@ -19,7 +19,7 @@ const {
   pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiAccountDescription, uiLine, uiLink } = require('../../lib/ui');
+const { uiAccountDescription, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
@@ -78,9 +78,7 @@ exports.handler = async options => {
   }
 
   if (!targetAccountId) {
-    logger.log(
-      uiLink(i18n(`${i18nKey}.logs.learnMoreLink`), 'https://www.google.com')
-    );
+    //logger.log(i18n(`${i18nKey}.logs.learnMoreLink`));
     logger.log();
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));

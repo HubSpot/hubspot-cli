@@ -152,15 +152,15 @@ class LocalDevManager {
       status: 'non-spinnable',
     });
 
-    this.spinnies.add('learnMoreLink', {
-      text: uiLink(
-        i18n(`${i18nKey}.header.learnMoreLink`),
-        this.generateLocalURL(`/hs/learnMore`),
-        { inSpinnies: true }
-      ),
-      category: 'header',
-      status: 'non-spinnable',
-    });
+    // this.spinnies.add('learnMoreLink', {
+    //   text: uiLink(
+    //     i18n(`${i18nKey}.header.learnMoreLink`),
+    //     this.generateLocalURL(`/hs/learnMore`),
+    //     { inSpinnies: true }
+    //   ),
+    //   category: 'header',
+    //   status: 'non-spinnable',
+    // });
     this.spinnies.add('spacer-1', {
       text: ' ',
       status: 'non-spinnable',
