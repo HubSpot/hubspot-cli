@@ -321,9 +321,9 @@
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
 "@hubspot/cli-lib@^4.1.12":
-  version "4.1.12"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.1.12.tgz#d5a52f6e47fe00dba1a3912f873ed8f28a3317cf"
-  integrity sha512-b/ch3Y1q+aIi3w1QWcOZecxDi2Epycy4j4HfoApfXoKRu9lKp/k82AYM8TAfK2jocAaASSDAzOXGsIvjt9W7GQ==
+  version "4.1.13"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.1.13.tgz#7f970f66b056492a78f23e504d9303f45e2caf8e"
+  integrity sha512-xeVXE4TIJRccPIkFEm9E0/7GJEAaB8Qg6MCbvtsvmY05sLq3tv1r7RB2Io1djj5P9RZBmhsm7j41MpoKw17AuQ==
   dependencies:
     chalk "^2.4.2"
     chokidar "^3.0.1"
