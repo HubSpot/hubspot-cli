@@ -51,18 +51,23 @@ class SpinniesManager {
     const { category, isParent, noIndent, ...rest } = options;
     const originalIndent = rest.indent || 0;
 
+    // Support adding generic spinnies lines without specifying a key
+    const uniqueKey = key || `${Date.now()}`;
+
     if (category) {
-      this.addKeyToCategory(key, category);
+      this.addKeyToCategory(uniqueKey, category);
     }
 
-    this.spinnies.add(key, {
+    this.spinnies.add(uniqueKey, {
       ...rest,
       indent: this.parentKey && !noIndent ? originalIndent + 1 : originalIndent,
     });
 
     if (isParent) {
-      this.parentKey = key;
+      this.parentKey = uniqueKey;
     }
+
+    return uniqueKey;
   }
 
   remove(key) {
@@ -79,10 +84,14 @@ class SpinniesManager {
    * Removes all spinnies instances
    * @param {string} preserveCategory - do not remove spinnies with a matching category
    */
-  removeAll({ preserveCategory = null } = {}) {
+  removeAll({ preserveCategory = null, targetCategory = null } = {}) {
     if (this.spinnies) {
       Object.keys(this.spinnies.spinners).forEach(key => {
-        if (
+        if (targetCategory) {
+          if (this.getCategoryForKey(key) === targetCategory) {
+            this.remove(key);
+          }
+        } else if (
           !preserveCategory ||
           this.getCategoryForKey(key) !== preserveCategory
         ) {

@@ -860,8 +860,9 @@ en:
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
-          manualUploadSkipped: "Manual upload skipped. Some changes may not be visible."
-          manualUploadRequired: "Project files changed, manual upload and deploy is needed ..."
+          manualUploadSkipped: "Manually upload and deploy project: {{#green}}(n){{/green}}"
+          manualUploadConfirmed: "Manually upload and deploy project: {{#green}}(Y){{/green}}"
+          manualUploadRequired: "Project file changes require a manual upload and deploy ..."
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
