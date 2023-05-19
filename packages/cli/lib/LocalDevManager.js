@@ -29,7 +29,7 @@ const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
-const BUILD_DEBOUNCE_TIME = 2000;
+const BUILD_DEBOUNCE_TIME = 3500;
 
 const WATCH_EVENTS = {
   add: 'add',
