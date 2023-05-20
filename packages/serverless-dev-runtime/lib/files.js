@@ -1,5 +1,5 @@
-const os = require('os');
-const { spawn } = require('child_process');
+const os = require('node:os');
+const { spawn } = require('node:child_process');
 const fs = require('fs-extra');
 const tmp = require('tmp');
 const { logger } = require('@hubspot/cli-lib/logger');

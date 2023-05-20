@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');

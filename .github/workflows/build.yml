@@ -15,9 +15,9 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 10.x
+          node-version-file: '.nvmrc'
       - name: Install Yarn
         run: npm install -g yarn
       - name: Install deps

@@ -1,5 +1,5 @@
-const path = require('path');
-const util = require('util');
+const path = require('node:path');
+const util = require('node:util');
 const fs = require('fs-extra');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');

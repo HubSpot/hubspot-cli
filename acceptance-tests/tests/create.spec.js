@@ -1,6 +1,6 @@
 const { ENTER } = require('./helpers/cmd');
 const rimraf = require('rimraf');
-const { existsSync } = require('fs');
+const { existsSync } = require('node:fs');
 
 const FOLDERS = {
   module: {

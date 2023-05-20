@@ -4,8 +4,8 @@
  * Taken from https://gist.github.com/zorrodg/c349cf54a3f6d0a9ba62e0f4066f31cb
  */
 
-const { existsSync } = require('fs');
-const { constants } = require('os');
+const { existsSync } = require('node:fs');
+const { constants } = require('node:os');
 const spawn = require('cross-spawn');
 const concat = require('concat-stream');
 const PATH = process.env.PATH;

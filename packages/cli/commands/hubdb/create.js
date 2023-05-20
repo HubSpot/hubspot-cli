@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');

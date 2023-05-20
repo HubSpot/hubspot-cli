@@ -1,7 +1,7 @@
 const cmd = require('./helpers/cmd');
 const { CONFIG_FILE_PATH } = require('../lib/constants');
 const rimraf = require('rimraf');
-const { existsSync, readFileSync } = require('fs');
+const { existsSync, readFileSync } = require('node:fs');
 const yaml = require('js-yaml');
 
 describe('hs init using personalAccessKey', () => {

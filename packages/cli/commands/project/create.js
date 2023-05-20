@@ -7,7 +7,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const path = require('path');
+const path = require('node:path');
 const chalk = require('chalk');
 const {
   createProjectPrompt,

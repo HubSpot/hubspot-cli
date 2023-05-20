@@ -5,7 +5,7 @@ const {
   folderOverwritePrompt,
 } = require('../../lib/prompts/folderOverwritePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
-const path = require('path');
+const path = require('node:path');
 const fs = require('fs-extra');
 const ora = require('ora');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
 const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
