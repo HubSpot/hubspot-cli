@@ -191,7 +191,10 @@ exports.handler = options => {
   const selectorsMap = generateSelectorsMap(fieldsJson);
   const selectorsPath = `${themePath}/selectors.json`;
 
-  fs.writeFileSync(selectorsPath, `${JSON.stringify(selectorsMap, null, 2)}\n`);
+  fs.writeFileSync(
+    selectorsPath,
+    `${JSON.stringify({ selectors: selectorsMap }, null, 2)}\n`
+  );
 
   logger.success(
     i18n(`${i18nKey}.success`, {
