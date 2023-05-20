@@ -253,31 +253,24 @@ exports.handler = async options => {
     );
   }
 
-  if (result && !result.succeeded) {
-    spinnies.fail('devModeSetup', {
-      text: i18n(`${i18nKey}.status.startupFailed`),
-    });
-
-    if (result.error) {
-      if (
-        isSpecifiedError(result.error, {
-          subCategory: ERROR_TYPES.PROJECT_LOCKED,
+  if (result && result.error) {
+    if (
+      isSpecifiedError(result.error, {
+        subCategory: ERROR_TYPES.PROJECT_LOCKED,
+      })
+    ) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+      logger.log();
+    } else {
+      logApiErrorInstance(
+        result.error,
+        new ApiErrorContext({
+          accountId,
+          projectName: projectConfig.name,
         })
-      ) {
-        logger.log();
-        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
-        logger.log();
-      } else {
-        logApiErrorInstance(
-          result.error,
-          new ApiErrorContext({
-            accountId,
-            projectName: projectConfig.name,
-          })
-        );
-      }
+      );
     }
-
     process.exit(EXIT_CODES.ERROR);
   } else {
     spinnies.remove('devModeSetup');

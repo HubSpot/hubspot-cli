@@ -330,13 +330,7 @@ class LocalDevManager {
     }
 
     if (this.uploadQueue.isPaused) {
-      if (
-        !this.standbyChanges.find(
-          changeInfo => changeInfo.filePath === filePath
-        )
-      ) {
-        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-      }
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
     } else {
       await this.flushStandbyChanges();
 
@@ -367,14 +361,7 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      if (
-        !this.standbyChanges.find(
-          standbyChangeInfo =>
-            standbyChangeInfo.filePath === changeInfo.filePath
-        )
-      ) {
-        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-      }
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
       this.spinnies.add('manualUploadRequired', {
         text: i18n(`${i18nKey}.upload.manualUploadRequired`),
@@ -414,47 +401,66 @@ class LocalDevManager {
       return;
     }
 
-    this.standbyChanges.push(changeInfo);
+    const existingIndex = this.standbyChanges.findIndex(
+      standyChangeInfo => standyChangeInfo.filePath === filePath
+    );
+
+    if (existingIndex) {
+      // Make sure the most recent event to this file is the one that gets acted on
+      this.standbyChanges[existingIndex].event = event;
+    } else {
+      this.standbyChanges.push(changeInfo);
+    }
   }
 
   async sendChanges(changeInfo) {
     const { event, filePath, remotePath } = changeInfo;
 
-    const spinniesKey = this.spinnies.add(null, {
-      text: i18n(`${i18nKey}.upload.uploadingChange`, {
-        filePath: remotePath,
-      }),
-      status: 'non-spinnable',
-    });
-
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
+        const spinniesKey = this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.upload.uploadingAddChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
         await uploadFileToBuild(
           this.targetAccountId,
           this.projectConfig.name,
           filePath,
           remotePath
         );
+        this.spinnies.update(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedAddChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
       } else if (
         event === WATCH_EVENTS.unlink ||
         event === WATCH_EVENTS.unlinkDir
       ) {
+        const spinniesKey = this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.upload.uploadingRemoveChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
         await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
           remotePath
         );
+        this.spinnies.update(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedRemoveChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
       }
     } catch (err) {
       logger.debug(err);
     }
-
-    this.spinnies.update(spinniesKey, {
-      text: i18n(`${i18nKey}.upload.uploadedChange`, {
-        filePath: remotePath,
-      }),
-      status: 'non-spinnable',
-    });
   }
 
   debounceQueueBuild() {
@@ -505,7 +511,7 @@ class LocalDevManager {
       return;
     }
 
-    await pollProjectBuildAndDeploy(
+    const result = await pollProjectBuildAndDeploy(
       this.targetAccountId,
       this.projectConfig,
       null,
@@ -513,13 +519,23 @@ class LocalDevManager {
       true
     );
 
-    this.spinnies.succeed(spinniesKey, {
-      text: i18n(`${i18nKey}.upload.uploadedChanges`, {
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
-      succeedColor: 'white',
-      noIndent: true,
-    });
+    if (result && result.succeeded) {
+      this.spinnies.succeed(spinniesKey, {
+        text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+        }),
+        succeedColor: 'white',
+        noIndent: true,
+      });
+    } else {
+      this.spinnies.fail(spinniesKey, {
+        text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+        }),
+        failColor: 'white',
+        noIndent: true,
+      });
+    }
 
     this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
 

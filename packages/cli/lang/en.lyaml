@@ -460,7 +460,6 @@ en:
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
               failedToCreateProject: "Failed to create project in the target account."
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
-              startupFailed: "Failed to initialize local dev server"
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
@@ -866,10 +865,13 @@ en:
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
-          uploadingChange: "[INFO] Uploading {{ filePath }}"
-          uploadedChange: "[INFO] Uploaded {{ filePath }}"
+          uploadingAddChange: "[INFO] Uploading {{ filePath }}"
+          uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
+          uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
+          uploadedRemoveChange: "[INFO] Removed {{ filePath }}"
           uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChanges: "{{#bold}}Built and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesSucceeded: "{{#bold}}Built and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesFailed: "{{#bold}}Failed to build and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
