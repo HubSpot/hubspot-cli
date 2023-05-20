@@ -405,7 +405,7 @@ class LocalDevManager {
       standyChangeInfo => standyChangeInfo.filePath === filePath
     );
 
-    if (existingIndex) {
+    if (existingIndex > -1) {
       // Make sure the most recent event to this file is the one that gets acted on
       this.standbyChanges[existingIndex].event = event;
     } else {
