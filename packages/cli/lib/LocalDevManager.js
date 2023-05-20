@@ -99,7 +99,7 @@ class LocalDevManager {
     this.updateKeypressListeners();
 
     // Do this again to pick up latest watch + server states
-    this.updateConsoleHeader();
+    // this.updateConsoleHeader();
   }
 
   async stop() {
@@ -151,10 +151,9 @@ class LocalDevManager {
   updateConsoleHeader() {
     this.spinnies.addOrUpdate('betaMessage', {
       text: i18n(`${i18nKey}.header.betaMessage`),
-      category: 'header',
       status: 'non-spinnable',
+      category: 'header',
     });
-
     // this.spinnies.addOrUpdate('learnMoreLink', {
     //   text: uiLink(
     //     i18n(`${i18nKey}.header.learnMoreLink`),
@@ -460,7 +459,7 @@ class LocalDevManager {
     }
 
     this.spinnies.update(spinniesKey, {
-      text: i18n(`${i18nKey}.upload.uploadedChange`, {
+      text: i18n(`${i18nKey}.content.uploadedChange`, {
         filePath: remotePath,
       }),
       status: 'non-spinnable',
@@ -581,7 +580,7 @@ class LocalDevManager {
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
-        logger: this.handleServerLog.bind(this),
+        spinniesLogger: this.handleServerLog.bind(this),
         port: this.port,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,
@@ -590,7 +589,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add('devServerStartError', {
+      this.spinnies.add(null, {
         text: i18n(`${i18nKey}.content.devServerStartError`),
         status: 'non-spinnable',
       });
@@ -606,7 +605,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add('devServerNotifyError', {
+      this.spinnies.add(null, {
         text: i18n(`${i18nKey}.content.devServerNotifyError`),
         status: 'non-spinnable',
       });
@@ -622,7 +621,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add('devServerExecuteError', {
+      this.spinnies.add(null, {
         text: i18n(`${i18nKey}.content.devServerExecuteError`),
         status: 'non-spinnable',
       });
@@ -636,7 +635,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add('devServerCleanupError', {
+      this.spinnies.add(null, {
         text: i18n(`${i18nKey}.content.devServerCleanupError`),
         status: 'non-spinnable',
       });

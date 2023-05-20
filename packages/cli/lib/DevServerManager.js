@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getProjectDetailUrl } = require('./projects');
-const UIEDevModeInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
+// const UIEDevModeInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -18,7 +18,7 @@ class DevServerManager {
     this.server = null;
     this.path = null;
     this.devServers = {
-      uie: UIEDevModeInterface,
+      // uie: UIEDevModeInterface,
     };
   }
 
@@ -41,13 +41,13 @@ class DevServerManager {
     return projectFiles;
   }
 
-  makeLogger(logger, serverKey) {
+  makeLogger(spinniesLogger, serverKey) {
     return {
-      debug: (...args) => logger(serverKey, ...args),
-      error: (...args) => logger(serverKey, ...args),
-      info: (...args) => logger(serverKey, '[INFO]', ...args),
-      log: (...args) => logger(serverKey, '[INFO]', ...args),
-      warn: (...args) => logger(serverKey, ...args),
+      debug: (...args) => spinniesLogger(serverKey, ...args),
+      error: (...args) => spinniesLogger(serverKey, '[ERROR] ', ...args),
+      info: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
+      log: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
+      warn: (...args) => spinniesLogger(serverKey, ...args),
     };
   }
 
@@ -84,7 +84,7 @@ class DevServerManager {
     });
 
     // Start server
-    this.server = app.listen(port || DEFAULT_PORT).on('error', err => {
+    this.server = await app.listen(port || DEFAULT_PORT).on('error', err => {
       if (err.code === 'EADDRINUSE') {
         logger.error(
           i18n(`${i18nKey}.portConflict`, { port: port || DEFAULT_PORT })
@@ -99,24 +99,16 @@ class DevServerManager {
     // Initialize component servers
     await this.iterateDevServers(async (serverInterface, serverKey) => {
       if (serverInterface.start) {
-        let serverApp;
+        const serverApp = await serverInterface.start(serverKey, this.server, {
+          debug,
+          logger: this.makeLogger(spinniesLogger, serverKey),
+          port,
+          projectConfig,
+          projectFiles,
+        });
 
-        try {
-          serverApp = await serverInterface.start(serverKey, this.server, {
-            debug,
-            logger: this.makeLogger(spinniesLogger, serverKey),
-            port,
-            projectConfig,
-            projectFiles,
-          });
-
-          if (serverApp) {
-            app.use(`/${serverKey}`, serverApp);
-          }
-        } catch (e) {
-          if (debug) {
-            console.log(e);
-          }
+        if (serverApp) {
+          app.use(`/${serverKey}`, serverApp);
         }
       }
     });
