@@ -141,15 +141,12 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  console.log('1');
-
   const {
     projectName: promptProjectName,
     appName: promptAppName,
     functionName: promptFunctionName,
     endpointName: promptEndpointName,
   } = await projectLogsPrompt(accountId, options);
-  console.log('2');
 
   const projectName = options.project || promptProjectName;
   const appName = options.app || promptAppName;
@@ -164,13 +161,11 @@ exports.handler = async options => {
     await ensureProjectExists(accountId, projectName, {
       allowCreate: false,
     });
-    console.log('3');
 
     const { deployedBuild, id: projectId } = await fetchProject(
       accountId,
       projectName
     );
-    console.log('4');
 
     const { results: deployComponents } = await fetchDeployComponentsMetadata(
       accountId,
