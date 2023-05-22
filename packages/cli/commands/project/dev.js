@@ -38,12 +38,18 @@ const {
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  logErrorInstance,
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   isMissingScopeError,
+  isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -217,7 +223,7 @@ exports.handler = async options => {
           succeedColor: 'white',
         });
       } catch (err) {
-        logger.log(i18n(`${i18nKey}.logs.failedToCreateProject`));
+        logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
@@ -247,10 +253,24 @@ exports.handler = async options => {
     );
   }
 
-  if (result && !result.succeeded) {
-    spinnies.fail('devModeSetup', {
-      text: i18n(`${i18nKey}.status.startupFailed`),
-    });
+  if (result && result.error) {
+    if (
+      isSpecifiedError(result.error, {
+        subCategory: ERROR_TYPES.PROJECT_LOCKED,
+      })
+    ) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+      logger.log();
+    } else {
+      logApiErrorInstance(
+        result.error,
+        new ApiErrorContext({
+          accountId,
+          projectName: projectConfig.name,
+        })
+      );
+    }
     process.exit(EXIT_CODES.ERROR);
   } else {
     spinnies.remove('devModeSetup');

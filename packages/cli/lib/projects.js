@@ -10,7 +10,6 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
   FEEDBACK_INTERVAL,
-  ERROR_TYPES,
   POLLING_DELAY,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
@@ -323,6 +322,7 @@ const uploadProjectFiles = async (
   });
 
   let buildId;
+  let error;
 
   try {
     const upload = await uploadProject(
@@ -355,20 +355,10 @@ const uploadProjectFiles = async (
       }),
     });
 
-    logApiErrorInstance(
-      err,
-      new ApiErrorContext({
-        accountId,
-        projectName,
-      })
-    );
-    if (err.error.subCategory === ERROR_TYPES.PROJECT_LOCKED) {
-      logger.log(i18n(`${i18nKey}.uploadProjectFiles.projectLockedError`));
-    }
-    process.exit(EXIT_CODES.ERROR);
+    error = err;
   }
 
-  return { buildId };
+  return { buildId, error };
 };
 
 const pollProjectBuildAndDeploy = async (
@@ -481,7 +471,7 @@ const handleProjectUpload = async (
 
   const result = new Promise(resolve =>
     output.on('close', async function() {
-      let result = {};
+      let uploadResult = {};
 
       logger.debug(
         i18n(`${i18nKey}.handleProjectUpload.compressed`, {
@@ -489,22 +479,24 @@ const handleProjectUpload = async (
         })
       );
 
-      const { buildId } = await uploadProjectFiles(
+      const { buildId, error } = await uploadProjectFiles(
         accountId,
         projectConfig.name,
         tempFile.name,
         uploadMessage
       );
 
-      if (callbackFunc) {
-        result = await callbackFunc(
+      if (error) {
+        uploadResult.error = error;
+      } else if (callbackFunc) {
+        uploadResult = await callbackFunc(
           accountId,
           projectConfig,
           tempFile,
           buildId
         );
       }
-      resolve(result);
+      resolve(uploadResult);
     })
   );
 
@@ -561,6 +553,7 @@ const makePollTaskStatusFunc = ({
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
+      category: 'projectPollStatus',
     });
 
     const [
@@ -621,6 +614,7 @@ const makePollTaskStatusFunc = ({
           indent,
           succeedColor: 'white',
           failColor: 'white',
+          category: 'projectPollStatus',
         });
       };
 

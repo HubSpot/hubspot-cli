@@ -1,7 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { i18n } = require('./lang');
 const { getProjectDetailUrl } = require('./projects');
+const { EXIT_CODES } = require('./enums/exitCodes');
+const { logger } = require('@hubspot/cli-lib/logger');
+
+const i18nKey = 'cli.lib.DevServerManager';
 
 const DEFAULT_PORT = 8080;
 
@@ -55,9 +60,19 @@ class DevServerManager {
     });
 
     // Start server
-    this.server = app.listen(port || DEFAULT_PORT);
+    this.server = app.listen(port || DEFAULT_PORT).on('error', err => {
+      if (err.code === 'EADDRINUSE') {
+        logger.error(
+          i18n(`${i18nKey}.portConflict`, { port: port || DEFAULT_PORT })
+        );
+        logger.log();
+        process.exit(EXIT_CODES.ERROR);
+      }
+    });
 
-    return `http://localhost:${this.server.address().port}`;
+    return this.server.address()
+      ? `http://localhost:${this.server.address().port}`
+      : null;
   }
 
   async notify() {
