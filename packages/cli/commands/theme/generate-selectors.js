@@ -189,7 +189,7 @@ exports.handler = options => {
   }
 
   const selectorsMap = generateSelectorsMap(fieldsJson);
-  const selectorsPath = `${themePath}/preview.json`;
+  const selectorsPath = `${themePath}/editor-preview.json`;
 
   fs.writeFileSync(
     selectorsPath,
