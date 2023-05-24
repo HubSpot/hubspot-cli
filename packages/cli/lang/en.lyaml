@@ -735,7 +735,7 @@ en:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
           generateSelectors:
-            describe: "Automatically generates a selectors.json file for the given theme. The selectors this command generates are not perfect, so please edit selectors.json after running."
+            describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
             errors:
               invalidPath: "Could not find directory \"{{ themePath }}\""
               fieldsNotFound: "Unable to find theme's fields.json."
@@ -743,7 +743,7 @@ en:
             success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
             positionals:
               themePath:
-                describe: "The path of the theme you'd like to generate a selectors.json for."
+                describe: "The path of the theme you'd like to generate an editor-preview.json for."
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
