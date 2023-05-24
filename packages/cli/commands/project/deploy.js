@@ -52,32 +52,30 @@ exports.handler = async options => {
 
   let buildIdToDeploy = buildIdOption;
 
-  if (!buildIdOption) {
-    const { latestBuild, deployedBuildId } = await fetchProject(
-      accountId,
-      projectName
-    );
-    if (!latestBuild || !latestBuild.buildId) {
-      logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+  try {
+    if (!buildIdOption) {
+      const { latestBuild, deployedBuildId } = await fetchProject(
+        accountId,
+        projectName
+      );
+      if (!latestBuild || !latestBuild.buildId) {
+        logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+        process.exit(EXIT_CODES.ERROR);
+      }
+      const buildIdPromptResponse = await buildIdPrompt(
+        latestBuild.buildId,
+        deployedBuildId,
+        projectName
+      );
+
+      buildIdToDeploy = buildIdPromptResponse.buildId;
+    }
+
+    if (!buildIdToDeploy) {
+      logger.error(i18n(`${i18nKey}.errors.noBuildId`));
       process.exit(EXIT_CODES.ERROR);
     }
-    const buildIdPromptResponse = await buildIdPrompt(
-      latestBuild.buildId,
-      deployedBuildId,
-      projectName
-    );
 
-    buildIdToDeploy = buildIdPromptResponse.buildId;
-  }
-
-  if (!buildIdToDeploy) {
-    logger.error(i18n(`${i18nKey}.errors.noBuildId`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  let exitCode = EXIT_CODES.SUCCESS;
-
-  try {
     const deployResp = await deployProject(
       accountId,
       projectName,
@@ -90,7 +88,6 @@ exports.handler = async options => {
           details: deployResp.error.message,
         })
       );
-      exitCode = EXIT_CODES.ERROR;
       return;
     }
 
@@ -106,9 +103,8 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
     }
-    exitCode = 1;
+    process.exit(EXIT_CODES.ERROR);
   }
-  process.exit(exitCode);
 };
 
 exports.builder = yargs => {

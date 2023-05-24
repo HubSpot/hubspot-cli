@@ -734,6 +734,16 @@ en:
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
+          generateSelectors:
+            describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
+            errors:
+              invalidPath: "Could not find directory \"{{ themePath }}\""
+              fieldsNotFound: "Unable to find theme's fields.json."
+              noSelectorsFound: "No selectors found."
+            success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
+            positionals:
+              themePath:
+                describe: "The path of the theme you'd like to generate an editor-preview.json for."
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
@@ -847,7 +857,7 @@ en:
         header:
           betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
           learnMoreLink: "Learn more about the projects local dev server"
-          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
+          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
           status:
@@ -859,8 +869,8 @@ en:
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
-          manualUploadSkipped: "Manually upload and deploy project: {{#green}}(n){{/green}}"
-          manualUploadConfirmed: "Manually upload and deploy project: {{#green}}(Y){{/green}}"
+          manualUploadSkipped: "Manually upload and deploy project to production account: {{#green}}(n){{/green}}"
+          manualUploadConfirmed: "Manually upload and deploy project to production account: {{#green}}(Y){{/green}}"
           manualUploadRequired: "Project file changes require a manual upload and deploy ..."
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
@@ -869,9 +879,9 @@ en:
           uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
           uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
           uploadedRemoveChange: "[INFO] Removed {{ filePath }}"
-          uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesSucceeded: "{{#bold}}Built and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesFailed: "{{#bold}}Failed to build and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

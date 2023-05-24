@@ -29,7 +29,8 @@ const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
-const BUILD_DEBOUNCE_TIME = 3500;
+const BUILD_DEBOUNCE_TIME_LONG = 5000;
+const BUILD_DEBOUNCE_TIME_SHORT = 3500;
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -335,7 +336,7 @@ class LocalDevManager {
       await this.flushStandbyChanges();
 
       if (!this.uploadQueue.isPaused) {
-        this.debounceQueueBuild();
+        this.debounceQueueBuild(changeInfo);
       }
 
       return this.uploadQueue.add(async () => {
@@ -463,7 +464,9 @@ class LocalDevManager {
     }
   }
 
-  debounceQueueBuild() {
+  debounceQueueBuild(changeInfo) {
+    const { event } = changeInfo;
+
     if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
       this.updateDevModeStatus('uploadPending');
     }
@@ -472,9 +475,14 @@ class LocalDevManager {
       clearTimeout(this.debouncedBuild);
     }
 
+    const debounceWaitTime =
+      event === WATCH_EVENTS.add
+        ? BUILD_DEBOUNCE_TIME_LONG
+        : BUILD_DEBOUNCE_TIME_SHORT;
+
     this.debouncedBuild = setTimeout(
       this.queueBuild.bind(this),
-      BUILD_DEBOUNCE_TIME
+      debounceWaitTime
     );
   }
 
@@ -482,6 +490,7 @@ class LocalDevManager {
     const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
+        buildId: this.currentStagedBuildId,
       }),
       noIndent: true,
     });
@@ -523,6 +532,7 @@ class LocalDevManager {
       this.spinnies.succeed(spinniesKey, {
         text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
+          buildId: result.buildId,
         }),
         succeedColor: 'white',
         noIndent: true,
@@ -531,6 +541,7 @@ class LocalDevManager {
       this.spinnies.fail(spinniesKey, {
         text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
+          buildId: result.buildId,
         }),
         failColor: 'white',
         noIndent: true,
@@ -561,7 +572,7 @@ class LocalDevManager {
               this.uploadPermission === UPLOAD_PERMISSIONS.always &&
               !this.uploadQueue.isPaused
             ) {
-              this.debounceQueueBuild();
+              this.debounceQueueBuild(changeInfo);
             }
             await this.sendChanges(changeInfo);
           };

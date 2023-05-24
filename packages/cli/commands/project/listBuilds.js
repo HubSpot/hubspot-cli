@@ -127,7 +127,10 @@ exports.handler = async options => {
     if (e.statusCode === 404) {
       logger.error(`Project ${projectConfig.name} not found. `);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+      logApiErrorInstance(
+        e,
+        new ApiErrorContext({ accountId, projectName: projectConfig.name })
+      );
     }
   }
 };
