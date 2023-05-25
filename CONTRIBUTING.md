@@ -36,6 +36,12 @@ cd /path/to/other-npm-package
 yarn link @hubspot/cli
 ```
 
+## Local development with cli-lib
+When contributing to hubspot-cli, you may also need to make changes to cli-lib. To use a local version of cli-lib as a dependancy, use [yarn link](https://classic.yarnpkg.com/lang/en/docs/cli/link/).
+1. Run `yarn link` in cli-lib to set up a symlink.
+2. Run `yarn link @hubspot/cli-lib` in hubspot-cli to use the symlinked local package.
+
+To stop using your local cli-lib, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
 
 ## Testing
 Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
