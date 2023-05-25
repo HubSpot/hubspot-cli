@@ -57,7 +57,7 @@ en:
             success:
               accountRemoved: "Account \"{{ accountName }}\" removed from the config"
           info:
-            accountId: "{{#bold}}Account ID{{/bold}}: {{#cyan}}{{ accountId }}{{/cyan}}"
+            accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
             describe: "Print information about the default account, or about the account specified with the \"--account\" option."
             errors:
               notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
@@ -65,7 +65,7 @@ en:
               default: "Print information for the default account"
               idBased: "Print information for the account with accountId equal to \"1234567\""
               nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
-            name: "{{#bold}}Account name{{/bold}}: {{#cyan}}{{ name }}{{/cyan}}"
+            name: "{{#bold}}Account name{{/bold}}: {{ name }}"
             scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
