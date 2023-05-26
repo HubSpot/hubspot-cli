@@ -932,6 +932,9 @@ en:
             helpCommand:
               command: "hs help"
               message: "Run {{ command }} to see a list of available commands"
+            projectCreateCommand:
+              command: "hs project create"
+              message: "Run {{ command }} to create a new project"
             projectDeployCommand:
               command: "hs project deploy"
               message: "Ready to take your project live? Run {{ command }}"
@@ -943,13 +946,13 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally."
+              message: "Run {{ command }} to start testing your project locally"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
-              message: "Run {{ command }} to to update CRM object definitions in your sandbox."
+              message: "Run {{ command }} to to update CRM object definitions in your sandbox"
             sandboxSyncStandardCommand:
               command: "hs sandbox sync"
-              message: "Run {{ command }} to to update all supported assets to your sandbox from production."
+              message: "Run {{ command }} to to update all supported assets to your sandbox from production"
       commonOpts:
         options:
           portal:
