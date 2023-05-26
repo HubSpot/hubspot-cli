@@ -12,7 +12,7 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { extractZipArchive } = require('@hubspot/cli-lib/archive');
+const { extractZipArchive } = require('@hubspot/local-dev-lib');
 const {
   downloadProject,
   fetchProjectBuilds,
