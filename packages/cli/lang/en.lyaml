@@ -484,7 +484,7 @@ en:
                 describe: "Project name (cannot be changed)"
               template:
                 describe: "The starting template"
-              repoPath:
+              templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
           add:
             describe: "Create a new component within a project"
