@@ -186,12 +186,14 @@ exports.handler = async options => {
       throw err;
     }
 
-    uiFeatureHighlight([
-      'accountsUseCommand',
-      sandboxType === DEVELOPER_SANDBOX
-        ? 'projectDevCommand'
-        : 'projectUploadCommand',
-    ]);
+    const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
+    if (sandboxType === DEVELOPER_SANDBOX) {
+      highlightItems.push('projectDevCommand');
+    } else {
+      highlightItems.push('projectUploadCommand');
+    }
+
+    uiFeatureHighlight(highlightItems);
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
     trackCommandUsage('sandbox-create', { successful: false }, accountId);
