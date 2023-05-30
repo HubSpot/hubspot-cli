@@ -8,6 +8,7 @@ const {
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
+const { getTableContents } = require('@hubspot/cli-lib/lib/table');
 
 const i18nKey = 'cli.commands.accounts.subcommands.info';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -26,11 +27,12 @@ exports.handler = async options => {
 
     const response = await getAccessToken(personalAccessKey, env, accountId);
 
-    let scopeGroups = response.scopeGroups.join('\n');
+    const scopeGroups = response.scopeGroups.map(s => [s]);
 
     logger.log(i18n(`${i18nKey}.name`, { name }));
     logger.log(i18n(`${i18nKey}.accountId`, { accountId }));
-    logger.log(i18n(`${i18nKey}.scopeGroups`, { scopeGroups }));
+    logger.log(i18n(`${i18nKey}.scopeGroups`));
+    logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
   } else {
     logger.log(i18n(`${i18nKey}.errors.notUsingPersonalAccessKey`));
   }
