@@ -24,6 +24,12 @@ const {
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const {
+  isSpecifiedError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const {
+  logErrorInstance,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -69,6 +75,32 @@ exports.handler = async options => {
     sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX;
   const isStandardSandbox =
     sandboxTypeMap[accountConfig.sandboxAccountType] === STANDARD_SANDBOX;
+
+  let availableSyncTasks;
+  try {
+    availableSyncTasks = await getAvailableSyncTypes(
+      parentAccountConfig,
+      accountConfig
+    );
+  } catch (error) {
+    if (
+      isSpecifiedError(error, {
+        statusCode: 404,
+        category: 'OBJECT_NOT_FOUND',
+        subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
+      })
+    ) {
+      logger.error(
+        i18n('cli.lib.sandbox.sync.failure.objectNotFound', {
+          account: getAccountName(accountConfig),
+        })
+      );
+    } else {
+      logErrorInstance(error);
+    }
+    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   if (isDevelopmentSandbox) {
     logger.log(i18n(`${i18nKey}.info.developmentSandbox`));
@@ -145,10 +177,6 @@ exports.handler = async options => {
   }
 
   try {
-    const availableSyncTasks = await getAvailableSyncTypes(
-      parentAccountConfig,
-      accountConfig
-    );
     const syncTasks = await getSyncTypesWithContactRecordsPrompt(
       accountConfig,
       availableSyncTasks,
