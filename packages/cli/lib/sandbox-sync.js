@@ -19,6 +19,9 @@ const {
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
 const { uiAccountDescription } = require('./ui');
+const {
+  debugErrorAndContext,
+} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -96,6 +99,8 @@ const syncSandbox = async ({
       logger.log('');
     }
   } catch (err) {
+    debugErrorAndContext(err);
+
     spinnies.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
@@ -105,6 +110,19 @@ const syncSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.missingScopes`, {
           accountName: getAccountName(parentAccountConfig),
+        })
+      );
+    } else if (
+      isSpecifiedError(err, {
+        statusCode: 403,
+        category: 'BANNED',
+        subCategory: 'sandboxes-sync-api.SYNC_NOT_ALLOWED_INVALID_USER',
+      })
+    ) {
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidUser`, {
+          accountName: uiAccountDescription(accountId),
+          parentAccountName: getAccountName(parentAccountConfig),
         })
       );
     } else if (

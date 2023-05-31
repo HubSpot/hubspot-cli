@@ -88,6 +88,21 @@ const buildSandbox = async ({
       );
     } else if (
       isSpecifiedError(err, {
+        statusCode: 403,
+        category: 'BANNED',
+        subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
+      })
+    ) {
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidUser`, {
+          accountName: name,
+          parentAccountName: accountConfig.name || accountId,
+        })
+      );
+      logger.log('');
+    } else if (
+      isSpecifiedError(err, {
         statusCode: 400,
         category: 'VALIDATION_ERROR',
         subCategory:

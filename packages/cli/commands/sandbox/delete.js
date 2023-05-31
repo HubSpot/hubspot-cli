@@ -189,6 +189,21 @@ exports.handler = async options => {
       }
     } else if (
       isSpecifiedError(err, {
+        statusCode: 403,
+        category: 'BANNED',
+        subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
+      })
+    ) {
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidUser`, {
+          accountName: getAccountName(accountConfig),
+          parentAccountName: getAccountName(parentAccount),
+        })
+      );
+      logger.log('');
+    } else if (
+      isSpecifiedError(err, {
         statusCode: 404,
         category: 'OBJECT_NOT_FOUND',
         subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
