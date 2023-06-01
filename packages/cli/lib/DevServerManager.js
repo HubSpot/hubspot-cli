@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getProjectDetailUrl } = require('./projects');
-// const UIEDevModeInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -17,9 +16,7 @@ class DevServerManager {
     this.initialized = false;
     this.server = null;
     this.path = null;
-    this.devServers = {
-      // uie: UIEDevModeInterface,
-    };
+    this.devServers = {};
   }
 
   async iterateDevServers(callback) {
