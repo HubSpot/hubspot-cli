@@ -20,12 +20,12 @@ const hasAllProperties = projectList => {
   );
 };
 
-const createTemplateOptions = async repoPath => {
-  const isRepoPath = !!repoPath;
+const createTemplateOptions = async templateSource => {
+  const isTemplateSource = !!templateSource;
   const config = await fetchJsonFromRepository(
-    repoPath,
+    templateSource,
     'main/config.json',
-    isRepoPath
+    isTemplateSource
   );
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
@@ -42,7 +42,9 @@ const createTemplateOptions = async repoPath => {
 };
 
 const createProjectPrompt = async (promptOptions = {}) => {
-  const projectTemplates = await createTemplateOptions(promptOptions.repoPath);
+  const projectTemplates = await createTemplateOptions(
+    promptOptions.templateSource
+  );
 
   return promptUser([
     {

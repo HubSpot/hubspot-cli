@@ -29,7 +29,8 @@ const { uiAccountDescription, uiLink } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManager';
 
-const BUILD_DEBOUNCE_TIME = 3500;
+const BUILD_DEBOUNCE_TIME_LONG = 5000;
+const BUILD_DEBOUNCE_TIME_SHORT = 3500;
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -339,18 +340,12 @@ class LocalDevManager {
     }
 
     if (this.uploadQueue.isPaused) {
-      if (
-        !this.standbyChanges.find(
-          changeInfo => changeInfo.filePath === filePath
-        )
-      ) {
-        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-      }
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
     } else {
       await this.flushStandbyChanges();
 
       if (!this.uploadQueue.isPaused) {
-        this.debounceQueueBuild();
+        this.debounceQueueBuild(changeInfo);
       }
 
       return this.uploadQueue.add(async () => {
@@ -376,14 +371,7 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      if (
-        !this.standbyChanges.find(
-          standbyChangeInfo =>
-            standbyChangeInfo.filePath === changeInfo.filePath
-        )
-      ) {
-        this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-      }
+      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
       this.spinnies.add('manualUploadRequired', {
         text: i18n(`${i18nKey}.content.manualUploadRequired`),
@@ -423,50 +411,71 @@ class LocalDevManager {
       return;
     }
 
-    this.standbyChanges.push(changeInfo);
+    const existingIndex = this.standbyChanges.findIndex(
+      standyChangeInfo => standyChangeInfo.filePath === filePath
+    );
+
+    if (existingIndex > -1) {
+      // Make sure the most recent event to this file is the one that gets acted on
+      this.standbyChanges[existingIndex].event = event;
+    } else {
+      this.standbyChanges.push(changeInfo);
+    }
   }
 
   async sendChanges(changeInfo) {
     const { event, filePath, remotePath } = changeInfo;
 
-    const spinniesKey = this.spinnies.add(null, {
-      text: i18n(`${i18nKey}.content.uploadingChange`, {
-        filePath: remotePath,
-      }),
-      status: 'non-spinnable',
-    });
-
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
+        const spinniesKey = this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.content.uploadingAddChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
         await uploadFileToBuild(
           this.targetAccountId,
           this.projectConfig.name,
           filePath,
           remotePath
         );
+        this.spinnies.update(spinniesKey, {
+          text: i18n(`${i18nKey}.content.uploadedAddChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
       } else if (
         event === WATCH_EVENTS.unlink ||
         event === WATCH_EVENTS.unlinkDir
       ) {
+        const spinniesKey = this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.content.uploadingRemoveChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
         await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
           remotePath
         );
+        this.spinnies.update(spinniesKey, {
+          text: i18n(`${i18nKey}.content.uploadedRemoveChange`, {
+            filePath: remotePath,
+          }),
+          status: 'non-spinnable',
+        });
       }
     } catch (err) {
       logger.debug(err);
     }
-
-    this.spinnies.update(spinniesKey, {
-      text: i18n(`${i18nKey}.content.uploadedChange`, {
-        filePath: remotePath,
-      }),
-      status: 'non-spinnable',
-    });
   }
 
-  debounceQueueBuild() {
+  debounceQueueBuild(changeInfo) {
+    const { event } = changeInfo;
+
     if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
       this.updateDevModeStatus('uploadPending');
     }
@@ -475,9 +484,14 @@ class LocalDevManager {
       clearTimeout(this.debouncedBuild);
     }
 
+    const debounceWaitTime =
+      event === WATCH_EVENTS.add
+        ? BUILD_DEBOUNCE_TIME_LONG
+        : BUILD_DEBOUNCE_TIME_SHORT;
+
     this.debouncedBuild = setTimeout(
       this.queueBuild.bind(this),
-      BUILD_DEBOUNCE_TIME
+      debounceWaitTime
     );
   }
 
@@ -485,6 +499,7 @@ class LocalDevManager {
     const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.content.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
+        buildId: this.currentStagedBuildId,
       }),
       noIndent: true,
     });
@@ -514,7 +529,7 @@ class LocalDevManager {
       return;
     }
 
-    await pollProjectBuildAndDeploy(
+    const result = await pollProjectBuildAndDeploy(
       this.targetAccountId,
       this.projectConfig,
       null,
@@ -522,13 +537,25 @@ class LocalDevManager {
       true
     );
 
-    this.spinnies.succeed(spinniesKey, {
-      text: i18n(`${i18nKey}.content.uploadedChanges`, {
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-      }),
-      succeedColor: 'white',
-      noIndent: true,
-    });
+    if (result && result.succeeded) {
+      this.spinnies.succeed(spinniesKey, {
+        text: i18n(`${i18nKey}.content.uploadedChangesSucceeded`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          buildId: result.buildId,
+        }),
+        succeedColor: 'white',
+        noIndent: true,
+      });
+    } else {
+      this.spinnies.fail(spinniesKey, {
+        text: i18n(`${i18nKey}.content.uploadedChangesFailed`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          buildId: result.buildId,
+        }),
+        failColor: 'white',
+        noIndent: true,
+      });
+    }
 
     this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
 
@@ -554,7 +581,7 @@ class LocalDevManager {
               this.uploadPermission === UPLOAD_PERMISSIONS.always &&
               !this.uploadQueue.isPaused
             ) {
-              this.debounceQueueBuild();
+              this.debounceQueueBuild(changeInfo);
             }
             await this.sendChanges(changeInfo);
           };

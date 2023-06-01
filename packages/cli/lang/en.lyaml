@@ -8,10 +8,10 @@ en:
         describe: "Commands for working with accounts."
         subcommands:
           list:
-            accounts: "Accounts:"
-            defaultAccount: "Default account: {{ account }}"
+            accounts: "{{#bold}}Accounts{{/bold}}:"
+            defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
             describe: "List names of accounts defined in config."
-            configPath: "Config path: {{ configPath }}"
+            configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
             labels:
               accountId: "Account ID"
               authType: "Auth Type"
@@ -57,7 +57,7 @@ en:
             success:
               accountRemoved: "Account \"{{ accountName }}\" removed from the config"
           info:
-            accountId: "Account ID: {{ accountId }}"
+            accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
             describe: "Print information about the default account, or about the account specified with the \"--account\" option."
             errors:
               notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
@@ -65,8 +65,8 @@ en:
               default: "Print information for the default account"
               idBased: "Print information for the account with accountId equal to \"1234567\""
               nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
-            name: "Account name: {{ name }}"
-            scopeGroups: "Scopes available:\n{{ scopeGroups }}"
+            name: "{{#bold}}Account name{{/bold}}: {{ name }}"
+            scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
@@ -460,7 +460,6 @@ en:
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
               failedToCreateProject: "Failed to create project in the target account."
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
-              startupFailed: "Failed to initialize local dev server"
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
@@ -485,7 +484,7 @@ en:
                 describe: "Project name (cannot be changed)"
               template:
                 describe: "The starting template"
-              repoPath:
+              templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
           add:
             describe: "Create a new component within a project"
@@ -663,10 +662,11 @@ en:
               deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
               configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
             failure:
+              invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
               noAccount: "No account specified. Specify an account by using the --account flag."
               noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
               noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
-              objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. The account has been removed from the config."
+              objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
               noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
               invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
             options:
@@ -735,6 +735,16 @@ en:
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
+          generateSelectors:
+            describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
+            errors:
+              invalidPath: "Could not find directory \"{{ themePath }}\""
+              fieldsNotFound: "Unable to find theme's fields.json."
+              noSelectorsFound: "No selectors found."
+            success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
+            positionals:
+              themePath:
+                describe: "The path of the theme you'd like to generate an editor-preview.json for."
           marketplaceValidate:
             describe: "Validate a theme for the marketplace"
             errors:
@@ -849,7 +859,7 @@ en:
         header:
           betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
           learnMoreLink: "Learn more about the projects local dev server"
-          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for project file changes ..."
+          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
           status:
@@ -861,20 +871,23 @@ en:
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         content:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
-          manualUploadSkipped: "Manually upload and deploy project: {{#green}}(n){{/green}}"
-          manualUploadConfirmed: "Manually upload and deploy project: {{#green}}(Y){{/green}}"
+          manualUploadSkipped: "Manually upload and deploy project to production account: {{#green}}(n){{/green}}"
+          manualUploadConfirmed: "Manually upload and deploy project to production account: {{#green}}(Y){{/green}}"
           manualUploadRequired: "Project file changes require a manual upload and deploy ..."
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
-          uploadingChange: "[INFO] Uploading {{ filePath }}"
-          uploadedChange: "[INFO] Uploaded {{ filePath }}"
-          uploadingChanges: "{{#bold}}Building and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChanges: "{{#bold}}Built and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
           devServerStartError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
           devServerNotifyError: "{{#red}}[ERROR]{{/red}} Failed to process change locally"
           devServerExecuteError: "{{#red}}[ERROR]{{/red}} Failed to handle change with local dev server"
           devServerCleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
+          uploadingAddChange: "[INFO] Uploading {{ filePath }}"
+          uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
+          uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
+          uploadedRemoveChange: "[INFO] Removed {{ filePath }}"
+          uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
+          uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -925,6 +938,9 @@ en:
             helpCommand:
               command: "hs help"
               message: "Run {{ command }} to see a list of available commands"
+            projectCreateCommand:
+              command: "hs project create"
+              message: "Run {{ command }} to create a new project"
             projectDeployCommand:
               command: "hs project deploy"
               message: "Ready to take your project live? Run {{ command }}"
@@ -936,13 +952,13 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally."
+              message: "Run {{ command }} to start testing your project locally"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
-              message: "Run {{ command }} to to update CRM object definitions in your sandbox."
+              message: "Run {{ command }} to to update CRM object definitions in your sandbox"
             sandboxSyncStandardCommand:
               command: "hs sandbox sync"
-              message: "Run {{ command }} to to update all supported assets to your sandbox from production."
+              message: "Run {{ command }} to to update all supported assets to your sandbox from production"
       commonOpts:
         options:
           portal:
@@ -962,7 +978,7 @@ en:
             describe: "Use environment variable config"
       prompts:
         projectDevTargetAccountPrompt:
-          createNewSandboxOption: "<Test on a new dev sandbox>"
+          createNewSandboxOption: "<Test on a new development sandbox>"
           chooseDefaultAccountOption: "<{{#bold}}!{{/bold}} Test on this production account {{#bold}}!{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
           sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
@@ -1118,6 +1134,7 @@ en:
           success:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
+            invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
@@ -1175,10 +1192,11 @@ en:
             fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
             succeed: "Sandbox sync complete."
           failure:
+            invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
             missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
             syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
             notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
-            objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been be deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
+            objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
           types:
             parcels:
               label: "Account tools and features"

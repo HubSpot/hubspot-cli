@@ -23,6 +23,10 @@ const {
   getLatestProjectAppFunctionLog,
 } = require('@hubspot/cli-lib/api/functions');
 const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
+const {
   getFunctionLogs,
   getLatestFunctionLog,
 } = require('@hubspot/cli-lib/api/results');
@@ -44,10 +48,16 @@ const getPrivateAppsUrl = accountId => {
   return `${baseUrl}/private-apps/${accountId}`;
 };
 
-const handleLogsError = (e, name) => {
-  logger.debug(`Log fetch error: ${e.message}`);
+const handleLogsError = (e, name, projectName) => {
   if (e.statusCode === 404) {
+    logger.debug(`Log fetch error: ${e.message}`);
     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
+  } else {
+    logApiErrorInstance(
+      e,
+      new ApiErrorContext({ accountId: getAccountId(), projectName })
+    );
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -77,7 +87,7 @@ const handleFunctionLog = async (accountId, options) => {
           )
         : getFunctionLogs(accountId, functionName, { after });
     } catch (e) {
-      handleLogsError(e, functionName);
+      handleLogsError(e, functionName, projectName);
     }
   };
 
@@ -89,7 +99,7 @@ const handleFunctionLog = async (accountId, options) => {
           projectName,
           appPath
         )
-      : getLatestFunctionLog(accountId, functionName);
+      : getLatestFunctionLog(accountId, functionName, projectName);
   };
 
   if (follow) {
@@ -104,14 +114,14 @@ const handleFunctionLog = async (accountId, options) => {
     try {
       logsResp = await fetchLatest();
     } catch (e) {
-      handleLogsError(e, functionName);
+      handleLogsError(e, functionName, projectName);
       return true;
     }
   } else {
     try {
       logsResp = await tailCall();
     } catch (e) {
-      handleLogsError(e, functionName);
+      handleLogsError(e, functionName, projectName);
       return true;
     }
   }

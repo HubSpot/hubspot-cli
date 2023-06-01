@@ -92,7 +92,7 @@ const createProjectConfig = async (
   projectPath,
   projectName,
   template,
-  repoPath
+  templateSource
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -137,7 +137,11 @@ const createProjectConfig = async (
       srcDir: 'src',
     });
   } else {
-    await downloadGitHubRepoContents(repoPath, template.path, projectPath);
+    await downloadGitHubRepoContents(
+      templateSource,
+      template.path,
+      projectPath
+    );
     const _config = JSON.parse(fs.readFileSync(projectConfigPath));
     writeProjectConfig(projectConfigPath, {
       ..._config,
@@ -256,7 +260,10 @@ const ensureProjectExists = async (
           );
           return true;
         } catch (err) {
-          return logApiErrorInstance(err, new ApiErrorContext({ accountId }));
+          return logApiErrorInstance(
+            err,
+            new ApiErrorContext({ accountId, projectName })
+          );
         }
       } else {
         if (!noLogs) {
@@ -270,8 +277,8 @@ const ensureProjectExists = async (
         return false;
       }
     }
-    logApiErrorInstance(err, new ApiErrorContext({ accountId }));
-    return false;
+    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

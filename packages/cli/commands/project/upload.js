@@ -50,54 +50,53 @@ exports.handler = async options => {
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
-  const result = await handleProjectUpload(
-    accountId,
-    projectConfig,
-    projectDir,
-    pollProjectBuildAndDeploy,
-    message
-  );
+  try {
+    const result = await handleProjectUpload(
+      accountId,
+      projectConfig,
+      projectDir,
+      pollProjectBuildAndDeploy,
+      message
+    );
 
-  if (result.error) {
-    if (
-      isSpecifiedError(result.error, {
-        subCategory: ERROR_TYPES.PROJECT_LOCKED,
-      })
-    ) {
-      logger.log();
-      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
-      logger.log();
-    } else {
-      logApiErrorInstance(
-        result.error,
-        new ApiErrorContext({
-          accountId,
-          projectName: projectConfig.name,
+    if (result.error) {
+      if (
+        isSpecifiedError(result.error, {
+          subCategory: ERROR_TYPES.PROJECT_LOCKED,
         })
-      );
+      ) {
+        logger.log();
+        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.log();
+      } else {
+        logApiErrorInstance(
+          result.error,
+          new ApiErrorContext({
+            accountId,
+            projectName: projectConfig.name,
+          })
+        );
+      }
+      process.exit(EXIT_CODES.ERROR);
     }
+    if (result.buildSucceeded && !result.autodeployEnabled) {
+      uiLine();
+      logger.log(
+        chalk.bold(
+          i18n(`${i18nKey}.logs.buildSucceeded`, {
+            buildId: result.buildId,
+          })
+        )
+      );
+      uiLine();
+      logFeedbackMessage(result.buildId);
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  } catch (e) {
+    const projectName = projectConfig.name;
+    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
     process.exit(EXIT_CODES.ERROR);
   }
-  if (result.buildSucceeded && !result.autodeployEnabled) {
-    uiLine();
-    logger.log(
-      chalk.bold(
-        i18n(`${i18nKey}.logs.buildSucceeded`, {
-          buildId: result.buildId,
-        })
-      )
-    );
-    logger.log(i18n(`${i18nKey}.logs.readyToGoLive`));
-    logger.log(
-      i18n(`${i18nKey}.logs.runCommand`, {
-        command: chalk.hex('f5c26b')('hs project deploy'),
-      })
-    );
-    uiLine();
-  }
-
-  logFeedbackMessage(result.buildId);
-  process.exit(result.succeeded ? EXIT_CODES.SUCCESS : EXIT_CODES.ERROR);
 };
 
 exports.builder = yargs => {
