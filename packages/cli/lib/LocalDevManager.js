@@ -90,7 +90,13 @@ class LocalDevManager {
 
     console.clear();
     this.spinnies.removeAll();
-    this.updateConsoleHeader();
+
+    // TODO there is an issue here with the usage of "non-spinnable" and the new addOrUpdate function in SpinniesManager.
+    // The spinnies lib automatically removes any non-active spinners, so "pick" is telling us that these spinners don't exist
+    // https://github.com/jbcarpanelli/spinnies/blob/master/index.js#L186
+    // We can only call updateConsoleHeader once (at the end of this method) until we resolve this issue
+
+    //this.updateConsoleHeader();
 
     this.uploadQueue.start();
 
@@ -100,7 +106,7 @@ class LocalDevManager {
     this.updateKeypressListeners();
 
     // Do this again to pick up latest watch + server states
-    // this.updateConsoleHeader();
+    this.updateConsoleHeader();
   }
 
   async stop() {
