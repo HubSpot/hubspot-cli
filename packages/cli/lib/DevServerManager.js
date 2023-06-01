@@ -33,11 +33,6 @@ class DevServerManager {
     return this.path ? `${this.path}/${path}` : null;
   }
 
-  async getProjectFiles(projectSourceDir) {
-    const projectFiles = await walk(projectSourceDir);
-    return projectFiles;
-  }
-
   makeLogger(spinniesLogger, serverKey) {
     return {
       debug: (...args) => spinniesLogger(serverKey, ...args),
@@ -91,7 +86,7 @@ class DevServerManager {
       }
     });
 
-    const projectFiles = await this.getProjectFiles(projectSourceDir);
+    const projectFiles = await walk(projectSourceDir);
 
     // Initialize component servers
     await this.iterateDevServers(async (serverInterface, serverKey) => {
