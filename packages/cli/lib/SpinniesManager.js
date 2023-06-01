@@ -71,6 +71,10 @@ class SpinniesManager {
     return uniqueKey;
   }
 
+  // TODO there is an issue here with the usage of "non-spinnable"
+  // The spinnies lib automatically removes any non-active spinners,
+  // so "pick" is telling us that these spinners don't exist
+  // https://github.com/jbcarpanelli/spinnies/blob/master/index.js#L186
   addOrUpdate(key, options = {}) {
     const spinner = this.spinnies.pick(key);
 

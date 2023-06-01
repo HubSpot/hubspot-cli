@@ -91,12 +91,8 @@ class LocalDevManager {
     console.clear();
     this.spinnies.removeAll();
 
-    // TODO there is an issue here with the usage of "non-spinnable" and the new addOrUpdate function in SpinniesManager.
-    // The spinnies lib automatically removes any non-active spinners, so "pick" is telling us that these spinners don't exist
-    // https://github.com/jbcarpanelli/spinnies/blob/master/index.js#L186
-    // We can only call updateConsoleHeader once (at the end of this method) until we resolve this issue
-
-    //this.updateConsoleHeader();
+    logger.log(i18n(`${i18nKey}.header.betaMessage`));
+    logger.log();
 
     this.uploadQueue.start();
 
@@ -105,7 +101,6 @@ class LocalDevManager {
     await this.startWatching();
     this.updateKeypressListeners();
 
-    // Do this again to pick up latest watch + server states
     this.updateConsoleHeader();
   }
 
@@ -156,11 +151,6 @@ class LocalDevManager {
   }
 
   updateConsoleHeader() {
-    this.spinnies.addOrUpdate('betaMessage', {
-      text: i18n(`${i18nKey}.header.betaMessage`),
-      status: 'non-spinnable',
-      category: 'header',
-    });
     // this.spinnies.addOrUpdate('learnMoreLink', {
     //   text: uiLink(
     //     i18n(`${i18nKey}.header.learnMoreLink`),
@@ -170,11 +160,6 @@ class LocalDevManager {
     //   category: 'header',
     //   status: 'non-spinnable',
     // });
-    this.spinnies.addOrUpdate('spacer-1', {
-      text: ' ',
-      status: 'non-spinnable',
-      category: 'header',
-    });
     this.spinnies.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -206,7 +191,7 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    this.spinnies.addOrUpdate('spacer-2', {
+    this.spinnies.addOrUpdate('spacer-1', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
