@@ -52,29 +52,37 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  if (contentsResp.children.length) {
-    const mappedContents = contentsResp.children.map(fileOrFolder => {
+  if (contentsResp.children) {
+    const contents =
+      directoryPath === '/'
+        ? ['@hubspot', ...contentsResp.children]
+        : contentsResp.children;
+    const mappedContents = contents.map(fileOrFolder => {
       if (!isPathFolder(fileOrFolder)) {
-        return fileOrFolder;
+        return chalk.reset.cyan(fileOrFolder);
       }
-
+      if (
+        fileOrFolder === HUBSPOT_FOLDER ||
+        fileOrFolder === MARKETPLACE_FOLDER
+      ) {
+        return chalk.reset.bold.blue(fileOrFolder);
+      }
       return chalk.reset.blue(fileOrFolder);
     });
-    const hubspotFolder = `/${HUBSPOT_FOLDER}`;
-    const marketplaceFolder = `/${MARKETPLACE_FOLDER}`;
+
     const folderContentsOutput = mappedContents
       .sort(function(a, b) {
         // Pin @hubspot folder to top
-        if (a === hubspotFolder) {
+        if (a === HUBSPOT_FOLDER) {
           return -1;
-        } else if (b === hubspotFolder) {
+        } else if (b === HUBSPOT_FOLDER) {
           return 1;
         }
 
         // Pin @marketplace folder to top
-        if (a === marketplaceFolder) {
+        if (a === MARKETPLACE_FOLDER) {
           return -1;
-        } else if (b === marketplaceFolder) {
+        } else if (b === MARKETPLACE_FOLDER) {
           return 1;
         }
 
