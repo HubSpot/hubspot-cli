@@ -1174,14 +1174,14 @@ en:
               standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             syncContactRecords:
-              standard: "Include up to 5000 most recently updated contacts in this sync? This will also copy up to 100 associated deals, 100 associated companies, and 100 associated tickets for each synced contact. Syncing contact records may take some time"
-              developer: "Include up to 100 most recently updated contacts in this sync? This will also copy up to 100 associated deals, 100 associated companies, and 100 associated tickets for each synced contact. Syncing contact records may take some time"
+              standard: "Include up to 5000 most recent updated contacts along with their associated deals, tickets, and companies (up to 100 each)? This sync can be done once per sandbox"
+              developer: "Include up to 100 most recent updated contacts along with their associated deals, tickets, and companies (up to 100 each)? This sync can be done once per sandbox"
           loading:
             startSync: "Initiating sync..."
             fail: "Failed to sync sandbox."
             succeed: "Sandbox sync initiated to {{ accountName }}."
             skipPolling: "Syncing CRM object definitions."
-            skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts. This will also copy up to 100 associated deals, 100 associated companies, and 100 associated tickets for each synced contact."
+            skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts along with their associated deals, tickets, and companies (up to 100 each)."
           polling:
             syncing: "Syncing sandbox..."
             fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
