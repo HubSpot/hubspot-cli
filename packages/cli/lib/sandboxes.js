@@ -263,7 +263,7 @@ const saveSandboxToConfig = async (env, result, force = false) => {
           )
         );
         const { name: promptName } = await enterAccountNamePrompt(
-          nameForConfig
+          nameForConfig + `_${Date.now()}`
         );
         validName = promptName;
       } else {
