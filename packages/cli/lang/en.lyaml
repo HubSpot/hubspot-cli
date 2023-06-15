@@ -863,6 +863,8 @@ en:
           viewInHubSpotLink: "View in HubSpot"
           status:
             clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
+            buildError: "{{#bold}}Status:{{/bold}} {{#red}}Build failed{{/red}}"
+            deployError: "{{#bold}}Status:{{/bold}} {{#red}}Deploy failed{{/red}}"
             uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
             noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
             manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"

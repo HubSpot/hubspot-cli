@@ -11,7 +11,11 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+  ERROR_TYPES,
+} = require('@hubspot/cli-lib/lib/constants');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
@@ -249,6 +253,43 @@ class LocalDevManager {
         }
       }
     });
+  }
+
+  logBuildError(buildStatus = {}) {
+    const subTasks = buildStatus[PROJECT_BUILD_TEXT.SUBTASK_KEY] || [];
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    logger.log(failedSubTasks);
+    if (failedSubTasks.length) {
+      this.updateDevModeStatus('buildError');
+
+      failedSubTasks.forEach(failedSubTask => {
+        this.spinnies.add(null, {
+          text: failedSubTask.errorMessage,
+          status: 'fail',
+          failColor: 'white',
+          noIndent: true,
+        });
+      });
+    }
+  }
+
+  logDeployError(deployStatus = {}) {
+    const subTasks = deployStatus[PROJECT_DEPLOY_TEXT.SUBTASK_KEY] || [];
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    if (failedSubTasks.length) {
+      this.updateDevModeStatus('deployError');
+
+      failedSubTasks.forEach(failedSubTask => {
+        this.spinnies.add(null, {
+          text: failedSubTask.errorMessage,
+          status: 'fail',
+          failColor: 'white',
+          noIndent: true,
+        });
+      });
+    }
   }
 
   generateLocalURL(path) {
@@ -529,6 +570,8 @@ class LocalDevManager {
     );
 
     if (result && result.succeeded) {
+      this.updateDevModeStatus('clean');
+
       this.spinnies.succeed(spinniesKey, {
         text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -546,6 +589,12 @@ class LocalDevManager {
         failColor: 'white',
         noIndent: true,
       });
+
+      if (result.buildResult.status === 'FAILURE') {
+        this.logBuildError(result.buildResult);
+      } else if (result.deployResult.status === 'FAILURE') {
+        this.logDeployError(result.deployResult);
+      }
     }
 
     this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
@@ -558,8 +607,6 @@ class LocalDevManager {
 
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();
-    } else {
-      this.updateDevModeStatus('clean');
     }
   }
 

@@ -240,11 +240,11 @@ exports.handler = async options => {
     isParent: true,
   });
 
-  let result;
+  let initialUploadResult;
   // Create an initial build if the project was newly created in the account or if
   // our upload permission is set to "always"
   if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
-    result = await handleProjectUpload(
+    initialUploadResult = await handleProjectUpload(
       targetAccountId,
       projectConfig,
       projectDir,
@@ -253,9 +253,9 @@ exports.handler = async options => {
     );
   }
 
-  if (result && result.error) {
+  if (!initialUploadResult || initialUploadResult.uploadError) {
     if (
-      isSpecifiedError(result.error, {
+      isSpecifiedError(initialUploadResult.uploadError, {
         subCategory: ERROR_TYPES.PROJECT_LOCKED,
       })
     ) {
@@ -264,7 +264,7 @@ exports.handler = async options => {
       logger.log();
     } else {
       logApiErrorInstance(
-        result.error,
+        initialUploadResult.uploadError,
         new ApiErrorContext({
           accountId,
           projectName: projectConfig.name,
@@ -272,9 +272,9 @@ exports.handler = async options => {
       );
     }
     process.exit(EXIT_CODES.ERROR);
-  } else {
-    spinnies.remove('devModeSetup');
   }
+
+  spinnies.remove('devModeSetup');
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,
@@ -286,6 +286,15 @@ exports.handler = async options => {
   });
 
   await LocalDev.start();
+
+  // Let the user know when the initial build or deploy fails
+  if (!initialUploadResult.succeeded) {
+    if (initialUploadResult.buildResult.status === 'FAILURE') {
+      LocalDev.logBuildError(initialUploadResult.buildResult);
+    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+      LocalDev.logDeployError(initialUploadResult.deployResult);
+    }
+  }
 
   handleExit(LocalDev.stop);
 };
