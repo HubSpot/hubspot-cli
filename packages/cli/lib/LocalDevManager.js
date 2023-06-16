@@ -259,7 +259,6 @@ class LocalDevManager {
     const subTasks = buildStatus[PROJECT_BUILD_TEXT.SUBTASK_KEY] || [];
     const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
 
-    logger.log(failedSubTasks);
     if (failedSubTasks.length) {
       this.updateDevModeStatus('buildError');
 
