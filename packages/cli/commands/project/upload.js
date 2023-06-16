@@ -59,7 +59,6 @@ exports.handler = async options => {
       message
     );
 
-    logger.log(result);
     if (result.uploadError) {
       if (
         isSpecifiedError(result.uploadError, {
