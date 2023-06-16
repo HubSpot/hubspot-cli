@@ -6,6 +6,7 @@ const { getProjectDetailUrl } = require('./projects');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
+const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -16,7 +17,9 @@ class DevServerManager {
     this.initialized = false;
     this.server = null;
     this.path = null;
-    this.devServers = {};
+    this.devServers = {
+      uie: UIEDevServerInterface,
+    };
   }
 
   async iterateDevServers(callback) {
@@ -91,17 +94,12 @@ class DevServerManager {
     // Initialize component servers
     await this.iterateDevServers(async (serverInterface, serverKey) => {
       if (serverInterface.start) {
-        const serverApp = await serverInterface.start(serverKey, this.server, {
+        await serverInterface.start({
           debug,
           logger: this.makeLogger(spinniesLogger, serverKey),
-          port,
           projectConfig,
           projectFiles,
         });
-
-        if (serverApp) {
-          app.use(`/${serverKey}`, serverApp);
-        }
       }
     });
 
@@ -134,16 +132,6 @@ class DevServerManager {
     }
 
     return notifyResponse;
-  }
-
-  async execute(changeInfo, notifyResponse) {
-    if (this.initialized) {
-      await this.iterateDevServers(async (serverInterface, serverKey) => {
-        if (notifyResponse[serverKey] && serverInterface.execute) {
-          await serverInterface.execute(changeInfo);
-        }
-      });
-    }
   }
 
   async cleanup() {

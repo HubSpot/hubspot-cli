@@ -94,6 +94,8 @@ class LocalDevManager {
     logger.log(i18n(`${i18nKey}.header.betaMessage`));
     logger.log();
 
+    this.updateConsoleHeader();
+
     this.uploadQueue.start();
 
     await this.startServers();
@@ -136,6 +138,8 @@ class LocalDevManager {
         }
       }
     }
+
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     if (exitCode === EXIT_CODES.SUCCESS) {
       this.spinnies.succeed('cleanupMessage', {
@@ -320,8 +324,6 @@ class LocalDevManager {
     if (!notifyResponse.uploadRequired) {
       this.updateDevModeStatus('supportedChange');
       this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
-
-      await this.executeServers(changeInfo, notifyResponse);
       return;
     }
 
@@ -630,20 +632,6 @@ class LocalDevManager {
     }
 
     return notifyResponse;
-  }
-
-  async executeServers(changeInfo, notifyResponse) {
-    try {
-      await DevServerManager.execute(changeInfo, notifyResponse);
-    } catch (e) {
-      if (this.debug) {
-        logger.error(e);
-      }
-      this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.content.devServerExecuteError`),
-        status: 'non-spinnable',
-      });
-    }
   }
 
   async cleanupServers() {
