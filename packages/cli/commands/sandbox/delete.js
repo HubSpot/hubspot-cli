@@ -44,6 +44,8 @@ exports.handler = async options => {
   const { account, force } = options;
   const config = getConfig();
 
+  trackCommandUsage('sandbox-delete', null);
+
   let accountPrompt;
   if (!account) {
     if (!force) {
@@ -52,11 +54,13 @@ exports.handler = async options => {
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noAccount`));
+      trackCommandUsage('sandbox-delete', { successful: false });
       process.exit(EXIT_CODES.ERROR);
     }
     if (!accountPrompt) {
       logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
+      trackCommandUsage('sandbox-delete', { successful: false });
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -68,7 +72,11 @@ exports.handler = async options => {
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
 
-  trackCommandUsage('sandbox-delete', null, sandboxAccountId);
+  trackCommandUsage(
+    'sandbox-delete',
+    { type: accountConfig.sandboxAccountType },
+    sandboxAccountId
+  );
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
@@ -170,7 +178,7 @@ exports.handler = async options => {
 
     trackCommandUsage(
       'sandbox-delete',
-      { successful: false },
+      { type: accountConfig.sandboxAccountType, successful: false },
       sandboxAccountId
     );
 
