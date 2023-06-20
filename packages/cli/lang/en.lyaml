@@ -998,7 +998,7 @@ en:
             invalidName: "You entered an invalid name. Please try again."
             nameRequired: "The name may not be blank. Please try again."
             spacesInName: "The name may not contain spaces. Please try again."
-            accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
+            accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
         personalAccessKeyPrompt:
           enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
           enterClientId: "Enter your OAuth2 client ID: "
@@ -1077,7 +1077,7 @@ en:
             errors:
               invalidName: "You entered an invalid name. Please try again."
               nameRequired: "The name may not be blank. Please try again."
-              accountNameExists: "Account name \"{{ name }}\" already exists, please enter a different name."
+              accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
             selectAccountName: "Select the sandbox account you want to delete"
             selectParentAccountName: "Select the account that the sandbox belongs to"
           type:
