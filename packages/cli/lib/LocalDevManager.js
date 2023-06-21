@@ -151,22 +151,13 @@ class LocalDevManager {
 
   logConsoleHeader() {
     this.spinnies.removeAll();
+
     this.spinnies.add('betaMessage', {
       text: i18n(`${i18nKey}.header.betaMessage`),
       category: 'header',
       status: 'non-spinnable',
     });
-
-    // this.spinnies.add('learnMoreLink', {
-    //   text: uiLink(
-    //     i18n(`${i18nKey}.header.learnMoreLink`),
-    //     this.generateLocalURL(`/hs/learnMore`),
-    //     { inSpinnies: true }
-    //   ),
-    //   category: 'header',
-    //   status: 'non-spinnable',
-    // });
-    this.spinnies.add('spacer-1', {
+    this.spinnies.add(null, {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
@@ -195,7 +186,7 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    this.spinnies.add('spacer-2', {
+    this.spinnies.add(null, {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
@@ -267,7 +258,7 @@ class LocalDevManager {
           text: failedSubTask.errorMessage,
           status: 'fail',
           failColor: 'white',
-          noIndent: true,
+          indent: 1,
         });
       });
     }
@@ -285,7 +276,7 @@ class LocalDevManager {
           text: failedSubTask.errorMessage,
           status: 'fail',
           failColor: 'white',
-          noIndent: true,
+          indent: 1,
         });
       });
     }
@@ -323,9 +314,12 @@ class LocalDevManager {
       logger.debug(err);
       if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
         await cancelStagedBuild(this.targetAccountId, this.projectConfig.name);
-        logger.log(i18n(`${i18nKey}.previousStagingBuildCancelled`));
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.previousStagingBuildCancelled`),
+          status: 'non-spinnable',
+        });
       }
-      process.exit(EXIT_CODES.ERROR);
+      this.stop();
     }
   }
 
@@ -527,6 +521,8 @@ class LocalDevManager {
   }
 
   async queueBuild() {
+    this.spinnies.add(null, { text: ' ', status: 'non-spinnable' });
+
     const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -537,68 +533,94 @@ class LocalDevManager {
 
     await this.pauseUploadQueue();
 
+    let queueBuildError;
+
     try {
       await queueBuild(this.targetAccountId, this.projectConfig.name);
     } catch (err) {
-      logger.debug(err);
-      if (
-        isSpecifiedError(err, {
-          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
-        })
-      ) {
-        logger.log(i18n(`${i18nKey}.cancelledFromUI`));
-        this.stop();
-      } else {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({
-            accountId: this.targetAccountId,
-            projectName: this.projectConfig.name,
-          })
-        );
-      }
-      return;
+      queueBuildError = err;
     }
 
-    const result = await pollProjectBuildAndDeploy(
-      this.targetAccountId,
-      this.projectConfig,
-      null,
-      this.currentStagedBuildId,
-      true
-    );
+    if (queueBuildError) {
+      this.updateDevModeStatus('buildError');
 
-    if (result && result.succeeded) {
-      this.updateDevModeStatus('clean');
+      logger.debug(queueBuildError);
 
-      this.spinnies.succeed(spinniesKey, {
-        text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
-          buildId: result.buildId,
-        }),
-        succeedColor: 'white',
-        noIndent: true,
-      });
-    } else {
       this.spinnies.fail(spinniesKey, {
         text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
-          buildId: result.buildId,
+          buildId: this.currentStagedBuildId,
         }),
         failColor: 'white',
         noIndent: true,
       });
 
-      if (result.buildResult.status === 'FAILURE') {
-        this.logBuildError(result.buildResult);
-      } else if (result.deployResult.status === 'FAILURE') {
-        this.logDeployError(result.deployResult);
+      if (
+        isSpecifiedError(queueBuildError, {
+          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+        })
+      ) {
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.cancelledFromUI`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        this.stop();
+      } else if (
+        queueBuildError &&
+        queueBuildError.error &&
+        queueBuildError.error.message
+      ) {
+        this.spinnies.add(null, {
+          text: queueBuildError.error.message,
+          status: 'non-spinnable',
+          indent: 1,
+        });
+      }
+    } else {
+      const result = await pollProjectBuildAndDeploy(
+        this.targetAccountId,
+        this.projectConfig,
+        null,
+        this.currentStagedBuildId,
+        true
+      );
+
+      if (result.succeeded) {
+        this.updateDevModeStatus('clean');
+
+        this.spinnies.succeed(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
+            accountIdentifier: uiAccountDescription(this.targetAccountId),
+            buildId: result.buildId,
+          }),
+          succeedColor: 'white',
+          noIndent: true,
+        });
+      } else {
+        this.spinnies.fail(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
+            accountIdentifier: uiAccountDescription(this.targetAccountId),
+            buildId: result.buildId,
+          }),
+          failColor: 'white',
+          noIndent: true,
+        });
+
+        if (result.buildResult.status === 'FAILURE') {
+          this.logBuildError(result.buildResult);
+        } else if (result.deployResult.status === 'FAILURE') {
+          this.logDeployError(result.deployResult);
+        }
       }
     }
 
     this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
 
-    if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
+    if (
+      !queueBuildError &&
+      this.uploadPermission === UPLOAD_PERMISSIONS.always
+    ) {
       await this.createNewStagingBuild();
     }
 

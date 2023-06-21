@@ -84,7 +84,6 @@ exports.handler = async options => {
   }
 
   if (!targetAccountId) {
-    //logger.log(i18n(`${i18nKey}.logs.learnMoreLink`));
     logger.log();
     uiLine();
     logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
@@ -241,6 +240,7 @@ exports.handler = async options => {
   });
 
   let initialUploadResult;
+
   // Create an initial build if the project was newly created in the account or if
   // our upload permission is set to "always"
   if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
@@ -251,27 +251,27 @@ exports.handler = async options => {
       (...args) => pollProjectBuildAndDeploy(...args, true),
       i18n(`${i18nKey}.logs.initialUploadMessage`)
     );
-  }
 
-  if (!initialUploadResult || initialUploadResult.uploadError) {
-    if (
-      isSpecifiedError(initialUploadResult.uploadError, {
-        subCategory: ERROR_TYPES.PROJECT_LOCKED,
-      })
-    ) {
-      logger.log();
-      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
-      logger.log();
-    } else {
-      logApiErrorInstance(
-        initialUploadResult.uploadError,
-        new ApiErrorContext({
-          accountId,
-          projectName: projectConfig.name,
+    if (initialUploadResult.uploadError) {
+      if (
+        isSpecifiedError(initialUploadResult.uploadError, {
+          subCategory: ERROR_TYPES.PROJECT_LOCKED,
         })
-      );
+      ) {
+        logger.log();
+        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+        logger.log();
+      } else {
+        logApiErrorInstance(
+          initialUploadResult.uploadError,
+          new ApiErrorContext({
+            accountId,
+            projectName: projectConfig.name,
+          })
+        );
+      }
+      process.exit(EXIT_CODES.ERROR);
     }
-    process.exit(EXIT_CODES.ERROR);
   }
 
   spinnies.remove('devModeSetup');
@@ -288,7 +288,7 @@ exports.handler = async options => {
   await LocalDev.start();
 
   // Let the user know when the initial build or deploy fails
-  if (!initialUploadResult.succeeded) {
+  if (initialUploadResult && !initialUploadResult.succeeded) {
     if (initialUploadResult.buildResult.status === 'FAILURE') {
       LocalDev.logBuildError(initialUploadResult.buildResult);
     } else if (initialUploadResult.deployResult.status === 'FAILURE') {

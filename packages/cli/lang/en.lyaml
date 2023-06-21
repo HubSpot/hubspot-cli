@@ -449,7 +449,6 @@ en:
             describe: "Start local dev for the current project"
             logs:
               betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
-              learnMoreLink: "Learn more about the projects local dev server"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
               placeholderAccountSelection: "Using default account as target account (for now)"
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
@@ -857,7 +856,6 @@ en:
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
         header:
           betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
-          learnMoreLink: "Learn more about the projects local dev server"
           running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
