@@ -876,6 +876,8 @@ en:
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
+          extensionNotAllowed: "Extension not allowed for {{ filePath }}"
+          fileIgnored: "File ignored: {{ filePath }}"
           uploadingAddChange: "[INFO] Uploading {{ filePath }}"
           uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
           uploadingRemoveChange: "[INFO] Removing {{ filePath }}"

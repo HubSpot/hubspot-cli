@@ -364,18 +364,10 @@ class LocalDevManager {
       return;
     }
 
-    if (this.uploadQueue.isPaused) {
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-    } else {
+    this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+
+    if (!this.uploadQueue.isPaused) {
       await this.flushStandbyChanges();
-
-      if (!this.uploadQueue.isPaused) {
-        this.debounceQueueBuild(changeInfo);
-      }
-
-      return this.uploadQueue.add(async () => {
-        await this.sendChanges(changeInfo);
-      });
     }
   }
 
@@ -427,12 +419,22 @@ class LocalDevManager {
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
       if (!isAllowedExtension(filePath)) {
-        logger.debug(`Extension not allowed: ${filePath}`);
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.upload.extensionNotAllowed`, {
+            filePath,
+          }),
+          status: 'non-spinnable',
+        });
         return;
       }
     }
     if (shouldIgnoreFile(filePath, true)) {
-      logger.debug(`File ignored: ${filePath}`);
+      this.spinnies.add(null, {
+        text: i18n(`${i18nKey}.upload.fileIgnored`, {
+          filePath,
+        }),
+        status: 'non-spinnable',
+      });
       return;
     }
 
