@@ -50,7 +50,7 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
-    this.port = options.port;
+    this.extension = options.extension;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -98,7 +98,7 @@ class LocalDevManager {
 
     this.uploadQueue.start();
 
-    await this.startServers();
+    await this.devServerStart();
 
     await this.startWatching();
     this.updateKeypressListeners();
@@ -114,7 +114,7 @@ class LocalDevManager {
     });
 
     await this.stopWatching();
-    await this.cleanupServers();
+    await this.devServerCleanup();
 
     let exitCode = EXIT_CODES.SUCCESS;
 
@@ -155,15 +155,6 @@ class LocalDevManager {
   }
 
   updateConsoleHeader() {
-    // this.spinnies.addOrUpdate('learnMoreLink', {
-    //   text: uiLink(
-    //     i18n(`${i18nKey}.header.learnMoreLink`),
-    //     this.generateLocalURL(`/hs/learnMore`),
-    //     { inSpinnies: true }
-    //   ),
-    //   category: 'header',
-    //   status: 'non-spinnable',
-    // });
     this.spinnies.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -319,7 +310,7 @@ class LocalDevManager {
       return;
     }
 
-    const notifyResponse = await this.notifyServers(changeInfo);
+    const notifyResponse = await this.devServerNotify(changeInfo);
 
     if (!notifyResponse.uploadRequired) {
       this.updateDevModeStatus('supportedChange');
@@ -563,6 +554,8 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('clean');
     }
+
+    this.devServerAfterUpload();
   }
 
   async flushStandbyChanges() {
@@ -595,13 +588,13 @@ class LocalDevManager {
     });
   }
 
-  async startServers() {
+  async devServerStart() {
     try {
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
+        extension: this.extension,
         spinniesLogger: this.handleServerLog.bind(this),
-        port: this.port,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,
       });
@@ -616,7 +609,7 @@ class LocalDevManager {
     }
   }
 
-  async notifyServers(changeInfo) {
+  async devServerNotify(changeInfo) {
     let notifyResponse = { uploadRequired: true };
 
     try {
@@ -634,7 +627,21 @@ class LocalDevManager {
     return notifyResponse;
   }
 
-  async cleanupServers() {
+  devServerAfterUpload() {
+    try {
+      DevServerManager.afterUpload();
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      this.spinnies.add(null, {
+        text: i18n(`${i18nKey}.content.devServerAfterUploadError`),
+        status: 'non-spinnable',
+      });
+    }
+  }
+
+  async devServerCleanup() {
     try {
       await DevServerManager.cleanup();
     } catch (e) {

@@ -48,11 +48,11 @@ class DevServerManager {
 
   async start({
     accountId,
-    spinniesLogger,
     debug,
+    extension,
     projectConfig,
     projectSourceDir,
-    port,
+    spinniesLogger,
   }) {
     const app = express();
 
@@ -73,17 +73,11 @@ class DevServerManager {
     app.get('/hs/project', (req, res) => {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
-    app.get('/hs/learnMore', (req, res) => {
-      //TODO link to docs
-      res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
-    });
 
     // Start server
-    this.server = await app.listen(port || DEFAULT_PORT).on('error', err => {
+    this.server = await app.listen(DEFAULT_PORT).on('error', err => {
       if (err.code === 'EADDRINUSE') {
-        logger.error(
-          i18n(`${i18nKey}.portConflict`, { port: port || DEFAULT_PORT })
-        );
+        logger.error(i18n(`${i18nKey}.portConflict`, { port: DEFAULT_PORT }));
         logger.log();
         process.exit(EXIT_CODES.ERROR);
       }
@@ -96,6 +90,7 @@ class DevServerManager {
       if (serverInterface.start) {
         await serverInterface.start({
           debug,
+          extension,
           logger: this.makeLogger(spinniesLogger, serverKey),
           projectConfig,
           projectFiles,
@@ -132,6 +127,16 @@ class DevServerManager {
     }
 
     return notifyResponse;
+  }
+
+  afterUpload() {
+    if (this.initialized) {
+      this.iterateDevServers(serverInterface => {
+        if (serverInterface.afterUpload) {
+          serverInterface.afterUpload();
+        }
+      });
+    }
   }
 
   async cleanup() {
