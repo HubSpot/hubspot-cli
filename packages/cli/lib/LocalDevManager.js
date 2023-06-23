@@ -396,7 +396,7 @@ class LocalDevManager {
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
       if (!isAllowedExtension(filePath, ['jsx'])) {
         logger.debug(`Extension not allowed: ${filePath}`);
-        return;
+        //return;
       }
     }
     if (shouldIgnoreFile(filePath, true)) {

@@ -38,11 +38,11 @@ class DevServerManager {
 
   makeLogger(spinniesLogger, serverKey) {
     return {
-      debug: (...args) => spinniesLogger(serverKey, ...args),
+      debug: (...args) => spinniesLogger(serverKey, '[DEBUG] ', ...args),
       error: (...args) => spinniesLogger(serverKey, '[ERROR] ', ...args),
       info: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
       log: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
-      warn: (...args) => spinniesLogger(serverKey, ...args),
+      warn: (...args) => spinniesLogger(serverKey, '[WARN] ', ...args),
     };
   }
 
