@@ -11,7 +11,11 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+  ERROR_TYPES,
+} = require('@hubspot/cli-lib/lib/constants');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
@@ -185,7 +189,7 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    this.spinnies.addOrUpdate('spacer-1', {
+    this.spinnies.addOrUpdate(null, {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
@@ -245,6 +249,42 @@ class LocalDevManager {
     });
   }
 
+  logBuildError(buildStatus = {}) {
+    const subTasks = buildStatus[PROJECT_BUILD_TEXT.SUBTASK_KEY] || [];
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    if (failedSubTasks.length) {
+      this.updateDevModeStatus('buildError');
+
+      failedSubTasks.forEach(failedSubTask => {
+        this.spinnies.add(null, {
+          text: failedSubTask.errorMessage,
+          status: 'fail',
+          failColor: 'white',
+          indent: 1,
+        });
+      });
+    }
+  }
+
+  logDeployError(deployStatus = {}) {
+    const subTasks = deployStatus[PROJECT_DEPLOY_TEXT.SUBTASK_KEY] || [];
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    if (failedSubTasks.length) {
+      this.updateDevModeStatus('deployError');
+
+      failedSubTasks.forEach(failedSubTask => {
+        this.spinnies.add(null, {
+          text: failedSubTask.errorMessage,
+          status: 'fail',
+          failColor: 'white',
+          indent: 1,
+        });
+      });
+    }
+  }
+
   updateDevModeStatus(langKey) {
     this.spinnies.update('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.${langKey}`),
@@ -273,9 +313,12 @@ class LocalDevManager {
       logger.debug(err);
       if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
         await cancelStagedBuild(this.targetAccountId, this.projectConfig.name);
-        logger.log(i18n(`${i18nKey}.previousStagingBuildCancelled`));
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.previousStagingBuildCancelled`),
+          status: 'non-spinnable',
+        });
       }
-      process.exit(EXIT_CODES.ERROR);
+      this.stop();
     }
   }
 
@@ -322,18 +365,10 @@ class LocalDevManager {
       return;
     }
 
-    if (this.uploadQueue.isPaused) {
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
-    } else {
+    this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+
+    if (!this.uploadQueue.isPaused) {
       await this.flushStandbyChanges();
-
-      if (!this.uploadQueue.isPaused) {
-        this.debounceQueueBuild(changeInfo);
-      }
-
-      return this.uploadQueue.add(async () => {
-        await this.sendChanges(changeInfo);
-      });
     }
   }
 
@@ -385,12 +420,22 @@ class LocalDevManager {
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
       if (!isAllowedExtension(filePath, ['jsx'])) {
-        logger.debug(`Extension not allowed: ${filePath}`);
-        //return;
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.upload.extensionNotAllowed`, {
+            filePath,
+          }),
+          status: 'non-spinnable',
+        });
+        return;
       }
     }
     if (shouldIgnoreFile(filePath, true)) {
-      logger.debug(`File ignored: ${filePath}`);
+      this.spinnies.add(null, {
+        text: i18n(`${i18nKey}.upload.fileIgnored`, {
+          filePath,
+        }),
+        status: 'non-spinnable',
+      });
       return;
     }
 
@@ -479,6 +524,8 @@ class LocalDevManager {
   }
 
   async queueBuild() {
+    this.spinnies.add(null, { text: ' ', status: 'non-spinnable' });
+
     const spinniesKey = this.spinnies.add(null, {
       text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
@@ -489,60 +536,94 @@ class LocalDevManager {
 
     await this.pauseUploadQueue();
 
+    let queueBuildError;
+
     try {
       await queueBuild(this.targetAccountId, this.projectConfig.name);
     } catch (err) {
-      logger.debug(err);
-      if (
-        isSpecifiedError(err, {
-          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
-        })
-      ) {
-        logger.log(i18n(`${i18nKey}.cancelledFromUI`));
-        this.stop();
-      } else {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({
-            accountId: this.targetAccountId,
-            projectName: this.projectConfig.name,
-          })
-        );
-      }
-      return;
+      queueBuildError = err;
     }
 
-    const result = await pollProjectBuildAndDeploy(
-      this.targetAccountId,
-      this.projectConfig,
-      null,
-      this.currentStagedBuildId,
-      true
-    );
+    if (queueBuildError) {
+      this.updateDevModeStatus('buildError');
 
-    if (result && result.succeeded) {
-      this.spinnies.succeed(spinniesKey, {
-        text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
-          buildId: result.buildId,
-        }),
-        succeedColor: 'white',
-        noIndent: true,
-      });
-    } else {
+      logger.debug(queueBuildError);
+
       this.spinnies.fail(spinniesKey, {
         text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
-          buildId: result.buildId,
+          buildId: this.currentStagedBuildId,
         }),
         failColor: 'white',
         noIndent: true,
       });
+
+      if (
+        isSpecifiedError(queueBuildError, {
+          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+        })
+      ) {
+        this.spinnies.add(null, {
+          text: i18n(`${i18nKey}.cancelledFromUI`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        this.stop();
+      } else if (
+        queueBuildError &&
+        queueBuildError.error &&
+        queueBuildError.error.message
+      ) {
+        this.spinnies.add(null, {
+          text: queueBuildError.error.message,
+          status: 'non-spinnable',
+          indent: 1,
+        });
+      }
+    } else {
+      const result = await pollProjectBuildAndDeploy(
+        this.targetAccountId,
+        this.projectConfig,
+        null,
+        this.currentStagedBuildId,
+        true
+      );
+
+      if (result.succeeded) {
+        this.updateDevModeStatus('clean');
+
+        this.spinnies.succeed(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
+            accountIdentifier: uiAccountDescription(this.targetAccountId),
+            buildId: result.buildId,
+          }),
+          succeedColor: 'white',
+          noIndent: true,
+        });
+      } else {
+        this.spinnies.fail(spinniesKey, {
+          text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
+            accountIdentifier: uiAccountDescription(this.targetAccountId),
+            buildId: result.buildId,
+          }),
+          failColor: 'white',
+          noIndent: true,
+        });
+
+        if (result.buildResult.status === 'FAILURE') {
+          this.logBuildError(result.buildResult);
+        } else if (result.deployResult.status === 'FAILURE') {
+          this.logDeployError(result.deployResult);
+        }
+      }
     }
 
     this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
 
-    if (this.uploadPermission === UPLOAD_PERMISSIONS.always) {
+    if (
+      !queueBuildError &&
+      this.uploadPermission === UPLOAD_PERMISSIONS.always
+    ) {
       await this.createNewStagingBuild();
     }
 
@@ -550,8 +631,6 @@ class LocalDevManager {
 
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();
-    } else {
-      this.updateDevModeStatus('clean');
     }
 
     this.devServerAfterUpload();

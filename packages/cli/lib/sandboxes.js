@@ -256,19 +256,20 @@ const saveSandboxToConfig = async (env, result, force = false) => {
     const invalidAccountName = accountNameExistsInConfig(nameForConfig);
     if (invalidAccountName) {
       if (!force) {
-        logger.log(
+        logger.log('');
+        logger.warn(
           i18n(
             `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
             { name: nameForConfig }
           )
         );
         const { name: promptName } = await enterAccountNamePrompt(
-          nameForConfig
+          nameForConfig + `_${result.sandbox.sandboxHubId}`
         );
         validName = promptName;
       } else {
         // Basic invalid name handling when force flag is passed
-        validName = nameForConfig + `_${Date.now()}`;
+        validName = nameForConfig + `_${result.sandbox.sandboxHubId}`;
       }
     }
   }

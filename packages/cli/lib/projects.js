@@ -372,18 +372,20 @@ const pollProjectBuildAndDeploy = async (
   buildId,
   silenceLogs = false
 ) => {
-  const {
-    autoDeployId,
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-    status,
-  } = await pollBuildStatus(
+  const buildStatus = await pollBuildStatus(
     accountId,
     projectConfig.name,
     buildId,
     null,
     silenceLogs
   );
+
+  const {
+    autoDeployId,
+    isAutoDeployEnabled,
+    deployStatusTaskLocator,
+  } = buildStatus;
+
   // autoDeployId of 0 indicates a skipped deploy
   const isDeploying =
     isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
@@ -395,12 +397,11 @@ const pollProjectBuildAndDeploy = async (
   const result = {
     succeeded: true,
     buildId,
-    buildSucceeded: true,
-    autodeployEnabled: isAutoDeployEnabled,
+    buildResult: buildStatus,
+    deployResult: null,
   };
 
-  if (status === 'FAILURE') {
-    result.buildSucceeded = false;
+  if (buildStatus.status === 'FAILURE') {
     result.succeeded = false;
     return result;
   } else if (isDeploying) {
@@ -415,14 +416,16 @@ const pollProjectBuildAndDeploy = async (
         )
       );
     }
-    const { status } = await pollDeployStatus(
+    const deployStatus = await pollDeployStatus(
       accountId,
       projectConfig.name,
       deployStatusTaskLocator.id,
       buildId,
       silenceLogs
     );
-    if (status === 'FAILURE') {
+    result.deployResult = deployStatus;
+
+    if (deployStatus.status === 'FAILURE') {
       result.succeeded = false;
     }
   }
@@ -491,7 +494,7 @@ const handleProjectUpload = async (
       );
 
       if (error) {
-        uploadResult.error = error;
+        uploadResult.uploadError = error;
       } else if (callbackFunc) {
         uploadResult = await callbackFunc(
           accountId,
