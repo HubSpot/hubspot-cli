@@ -52,7 +52,7 @@ class SpinniesManager {
     const originalIndent = rest.indent || 0;
 
     // Support adding generic spinnies lines without specifying a key
-    const uniqueKey = key || `${Date.now()}`;
+    const uniqueKey = key || `${Date.now()}-${Math.random()}`;
 
     if (category) {
       this.addKeyToCategory(uniqueKey, category);

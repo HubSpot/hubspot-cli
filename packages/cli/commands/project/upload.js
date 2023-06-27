@@ -59,9 +59,9 @@ exports.handler = async options => {
       message
     );
 
-    if (result.error) {
+    if (result.uploadError) {
       if (
-        isSpecifiedError(result.error, {
+        isSpecifiedError(result.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
         })
       ) {
@@ -70,7 +70,7 @@ exports.handler = async options => {
         logger.log();
       } else {
         logApiErrorInstance(
-          result.error,
+          result.uploadError,
           new ApiErrorContext({
             accountId,
             projectName: projectConfig.name,
@@ -79,7 +79,7 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
-    if (result.buildSucceeded && !result.autodeployEnabled) {
+    if (result.succeeded && !result.buildResult.isAutoDeployEnabled) {
       uiLine();
       logger.log(
         chalk.bold(
