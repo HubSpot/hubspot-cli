@@ -6,7 +6,6 @@ const { getProjectDetailUrl } = require('./projects');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
-const UIEDevServerInterface = require('../../../../ui-extensibility/public-packages/ui-extensions-dev-server/DevModeInterface');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -17,9 +16,17 @@ class DevServerManager {
     this.initialized = false;
     this.server = null;
     this.path = null;
-    this.devServers = {
-      uie: UIEDevServerInterface,
-    };
+    this.devServers = {};
+  }
+
+  setServer(key, serverInterfacePath) {
+    try {
+      this.devServers[key] = require(serverInterfacePath);
+    } catch (e) {
+      logger.debug(
+        `Failed to load dev server interface at ${serverInterfacePath}`
+      );
+    }
   }
 
   async iterateDevServers(callback) {

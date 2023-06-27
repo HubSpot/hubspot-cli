@@ -54,7 +54,7 @@ const {
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account] [--extension]';
+exports.command = 'dev [--account]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -283,6 +283,7 @@ exports.handler = async options => {
     projectDir,
     targetAccountId,
     uploadPermission,
+    devServerPath: options.devServerPath,
   });
 
   await LocalDev.start();
@@ -299,6 +300,13 @@ exports.builder = yargs => {
   yargs.option('extension', {
     describe: i18n(`${i18nKey}.options.extension.describe`),
     type: 'string',
+    hidden: true,
+  });
+
+  yargs.option('devServerPath', {
+    describe: i18n(`${i18nKey}.options.devServerPath.describe`),
+    type: 'string',
+    hidden: true,
   });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);

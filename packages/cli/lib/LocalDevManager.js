@@ -51,6 +51,7 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.extension = options.extension;
+    this.devServerPath = options.devServerPath;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -590,6 +591,9 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
+      if (this.devServerPath) {
+        DevServerManager.setServer('uie', this.devServerPath);
+      }
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
