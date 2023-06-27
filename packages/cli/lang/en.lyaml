@@ -871,7 +871,7 @@ en:
             manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
             supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
-        content:
+        upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
           manualUploadSkipped: "Manually upload and deploy project to production account: {{#green}}(n){{/green}}"
           manualUploadConfirmed: "Manually upload and deploy project to production account: {{#green}}(Y){{/green}}"
@@ -879,11 +879,6 @@ en:
           manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
           manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
           manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
-          devServerStartError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
-          devServerNotifyError: "{{#red}}[ERROR]{{/red}} Failed to process change locally"
-          devServerExecuteError: "{{#red}}[ERROR]{{/red}} Failed to handle change with local dev server"
-          devServerCleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
-          devServerAfterUploadError: "{{#red}}[ERROR]{{/red}} Failed to update local dev server after upload"
           uploadingAddChange: "[INFO] Uploading {{ filePath }}"
           uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
           uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
@@ -891,6 +886,12 @@ en:
           uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
           uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
           uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
+        devServer:
+          startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
+          notifyError: "{{#red}}[ERROR]{{/red}} Failed to process change locally"
+          executeError: "{{#red}}[ERROR]{{/red}} Failed to handle change with local dev server"
+          cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
+          afterUploadError: "{{#red}}[ERROR]{{/red}} Failed to update local dev server after upload"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

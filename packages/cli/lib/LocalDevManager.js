@@ -140,8 +140,6 @@ class LocalDevManager {
       }
     }
 
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
     if (exitCode === EXIT_CODES.SUCCESS) {
       this.spinnies.succeed('cleanupMessage', {
         text: i18n(`${i18nKey}.exitingSucceed`),
@@ -226,7 +224,7 @@ class LocalDevManager {
 
         if (key.name === 'y') {
           this.spinnies.add(null, {
-            text: i18n(`${i18nKey}.content.manualUploadConfirmed`),
+            text: i18n(`${i18nKey}.upload.manualUploadConfirmed`),
             status: 'succeed',
             succeedColor: 'white',
             noIndent: true,
@@ -237,7 +235,7 @@ class LocalDevManager {
           await this.queueBuild();
         } else if (key.name === 'n') {
           this.spinnies.add(null, {
-            text: i18n(`${i18nKey}.content.manualUploadSkipped`),
+            text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
             status: 'fail',
             failColor: 'white',
             noIndent: true,
@@ -346,7 +344,7 @@ class LocalDevManager {
       this.updateDevModeStatus('noUploadsAllowed');
 
       this.spinnies.add('noUploadsAllowed', {
-        text: i18n(`${i18nKey}.content.noUploadsAllowed`, {
+        text: i18n(`${i18nKey}.upload.noUploadsAllowed`, {
           filePath: remotePath,
         }),
         status: 'fail',
@@ -359,23 +357,23 @@ class LocalDevManager {
       this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
       this.spinnies.add('manualUploadRequired', {
-        text: i18n(`${i18nKey}.content.manualUploadRequired`),
+        text: i18n(`${i18nKey}.upload.manualUploadRequired`),
         status: 'fail',
         failColor: 'white',
         noIndent: true,
       });
       this.spinnies.add('manualUploadExplanation1', {
-        text: i18n(`${i18nKey}.content.manualUploadExplanation1`),
+        text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
         status: 'non-spinnable',
         indent: 1,
       });
       this.spinnies.add('manualUploadExplanation2', {
-        text: i18n(`${i18nKey}.content.manualUploadExplanation2`),
+        text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
         status: 'non-spinnable',
         indent: 1,
       });
       this.spinnies.add('manualUploadPrompt', {
-        text: i18n(`${i18nKey}.content.manualUploadPrompt`),
+        text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
         status: 'non-spinnable',
         indent: 1,
       });
@@ -414,7 +412,7 @@ class LocalDevManager {
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
         const spinniesKey = this.spinnies.add(null, {
-          text: i18n(`${i18nKey}.content.uploadingAddChange`, {
+          text: i18n(`${i18nKey}.upload.uploadingAddChange`, {
             filePath: remotePath,
           }),
           status: 'non-spinnable',
@@ -426,7 +424,7 @@ class LocalDevManager {
           remotePath
         );
         this.spinnies.update(spinniesKey, {
-          text: i18n(`${i18nKey}.content.uploadedAddChange`, {
+          text: i18n(`${i18nKey}.upload.uploadedAddChange`, {
             filePath: remotePath,
           }),
           status: 'non-spinnable',
@@ -436,7 +434,7 @@ class LocalDevManager {
         event === WATCH_EVENTS.unlinkDir
       ) {
         const spinniesKey = this.spinnies.add(null, {
-          text: i18n(`${i18nKey}.content.uploadingRemoveChange`, {
+          text: i18n(`${i18nKey}.upload.uploadingRemoveChange`, {
             filePath: remotePath,
           }),
           status: 'non-spinnable',
@@ -447,7 +445,7 @@ class LocalDevManager {
           remotePath
         );
         this.spinnies.update(spinniesKey, {
-          text: i18n(`${i18nKey}.content.uploadedRemoveChange`, {
+          text: i18n(`${i18nKey}.upload.uploadedRemoveChange`, {
             filePath: remotePath,
           }),
           status: 'non-spinnable',
@@ -482,7 +480,7 @@ class LocalDevManager {
 
   async queueBuild() {
     const spinniesKey = this.spinnies.add(null, {
-      text: i18n(`${i18nKey}.content.uploadingChanges`, {
+      text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
         buildId: this.currentStagedBuildId,
       }),
@@ -524,7 +522,7 @@ class LocalDevManager {
 
     if (result && result.succeeded) {
       this.spinnies.succeed(spinniesKey, {
-        text: i18n(`${i18nKey}.content.uploadedChangesSucceeded`, {
+        text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           buildId: result.buildId,
         }),
@@ -533,7 +531,7 @@ class LocalDevManager {
       });
     } else {
       this.spinnies.fail(spinniesKey, {
-        text: i18n(`${i18nKey}.content.uploadedChangesFailed`, {
+        text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           buildId: result.buildId,
         }),
@@ -607,7 +605,7 @@ class LocalDevManager {
         logger.error(e);
       }
       this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.content.devServerStartError`),
+        text: i18n(`${i18nKey}.devServer.startError`),
         status: 'non-spinnable',
       });
     }
@@ -623,7 +621,7 @@ class LocalDevManager {
         logger.error(e);
       }
       this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.content.devServerNotifyError`),
+        text: i18n(`${i18nKey}.devServer.notifyError`),
         status: 'non-spinnable',
       });
     }
@@ -639,7 +637,7 @@ class LocalDevManager {
         logger.error(e);
       }
       this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.content.devServerAfterUploadError`),
+        text: i18n(`${i18nKey}.devServer.afterUploadError`),
         status: 'non-spinnable',
       });
     }
@@ -653,7 +651,7 @@ class LocalDevManager {
         logger.error(e);
       }
       this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.content.devServerCleanupError`),
+        text: i18n(`${i18nKey}.devServer.cleanupError`),
         status: 'non-spinnable',
       });
     }
