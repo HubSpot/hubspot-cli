@@ -54,13 +54,11 @@ exports.handler = async options => {
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noAccount`));
-      trackCommandUsage('sandbox-delete', { successful: false });
       process.exit(EXIT_CODES.ERROR);
     }
     if (!accountPrompt) {
       logger.log('');
       logger.error(i18n(`${i18nKey}.failure.noSandboxAccounts`));
-      trackCommandUsage('sandbox-delete', { successful: false });
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -71,12 +69,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(sandboxAccountId);
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
-
-  trackCommandUsage(
-    'sandbox-delete',
-    { type: accountConfig.sandboxAccountType },
-    sandboxAccountId
-  );
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
@@ -175,12 +167,6 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugErrorAndContext(err);
-
-    trackCommandUsage(
-      'sandbox-delete',
-      { type: accountConfig.sandboxAccountType, successful: false },
-      sandboxAccountId
-    );
 
     if (err instanceof HubSpotAuthError) {
       // Intercept invalid key error

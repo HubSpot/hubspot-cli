@@ -55,7 +55,6 @@ exports.handler = async options => {
     accountConfig.sandboxAccountType &&
     accountConfig.sandboxAccountType !== null
   ) {
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
     logger.error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
@@ -73,15 +72,10 @@ exports.handler = async options => {
       typePrompt = await sandboxTypePrompt();
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
-      trackCommandUsage('sandbox-create', { successful: false }, accountId);
       process.exit(EXIT_CODES.ERROR);
     }
   }
   const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
-
-  const trackingSandboxType =
-    sandboxType === DEVELOPER_SANDBOX ? 'DEVELOPER' : 'STANDARD';
-  trackCommandUsage('sandbox-create', { type: trackingSandboxType }, accountId);
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
@@ -104,11 +98,6 @@ exports.handler = async options => {
     } else {
       logErrorInstance(err);
     }
-    trackCommandUsage(
-      'sandbox-create',
-      { type: trackingSandboxType, successful: false },
-      accountId
-    );
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -117,11 +106,6 @@ exports.handler = async options => {
       namePrompt = await sandboxNamePrompt(sandboxType);
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
-      trackCommandUsage(
-        'sandbox-create',
-        { type: trackingSandboxType, successful: false },
-        accountId
-      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -208,11 +192,6 @@ exports.handler = async options => {
     uiFeatureHighlight(highlightItems);
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
-    trackCommandUsage(
-      'sandbox-create',
-      { type: trackingSandboxType, successful: false },
-      accountId
-    );
     // Errors are logged in util functions
     process.exit(EXIT_CODES.ERROR);
   }
