@@ -1,4 +1,4 @@
-const Spinnies = require('spinnies');
+const SpinniesManager = require('./SpinniesManager');
 const {
   getSandboxLimit,
   getHasSandboxesByType,
@@ -38,7 +38,7 @@ const buildSandbox = async ({
   env,
   force = false,
 }) => {
-  const spinnies = new Spinnies({
+  SpinniesManager.init({
     succeedColor: 'white',
   });
   const accountId = getAccountId(accountConfig.portalId);
@@ -48,7 +48,7 @@ const buildSandbox = async ({
 
   try {
     logger.log('');
-    spinnies.add('sandboxCreate', {
+    SpinniesManager.add('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.add`, {
         sandboxName: name,
       }),
@@ -57,7 +57,7 @@ const buildSandbox = async ({
     const sandboxApiType = sandboxApiTypeMap[type]; // API expects sandbox type as 1 or 2
     result = await createSandbox(accountId, name, sandboxApiType);
 
-    spinnies.succeed('sandboxCreate', {
+    SpinniesManager.succeed('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.succeed`, {
         name: result.sandbox.name,
         sandboxHubId: result.sandbox.sandboxHubId,
@@ -66,7 +66,7 @@ const buildSandbox = async ({
   } catch (err) {
     debugErrorAndContext(err);
 
-    spinnies.fail('sandboxCreate', {
+    SpinniesManager.fail('sandboxCreate', {
       text: i18n(`${spinniesI18nKey}.fail`, {
         sandboxName: name,
       }),

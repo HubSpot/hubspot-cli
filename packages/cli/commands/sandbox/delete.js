@@ -44,6 +44,8 @@ exports.handler = async options => {
   const { account, force } = options;
   const config = getConfig();
 
+  trackCommandUsage('sandbox-delete', null);
+
   let accountPrompt;
   if (!account) {
     if (!force) {
@@ -67,8 +69,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(sandboxAccountId);
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
-
-  trackCommandUsage('sandbox-delete', null, sandboxAccountId);
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
@@ -167,12 +167,6 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     debugErrorAndContext(err);
-
-    trackCommandUsage(
-      'sandbox-delete',
-      { successful: false },
-      sandboxAccountId
-    );
 
     if (err instanceof HubSpotAuthError) {
       // Intercept invalid key error

@@ -1,5 +1,4 @@
-const Spinnies = require('spinnies');
-
+const SpinniesManager = require('../../lib/SpinniesManager');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -31,8 +30,9 @@ exports.handler = async options => {
 
   trackCommandUsage('validate', null, accountId);
 
-  const spinnies = new Spinnies();
-  spinnies.add('marketplaceValidation', {
+  SpinniesManager.init();
+
+  SpinniesManager.add('marketplaceValidation', {
     text: i18n(`${i18nKey}.logs.validatingModule`, {
       path: src,
     }),
@@ -42,7 +42,7 @@ exports.handler = async options => {
   const validationId = await kickOffValidation(accountId, assetType, src);
   await pollForValidationFinish(accountId, validationId);
 
-  spinnies.remove('marketplaceValidation');
+  SpinniesManager.remove('marketplaceValidation');
 
   const validationResults = await fetchValidationResults(
     accountId,

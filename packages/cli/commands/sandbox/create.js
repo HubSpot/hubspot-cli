@@ -55,7 +55,6 @@ exports.handler = async options => {
     accountConfig.sandboxAccountType &&
     accountConfig.sandboxAccountType !== null
   ) {
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
     logger.error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
         sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
@@ -73,7 +72,6 @@ exports.handler = async options => {
       typePrompt = await sandboxTypePrompt();
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
-      trackCommandUsage('sandbox-create', { successful: false }, accountId);
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -100,7 +98,6 @@ exports.handler = async options => {
     } else {
       logErrorInstance(err);
     }
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -109,7 +106,6 @@ exports.handler = async options => {
       namePrompt = await sandboxNamePrompt(sandboxType);
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
-      trackCommandUsage('sandbox-create', { successful: false }, accountId);
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -196,7 +192,6 @@ exports.handler = async options => {
     uiFeatureHighlight(highlightItems);
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
     // Errors are logged in util functions
     process.exit(EXIT_CODES.ERROR);
   }

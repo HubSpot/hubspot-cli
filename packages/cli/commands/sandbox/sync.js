@@ -44,7 +44,11 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const env = getValidEnv(getEnv(accountId));
 
-  trackCommandUsage('sandbox-sync', null, accountId);
+  trackCommandUsage(
+    'sandbox-sync',
+    { type: accountConfig.sandboxAccountType },
+    accountId
+  );
 
   if (
     // Check if default account is a sandbox, otherwise exit
@@ -53,7 +57,6 @@ exports.handler = async options => {
     accountConfig.sandboxAccountType === null
   ) {
     logger.error(i18n(`${i18nKey}.failure.notSandbox`));
-    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -66,7 +69,6 @@ exports.handler = async options => {
         sandboxName: getAccountName(accountConfig),
       })
     );
-    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -98,7 +100,6 @@ exports.handler = async options => {
     } else {
       logErrorInstance(error);
     }
-    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -128,7 +129,6 @@ exports.handler = async options => {
         },
       ]);
       if (!confirmed) {
-        trackCommandUsage('sandbox-sync', { successful: false }, accountId);
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
@@ -166,13 +166,11 @@ exports.handler = async options => {
         },
       ]);
       if (!confirmed) {
-        trackCommandUsage('sandbox-sync', { successful: false }, accountId);
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
   } else {
     logger.error('Sync must be run in a sandbox account.');
-    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -193,7 +191,6 @@ exports.handler = async options => {
 
     process.exit(EXIT_CODES.SUCCESS);
   } catch (error) {
-    trackCommandUsage('sandbox-sync', { successful: false }, accountId);
     process.exit(EXIT_CODES.ERROR);
   }
 };

@@ -64,7 +64,6 @@ class LocalDevManager {
       this.projectDir,
       this.projectConfig.srcDir
     );
-    this.spinnies = null;
     this.watcher = null;
     this.uploadQueue = null;
     this.standbyChanges = [];
@@ -78,7 +77,7 @@ class LocalDevManager {
   }
 
   async start() {
-    this.spinnies = SpinniesManager.init();
+    SpinniesManager.init();
 
     this.watcher = chokidar.watch(this.projectSourceDir, {
       ignoreInitial: true,
@@ -114,7 +113,7 @@ class LocalDevManager {
   async stop() {
     this.clearConsoleContent();
 
-    this.spinnies.add('cleanupMessage', {
+    SpinniesManager.add('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingStart`),
     });
 
@@ -145,11 +144,11 @@ class LocalDevManager {
     }
 
     if (exitCode === EXIT_CODES.SUCCESS) {
-      this.spinnies.succeed('cleanupMessage', {
+      SpinniesManager.succeed('cleanupMessage', {
         text: i18n(`${i18nKey}.exitingSucceed`),
       });
     } else {
-      this.spinnies.fail('cleanupMessage', {
+      SpinniesManager.fail('cleanupMessage', {
         text: i18n(`${i18nKey}.exitingFail`),
       });
     }
@@ -158,7 +157,7 @@ class LocalDevManager {
   }
 
   updateConsoleHeader() {
-    this.spinnies.addOrUpdate('devModeRunning', {
+    SpinniesManager.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
         projectName: this.projectConfig.name,
@@ -166,7 +165,7 @@ class LocalDevManager {
       isParent: true,
       category: 'header',
     });
-    this.spinnies.addOrUpdate('devModeStatus', {
+    SpinniesManager.addOrUpdate('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.clean`),
       status: 'non-spinnable',
       indent: 1,
@@ -183,24 +182,24 @@ class LocalDevManager {
         )
       : ' ';
 
-    this.spinnies.addOrUpdate('viewInHubSpotLink', {
+    SpinniesManager.addOrUpdate('viewInHubSpotLink', {
       text: viewText,
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.addOrUpdate(null, {
+    SpinniesManager.addOrUpdate(null, {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
     });
-    this.spinnies.addOrUpdate('quitHelper', {
+    SpinniesManager.addOrUpdate('quitHelper', {
       text: i18n(`${i18nKey}.header.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    this.spinnies.addOrUpdate('lineSeparator', {
+    SpinniesManager.addOrUpdate('lineSeparator', {
       text: '-'.repeat(50),
       status: 'non-spinnable',
       noIndent: true,
@@ -209,7 +208,7 @@ class LocalDevManager {
   }
 
   clearConsoleContent() {
-    this.spinnies.removeAll({ preserveCategory: 'header' });
+    SpinniesManager.removeAll({ preserveCategory: 'header' });
   }
 
   updateKeypressListeners() {
@@ -221,13 +220,13 @@ class LocalDevManager {
         this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
         this.hasAnyUnsupportedStandbyChanges()
       ) {
-        this.spinnies.remove('manualUploadRequired');
-        this.spinnies.remove('manualUploadExplanation1');
-        this.spinnies.remove('manualUploadExplanation2');
-        this.spinnies.remove('manualUploadPrompt');
+        SpinniesManager.remove('manualUploadRequired');
+        SpinniesManager.remove('manualUploadExplanation1');
+        SpinniesManager.remove('manualUploadExplanation2');
+        SpinniesManager.remove('manualUploadPrompt');
 
         if (key.name === 'y') {
-          this.spinnies.add(null, {
+          SpinniesManager.add(null, {
             text: i18n(`${i18nKey}.upload.manualUploadConfirmed`),
             status: 'succeed',
             succeedColor: 'white',
@@ -238,7 +237,7 @@ class LocalDevManager {
           await this.flushStandbyChanges();
           await this.queueBuild();
         } else if (key.name === 'n') {
-          this.spinnies.add(null, {
+          SpinniesManager.add(null, {
             text: i18n(`${i18nKey}.upload.manualUploadSkipped`),
             status: 'fail',
             failColor: 'white',
@@ -257,7 +256,7 @@ class LocalDevManager {
       this.updateDevModeStatus('buildError');
 
       failedSubTasks.forEach(failedSubTask => {
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: failedSubTask.errorMessage,
           status: 'fail',
           failColor: 'white',
@@ -275,7 +274,7 @@ class LocalDevManager {
       this.updateDevModeStatus('deployError');
 
       failedSubTasks.forEach(failedSubTask => {
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: failedSubTask.errorMessage,
           status: 'fail',
           failColor: 'white',
@@ -286,7 +285,7 @@ class LocalDevManager {
   }
 
   updateDevModeStatus(langKey) {
-    this.spinnies.update('devModeStatus', {
+    SpinniesManager.update('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.${langKey}`),
       status: 'non-spinnable',
       noIndent: true,
@@ -313,7 +312,7 @@ class LocalDevManager {
       logger.debug(err);
       if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
         await cancelStagedBuild(this.targetAccountId, this.projectConfig.name);
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.previousStagingBuildCancelled`),
           status: 'non-spinnable',
         });
@@ -378,7 +377,7 @@ class LocalDevManager {
     if (this.uploadPermission === UPLOAD_PERMISSIONS.never) {
       this.updateDevModeStatus('noUploadsAllowed');
 
-      this.spinnies.add('noUploadsAllowed', {
+      SpinniesManager.add('noUploadsAllowed', {
         text: i18n(`${i18nKey}.upload.noUploadsAllowed`, {
           filePath: remotePath,
         }),
@@ -391,23 +390,23 @@ class LocalDevManager {
 
       this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
-      this.spinnies.add('manualUploadRequired', {
+      SpinniesManager.add('manualUploadRequired', {
         text: i18n(`${i18nKey}.upload.manualUploadRequired`),
         status: 'fail',
         failColor: 'white',
         noIndent: true,
       });
-      this.spinnies.add('manualUploadExplanation1', {
+      SpinniesManager.add('manualUploadExplanation1', {
         text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
         status: 'non-spinnable',
         indent: 1,
       });
-      this.spinnies.add('manualUploadExplanation2', {
+      SpinniesManager.add('manualUploadExplanation2', {
         text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
         status: 'non-spinnable',
         indent: 1,
       });
-      this.spinnies.add('manualUploadPrompt', {
+      SpinniesManager.add('manualUploadPrompt', {
         text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
         status: 'non-spinnable',
         indent: 1,
@@ -420,7 +419,7 @@ class LocalDevManager {
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
       if (!isAllowedExtension(filePath, ['jsx'])) {
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.extensionNotAllowed`, {
             filePath,
           }),
@@ -430,7 +429,7 @@ class LocalDevManager {
       }
     }
     if (shouldIgnoreFile(filePath, true)) {
-      this.spinnies.add(null, {
+      SpinniesManager.add(null, {
         text: i18n(`${i18nKey}.upload.fileIgnored`, {
           filePath,
         }),
@@ -456,7 +455,7 @@ class LocalDevManager {
 
     try {
       if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
-        const spinniesKey = this.spinnies.add(null, {
+        const { name: spinnerName } = SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.uploadingAddChange`, {
             filePath: remotePath,
           }),
@@ -468,7 +467,7 @@ class LocalDevManager {
           filePath,
           remotePath
         );
-        this.spinnies.update(spinniesKey, {
+        SpinniesManager.update(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedAddChange`, {
             filePath: remotePath,
           }),
@@ -478,7 +477,7 @@ class LocalDevManager {
         event === WATCH_EVENTS.unlink ||
         event === WATCH_EVENTS.unlinkDir
       ) {
-        const spinniesKey = this.spinnies.add(null, {
+        const { name: spinnerName } = SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.uploadingRemoveChange`, {
             filePath: remotePath,
           }),
@@ -489,7 +488,7 @@ class LocalDevManager {
           this.projectConfig.name,
           remotePath
         );
-        this.spinnies.update(spinniesKey, {
+        SpinniesManager.update(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedRemoveChange`, {
             filePath: remotePath,
           }),
@@ -524,9 +523,9 @@ class LocalDevManager {
   }
 
   async queueBuild() {
-    this.spinnies.add(null, { text: ' ', status: 'non-spinnable' });
+    SpinniesManager.add(null, { text: ' ', status: 'non-spinnable' });
 
-    const spinniesKey = this.spinnies.add(null, {
+    const { name: spinnerName } = SpinniesManager.add(null, {
       text: i18n(`${i18nKey}.upload.uploadingChanges`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
         buildId: this.currentStagedBuildId,
@@ -549,7 +548,7 @@ class LocalDevManager {
 
       logger.debug(queueBuildError);
 
-      this.spinnies.fail(spinniesKey, {
+      SpinniesManager.fail(spinnerName, {
         text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           buildId: this.currentStagedBuildId,
@@ -563,7 +562,7 @@ class LocalDevManager {
           subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
         })
       ) {
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.cancelledFromUI`),
           status: 'non-spinnable',
           indent: 1,
@@ -574,7 +573,7 @@ class LocalDevManager {
         queueBuildError.error &&
         queueBuildError.error.message
       ) {
-        this.spinnies.add(null, {
+        SpinniesManager.add(null, {
           text: queueBuildError.error.message,
           status: 'non-spinnable',
           indent: 1,
@@ -592,7 +591,7 @@ class LocalDevManager {
       if (result.succeeded) {
         this.updateDevModeStatus('clean');
 
-        this.spinnies.succeed(spinniesKey, {
+        SpinniesManager.succeed(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedChangesSucceeded`, {
             accountIdentifier: uiAccountDescription(this.targetAccountId),
             buildId: result.buildId,
@@ -601,7 +600,7 @@ class LocalDevManager {
           noIndent: true,
         });
       } else {
-        this.spinnies.fail(spinniesKey, {
+        SpinniesManager.fail(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedChangesFailed`, {
             accountIdentifier: uiAccountDescription(this.targetAccountId),
             buildId: result.buildId,
@@ -618,7 +617,7 @@ class LocalDevManager {
       }
     }
 
-    this.spinnies.removeAll({ targetCategory: 'projectPollStatus' });
+    SpinniesManager.removeAll({ targetCategory: 'projectPollStatus' });
 
     if (
       !queueBuildError &&
