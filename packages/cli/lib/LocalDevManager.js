@@ -387,29 +387,34 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      const addedToQueue = this.addChangeToStandbyQueue({
+        ...changeInfo,
+        supported: false,
+      });
 
-      SpinniesManager.add('manualUploadRequired', {
-        text: i18n(`${i18nKey}.upload.manualUploadRequired`),
-        status: 'fail',
-        failColor: 'white',
-        noIndent: true,
-      });
-      SpinniesManager.add('manualUploadExplanation1', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
-      SpinniesManager.add('manualUploadExplanation2', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
-      SpinniesManager.add('manualUploadPrompt', {
-        text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
+      if (addedToQueue) {
+        SpinniesManager.add('manualUploadRequired', {
+          text: i18n(`${i18nKey}.upload.manualUploadRequired`),
+          status: 'fail',
+          failColor: 'white',
+          noIndent: true,
+        });
+        SpinniesManager.add('manualUploadExplanation1', {
+          text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        SpinniesManager.add('manualUploadExplanation2', {
+          text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        SpinniesManager.add('manualUploadPrompt', {
+          text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+      }
     }
   }
 
@@ -417,14 +422,14 @@ class LocalDevManager {
     const { event, filePath } = changeInfo;
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
-      if (!isAllowedExtension(filePath)) {
+      if (!isAllowedExtension(filePath, ['jsx'])) {
         SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.extensionNotAllowed`, {
             filePath,
           }),
           status: 'non-spinnable',
         });
-        return;
+        return false;
       }
     }
     if (shouldIgnoreFile(filePath, true)) {
@@ -434,7 +439,7 @@ class LocalDevManager {
         }),
         status: 'non-spinnable',
       });
-      return;
+      return false;
     }
 
     const existingIndex = this.standbyChanges.findIndex(
@@ -447,6 +452,7 @@ class LocalDevManager {
     } else {
       this.standbyChanges.push(changeInfo);
     }
+    return true;
   }
 
   async sendChanges(changeInfo) {
