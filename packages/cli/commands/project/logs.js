@@ -9,7 +9,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
+// const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   fetchProject,
   fetchDeployComponentsMetadata,
@@ -18,25 +18,25 @@ const {
   getTableContents,
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
-const {
-  getProjectAppFunctionLogs,
-  getLatestProjectAppFunctionLog,
-} = require('@hubspot/cli-lib/api/functions');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
-const {
-  getFunctionLogs,
-  getLatestFunctionLog,
-} = require('@hubspot/cli-lib/api/results');
+// const {
+//   getProjectAppFunctionLogs,
+//   getLatestProjectAppFunctionLog,
+// } = require('@hubspot/cli-lib/api/functions');
+// const {
+//   logApiErrorInstance,
+//   ApiErrorContext,
+// } = require('@hubspot/cli-lib/errorHandlers');
+// const {
+//   getFunctionLogs,
+//   getLatestFunctionLog,
+// } = require('@hubspot/cli-lib/api/results');
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
-const { tailLogs } = require('../../lib/serverlessLogs');
+// const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+// const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.logs';
 
@@ -48,90 +48,92 @@ const getPrivateAppsUrl = accountId => {
   return `${baseUrl}/private-apps/${accountId}`;
 };
 
-const handleLogsError = (e, name, projectName) => {
-  if (e.statusCode === 404) {
-    logger.debug(`Log fetch error: ${e.message}`);
-    logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
-  } else {
-    logApiErrorInstance(
-      e,
-      new ApiErrorContext({ accountId: getAccountId(), projectName })
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
-};
+// We currently cannot fetch logs directly to the CLI. See internal CLI issue #413 for more information.
 
-const handleFunctionLog = async (accountId, options) => {
-  const {
-    latest,
-    follow,
-    compact,
-    appPath,
-    functionName,
-    projectName,
-  } = options;
+// const handleLogsError = (e, name, projectName) => {
+//   if (e.statusCode === 404) {
+//     logger.debug(`Log fetch error: ${e.message}`);
+//     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
+//   } else {
+//     logApiErrorInstance(
+//       e,
+//       new ApiErrorContext({ accountId: getAccountId(), projectName })
+//     );
+//     process.exit(EXIT_CODES.ERROR);
+//   }
+// };
 
-  let logsResp;
+// const handleFunctionLog = async (accountId, options) => {
+//   const {
+//     latest,
+//     follow,
+//     compact,
+//     appPath,
+//     functionName,
+//     projectName,
+//   } = options;
 
-  const tailCall = async after => {
-    try {
-      return appPath
-        ? getProjectAppFunctionLogs(
-            accountId,
-            functionName,
-            projectName,
-            appPath,
-            {
-              after,
-            }
-          )
-        : getFunctionLogs(accountId, functionName, { after });
-    } catch (e) {
-      handleLogsError(e, functionName, projectName);
-    }
-  };
+//   let logsResp;
 
-  const fetchLatest = async () => {
-    return appPath
-      ? getLatestProjectAppFunctionLog(
-          accountId,
-          functionName,
-          projectName,
-          appPath
-        )
-      : getLatestFunctionLog(accountId, functionName, projectName);
-  };
+//   const tailCall = async after => {
+//     try {
+//       return appPath
+//         ? getProjectAppFunctionLogs(
+//             accountId,
+//             functionName,
+//             projectName,
+//             appPath,
+//             {
+//               after,
+//             }
+//           )
+//         : getFunctionLogs(accountId, functionName, { after });
+//     } catch (e) {
+//       handleLogsError(e, functionName, projectName);
+//     }
+//   };
 
-  if (follow) {
-    await tailLogs({
-      accountId,
-      compact,
-      tailCall,
-      fetchLatest,
-      name: functionName,
-    });
-  } else if (latest) {
-    try {
-      logsResp = await fetchLatest();
-    } catch (e) {
-      handleLogsError(e, functionName, projectName);
-      return true;
-    }
-  } else {
-    try {
-      logsResp = await tailCall();
-    } catch (e) {
-      handleLogsError(e, functionName, projectName);
-      return true;
-    }
-  }
+//   const fetchLatest = async () => {
+//     return appPath
+//       ? getLatestProjectAppFunctionLog(
+//           accountId,
+//           functionName,
+//           projectName,
+//           appPath
+//         )
+//       : getLatestFunctionLog(accountId, functionName, projectName);
+//   };
 
-  if (logsResp) {
-    outputLogs(logsResp, options);
-    return true;
-  }
-  return false;
-};
+//   if (follow) {
+//     await tailLogs({
+//       accountId,
+//       compact,
+//       tailCall,
+//       fetchLatest,
+//       name: functionName,
+//     });
+//   } else if (latest) {
+//     try {
+//       logsResp = await fetchLatest();
+//     } catch (e) {
+//       handleLogsError(e, functionName, projectName);
+//       return true;
+//     }
+//   } else {
+//     try {
+//       logsResp = await tailCall();
+//     } catch (e) {
+//       handleLogsError(e, functionName, projectName);
+//       return true;
+//     }
+//   }
+
+//   if (logsResp) {
+//     outputLogs(logsResp, options);
+//     return true;
+//   }
+//   return false;
+// };
 
 exports.command = 'logs [--project] [--app] [--function] [--endpoint]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -154,7 +156,7 @@ exports.handler = async options => {
     options.function || promptFunctionName || options.endpoint;
   const endpointName = options.endpoint || promptEndpointName;
 
-  let relativeAppPath;
+  // let relativeAppPath;
   let appId;
 
   if (appName && !endpointName) {
@@ -162,10 +164,11 @@ exports.handler = async options => {
       allowCreate: false,
     });
 
-    const { deployedBuild, id: projectId } = await fetchProject(
-      accountId,
-      projectName
-    );
+    // const { deployedBuild, id: projectId } = await fetchProject(
+    //   accountId,
+    //   projectName
+    // );
+    const { id: projectId } = await fetchProject(accountId, projectName);
 
     const { results: deployComponents } = await fetchDeployComponentsMetadata(
       accountId,
@@ -180,22 +183,22 @@ exports.handler = async options => {
       appId = appComponent.componentIdentifier;
     }
 
-    if (deployedBuild && deployedBuild.subbuildStatuses) {
-      const appSubbuild = deployedBuild.subbuildStatuses.find(
-        subbuild => subbuild.buildName === appName
-      );
-      if (appSubbuild) {
-        relativeAppPath = appSubbuild.rootPath;
-      } else {
-        logger.error(
-          i18n(`${i18nKey}.errors.invalidAppName`, {
-            appName: options.app,
-            projectName,
-          })
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
-    }
+    // if (deployedBuild && deployedBuild.subbuildStatuses) {
+    //   const appSubbuild = deployedBuild.subbuildStatuses.find(
+    //     subbuild => subbuild.buildName === appName
+    //   );
+    //   if (appSubbuild) {
+    //     relativeAppPath = appSubbuild.rootPath;
+    //   } else {
+    //     logger.error(
+    //       i18n(`${i18nKey}.errors.invalidAppName`, {
+    //         appName: options.app,
+    //         projectName,
+    //       })
+    //     );
+    //     process.exit(EXIT_CODES.ERROR);
+    //   }
+    // }
   }
 
   trackCommandUsage('project-logs', null, accountId);
@@ -240,16 +243,16 @@ exports.handler = async options => {
   logger.log();
   uiLine();
 
-  const showFinalMessage = await handleFunctionLog(accountId, {
-    ...options,
-    projectName,
-    appPath: relativeAppPath,
-    functionName: functionName || endpointName,
-  });
+  //   const showFinalMessage = await handleFunctionLog(accountId, {
+  //     ...options,
+  //     projectName,
+  //     appPath: relativeAppPath,
+  //     functionName: functionName || endpointName,
+  //   });
 
-  if (showFinalMessage) {
-    uiLine();
-  }
+  //   if (showFinalMessage) {
+  //     uiLine();
+  //   }
 };
 
 exports.builder = yargs => {
