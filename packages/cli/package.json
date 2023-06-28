@@ -14,6 +14,7 @@
     "body-parser": "^1.19.0",
     "chalk": "^4.1.2",
     "chokidar": "^3.0.1",
+    "cli-cursor": "^3.1.0",
     "cli-progress": "^3.11.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -25,7 +26,7 @@
     "open": "^7.0.3",
     "ora": "^4.0.3",
     "p-queue": "^6.0.2",
-    "spinnies": "^0.5.1",
+    "strip-ansi": "^5.2.0",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
     "yargs": "15.4.1"

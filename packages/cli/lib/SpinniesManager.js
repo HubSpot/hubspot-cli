@@ -1,104 +1,346 @@
-const Spinnies = require('spinnies');
+/*
+https://github.com/jbcarpanelli/spinnies
 
-// Allows us to maintain a single instance of spinnies across multiple files
+Copyright 2019 Juan Bautista Carpanelli (jcarpanelli)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+**/
+
+const readline = require('readline');
+const chalk = require('chalk');
+const cliCursor = require('cli-cursor');
+const {
+  breakText,
+  cleanStream,
+  colorOptions,
+  getLinesLength,
+  purgeSpinnerOptions,
+  purgeSpinnersOptions,
+  SPINNERS,
+  terminalSupportsUnicode,
+  writeStream,
+} = require('./spinniesUtils');
+
 class SpinniesManager {
   constructor() {
-    this.spinnies = null;
-    this.parentKey = null;
+    this.resetState();
+  }
+
+  init(options = {}) {
+    this.options = {
+      spinnerColor: 'greenBright',
+      succeedColor: 'green',
+      failColor: 'red',
+      spinner: terminalSupportsUnicode() ? SPINNERS.dots : SPINNERS.dashes,
+      disableSpins: false,
+      ...purgeSpinnersOptions(options),
+    };
+    this.spin =
+      !this.options.disableSpins &&
+      !process.env.CI &&
+      process.stderr &&
+      process.stderr.isTTY;
+
+    if (!this.hasAnySpinners()) {
+      this.resetState();
+    }
+    this.bindSigint();
+  }
+
+  resetState() {
+    // Default Spinnies fields
+    this.spinners = {};
+    this.isCursorHidden = false;
+    this.currentInterval = null;
+    this.stream = process.stderr;
+    this.lineCount = 0;
+    this.currentFrameIndex = 0;
+
+    // Custom fields
+    this.parentSpinnerName = null;
     this.categories = {};
   }
 
-  init(options) {
-    if (!this.spinnies) {
-      this.spinnies = new Spinnies(options);
-    }
-
-    return {
-      add: this.add.bind(this),
-      pick: this.spinnies.pick.bind(this.spinnies),
-      remove: this.remove.bind(this),
-      removeAll: this.removeAll.bind(this),
-      update: this.spinnies.update.bind(this.spinnies),
-      succeed: this.spinnies.succeed.bind(this.spinnies),
-      fail: this.spinnies.fail.bind(this.spinnies),
-      stopAll: this.spinnies.stopAll.bind(this.spinnies),
-      hasActiveSpinners: this.spinnies.hasActiveSpinners.bind(this.spinnies),
-    };
-  }
-
-  addKeyToCategory(key, category) {
+  addSpinnerToCategory(name, category) {
     if (!this.categories[category]) {
-      this.categories[category] = [];
+      this.categories[category] = {};
     }
-    this.categories[category].push(key);
+    this.categories[category][name] = true;
   }
 
-  getCategoryForKey(key) {
-    return Object.keys(this.categories).find(category =>
-      this.categories[category].find(k => k === key)
+  getSpinnerCategory(name) {
+    return Object.keys(this.categories).find(
+      category => !!this.categories[category][name]
     );
   }
 
-  removeKeyFromCategory(key) {
-    const category = this.getCategoryForKey(key);
+  removeSpinnerFromCategory(name) {
+    const category = this.getSpinnerCategory(name);
     if (category) {
-      const index = this.categories[category].indexOf(key);
-      this.categories[category].splice(index, 1);
+      delete this.categories[category][name];
     }
   }
 
-  add(key, options = {}) {
-    const { category, isParent, noIndent, ...rest } = options;
-    const originalIndent = rest.indent || 0;
+  pick(name) {
+    return this.spinners[name];
+  }
 
-    // Support adding generic spinnies lines without specifying a key
-    const uniqueKey = key || `${Date.now()}-${Math.random()}`;
+  add(name, options = {}) {
+    const { category, isParent, noIndent, ...spinnerOptions } = options;
+
+    // Support adding generic spinnies lines without specifying a name
+    const resolvedName = name || `${Date.now()}-${Math.random()}`;
 
     if (category) {
-      this.addKeyToCategory(uniqueKey, category);
+      this.addSpinnerToCategory(resolvedName, category);
     }
 
-    this.spinnies.add(uniqueKey, {
-      ...rest,
-      indent: this.parentKey && !noIndent ? originalIndent + 1 : originalIndent,
-    });
+    if (!options.text) {
+      spinnerOptions.text = resolvedName;
+    }
+
+    const originalIndent = spinnerOptions.indent || 0;
+
+    const spinnerProperties = {
+      ...colorOptions(this.options),
+      succeedPrefix: this.options.succeedPrefix,
+      failPrefix: this.options.failPrefix,
+      status: 'spinning',
+      ...purgeSpinnerOptions(spinnerOptions),
+      indent:
+        this.parentSpinnerName && !noIndent
+          ? originalIndent + 1
+          : originalIndent,
+    };
+
+    this.spinners[resolvedName] = spinnerProperties;
+    this.updateSpinnerState();
 
     if (isParent) {
-      this.parentKey = uniqueKey;
+      this.parentSpinnerName = resolvedName;
     }
 
-    return uniqueKey;
+    return { name: resolvedName, ...spinnerProperties };
   }
 
-  remove(key) {
-    if (this.spinnies) {
-      if (key === this.parentKey) {
-        this.parentKey = null;
-      }
-      this.removeKeyFromCategory(key);
-      this.spinnies.remove(key);
+  update(name, options = {}) {
+    const { status } = options;
+    this.setSpinnerProperties(name, options, status);
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+  succeed(name, options = {}) {
+    this.setSpinnerProperties(name, options, 'succeed');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+  fail(name, options = {}) {
+    this.setSpinnerProperties(name, options, 'fail');
+    this.updateSpinnerState();
+
+    return this.spinners[name];
+  }
+
+  remove(name) {
+    if (typeof name !== 'string') {
+      throw Error('A spinner reference name must be specified');
     }
+
+    if (name === this.parentSpinnerName) {
+      this.parentSpinnerName = null;
+    }
+
+    this.removeSpinnerFromCategory(name);
+
+    const spinner = this.spinners[name];
+    delete this.spinners[name];
+    return spinner;
   }
 
   /**
    * Removes all spinnies instances
+   * @param {string} targetCategory - remove all spinnies with a matching category
    * @param {string} preserveCategory - do not remove spinnies with a matching category
    */
   removeAll({ preserveCategory = null, targetCategory = null } = {}) {
-    if (this.spinnies) {
-      Object.keys(this.spinnies.spinners).forEach(key => {
-        if (targetCategory) {
-          if (this.getCategoryForKey(key) === targetCategory) {
-            this.remove(key);
-          }
-        } else if (
-          !preserveCategory ||
-          this.getCategoryForKey(key) !== preserveCategory
-        ) {
-          this.remove(key);
+    Object.keys(this.spinners).forEach(name => {
+      if (targetCategory) {
+        if (this.getSpinnerCategory(name) === targetCategory) {
+          this.remove(name);
         }
-      });
+      } else if (
+        !preserveCategory ||
+        this.getSpinnerCategory(name) !== preserveCategory
+      ) {
+        this.remove(name);
+      }
+    });
+  }
+
+  stopAll(newStatus = 'stopped') {
+    Object.keys(this.spinners).forEach(name => {
+      const { status: currentStatus } = this.spinners[name];
+      if (
+        currentStatus !== 'fail' &&
+        currentStatus !== 'succeed' &&
+        currentStatus !== 'non-spinnable'
+      ) {
+        if (newStatus === 'succeed' || newStatus === 'fail') {
+          this.spinners[name].status = newStatus;
+          this.spinners[name].color = this.options[`${newStatus}Color`];
+        } else {
+          this.spinners[name].status = 'stopped';
+          this.spinners[name].color = 'grey';
+        }
+      }
+    });
+    this.checkIfActiveSpinners();
+
+    return this.spinners;
+  }
+
+  hasAnySpinners() {
+    return !!Object.keys(this.spinners).length;
+  }
+
+  hasActiveSpinners() {
+    return !!Object.values(this.spinners).find(
+      ({ status }) => status === 'spinning'
+    );
+  }
+
+  setSpinnerProperties(name, options, status) {
+    if (typeof name !== 'string') {
+      throw Error('A spinner reference name must be specified');
     }
+    if (!this.spinners[name]) {
+      throw Error(`No spinner initialized with name ${name}`);
+    }
+    options = purgeSpinnerOptions(options);
+    status = status || 'spinning';
+
+    this.spinners[name] = { ...this.spinners[name], ...options, status };
+  }
+
+  updateSpinnerState() {
+    if (this.spin) {
+      clearInterval(this.currentInterval);
+      this.currentInterval = this.loopStream();
+      if (!this.isCursorHidden) {
+        cliCursor.hide();
+      }
+      this.isCursorHidden = true;
+      this.checkIfActiveSpinners();
+    } else {
+      this.setRawStreamOutput();
+    }
+  }
+
+  loopStream() {
+    const { frames, interval } = this.options.spinner;
+    return setInterval(() => {
+      this.setStreamOutput(frames[this.currentFrameIndex]);
+      this.currentFrameIndex =
+        this.currentFrameIndex === frames.length - 1
+          ? 0
+          : ++this.currentFrameIndex;
+    }, interval);
+  }
+
+  setStreamOutput(frame = '') {
+    let output = '';
+    const linesLength = [];
+    const hasActiveSpinners = this.hasActiveSpinners();
+    Object.values(this.spinners).map(
+      ({
+        text,
+        status,
+        color,
+        spinnerColor,
+        succeedColor,
+        failColor,
+        succeedPrefix,
+        failPrefix,
+        indent,
+      }) => {
+        let line;
+        let prefixLength = indent || 0;
+        if (status === 'spinning') {
+          prefixLength += frame.length + 1;
+          text = breakText(text, prefixLength);
+          line = `${chalk[spinnerColor](frame)} ${
+            color ? chalk[color](text) : text
+          }`;
+        } else {
+          if (status === 'succeed') {
+            prefixLength += succeedPrefix.length + 1;
+            if (hasActiveSpinners) {
+              text = breakText(text, prefixLength);
+            }
+            line = `${chalk.green(succeedPrefix)} ${chalk[succeedColor](text)}`;
+          } else if (status === 'fail') {
+            prefixLength += failPrefix.length + 1;
+            if (hasActiveSpinners) {
+              text = breakText(text, prefixLength);
+            }
+            line = `${chalk.red(failPrefix)} ${chalk[failColor](text)}`;
+          } else {
+            if (hasActiveSpinners) {
+              text = breakText(text, prefixLength);
+            }
+            line = color ? chalk[color](text) : text;
+          }
+        }
+        linesLength.push(...getLinesLength(text, prefixLength));
+        output += indent ? `${' '.repeat(indent)}${line}\n` : `${line}\n`;
+      }
+    );
+
+    if (!hasActiveSpinners) {
+      readline.clearScreenDown(this.stream);
+    }
+
+    writeStream(this.stream, output, linesLength);
+
+    if (hasActiveSpinners) {
+      cleanStream(this.stream, linesLength);
+    }
+
+    this.lineCount = linesLength.length;
+  }
+
+  setRawStreamOutput() {
+    Object.values(this.spinners).forEach(i => {
+      process.stderr.write(`- ${i.text}\n`);
+    });
+  }
+
+  checkIfActiveSpinners() {
+    if (!this.hasActiveSpinners()) {
+      if (this.spin) {
+        this.setStreamOutput();
+        readline.moveCursor(this.stream, 0, this.lineCount);
+        clearInterval(this.currentInterval);
+        this.isCursorHidden = false;
+        cliCursor.show();
+      }
+      this.spinners = {};
+    }
+  }
+
+  bindSigint() {
+    process.removeAllListeners('SIGINT');
+    process.on('SIGINT', () => {
+      cliCursor.show();
+      readline.moveCursor(process.stderr, 0, this.lineCount);
+      process.exit(0);
+    });
   }
 }
 
