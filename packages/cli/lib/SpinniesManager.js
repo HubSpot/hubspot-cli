@@ -1,4 +1,3 @@
-'use strict';
 /*
 https://github.com/jbcarpanelli/spinnies
 
@@ -12,16 +11,17 @@ The above copyright notice and this permission notice shall be included in all c
 const readline = require('readline');
 const chalk = require('chalk');
 const cliCursor = require('cli-cursor');
-const { dashes, dots } = require('spinnies/spinners');
 const {
+  breakText,
+  cleanStream,
+  colorOptions,
+  getLinesLength,
   purgeSpinnerOptions,
   purgeSpinnersOptions,
-  colorOptions,
-  breakText,
-  getLinesLength,
+  SPINNERS,
   terminalSupportsUnicode,
-} = require('spinnies/utils');
-const { writeStream, cleanStream } = require('spinnies/utils');
+  writeStream,
+} = require('./spinniesUtils');
 
 class SpinniesManager {
   constructor() {
@@ -33,7 +33,7 @@ class SpinniesManager {
       spinnerColor: 'greenBright',
       succeedColor: 'green',
       failColor: 'red',
-      spinner: terminalSupportsUnicode() ? dots : dashes,
+      spinner: terminalSupportsUnicode() ? SPINNERS.dots : SPINNERS.dashes,
       disableSpins: false,
       ...purgeSpinnersOptions(options),
     };
