@@ -93,7 +93,7 @@ class LocalDevManager {
     }
 
     console.clear();
-    this.spinnies.removeAll();
+    SpinniesManager.removeAll();
 
     logger.log(i18n(`${i18nKey}.header.betaMessage`));
     logger.log();
