@@ -179,15 +179,15 @@ const pollFetchProject = async (accountId, projectName) => {
   // Temporary solution for gating slowness. Retry on 403 statusCode
   return new Promise((resolve, reject) => {
     let pollCount = 0;
-    const spinnies = SpinniesManager.init();
-    spinnies.add('pollFetchProject', {
+    SpinniesManager.init();
+    SpinniesManager.add('pollFetchProject', {
       text: 'Fetching project status',
     });
     const pollInterval = setInterval(async () => {
       try {
         const project = await fetchProject(accountId, projectName);
         if (project) {
-          spinnies.remove('pollFetchProject');
+          SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
           resolve(project);
         }
@@ -202,11 +202,11 @@ const pollFetchProject = async (accountId, projectName) => {
           pollCount += 1;
         } else if (pollCount >= 15) {
           // Poll up to max 30s
-          spinnies.remove('pollFetchProject');
+          SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
           reject(err);
         } else {
-          spinnies.remove('pollFetchProject');
+          SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
           reject(err);
         }
@@ -314,10 +314,10 @@ const uploadProjectFiles = async (
   filePath,
   uploadMessage
 ) => {
-  const spinnies = SpinniesManager.init({});
+  SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
 
-  spinnies.add('upload', {
+  SpinniesManager.add('upload', {
     text: i18n(`${i18nKey}.uploadProjectFiles.add`, {
       accountIdentifier,
       projectName,
@@ -338,7 +338,7 @@ const uploadProjectFiles = async (
 
     buildId = upload.buildId;
 
-    spinnies.succeed('upload', {
+    SpinniesManager.succeed('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.succeed`, {
         accountIdentifier,
         projectName,
@@ -352,7 +352,7 @@ const uploadProjectFiles = async (
       })
     );
   } catch (err) {
-    spinnies.fail('upload', {
+    SpinniesManager.fail('upload', {
       text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {
         accountIdentifier,
         projectName,
@@ -551,11 +551,11 @@ const makePollTaskStatusFunc = ({
       );
     }
 
-    const spinnies = SpinniesManager.init();
+    SpinniesManager.init();
 
     const overallTaskSpinniesKey = `overallTaskStatus-${statusText.STATUS_TEXT}`;
 
-    spinnies.add(overallTaskSpinniesKey, {
+    SpinniesManager.add(overallTaskSpinniesKey, {
       text: 'Beginning',
       succeedColor: 'white',
       failColor: 'white',
@@ -601,7 +601,7 @@ const makePollTaskStatusFunc = ({
           { numComponents }
         ) + '\n';
 
-    spinnies.update(overallTaskSpinniesKey, {
+    SpinniesManager.update(overallTaskSpinniesKey, {
       text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
     });
 
@@ -616,7 +616,7 @@ const makePollTaskStatusFunc = ({
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
-        spinnies.add(task.id, {
+        SpinniesManager.add(task.id, {
           text,
           indent,
           succeedColor: 'white',
@@ -641,10 +641,10 @@ const makePollTaskStatusFunc = ({
 
         const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
 
-        if (spinnies.hasActiveSpinners()) {
+        if (SpinniesManager.hasActiveSpinners()) {
           subTaskStatus.forEach(subTask => {
             const { id, status } = subTask;
-            const spinner = spinnies.pick(id);
+            const spinner = SpinniesManager.pick(id);
 
             if (!spinner || spinner.status !== SPINNER_STATUS.SPINNING) {
               return;
@@ -668,12 +668,12 @@ const makePollTaskStatusFunc = ({
               )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
 
               status === statusText.STATES.SUCCESS
-                ? spinnies.succeed(id, { text: updatedText })
-                : spinnies.fail(id, { text: updatedText });
+                ? SpinniesManager.succeed(id, { text: updatedText })
+                : SpinniesManager.fail(id, { text: updatedText });
 
               if (topLevelTask) {
                 topLevelTask.subtasks.forEach(currentSubtask =>
-                  spinnies.remove(currentSubtask.id)
+                  SpinniesManager.remove(currentSubtask.id)
                 );
               }
             }
@@ -681,11 +681,11 @@ const makePollTaskStatusFunc = ({
 
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
-              spinnies.succeed(overallTaskSpinniesKey, {
+              SpinniesManager.succeed(overallTaskSpinniesKey, {
                 text: statusStrings.SUCCESS(taskName),
               });
             } else if (status === statusText.STATES.FAILURE) {
-              spinnies.fail(overallTaskSpinniesKey, {
+              SpinniesManager.fail(overallTaskSpinniesKey, {
                 text: statusStrings.FAIL(taskName),
               });
 

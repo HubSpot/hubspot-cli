@@ -1,4 +1,4 @@
-const Spinnies = require('spinnies');
+const SpinniesManager = require('./SpinniesManager');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('./lang');
@@ -44,7 +44,7 @@ const syncSandbox = async ({
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
-  const spinnies = new Spinnies({
+  SpinniesManager.init({
     succeedColor: 'white',
   });
   let initiateSyncResponse;
@@ -68,7 +68,7 @@ const syncSandbox = async ({
       );
     }
 
-    spinnies.add('sandboxSync', {
+    SpinniesManager.add('sandboxSync', {
       text: i18n(`${i18nKey}.loading.startSync`),
     });
 
@@ -82,7 +82,7 @@ const syncSandbox = async ({
     if (allowEarlyTermination) {
       logger.log(i18n(`${i18nKey}.info.earlyExit`));
     }
-    spinnies.succeed('sandboxSync', {
+    SpinniesManager.succeed('sandboxSync', {
       text: i18n(`${i18nKey}.loading.succeed`, {
         accountName: uiAccountDescription(accountId),
       }),
@@ -101,7 +101,7 @@ const syncSandbox = async ({
   } catch (err) {
     debugErrorAndContext(err);
 
-    spinnies.fail('sandboxSync', {
+    SpinniesManager.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
 
@@ -182,10 +182,10 @@ const syncSandbox = async ({
       );
 
       logger.log('');
-      spinnies.add('syncComplete', {
+      SpinniesManager.add('syncComplete', {
         text: i18n(`${i18nKey}.polling.syncing`),
       });
-      spinnies.succeed('syncComplete', {
+      SpinniesManager.succeed('syncComplete', {
         text: i18n(`${i18nKey}.polling.succeed`),
       });
       logger.log('');
@@ -198,10 +198,10 @@ const syncSandbox = async ({
       // If polling fails at this point, we do not track a failed sync since it is running in the background.
       logErrorInstance(err);
 
-      spinnies.add('syncComplete', {
+      SpinniesManager.add('syncComplete', {
         text: i18n(`${i18nKey}.polling.syncing`),
       });
-      spinnies.fail('syncComplete', {
+      SpinniesManager.fail('syncComplete', {
         text: i18n(`${i18nKey}.polling.fail`, {
           url: syncStatusUrl,
         }),

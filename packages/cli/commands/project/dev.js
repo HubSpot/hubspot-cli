@@ -181,7 +181,7 @@ exports.handler = async options => {
     }
   }
 
-  const spinnies = SpinniesManager.init();
+  SpinniesManager.init();
 
   if (!projectExists) {
     // Create the project without prompting if this is a newly created sandbox
@@ -207,14 +207,14 @@ exports.handler = async options => {
 
     if (shouldCreateProject) {
       try {
-        spinnies.add('createProject', {
+        SpinniesManager.add('createProject', {
           text: i18n(`${i18nKey}.status.creatingProject`, {
             accountIdentifier: uiAccountDescription(targetAccountId),
             projectName: projectConfig.name,
           }),
         });
         await createProject(targetAccountId, projectConfig.name);
-        spinnies.succeed('createProject', {
+        SpinniesManager.succeed('createProject', {
           text: i18n(`${i18nKey}.status.createdProject`, {
             accountIdentifier: uiAccountDescription(targetAccountId),
             projectName: projectConfig.name,
@@ -232,7 +232,7 @@ exports.handler = async options => {
     }
   }
 
-  spinnies.add('devModeSetup', {
+  SpinniesManager.add('devModeSetup', {
     text: i18n(`${i18nKey}.status.startupMessage`, {
       projectName: projectConfig.name,
     }),
@@ -274,7 +274,7 @@ exports.handler = async options => {
     }
   }
 
-  spinnies.remove('devModeSetup');
+  SpinniesManager.remove('devModeSetup');
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,
