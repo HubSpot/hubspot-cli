@@ -633,8 +633,6 @@ class LocalDevManager {
     if (this.hasAnyUnsupportedStandbyChanges()) {
       this.flushStandbyChanges();
     }
-
-    this.devServerAfterUpload();
   }
 
   flushStandbyChanges() {
