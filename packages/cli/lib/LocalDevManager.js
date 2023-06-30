@@ -418,7 +418,7 @@ class LocalDevManager {
     const { event, filePath } = changeInfo;
 
     if (event === WATCH_EVENTS.add || event === WATCH_EVENTS.change) {
-      if (!isAllowedExtension(filePath, ['jsx'])) {
+      if (!isAllowedExtension(filePath, ['jsx', 'tsx'])) {
         SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.extensionNotAllowed`, {
             filePath,
