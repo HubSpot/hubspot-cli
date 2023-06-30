@@ -231,7 +231,7 @@ class LocalDevManager {
           });
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
-          await this.flushStandbyChanges();
+          this.flushStandbyChanges();
           await this.queueBuild();
         } else if (key.name === 'n') {
           SpinniesManager.add(null, {
@@ -366,7 +366,7 @@ class LocalDevManager {
     this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
     if (!this.uploadQueue.isPaused) {
-      await this.flushStandbyChanges();
+      this.flushStandbyChanges();
     }
   }
 
@@ -632,9 +632,9 @@ class LocalDevManager {
     }
   }
 
-  async flushStandbyChanges() {
+  flushStandbyChanges() {
     if (this.standbyChanges.length) {
-      await this.uploadQueue.addAll(
+      this.uploadQueue.addAll(
         this.standbyChanges.map(changeInfo => {
           return async () => {
             if (
