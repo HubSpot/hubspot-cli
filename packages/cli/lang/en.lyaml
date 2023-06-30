@@ -463,8 +463,10 @@ en:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
               targetNonSandbox: "Continue testing in a non-sandbox account?"
             options:
-              port:
-                describe: "The port that the running server will listen on"
+              extension:
+                describe: "The extension that you would like to run locally"
+              devServerPath:
+                describe: "Relative path to the dev server interface file"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
@@ -849,6 +851,7 @@ en:
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
       LocalDevManager:
+        failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to clean up before exiting"
@@ -866,7 +869,6 @@ en:
             uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
             noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
             manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
-            supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
@@ -885,6 +887,9 @@ en:
           uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
           uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
           uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
+        devServer:
+          startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
+          cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

@@ -54,7 +54,7 @@ const {
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
-exports.command = 'dev [--account] [--port]';
+exports.command = 'dev [--account]';
 exports.describe = null; //i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -278,11 +278,12 @@ exports.handler = async options => {
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,
+    extension: options.extension,
     projectConfig,
     projectDir,
     targetAccountId,
     uploadPermission,
-    port: options.port,
+    devServerPath: options.devServerPath,
   });
 
   await LocalDev.start();
@@ -305,9 +306,16 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
-  yargs.option('port', {
-    describe: i18n(`${i18nKey}.options.port.describe`),
-    type: 'number',
+  yargs.option('extension', {
+    describe: i18n(`${i18nKey}.options.extension.describe`),
+    type: 'string',
+    hidden: true,
+  });
+
+  yargs.option('devServerPath', {
+    describe: i18n(`${i18nKey}.options.devServerPath.describe`),
+    type: 'string',
+    hidden: true,
   });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);

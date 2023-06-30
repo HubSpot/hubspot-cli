@@ -133,6 +133,20 @@ class SpinniesManager {
     return this.spinners[name];
   }
 
+  // TODO there is an issue here with the usage of "non-spinnable"
+  // The spinnies lib automatically removes any non-active spinners
+  // after adding a new spinner (add -> updateSpinnerState -> checkIfActiveSpinners)
+  // so "pick" is telling us that these newly-added spinners don't exist.
+  addOrUpdate(name, options = {}) {
+    const spinner = this.pick(name);
+
+    if (spinner) {
+      this.update(name, options);
+    } else {
+      this.add(name, options);
+    }
+  }
+
   succeed(name, options = {}) {
     this.setSpinnerProperties(name, options, 'succeed');
     this.updateSpinnerState();

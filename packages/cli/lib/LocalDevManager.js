@@ -54,9 +54,12 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.extension = options.extension;
+    this.devServerPath = options.devServerPath;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
+
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -66,10 +69,9 @@ class LocalDevManager {
     this.standbyChanges = [];
     this.debouncedBuild = null;
     this.currentStagedBuildId = null;
-    this.port = options.port;
-    this.devServerPath = null;
 
     if (!this.targetAccountId || !this.projectConfig || !this.projectDir) {
+      logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -91,14 +93,25 @@ class LocalDevManager {
     }
 
     console.clear();
+    SpinniesManager.removeAll();
 
-    this.uploadQueue.start();
+    logger.log(i18n(`${i18nKey}.header.betaMessage`));
+    logger.log();
 
-    await this.startServers();
+    this.updateConsoleHeader();
 
-    this.logConsoleHeader();
-    await this.startWatching();
+    await this.devServerStart();
+
+    if (!this.devServerPath) {
+      this.uploadQueue.start();
+      await this.startWatching();
+    } else {
+      this.uploadPermission = UPLOAD_PERMISSIONS.never;
+    }
+
     this.updateKeypressListeners();
+
+    this.updateConsoleHeader();
   }
 
   async stop() {
@@ -109,8 +122,7 @@ class LocalDevManager {
     });
 
     await this.stopWatching();
-
-    await this.cleanupServers();
+    await this.devServerCleanup();
 
     let exitCode = EXIT_CODES.SUCCESS;
 
@@ -148,20 +160,8 @@ class LocalDevManager {
     process.exit(exitCode);
   }
 
-  logConsoleHeader() {
-    SpinniesManager.removeAll();
-
-    SpinniesManager.add('betaMessage', {
-      text: i18n(`${i18nKey}.header.betaMessage`),
-      category: 'header',
-      status: 'non-spinnable',
-    });
-    SpinniesManager.add(null, {
-      text: ' ',
-      status: 'non-spinnable',
-      category: 'header',
-    });
-    SpinniesManager.add('devModeRunning', {
+  updateConsoleHeader() {
+    SpinniesManager.addOrUpdate('devModeRunning', {
       text: i18n(`${i18nKey}.header.running`, {
         accountIdentifier: uiAccountDescription(this.targetAccountId),
         projectName: this.projectConfig.name,
@@ -169,34 +169,41 @@ class LocalDevManager {
       isParent: true,
       category: 'header',
     });
-    SpinniesManager.add('devModeStatus', {
+    SpinniesManager.addOrUpdate('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.clean`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    SpinniesManager.add('viewInHubSpotLink', {
-      text: uiLink(
-        i18n(`${i18nKey}.header.viewInHubSpotLink`),
-        this.generateLocalURL(`/hs/project`),
-        { inSpinnies: true }
-      ),
+
+    const viewText = DevServerManager.initialized
+      ? uiLink(
+          i18n(`${i18nKey}.header.viewInHubSpotLink`),
+          DevServerManager.generateURL(`hs/project`),
+          {
+            inSpinnies: true,
+          }
+        )
+      : ' ';
+
+    SpinniesManager.addOrUpdate('viewInHubSpotLink', {
+      text: viewText,
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    SpinniesManager.add(null, {
+    SpinniesManager.addOrUpdate('spacer-1', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
     });
-    SpinniesManager.add('keypressMessage', {
+    SpinniesManager.addOrUpdate('quitHelper', {
       text: i18n(`${i18nKey}.header.quitHelper`),
       status: 'non-spinnable',
       indent: 1,
       category: 'header',
     });
-    SpinniesManager.add('lineSeparator', {
+    SpinniesManager.addOrUpdate('lineSeparator', {
       text: '-'.repeat(50),
       status: 'non-spinnable',
       noIndent: true,
@@ -281,10 +288,6 @@ class LocalDevManager {
     }
   }
 
-  generateLocalURL(path) {
-    return this.devServerPath ? `${this.devServerPath}${path}` : null;
-  }
-
   updateDevModeStatus(langKey) {
     SpinniesManager.update('devModeStatus', {
       text: i18n(`${i18nKey}.header.status.${langKey}`),
@@ -348,13 +351,7 @@ class LocalDevManager {
       remotePath: path.relative(this.projectSourceDir, filePath),
     };
 
-    const notifyResponse = await this.notifyServers(changeInfo);
-
-    if (!notifyResponse.uploadRequired) {
-      this.updateDevModeStatus('supportedChange');
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
-
-      await this.executeServers(notifyResponse, changeInfo);
+    if (changeInfo.filePath.includes('dist')) {
       return;
     }
 
@@ -661,25 +658,49 @@ class LocalDevManager {
     await this.watcher.close();
   }
 
-  async startServers() {
-    this.devServerPath = await DevServerManager.start({
-      accountId: this.targetAccountId,
-      projectConfig: this.projectConfig,
-      port: this.port,
+  handleServerLog(serverKey, ...args) {
+    SpinniesManager.add(null, {
+      text: `${args.join('')}`,
+      status: 'non-spinnable',
     });
   }
 
-  async notifyServers(changeInfo) {
-    const notifyResponse = await DevServerManager.notify(changeInfo);
-    return notifyResponse;
+  async devServerStart() {
+    try {
+      if (this.devServerPath) {
+        DevServerManager.setServer('uie', this.devServerPath);
+      }
+      await DevServerManager.start({
+        accountId: this.targetAccountId,
+        debug: this.debug,
+        extension: this.extension,
+        spinniesLogger: this.handleServerLog,
+        projectConfig: this.projectConfig,
+        projectSourceDir: this.projectSourceDir,
+      });
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      SpinniesManager.add(null, {
+        text: i18n(`${i18nKey}.devServer.startError`),
+        status: 'non-spinnable',
+      });
+    }
   }
 
-  async executeServers(notifyResponse, changeInfo) {
-    await DevServerManager.execute(notifyResponse, changeInfo);
-  }
-
-  async cleanupServers() {
-    await DevServerManager.cleanup();
+  async devServerCleanup() {
+    try {
+      await DevServerManager.cleanup();
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      SpinniesManager.add(null, {
+        text: i18n(`${i18nKey}.devServer.cleanupError`),
+        status: 'non-spinnable',
+      });
+    }
   }
 }
 
