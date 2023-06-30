@@ -238,7 +238,7 @@ class LocalDevManager {
           });
           this.updateDevModeStatus('manualUpload');
           await this.createNewStagingBuild();
-          await this.flushStandbyChanges();
+          this.flushStandbyChanges();
           await this.queueBuild();
         } else if (key.name === 'n') {
           SpinniesManager.add(null, {
@@ -363,7 +363,7 @@ class LocalDevManager {
     this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
 
     if (!this.uploadQueue.isPaused) {
-      await this.flushStandbyChanges();
+      this.flushStandbyChanges();
     }
   }
 
@@ -384,29 +384,34 @@ class LocalDevManager {
     } else {
       this.updateDevModeStatus('manualUploadRequired');
 
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: false });
+      const addedToQueue = this.addChangeToStandbyQueue({
+        ...changeInfo,
+        supported: false,
+      });
 
-      SpinniesManager.add('manualUploadRequired', {
-        text: i18n(`${i18nKey}.upload.manualUploadRequired`),
-        status: 'fail',
-        failColor: 'white',
-        noIndent: true,
-      });
-      SpinniesManager.add('manualUploadExplanation1', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
-      SpinniesManager.add('manualUploadExplanation2', {
-        text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
-      SpinniesManager.add('manualUploadPrompt', {
-        text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
-        status: 'non-spinnable',
-        indent: 1,
-      });
+      if (addedToQueue) {
+        SpinniesManager.add('manualUploadRequired', {
+          text: i18n(`${i18nKey}.upload.manualUploadRequired`),
+          status: 'fail',
+          failColor: 'white',
+          noIndent: true,
+        });
+        SpinniesManager.add('manualUploadExplanation1', {
+          text: i18n(`${i18nKey}.upload.manualUploadExplanation1`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        SpinniesManager.add('manualUploadExplanation2', {
+          text: i18n(`${i18nKey}.upload.manualUploadExplanation2`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+        SpinniesManager.add('manualUploadPrompt', {
+          text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
+          status: 'non-spinnable',
+          indent: 1,
+        });
+      }
     }
   }
 
@@ -421,7 +426,7 @@ class LocalDevManager {
           }),
           status: 'non-spinnable',
         });
-        return;
+        return false;
       }
     }
     if (shouldIgnoreFile(filePath, true)) {
@@ -431,7 +436,7 @@ class LocalDevManager {
         }),
         status: 'non-spinnable',
       });
-      return;
+      return false;
     }
 
     const existingIndex = this.standbyChanges.findIndex(
@@ -444,6 +449,7 @@ class LocalDevManager {
     } else {
       this.standbyChanges.push(changeInfo);
     }
+    return true;
   }
 
   async sendChanges(changeInfo) {
@@ -631,9 +637,9 @@ class LocalDevManager {
     this.devServerAfterUpload();
   }
 
-  async flushStandbyChanges() {
+  flushStandbyChanges() {
     if (this.standbyChanges.length) {
-      await this.uploadQueue.addAll(
+      this.uploadQueue.addAll(
         this.standbyChanges.map(changeInfo => {
           return async () => {
             if (
