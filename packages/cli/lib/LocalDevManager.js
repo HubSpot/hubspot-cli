@@ -100,11 +100,15 @@ class LocalDevManager {
 
     this.updateConsoleHeader();
 
-    this.uploadQueue.start();
-
     await this.devServerStart();
 
-    await this.startWatching();
+    if (!this.devServerPath) {
+      this.uploadQueue.start();
+      await this.startWatching();
+    } else {
+      this.uploadPermission = UPLOAD_PERMISSIONS.never;
+    }
+
     this.updateKeypressListeners();
 
     this.updateConsoleHeader();
@@ -188,7 +192,7 @@ class LocalDevManager {
       indent: 1,
       category: 'header',
     });
-    SpinniesManager.addOrUpdate(null, {
+    SpinniesManager.addOrUpdate('spacer-1', {
       text: ' ',
       status: 'non-spinnable',
       category: 'header',
@@ -348,14 +352,6 @@ class LocalDevManager {
     };
 
     if (changeInfo.filePath.includes('dist')) {
-      return;
-    }
-
-    const notifyResponse = await this.devServerNotify(changeInfo);
-
-    if (!notifyResponse.uploadRequired) {
-      this.updateDevModeStatus('supportedChange');
-      this.addChangeToStandbyQueue({ ...changeInfo, supported: true });
       return;
     }
 
@@ -659,7 +655,7 @@ class LocalDevManager {
   }
 
   handleServerLog(serverKey, ...args) {
-    this.spinnies.add(null, {
+    SpinniesManager.add(null, {
       text: `${args.join('')}`,
       status: 'non-spinnable',
     });
@@ -674,7 +670,7 @@ class LocalDevManager {
         accountId: this.targetAccountId,
         debug: this.debug,
         extension: this.extension,
-        spinniesLogger: this.handleServerLog.bind(this),
+        spinniesLogger: this.handleServerLog,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,
       });
@@ -682,40 +678,8 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add(null, {
+      SpinniesManager.add(null, {
         text: i18n(`${i18nKey}.devServer.startError`),
-        status: 'non-spinnable',
-      });
-    }
-  }
-
-  async devServerNotify(changeInfo) {
-    let notifyResponse = { uploadRequired: true };
-
-    try {
-      notifyResponse = await DevServerManager.notify(changeInfo);
-    } catch (e) {
-      if (this.debug) {
-        logger.error(e);
-      }
-      this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.devServer.notifyError`),
-        status: 'non-spinnable',
-      });
-    }
-
-    return notifyResponse;
-  }
-
-  devServerAfterUpload() {
-    try {
-      DevServerManager.afterUpload();
-    } catch (e) {
-      if (this.debug) {
-        logger.error(e);
-      }
-      this.spinnies.add(null, {
-        text: i18n(`${i18nKey}.devServer.afterUploadError`),
         status: 'non-spinnable',
       });
     }
@@ -728,7 +692,7 @@ class LocalDevManager {
       if (this.debug) {
         logger.error(e);
       }
-      this.spinnies.add(null, {
+      SpinniesManager.add(null, {
         text: i18n(`${i18nKey}.devServer.cleanupError`),
         status: 'non-spinnable',
       });

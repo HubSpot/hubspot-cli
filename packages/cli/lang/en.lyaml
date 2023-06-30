@@ -869,7 +869,6 @@ en:
             uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
             noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
             manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
-            supportedChange: "{{#bold}}Status:{{/bold}} {{#green}}Change handled by local dev server{{/green}}"
             manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
         upload:
           noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
@@ -890,10 +889,7 @@ en:
           uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
         devServer:
           startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
-          notifyError: "{{#red}}[ERROR]{{/red}} Failed to process change locally"
-          executeError: "{{#red}}[ERROR]{{/red}} Failed to handle change with local dev server"
           cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
-          afterUploadError: "{{#red}}[ERROR]{{/red}} Failed to update local dev server after upload"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

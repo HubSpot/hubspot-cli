@@ -112,40 +112,6 @@ class DevServerManager {
     this.initialized = true;
   }
 
-  async notify(changeInfo) {
-    let notifyResponse = { uploadRequired: true };
-
-    if (this.initialized) {
-      await this.iterateDevServers(async (serverInterface, serverKey) => {
-        let isSupportedByServer = false;
-
-        if (serverInterface.notify) {
-          isSupportedByServer = await serverInterface.notify(changeInfo);
-        }
-
-        if (isSupportedByServer) {
-          notifyResponse[serverKey] = true;
-
-          if (notifyResponse.uploadRequired) {
-            notifyResponse.uploadRequired = false;
-          }
-        }
-      });
-    }
-
-    return notifyResponse;
-  }
-
-  afterUpload() {
-    if (this.initialized) {
-      this.iterateDevServers(serverInterface => {
-        if (serverInterface.afterUpload) {
-          serverInterface.afterUpload();
-        }
-      });
-    }
-  }
-
   async cleanup() {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
