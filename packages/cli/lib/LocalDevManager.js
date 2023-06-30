@@ -213,7 +213,7 @@ class LocalDevManager {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
       } else if (
-        (key.name === 'y' || key.name === 'n') &&
+        (key.name === 'y' || key.name === 'n' || key.name === 'a') &&
         this.uploadPermission === UPLOAD_PERMISSIONS.manual &&
         this.hasAnyUnsupportedStandbyChanges()
       ) {
@@ -221,7 +221,23 @@ class LocalDevManager {
         SpinniesManager.remove('manualUploadExplanation1');
         SpinniesManager.remove('manualUploadExplanation2');
         SpinniesManager.remove('manualUploadPrompt');
+        SpinniesManager.remove('manualUploadYes');
+        SpinniesManager.remove('manualUploadNo');
+        SpinniesManager.remove('manualUploadAlways');
 
+        if (key.name === 'a') {
+          SpinniesManager.add(null, {
+            text: i18n(`${i18nKey}.upload.automaticUploadConfirmed`),
+            status: 'succeed',
+            succeedColor: 'white',
+            noIndent: true,
+          });
+          this.updateDevModeStatus('uploadPending');
+          await this.createNewStagingBuild();
+          this.flushStandbyChanges();
+          this.setUploadPermission(UPLOAD_PERMISSIONS.always);
+          await this.queueBuild();
+        }
         if (key.name === 'y') {
           SpinniesManager.add(null, {
             text: i18n(`${i18nKey}.upload.manualUploadConfirmed`),
@@ -283,6 +299,10 @@ class LocalDevManager {
 
   generateLocalURL(path) {
     return this.devServerPath ? `${this.devServerPath}${path}` : null;
+  }
+
+  setUploadPermission(uploadPermission) {
+    this.uploadPermission = uploadPermission;
   }
 
   updateDevModeStatus(langKey) {
@@ -413,6 +433,21 @@ class LocalDevManager {
           text: i18n(`${i18nKey}.upload.manualUploadPrompt`),
           status: 'non-spinnable',
           indent: 1,
+        });
+        SpinniesManager.add('manualUploadYes', {
+          text: i18n(`${i18nKey}.upload.manualUploadYes`),
+          status: 'non-spinnable',
+          indent: 2,
+        });
+        SpinniesManager.add('manualUploadNo', {
+          text: i18n(`${i18nKey}.upload.manualUploadNo`),
+          status: 'non-spinnable',
+          indent: 2,
+        });
+        SpinniesManager.add('manualUploadAlways', {
+          text: i18n(`${i18nKey}.upload.manualUploadAlways`),
+          status: 'non-spinnable',
+          indent: 2,
         });
       }
     }
