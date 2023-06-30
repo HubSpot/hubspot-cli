@@ -1,8 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { i18n } = require('./lang');
+const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { getProjectDetailUrl } = require('./projects');
+const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -12,8 +13,20 @@ const DEFAULT_PORT = 8080;
 
 class DevServerManager {
   constructor() {
+    this.initialized = false;
     this.server = null;
+    this.path = null;
     this.devServers = {};
+  }
+
+  setServer(key, serverInterfacePath) {
+    try {
+      this.devServers[key] = require(serverInterfacePath);
+    } catch (e) {
+      logger.debug(
+        `Failed to load dev server interface at ${serverInterfacePath}`
+      );
+    }
   }
 
   async iterateDevServers(callback) {
@@ -26,7 +39,28 @@ class DevServerManager {
     }
   }
 
-  async start({ projectConfig, accountId, port }) {
+  generateURL(path) {
+    return this.path ? `${this.path}/${path}` : null;
+  }
+
+  makeLogger(spinniesLogger, serverKey) {
+    return {
+      debug: (...args) => spinniesLogger(serverKey, '[DEBUG] ', ...args),
+      error: (...args) => spinniesLogger(serverKey, '[ERROR] ', ...args),
+      info: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
+      log: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
+      warn: (...args) => spinniesLogger(serverKey, '[WARN] ', ...args),
+    };
+  }
+
+  async start({
+    accountId,
+    debug,
+    extension,
+    projectConfig,
+    projectSourceDir,
+    spinniesLogger,
+  }) {
     const app = express();
 
     // Install Middleware
@@ -47,41 +81,47 @@ class DevServerManager {
       res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
     });
 
-    // Initialize component servers
-    await this.iterateDevServers(async (serverInterface, serverKey) => {
-      if (serverInterface.start) {
-        const serverApp = await serverInterface.start(serverKey);
-        app.use(`/${serverKey}`, serverApp);
-      }
-    });
-
     // Start server
-    this.server = app.listen(port || DEFAULT_PORT).on('error', err => {
+    this.server = await app.listen(DEFAULT_PORT).on('error', err => {
       if (err.code === 'EADDRINUSE') {
-        logger.error(
-          i18n(`${i18nKey}.portConflict`, { port: port || DEFAULT_PORT })
-        );
+        logger.error(i18n(`${i18nKey}.portConflict`, { port: DEFAULT_PORT }));
         logger.log();
         process.exit(EXIT_CODES.ERROR);
       }
     });
 
-    return this.server.address()
+    const projectFiles = await walk(projectSourceDir);
+
+    // Initialize component servers
+    await this.iterateDevServers(async (serverInterface, serverKey) => {
+      if (serverInterface.start) {
+        await serverInterface.start({
+          debug,
+          extension,
+          logger: this.makeLogger(spinniesLogger, serverKey),
+          projectConfig,
+          projectFiles,
+        });
+      }
+    });
+
+    this.path = this.server.address()
       ? `http://localhost:${this.server.address().port}`
       : null;
-  }
 
-  async notify() {
-    return { uploadRequired: true };
-  }
-
-  async execute() {
-    return;
+    this.initialized = true;
   }
 
   async cleanup() {
-    if (this.server) {
-      await this.server.close();
+    if (this.initialized) {
+      await this.iterateDevServers(async serverInterface => {
+        if (serverInterface.cleanup) {
+          await serverInterface.cleanup();
+        }
+      });
+      if (this.server) {
+        await this.server.close();
+      }
     }
   }
 }
