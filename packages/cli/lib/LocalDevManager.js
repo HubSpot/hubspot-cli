@@ -40,6 +40,7 @@ const WATCH_EVENTS = {
   add: 'add',
   change: 'change',
   unlink: 'unlink',
+  unlinkDir: 'unlinkDir',
 };
 
 const UPLOAD_PERMISSIONS = {
@@ -335,6 +336,9 @@ class LocalDevManager {
     this.watcher.on('unlink', async filePath => {
       this.handleWatchEvent(filePath, WATCH_EVENTS.unlink);
     });
+    this.watcher.on('unlinkDir', async filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.unlinkDir);
+    });
   }
 
   async handleWatchEvent(filePath, event) {
@@ -468,7 +472,10 @@ class LocalDevManager {
           }),
           status: 'non-spinnable',
         });
-      } else if (event === WATCH_EVENTS.unlink) {
+      } else if (
+        event === WATCH_EVENTS.unlink ||
+        event === WATCH_EVENTS.unlinkDir
+      ) {
         const { name: spinnerName } = SpinniesManager.add(null, {
           text: i18n(`${i18nKey}.upload.uploadingRemoveChange`, {
             filePath: remotePath,
