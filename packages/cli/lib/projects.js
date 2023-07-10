@@ -330,6 +330,10 @@ const uploadProjectFiles = async (
   let error;
 
   try {
+    if (!platformVersion) {
+      logger.log(i18n(`${i18nKey}.uploadProjectFiles.noPlatformVersion`));
+    }
+
     const upload = await uploadProject(
       accountId,
       projectName,

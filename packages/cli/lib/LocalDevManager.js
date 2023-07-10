@@ -683,6 +683,9 @@ class LocalDevManager {
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,
       });
+      if (!this.projectConfig.platformVersion) {
+        logger.log(i18n(`${i18nKey}.noPlatformVersion`));
+      }
     } catch (e) {
       if (this.debug) {
         logger.error(e);
