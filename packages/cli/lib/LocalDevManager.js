@@ -309,7 +309,8 @@ class LocalDevManager {
     try {
       const { buildId } = await provisionBuild(
         this.targetAccountId,
-        this.projectConfig.name
+        this.projectConfig.name,
+        this.projectConfig.platformVersion
       );
       this.currentStagedBuildId = buildId;
     } catch (err) {
@@ -540,7 +541,11 @@ class LocalDevManager {
     let queueBuildError;
 
     try {
-      await queueBuild(this.targetAccountId, this.projectConfig.name);
+      await queueBuild(
+        this.targetAccountId,
+        this.projectConfig.name,
+        this.projectConfig.platformVersion
+      );
     } catch (err) {
       queueBuildError = err;
     }
