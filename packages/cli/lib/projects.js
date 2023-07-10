@@ -15,6 +15,7 @@ const {
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
+  DEFAULT_PLATFORM_VERSION,
   SPINNER_STATUS,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -312,7 +313,8 @@ const uploadProjectFiles = async (
   accountId,
   projectName,
   filePath,
-  uploadMessage
+  uploadMessage,
+  platformVersion = DEFAULT_PLATFORM_VERSION
 ) => {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
@@ -333,7 +335,8 @@ const uploadProjectFiles = async (
       accountId,
       projectName,
       filePath,
-      uploadMessage
+      uploadMessage,
+      platformVersion
     );
 
     buildId = upload.buildId;
@@ -490,7 +493,8 @@ const handleProjectUpload = async (
         accountId,
         projectConfig.name,
         tempFile.name,
-        uploadMessage
+        uploadMessage,
+        projectConfig.platformVersion
       );
 
       if (error) {
