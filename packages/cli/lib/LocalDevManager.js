@@ -55,7 +55,7 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.extension = options.extension;
-    this.devServerPath = options.devServerPath;
+    this.useDevServer = options.useDevServer;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -102,7 +102,7 @@ class LocalDevManager {
 
     await this.devServerStart();
 
-    if (!this.devServerPath) {
+    if (!this.useDevServer) {
       this.uploadQueue.start();
       await this.startWatching();
     } else {
@@ -667,8 +667,8 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      if (this.devServerPath) {
-        DevServerManager.setServer('uie', this.devServerPath);
+      if (this.useDevServer) {
+        DevServerManager.safeLoadServer();
       }
       await DevServerManager.start({
         accountId: this.targetAccountId,

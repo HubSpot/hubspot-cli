@@ -465,8 +465,8 @@ en:
             options:
               extension:
                 describe: "The extension that you would like to run locally"
-              devServerPath:
-                describe: "Relative path to the dev server interface file"
+              useDevServer:
+                describe: "Boolean that determines whether to use the dev server or not"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."

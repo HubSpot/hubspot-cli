@@ -283,7 +283,7 @@ exports.handler = async options => {
     projectDir,
     targetAccountId,
     uploadPermission,
-    devServerPath: options.devServerPath,
+    useDevServer: options.useDevServer,
   });
 
   await LocalDev.start();
@@ -312,9 +312,9 @@ exports.builder = yargs => {
     hidden: true,
   });
 
-  yargs.option('devServerPath', {
-    describe: i18n(`${i18nKey}.options.devServerPath.describe`),
-    type: 'string',
+  yargs.option('useDevServer', {
+    describe: i18n(`${i18nKey}.options.useDevServer.describe`),
+    type: 'boolean',
     hidden: true,
   });
 

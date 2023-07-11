@@ -19,13 +19,12 @@ class DevServerManager {
     this.devServers = {};
   }
 
-  setServer(key, serverInterfacePath) {
+  safeLoadServer() {
     try {
-      this.devServers[key] = require(serverInterfacePath);
+      const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
+      this.devServers['uie'] = DevModeInterface;
     } catch (e) {
-      logger.debug(
-        `Failed to load dev server interface at ${serverInterfacePath}`
-      );
+      logger.debug('Failed to load dev server interface: ', e);
     }
   }
 
