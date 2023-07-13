@@ -21,7 +21,7 @@ const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
   cancelStagedBuild,
   uploadFileToBuild,
-  deleteFileFromBuild,
+  deleteAssetFromBuild,
   provisionBuild,
   queueBuild,
 } = require('@hubspot/cli-lib/api/dfs');
@@ -485,10 +485,12 @@ class LocalDevManager {
           }),
           status: 'non-spinnable',
         });
-        await deleteFileFromBuild(
+        const path =
+          event === WATCH_EVENTS.unlinkDir ? `${remotePath}/` : remotePath;
+        await deleteAssetFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
-          remotePath
+          path
         );
         SpinniesManager.update(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedRemoveChange`, {
