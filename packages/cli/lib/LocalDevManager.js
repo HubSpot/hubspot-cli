@@ -55,7 +55,6 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.extension = options.extension;
-    this.useDevServer = options.useDevServer;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -77,7 +76,7 @@ class LocalDevManager {
   }
 
   async start() {
-    SpinniesManager.init();
+    SpinniesManager.init({ interval: 200 });
 
     this.watcher = chokidar.watch(this.projectSourceDir, {
       ignoreInitial: true,
@@ -102,7 +101,7 @@ class LocalDevManager {
 
     await this.devServerStart();
 
-    if (!this.useDevServer) {
+    if (!this.extension) {
       this.uploadQueue.start();
       await this.startWatching();
     } else {
@@ -667,7 +666,7 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      if (this.useDevServer) {
+      if (this.extension) {
         DevServerManager.safeLoadServer();
       }
       await DevServerManager.start({

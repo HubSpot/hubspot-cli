@@ -43,6 +43,10 @@ class SpinniesManager {
       process.stderr &&
       process.stderr.isTTY;
 
+    if (options.interval) {
+      this.options.spinner.interval = options.interval;
+    }
+
     if (!this.hasAnySpinners()) {
       this.resetState();
     }
@@ -53,6 +57,9 @@ class SpinniesManager {
     // Default Spinnies fields
     this.spinners = {};
     this.isCursorHidden = false;
+    if (this.currentInterval) {
+      clearInterval(this.currentInterval);
+    }
     this.currentInterval = null;
     this.stream = process.stderr;
     this.lineCount = 0;

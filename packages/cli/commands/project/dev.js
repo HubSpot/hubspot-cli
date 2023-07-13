@@ -176,7 +176,7 @@ exports.handler = async options => {
       targetAccountId,
       projectConfig.name
     );
-    if (sourceIntegration) {
+    if (options.extension || sourceIntegration) {
       uploadPermission = UPLOAD_PERMISSIONS.never;
     }
   }
@@ -283,7 +283,6 @@ exports.handler = async options => {
     projectDir,
     targetAccountId,
     uploadPermission,
-    useDevServer: options.useDevServer,
   });
 
   await LocalDev.start();
@@ -309,12 +308,6 @@ exports.builder = yargs => {
   yargs.option('extension', {
     describe: i18n(`${i18nKey}.options.extension.describe`),
     type: 'string',
-    hidden: true,
-  });
-
-  yargs.option('useDevServer', {
-    describe: i18n(`${i18nKey}.options.useDevServer.describe`),
-    type: 'boolean',
     hidden: true,
   });
 
