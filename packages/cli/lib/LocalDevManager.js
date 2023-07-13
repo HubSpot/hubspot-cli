@@ -21,7 +21,7 @@ const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const {
   cancelStagedBuild,
   uploadFileToBuild,
-  deleteAssetFromBuild,
+  deleteFileFromBuild,
   provisionBuild,
   queueBuild,
 } = require('@hubspot/cli-lib/api/dfs');
@@ -487,7 +487,7 @@ class LocalDevManager {
         });
         const path =
           event === WATCH_EVENTS.unlinkDir ? `${remotePath}/` : remotePath;
-        await deleteAssetFromBuild(
+        await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
           path
