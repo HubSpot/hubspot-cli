@@ -850,7 +850,6 @@ en:
         portConflict: "The port {{ port }} is already in use."
       LocalDevManagerV2:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
-        betaTag: "[beta]"
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
