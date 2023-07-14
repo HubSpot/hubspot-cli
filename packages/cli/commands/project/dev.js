@@ -39,7 +39,11 @@ const {
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+  ERROR_TYPES,
+} = require('@hubspot/cli-lib/lib/constants');
 const {
   logErrorInstance,
   logApiErrorInstance,
@@ -254,6 +258,8 @@ exports.handler = async options => {
     );
 
     if (initialUploadResult.uploadError) {
+      SpinniesManager.fail('devModeSetup');
+
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -273,6 +279,37 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
+  }
+
+  // Let the user know when the initial build or deploy fails
+  // Do this before starting the dev server for v2 behavior because we cannot
+  // run a server on a broken project
+  if (
+    options.extension &&
+    initialUploadResult &&
+    !initialUploadResult.succeeded
+  ) {
+    SpinniesManager.fail('devModeSetup');
+
+    let subTasks = [];
+
+    if (initialUploadResult.buildResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+    }
+
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    logger.log();
+    failedSubTasks.forEach(failedSubTask => {
+      console.log(failedSubTask.errorMessage);
+    });
+    logger.log();
+
+    process.exit(EXIT_CODES.ERROR);
   }
 
   SpinniesManager.remove('devModeSetup');
@@ -295,14 +332,16 @@ exports.handler = async options => {
 
   await LocalDev.start();
 
-  if (!options.extension) {
-    // Let the user know when the initial build or deploy fails
-    if (initialUploadResult && !initialUploadResult.succeeded) {
-      if (initialUploadResult.buildResult.status === 'FAILURE') {
-        LocalDev.logBuildError(initialUploadResult.buildResult);
-      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-        LocalDev.logDeployError(initialUploadResult.deployResult);
-      }
+  // Let the user know when the initial build or deploy fails
+  if (
+    !options.extension &&
+    initialUploadResult &&
+    !initialUploadResult.succeeded
+  ) {
+    if (initialUploadResult.buildResult.status === 'FAILURE') {
+      LocalDev.logBuildError(initialUploadResult.buildResult);
+    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+      LocalDev.logDeployError(initialUploadResult.deployResult);
     }
   }
 

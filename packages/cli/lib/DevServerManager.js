@@ -87,6 +87,7 @@ class DevServerManager {
           accountId,
           debug,
           extension,
+          logger: console,
           projectConfig,
           projectFiles,
         });
