@@ -29,6 +29,7 @@ const {
   LocalDevManager,
   UPLOAD_PERMISSIONS,
 } = require('../../lib/LocalDevManager');
+const LocalDevManagerV2 = require('../../lib/LocalDevManagerV2');
 const { isSandbox } = require('../../lib/sandboxes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -276,23 +277,32 @@ exports.handler = async options => {
 
   SpinniesManager.remove('devModeSetup');
 
-  const LocalDev = new LocalDevManager({
-    debug: options.debug,
-    extension: options.extension,
-    projectConfig,
-    projectDir,
-    targetAccountId,
-    uploadPermission,
-  });
+  const LocalDev = options.extension
+    ? new LocalDevManagerV2({
+        debug: options.debug,
+        extension: options.extension,
+        projectConfig,
+        projectDir,
+        targetAccountId,
+      })
+    : new LocalDevManager({
+        debug: options.debug,
+        projectConfig,
+        projectDir,
+        targetAccountId,
+        uploadPermission,
+      });
 
   await LocalDev.start();
 
-  // Let the user know when the initial build or deploy fails
-  if (initialUploadResult && !initialUploadResult.succeeded) {
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      LocalDev.logBuildError(initialUploadResult.buildResult);
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      LocalDev.logDeployError(initialUploadResult.deployResult);
+  if (!options.extension) {
+    // Let the user know when the initial build or deploy fails
+    if (initialUploadResult && !initialUploadResult.succeeded) {
+      if (initialUploadResult.buildResult.status === 'FAILURE') {
+        LocalDev.logBuildError(initialUploadResult.buildResult);
+      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+        LocalDev.logDeployError(initialUploadResult.deployResult);
+      }
     }
   }
 

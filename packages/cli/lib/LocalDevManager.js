@@ -1,5 +1,6 @@
 const chokidar = require('chokidar');
 const path = require('path');
+const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -54,7 +55,6 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
-    this.extension = options.extension;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -76,7 +76,7 @@ class LocalDevManager {
   }
 
   async start() {
-    SpinniesManager.init({ interval: 200 });
+    SpinniesManager.init();
 
     this.watcher = chokidar.watch(this.projectSourceDir, {
       ignoreInitial: true,
@@ -101,12 +101,8 @@ class LocalDevManager {
 
     await this.devServerStart();
 
-    if (!this.extension) {
-      this.uploadQueue.start();
-      await this.startWatching();
-    } else {
-      this.uploadPermission = UPLOAD_PERMISSIONS.never;
-    }
+    this.uploadQueue.start();
+    await this.startWatching();
 
     this.updateKeypressListeners();
 
@@ -161,10 +157,12 @@ class LocalDevManager {
 
   updateConsoleHeader() {
     SpinniesManager.addOrUpdate('devModeRunning', {
-      text: i18n(`${i18nKey}.header.running`, {
-        accountIdentifier: uiAccountDescription(this.targetAccountId),
-        projectName: this.projectConfig.name,
-      }),
+      text: chalk.hex('#FF8F59')(
+        i18n(`${i18nKey}.header.running`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          projectName: this.projectConfig.name,
+        })
+      ),
       isParent: true,
       category: 'header',
     });
@@ -666,13 +664,9 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      if (this.extension) {
-        DevServerManager.safeLoadServer();
-      }
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
-        extension: this.extension,
         spinniesLogger: this.handleServerLog,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,

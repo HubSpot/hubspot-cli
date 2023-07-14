@@ -43,10 +43,6 @@ class SpinniesManager {
       process.stderr &&
       process.stderr.isTTY;
 
-    if (options.interval) {
-      this.options.spinner.interval = options.interval;
-    }
-
     if (!this.hasAnySpinners()) {
       this.resetState();
     }
