@@ -7,7 +7,7 @@ const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
-const { uiAccountDescription, uiLink, uiLine } = require('./ui');
+const { uiAccountDescription, uiBetaMessage, uiLink, uiLine } = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManagerV2';
 
@@ -35,10 +35,7 @@ class LocalDevManagerV2 {
     SpinniesManager.removeAll();
     SpinniesManager.init();
 
-    logger.log(
-      chalk.hex('#9784c2')(i18n(`${i18nKey}.betaTag`)),
-      i18n(`${i18nKey}.betaMessage`)
-    );
+    uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     logger.log(
       chalk.hex('#FF8F59')(

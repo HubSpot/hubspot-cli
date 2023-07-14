@@ -448,7 +448,7 @@ en:
           dev:
             describe: "Start local dev for the current project"
             logs:
-              betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
+              betaMessage: "HubSpot projects local development"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
               placeholderAccountSelection: "Using default account as target account (for now)"
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
@@ -926,6 +926,7 @@ en:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
       ui:
+        betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
           footer: "{{#yellow}}******************************************************************{{/yellow}}"

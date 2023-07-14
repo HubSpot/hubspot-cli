@@ -19,7 +19,7 @@ const {
   pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiAccountDescription, uiLine } = require('../../lib/ui');
+const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
@@ -72,7 +72,7 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  logger.log(i18n(`${i18nKey}.logs.betaMessage`));
+  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
