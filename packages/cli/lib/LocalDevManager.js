@@ -1,6 +1,5 @@
 const chokidar = require('chokidar');
 const path = require('path');
-const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -157,12 +156,10 @@ class LocalDevManager {
 
   updateConsoleHeader() {
     SpinniesManager.addOrUpdate('devModeRunning', {
-      text: chalk.hex('#FF8F59')(
-        i18n(`${i18nKey}.header.running`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
-          projectName: this.projectConfig.name,
-        })
-      ),
+      text: i18n(`${i18nKey}.header.running`, {
+        accountIdentifier: uiAccountDescription(this.targetAccountId),
+        projectName: this.projectConfig.name,
+      }),
       isParent: true,
       category: 'header',
     });
