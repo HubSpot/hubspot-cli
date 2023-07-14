@@ -485,10 +485,12 @@ class LocalDevManager {
           }),
           status: 'non-spinnable',
         });
+        const path =
+          event === WATCH_EVENTS.unlinkDir ? `${remotePath}/` : remotePath;
         await deleteFileFromBuild(
           this.targetAccountId,
           this.projectConfig.name,
-          remotePath
+          path
         );
         SpinniesManager.update(spinnerName, {
           text: i18n(`${i18nKey}.upload.uploadedRemoveChange`, {
