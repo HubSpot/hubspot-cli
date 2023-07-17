@@ -103,7 +103,9 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
-      logger.error(i18n(`${i18nKey}.devServerStartError`));
+      logger.error(
+        i18n(`${i18nKey}.devServer.startError`, { message: e.message })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
@@ -116,6 +118,9 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
+      logger.error(
+        i18n(`${i18nKey}.devServer.cleanupError`, { message: e.message })
+      );
       return false;
     }
   }

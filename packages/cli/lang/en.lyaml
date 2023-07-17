@@ -857,7 +857,9 @@ en:
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
-        devServerStartError: "Failed to start local dev server"
+        devServer:
+          cleanupError: "Failed to cleanup local dev server: {{ message }}"
+          startError: "Failed to start local dev server: {{ message }}"
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
         exitingStart: "Stopping local dev server ..."
