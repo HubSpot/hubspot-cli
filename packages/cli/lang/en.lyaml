@@ -856,9 +856,8 @@ en:
         viewInHubSpotLink: "View in HubSpot"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
-        devServer:
-          startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
-          cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
+        exitingFail: "Failed to cleanup before exiting"
+        devServerStartError: "Failed to start local dev server"
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
         exitingStart: "Stopping local dev server ..."

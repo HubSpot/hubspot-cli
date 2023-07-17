@@ -107,6 +107,7 @@ class DevServerManager {
           await serverInterface.cleanup();
         }
       });
+
       if (this.server) {
         await this.server.close();
       }

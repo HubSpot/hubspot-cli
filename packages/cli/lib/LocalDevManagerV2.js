@@ -66,12 +66,18 @@ class LocalDevManagerV2 {
       text: i18n(`${i18nKey}.exitingStart`),
     });
 
-    await this.devServerCleanup();
+    const cleanupSucceeded = await this.devServerCleanup();
+
+    if (!cleanupSucceeded) {
+      SpinniesManager.fail('cleanupMessage', {
+        text: i18n(`${i18nKey}.exitingFail`),
+      });
+      process.exit(EXIT_CODES.ERROR);
+    }
 
     SpinniesManager.succeed('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingSucceed`),
     });
-
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -97,24 +103,20 @@ class LocalDevManagerV2 {
       if (this.debug) {
         logger.error(e);
       }
-      SpinniesManager.add(null, {
-        text: i18n(`${i18nKey}.devServer.startError`),
-        status: 'non-spinnable',
-      });
+      logger.error(i18n(`${i18nKey}.devServerStartError`));
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 
   async devServerCleanup() {
     try {
       await DevServerManager.cleanup();
+      return true;
     } catch (e) {
       if (this.debug) {
         logger.error(e);
       }
-      SpinniesManager.add(null, {
-        text: i18n(`${i18nKey}.devServer.cleanupError`),
-        status: 'non-spinnable',
-      });
+      return false;
     }
   }
 }
