@@ -1,21 +1,18 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const fs = require('fs');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
-const { getProjectDetailUrl } = require('./projects');
 const { i18n } = require('./lang');
-const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { promptUser } = require('./prompts/promptUtils');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
-const DEFAULT_PORT = 8080;
+const APP_COMPONENT_CONFIG = 'app.json';
 
 class DevServerManager {
   constructor() {
+    this.debug = false;
     this.initialized = false;
-    this.server = null;
-    this.path = null;
+    this.started = false;
     this.devServers = {};
   }
 
@@ -28,6 +25,21 @@ class DevServerManager {
     }
   }
 
+  safeLoadConfigFile(configPath) {
+    if (configPath) {
+      try {
+        const source = fs.readFileSync(configPath);
+        const parsedConfig = JSON.parse(source);
+        return parsedConfig;
+      } catch (e) {
+        if (this.debug) {
+          logger.error(e);
+        }
+      }
+    }
+    return null;
+  }
+
   async iterateDevServers(callback) {
     const serverKeys = Object.keys(this.devServers);
 
@@ -38,79 +50,75 @@ class DevServerManager {
     }
   }
 
-  generateURL(path) {
-    return this.path ? `${this.path}/${path}` : null;
-  }
-
-  async start({
-    accountId,
-    debug,
-    extension,
-    projectConfig,
-    projectSourceDir,
-  }) {
-    const app = express();
-
-    // Install Middleware
-    app.use(bodyParser.json({ limit: '50mb' }));
-    app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-    app.use(cors());
-
-    // Configure
-    app.set('trust proxy', true);
-
-    // Initialize a base route
-    app.get('/', (req, res) => {
-      res.send('HubSpot local dev server');
-    });
-
-    // Initialize URL redirects
-    app.get('/hs/project', (req, res) => {
-      res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
-    });
-
-    // Start server
-    this.server = await app.listen(DEFAULT_PORT).on('error', err => {
-      if (err.code === 'EADDRINUSE') {
-        logger.error(i18n(`${i18nKey}.portConflict`, { port: DEFAULT_PORT }));
-        logger.log();
-        process.exit(EXIT_CODES.ERROR);
-      }
-    });
+  async findComponents(projectSourceDir) {
+    let components = {};
 
     const projectFiles = await walk(projectSourceDir);
 
-    // Initialize component servers
+    projectFiles.forEach(projectFile => {
+      if (projectFile.endsWith(APP_COMPONENT_CONFIG)) {
+        const parsedConfig = this.safeLoadConfigFile(projectFile);
+
+        if (parsedConfig && parsedConfig.name) {
+          components[parsedConfig.name] = {
+            config: parsedConfig,
+            path: projectFile.substring(
+              0,
+              projectFile.indexOf(APP_COMPONENT_CONFIG)
+            ),
+          };
+        }
+      }
+    });
+
+    return components;
+  }
+
+  async setup({ debug, projectSourceDir }) {
+    this.debug = debug;
+
+    this.safeLoadServer();
+
+    const components = await this.findComponents(projectSourceDir);
+
     await this.iterateDevServers(async serverInterface => {
-      if (serverInterface.start) {
-        await serverInterface.start({
-          accountId,
+      if (serverInterface.setup) {
+        await serverInterface.setup({
           debug,
-          extension,
-          projectConfig,
-          projectFiles,
+          promptUser,
+          components,
         });
       }
     });
 
-    this.path = this.server.address()
-      ? `http://localhost:${this.server.address().port}`
-      : null;
-
     this.initialized = true;
   }
 
-  async cleanup() {
+  async start({ accountId, projectConfig }) {
     if (this.initialized) {
+      await this.iterateDevServers(async serverInterface => {
+        if (serverInterface.start) {
+          await serverInterface.start({
+            accountId,
+            debug: this.debug,
+            projectConfig,
+          });
+        }
+      });
+    } else {
+      throw new Error(i18n(`${i18nKey}.notInitialized`));
+    }
+
+    this.started = true;
+  }
+
+  async cleanup() {
+    if (this.started) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.cleanup) {
           await serverInterface.cleanup();
         }
       });
-
-      if (this.server) {
-        await this.server.close();
-      }
     }
   }
 }
