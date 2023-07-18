@@ -3,6 +3,7 @@ const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { promptUser } = require('./prompts/promptUtils');
+const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -13,16 +14,9 @@ class DevServerManager {
     this.debug = false;
     this.initialized = false;
     this.started = false;
-    this.devServers = {};
-  }
-
-  safeLoadServer() {
-    try {
-      const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
-      this.devServers['uie'] = DevModeInterface;
-    } catch (e) {
-      logger.debug('Failed to load dev server interface: ', e);
-    }
+    this.devServers = {
+      uie: DevModeInterface,
+    };
   }
 
   safeLoadConfigFile(configPath) {
@@ -76,8 +70,6 @@ class DevServerManager {
 
   async setup({ debug, projectSourceDir }) {
     this.debug = debug;
-
-    this.safeLoadServer();
 
     const components = await this.findComponents(projectSourceDir);
 
