@@ -904,7 +904,6 @@ en:
           createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
           createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
           notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
-          noPlatformVersion: "You are currently using the default version of the project platform version. If you want to use another version, you can add a `platformVersion` property to the hsproject.json file."
         makePollTaskStatusFunc:
           componentCountSingular: "Found 1 component in this project"
           componentCount: "Found {{ numComponents }} components in this project"
@@ -916,6 +915,8 @@ en:
         logFeedbackMessage:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+        showPlatformVersionWarning:
+          noPlatformVersion: "You are currently using the default version of the project platform version. If you want to use another version, you can add a `platformVersion` property to the hsproject.json file."
       ui:
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"

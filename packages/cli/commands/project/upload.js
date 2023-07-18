@@ -16,6 +16,7 @@ const {
   logFeedbackMessage,
   validateProjectConfig,
   pollProjectBuildAndDeploy,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
@@ -48,13 +49,9 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(
-    accountId,
-    projectConfig.name,
-    projectConfig.platformVersion,
-    true,
-    { forceCreate }
-  );
+  await showPlatformVersionWarning(projectConfig.platformVersion);
+
+  await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
   try {
     const result = await handleProjectUpload(
