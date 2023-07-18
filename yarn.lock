@@ -467,20 +467,18 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/ui-extensions-dev-server@^0.0.1-prealpha.7":
-  version "0.0.1-prealpha.8"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.0.1-prealpha.8.tgz#f360d1d1a4d213e990bd8317610be2b5851444cc"
-  integrity sha512-Ubj+CTBjEwcGJ9/DjilJ0N/DIql5QX7lV91ewMJZOimSapR32GUiRf2pmVfUnc+pbuNCs3/lKGgCioFgzYG47Q==
+"@hubspot/ui-extensions-dev-server@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.4.0.tgz#3f894c8f590df0466d7668ee280752e67b5a346c"
+  integrity sha512-LYCId5QDrSaPJUAH+k5u9msW+b/HTXiA4PcvKNvJW0niDxX4NAV19u2F60n46mHvhseF498r5kuTW7DX2k3w+Q==
   dependencies:
-    chokidar "^3.5.3"
     command-line-args "^5.2.1"
     command-line-usage "^7.0.1"
     console-log-colors "^0.4.0"
+    cors "^2.8.5"
     express "^4.18.2"
-    process "^0.11.10"
     prompts "^2.4.2"
     vite "^4.0.4"
-    ws "^8.12.1"
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
@@ -2563,7 +2561,7 @@ chardet@^0.7.0:
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
   integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
 
-"chokidar@>=2.0.0 <4.0.0", chokidar@^3.0.1, chokidar@^3.4.3, chokidar@^3.5.3:
+"chokidar@>=2.0.0 <4.0.0", chokidar@^3.0.1, chokidar@^3.4.3:
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"
   integrity sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==
@@ -7625,11 +7623,6 @@ process-nextick-args@~2.0.0:
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
 
-process@^0.11.10:
-  version "0.11.10"
-  resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
-  integrity sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==
-
 progress@^2.0.0:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.3.tgz#7e8cf8d8f5b8f239c1bc68beb4eb78567d572ef8"
@@ -9758,11 +9751,6 @@ ws@^7.4.6:
   version "7.5.9"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
   integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
-
-ws@^8.12.1:
-  version "8.13.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.13.0.tgz#9a9fb92f93cf41512a0735c8f4dd09b8a1211cd0"
-  integrity sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==
 
 xdg-basedir@^4.0.0:
   version "4.0.0"
