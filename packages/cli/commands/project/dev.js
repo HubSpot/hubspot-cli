@@ -19,7 +19,7 @@ const {
   pollProjectBuildAndDeploy,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiAccountDescription, uiLine } = require('../../lib/ui');
+const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
@@ -29,6 +29,7 @@ const {
   LocalDevManager,
   UPLOAD_PERMISSIONS,
 } = require('../../lib/LocalDevManager');
+const LocalDevManagerV2 = require('../../lib/LocalDevManagerV2');
 const { isSandbox } = require('../../lib/sandboxes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -38,7 +39,11 @@ const {
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const {
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+  ERROR_TYPES,
+} = require('@hubspot/cli-lib/lib/constants');
 const {
   logErrorInstance,
   logApiErrorInstance,
@@ -67,7 +72,7 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  logger.log(i18n(`${i18nKey}.logs.betaMessage`));
+  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
@@ -176,7 +181,7 @@ exports.handler = async options => {
       targetAccountId,
       projectConfig.name
     );
-    if (sourceIntegration) {
+    if (options.extension || sourceIntegration) {
       uploadPermission = UPLOAD_PERMISSIONS.never;
     }
   }
@@ -253,6 +258,8 @@ exports.handler = async options => {
     );
 
     if (initialUploadResult.uploadError) {
+      SpinniesManager.fail('devModeSetup');
+
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -274,22 +281,63 @@ exports.handler = async options => {
     }
   }
 
+  // Let the user know when the initial build or deploy fails
+  // Do this before starting the dev server for v2 behavior because we cannot
+  // run a server on a broken project
+  if (
+    options.extension &&
+    initialUploadResult &&
+    !initialUploadResult.succeeded
+  ) {
+    SpinniesManager.fail('devModeSetup');
+
+    let subTasks = [];
+
+    if (initialUploadResult.buildResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+    }
+
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    logger.log();
+    failedSubTasks.forEach(failedSubTask => {
+      console.log(failedSubTask.errorMessage);
+    });
+    logger.log();
+
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   SpinniesManager.remove('devModeSetup');
 
-  const LocalDev = new LocalDevManager({
-    debug: options.debug,
-    extension: options.extension,
-    projectConfig,
-    projectDir,
-    targetAccountId,
-    uploadPermission,
-    devServerPath: options.devServerPath,
-  });
+  const LocalDev = options.extension
+    ? new LocalDevManagerV2({
+        debug: options.debug,
+        extension: options.extension,
+        projectConfig,
+        projectDir,
+        targetAccountId,
+      })
+    : new LocalDevManager({
+        debug: options.debug,
+        projectConfig,
+        projectDir,
+        targetAccountId,
+        uploadPermission,
+      });
 
   await LocalDev.start();
 
   // Let the user know when the initial build or deploy fails
-  if (initialUploadResult && !initialUploadResult.succeeded) {
+  if (
+    !options.extension &&
+    initialUploadResult &&
+    !initialUploadResult.succeeded
+  ) {
     if (initialUploadResult.buildResult.status === 'FAILURE') {
       LocalDev.logBuildError(initialUploadResult.buildResult);
     } else if (initialUploadResult.deployResult.status === 'FAILURE') {
@@ -308,12 +356,6 @@ exports.builder = yargs => {
 
   yargs.option('extension', {
     describe: i18n(`${i18nKey}.options.extension.describe`),
-    type: 'string',
-    hidden: true,
-  });
-
-  yargs.option('devServerPath', {
-    describe: i18n(`${i18nKey}.options.devServerPath.describe`),
     type: 'string',
     hidden: true,
   });

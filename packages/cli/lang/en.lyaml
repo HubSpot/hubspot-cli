@@ -448,7 +448,7 @@ en:
           dev:
             describe: "Start local dev for the current project"
             logs:
-              betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
+              betaMessage: "HubSpot projects local development"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
               placeholderAccountSelection: "Using default account as target account (for now)"
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
@@ -465,8 +465,6 @@ en:
             options:
               extension:
                 describe: "The extension that you would like to run locally"
-              devServerPath:
-                describe: "Relative path to the dev server interface file"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
@@ -850,6 +848,18 @@ en:
     lib:
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
+      LocalDevManagerV2:
+        failedToInitialize: "Missing required arguments to initialize Local Dev"
+        betaMessage: "HubSpot projects local development"
+        running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
+        quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
+        viewInHubSpotLink: "View in HubSpot"
+        exitingStart: "Stopping local dev server ..."
+        exitingSucceed: "Successfully exited"
+        exitingFail: "Failed to cleanup before exiting"
+        devServer:
+          cleanupError: "Failed to cleanup local dev server: {{ message }}"
+          startError: "Failed to start local dev server: {{ message }}"
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
         exitingStart: "Stopping local dev server ..."
@@ -859,7 +869,7 @@ en:
         cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
         header:
           betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
-          running: "Running {{ projectName}} locally on {{ accountIdentifier }}, waiting for changes ..."
+          running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
           quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
           viewInHubSpotLink: "View in HubSpot"
           status:
@@ -916,6 +926,7 @@ en:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
       ui:
+        betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
           footer: "{{#yellow}}******************************************************************{{/yellow}}"

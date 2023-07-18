@@ -54,8 +54,6 @@ class LocalDevManager {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
-    this.extension = options.extension;
-    this.devServerPath = options.devServerPath;
     this.uploadPermission =
       options.uploadPermission || UPLOAD_PERMISSIONS.always;
     this.debug = options.debug || false;
@@ -102,12 +100,8 @@ class LocalDevManager {
 
     await this.devServerStart();
 
-    if (!this.devServerPath) {
-      this.uploadQueue.start();
-      await this.startWatching();
-    } else {
-      this.uploadPermission = UPLOAD_PERMISSIONS.never;
-    }
+    this.uploadQueue.start();
+    await this.startWatching();
 
     this.updateKeypressListeners();
 
@@ -669,13 +663,9 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      if (this.devServerPath) {
-        DevServerManager.setServer('uie', this.devServerPath);
-      }
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
-        extension: this.extension,
         spinniesLogger: this.handleServerLog,
         projectConfig: this.projectConfig,
         projectSourceDir: this.projectSourceDir,

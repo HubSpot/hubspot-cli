@@ -19,13 +19,12 @@ class DevServerManager {
     this.devServers = {};
   }
 
-  setServer(key, serverInterfacePath) {
+  safeLoadServer() {
     try {
-      this.devServers[key] = require(serverInterfacePath);
+      const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
+      this.devServers['uie'] = DevModeInterface;
     } catch (e) {
-      logger.debug(
-        `Failed to load dev server interface at ${serverInterfacePath}`
-      );
+      logger.debug('Failed to load dev server interface: ', e);
     }
   }
 
@@ -43,23 +42,12 @@ class DevServerManager {
     return this.path ? `${this.path}/${path}` : null;
   }
 
-  makeLogger(spinniesLogger, serverKey) {
-    return {
-      debug: (...args) => spinniesLogger(serverKey, '[DEBUG] ', ...args),
-      error: (...args) => spinniesLogger(serverKey, '[ERROR] ', ...args),
-      info: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
-      log: (...args) => spinniesLogger(serverKey, '[INFO] ', ...args),
-      warn: (...args) => spinniesLogger(serverKey, '[WARN] ', ...args),
-    };
-  }
-
   async start({
     accountId,
     debug,
     extension,
     projectConfig,
     projectSourceDir,
-    spinniesLogger,
   }) {
     const app = express();
 
@@ -93,12 +81,12 @@ class DevServerManager {
     const projectFiles = await walk(projectSourceDir);
 
     // Initialize component servers
-    await this.iterateDevServers(async (serverInterface, serverKey) => {
+    await this.iterateDevServers(async serverInterface => {
       if (serverInterface.start) {
         await serverInterface.start({
+          accountId,
           debug,
           extension,
-          logger: this.makeLogger(spinniesLogger, serverKey),
           projectConfig,
           projectFiles,
         });
@@ -119,6 +107,7 @@ class DevServerManager {
           await serverInterface.cleanup();
         }
       });
+
       if (this.server) {
         await this.server.close();
       }
