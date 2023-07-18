@@ -157,6 +157,8 @@ exports.handler = async options => {
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,
+    projectConfig.platformVersion,
+    true,
     {
       allowCreate: false,
       noLogs: true,

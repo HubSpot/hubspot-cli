@@ -97,7 +97,12 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name);
+  await ensureProjectExists(
+    accountId,
+    projectConfig.name,
+    projectConfig.platformVersion,
+    true
+  );
 
   try {
     const { results: builds } = await fetchProjectBuilds(

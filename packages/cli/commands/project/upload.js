@@ -48,7 +48,13 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
+  await ensureProjectExists(
+    accountId,
+    projectConfig.name,
+    projectConfig.platformVersion,
+    true,
+    { forceCreate }
+  );
 
   try {
     const result = await handleProjectUpload(

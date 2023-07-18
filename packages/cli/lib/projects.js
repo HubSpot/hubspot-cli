@@ -218,6 +218,8 @@ const pollFetchProject = async (accountId, projectName) => {
 const ensureProjectExists = async (
   accountId,
   projectName,
+  platformVersion = null,
+  usePlatformVersion = false,
   {
     forceCreate = false,
     allowCreate = true,
@@ -233,6 +235,12 @@ const ensureProjectExists = async (
     return !!project;
   } catch (err) {
     if (err.statusCode === 404) {
+      if (!platformVersion && usePlatformVersion) {
+        logger.log('');
+        logger.log(i18n(`${i18nKey}.ensureProjectExists.noPlatformVersion`));
+        logger.log('');
+      }
+
       let shouldCreateProject = forceCreate;
 
       if (allowCreate && !shouldCreateProject) {
@@ -330,10 +338,6 @@ const uploadProjectFiles = async (
   let error;
 
   try {
-    if (!platformVersion) {
-      logger.log(i18n(`${i18nKey}.uploadProjectFiles.noPlatformVersion`));
-    }
-
     const upload = await uploadProject(
       accountId,
       projectName,
