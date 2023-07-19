@@ -49,7 +49,7 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await showPlatformVersionWarning(accountId, projectConfig.platformVersion);
+  await showPlatformVersionWarning(accountId, projectConfig);
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 

@@ -813,11 +813,13 @@ const createProjectComponent = async (component, name) => {
   );
 };
 
-const showPlatformVersionWarning = async (accountId, platformVersion) => {
+const showPlatformVersionWarning = async (accountId, projectConfig) => {
+  const platformVersion = projectConfig.platformVersion;
+
   if (!platformVersion) {
     const defaultVersion = await fetchDefaultVersion(accountId);
     logger.log('');
-    logger.log(
+    logger.warn(
       i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
         defaultVersion,
       })
