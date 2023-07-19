@@ -98,7 +98,7 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await showPlatformVersionWarning(projectConfig.platformVersion);
+  await showPlatformVersionWarning(accountId, projectConfig.platformVersion);
 
   await ensureProjectExists(accountId, projectConfig.name);
 

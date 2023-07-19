@@ -926,7 +926,7 @@ en:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
         showPlatformVersionWarning:
-          noPlatformVersion: "You are currently using the default version of the project platform version. If you want to use another version, you can add a `platformVersion` property to the hsproject.json file."
+          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
       ui:
         betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:

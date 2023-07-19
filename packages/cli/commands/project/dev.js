@@ -80,7 +80,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  await showPlatformVersionWarning(projectConfig.platformVersion);
+  await showPlatformVersionWarning(accountId, projectConfig.platformVersion);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
