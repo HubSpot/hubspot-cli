@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
+const httpClient = require('@hubspot/cli-lib/http');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { promptUser } = require('./prompts/promptUtils');
@@ -94,6 +95,7 @@ class DevServerManager {
             accountId,
             debug: this.debug,
             projectConfig,
+            httpClient,
           });
         }
       });

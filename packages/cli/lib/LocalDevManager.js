@@ -35,6 +35,7 @@ class LocalDevManagerV2 {
     SpinniesManager.init();
 
     uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
+    logger.log();
     await this.devServerSetup();
 
     console.clear();
