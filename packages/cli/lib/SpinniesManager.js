@@ -53,6 +53,9 @@ class SpinniesManager {
     // Default Spinnies fields
     this.spinners = {};
     this.isCursorHidden = false;
+    if (this.currentInterval) {
+      clearInterval(this.currentInterval);
+    }
     this.currentInterval = null;
     this.stream = process.stderr;
     this.lineCount = 0;

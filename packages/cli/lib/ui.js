@@ -105,6 +105,12 @@ const uiFeatureHighlight = (commands, title) => {
   });
 };
 
+const uiBetaMessage = message => {
+  const i18nKey = 'cli.lib.ui';
+
+  logger.log(chalk.hex('#bda9ea')(i18n(`${i18nKey}.betaTag`)), message);
+};
+
 const uiBetaWarning = logMessage => {
   const i18nKey = 'cli.lib.ui.betaWarning';
 
@@ -115,6 +121,7 @@ const uiBetaWarning = logMessage => {
 
 module.exports = {
   uiAccountDescription,
+  uiBetaMessage,
   uiBetaWarning,
   uiFeatureHighlight,
   uiInfoSection,
