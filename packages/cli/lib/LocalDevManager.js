@@ -9,9 +9,9 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
 const { uiAccountDescription, uiBetaMessage, uiLink, uiLine } = require('./ui');
 
-const i18nKey = 'cli.lib.LocalDevManagerV2';
+const i18nKey = 'cli.lib.LocalDevManager';
 
-class LocalDevManagerV2 {
+class LocalDevManager {
   constructor(options) {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
@@ -30,11 +30,9 @@ class LocalDevManagerV2 {
   }
 
   async start() {
-    console.clear();
     SpinniesManager.stopAll();
     SpinniesManager.init();
 
-    uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     await this.devServerSetup();
 
@@ -143,4 +141,4 @@ class LocalDevManagerV2 {
   }
 }
 
-module.exports = LocalDevManagerV2;
+module.exports = LocalDevManager;

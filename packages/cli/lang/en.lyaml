@@ -848,7 +848,7 @@ en:
     lib:
       DevServerManager:
         notInitialized: "The Dev Server Manager must be initialized before it is started."
-      LocalDevManagerV2:
+      LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
