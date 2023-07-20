@@ -168,19 +168,15 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
-    if (err instanceof HubSpotAuthError) {
+    if (err instanceof HubSpotAuthError && err.statusCode === 401) {
       // Intercept invalid key error
       // This command uses the parent portal PAK to delete a sandbox, so we must specify which account needs a new key
-      const regex = /\bYour personal access key is invalid\b/;
-      const match = err.message.match(regex);
-      if (match && match[0]) {
-        logger.log('');
-        logger.error(
-          i18n(`${i18nKey}.failure.invalidKey`, {
-            account: getAccountName(parentAccount),
-          })
-        );
-      }
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidKey`, {
+          account: getAccountName(parentAccount),
+        })
+      );
     } else if (
       isSpecifiedError(err, {
         statusCode: 403,

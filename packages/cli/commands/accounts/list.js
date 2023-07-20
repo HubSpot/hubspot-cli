@@ -71,7 +71,7 @@ const getPortalData = mappedPortalData => {
 };
 
 exports.handler = async options => {
-  await loadAndValidateOptions(options);
+  await loadAndValidateOptions(options, false);
 
   const accountId = getAccountId(options);
 
