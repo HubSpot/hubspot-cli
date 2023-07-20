@@ -10,24 +10,19 @@ const { setLogLevel } = require('./commonOpts');
 /* **
 Available tracking meta properties
 
-  ImmutableMap
-    .<EventProperty, String>builder()
-    .put(EventProperty.ACTION, "The specific action taken in the CLI")
-    .put(EventProperty.OS, "The user's OS")
-    .put(EventProperty.NODE_VERSION, "The user's version of node.js")
-    .put(EventProperty.NODE_MAJOR_VERSION, "The user's major version of node.js")
-    .put(EventProperty.VERSION, "The user's version of the CLI")
-    .put(
-      EventProperty.COMMAND,
-      "The specific command that the user ran in this interaction"
-    )
-    .put(EventProperty.AUTH_TYPE, "The configured auth type the user has for the CLI")
-    .put(EventProperty.STEP, "The specific step in the auth process")
-    .put(EventProperty.ASSET_TYPE, "The CMS asset type")
-    .put(EventProperty.MODE, "The CLI mode (draft or publish")
-    .put(EventProperty.TYPE, "The upload type (file or folder)")
-    .put(EventProperty.FILE, "Whether or not the 'file' flag was used")
-    .put(EventProperty.SUCCESSFUL, "Whether or not the CLI interaction was successful")
+  - action: "The specific action taken in the CLI"
+  - os: "The user's OS"
+  - nodeVersion: "The user's version of node.js"
+  - nodeMajorVersion: "The user's major version of node.js"
+  - version: "The user's version of the CLI"
+  - command: "The specific command that the user ran in this interaction"
+  - authType: "The configured auth type the user has for the CLI"
+  - step: "The specific step in the auth process"
+  - assetType: "The CMS asset type"
+  - mode: "The CLI mode (draft or publish"
+  - type: "The upload type (file or folder)"
+  - file: "Whether or not the 'file' flag was used"
+  - successful: "Whether or not the CLI interaction was successful"
 
 */
 
