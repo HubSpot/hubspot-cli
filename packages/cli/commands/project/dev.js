@@ -60,7 +60,7 @@ const {
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
-exports.describe = null; //i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

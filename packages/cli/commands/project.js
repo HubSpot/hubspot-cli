@@ -1,4 +1,5 @@
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const { i18n } = require('../lib/lang');
 const deploy = require('./project/deploy');
 const create = require('./project/create');
 const upload = require('./project/upload');
@@ -10,8 +11,10 @@ const open = require('./project/open');
 const dev = require('./project/dev');
 const add = require('./project/add');
 
+const i18nKey = 'cli.commands.project';
+
 exports.command = 'project';
-exports.describe = false; //'Commands for working with projects';
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
   addConfigOptions(yargs, true);

@@ -444,6 +444,7 @@ en:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
       project:
+        describe: "Commands for working with projects"
         subcommands:
           dev:
             describe: "Start local dev for the current project"
@@ -516,6 +517,8 @@ en:
                 describe: "Project build ID to be deployed"
               project:
                 describe: "Project name"
+          listBuilds:
+            describe: "List the project's builds"
           logs:
             describe: "Get execution logs for a serverless function within a project"
             errors:
