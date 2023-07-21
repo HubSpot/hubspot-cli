@@ -461,13 +461,9 @@ en:
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-              targetNonSandbox: "Continue testing in a non-sandbox account?"
-            options:
-              extension:
-                describe: "The extension that you would like to run locally"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
-              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             examples:
               default: "Start local dev for the current project"
           create:

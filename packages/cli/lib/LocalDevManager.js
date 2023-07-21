@@ -104,7 +104,6 @@ class LocalDevManager {
       logger.error(
         i18n(`${i18nKey}.devServer.setupError`, { message: e.message })
       );
-      process.exit(EXIT_CODES.ERROR);
     }
   }
 
