@@ -57,7 +57,7 @@ class DevServerManager {
     return this.path ? `${this.path}/${path}` : null;
   }
 
-  async setup({ alpha, componentsByType, debug }) {
+  async setup({ alpha, componentsByType, debug, onUploadRequired }) {
     this.debug = debug;
     this.componentsByType = componentsByType;
 
@@ -69,6 +69,7 @@ class DevServerManager {
           alpha,
           components,
           debug,
+          onUploadRequired,
           promptUser,
         });
       }

@@ -176,12 +176,13 @@ exports.handler = async options => {
     ? UPLOAD_PERMISSIONS.manual
     : UPLOAD_PERMISSIONS.always;
 
+  let deployedBuild;
+
   if (projectExists) {
-    const { sourceIntegration } = await fetchProject(
-      targetAccountId,
-      projectConfig.name
-    );
-    if (options.local || options.localAll || sourceIntegration) {
+    const project = await fetchProject(targetAccountId, projectConfig.name);
+    deployedBuild = project.deployedBuild;
+
+    if (options.local || options.localAll || project.sourceIntegration) {
       uploadPermission = UPLOAD_PERMISSIONS.never;
     }
   }
@@ -317,8 +318,9 @@ exports.handler = async options => {
   const LocalDev =
     options.local || options.localAll
       ? new LocalDevManagerV2({
-          debug: options.debug,
           alpha: options.localAll,
+          debug: options.debug,
+          deployedBuild,
           projectConfig,
           projectDir,
           targetAccountId,

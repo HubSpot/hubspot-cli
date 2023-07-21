@@ -22,7 +22,8 @@ function safeLoadConfigFile(configPath) {
   return null;
 }
 
-function getIsLegacyApp(appConfig, appPath) {
+function getAppCardConfigs(appConfig, appPath) {
+  let cardConfigs = [];
   let cards;
 
   if (appConfig && appConfig.extensions && appConfig.extensions.crm) {
@@ -30,28 +31,42 @@ function getIsLegacyApp(appConfig, appPath) {
   }
 
   if (cards) {
-    let hasAnyReactExtensions = false;
-
     cards.forEach(({ file }) => {
-      if (!hasAnyReactExtensions) {
-        const cardConfigPath = path.join(appPath, file);
-        const cardConfig = safeLoadConfigFile(cardConfigPath);
+      const cardConfigPath = path.join(appPath, file);
+      const cardConfig = safeLoadConfigFile(cardConfigPath);
 
-        const isReactExtension =
-          cardConfig &&
-          !!cardConfig.data &&
-          !!cardConfig.data.module &&
-          !!cardConfig.data.module.file;
-
-        hasAnyReactExtensions = isReactExtension;
+      if (cardConfig) {
+        cardConfigs.push(cardConfig);
       }
     });
-
-    return !hasAnyReactExtensions;
   }
 
-  // Assume any app that does not have any cards is not legacy
-  return false;
+  return cardConfigs;
+}
+
+function getIsLegacyApp(appConfig, appPath) {
+  const cardConfigs = getAppCardConfigs(appConfig, appPath);
+
+  if (!cardConfigs.length) {
+    // Assume any app that does not have any cards is not legacy
+    return false;
+  }
+
+  let hasAnyReactExtensions = false;
+
+  cardConfigs.forEach(cardConfig => {
+    if (!hasAnyReactExtensions) {
+      const isReactExtension =
+        cardConfig &&
+        !!cardConfig.data &&
+        !!cardConfig.data.module &&
+        !!cardConfig.data.module.file;
+
+      hasAnyReactExtensions = isReactExtension;
+    }
+  });
+
+  return !hasAnyReactExtensions;
 }
 
 async function findProjectComponents(projectSourceDir) {
@@ -89,4 +104,5 @@ async function findProjectComponents(projectSourceDir) {
 module.exports = {
   COMPONENT_TYPES,
   findProjectComponents,
+  getAppCardConfigs,
 };

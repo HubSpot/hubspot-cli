@@ -3,11 +3,19 @@ const chalk = require('chalk');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
+const {
+  getAccountId,
+  getConfigDefaultAccount,
+} = require('@hubspot/cli-lib/lib/config');
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
-const { findProjectComponents } = require('./projectStructure');
+const {
+  COMPONENT_TYPES,
+  findProjectComponents,
+  getAppCardConfigs,
+} = require('./projectStructure');
 const {
   UI_COLORS,
   uiAccountDescription,
@@ -25,6 +33,7 @@ class LocalDevManagerV2 {
     this.projectDir = options.projectDir;
     this.debug = options.debug || false;
     this.alpha = options.alpha;
+    this.deployedBuild = options.deployedBuild;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -103,6 +112,8 @@ class LocalDevManagerV2 {
     await this.devServerStart();
 
     this.updateKeypressListeners();
+
+    this.compareDeployedProjectToLocal(runnableComponentsByType);
   }
 
   async stop() {
@@ -133,12 +144,69 @@ class LocalDevManagerV2 {
     });
   }
 
+  logUploadWarning(reason) {
+    const currentDefaultAccount = getConfigDefaultAccount();
+    const defaultAccountId = getAccountId(currentDefaultAccount);
+
+    logger.log();
+    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
+    logger.log(i18n(`${i18nKey}.uploadWarning.stopDev`));
+    if (this.targetAccountId !== defaultAccountId) {
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
+          accountId: this.targetAccountId,
+        })
+      );
+    } else {
+      logger.log(i18n(`${i18nKey}.uploadWarning.runUpload`));
+    }
+    logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
+  }
+
+  compareDeployedProjectToLocal(runnableComponentsByType) {
+    const deployedComponentNames = this.deployedBuild.subbuildStatuses.map(
+      subbuildStatus => subbuildStatus.buildName
+    );
+
+    let missingComponents = [];
+
+    if (runnableComponentsByType[COMPONENT_TYPES.app]) {
+      Object.keys(runnableComponentsByType[COMPONENT_TYPES.app]).forEach(
+        key => {
+          const { config, path } = runnableComponentsByType[
+            COMPONENT_TYPES.app
+          ][key];
+
+          const cardConfigs = getAppCardConfigs(config, path);
+          cardConfigs.forEach(cardConfig => {
+            if (
+              cardConfig.data &&
+              cardConfig.data.title &&
+              !deployedComponentNames.includes(cardConfig.data.title)
+            ) {
+              missingComponents.push(cardConfig.data.title);
+            }
+          });
+        }
+      );
+    }
+
+    if (missingComponents.length) {
+      this.logUploadWarning(
+        i18n(`${i18nKey}.uploadWarning.missingComponents`, {
+          missingComponents: missingComponents.join(','),
+        })
+      );
+    }
+  }
+
   async devServerSetup(componentsByType) {
     try {
       await DevServerManager.setup({
         alpha: this.alpha,
         componentsByType,
         debug: this.debug,
+        onUploadRequired: this.logUploadWarning.bind(this),
       });
     } catch (e) {
       if (this.debug) {

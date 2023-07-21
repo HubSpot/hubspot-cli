@@ -862,6 +862,13 @@ en:
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
+        uploadWarning:
+          missingComponents: "Your deployed project does not contain the components {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
+          header: "{{ reason }} To reflect these changes:"
+          stopDev: "  * Stop {{#bold}}`hs project dev`{{/bold}}"
+          runUpload: "  * Run {{#bold}}`hs project upload`{{/bold}}"
+          runUploadWithAccount: "  * Run {{#bold}}`hs project upload --account={{ accountId }}`{{/bold}}"
+          restartDev: "  * Re-run {{#bold}}`hs project dev`{{/bold}}"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
           setupError: "Failed to setup local dev server: {{ message }}"
