@@ -181,7 +181,7 @@ exports.handler = async options => {
       targetAccountId,
       projectConfig.name
     );
-    if (options.extension || sourceIntegration) {
+    if (options.local || options.localAll || sourceIntegration) {
       uploadPermission = UPLOAD_PERMISSIONS.never;
     }
   }
@@ -285,7 +285,7 @@ exports.handler = async options => {
   // Do this before starting the dev server for v2 behavior because we cannot
   // run a server on a broken project
   if (
-    options.extension &&
+    (options.local || options.localAll) &&
     initialUploadResult &&
     !initialUploadResult.succeeded
   ) {
@@ -314,27 +314,29 @@ exports.handler = async options => {
 
   SpinniesManager.remove('devModeSetup');
 
-  const LocalDev = options.extension
-    ? new LocalDevManagerV2({
-        debug: options.debug,
-        extension: options.extension,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-      })
-    : new LocalDevManager({
-        debug: options.debug,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-        uploadPermission,
-      });
+  const LocalDev =
+    options.local || options.localAll
+      ? new LocalDevManagerV2({
+          debug: options.debug,
+          alpha: options.localAll,
+          projectConfig,
+          projectDir,
+          targetAccountId,
+        })
+      : new LocalDevManager({
+          debug: options.debug,
+          projectConfig,
+          projectDir,
+          targetAccountId,
+          uploadPermission,
+        });
 
   await LocalDev.start();
 
   // Let the user know when the initial build or deploy fails
   if (
-    !options.extension &&
+    !options.local &&
+    !options.localAll &&
     initialUploadResult &&
     !initialUploadResult.succeeded
   ) {
@@ -354,9 +356,15 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
-  yargs.option('extension', {
-    describe: i18n(`${i18nKey}.options.extension.describe`),
-    type: 'string',
+  yargs.option('local', {
+    describe: i18n(`${i18nKey}.options.local.describe`),
+    type: 'boolean',
+    hidden: true,
+  });
+
+  yargs.option('local-all', {
+    describe: i18n(`${i18nKey}.options.localAll.describe`),
+    type: 'boolean',
     hidden: true,
   });
 

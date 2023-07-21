@@ -7,7 +7,14 @@ const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
-const { uiAccountDescription, uiBetaMessage, uiLink, uiLine } = require('./ui');
+const { findProjectComponents } = require('./projectStructure');
+const {
+  UI_COLORS,
+  uiAccountDescription,
+  uiBetaMessage,
+  uiLink,
+  uiLine,
+} = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManagerV2';
 
@@ -16,8 +23,8 @@ class LocalDevManagerV2 {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
-    this.extension = options.extension;
     this.debug = options.debug || false;
+    this.alpha = options.alpha;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -31,14 +38,51 @@ class LocalDevManagerV2 {
   }
 
   async start() {
-    console.clear();
     SpinniesManager.removeAll();
     SpinniesManager.init();
+
+    const componentsByType = await findProjectComponents(this.projectSourceDir);
+
+    const componentTypes = Object.keys(componentsByType);
+
+    if (!componentTypes.length) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.noComponents`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    const runnableComponentsByType = componentTypes.reduce((acc, type) => {
+      const components = componentsByType[type];
+
+      Object.keys(components).forEach(key => {
+        if (components[key].runnable) {
+          if (!acc[type]) {
+            acc[type] = {};
+          }
+          acc[type][key] = components[key];
+        }
+      });
+
+      return acc;
+    }, {});
+
+    if (!Object.keys(runnableComponentsByType).length) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.noRunnableComponents`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    logger.log();
+    await this.devServerSetup(runnableComponentsByType);
+
+    if (!this.debug) {
+      console.clear();
+    }
 
     uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     logger.log(
-      chalk.hex('#FF8F59')(
+      chalk.hex(UI_COLORS.orange)(
         i18n(`${i18nKey}.running`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           projectName: this.projectConfig.name,
@@ -89,15 +133,29 @@ class LocalDevManagerV2 {
     });
   }
 
+  async devServerSetup(componentsByType) {
+    try {
+      await DevServerManager.setup({
+        alpha: this.alpha,
+        componentsByType,
+        debug: this.debug,
+      });
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      logger.error(
+        i18n(`${i18nKey}.devServer.setupError`, { message: e.message })
+      );
+    }
+  }
+
   async devServerStart() {
     try {
-      DevServerManager.safeLoadServer();
       await DevServerManager.start({
+        alpha: this.alpha,
         accountId: this.targetAccountId,
-        debug: this.debug,
-        extension: this.extension,
         projectConfig: this.projectConfig,
-        projectSourceDir: this.projectSourceDir,
       });
     } catch (e) {
       if (this.debug) {
