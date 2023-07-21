@@ -444,7 +444,7 @@ en:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
       project:
-        describe: "Commands for working with projects"
+        describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
         subcommands:
           dev:
             describe: "Start local dev for the current project"
