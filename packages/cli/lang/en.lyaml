@@ -927,6 +927,7 @@ en:
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
         showPlatformVersionWarning:
           noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
+          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
       ui:
         betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:
