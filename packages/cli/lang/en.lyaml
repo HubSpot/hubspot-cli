@@ -792,6 +792,8 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
+          notRootUpload: "Source or Dest do not point to the root. Cannot do --remove unless you are uploading to and from the root of your project."
+          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
         options:
           options:
             describe: "Options to pass to javascript fields files"
@@ -799,6 +801,10 @@ en:
             describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
           convertFields:
             describe: "If true, converts any javascript fields files contained in module folder or project root."
+          remove:
+            describe: "Deletes files from HubSpot that do not exist locally."
+          force:
+            describe: "Removes files without prompting for deletion."
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
@@ -810,6 +816,7 @@ en:
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
         notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
+        deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:

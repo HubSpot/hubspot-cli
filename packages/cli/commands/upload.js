@@ -218,9 +218,8 @@ exports.handler = async options => {
     if (options.remove) {
       if (!isRootUpload(projectRoot, absoluteSrcPath, normalizedDest)) {
         // Can't remove. Error and exit.
-        logger.error(
-          'Source or Dest do not point to the root. Cannot do --remove unless you are uploading full projects'
-        );
+        logger.log(i18n(`${i18nKey}.errors.notRootUpload`));
+        process.exit(EXIT_CODES.WARNING);
       }
       const remoteAndNotLocal = await getDeletedFilesList(
         accountId,
@@ -236,7 +235,7 @@ exports.handler = async options => {
         }
         if (deleteFile) {
           try {
-            //await deleteFile(accountId, hsPath);
+            await deleteFile(accountId, hsPath);
             logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
           } catch (error) {
             logger.error(
@@ -322,13 +321,13 @@ exports.builder = yargs => {
     default: false,
   });
   yargs.option('remove', {
-    //describe: i18n(`${i18nKey}.options.remove.describe`),
+    describe: i18n(`${i18nKey}.options.remove.describe`),
     type: 'boolean',
     default: false,
     alias: ['r'],
   });
   yargs.option('force', {
-    //describe: i18n(`${i18nKey}.options.forceRemove.describe`),
+    describe: i18n(`${i18nKey}.options.forceRemove.describe`),
     type: 'boolean',
     default: false,
     alias: ['f'],
