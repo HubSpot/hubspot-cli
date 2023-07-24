@@ -21,16 +21,16 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
 
   // TODO: deploy must be updated
-  yargs.command(deploy).demandCommand(1, '');
   yargs.command(create).demandCommand(0, '');
-  yargs.command(upload).demandCommand(0, '');
+  yargs.command(add).demandCommand(0, '');
   yargs.command(watch).demandCommand(0, '');
-  yargs.command(listBuilds).demandCommand(0, '');
+  yargs.command(dev).demandCommand(0, '');
+  yargs.command(upload).demandCommand(0, '');
+  yargs.command(deploy).demandCommand(1, '');
   yargs.command(logs).demandCommand(1, '');
+  yargs.command(listBuilds).demandCommand(0, '');
   yargs.command(download).demandCommand(0, '');
   yargs.command(open).demandCommand(0, '');
-  yargs.command(dev).demandCommand(0, '');
-  yargs.command(add).demandCommand(0, '');
 
   return yargs;
 };

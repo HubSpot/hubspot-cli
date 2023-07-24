@@ -602,7 +602,7 @@ en:
               dest:
                 describe: "Destination folder for the project"
           open:
-            describe: "Open available projects for the specified account"
+            describe: "Open the specified project's details page in the browser"
             options:
               project:
                 describe: "Name of project to open"
