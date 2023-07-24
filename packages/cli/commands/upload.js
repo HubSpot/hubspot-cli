@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
-const { upload } = require('@hubspot/cli-lib/api/fileMapper');
+const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
@@ -229,13 +229,13 @@ exports.handler = async options => {
       );
       for (const filePath of remoteAndNotLocal) {
         const hsPath = path.join(normalizedDest, filePath);
-        let deleteFile = options.force;
+        let removeFile = options.force;
         if (!options.force) {
-          deleteFile = await deleteFilePrompt(hsPath);
+          removeFile = await deleteFilePrompt(hsPath);
         }
-        if (deleteFile) {
+        if (removeFile) {
           try {
-            await deleteFile(accountId, hsPath);
+            await deleteFile(accountId, convertToUnixPath(hsPath));
             logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
           } catch (error) {
             logger.error(
