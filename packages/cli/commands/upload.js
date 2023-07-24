@@ -327,7 +327,7 @@ exports.builder = yargs => {
     alias: ['r'],
   });
   yargs.option('force', {
-    describe: i18n(`${i18nKey}.options.forceRemove.describe`),
+    describe: i18n(`${i18nKey}.options.force.describe`),
     type: 'boolean',
     default: false,
     alias: ['f'],
