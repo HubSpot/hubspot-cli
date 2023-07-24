@@ -1,16 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
-const {
-  getFileMapperQueryValues,
-  doRemoteWalk,
-} = require('@hubspot/cli-lib/fileMapper');
+const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
   isAllowedExtension,
-  splitHubSpotPath,
 } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -33,7 +29,7 @@ const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { deleteFilePrompt } = require('../lib/prompts/deleteFilePrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { getUploadableFileList } = require('../lib/upload');
+const { getUploadableFileList, getDeletedFilesList } = require('../lib/upload');
 const {
   getThemePreviewUrl,
   getThemeJSONPath,
@@ -60,6 +56,15 @@ const logThemePreview = (filePath, accountId) => {
       })
     );
   }
+};
+
+const isRootUpload = (projectRoot, absoluteSrcPath, normalizedDest) => {
+  // Only allow removal if it is a root -> root upload.
+  const srcIsRoot = projectRoot === absoluteSrcPath;
+  // The normalized path contains no '/' only if it is a root, since convertToUnix strips leading and trailing '/'.
+  const destIsRoot = !normalizedDest.includes('/');
+
+  return srcIsRoot && destIsRoot;
 };
 
 exports.handler = async options => {
@@ -210,54 +215,37 @@ exports.handler = async options => {
       options.convertFields
     );
 
-    // TODO: IF same folder/file exists on DM, get list of it's files. If there is one there that isn't in `filePaths`, delete.
-    const remove = true;
-    const force = false;
-    if (remove) {
-      // Walk the file mapper
-      //const input = {accountId, src, normalizedDest, mode, options}
-      /*  console.log(src, dest, normalizedDest);
-      const filemapperPaths = await getDirectoryContentsByPath(
-        accountId,
-        normalizedDest
-      );
-      const filemapperFiles = [];
- */
-
-      // Only allow removal if it is a root -> root upload.
-
-      const srcIsRoot = projectRoot === absoluteSrcPath;
-      // The normalized path contains no '/' only if it is a root, since convertToUnix strips leading and trailing '/'.
-      const destIsRoot = !normalizedDest.includes('/');
-      if (!srcIsRoot || !destIsRoot) {
-        // Can't remove. Error or something.
+    if (options.remove) {
+      if (!isRootUpload(projectRoot, absoluteSrcPath, normalizedDest)) {
+        // Can't remove. Error and exit.
         logger.error(
           'Source or Dest do not point to the root. Cannot do --remove unless you are uploading full projects'
         );
       }
-
-      const remoteFiles = await doRemoteWalk(accountId, normalizedDest);
-      const remoteProjectRoot = splitHubSpotPath(normalizedDest).shift();
-      const relLocalPaths = filePaths.map(filePath =>
-        path.relative(projectRoot, filePath)
+      const remoteAndNotLocal = await getDeletedFilesList(
+        accountId,
+        projectRoot,
+        normalizedDest,
+        filePaths
       );
-      const relRemotePaths = remoteFiles.map(filePath =>
-        path.relative(remoteProjectRoot, filePath)
-      );
-
-      const remoteAndNotLocal = relRemotePaths.filter(
-        x => !relLocalPaths.includes(x)
-      );
-      for (const filePath in remoteAndNotLocal) {
-        const fullPath = path.resolve(normalizedDest, filePath);
-        let deleteFile = force;
-        if (!force) {
-          deleteFile = await deleteFilePrompt(fullPath);
+      for (const filePath of remoteAndNotLocal) {
+        const hsPath = path.join(normalizedDest, filePath);
+        let deleteFile = options.force;
+        if (!options.force) {
+          deleteFile = await deleteFilePrompt(hsPath);
         }
         if (deleteFile) {
-          logger.warn(
-            `Deleting file ${fullPath} from HubSpot as it no longer exists locally`
-          );
+          try {
+            //await deleteFile(accountId, hsPath);
+            logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
+          } catch (error) {
+            logger.error(
+              i18n(`${i18nKey}.errors.deleteFailed`, {
+                accountId,
+                path: hsPath,
+              })
+            );
+          }
         }
       }
     }
@@ -332,6 +320,18 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.convertFields.describe`),
     type: 'boolean',
     default: false,
+  });
+  yargs.option('remove', {
+    //describe: i18n(`${i18nKey}.options.remove.describe`),
+    type: 'boolean',
+    default: false,
+    alias: ['r'],
+  });
+  yargs.option('force', {
+    //describe: i18n(`${i18nKey}.options.forceRemove.describe`),
+    type: 'boolean',
+    default: false,
+    alias: ['f'],
   });
   return yargs;
 };

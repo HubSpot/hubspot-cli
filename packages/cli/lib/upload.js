@@ -2,8 +2,12 @@ const path = require('path');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
 const { createIgnoreFilter } = require('@hubspot/cli-lib/ignoreRules');
 const { fieldsJsPrompt } = require('../lib/prompts/cmsFieldPrompt');
-const { isAllowedExtension } = require('@hubspot/cli-lib/path');
+const {
+  isAllowedExtension,
+  splitHubSpotPath,
+} = require('@hubspot/cli-lib/path');
 const { isConvertableFieldJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
+const { doRemoteWalk } = require('@hubspot/cli-lib/fileMapper');
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.
@@ -45,6 +49,30 @@ const getUploadableFileList = async (src, convertFields) => {
   return uploadableFiles;
 };
 
+/*
+ * Return any files that exist on the remote but not locally.
+ */
+const getDeletedFilesList = async (
+  accountId,
+  projectRoot,
+  normalizedDest,
+  filePaths
+) => {
+  const remoteFiles = await doRemoteWalk(accountId, normalizedDest);
+  const remoteProjectRoot = splitHubSpotPath(normalizedDest).shift();
+  const relLocalPaths = filePaths.map(filePath =>
+    path.relative(projectRoot, filePath)
+  );
+  const relRemotePaths = remoteFiles.map(filePath =>
+    path.relative(remoteProjectRoot, filePath)
+  );
+  const remoteAndNotLocal = relRemotePaths.filter(
+    x => !relLocalPaths.includes(x)
+  );
+  return remoteAndNotLocal;
+};
+
 module.exports = {
   getUploadableFileList,
+  getDeletedFilesList,
 };
