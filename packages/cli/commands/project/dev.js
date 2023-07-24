@@ -17,6 +17,7 @@ const {
   ensureProjectExists,
   handleProjectUpload,
   pollProjectBuildAndDeploy,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
@@ -78,6 +79,8 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await showPlatformVersionWarning(accountId, projectConfig);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
