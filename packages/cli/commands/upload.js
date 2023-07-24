@@ -1,12 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
-const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
+const {
+  getFileMapperQueryValues,
+  doRemoteWalk,
+} = require('@hubspot/cli-lib/fileMapper');
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
   isAllowedExtension,
+  splitHubSpotPath,
 } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -26,6 +30,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
+const { deleteFilePrompt } = require('../lib/prompts/deleteFilePrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
@@ -204,6 +209,58 @@ exports.handler = async options => {
       absoluteSrcPath,
       options.convertFields
     );
+
+    // TODO: IF same folder/file exists on DM, get list of it's files. If there is one there that isn't in `filePaths`, delete.
+    const remove = true;
+    const force = false;
+    if (remove) {
+      // Walk the file mapper
+      //const input = {accountId, src, normalizedDest, mode, options}
+      /*  console.log(src, dest, normalizedDest);
+      const filemapperPaths = await getDirectoryContentsByPath(
+        accountId,
+        normalizedDest
+      );
+      const filemapperFiles = [];
+ */
+
+      // Only allow removal if it is a root -> root upload.
+
+      const srcIsRoot = projectRoot === absoluteSrcPath;
+      // The normalized path contains no '/' only if it is a root, since convertToUnix strips leading and trailing '/'.
+      const destIsRoot = !normalizedDest.includes('/');
+      if (!srcIsRoot || !destIsRoot) {
+        // Can't remove. Error or something.
+        logger.error(
+          'Source or Dest do not point to the root. Cannot do --remove unless you are uploading full projects'
+        );
+      }
+
+      const remoteFiles = await doRemoteWalk(accountId, normalizedDest);
+      const remoteProjectRoot = splitHubSpotPath(normalizedDest).shift();
+      const relLocalPaths = filePaths.map(filePath =>
+        path.relative(projectRoot, filePath)
+      );
+      const relRemotePaths = remoteFiles.map(filePath =>
+        path.relative(remoteProjectRoot, filePath)
+      );
+
+      const remoteAndNotLocal = relRemotePaths.filter(
+        x => !relLocalPaths.includes(x)
+      );
+      for (const filePath in remoteAndNotLocal) {
+        const fullPath = path.resolve(normalizedDest, filePath);
+        let deleteFile = force;
+        if (!force) {
+          deleteFile = await deleteFilePrompt(fullPath);
+        }
+        if (deleteFile) {
+          logger.warn(
+            `Deleting file ${fullPath} from HubSpot as it no longer exists locally`
+          );
+        }
+      }
+    }
     uploadFolder(
       accountId,
       absoluteSrcPath,
