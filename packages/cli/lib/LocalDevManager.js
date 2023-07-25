@@ -668,6 +668,9 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
+      // Set this to true manually for now
+      DevServerManager.initialized = true;
+
       await DevServerManager.start({
         accountId: this.targetAccountId,
         debug: this.debug,
