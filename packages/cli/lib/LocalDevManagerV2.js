@@ -82,9 +82,9 @@ class LocalDevManagerV2 {
     }
 
     logger.log();
-    await this.devServerSetup(runnableComponentsByType);
+    const setupSucceeded = await this.devServerSetup(runnableComponentsByType);
 
-    if (!this.debug) {
+    if (setupSucceeded || !this.debug) {
       console.clear();
     }
 
@@ -208,6 +208,7 @@ class LocalDevManagerV2 {
         debug: this.debug,
         onUploadRequired: this.logUploadWarning.bind(this),
       });
+      return true;
     } catch (e) {
       if (this.debug) {
         logger.error(e);
@@ -215,6 +216,7 @@ class LocalDevManagerV2 {
       logger.error(
         i18n(`${i18nKey}.devServer.setupError`, { message: e.message })
       );
+      return false;
     }
   }
 

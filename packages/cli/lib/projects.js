@@ -18,6 +18,9 @@ const {
   SPINNER_STATUS,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
+  fetchDefaultVersion,
+} = require('@hubspot/cli-lib/lib/projectPlatformVersion');
+const {
   createProject,
   getBuildStatus,
   getBuildStructure,
@@ -312,7 +315,8 @@ const uploadProjectFiles = async (
   accountId,
   projectName,
   filePath,
-  uploadMessage
+  uploadMessage,
+  platformVersion
 ) => {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
@@ -333,7 +337,8 @@ const uploadProjectFiles = async (
       accountId,
       projectName,
       filePath,
-      uploadMessage
+      uploadMessage,
+      platformVersion
     );
 
     buildId = upload.buildId;
@@ -490,7 +495,8 @@ const handleProjectUpload = async (
         accountId,
         projectConfig.name,
         tempFile.name,
-        uploadMessage
+        uploadMessage,
+        projectConfig.platformVersion
       );
 
       if (error) {
@@ -807,6 +813,30 @@ const createProjectComponent = async (component, name) => {
   );
 };
 
+const showPlatformVersionWarning = async (accountId, projectConfig) => {
+  const platformVersion = projectConfig.platformVersion;
+
+  if (!platformVersion) {
+    try {
+      const defaultVersion = await fetchDefaultVersion(accountId);
+      logger.log('');
+      logger.warn(
+        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
+          defaultVersion,
+        })
+      );
+      logger.log('');
+    } catch (e) {
+      logger.log('');
+      logger.warn(
+        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
+      );
+      logger.log('');
+      logger.debug(e.error);
+    }
+  }
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -823,4 +853,5 @@ module.exports = {
   ensureProjectExists,
   logFeedbackMessage,
   createProjectComponent,
+  showPlatformVersionWarning,
 };
