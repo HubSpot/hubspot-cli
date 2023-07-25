@@ -9,7 +9,7 @@ const COMPONENT_TYPES = Object.freeze({
 
 const APP_COMPONENT_CONFIG = 'app.json';
 
-function safeLoadConfigFile(configPath) {
+function loadConfigFile(configPath) {
   if (configPath) {
     try {
       const source = fs.readFileSync(configPath);
@@ -33,7 +33,7 @@ function getAppCardConfigs(appConfig, appPath) {
   if (cards) {
     cards.forEach(({ file }) => {
       const cardConfigPath = path.join(appPath, file);
-      const cardConfig = safeLoadConfigFile(cardConfigPath);
+      const cardConfig = loadConfigFile(cardConfigPath);
 
       if (cardConfig) {
         cardConfigs.push(cardConfig);
@@ -70,13 +70,14 @@ function getIsLegacyApp(appConfig, appPath) {
 }
 
 async function findProjectComponents(projectSourceDir) {
-  let componentsByType = {};
+  const components = [];
 
   const projectFiles = await walk(projectSourceDir);
 
   projectFiles.forEach(projectFile => {
+    // Find app components
     if (projectFile.endsWith(APP_COMPONENT_CONFIG)) {
-      const parsedAppConfig = safeLoadConfigFile(projectFile);
+      const parsedAppConfig = loadConfigFile(projectFile);
 
       if (parsedAppConfig && parsedAppConfig.name) {
         const appPath = projectFile.substring(
@@ -85,20 +86,17 @@ async function findProjectComponents(projectSourceDir) {
         );
         const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
 
-        if (!componentsByType[COMPONENT_TYPES.app]) {
-          componentsByType[COMPONENT_TYPES.app] = {};
-        }
-
-        componentsByType[COMPONENT_TYPES.app][parsedAppConfig.name] = {
+        components.push({
+          type: COMPONENT_TYPES.app,
           config: parsedAppConfig,
           runnable: !isLegacy,
           path: appPath,
-        };
+        });
       }
     }
   });
 
-  return componentsByType;
+  return components;
 }
 
 module.exports = {

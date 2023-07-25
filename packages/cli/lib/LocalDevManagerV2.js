@@ -50,39 +50,26 @@ class LocalDevManagerV2 {
     SpinniesManager.removeAll();
     SpinniesManager.init();
 
-    const componentsByType = await findProjectComponents(this.projectSourceDir);
+    const components = await findProjectComponents(this.projectSourceDir);
 
-    const componentTypes = Object.keys(componentsByType);
-
-    if (!componentTypes.length) {
+    if (!components.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noComponents`));
       process.exit(EXIT_CODES.SUCCESS);
     }
 
-    const runnableComponentsByType = componentTypes.reduce((acc, type) => {
-      const components = componentsByType[type];
+    const runnableComponents = components.filter(
+      component => component.runnable
+    );
 
-      Object.keys(components).forEach(key => {
-        if (components[key].runnable) {
-          if (!acc[type]) {
-            acc[type] = {};
-          }
-          acc[type][key] = components[key];
-        }
-      });
-
-      return acc;
-    }, {});
-
-    if (!Object.keys(runnableComponentsByType).length) {
+    if (!runnableComponents.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noRunnableComponents`));
       process.exit(EXIT_CODES.SUCCESS);
     }
 
     logger.log();
-    const setupSucceeded = await this.devServerSetup(runnableComponentsByType);
+    const setupSucceeded = await this.devServerSetup(runnableComponents);
 
     if (setupSucceeded || !this.debug) {
       console.clear();
@@ -113,7 +100,7 @@ class LocalDevManagerV2 {
 
     this.updateKeypressListeners();
 
-    this.compareDeployedProjectToLocal(runnableComponentsByType);
+    this.compareLocalProjectToDeployed(runnableComponents);
   }
 
   async stop() {
@@ -163,33 +150,28 @@ class LocalDevManagerV2 {
     logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
   }
 
-  compareDeployedProjectToLocal(runnableComponentsByType) {
+  compareLocalProjectToDeployed(runnableComponents) {
     const deployedComponentNames = this.deployedBuild.subbuildStatuses.map(
       subbuildStatus => subbuildStatus.buildName
     );
 
     let missingComponents = [];
 
-    if (runnableComponentsByType[COMPONENT_TYPES.app]) {
-      Object.keys(runnableComponentsByType[COMPONENT_TYPES.app]).forEach(
-        key => {
-          const { config, path } = runnableComponentsByType[
-            COMPONENT_TYPES.app
-          ][key];
+    runnableComponents.forEach(({ type, config, path }) => {
+      if (type === COMPONENT_TYPES.app) {
+        const cardConfigs = getAppCardConfigs(config, path);
 
-          const cardConfigs = getAppCardConfigs(config, path);
-          cardConfigs.forEach(cardConfig => {
-            if (
-              cardConfig.data &&
-              cardConfig.data.title &&
-              !deployedComponentNames.includes(cardConfig.data.title)
-            ) {
-              missingComponents.push(cardConfig.data.title);
-            }
-          });
-        }
-      );
-    }
+        cardConfigs.forEach(cardConfig => {
+          if (
+            cardConfig.data &&
+            cardConfig.data.title &&
+            !deployedComponentNames.includes(cardConfig.data.title)
+          ) {
+            missingComponents.push(cardConfig.data.title);
+          }
+        });
+      }
+    });
 
     if (missingComponents.length) {
       this.logUploadWarning(
@@ -200,11 +182,11 @@ class LocalDevManagerV2 {
     }
   }
 
-  async devServerSetup(componentsByType) {
+  async devServerSetup(components) {
     try {
       await DevServerManager.setup({
         alpha: this.alpha,
-        componentsByType,
+        components,
         debug: this.debug,
         onUploadRequired: this.logUploadWarning.bind(this),
       });
