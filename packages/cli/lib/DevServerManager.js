@@ -12,6 +12,10 @@ const { promptUser } = require('./prompts/promptUtils');
 const i18nKey = 'cli.lib.DevServerManager';
 
 const DEFAULT_PORT = 8080;
+const SERVER_KEYS = {
+  app: 'app',
+};
+
 class DevServerManager {
   constructor() {
     this.initialized = false;
@@ -26,7 +30,7 @@ class DevServerManager {
   safeLoadServer() {
     try {
       const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
-      this.devServers['uie'] = {
+      this.devServers[SERVER_KEYS.app] = {
         componentType: COMPONENT_TYPES.app,
         serverInterface: DevModeInterface,
       };
