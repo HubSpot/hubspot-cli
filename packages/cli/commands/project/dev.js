@@ -5,7 +5,10 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -132,6 +135,13 @@ exports.handler = async options => {
     }
     try {
       const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+
+      trackCommandMetadataUsage(
+        'sandbox-create',
+        { step: 'project-dev' },
+        accountId
+      );
+
       const { result } = await buildSandbox({
         name,
         type: DEVELOPER_SANDBOX,

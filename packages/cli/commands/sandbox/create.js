@@ -22,7 +22,10 @@ const {
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const {
   sandboxTypePrompt,
   sandboxNamePrompt,
@@ -153,6 +156,12 @@ exports.handler = async options => {
     // Prompt user to sync assets after sandbox creation
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
     const handleSyncSandbox = async syncTasks => {
+      // Send tracking event for secondary action, in this case a sandbox sync within the sandbox create flow
+      trackCommandMetadataUsage(
+        'sandbox-sync',
+        { step: 'sandbox-create' },
+        result.sandbox.sandboxHubId
+      );
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,
