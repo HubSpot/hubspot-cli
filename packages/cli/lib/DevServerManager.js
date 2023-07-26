@@ -61,22 +61,38 @@ class DevServerManager {
     return this.path ? `${this.path}/${path}` : null;
   }
 
-  async setup({ alpha, componentsByType, debug }) {
+  arrangeComponentsByType(components) {
+    return components.reduce((acc, component) => {
+      if (!acc[component.type]) {
+        acc[component.type] = {};
+      }
+
+      acc[component.type][component.config.name] = component;
+
+      return acc;
+    }, {});
+  }
+
+  async setup({ alpha, components, debug, onUploadRequired }) {
     this.debug = debug;
-    this.componentsByType = componentsByType;
+
+    this.componentsByType = this.arrangeComponentsByType(components);
 
     this.safeLoadServer();
 
-    await this.iterateDevServers(async (serverInterface, components) => {
-      if (serverInterface.setup) {
-        await serverInterface.setup({
-          alpha,
-          components,
-          debug,
-          promptUser,
-        });
+    await this.iterateDevServers(
+      async (serverInterface, compatibleComponents) => {
+        if (serverInterface.setup) {
+          await serverInterface.setup({
+            alpha,
+            components: compatibleComponents,
+            debug,
+            onUploadRequired,
+            promptUser,
+          });
+        }
       }
-    });
+    );
 
     this.initialized = true;
   }

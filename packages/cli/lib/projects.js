@@ -825,13 +825,11 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
           defaultVersion,
         })
       );
-      logger.log('');
     } catch (e) {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
       );
-      logger.log('');
       logger.debug(e.error);
     }
   }
