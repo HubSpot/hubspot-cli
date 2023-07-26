@@ -8,7 +8,7 @@
     "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "dependencies": {
-    "@hubspot/cli-lib": "^4.1.14",
+    "@hubspot/cli-lib": "^4.2.1",
     "@hubspot/serverless-dev-runtime": "4.1.8-beta.6",
     "@hubspot/ui-extensions-dev-server": "^0.4.0",
     "archiver": "^5.3.0",
