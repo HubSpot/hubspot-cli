@@ -115,7 +115,7 @@ const argv = yargs
   .option('debug', {
     alias: 'd',
     default: false,
-    describe: 'set log level to debug',
+    describe: 'Set log level to debug',
     type: 'boolean',
   })
   .option('noHyperlinks', {

@@ -444,9 +444,10 @@ en:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
       project:
+        describe: "{{#bold}}[beta]{{/bold}} Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
         subcommands:
           dev:
-            describe: "Start local dev for the current project"
+            describe: "{{#bold}}[beta]{{/bold}} Start local dev for the current project"
             logs:
               betaMessage: "HubSpot projects local development"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
@@ -472,7 +473,7 @@ en:
             examples:
               default: "Start local dev for the current project"
           create:
-            describe: "Create a new project"
+            describe: "{{#bold}}[beta]{{/bold}} Create a new project"
             logs:
               welcomeMessage: "Welcome to HubSpot Developer Projects!"
             examples:
@@ -487,7 +488,7 @@ en:
               templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
           add:
-            describe: "Create a new component within a project"
+            describe: "{{#bold}}[beta]{{/bold}} Create a new component within a project"
             options:
               name:
                 describe: "Component name"
@@ -502,7 +503,7 @@ en:
             examples:
               default: "Create a component within your project"
           deploy:
-            describe: "Deploy a project build"
+            describe: "{{#bold}}[beta]{{/bold}} Deploy a project build"
             debug:
               deploying: "Deploying project at path: {{ path }}"
             errors:
@@ -517,8 +518,10 @@ en:
                 describe: "Project build ID to be deployed"
               project:
                 describe: "Project name"
+          listBuilds:
+            describe: "{{#bold}}[beta]{{/bold}} List the project's builds"
           logs:
-            describe: "Get execution logs for a serverless function within a project"
+            describe: "{{#bold}}[beta]{{/bold}} Get execution logs for a serverless function within a project"
             errors:
               invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
             logs:
@@ -553,7 +556,7 @@ en:
               endpoint:
                 describe: "Public endpoint path"
           upload:
-            describe: "Upload your project files and create a new build"
+            describe: "{{#bold}}[beta]{{/bold}} Upload your project files and create a new build"
             examples:
               default: "Upload a project"
             logs:
@@ -571,7 +574,7 @@ en:
               path:
                 describe: "Path to a project folder"
           watch:
-            describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
+            describe: "{{#bold}}[beta]{{/bold}} Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs:
@@ -583,7 +586,7 @@ en:
               initialUpload:
                 describe: "Upload directory before watching for updates"
           download:
-            describe: "Download your project files from HubSpot and write to a path on your computer"
+            describe: "{{#bold}}[beta]{{/bold}} Download your project files from HubSpot and write to a path on your computer"
             examples:
               default: "Download the project myProject into myProjectFolder folder"
             logs:
@@ -600,7 +603,7 @@ en:
               dest:
                 describe: "Destination folder for the project"
           open:
-            describe: "Open available projects for the specified account"
+            describe: "{{#bold}}[beta]{{/bold}} Open the specified project's details page in the browser"
             options:
               project:
                 describe: "Name of project to open"
