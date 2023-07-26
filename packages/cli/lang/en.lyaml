@@ -462,10 +462,11 @@ en:
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-              targetNonSandbox: "Continue testing in a non-sandbox account?"
             options:
-              extension:
-                describe: "The extension that you would like to run locally"
+              local:
+                describe: "Run the alpha version of this command with some local dev server functionality"
+              localAll:
+                describe: "Run the alpha version of this command with all local dev server functionality"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
@@ -851,8 +852,12 @@ en:
     lib:
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
+        notInitialized: "The Dev Server Manager must be initialized before it is started."
+        noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
       LocalDevManagerV2:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
+        noComponents: "There are no components in this project."
+        noRunnableComponents: "There are no components in this project that support local development."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
@@ -862,6 +867,7 @@ en:
         exitingFail: "Failed to cleanup before exiting"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
+          setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
@@ -928,6 +934,9 @@ en:
         logFeedbackMessage:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+        showPlatformVersionWarning:
+          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
+          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
       ui:
         betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:
