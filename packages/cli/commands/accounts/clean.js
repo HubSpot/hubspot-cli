@@ -57,8 +57,9 @@ exports.handler = async options => {
     } catch (error) {
       if (error && error instanceof HubSpotAuthError) {
         if (
-          error.statusCode === 404 &&
-          error.subCategory === 'LocalDevAuthErrorType.INVALID_PORTAL_ID'
+          error.statusCode === 401 &&
+          error.category === 'INVALID_AUTHENTICATION' &&
+          error.subCategory === 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE'
         ) {
           portalsToRemove.push(account);
         }
