@@ -443,10 +443,10 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@hubspot/cli-lib@^4.1.14":
-  version "4.1.15"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.1.15.tgz#2eb49618d9ee92f39ea6b46f871cea033e78ae05"
-  integrity sha512-2B4g5s8ObgL3oxDG0DM8zpT97d9wsWMsDk2e0tbDQ/rlLNVQXRyf7YcRZhvg0eCDfIRckuZBzWu0zHY/7BxVTw==
+"@hubspot/cli-lib@^4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.0.tgz#8d1e63ad4304ebb82245e6178fb4f021f2a60dfc"
+  integrity sha512-stBOaawiSGiXDMP4OIO394Dj6K4CHTF83/P7BPtkzx9ROACK7ChVlbBrwGUk/8J2rsDiuUKrVOux5zlWbIEL+g==
   dependencies:
     chalk "^2.4.2"
     chokidar "^3.0.1"

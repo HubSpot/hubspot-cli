@@ -5,7 +5,10 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -17,6 +20,7 @@ const {
   ensureProjectExists,
   handleProjectUpload,
   pollProjectBuildAndDeploy,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
@@ -60,7 +64,7 @@ const {
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
-exports.describe = null; //i18n(`${i18nKey}.describe`);
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -78,6 +82,8 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await showPlatformVersionWarning(accountId, projectConfig);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
@@ -129,6 +135,13 @@ exports.handler = async options => {
     }
     try {
       const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+
+      trackCommandMetadataUsage(
+        'sandbox-create',
+        { step: 'project-dev' },
+        accountId
+      );
+
       const { result } = await buildSandbox({
         name,
         type: DEVELOPER_SANDBOX,
@@ -176,12 +189,13 @@ exports.handler = async options => {
     ? UPLOAD_PERMISSIONS.manual
     : UPLOAD_PERMISSIONS.always;
 
+  let deployedBuild;
+
   if (projectExists) {
-    const { sourceIntegration } = await fetchProject(
-      targetAccountId,
-      projectConfig.name
-    );
-    if (options.extension || sourceIntegration) {
+    const project = await fetchProject(targetAccountId, projectConfig.name);
+    deployedBuild = project.deployedBuild;
+
+    if (options.local || options.localAll || project.sourceIntegration) {
       uploadPermission = UPLOAD_PERMISSIONS.never;
     }
   }
@@ -285,7 +299,7 @@ exports.handler = async options => {
   // Do this before starting the dev server for v2 behavior because we cannot
   // run a server on a broken project
   if (
-    options.extension &&
+    (options.local || options.localAll) &&
     initialUploadResult &&
     !initialUploadResult.succeeded
   ) {
@@ -314,27 +328,30 @@ exports.handler = async options => {
 
   SpinniesManager.remove('devModeSetup');
 
-  const LocalDev = options.extension
-    ? new LocalDevManagerV2({
-        debug: options.debug,
-        extension: options.extension,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-      })
-    : new LocalDevManager({
-        debug: options.debug,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-        uploadPermission,
-      });
+  const LocalDev =
+    options.local || options.localAll
+      ? new LocalDevManagerV2({
+          alpha: options.localAll,
+          debug: options.debug,
+          deployedBuild,
+          projectConfig,
+          projectDir,
+          targetAccountId,
+        })
+      : new LocalDevManager({
+          debug: options.debug,
+          projectConfig,
+          projectDir,
+          targetAccountId,
+          uploadPermission,
+        });
 
   await LocalDev.start();
 
   // Let the user know when the initial build or deploy fails
   if (
-    !options.extension &&
+    !options.local &&
+    !options.localAll &&
     initialUploadResult &&
     !initialUploadResult.succeeded
   ) {
@@ -354,9 +371,15 @@ exports.builder = yargs => {
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
 
-  yargs.option('extension', {
-    describe: i18n(`${i18nKey}.options.extension.describe`),
-    type: 'string',
+  yargs.option('local', {
+    describe: i18n(`${i18nKey}.options.local.describe`),
+    type: 'boolean',
+    hidden: true,
+  });
+
+  yargs.option('local-all', {
+    describe: i18n(`${i18nKey}.options.localAll.describe`),
+    type: 'boolean',
     hidden: true,
   });
 

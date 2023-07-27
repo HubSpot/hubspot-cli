@@ -453,9 +453,10 @@ en:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
       project:
+        describe: "{{#bold}}[beta]{{/bold}} Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
         subcommands:
           dev:
-            describe: "Start local dev for the current project"
+            describe: "{{#bold}}[beta]{{/bold}} Start local dev for the current project"
             logs:
               betaMessage: "HubSpot projects local development"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
@@ -470,17 +471,18 @@ en:
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-              targetNonSandbox: "Continue testing in a non-sandbox account?"
             options:
-              extension:
-                describe: "The extension that you would like to run locally"
+              local:
+                describe: "Run the alpha version of this command with some local dev server functionality"
+              localAll:
+                describe: "Run the alpha version of this command with all local dev server functionality"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             examples:
               default: "Start local dev for the current project"
           create:
-            describe: "Create a new project"
+            describe: "{{#bold}}[beta]{{/bold}} Create a new project"
             logs:
               welcomeMessage: "Welcome to HubSpot Developer Projects!"
             examples:
@@ -495,7 +497,7 @@ en:
               templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
           add:
-            describe: "Create a new component within a project"
+            describe: "{{#bold}}[beta]{{/bold}} Create a new component within a project"
             options:
               name:
                 describe: "Component name"
@@ -510,7 +512,7 @@ en:
             examples:
               default: "Create a component within your project"
           deploy:
-            describe: "Deploy a project build"
+            describe: "{{#bold}}[beta]{{/bold}} Deploy a project build"
             debug:
               deploying: "Deploying project at path: {{ path }}"
             errors:
@@ -525,8 +527,10 @@ en:
                 describe: "Project build ID to be deployed"
               project:
                 describe: "Project name"
+          listBuilds:
+            describe: "{{#bold}}[beta]{{/bold}} List the project's builds"
           logs:
-            describe: "Get execution logs for a serverless function within a project"
+            describe: "{{#bold}}[beta]{{/bold}} Get execution logs for a serverless function within a project"
             errors:
               invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
             logs:
@@ -561,7 +565,7 @@ en:
               endpoint:
                 describe: "Public endpoint path"
           upload:
-            describe: "Upload your project files and create a new build"
+            describe: "{{#bold}}[beta]{{/bold}} Upload your project files and create a new build"
             examples:
               default: "Upload a project"
             logs:
@@ -579,7 +583,7 @@ en:
               path:
                 describe: "Path to a project folder"
           watch:
-            describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
+            describe: "{{#bold}}[beta]{{/bold}} Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
             examples:
               default: "Watch a project within the myProjectFolder folder"
             logs:
@@ -591,7 +595,7 @@ en:
               initialUpload:
                 describe: "Upload directory before watching for updates"
           download:
-            describe: "Download your project files from HubSpot and write to a path on your computer"
+            describe: "{{#bold}}[beta]{{/bold}} Download your project files from HubSpot and write to a path on your computer"
             examples:
               default: "Download the project myProject into myProjectFolder folder"
             logs:
@@ -608,7 +612,7 @@ en:
               dest:
                 describe: "Destination folder for the project"
           open:
-            describe: "Open available projects for the specified account"
+            describe: "{{#bold}}[beta]{{/bold}} Open the specified project's details page in the browser"
             options:
               project:
                 describe: "Name of project to open"
@@ -857,8 +861,12 @@ en:
     lib:
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
+        notInitialized: "The Dev Server Manager must be initialized before it is started."
+        noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
       LocalDevManagerV2:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
+        noComponents: "There are no components in this project."
+        noRunnableComponents: "There are no components in this project that support local development."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
@@ -866,8 +874,16 @@ en:
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
+        uploadWarning:
+          missingComponents: "Your deployed project does not contain the components {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
+          header: "{{ reason }} To reflect these changes:"
+          stopDev: "  * Stop {{#bold}}`hs project dev`{{/bold}}"
+          runUpload: "  * Run {{#bold}}`hs project upload`{{/bold}}"
+          runUploadWithAccount: "  * Run {{#bold}}`hs project upload --account={{ accountId }}`{{/bold}}"
+          restartDev: "  * Re-run {{#bold}}`hs project dev`{{/bold}}"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
+          setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
@@ -934,6 +950,9 @@ en:
         logFeedbackMessage:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+        showPlatformVersionWarning:
+          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
+          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
       ui:
         betaTag: "{{#bold}}[beta]{{/bold}}"
         betaWarning:

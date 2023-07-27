@@ -3,11 +3,26 @@ const chalk = require('chalk');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
+const {
+  getAccountId,
+  getConfigDefaultAccount,
+} = require('@hubspot/cli-lib/lib/config');
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
-const { uiAccountDescription, uiBetaMessage, uiLink, uiLine } = require('./ui');
+const {
+  COMPONENT_TYPES,
+  findProjectComponents,
+  getAppCardConfigs,
+} = require('./projectStructure');
+const {
+  UI_COLORS,
+  uiAccountDescription,
+  uiBetaMessage,
+  uiLink,
+  uiLine,
+} = require('./ui');
 
 const i18nKey = 'cli.lib.LocalDevManagerV2';
 
@@ -16,8 +31,9 @@ class LocalDevManagerV2 {
     this.targetAccountId = options.targetAccountId;
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
-    this.extension = options.extension;
     this.debug = options.debug || false;
+    this.alpha = options.alpha;
+    this.deployedBuild = options.deployedBuild;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -31,14 +47,38 @@ class LocalDevManagerV2 {
   }
 
   async start() {
-    console.clear();
     SpinniesManager.removeAll();
     SpinniesManager.init();
+
+    const components = await findProjectComponents(this.projectSourceDir);
+
+    if (!components.length) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.noComponents`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    const runnableComponents = components.filter(
+      component => component.runnable
+    );
+
+    if (!runnableComponents.length) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.noRunnableComponents`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    logger.log();
+    const setupSucceeded = await this.devServerSetup(runnableComponents);
+
+    if (setupSucceeded || !this.debug) {
+      console.clear();
+    }
 
     uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     logger.log(
-      chalk.hex('#FF8F59')(
+      chalk.hex(UI_COLORS.orange)(
         i18n(`${i18nKey}.running`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           projectName: this.projectConfig.name,
@@ -59,6 +99,8 @@ class LocalDevManagerV2 {
     await this.devServerStart();
 
     this.updateKeypressListeners();
+
+    this.compareLocalProjectToDeployed(runnableComponents);
   }
 
   async stop() {
@@ -89,15 +131,83 @@ class LocalDevManagerV2 {
     });
   }
 
+  logUploadWarning(reason) {
+    const currentDefaultAccount = getConfigDefaultAccount();
+    const defaultAccountId = getAccountId(currentDefaultAccount);
+
+    logger.log();
+    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
+    logger.log(i18n(`${i18nKey}.uploadWarning.stopDev`));
+    if (this.targetAccountId !== defaultAccountId) {
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
+          accountId: this.targetAccountId,
+        })
+      );
+    } else {
+      logger.log(i18n(`${i18nKey}.uploadWarning.runUpload`));
+    }
+    logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
+  }
+
+  compareLocalProjectToDeployed(runnableComponents) {
+    const deployedComponentNames = this.deployedBuild.subbuildStatuses.map(
+      subbuildStatus => subbuildStatus.buildName
+    );
+
+    let missingComponents = [];
+
+    runnableComponents.forEach(({ type, config, path }) => {
+      if (type === COMPONENT_TYPES.app) {
+        const cardConfigs = getAppCardConfigs(config, path);
+
+        cardConfigs.forEach(cardConfig => {
+          if (
+            cardConfig.data &&
+            cardConfig.data.title &&
+            !deployedComponentNames.includes(cardConfig.data.title)
+          ) {
+            missingComponents.push(cardConfig.data.title);
+          }
+        });
+      }
+    });
+
+    if (missingComponents.length) {
+      this.logUploadWarning(
+        i18n(`${i18nKey}.uploadWarning.missingComponents`, {
+          missingComponents: missingComponents.join(','),
+        })
+      );
+    }
+  }
+
+  async devServerSetup(components) {
+    try {
+      await DevServerManager.setup({
+        alpha: this.alpha,
+        components,
+        debug: this.debug,
+        onUploadRequired: this.logUploadWarning.bind(this),
+      });
+      return true;
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      logger.error(
+        i18n(`${i18nKey}.devServer.setupError`, { message: e.message })
+      );
+      return false;
+    }
+  }
+
   async devServerStart() {
     try {
-      DevServerManager.safeLoadServer();
       await DevServerManager.start({
+        alpha: this.alpha,
         accountId: this.targetAccountId,
-        debug: this.debug,
-        extension: this.extension,
         projectConfig: this.projectConfig,
-        projectSourceDir: this.projectSourceDir,
       });
     } catch (e) {
       if (this.debug) {

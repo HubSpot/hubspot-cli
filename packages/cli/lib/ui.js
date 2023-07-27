@@ -6,6 +6,10 @@ const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
+const UI_COLORS = {
+  orange: '#FF8F59',
+};
+
 /**
  * Outputs horizontal line
  *
@@ -108,7 +112,7 @@ const uiFeatureHighlight = (commands, title) => {
 const uiBetaMessage = message => {
   const i18nKey = 'cli.lib.ui';
 
-  logger.log(chalk.hex('#bda9ea')(i18n(`${i18nKey}.betaTag`)), message);
+  logger.log(chalk.hex(UI_COLORS.orange)(i18n(`${i18nKey}.betaTag`)), message);
 };
 
 const uiBetaWarning = logMessage => {
@@ -120,6 +124,7 @@ const uiBetaWarning = logMessage => {
 };
 
 module.exports = {
+  UI_COLORS,
   uiAccountDescription,
   uiBetaMessage,
   uiBetaWarning,
