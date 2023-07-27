@@ -566,7 +566,6 @@ const makePollTaskStatusFunc = ({
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
-      category: 'projectPollStatus',
     });
 
     const [
@@ -627,7 +626,6 @@ const makePollTaskStatusFunc = ({
           indent,
           succeedColor: 'white',
           failColor: 'white',
-          category: 'projectPollStatus',
         });
       };
 

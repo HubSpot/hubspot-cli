@@ -63,27 +63,6 @@ class SpinniesManager {
 
     // Custom fields
     this.parentSpinnerName = null;
-    this.categories = {};
-  }
-
-  addSpinnerToCategory(name, category) {
-    if (!this.categories[category]) {
-      this.categories[category] = {};
-    }
-    this.categories[category][name] = true;
-  }
-
-  getSpinnerCategory(name) {
-    return Object.keys(this.categories).find(
-      category => !!this.categories[category][name]
-    );
-  }
-
-  removeSpinnerFromCategory(name) {
-    const category = this.getSpinnerCategory(name);
-    if (category) {
-      delete this.categories[category][name];
-    }
   }
 
   pick(name) {
@@ -91,16 +70,12 @@ class SpinniesManager {
   }
 
   add(name, options = {}) {
-    const { category, isParent, noIndent, ...spinnerOptions } = options;
+    const { isParent, ...spinnerOptions } = options;
 
     // Support adding generic spinnies lines without specifying a name
     const resolvedName = name || `${Date.now()}-${Math.random()}`;
 
-    if (category) {
-      this.addSpinnerToCategory(resolvedName, category);
-    }
-
-    if (!options.text) {
+    if (!spinnerOptions.text) {
       spinnerOptions.text = resolvedName;
     }
 
@@ -112,10 +87,7 @@ class SpinniesManager {
       failPrefix: this.options.failPrefix,
       status: 'spinning',
       ...purgeSpinnerOptions(spinnerOptions),
-      indent:
-        this.parentSpinnerName && !noIndent
-          ? originalIndent + 1
-          : originalIndent,
+      indent: this.parentSpinnerName ? originalIndent + 1 : originalIndent,
     };
 
     this.spinners[resolvedName] = spinnerProperties;
@@ -134,20 +106,6 @@ class SpinniesManager {
     this.updateSpinnerState();
 
     return this.spinners[name];
-  }
-
-  // TODO there is an issue here with the usage of "non-spinnable"
-  // The spinnies lib automatically removes any non-active spinners
-  // after adding a new spinner (add -> updateSpinnerState -> checkIfActiveSpinners)
-  // so "pick" is telling us that these newly-added spinners don't exist.
-  addOrUpdate(name, options = {}) {
-    const spinner = this.pick(name);
-
-    if (spinner) {
-      this.update(name, options);
-    } else {
-      this.add(name, options);
-    }
   }
 
   succeed(name, options = {}) {
@@ -173,31 +131,9 @@ class SpinniesManager {
       this.parentSpinnerName = null;
     }
 
-    this.removeSpinnerFromCategory(name);
-
     const spinner = this.spinners[name];
     delete this.spinners[name];
     return spinner;
-  }
-
-  /**
-   * Removes all spinnies instances
-   * @param {string} targetCategory - remove all spinnies with a matching category
-   * @param {string} preserveCategory - do not remove spinnies with a matching category
-   */
-  removeAll({ preserveCategory = null, targetCategory = null } = {}) {
-    Object.keys(this.spinners).forEach(name => {
-      if (targetCategory) {
-        if (this.getSpinnerCategory(name) === targetCategory) {
-          this.remove(name);
-        }
-      } else if (
-        !preserveCategory ||
-        this.getSpinnerCategory(name) !== preserveCategory
-      ) {
-        this.remove(name);
-      }
-    });
   }
 
   stopAll(newStatus = 'stopped') {

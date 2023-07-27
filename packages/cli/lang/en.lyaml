@@ -462,14 +462,9 @@ en:
               startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-            options:
-              local:
-                describe: "Run the alpha version of this command with some local dev server functionality"
-              localAll:
-                describe: "Run the alpha version of this command with all local dev server functionality"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
-              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -854,7 +849,7 @@ en:
         portConflict: "The port {{ port }} is already in use."
         notInitialized: "The Dev Server Manager must be initialized before it is started."
         noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
-      LocalDevManagerV2:
+      LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         noComponents: "There are no components in this project."
         noRunnableComponents: "There are no components in this project that support local development."
@@ -876,46 +871,6 @@ en:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
-      LocalDevManager:
-        failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
-        exitingStart: "Stopping local dev server ..."
-        exitingSucceed: "Successfully exited"
-        exitingFail: "Failed to clean up before exiting"
-        previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
-        cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
-        header:
-          betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
-          running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
-          quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-          viewInHubSpotLink: "View in HubSpot"
-          status:
-            clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
-            buildError: "{{#bold}}Status:{{/bold}} {{#red}}Latest build failed{{/red}}"
-            deployError: "{{#bold}}Status:{{/bold}} {{#red}}Latest deploy failed{{/red}}"
-            uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
-            noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
-            manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
-            manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
-        upload:
-          noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
-          manualUploadSkipped: "Manually upload and deploy project to production account: {{#green}}(n){{/green}}"
-          manualUploadConfirmed: "Manually upload and deploy project to production account: {{#green}}(Y){{/green}}"
-          manualUploadRequired: "Project file changes require a manual upload and deploy ..."
-          manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
-          manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
-          manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
-          extensionNotAllowed: "Extension not allowed for {{ filePath }}"
-          fileIgnored: "File ignored: {{ filePath }}"
-          uploadingAddChange: "[INFO] Uploading {{ filePath }}"
-          uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
-          uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
-          uploadedRemoveChange: "[INFO] Removed {{ filePath }}"
-          uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
-        devServer:
-          startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
-          cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

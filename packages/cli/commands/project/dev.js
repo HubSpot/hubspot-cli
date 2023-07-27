@@ -29,11 +29,7 @@ const {
   selectTargetAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
-const {
-  LocalDevManager,
-  UPLOAD_PERMISSIONS,
-} = require('../../lib/LocalDevManager');
-const LocalDevManagerV2 = require('../../lib/LocalDevManagerV2');
+const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox } = require('../../lib/sandboxes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -182,22 +178,11 @@ exports.handler = async options => {
     }
   );
 
-  const isNonSandboxAccount =
-    !defaultAccountIsSandbox && targetAccountId === accountId;
-
-  let uploadPermission = isNonSandboxAccount
-    ? UPLOAD_PERMISSIONS.manual
-    : UPLOAD_PERMISSIONS.always;
-
   let deployedBuild;
 
   if (projectExists) {
     const project = await fetchProject(targetAccountId, projectConfig.name);
     deployedBuild = project.deployedBuild;
-
-    if (options.local || options.localAll || project.sourceIntegration) {
-      uploadPermission = UPLOAD_PERMISSIONS.never;
-    }
   }
 
   SpinniesManager.init();
@@ -260,9 +245,8 @@ exports.handler = async options => {
 
   let initialUploadResult;
 
-  // Create an initial build if the project was newly created in the account or if
-  // our upload permission is set to "always"
-  if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
+  // Create an initial build if the project was newly created in the account
+  if (!projectExists) {
     initialUploadResult = await handleProjectUpload(
       targetAccountId,
       projectConfig,
@@ -296,13 +280,9 @@ exports.handler = async options => {
   }
 
   // Let the user know when the initial build or deploy fails
-  // Do this before starting the dev server for v2 behavior because we cannot
+  // Do this before starting the dev server because we cannot
   // run a server on a broken project
-  if (
-    (options.local || options.localAll) &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
+  if (initialUploadResult && !initialUploadResult.succeeded) {
     SpinniesManager.fail('devModeSetup');
 
     let subTasks = [];
@@ -328,39 +308,15 @@ exports.handler = async options => {
 
   SpinniesManager.remove('devModeSetup');
 
-  const LocalDev =
-    options.local || options.localAll
-      ? new LocalDevManagerV2({
-          alpha: options.localAll,
-          debug: options.debug,
-          deployedBuild,
-          projectConfig,
-          projectDir,
-          targetAccountId,
-        })
-      : new LocalDevManager({
-          debug: options.debug,
-          projectConfig,
-          projectDir,
-          targetAccountId,
-          uploadPermission,
-        });
+  const LocalDev = new LocalDevManager({
+    debug: options.debug,
+    deployedBuild,
+    projectConfig,
+    projectDir,
+    targetAccountId,
+  });
 
   await LocalDev.start();
-
-  // Let the user know when the initial build or deploy fails
-  if (
-    !options.local &&
-    !options.localAll &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      LocalDev.logBuildError(initialUploadResult.buildResult);
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      LocalDev.logDeployError(initialUploadResult.deployResult);
-    }
-  }
 
   handleExit(LocalDev.stop);
 };
@@ -370,18 +326,6 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
-
-  yargs.option('local', {
-    describe: i18n(`${i18nKey}.options.local.describe`),
-    type: 'boolean',
-    hidden: true,
-  });
-
-  yargs.option('local-all', {
-    describe: i18n(`${i18nKey}.options.localAll.describe`),
-    type: 'boolean',
-    hidden: true,
-  });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 
