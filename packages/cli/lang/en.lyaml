@@ -792,7 +792,6 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
-          notRootUpload: "Source or Dest do not point to the root. Cannot do --remove unless you are uploading to and from the root of your project."
           deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
         options:
           options:
@@ -802,9 +801,9 @@ en:
           convertFields:
             describe: "If true, converts any javascript fields files contained in module folder or project root."
           remove:
-            describe: "Deletes files from HubSpot that do not exist locally."
+            describe: "Removes destination folder before uploading. Use this to remove files that exist on HubSpot but not locally."
           force:
-            describe: "Removes files without prompting for deletion."
+            describe: "Forces removal without prompting for deletion"
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
@@ -1122,6 +1121,8 @@ en:
           errors:
             buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+        deletePrompt:
+          message: Are you sure you want to remove {{ filePath }} from HubSpot?
       convertFields:
         positionals:
           src:

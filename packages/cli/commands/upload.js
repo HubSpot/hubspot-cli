@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
-const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
+const {
+  upload,
+  deleteFile,
+  getDirectoryContentsByPath,
+} = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
@@ -29,7 +33,7 @@ const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { deleteFilePrompt } = require('../lib/prompts/deleteFilePrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { getUploadableFileList, getDeletedFilesList } = require('../lib/upload');
+const { getUploadableFileList } = require('../lib/upload');
 const {
   getThemePreviewUrl,
   getThemeJSONPath,
@@ -56,15 +60,6 @@ const logThemePreview = (filePath, accountId) => {
       })
     );
   }
-};
-
-const isRootUpload = (projectRoot, absoluteSrcPath, normalizedDest) => {
-  // Only allow removal if it is a root -> root upload.
-  const srcIsRoot = projectRoot === absoluteSrcPath;
-  // The normalized path contains no '/' only if it is a root, since convertToUnix strips leading and trailing '/'.
-  const destIsRoot = !normalizedDest.includes('/');
-
-  return srcIsRoot && destIsRoot;
 };
 
 exports.handler = async options => {
@@ -216,32 +211,25 @@ exports.handler = async options => {
     );
 
     if (options.remove) {
-      if (!isRootUpload(projectRoot, absoluteSrcPath, normalizedDest)) {
-        // Can't remove. Error and exit.
-        logger.log(i18n(`${i18nKey}.errors.notRootUpload`));
-        process.exit(EXIT_CODES.WARNING);
-      }
-      const remoteAndNotLocal = await getDeletedFilesList(
-        accountId,
-        projectRoot,
-        normalizedDest,
-        filePaths
-      );
-      for (const filePath of remoteAndNotLocal) {
-        const hsPath = path.join(normalizedDest, filePath);
+      //  If remove is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
+      const remoteFileList = await getDirectoryContentsByPath(accountId, dest);
+      for (let filePath of remoteFileList.children) {
+        filePath = path.join(dest, filePath);
         let removeFile = options.force;
         if (!options.force) {
-          removeFile = await deleteFilePrompt(hsPath);
+          removeFile = await deleteFilePrompt(filePath);
         }
         if (removeFile) {
           try {
-            await deleteFile(accountId, convertToUnixPath(hsPath));
-            logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
+            await deleteFile(accountId, filePath);
+            logger.log(
+              i18n(`${i18nKey}.deleted`, { accountId, path: filePath })
+            );
           } catch (error) {
             logger.error(
               i18n(`${i18nKey}.errors.deleteFailed`, {
                 accountId,
-                path: hsPath,
+                path: filePath,
               })
             );
           }
