@@ -96,7 +96,7 @@ exports.handler = async options => {
     if (accountsCleanPrompt) {
       logger.log('');
       for (const accountToRemove of portalsToRemove) {
-        await deleteAccount(accountToRemove);
+        await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
             accountName: getAccountName(accountToRemove),
