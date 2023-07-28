@@ -2,11 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
-const {
-  upload,
-  deleteFile,
-  getDirectoryContentsByPath,
-} = require('@hubspot/cli-lib/api/fileMapper');
+const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
@@ -212,27 +208,19 @@ exports.handler = async options => {
 
     if (options.remove) {
       //  If remove is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
-      const remoteFileList = await getDirectoryContentsByPath(accountId, dest);
-      for (let filePath of remoteFileList.children) {
-        filePath = path.join(dest, filePath);
-        let removeFile = options.force;
-        if (!options.force) {
-          removeFile = await deleteFilePrompt(filePath);
-        }
-        if (removeFile) {
-          try {
-            await deleteFile(accountId, filePath);
-            logger.log(
-              i18n(`${i18nKey}.deleted`, { accountId, path: filePath })
-            );
-          } catch (error) {
-            logger.error(
-              i18n(`${i18nKey}.errors.deleteFailed`, {
-                accountId,
-                path: filePath,
-              })
-            );
-          }
+      const filePath = path.join(dest, filePath);
+      const removeFile = await deleteFilePrompt(filePath);
+      if (removeFile) {
+        try {
+          await deleteFile(accountId, filePath);
+          logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: filePath }));
+        } catch (error) {
+          logger.error(
+            i18n(`${i18nKey}.errors.deleteFailed`, {
+              accountId,
+              path: filePath,
+            })
+          );
         }
       }
     }
@@ -313,12 +301,6 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
     alias: ['r'],
-  });
-  yargs.option('force', {
-    describe: i18n(`${i18nKey}.options.force.describe`),
-    type: 'boolean',
-    default: false,
-    alias: ['f'],
   });
   return yargs;
 };

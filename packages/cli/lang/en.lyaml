@@ -802,8 +802,6 @@ en:
             describe: "If true, converts any javascript fields files contained in module folder or project root."
           remove:
             describe: "Removes destination folder before uploading. Use this to remove files that exist on HubSpot but not locally."
-          force:
-            describe: "Forces removal without prompting for deletion"
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
