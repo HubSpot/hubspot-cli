@@ -26,7 +26,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { deleteFilePrompt } = require('../lib/prompts/deleteFilePrompt');
+const { overwriteFilePrompt } = require('../lib/prompts/overwriteFilePrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
@@ -206,19 +206,18 @@ exports.handler = async options => {
       options.convertFields
     );
 
-    if (options.remove) {
-      //  If remove is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
-      const filePath = path.join(dest, filePath);
-      const removeFile = await deleteFilePrompt(filePath);
-      if (removeFile) {
+    if (options.overwrite) {
+      //  If overwrite is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
+      const overwriteFile = await overwriteFilePrompt(dest);
+      if (overwriteFile) {
         try {
-          await deleteFile(accountId, filePath);
-          logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: filePath }));
+          await deleteFile(accountId, dest);
+          logger.log(i18n(`${i18nKey}.overwriting`, { accountId, path: dest }));
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
               accountId,
-              path: filePath,
+              path: dest,
             })
           );
         }
@@ -296,11 +295,10 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
   });
-  yargs.option('remove', {
-    describe: i18n(`${i18nKey}.options.remove.describe`),
+  yargs.option('overwrite', {
+    describe: i18n(`${i18nKey}.options.overwrite.describe`),
     type: 'boolean',
     default: false,
-    alias: ['r'],
   });
   return yargs;
 };
