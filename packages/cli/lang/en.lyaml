@@ -856,7 +856,7 @@ en:
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-        viewInHubSpotLink: "View in HubSpot"
+        viewInHubSpotLink: "View project in HubSpot"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
@@ -885,6 +885,8 @@ en:
           createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
           createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
           notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+        pollFetchProject:
+          checkingProject: "Checking if project exists in {{ accountIdentifier }}"
         makePollTaskStatusFunc:
           componentCountSingular: "Found 1 component in this project"
           componentCount: "Found {{ numComponents }} components in this project"
@@ -900,7 +902,7 @@ en:
           noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
           noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
       ui:
-        betaTag: "{{#bold}}[beta]{{/bold}}"
+        betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
           footer: "{{#yellow}}******************************************************************{{/yellow}}"

@@ -72,14 +72,15 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
+  if (!options.debug) {
+    console.clear();
+  }
   uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  await showPlatformVersionWarning(accountId, projectConfig);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
@@ -168,6 +169,7 @@ exports.handler = async options => {
     }
   }
 
+  logger.log();
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,
@@ -187,11 +189,17 @@ exports.handler = async options => {
 
   SpinniesManager.init();
 
+  if (!options.debug) {
+    console.clear();
+  }
+  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
+
   if (!projectExists) {
     // Create the project without prompting if this is a newly created sandbox
     let shouldCreateProject = createNewSandbox;
 
     if (!shouldCreateProject) {
+      logger.log();
       uiLine();
       logger.warn(
         i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
@@ -210,6 +218,8 @@ exports.handler = async options => {
     }
 
     if (shouldCreateProject) {
+      await showPlatformVersionWarning(accountId, projectConfig);
+
       try {
         SpinniesManager.add('createProject', {
           text: i18n(`${i18nKey}.status.creatingProject`, {
@@ -231,6 +241,7 @@ exports.handler = async options => {
       }
     } else {
       // We cannot continue if the project does not exist in the target account
+      logger.log();
       logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
       process.exit(EXIT_CODES.SUCCESS);
     }

@@ -184,7 +184,9 @@ const pollFetchProject = async (accountId, projectName) => {
     let pollCount = 0;
     SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
-      text: 'Fetching project status',
+      text: i18n(`${i18nKey}.pollFetchProject.checkingProject`, {
+        accountIdentifier: uiAccountDescription(accountId),
+      }),
     });
     const pollInterval = setInterval(async () => {
       try {
@@ -823,11 +825,13 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
           defaultVersion,
         })
       );
+      logger.log('');
     } catch (e) {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
       );
+      logger.log('');
       logger.debug(e.error);
     }
   }
