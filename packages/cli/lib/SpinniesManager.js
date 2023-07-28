@@ -60,9 +60,6 @@ class SpinniesManager {
     this.stream = process.stderr;
     this.lineCount = 0;
     this.currentFrameIndex = 0;
-
-    // Custom fields
-    this.parentSpinnerName = null;
   }
 
   pick(name) {
@@ -70,32 +67,23 @@ class SpinniesManager {
   }
 
   add(name, options = {}) {
-    const { isParent, ...spinnerOptions } = options;
-
     // Support adding generic spinnies lines without specifying a name
     const resolvedName = name || `${Date.now()}-${Math.random()}`;
 
-    if (!spinnerOptions.text) {
-      spinnerOptions.text = resolvedName;
+    if (!options.text) {
+      options.text = resolvedName;
     }
-
-    const originalIndent = spinnerOptions.indent || 0;
 
     const spinnerProperties = {
       ...colorOptions(this.options),
       succeedPrefix: this.options.succeedPrefix,
       failPrefix: this.options.failPrefix,
       status: 'spinning',
-      ...purgeSpinnerOptions(spinnerOptions),
-      indent: this.parentSpinnerName ? originalIndent + 1 : originalIndent,
+      ...purgeSpinnerOptions(options),
     };
 
     this.spinners[resolvedName] = spinnerProperties;
     this.updateSpinnerState();
-
-    if (isParent) {
-      this.parentSpinnerName = resolvedName;
-    }
 
     return { name: resolvedName, ...spinnerProperties };
   }
@@ -125,10 +113,6 @@ class SpinniesManager {
   remove(name) {
     if (typeof name !== 'string') {
       throw Error('A spinner reference name must be specified');
-    }
-
-    if (name === this.parentSpinnerName) {
-      this.parentSpinnerName = null;
     }
 
     const spinner = this.spinners[name];

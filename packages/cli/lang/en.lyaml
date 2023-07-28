@@ -459,7 +459,6 @@ en:
               creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
               failedToCreateProject: "Failed to create project in the target account."
-              startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
             errors:
@@ -852,6 +851,7 @@ en:
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         noComponents: "There are no components in this project."
+        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}."
         noRunnableComponents: "There are no components in this project that support local development."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."

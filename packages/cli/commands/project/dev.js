@@ -236,13 +236,6 @@ exports.handler = async options => {
     }
   }
 
-  SpinniesManager.add('devModeSetup', {
-    text: i18n(`${i18nKey}.status.startupMessage`, {
-      projectName: projectConfig.name,
-    }),
-    isParent: true,
-  });
-
   let initialUploadResult;
 
   // Create an initial build if the project was newly created in the account
@@ -256,8 +249,6 @@ exports.handler = async options => {
     );
 
     if (initialUploadResult.uploadError) {
-      SpinniesManager.fail('devModeSetup');
-
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -277,36 +268,31 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
-  }
 
-  // Let the user know when the initial build or deploy fails
-  // Do this before starting the dev server because we cannot
-  // run a server on a broken project
-  if (initialUploadResult && !initialUploadResult.succeeded) {
-    SpinniesManager.fail('devModeSetup');
+    if (!initialUploadResult.succeeded) {
+      let subTasks = [];
 
-    let subTasks = [];
+      if (initialUploadResult.buildResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      }
 
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+      logger.log();
+      failedSubTasks.forEach(failedSubTask => {
+        console.log(failedSubTask.errorMessage);
+      });
+      logger.log();
+
+      process.exit(EXIT_CODES.ERROR);
     }
 
-    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
-
-    logger.log();
-    failedSubTasks.forEach(failedSubTask => {
-      console.log(failedSubTask.errorMessage);
-    });
-    logger.log();
-
-    process.exit(EXIT_CODES.ERROR);
+    deployedBuild = initialUploadResult.buildResult;
   }
-
-  SpinniesManager.remove('devModeSetup');
 
   const LocalDev = new LocalDevManager({
     debug: options.debug,

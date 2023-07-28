@@ -50,6 +50,16 @@ class LocalDevManager {
     SpinniesManager.stopAll();
     SpinniesManager.init();
 
+    if (!this.deployedBuild) {
+      logger.log();
+      logger.error(
+        i18n(`${i18nKey}.noDeployedBuild`, {
+          accountIdentifier: uiAccountDescription(this.targetAccountId),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
     const components = await findProjectComponents(this.projectSourceDir);
 
     if (!components.length) {
