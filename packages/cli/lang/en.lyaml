@@ -1122,7 +1122,7 @@ en:
             buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
         deletePrompt:
-          message: Are you sure you want to remove {{ filePath }} from HubSpot?
+          message: "Are you sure you want to remove {{ filePath }} from HubSpot?"
       convertFields:
         positionals:
           src:
