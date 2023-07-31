@@ -971,6 +971,7 @@ en:
           chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
           sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
+          confirmDefaultSandboxAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"
