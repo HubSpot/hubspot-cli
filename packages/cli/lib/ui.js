@@ -7,7 +7,9 @@ const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const UI_COLORS = {
-  orange: '#FF8F59',
+  SORBET: '#FF8F59',
+  MARIGOLD: '#f5c26b',
+  MARIGOLD_DARK: '#dbae60',
 };
 
 /**
@@ -92,6 +94,10 @@ const uiInfoSection = (title, logContent) => {
   uiLine();
 };
 
+const uiCommandReference = command => {
+  return chalk.bold(chalk.hex(UI_COLORS.MARIGOLD_DARK)(`\`${command}\``));
+};
+
 const uiFeatureHighlight = (commands, title) => {
   const i18nKey = 'cli.lib.ui.featureHighlight';
 
@@ -112,7 +118,7 @@ const uiFeatureHighlight = (commands, title) => {
 const uiBetaMessage = message => {
   const i18nKey = 'cli.lib.ui';
 
-  logger.log(chalk.hex(UI_COLORS.orange)(i18n(`${i18nKey}.betaTag`)), message);
+  logger.log(chalk.hex(UI_COLORS.SORBET)(i18n(`${i18nKey}.betaTag`)), message);
 };
 
 const uiBetaWarning = logMessage => {
@@ -126,6 +132,7 @@ const uiBetaWarning = logMessage => {
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
+  uiCommandReference,
   uiBetaMessage,
   uiBetaWarning,
   uiFeatureHighlight,
