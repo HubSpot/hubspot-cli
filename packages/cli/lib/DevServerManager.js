@@ -57,7 +57,7 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ alpha, components, debug, onUploadRequired }) {
+  async setup({ components, debug, onUploadRequired }) {
     this.debug = debug;
     this.componentsByType = this.arrangeComponentsByType(components);
 
@@ -65,7 +65,7 @@ class DevServerManager {
       async (serverInterface, compatibleComponents) => {
         if (serverInterface.setup) {
           await serverInterface.setup({
-            alpha,
+            alpha: true,
             components: compatibleComponents,
             debug,
             onUploadRequired,
@@ -78,12 +78,12 @@ class DevServerManager {
     this.initialized = true;
   }
 
-  async start({ alpha, accountId, projectConfig }) {
+  async start({ accountId, projectConfig }) {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
           await serverInterface.start({
-            alpha,
+            alpha: true,
             accountId,
             debug: this.debug,
             httpClient,

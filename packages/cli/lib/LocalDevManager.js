@@ -42,7 +42,6 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.debug = options.debug || false;
-    this.alpha = options.alpha;
     this.deployedBuild = options.deployedBuild;
     this.watcher = null;
     this.uploadWarnings = {};
@@ -239,7 +238,6 @@ class LocalDevManager {
   }
 
   startWatching(runnableComponents) {
-    logger.log(this.projectDir);
     this.watcher = chokidar.watch(this.projectDir, {
       ignoreInitial: true,
     });
@@ -281,7 +279,6 @@ class LocalDevManager {
   async devServerSetup(components) {
     try {
       await DevServerManager.setup({
-        alpha: this.alpha,
         components,
         debug: this.debug,
         onUploadRequired: this.logUploadWarning.bind(this),
@@ -301,7 +298,6 @@ class LocalDevManager {
   async devServerStart() {
     try {
       await DevServerManager.start({
-        alpha: this.alpha,
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
       });
