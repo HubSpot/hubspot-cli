@@ -17,7 +17,7 @@ const {
   downloadProject,
   fetchProjectBuilds,
 } = require('@hubspot/cli-lib/api/dfs');
-const { ensureProjectExists } = require('../../lib/projects');
+const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   downloadProjectPrompt,
@@ -32,6 +32,12 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
+
+  const { projectConfig } = await getProjectConfig();
+  const platformVersion =
+    projectConfig && projectConfig.platformVersion
+      ? projectConfig.platformVersion
+      : '';
 
   const { project, dest, buildNumber } = options;
   let { project: promptedProjectName } = await downloadProjectPrompt(options);
@@ -78,7 +84,8 @@ exports.handler = async options => {
     const zippedProject = await downloadProject(
       accountId,
       projectName,
-      buildNumberToDownload
+      buildNumberToDownload,
+      platformVersion
     );
 
     await extractZipArchive(
