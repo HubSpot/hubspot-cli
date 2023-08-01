@@ -156,18 +156,6 @@ class LocalDevManager {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
       }
-
-      if (key.name === 'l') {
-        console.log('logging something to the console');
-      }
-
-      if (key.name === 'r') {
-        this.logUploadWarning('Reason 1');
-      }
-
-      if (key.name === 'b') {
-        this.logUploadWarning('Reason 2');
-      }
     });
   }
 
