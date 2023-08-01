@@ -5,7 +5,6 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { getProjectConfig } = require('../projects');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 
@@ -13,14 +12,12 @@ const i18nKey = 'cli.lib.prompts.downloadProjectPrompt';
 
 const createProjectsList = async () => {
   const accountId = getAccountId();
-  const { projectConfig } = await getProjectConfig();
-  const projectName = projectConfig.name;
 
   try {
     const projects = await fetchProjects(accountId);
     return projects.results;
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
