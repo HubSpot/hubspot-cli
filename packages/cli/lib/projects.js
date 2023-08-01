@@ -712,7 +712,13 @@ const makePollTaskStatusFunc = ({
                 logger.log('See below for a summary of errors.');
                 uiLine();
 
-                failedSubtasks.forEach(subTask => {
+                const displayErrors = failedSubtasks.filter(
+                  subtask =>
+                    subtask.standardError.subCategory !==
+                    'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED'
+                );
+
+                displayErrors.forEach(subTask => {
                   logger.log(
                     `\n--- ${chalk.bold(
                       subTask[statusText.SUBTASK_NAME_KEY]
