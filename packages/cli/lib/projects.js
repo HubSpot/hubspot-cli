@@ -43,8 +43,8 @@ const { i18n } = require('./lang');
 const SpinniesManager = require('./SpinniesManager');
 const {
   isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
 
 const i18nKey = 'cli.lib.projects';
 
@@ -281,7 +281,11 @@ const ensureProjectExists = async (
         return false;
       }
     }
-    if (err.statusCode === 401 && err instanceof HubSpotAuthError) {
+    if (
+      isSpecifiedHubSpotAuthError(err, {
+        statusCode: 401,
+      })
+    ) {
       logger.error(err.message);
       process.exit(EXIT_CODES.ERROR);
     }
