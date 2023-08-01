@@ -202,14 +202,10 @@ const pollFetchProject = async (accountId, projectName) => {
             statusCode: 403,
             category: 'GATED',
             subCategory: 'BuildPipelineErrorType.PORTAL_GATED',
-          })
+          }) &&
+          pollCount < 15
         ) {
           pollCount += 1;
-        } else if (pollCount >= 15) {
-          // Poll up to max 30s
-          SpinniesManager.remove('pollFetchProject');
-          clearInterval(pollInterval);
-          reject(err);
         } else {
           SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
