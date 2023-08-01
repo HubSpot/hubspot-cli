@@ -21,6 +21,7 @@ const {
 } = require('./projectStructure');
 const {
   UI_COLORS,
+  uiCommandReference,
   uiAccountDescription,
   uiBetaMessage,
   uiLink,
@@ -99,7 +100,7 @@ class LocalDevManager {
     uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     logger.log(
-      chalk.hex(UI_COLORS.orange)(
+      chalk.hex(UI_COLORS.SORBET)(
         i18n(`${i18nKey}.running`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
           projectName: this.projectConfig.name,
@@ -177,17 +178,32 @@ class LocalDevManager {
 
       logger.log();
       logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
-      logger.log(i18n(`${i18nKey}.uploadWarning.stopDev`));
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.stopDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
       if (this.targetAccountId !== defaultAccountId) {
         logger.log(
           i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
-            accountId: this.targetAccountId,
+            command: uiCommandReference(
+              `hs project upload --account=${this.targetAccountId}`
+            ),
           })
         );
       } else {
-        logger.log(i18n(`${i18nKey}.uploadWarning.runUpload`));
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUpload`, {
+            command: uiCommandReference('hs project upload'),
+          })
+        );
       }
-      logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.restartDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
+
       this.mostRecentUploadWarning = reason;
       this.uploadWarnings[reason] = true;
     }
@@ -216,13 +232,23 @@ class LocalDevManager {
       if (type === COMPONENT_TYPES.app) {
         const cardConfigs = getAppCardConfigs(config, path);
 
+        if (!deployedComponentNames.includes(config.name)) {
+          missingComponents.push(
+            `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${config.name}`
+          );
+        }
+
         cardConfigs.forEach(cardConfig => {
           if (
             cardConfig.data &&
             cardConfig.data.title &&
             !deployedComponentNames.includes(cardConfig.data.title)
           ) {
-            missingComponents.push(cardConfig.data.title);
+            missingComponents.push(
+              `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${
+                cardConfig.data.title
+              }`
+            );
           }
         });
       }
@@ -231,7 +257,7 @@ class LocalDevManager {
     if (missingComponents.length) {
       this.logUploadWarning(
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
-          missingComponents: missingComponents.join(','),
+          missingComponents: missingComponents.join(', '),
         })
       );
     }
