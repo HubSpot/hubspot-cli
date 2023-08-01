@@ -100,6 +100,7 @@ async function findProjectComponents(projectSourceDir) {
 }
 
 module.exports = {
+  APP_COMPONENT_CONFIG,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,

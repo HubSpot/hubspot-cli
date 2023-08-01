@@ -861,6 +861,7 @@ en:
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
         uploadWarning:
+          configEdit: "You edited the configuration file {{#bold}}{{ path }}{{/bold}}. Changes to configuration files cannot be handled by the local dev server."
           missingComponents: "Your deployed project does not contain the components {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
           header: "{{ reason }} To reflect these changes:"
           stopDev: "  * Stop {{#bold}}`hs project dev`{{/bold}}"

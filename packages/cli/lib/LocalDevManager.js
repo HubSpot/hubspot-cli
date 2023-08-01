@@ -1,4 +1,5 @@
 const path = require('path');
+const chokidar = require('chokidar');
 const chalk = require('chalk');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -7,11 +8,13 @@ const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
+const { PROJECT_CONFIG_FILE } = require('@hubspot/cli-lib/lib/constants');
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
 const {
+  APP_COMPONENT_CONFIG,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
@@ -24,6 +27,13 @@ const {
   uiLine,
 } = require('./ui');
 
+const WATCH_EVENTS = {
+  add: 'add',
+  change: 'change',
+  unlink: 'unlink',
+  unlinkDir: 'unlinkDir',
+};
+
 const i18nKey = 'cli.lib.LocalDevManager';
 
 class LocalDevManager {
@@ -34,6 +44,8 @@ class LocalDevManager {
     this.debug = options.debug || false;
     this.alpha = options.alpha;
     this.deployedBuild = options.deployedBuild;
+    this.watcher = null;
+    this.uploadWarnings = {};
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -108,7 +120,11 @@ class LocalDevManager {
 
     await this.devServerStart();
 
+    this.startWatching(runnableComponents);
+
     this.updateKeypressListeners();
+
+    this.monitorConsoleOutput();
 
     this.compareLocalProjectToDeployed(runnableComponents);
   }
@@ -117,6 +133,8 @@ class LocalDevManager {
     SpinniesManager.add('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingStart`),
     });
+
+    await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
 
@@ -138,26 +156,54 @@ class LocalDevManager {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         this.stop();
       }
+
+      if (key.name === 'l') {
+        console.log('logging something to the console');
+      }
+
+      if (key.name === 'r') {
+        this.logUploadWarning('Reason 1');
+      }
+
+      if (key.name === 'b') {
+        this.logUploadWarning('Reason 2');
+      }
     });
   }
 
   logUploadWarning(reason) {
-    const currentDefaultAccount = getConfigDefaultAccount();
-    const defaultAccountId = getAccountId(currentDefaultAccount);
+    if (!this.uploadWarnings[reason]) {
+      const currentDefaultAccount = getConfigDefaultAccount();
+      const defaultAccountId = getAccountId(currentDefaultAccount);
 
-    logger.log();
-    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
-    logger.log(i18n(`${i18nKey}.uploadWarning.stopDev`));
-    if (this.targetAccountId !== defaultAccountId) {
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
-          accountId: this.targetAccountId,
-        })
-      );
-    } else {
-      logger.log(i18n(`${i18nKey}.uploadWarning.runUpload`));
+      logger.log();
+      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
+      logger.log(i18n(`${i18nKey}.uploadWarning.stopDev`));
+      if (this.targetAccountId !== defaultAccountId) {
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
+            accountId: this.targetAccountId,
+          })
+        );
+      } else {
+        logger.log(i18n(`${i18nKey}.uploadWarning.runUpload`));
+      }
+      logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
+      this.mostRecentUploadWarning = reason;
+      this.uploadWarnings[reason] = true;
     }
-    logger.log(i18n(`${i18nKey}.uploadWarning.restartDev`));
+  }
+
+  monitorConsoleOutput() {
+    const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+    process.stdout.write = function(chunk, encoding, callback) {
+      if (this.uploadWarnings[this.mostRecentUploadWarning]) {
+        this.uploadWarnings[this.mostRecentUploadWarning] = false;
+      }
+
+      return originalStdoutWrite(chunk, encoding, callback);
+    }.bind(this);
   }
 
   compareLocalProjectToDeployed(runnableComponents) {
@@ -187,6 +233,46 @@ class LocalDevManager {
       this.logUploadWarning(
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
           missingComponents: missingComponents.join(','),
+        })
+      );
+    }
+  }
+
+  startWatching(runnableComponents) {
+    logger.log(this.projectDir);
+    this.watcher = chokidar.watch(this.projectDir, {
+      ignoreInitial: true,
+    });
+
+    const configPaths = runnableComponents
+      .filter(({ type }) => type === COMPONENT_TYPES.app)
+      .map(component => path.join(component.path, APP_COMPONENT_CONFIG));
+
+    configPaths.push(path.join(this.projectDir, PROJECT_CONFIG_FILE));
+
+    this.watcher.on('add', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.add, configPaths);
+    });
+    this.watcher.on('change', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.change, configPaths);
+    });
+    this.watcher.on('unlink', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.unlink, configPaths);
+    });
+    this.watcher.on('unlinkDir', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.unlinkDir, configPaths);
+    });
+  }
+
+  async stopWatching() {
+    await this.watcher.close();
+  }
+
+  handleWatchEvent(filePath, event, configPaths) {
+    if (configPaths.includes(filePath)) {
+      this.logUploadWarning(
+        i18n(`${i18nKey}.uploadWarning.configEdit`, {
+          path: path.relative(this.projectDir, filePath),
         })
       );
     }
