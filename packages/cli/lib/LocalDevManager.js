@@ -258,9 +258,13 @@ class LocalDevManager {
 
     const configPaths = runnableComponents
       .filter(({ type }) => type === COMPONENT_TYPES.app)
-      .map(component => path.join(component.path, APP_COMPONENT_CONFIG));
+      .map(component => {
+        const appConfigPath = path.join(component.path, APP_COMPONENT_CONFIG);
+        return appConfigPath;
+      });
 
-    configPaths.push(path.join(this.projectDir, PROJECT_CONFIG_FILE));
+    const projectConfigPath = path.join(this.projectDir, PROJECT_CONFIG_FILE);
+    configPaths.push(projectConfigPath);
 
     this.watcher.on('add', filePath => {
       this.handleWatchEvent(filePath, WATCH_EVENTS.add, configPaths);
