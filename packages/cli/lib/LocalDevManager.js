@@ -291,6 +291,8 @@ class LocalDevManager {
           path: path.relative(this.projectDir, filePath),
         })
       );
+    } else {
+      this.devServerFileChange(filePath, event);
     }
   }
 
@@ -327,6 +329,21 @@ class LocalDevManager {
         i18n(`${i18nKey}.devServer.startError`, { message: e.message })
       );
       process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  devServerFileChange(filePath, event) {
+    try {
+      DevServerManager.fileChange({ filePath, event });
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      logger.error(
+        i18n(`${i18nKey}.devServer.fileChangeError`, {
+          message: e.message,
+        })
+      );
     }
   }
 

@@ -98,6 +98,16 @@ class DevServerManager {
     this.started = true;
   }
 
+  fileChange({ filePath, event }) {
+    if (this.started) {
+      this.iterateDevServers(async serverInterface => {
+        if (serverInterface.fileChange) {
+          await serverInterface.fileChange(filePath, event);
+        }
+      });
+    }
+  }
+
   async cleanup() {
     if (this.started) {
       await this.iterateDevServers(async serverInterface => {

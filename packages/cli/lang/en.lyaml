@@ -874,6 +874,7 @@ en:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
+          fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
