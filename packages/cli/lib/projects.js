@@ -614,7 +614,10 @@ const makePollTaskStatusFunc = ({
         ) + '\n';
 
     SpinniesManager.update(overallTaskSpinniesKey, {
-      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
+      text: `${statusStrings.INITIALIZE(
+        taskName,
+        displayId
+      )}\n${componentCountText}`,
     });
 
     if (!silenceLogs) {
@@ -693,11 +696,11 @@ const makePollTaskStatusFunc = ({
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
               SpinniesManager.succeed(overallTaskSpinniesKey, {
-                text: statusStrings.SUCCESS(taskName),
+                text: statusStrings.SUCCESS(taskName, displayId),
               });
             } else if (status === statusText.STATES.FAILURE) {
               SpinniesManager.fail(overallTaskSpinniesKey, {
-                text: statusStrings.FAIL(taskName),
+                text: statusStrings.FAIL(taskName, displayId),
               });
 
               if (!silenceLogs) {
@@ -760,9 +763,9 @@ const pollBuildStatus = makePollTaskStatusFunc({
   structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
-    INITIALIZE: name => `Building ${chalk.bold(name)}`,
-    SUCCESS: name => `Built ${chalk.bold(name)}`,
-    FAIL: name => `Failed to build ${chalk.bold(name)}`,
+    INITIALIZE: (name, buildId) => `Building ${chalk.bold(name)} #${buildId}`,
+    SUCCESS: (name, buildId) => `Built ${chalk.bold(name)} #${buildId}`,
+    FAIL: (name, buildId) => `Failed to build ${chalk.bold(name)} #${buildId}`,
     SUBTASK_FAIL: (buildId, name) =>
       `Build #${buildId} failed because there was a problem\nbuilding ${chalk.bold(
         name
@@ -780,9 +783,12 @@ const pollDeployStatus = makePollTaskStatusFunc({
   structureFn: getDeployStructure,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
-    INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
-    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
-    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+    INITIALIZE: (name, buildId) =>
+      `Deploying build #${buildId} in ${chalk.bold(name)}`,
+    SUCCESS: (name, buildId) =>
+      `Deployed build #${buildId} in ${chalk.bold(name)}`,
+    FAIL: (name, buildId) =>
+      `Failed to deploy build #${buildId} in ${chalk.bold(name)}`,
     SUBTASK_FAIL: (deployedBuildId, name) =>
       `Deploy for build #${deployedBuildId} failed because there was a\nproblem deploying ${chalk.bold(
         name
