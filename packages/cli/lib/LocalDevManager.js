@@ -62,6 +62,7 @@ class LocalDevManager {
     SpinniesManager.stopAll();
     SpinniesManager.init();
 
+    // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
       logger.log();
       logger.error(
@@ -74,6 +75,7 @@ class LocalDevManager {
 
     const components = await findProjectComponents(this.projectSourceDir);
 
+    // The project is empty, there is nothing to run locally
     if (!components.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noComponents`));
@@ -84,6 +86,7 @@ class LocalDevManager {
       component => component.runnable
     );
 
+    // The project does not contain any components that support local development
     if (!runnableComponents.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noRunnableComponents`));
@@ -120,12 +123,15 @@ class LocalDevManager {
 
     await this.devServerStart();
 
+    // Initialize project file watcher to detect configuration file changes
     this.startWatching(runnableComponents);
 
     this.updateKeypressListeners();
 
     this.monitorConsoleOutput();
 
+    // Verify that there are no mismatches between components in the local project
+    // and components in the deployed build of the project.
     this.compareLocalProjectToDeployed(runnableComponents);
   }
 
@@ -160,6 +166,8 @@ class LocalDevManager {
   }
 
   logUploadWarning(reason) {
+    // Avoid logging the warning to the console if it is currently the most
+    // recently logged warning. We do not want to spam the console with the same message.
     if (!this.uploadWarnings[reason]) {
       const currentDefaultAccount = getConfigDefaultAccount();
       const defaultAccountId = getAccountId(currentDefaultAccount);
@@ -201,8 +209,12 @@ class LocalDevManager {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
     process.stdout.write = function(chunk, encoding, callback) {
-      if (this.uploadWarnings[this.mostRecentUploadWarning]) {
-        this.uploadWarnings[this.mostRecentUploadWarning] = false;
+      // Reset the most recently logged warning
+      if (
+        this.mostRecentUploadWarning &&
+        this.uploadWarnings[this.mostRecentUploadWarning]
+      ) {
+        delete this.uploadWarnings[this.mostRecentUploadWarning];
       }
 
       return originalStdoutWrite(chunk, encoding, callback);
