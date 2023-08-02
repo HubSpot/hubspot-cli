@@ -69,12 +69,15 @@ en:
             scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
           clean:
             describe: "Checks for inactive accounts and removes them from the CLI config"
-            noResults: "No inactive accounts found for removal."
+            noResults: "No inactive accounts found to remove."
             loading:
-              add: "Verifying all available accounts..."
-              succeed: "Accounts verification complete."
-            accountsMarkedForRemoval: "{{ count }} accounts marked for removal:"
-            confirm: "Remove marked accounts from the CLI config?"
+              add: "Looking for inactive accounts…"
+            inactiveAccountsFound:
+              one: "1 inactive account found:"
+              other: "{{ count }} inactive accounts found:"
+            confirm:
+              one: "Remove 1 inactive account from the CLI config?"
+              other: "Remove {{ count }} inactive accounts from the CLI config?"
             removeSuccess: "Removed {{ accountName }} from the CLI config."
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."

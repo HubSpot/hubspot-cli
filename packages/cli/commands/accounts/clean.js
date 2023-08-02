@@ -73,17 +73,19 @@ exports.handler = async options => {
       }
     }
   }
-  SpinniesManager.succeed('accountsClean', {
-    text: i18n(`${i18nKey}.loading.succeed`),
-  });
 
-  logger.log('');
   if (accountsToRemove.length > 0) {
-    logger.log(
-      i18n(`${i18nKey}.accountsMarkedForRemoval`, {
-        count: accountsToRemove.length,
-      })
-    );
+    const oneAccountFound = accountsToRemove.length === 1;
+    SpinniesManager.succeed('accountsClean', {
+      text: i18n(
+        oneAccountFound
+          ? `${i18nKey}.inactiveAccountsFound.one`
+          : `${i18nKey}.inactiveAccountsFound.other`,
+        {
+          count: accountsToRemove.length,
+        }
+      ),
+    });
     logger.log(
       getTableContents(
         accountsToRemove.map(p => [getAccountName(p)]),
@@ -94,7 +96,14 @@ exports.handler = async options => {
       {
         name: 'accountsCleanPrompt',
         type: 'confirm',
-        message: i18n(`${i18nKey}.confirm`),
+        message: i18n(
+          oneAccountFound
+            ? `${i18nKey}.confirm.one`
+            : `${i18nKey}.confirm.other`,
+          {
+            count: accountsToRemove.length,
+          }
+        ),
       },
     ]);
     if (accountsCleanPrompt) {
@@ -109,7 +118,9 @@ exports.handler = async options => {
       }
     }
   } else {
-    logger.log(i18n(`${i18nKey}.noResults`));
+    SpinniesManager.succeed('accountsClean', {
+      text: i18n(`${i18nKey}.noResults`),
+    });
   }
 
   logger.log('');
