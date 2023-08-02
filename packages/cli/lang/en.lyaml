@@ -589,6 +589,8 @@ en:
             errors:
               downloadFailed: "Something went wrong downloading the project"
               projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            warnings:
+              cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
             options:
               buildNumber:
                 describe: "The build number to download"

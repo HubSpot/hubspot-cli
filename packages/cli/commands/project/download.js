@@ -34,10 +34,11 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const { projectConfig } = await getProjectConfig();
-  const platformVersion =
-    projectConfig && projectConfig.platformVersion
-      ? projectConfig.platformVersion
-      : '';
+
+  if (projectConfig) {
+    logger.warn(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
+    process.exit(EXIT_CODES.WARNING);
+  }
 
   const { project, dest, buildNumber } = options;
   let { project: promptedProjectName } = await downloadProjectPrompt(options);
@@ -84,8 +85,7 @@ exports.handler = async options => {
     const zippedProject = await downloadProject(
       accountId,
       projectName,
-      buildNumberToDownload,
-      platformVersion
+      buildNumberToDownload
     );
 
     await extractZipArchive(
