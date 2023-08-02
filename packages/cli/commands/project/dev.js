@@ -29,11 +29,7 @@ const {
   selectTargetAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
-const {
-  LocalDevManager,
-  UPLOAD_PERMISSIONS,
-} = require('../../lib/LocalDevManager');
-const LocalDevManagerV2 = require('../../lib/LocalDevManagerV2');
+const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox } = require('../../lib/sandboxes');
 const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -76,14 +72,15 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
+  if (!options.debug) {
+    console.clear();
+  }
   uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  await showPlatformVersionWarning(accountId, projectConfig);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
@@ -172,41 +169,37 @@ exports.handler = async options => {
     }
   }
 
+  logger.log();
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,
     {
       allowCreate: false,
       noLogs: true,
-      withPolling: true,
+      withPolling: createNewSandbox,
     }
   );
-
-  const isNonSandboxAccount =
-    !defaultAccountIsSandbox && targetAccountId === accountId;
-
-  let uploadPermission = isNonSandboxAccount
-    ? UPLOAD_PERMISSIONS.manual
-    : UPLOAD_PERMISSIONS.always;
 
   let deployedBuild;
 
   if (projectExists) {
     const project = await fetchProject(targetAccountId, projectConfig.name);
     deployedBuild = project.deployedBuild;
-
-    if (options.local || options.localAll || project.sourceIntegration) {
-      uploadPermission = UPLOAD_PERMISSIONS.never;
-    }
   }
 
   SpinniesManager.init();
+
+  if (!options.debug) {
+    console.clear();
+  }
+  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectExists) {
     // Create the project without prompting if this is a newly created sandbox
     let shouldCreateProject = createNewSandbox;
 
     if (!shouldCreateProject) {
+      logger.log();
       uiLine();
       logger.warn(
         i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
@@ -225,6 +218,8 @@ exports.handler = async options => {
     }
 
     if (shouldCreateProject) {
+      await showPlatformVersionWarning(accountId, projectConfig);
+
       try {
         SpinniesManager.add('createProject', {
           text: i18n(`${i18nKey}.status.creatingProject`, {
@@ -246,23 +241,16 @@ exports.handler = async options => {
       }
     } else {
       // We cannot continue if the project does not exist in the target account
+      logger.log();
       logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
 
-  SpinniesManager.add('devModeSetup', {
-    text: i18n(`${i18nKey}.status.startupMessage`, {
-      projectName: projectConfig.name,
-    }),
-    isParent: true,
-  });
-
   let initialUploadResult;
 
-  // Create an initial build if the project was newly created in the account or if
-  // our upload permission is set to "always"
-  if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
+  // Create an initial build if the project was newly created in the account
+  if (!projectExists) {
     initialUploadResult = await handleProjectUpload(
       targetAccountId,
       projectConfig,
@@ -272,8 +260,6 @@ exports.handler = async options => {
     );
 
     if (initialUploadResult.uploadError) {
-      SpinniesManager.fail('devModeSetup');
-
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -293,74 +279,41 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
-  }
 
-  // Let the user know when the initial build or deploy fails
-  // Do this before starting the dev server for v2 behavior because we cannot
-  // run a server on a broken project
-  if (
-    (options.local || options.localAll) &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
-    SpinniesManager.fail('devModeSetup');
+    if (!initialUploadResult.succeeded) {
+      let subTasks = [];
 
-    let subTasks = [];
+      if (initialUploadResult.buildResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      }
 
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+      logger.log();
+      failedSubTasks.forEach(failedSubTask => {
+        console.log(failedSubTask.errorMessage);
+      });
+      logger.log();
+
+      process.exit(EXIT_CODES.ERROR);
     }
 
-    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
-
-    logger.log();
-    failedSubTasks.forEach(failedSubTask => {
-      console.log(failedSubTask.errorMessage);
-    });
-    logger.log();
-
-    process.exit(EXIT_CODES.ERROR);
+    deployedBuild = initialUploadResult.buildResult;
   }
 
-  SpinniesManager.remove('devModeSetup');
-
-  const LocalDev =
-    options.local || options.localAll
-      ? new LocalDevManagerV2({
-          alpha: options.localAll,
-          debug: options.debug,
-          deployedBuild,
-          projectConfig,
-          projectDir,
-          targetAccountId,
-        })
-      : new LocalDevManager({
-          debug: options.debug,
-          projectConfig,
-          projectDir,
-          targetAccountId,
-          uploadPermission,
-        });
+  const LocalDev = new LocalDevManager({
+    debug: options.debug,
+    deployedBuild,
+    projectConfig,
+    projectDir,
+    targetAccountId,
+  });
 
   await LocalDev.start();
-
-  // Let the user know when the initial build or deploy fails
-  if (
-    !options.local &&
-    !options.localAll &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      LocalDev.logBuildError(initialUploadResult.buildResult);
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      LocalDev.logDeployError(initialUploadResult.deployResult);
-    }
-  }
 
   handleExit(LocalDev.stop);
 };
@@ -370,18 +323,6 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
-
-  yargs.option('local', {
-    describe: i18n(`${i18nKey}.options.local.describe`),
-    type: 'boolean',
-    hidden: true,
-  });
-
-  yargs.option('local-all', {
-    describe: i18n(`${i18nKey}.options.localAll.describe`),
-    type: 'boolean',
-    hidden: true,
-  });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 

@@ -1,17 +1,12 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
 const httpClient = require('@hubspot/cli-lib/http');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getProjectDetailUrl } = require('./projects');
 const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
-const { EXIT_CODES } = require('./enums/exitCodes');
 const { promptUser } = require('./prompts/promptUtils');
+const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
-const DEFAULT_PORT = 8080;
 const SERVER_KEYS = {
   app: 'app',
 };
@@ -23,20 +18,13 @@ class DevServerManager {
     this.componentsByType = {};
     this.server = null;
     this.path = null;
-    this.devServers = {};
-    this.debug = false;
-  }
-
-  safeLoadServer() {
-    try {
-      const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
-      this.devServers[SERVER_KEYS.app] = {
+    this.devServers = {
+      [SERVER_KEYS.app]: {
         componentType: COMPONENT_TYPES.app,
         serverInterface: DevModeInterface,
-      };
-    } catch (e) {
-      logger.debug('Failed to load dev server interface: ', e);
-    }
+      },
+    };
+    this.debug = false;
   }
 
   async iterateDevServers(callback) {
@@ -57,10 +45,6 @@ class DevServerManager {
     }
   }
 
-  generateURL(path) {
-    return this.path ? `${this.path}/${path}` : null;
-  }
-
   arrangeComponentsByType(components) {
     return components.reduce((acc, component) => {
       if (!acc[component.type]) {
@@ -75,10 +59,7 @@ class DevServerManager {
 
   async setup({ alpha, components, debug, onUploadRequired }) {
     this.debug = debug;
-
     this.componentsByType = this.arrangeComponentsByType(components);
-
-    this.safeLoadServer();
 
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
@@ -99,36 +80,6 @@ class DevServerManager {
 
   async start({ alpha, accountId, projectConfig }) {
     if (this.initialized) {
-      const app = express();
-
-      // Install Middleware
-      app.use(bodyParser.json({ limit: '50mb' }));
-      app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-      app.use(cors());
-
-      // Configure
-      app.set('trust proxy', true);
-
-      // Initialize a base route
-      app.get('/', (req, res) => {
-        res.send('HubSpot local dev server');
-      });
-
-      // Initialize URL redirects
-      app.get('/hs/project', (req, res) => {
-        res.redirect(getProjectDetailUrl(projectConfig.name, accountId));
-      });
-
-      // Start server
-      this.server = await app.listen(DEFAULT_PORT).on('error', err => {
-        if (err.code === 'EADDRINUSE') {
-          logger.error(i18n(`${i18nKey}.portConflict`, { port: DEFAULT_PORT }));
-          logger.log();
-          process.exit(EXIT_CODES.ERROR);
-        }
-      });
-
-      // Initialize component servers
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
           await serverInterface.start({
@@ -140,10 +91,6 @@ class DevServerManager {
           });
         }
       });
-
-      this.path = this.server.address()
-        ? `http://localhost:${this.server.address().port}`
-        : null;
     } else {
       throw new Error(i18n(`${i18nKey}.notInitialized`));
     }
@@ -158,10 +105,6 @@ class DevServerManager {
           await serverInterface.cleanup();
         }
       });
-
-      if (this.server) {
-        await this.server.close();
-      }
     }
   }
 }

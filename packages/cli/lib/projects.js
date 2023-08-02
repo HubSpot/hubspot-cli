@@ -184,7 +184,9 @@ const pollFetchProject = async (accountId, projectName) => {
     let pollCount = 0;
     SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
-      text: 'Fetching project status',
+      text: i18n(`${i18nKey}.pollFetchProject.checkingProject`, {
+        accountIdentifier: uiAccountDescription(accountId),
+      }),
     });
     const pollInterval = setInterval(async () => {
       try {
@@ -200,14 +202,10 @@ const pollFetchProject = async (accountId, projectName) => {
             statusCode: 403,
             category: 'GATED',
             subCategory: 'BuildPipelineErrorType.PORTAL_GATED',
-          })
+          }) &&
+          pollCount < 15
         ) {
           pollCount += 1;
-        } else if (pollCount >= 15) {
-          // Poll up to max 30s
-          SpinniesManager.remove('pollFetchProject');
-          clearInterval(pollInterval);
-          reject(err);
         } else {
           SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
@@ -566,7 +564,6 @@ const makePollTaskStatusFunc = ({
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
-      category: 'projectPollStatus',
     });
 
     const [
@@ -627,7 +624,6 @@ const makePollTaskStatusFunc = ({
           indent,
           succeedColor: 'white',
           failColor: 'white',
-          category: 'projectPollStatus',
         });
       };
 
@@ -712,7 +708,13 @@ const makePollTaskStatusFunc = ({
                 logger.log('See below for a summary of errors.');
                 uiLine();
 
-                failedSubtasks.forEach(subTask => {
+                const displayErrors = failedSubtasks.filter(
+                  subtask =>
+                    subtask.standardError.subCategory !==
+                    'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED'
+                );
+
+                displayErrors.forEach(subTask => {
                   logger.log(
                     `\n--- ${chalk.bold(
                       subTask[statusText.SUBTASK_NAME_KEY]
@@ -825,11 +827,13 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
           defaultVersion,
         })
       );
+      logger.log('');
     } catch (e) {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
       );
+      logger.log('');
       logger.debug(e.error);
     }
   }
