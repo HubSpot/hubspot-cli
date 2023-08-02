@@ -96,6 +96,9 @@ exports.handler = async options => {
 
     if (useDefaultSandboxAccount) {
       targetAccountId = accountId;
+    } else {
+      logger.log(i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`));
+      process.exit(EXIT_CODES.SUCCESS);
     }
   }
 

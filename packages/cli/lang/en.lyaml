@@ -455,6 +455,7 @@ en:
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
+              declineDefaultSandboxExplanation: "To develop on a different account, run {{#bold}}`hs accounts use`{{/bold}} to change your default account, then re-run {{#bold}}`hs project dev`{{/bold}}."
             status:
               creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
