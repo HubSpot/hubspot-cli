@@ -875,6 +875,7 @@ en:
         uploadWarning:
           appLabel: "[App]"
           uiExtensionLabel: "[UI Extension]"
+          configEdit: "You edited the configuration file {{#bold}}{{ path }}{{/bold}}. Changes to configuration files cannot be handled by the local dev server."
           missingComponents: "The deployed build for this project does not contain {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
           header: "{{ reason }} To reflect these changes:"
           stopDev: "  * Stop {{ command }}"
@@ -885,6 +886,7 @@ en:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
+          fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
       projects:
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

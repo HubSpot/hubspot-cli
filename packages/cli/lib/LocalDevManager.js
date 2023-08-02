@@ -1,4 +1,5 @@
 const path = require('path');
+const chokidar = require('chokidar');
 const chalk = require('chalk');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -7,11 +8,13 @@ const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
+const { PROJECT_CONFIG_FILE } = require('@hubspot/cli-lib/lib/constants');
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
 const {
+  APP_COMPONENT_CONFIG,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
@@ -25,6 +28,13 @@ const {
   uiLine,
 } = require('./ui');
 
+const WATCH_EVENTS = {
+  add: 'add',
+  change: 'change',
+  unlink: 'unlink',
+  unlinkDir: 'unlinkDir',
+};
+
 const i18nKey = 'cli.lib.LocalDevManager';
 
 class LocalDevManager {
@@ -33,8 +43,9 @@ class LocalDevManager {
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.debug = options.debug || false;
-    this.alpha = options.alpha;
     this.deployedBuild = options.deployedBuild;
+    this.watcher = null;
+    this.uploadWarnings = {};
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -51,6 +62,7 @@ class LocalDevManager {
     SpinniesManager.stopAll();
     SpinniesManager.init();
 
+    // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
       logger.log();
       logger.error(
@@ -63,6 +75,7 @@ class LocalDevManager {
 
     const components = await findProjectComponents(this.projectSourceDir);
 
+    // The project is empty, there is nothing to run locally
     if (!components.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noComponents`));
@@ -73,6 +86,7 @@ class LocalDevManager {
       component => component.runnable
     );
 
+    // The project does not contain any components that support local development
     if (!runnableComponents.length) {
       logger.log();
       logger.error(i18n(`${i18nKey}.noRunnableComponents`));
@@ -109,8 +123,15 @@ class LocalDevManager {
 
     await this.devServerStart();
 
+    // Initialize project file watcher to detect configuration file changes
+    this.startWatching(runnableComponents);
+
     this.updateKeypressListeners();
 
+    this.monitorConsoleOutput();
+
+    // Verify that there are no mismatches between components in the local project
+    // and components in the deployed build of the project.
     this.compareLocalProjectToDeployed(runnableComponents);
   }
 
@@ -118,6 +139,8 @@ class LocalDevManager {
     SpinniesManager.add('cleanupMessage', {
       text: i18n(`${i18nKey}.exitingStart`),
     });
+
+    await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
 
@@ -143,36 +166,59 @@ class LocalDevManager {
   }
 
   logUploadWarning(reason) {
-    const currentDefaultAccount = getConfigDefaultAccount();
-    const defaultAccountId = getAccountId(currentDefaultAccount);
+    // Avoid logging the warning to the console if it is currently the most
+    // recently logged warning. We do not want to spam the console with the same message.
+    if (!this.uploadWarnings[reason]) {
+      const currentDefaultAccount = getConfigDefaultAccount();
+      const defaultAccountId = getAccountId(currentDefaultAccount);
 
-    logger.log();
-    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
-    logger.log(
-      i18n(`${i18nKey}.uploadWarning.stopDev`, {
-        command: uiCommandReference('hs project dev'),
-      })
-    );
-    if (this.targetAccountId !== defaultAccountId) {
+      logger.log();
+      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
       logger.log(
-        i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
-          command: uiCommandReference(
-            `hs project upload --account=${this.targetAccountId}`
-          ),
+        i18n(`${i18nKey}.uploadWarning.stopDev`, {
+          command: uiCommandReference('hs project dev'),
         })
       );
-    } else {
+      if (this.targetAccountId !== defaultAccountId) {
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
+            command: uiCommandReference(
+              `hs project upload --account=${this.targetAccountId}`
+            ),
+          })
+        );
+      } else {
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUpload`, {
+            command: uiCommandReference('hs project upload'),
+          })
+        );
+      }
       logger.log(
-        i18n(`${i18nKey}.uploadWarning.runUpload`, {
-          command: uiCommandReference('hs project upload'),
+        i18n(`${i18nKey}.uploadWarning.restartDev`, {
+          command: uiCommandReference('hs project dev'),
         })
       );
+
+      this.mostRecentUploadWarning = reason;
+      this.uploadWarnings[reason] = true;
     }
-    logger.log(
-      i18n(`${i18nKey}.uploadWarning.restartDev`, {
-        command: uiCommandReference('hs project dev'),
-      })
-    );
+  }
+
+  monitorConsoleOutput() {
+    const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+    process.stdout.write = function(chunk, encoding, callback) {
+      // Reset the most recently logged warning
+      if (
+        this.mostRecentUploadWarning &&
+        this.uploadWarnings[this.mostRecentUploadWarning]
+      ) {
+        delete this.uploadWarnings[this.mostRecentUploadWarning];
+      }
+
+      return originalStdoutWrite(chunk, encoding, callback);
+    }.bind(this);
   }
 
   compareLocalProjectToDeployed(runnableComponents) {
@@ -217,10 +263,54 @@ class LocalDevManager {
     }
   }
 
+  startWatching(runnableComponents) {
+    this.watcher = chokidar.watch(this.projectDir, {
+      ignoreInitial: true,
+    });
+
+    const configPaths = runnableComponents
+      .filter(({ type }) => type === COMPONENT_TYPES.app)
+      .map(component => {
+        const appConfigPath = path.join(component.path, APP_COMPONENT_CONFIG);
+        return appConfigPath;
+      });
+
+    const projectConfigPath = path.join(this.projectDir, PROJECT_CONFIG_FILE);
+    configPaths.push(projectConfigPath);
+
+    this.watcher.on('add', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.add, configPaths);
+    });
+    this.watcher.on('change', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.change, configPaths);
+    });
+    this.watcher.on('unlink', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.unlink, configPaths);
+    });
+    this.watcher.on('unlinkDir', filePath => {
+      this.handleWatchEvent(filePath, WATCH_EVENTS.unlinkDir, configPaths);
+    });
+  }
+
+  async stopWatching() {
+    await this.watcher.close();
+  }
+
+  handleWatchEvent(filePath, event, configPaths) {
+    if (configPaths.includes(filePath)) {
+      this.logUploadWarning(
+        i18n(`${i18nKey}.uploadWarning.configEdit`, {
+          path: path.relative(this.projectDir, filePath),
+        })
+      );
+    } else {
+      this.devServerFileChange(filePath, event);
+    }
+  }
+
   async devServerSetup(components) {
     try {
       await DevServerManager.setup({
-        alpha: this.alpha,
         components,
         debug: this.debug,
         onUploadRequired: this.logUploadWarning.bind(this),
@@ -240,7 +330,6 @@ class LocalDevManager {
   async devServerStart() {
     try {
       await DevServerManager.start({
-        alpha: this.alpha,
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
       });
@@ -252,6 +341,21 @@ class LocalDevManager {
         i18n(`${i18nKey}.devServer.startError`, { message: e.message })
       );
       process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  devServerFileChange(filePath, event) {
+    try {
+      DevServerManager.fileChange({ filePath, event });
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      logger.error(
+        i18n(`${i18nKey}.devServer.fileChangeError`, {
+          message: e.message,
+        })
+      );
     }
   }
 
