@@ -610,7 +610,7 @@ const makePollTaskStatusFunc = ({
     SpinniesManager.update(overallTaskSpinniesKey, {
       text: `${statusStrings.INITIALIZE(
         taskName,
-        taskId
+        displayId
       )}\n${componentCountText}`,
     });
 
@@ -691,11 +691,11 @@ const makePollTaskStatusFunc = ({
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
               SpinniesManager.succeed(overallTaskSpinniesKey, {
-                text: statusStrings.SUCCESS(taskName, taskId),
+                text: statusStrings.SUCCESS(taskName, displayId),
               });
             } else if (status === statusText.STATES.FAILURE) {
               SpinniesManager.fail(overallTaskSpinniesKey, {
-                text: statusStrings.FAIL(taskName, taskId),
+                text: statusStrings.FAIL(taskName, displayId),
               });
 
               if (!silenceLogs) {
@@ -752,12 +752,9 @@ const pollBuildStatus = makePollTaskStatusFunc({
   structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
-    INITIALIZE: (name, buildId) =>
-      `Building build #${buildId} in ${chalk.bold(name)}`,
-    SUCCESS: (name, buildId) =>
-      `Built build #${buildId} in ${chalk.bold(name)}`,
-    FAIL: (name, buildId) =>
-      `Failed to build #${buildId} in ${chalk.bold(name)}`,
+    INITIALIZE: (name, buildId) => `Building ${chalk.bold(name)} #${buildId}`,
+    SUCCESS: (name, buildId) => `Built ${chalk.bold(name)} #${buildId}`,
+    FAIL: (name, buildId) => `Failed to build ${chalk.bold(name)} #${buildId}`,
     SUBTASK_FAIL: (buildId, name) =>
       `Build #${buildId} failed because there was a problem\nbuilding ${chalk.bold(
         name
