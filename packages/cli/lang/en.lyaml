@@ -73,7 +73,7 @@ en:
             loading:
               add: "Verifying all available accounts..."
               succeed: "Accounts verification complete."
-            portalsMarkedForRemoval: "{{ count }} portals marked for removal:"
+            accountsMarkedForRemoval: "{{ count }} accounts marked for removal:"
             confirm: "Remove marked accounts from the CLI config?"
             removeSuccess: "Removed {{ accountName }} from the CLI config."
       auth:

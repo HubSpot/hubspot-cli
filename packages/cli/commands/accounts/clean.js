@@ -14,12 +14,14 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
 const { getAccountName } = require('../../lib/sandboxes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('@hubspot/cli-lib/lib/table');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const { deleteAccount } = require('@hubspot/cli-lib/lib/config');
+const {
+  isSpecifiedHubSpotAuthError,
+} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 
@@ -34,16 +36,16 @@ exports.handler = async options => {
 
   trackCommandUsage('accounts-clean', null);
 
-  const filteredTestPortals = config.portals.filter(p =>
+  const filteredTestAccounts = config.portals.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );
 
-  if (filteredTestPortals && filteredTestPortals.length === 0) {
+  if (filteredTestAccounts && filteredTestAccounts.length === 0) {
     logger.log(i18n(`${i18nKey}.noResults`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const portalsToRemove = [];
+  const accountsToRemove = [];
   SpinniesManager.init({
     succeedColor: 'white',
   });
@@ -51,21 +53,23 @@ exports.handler = async options => {
     text: i18n(`${i18nKey}.loading.add`),
   });
 
-  for (const account of filteredTestPortals) {
+  for (const account of filteredTestAccounts) {
     try {
       await accessTokenForPersonalAccessKey(account.portalId);
     } catch (error) {
-      if (error && error instanceof HubSpotAuthError) {
-        if (
-          (error.statusCode === 401 &&
-            error.category === 'INVALID_AUTHENTICATION' &&
-            error.subCategory === 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE') ||
-          (error.statusCode === 404 &&
-            error.category === 'INVALID_AUTHENTICATION' &&
-            error.subCategory === 'LocalDevAuthErrorType.INVALID_PORTAL_ID')
-        ) {
-          portalsToRemove.push(account);
-        }
+      if (
+        isSpecifiedHubSpotAuthError(error, {
+          statusCode: 401,
+          category: 'INVALID_AUTHENTICATION',
+          subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
+        }) ||
+        isSpecifiedHubSpotAuthError(error, {
+          statusCode: 404,
+          category: 'INVALID_AUTHENTICATION',
+          subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
+        })
+      ) {
+        accountsToRemove.push(account);
       }
     }
   }
@@ -74,15 +78,15 @@ exports.handler = async options => {
   });
 
   logger.log('');
-  if (portalsToRemove.length > 0) {
+  if (accountsToRemove.length > 0) {
     logger.log(
-      i18n(`${i18nKey}.portalsMarkedForRemoval`, {
-        count: portalsToRemove.length,
+      i18n(`${i18nKey}.accountsMarkedForRemoval`, {
+        count: accountsToRemove.length,
       })
     );
     logger.log(
       getTableContents(
-        portalsToRemove.map(p => [getAccountName(p)]),
+        accountsToRemove.map(p => [getAccountName(p)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -95,7 +99,7 @@ exports.handler = async options => {
     ]);
     if (accountsCleanPrompt) {
       logger.log('');
-      for (const accountToRemove of portalsToRemove) {
+      for (const accountToRemove of accountsToRemove) {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
