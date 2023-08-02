@@ -65,7 +65,6 @@ class DevServerManager {
       async (serverInterface, compatibleComponents) => {
         if (serverInterface.setup) {
           await serverInterface.setup({
-            alpha: true,
             components: compatibleComponents,
             debug,
             onUploadRequired,
@@ -83,7 +82,6 @@ class DevServerManager {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
           await serverInterface.start({
-            alpha: true,
             accountId,
             debug: this.debug,
             httpClient,
