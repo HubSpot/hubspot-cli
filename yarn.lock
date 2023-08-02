@@ -443,10 +443,20 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@hubspot/cli-lib@^4.2.0":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.0.tgz#8d1e63ad4304ebb82245e6178fb4f021f2a60dfc"
-  integrity sha512-stBOaawiSGiXDMP4OIO394Dj6K4CHTF83/P7BPtkzx9ROACK7ChVlbBrwGUk/8J2rsDiuUKrVOux5zlWbIEL+g==
+"@hubspot/app-functions-dev-server@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.5.0.tgz#6fcf923b096b9c6caca8d3bd9baed0713bbfc5e4"
+  integrity sha512-bkIvBS2cJTac9E8w8682YR2Gw7jQYKozSSm75oAXx4PHR+/EntVRQIYCkRyjGEmVKjnD3SJFD221bEVvdgNKXw==
+  dependencies:
+    "@hubspot/cli-lib" "^4.1.6"
+    body-parser "1.20.2"
+    cors "^2.8.5"
+    express "^4.18.2"
+
+"@hubspot/cli-lib@^4.1.6", "@hubspot/cli-lib@^4.2.1":
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.1.tgz#0d58deed3503080f508462d2f6b7c19a5dad6e4e"
+  integrity sha512-nqqFSl9w4HLfp8gf1d2ny7i3l1t+WjdxH+FwBLOXAURhtKXtYcwFbTQumhululYsjmNzKHABv4gg8khzOo74yg==
   dependencies:
     chalk "^2.4.2"
     chokidar "^3.0.1"
@@ -467,17 +477,18 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/ui-extensions-dev-server@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.4.0.tgz#3f894c8f590df0466d7668ee280752e67b5a346c"
-  integrity sha512-LYCId5QDrSaPJUAH+k5u9msW+b/HTXiA4PcvKNvJW0niDxX4NAV19u2F60n46mHvhseF498r5kuTW7DX2k3w+Q==
+"@hubspot/ui-extensions-dev-server@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.5.0.tgz#ebb79c0449e86d55b0d2f41fe88342c3ee1676fc"
+  integrity sha512-E8VVn3B3CpWYORcxxB46TaN+PBdB1TUXn8+mXRs3vPxmS4R+Awp3AxG07WISTGuDmekTqpnbz2BQ/0oNfWb1GA==
   dependencies:
+    "@hubspot/app-functions-dev-server" "^0.5.0"
     command-line-args "^5.2.1"
     command-line-usage "^7.0.1"
     console-log-colors "^0.4.0"
     cors "^2.8.5"
     express "^4.18.2"
-    prompts "^2.4.2"
+    inquirer "8.2.0"
     vite "^4.0.4"
 
 "@humanwhocodes/config-array@^0.5.0":
@@ -2264,7 +2275,7 @@ body-parser@1.20.1:
     type-is "~1.6.18"
     unpipe "1.0.0"
 
-body-parser@^1.19.0:
+body-parser@1.20.2, body-parser@^1.19.0:
   version "1.20.2"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.20.2.tgz#6feb0e21c4724d06de7ff38da36dad4f57a747fd"
   integrity sha512-ml9pReCu3M61kGlqoTm2umSXTlRTuGTx0bfYj+uIUKKYycG5NtSbeetV3faSU6R7ajOPw0g/J1PvK4qNy7s5bA==
@@ -7641,7 +7652,7 @@ promise-retry@^2.0.1:
     err-code "^2.0.2"
     retry "^0.12.0"
 
-prompts@^2.0.1, prompts@^2.4.2:
+prompts@^2.0.1:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.4.2.tgz#7b57e73b3a48029ad10ebd44f74b01722a4cb069"
   integrity sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==
