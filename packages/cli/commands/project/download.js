@@ -17,10 +17,7 @@ const {
   downloadProject,
   fetchProjectBuilds,
 } = require('@hubspot/cli-lib/api/dfs');
-const {
-  createProjectConfig,
-  ensureProjectExists,
-} = require('../../lib/projects');
+const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   downloadProjectPrompt,
@@ -35,6 +32,13 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
+
+  const { projectConfig } = await getProjectConfig();
+
+  if (projectConfig) {
+    logger.error(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const { project, dest, buildNumber } = options;
   let { project: promptedProjectName } = await downloadProjectPrompt(options);
@@ -63,17 +67,6 @@ exports.handler = async options => {
 
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
 
-    const projectConfigCreated = await createProjectConfig(
-      absoluteDestPath,
-      projectName,
-      { name: 'no-template' }
-    );
-
-    if (!projectConfigCreated) {
-      logger.log(i18n(`${i18nKey}.logs.downloadCancelled`));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-
     let buildNumberToDownload = buildNumber;
 
     if (!buildNumberToDownload) {
@@ -98,10 +91,8 @@ exports.handler = async options => {
     await extractZipArchive(
       zippedProject,
       projectName,
-      path.resolve(absoluteDestPath, 'src'),
-      {
-        includesRootDir: false,
-      }
+      path.resolve(absoluteDestPath),
+      { includesRootDir: false }
     );
 
     logger.log(
