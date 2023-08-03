@@ -440,17 +440,17 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@hubspot/app-functions-dev-server@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.5.0.tgz#6fcf923b096b9c6caca8d3bd9baed0713bbfc5e4"
-  integrity sha512-bkIvBS2cJTac9E8w8682YR2Gw7jQYKozSSm75oAXx4PHR+/EntVRQIYCkRyjGEmVKjnD3SJFD221bEVvdgNKXw==
+"@hubspot/app-functions-dev-server@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.7.0.tgz#47041362e48830ec71ea841f5e627e48e4f377b3"
+  integrity sha512-pV+GZOjrjsVnj9Re0WWGMD1v9jZxlJPFVpnwU4VRVHag2a7cE8D7XM33FaozEIsPCrsTy8ovD/cJyB1YPcHgwg==
   dependencies:
     "@hubspot/cli-lib" "^4.1.6"
     body-parser "1.20.2"
     cors "^2.8.5"
     express "^4.18.2"
 
-"@hubspot/cli-lib@^4.1.6", "@hubspot/cli-lib@^4.2.1":
+"@hubspot/cli-lib@^4.1.6":
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.1.tgz#0d58deed3503080f508462d2f6b7c19a5dad6e4e"
   integrity sha512-nqqFSl9w4HLfp8gf1d2ny7i3l1t+WjdxH+FwBLOXAURhtKXtYcwFbTQumhululYsjmNzKHABv4gg8khzOo74yg==
@@ -474,12 +474,36 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/ui-extensions-dev-server@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.5.0.tgz#ebb79c0449e86d55b0d2f41fe88342c3ee1676fc"
-  integrity sha512-E8VVn3B3CpWYORcxxB46TaN+PBdB1TUXn8+mXRs3vPxmS4R+Awp3AxG07WISTGuDmekTqpnbz2BQ/0oNfWb1GA==
+"@hubspot/cli-lib@^4.2.2":
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.2.tgz#3c5483d3f38c09c4a84371dd81320a81f52565a0"
+  integrity sha512-LVgHk5KfjzCBTz1QubW3GJ/axJ7odQI6xsqfUAsa3s05i8dDaOBdKTp8aNFkdfC3VbCchnvP5ofPThJ0rjxnyw==
   dependencies:
-    "@hubspot/app-functions-dev-server" "^0.5.0"
+    chalk "^2.4.2"
+    chokidar "^3.0.1"
+    content-disposition "^0.5.3"
+    debounce "^1.2.0"
+    extract-zip "^1.6.7"
+    findup-sync "^3.0.0"
+    fs-extra "^8.1.0"
+    ignore "^5.1.4"
+    jest "^26.6.3"
+    js-yaml "^4.1.0"
+    moment "^2.24.0"
+    p-queue "^6.0.2"
+    prettier "^1.19.1"
+    request "^2.87.0"
+    request-promise-native "^1.0.7"
+    semver "^6.3.0"
+    table "^6.6.0"
+    unixify "1.0.0"
+
+"@hubspot/ui-extensions-dev-server@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.7.0.tgz#60c1c796def7e89fb9cfdc536e9b8b2f02a292a2"
+  integrity sha512-4b7O5Nc2v1ap+6FUX+Gqt3g2X6z2669RMC0FhVF92nQf4Pmt7KINJvaqvqNxgjD6Z4tzEV18z3PW8dkLf+ogvQ==
+  dependencies:
+    "@hubspot/app-functions-dev-server" "^0.7.0"
     command-line-args "^5.2.1"
     command-line-usage "^7.0.1"
     console-log-colors "^0.4.0"
