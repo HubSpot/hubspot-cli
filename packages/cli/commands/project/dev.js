@@ -23,7 +23,12 @@ const {
   showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
+const {
+  uiAccountDescription,
+  uiBetaMessage,
+  uiCommandReference,
+  uiLine,
+} = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
@@ -89,6 +94,7 @@ exports.handler = async options => {
   const defaultAccountIsSandbox = isSandbox(accountConfig);
 
   if (!targetAccountId && defaultAccountIsSandbox) {
+    logger.log();
     const useDefaultSandboxAccount = await confirmDefaultSandboxAccountPrompt(
       accountConfig.name,
       accountConfig.sandboxAccountType
@@ -97,7 +103,12 @@ exports.handler = async options => {
     if (useDefaultSandboxAccount) {
       targetAccountId = accountId;
     } else {
-      logger.log(i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`));
+      logger.log(
+        i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
