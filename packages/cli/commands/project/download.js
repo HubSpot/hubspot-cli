@@ -36,8 +36,8 @@ exports.handler = async options => {
   const { projectConfig } = await getProjectConfig();
 
   if (projectConfig) {
-    logger.warn(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
-    process.exit(EXIT_CODES.WARNING);
+    logger.error(i18n(`${i18nKey}.warnings.cannotDownloadWithinProject`));
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const { project, dest, buildNumber } = options;
