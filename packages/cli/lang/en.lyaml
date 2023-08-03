@@ -467,6 +467,7 @@ en:
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
+              declineDefaultSandboxExplanation: "To develop on a different account, run {{#bold}}`hs accounts use`{{/bold}} to change your default account, then re-run {{#bold}}`hs project dev`{{/bold}}."
             status:
               creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
@@ -987,6 +988,7 @@ en:
           chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
           sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
+          confirmDefaultSandboxAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"

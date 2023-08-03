@@ -27,6 +27,7 @@ const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
+  confirmDefaultSandboxAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
@@ -88,7 +89,17 @@ exports.handler = async options => {
   const defaultAccountIsSandbox = isSandbox(accountConfig);
 
   if (!targetAccountId && defaultAccountIsSandbox) {
-    targetAccountId = accountId;
+    const useDefaultSandboxAccount = await confirmDefaultSandboxAccountPrompt(
+      accountConfig.name,
+      accountConfig.sandboxAccountType
+    );
+
+    if (useDefaultSandboxAccount) {
+      targetAccountId = accountId;
+    } else {
+      logger.log(i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   if (!targetAccountId) {
