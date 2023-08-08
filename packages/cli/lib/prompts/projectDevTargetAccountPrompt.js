@@ -26,7 +26,11 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
     logger.debug('Unable to fetch sandbox usage limits: ', err);
   }
 
-  const sandboxAccounts = accounts.reverse().filter(isSandbox);
+  const sandboxAccounts = accounts
+    .reverse()
+    .filter(
+      config => isSandbox(config) && config.parentAccountId === defaultAccountId
+    );
   let disabledMessage = false;
 
   if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
