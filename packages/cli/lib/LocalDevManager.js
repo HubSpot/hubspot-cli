@@ -247,7 +247,7 @@ class LocalDevManager {
             !deployedComponentNames.includes(cardConfig.data.title)
           ) {
             missingComponents.push(
-              `${i18n(`${i18nKey}.uploadWarning.appLabel`)} ${
+              `${i18n(`${i18nKey}.uploadWarning.uiExtensionLabel`)} ${
                 cardConfig.data.title
               }`
             );
