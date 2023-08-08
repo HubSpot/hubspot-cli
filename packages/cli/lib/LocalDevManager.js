@@ -96,7 +96,9 @@ class LocalDevManager {
     logger.log();
     const setupSucceeded = await this.devServerSetup(runnableComponents);
 
-    if (setupSucceeded || !this.debug) {
+    if (!setupSucceeded) {
+      process.exit(EXIT_CODES.ERROR);
+    } else if (!this.debug) {
       console.clear();
     }
 
