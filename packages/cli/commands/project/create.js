@@ -38,7 +38,7 @@ exports.handler = async options => {
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    options.template || template,
+    template || { path: options.template },
     options.templateSource
   );
 
