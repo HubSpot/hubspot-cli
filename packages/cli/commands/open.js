@@ -7,7 +7,7 @@ const {
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
 const { promptUser } = require('../lib/prompts/promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.open';
 

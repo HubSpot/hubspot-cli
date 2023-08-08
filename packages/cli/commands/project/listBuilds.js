@@ -7,6 +7,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { i18n } = require('../../lib/lang');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -31,8 +32,10 @@ const {
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 
+const i18nKey = 'cli.commands.project.subcommands.listBuilds';
+
 exports.command = 'list-builds [path]';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -127,7 +130,10 @@ exports.handler = async options => {
     if (e.statusCode === 404) {
       logger.error(`Project ${projectConfig.name} not found. `);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+      logApiErrorInstance(
+        e,
+        new ApiErrorContext({ accountId, projectName: projectConfig.name })
+      );
     }
   }
 };

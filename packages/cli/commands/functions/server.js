@@ -8,7 +8,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.functions.subcommands.server';
 

@@ -1,5 +1,5 @@
 const { promptUser } = require('./promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 

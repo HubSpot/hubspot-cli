@@ -8,7 +8,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { promptUser } = require('./promptUtils');
 const { accountNamePrompt } = require('./enterAccountNamePrompt');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 const { uiInfoSection } = require('../ui');
 const { EXIT_CODES } = require('../enums/exitCodes');
 

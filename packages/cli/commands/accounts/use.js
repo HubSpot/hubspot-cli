@@ -7,7 +7,7 @@ const {
 } = require('@hubspot/cli-lib/lib/config');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
 

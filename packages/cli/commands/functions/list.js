@@ -18,7 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.functions.subcommands.list';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -36,7 +36,7 @@ exports.handler = async options => {
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
   const routesResp = await getRoutes(accountId).catch(async e => {
-    await logApiErrorInstance(accountId, e, new ApiErrorContext({ accountId }));
+    await logApiErrorInstance(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.SUCCESS);
   });
 

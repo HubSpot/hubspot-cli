@@ -13,7 +13,7 @@ const {
 } = require('../lib/usageTracking');
 const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -115,7 +115,7 @@ const argv = yargs
   .option('debug', {
     alias: 'd',
     default: false,
-    describe: 'set log level to debug',
+    describe: 'Set log level to debug',
     type: 'boolean',
   })
   .option('noHyperlinks', {

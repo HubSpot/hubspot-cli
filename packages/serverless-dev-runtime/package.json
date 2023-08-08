@@ -1,12 +1,12 @@
 {
   "name": "@hubspot/serverless-dev-runtime",
-  "version": "4.1.7",
+  "version": "4.2.1-beta.3",
   "description": "A tool for testing HubSpot CMS serverless functions locally",
   "main": "index.js",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "license": "Apache-2.0",
   "dependencies": {
-    "@hubspot/cli-lib": "4.1.7",
+    "@hubspot/cli-lib": "^4.2.2",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
     "chokidar": "^3.4.3",

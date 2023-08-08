@@ -13,8 +13,8 @@ const {
 } = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
-const { getConfig, getEnv } = require('@hubspot/cli-lib');
+const { i18n } = require('../../lib/lang');
+const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   removeSandboxAccountFromConfig,
@@ -26,10 +26,12 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { getAccountName } = require('../../lib/sandboxes');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -41,6 +43,8 @@ exports.handler = async options => {
 
   const { account, force } = options;
   const config = getConfig();
+
+  trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
   if (!account) {
@@ -62,14 +66,12 @@ exports.handler = async options => {
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
   });
-
+  const accountConfig = getAccountConfig(sandboxAccountId);
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
 
-  trackCommandUsage('sandbox-delete', null, sandboxAccountId);
-
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv(sandboxAccountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
@@ -89,12 +91,13 @@ exports.handler = async options => {
     }
   }
 
+  const parentAccount = getAccountConfig(parentAccountId);
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
   const command = `hs auth ${
     getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
   } --account=${parentAccountId}`;
 
-  if (!getAccountId({ account: parentAccountId })) {
+  if (parentAccountId && !getAccountId({ account: parentAccountId })) {
     logger.log('');
     logger.error(
       i18n(`${i18nKey}.failure.noParentPortalAvailable`, {
@@ -109,16 +112,17 @@ exports.handler = async options => {
 
   logger.debug(
     i18n(`${i18nKey}.debug.deleting`, {
-      account: account || accountPrompt.account,
+      account: getAccountName(accountConfig),
     })
   );
 
   if (isDefaultAccount) {
-    logger.log(
+    logger.info(
       i18n(`${i18nKey}.defaultAccountWarning`, {
-        account: account || accountPrompt.account,
+        account: getAccountName(accountConfig),
       })
     );
+    logger.log('');
   }
 
   try {
@@ -128,7 +132,7 @@ exports.handler = async options => {
           name: 'confirmSandboxDeletePrompt',
           type: 'confirm',
           message: i18n(`${i18nKey}.confirm`, {
-            account: account || accountPrompt.account,
+            account: getAccountName(accountConfig),
           }),
         },
       ]);
@@ -164,24 +168,41 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
-    trackCommandUsage(
-      'sandbox-delete',
-      { successful: false },
-      sandboxAccountId
-    );
-
-    if (
-      isSpecifiedError(
-        err,
-        404,
-        'OBJECT_NOT_FOUND',
-        'SandboxErrors.SANDBOX_NOT_FOUND'
-      )
+    if (isSpecifiedHubSpotAuthError(err, { statusCode: 401 })) {
+      // Intercept invalid key error
+      // This command uses the parent portal PAK to delete a sandbox, so we must specify which account needs a new key
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidKey`, {
+          account: getAccountName(parentAccount),
+        })
+      );
+    } else if (
+      isSpecifiedError(err, {
+        statusCode: 403,
+        category: 'BANNED',
+        subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
+      })
+    ) {
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.invalidUser`, {
+          accountName: getAccountName(accountConfig),
+          parentAccountName: getAccountName(parentAccount),
+        })
+      );
+      logger.log('');
+    } else if (
+      isSpecifiedError(err, {
+        statusCode: 404,
+        category: 'OBJECT_NOT_FOUND',
+        subCategory: 'SandboxErrors.SANDBOX_NOT_FOUND',
+      })
     ) {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: account || accountPrompt.account,
+          account: getAccountName(accountConfig),
         })
       );
       logger.log('');

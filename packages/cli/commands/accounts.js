@@ -1,10 +1,11 @@
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lib/lang');
 const list = require('./accounts/list');
 const rename = require('./accounts/rename');
 const use = require('./accounts/use');
 const info = require('./accounts/info');
 const remove = require('./accounts/remove');
+const clean = require('./accounts/clean');
 
 const i18nKey = 'cli.commands.accounts';
 
@@ -24,6 +25,7 @@ exports.builder = yargs => {
     .command(use)
     .command(info)
     .command(remove)
+    .command(clean)
     .demandCommand(1, '');
 
   return yargs;

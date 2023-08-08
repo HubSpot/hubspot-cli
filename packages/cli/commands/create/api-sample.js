@@ -11,7 +11,7 @@ const ora = require('ora');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.create.subcommands.apiSample';
 
@@ -39,7 +39,7 @@ module.exports = {
     const downloadSpinner = ora(i18n(`${i18nKey}.loading.apiSamples`));
     downloadSpinner.start();
     const samplesConfig = await fetchJsonFromRepository(
-      'sample-apps-list',
+      'HubSpot/sample-apps-list',
       'main/samples.json'
     );
     downloadSpinner.stop();

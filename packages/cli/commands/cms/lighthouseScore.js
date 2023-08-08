@@ -1,5 +1,4 @@
-//const chalk = require('chalk');
-const Spinnies = require('spinnies');
+const SpinniesManager = require('../../lib/SpinniesManager');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -13,7 +12,7 @@ const {
 } = require('@hubspot/cli-lib/lib/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { fetchThemes } = require('@hubspot/cli-lib/api/designManager');
 const {
   requestLighthouseScore,
@@ -119,9 +118,9 @@ exports.handler = async options => {
 
   // Poll till scoring is finished
   try {
-    const spinnies = new Spinnies();
+    SpinniesManager.init();
 
-    spinnies.add('lighthouseScore', {
+    SpinniesManager.add('lighthouseScore', {
       text: i18n(`${i18nKey}.info.generatingScore`, { theme: themeToCheck }),
     });
 
@@ -148,7 +147,7 @@ exports.handler = async options => {
 
     await checkScoreStatus();
 
-    spinnies.remove('lighthouseScore');
+    SpinniesManager.remove('lighthouseScore');
   } catch (err) {
     logger.debug(err);
     process.exit(EXIT_CODES.ERROR);

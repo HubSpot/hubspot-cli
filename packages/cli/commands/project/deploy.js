@@ -14,7 +14,8 @@ const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
+const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
@@ -28,46 +29,57 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const { project, buildId } = options;
+  const { project: projectOption, buildId: buildIdOption } = options;
   const sandboxType = accountConfig && accountConfig.sandboxAccountType;
 
   trackCommandUsage('project-deploy', { type: sandboxType }, accountId);
 
   const { projectConfig } = await getProjectConfig();
 
-  let projectName = project;
+  let projectName = projectOption;
 
-  if (!projectName && projectConfig) {
+  if (!projectOption && projectConfig) {
     projectName = projectConfig.name;
   }
 
-  const namePrompt = await projectNamePrompt(accountId, {
+  const namePromptResponse = await projectNamePrompt(accountId, {
     project: projectName,
   });
 
-  if (!projectName && namePrompt.projectName) {
-    projectName = namePrompt.projectName;
+  if (!projectName && namePromptResponse.projectName) {
+    projectName = namePromptResponse.projectName;
   }
 
-  let exitCode = EXIT_CODES.SUCCESS;
-
-  const getBuildId = async () => {
-    const { latestBuild } = await fetchProject(accountId, projectName);
-    if (latestBuild && latestBuild.buildId) {
-      return latestBuild.buildId;
-    }
-    logger.error(i18n(`${i18nKey}.errors.noBuildId`));
-    exitCode = EXIT_CODES.ERROR;
-    return;
-  };
+  let buildIdToDeploy = buildIdOption;
 
   try {
-    const deployedBuildId = buildId || (await getBuildId());
+    if (!buildIdOption) {
+      const { latestBuild, deployedBuildId } = await fetchProject(
+        accountId,
+        projectName
+      );
+      if (!latestBuild || !latestBuild.buildId) {
+        logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+        process.exit(EXIT_CODES.ERROR);
+      }
+      const buildIdPromptResponse = await buildIdPrompt(
+        latestBuild.buildId,
+        deployedBuildId,
+        projectName
+      );
+
+      buildIdToDeploy = buildIdPromptResponse.buildId;
+    }
+
+    if (!buildIdToDeploy) {
+      logger.error(i18n(`${i18nKey}.errors.noBuildId`));
+      process.exit(EXIT_CODES.ERROR);
+    }
 
     const deployResp = await deployProject(
       accountId,
       projectName,
-      deployedBuildId
+      buildIdToDeploy
     );
 
     if (deployResp.error) {
@@ -76,7 +88,6 @@ exports.handler = async options => {
           details: deployResp.error.message,
         })
       );
-      exitCode = EXIT_CODES.ERROR;
       return;
     }
 
@@ -84,7 +95,7 @@ exports.handler = async options => {
       accountId,
       projectName,
       deployResp.id,
-      deployedBuildId
+      buildIdToDeploy
     );
   } catch (e) {
     if (e.statusCode === 400) {
@@ -92,9 +103,8 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
     }
-    exitCode = 1;
+    process.exit(EXIT_CODES.ERROR);
   }
-  process.exit(exitCode);
 };
 
 exports.builder = yargs => {

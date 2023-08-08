@@ -2,7 +2,7 @@ const {
   createTemplatePrompt,
 } = require('../../lib/prompts/createTemplatePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { createTemplate } = require('@hubspot/cli-lib/templates');
 
 const i18nKey = 'cli.commands.create.subcommands.template';

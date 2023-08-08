@@ -5,156 +5,225 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logger } = require('@hubspot/cli-lib/logger');
-const Spinnies = require('spinnies');
-const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { createSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const { i18n } = require('../../lib/lang');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
+const { buildSandbox } = require('../../lib/sandbox-create');
+const { uiFeatureHighlight } = require('../../lib/ui');
 const {
-  getSandboxType,
-  sandboxCreatePersonalAccessKeyFlow,
+  sandboxTypeMap,
+  DEVELOPER_SANDBOX,
+  getSandboxTypeAsString,
+  getAccountName,
+  getAvailableSyncTypes,
+  syncTypes,
+  validateSandboxUsageLimits,
 } = require('../../lib/sandboxes');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { logger } = require('@hubspot/cli-lib/logger');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
+const {
+  sandboxTypePrompt,
+  sandboxNamePrompt,
+} = require('../../lib/prompts/sandboxesPrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
+const { syncSandbox } = require('../../lib/sandbox-sync');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
-  debugErrorAndContext,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig } = require('@hubspot/cli-lib');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const {
   isMissingScopeError,
-  isSpecifiedError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
-exports.command = 'create [--name]';
+exports.command = 'create [--name] [--type]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name } = options;
+  const { name, type, force } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  const spinnies = new Spinnies({
-    succeedColor: 'white',
-  });
+  const env = getValidEnv(getEnv(accountId));
 
   trackCommandUsage('sandbox-create', null, accountId);
 
+  // Default account is not a production portal
   if (
     accountConfig.sandboxAccountType &&
     accountConfig.sandboxAccountType !== null
   ) {
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
-
     logger.error(
       i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxType(accountConfig.sandboxAccountType),
+        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
+        sandboxName: accountConfig.name,
       })
     );
-
     process.exit(EXIT_CODES.ERROR);
   }
 
+  let typePrompt;
   let namePrompt;
 
-  logger.log(i18n(`${i18nKey}.sandboxLimitation`));
-  logger.log('');
-
-  if (!name) {
-    namePrompt = await createSandboxPrompt();
+  if ((type && !sandboxTypeMap[type]) || !type) {
+    if (!force) {
+      typePrompt = await sandboxTypePrompt();
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.type`));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
+  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
 
-  const sandboxName = name || namePrompt.name;
-
-  let result;
-
+  // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
-    spinnies.add('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.add`, {
-        sandboxName,
-      }),
-    });
-
-    result = await createSandbox(accountId, sandboxName);
-
-    logger.log('');
-    spinnies.succeed('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.succeed`, {
-        name: result.name,
-        sandboxHubId: result.sandboxHubId,
-      }),
-    });
+    await validateSandboxUsageLimits(accountConfig, sandboxType, env);
   } catch (err) {
-    debugErrorAndContext(err);
-
-    trackCommandUsage('sandbox-create', { successful: false }, accountId);
-
-    spinnies.fail('sandboxCreate', {
-      text: i18n(`${i18nKey}.loading.fail`, {
-        sandboxName,
-      }),
-    });
-
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n(`${i18nKey}.failure.scopes.message`, {
+        i18n('cli.lib.sandbox.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n(`${i18nKey}.failure.scopes.instructions`, {
+        i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
           accountName: accountConfig.name || accountId,
           url,
         })
       );
-    } else if (
-      isSpecifiedError(
-        err,
-        400,
-        'VALIDATION_ERROR',
-        'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR'
-      ) &&
-      err.error &&
-      err.error.message
-    ) {
-      logger.log('');
-      logger.error(err.error.message);
     } else {
       logErrorInstance(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
+
+  if (!name) {
+    if (!force) {
+      namePrompt = await sandboxNamePrompt(sandboxType);
+    } else {
+      logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+  const sandboxName = name || namePrompt.name;
+
+  let sandboxSyncPromptResult = true;
+  let contactRecordsSyncPromptResult = true;
+  if (!force) {
+    const syncI18nKey = 'cli.lib.sandbox.sync';
+    const { sandboxSyncPrompt } = await promptUser([
+      {
+        name: 'sandboxSyncPrompt',
+        type: 'confirm',
+        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
+          parentAccountName: getAccountName(accountConfig),
+          sandboxName,
+        }),
+      },
+    ]);
+    sandboxSyncPromptResult = sandboxSyncPrompt;
+    // We can prompt for contact records before fetching types since we're starting with a fresh sandbox in create
+    if (sandboxSyncPrompt) {
+      const { contactRecordsSyncPrompt } = await promptUser([
+        {
+          name: 'contactRecordsSyncPrompt',
+          type: 'confirm',
+          message: i18n(
+            `${syncI18nKey}.confirm.syncContactRecords.${sandboxType}`
+          ),
+        },
+      ]);
+      contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
+    }
+  }
+
   try {
-    await sandboxCreatePersonalAccessKeyFlow(
+    const { result } = await buildSandbox({
+      name: sandboxName,
+      type: sandboxType,
+      accountConfig,
       env,
-      result.sandboxHubId,
-      result.name
-    );
+      force,
+    });
+
+    // Prompt user to sync assets after sandbox creation
+    const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    const handleSyncSandbox = async syncTasks => {
+      // Send tracking event for secondary action, in this case a sandbox sync within the sandbox create flow
+      trackCommandMetadataUsage(
+        'sandbox-sync',
+        { step: 'sandbox-create' },
+        result.sandbox.sandboxHubId
+      );
+      await syncSandbox({
+        accountConfig: sandboxAccountConfig,
+        parentAccountConfig: accountConfig,
+        env,
+        syncTasks,
+      });
+    };
+    try {
+      let availableSyncTasks = await getAvailableSyncTypes(
+        accountConfig,
+        sandboxAccountConfig
+      );
+      if (!contactRecordsSyncPromptResult) {
+        availableSyncTasks = availableSyncTasks.filter(
+          t => t.type !== syncTypes.OBJECT_RECORDS
+        );
+      }
+      if (!force) {
+        if (sandboxSyncPromptResult) {
+          await handleSyncSandbox(availableSyncTasks);
+        }
+      } else {
+        await handleSyncSandbox(availableSyncTasks);
+      }
+    } catch (err) {
+      logErrorInstance(err);
+      throw err;
+    }
+
+    const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
+    if (sandboxType === DEVELOPER_SANDBOX) {
+      highlightItems.push('projectDevCommand');
+    } else {
+      highlightItems.push('projectUploadCommand');
+    }
+
+    uiFeatureHighlight(highlightItems);
     process.exit(EXIT_CODES.SUCCESS);
-  } catch (err) {
-    logErrorInstance(err);
+  } catch (error) {
+    // Errors are logged in util functions
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
+  yargs.option('f', {
+    type: 'boolean',
+    alias: 'force',
+    describe: i18n(`${i18nKey}.examples.force`),
+  });
   yargs.option('name', {
     describe: i18n(`${i18nKey}.options.name.describe`),
+    type: 'string',
+  });
+  yargs.option('type', {
+    describe: i18n(`${i18nKey}.options.type.describe`),
     type: 'string',
   });
 
   yargs.example([
     [
-      '$0 sandbox create --name=MySandboxAccount',
+      '$0 sandbox create --name=MySandboxAccount --type=STANDARD',
       i18n(`${i18nKey}.examples.default`),
     ],
   ]);

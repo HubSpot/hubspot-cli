@@ -1,6 +1,6 @@
 const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { createModule } = require('@hubspot/cli-lib/modules');
 
 const i18nKey = 'cli.commands.create.subcommands.module';

@@ -1,4 +1,4 @@
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
 const {
   logApiErrorInstance,
@@ -21,6 +21,7 @@ const {
   pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const {
   cancelStagedBuild,
@@ -97,35 +98,44 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
+  await showPlatformVersionWarning(accountId, projectConfig);
+
   await ensureProjectExists(accountId, projectConfig.name);
 
-  const { results: builds } = await fetchProjectBuilds(
-    accountId,
-    projectConfig.name,
-    options
-  );
-  const hasNoBuilds = !builds || !builds.length;
-
-  const startWatching = async () => {
-    await createWatcher(
+  try {
+    const { results: builds } = await fetchProjectBuilds(
       accountId,
-      projectConfig,
-      projectDir,
-      handleBuildStatus,
-      handleUserInput
+      projectConfig.name,
+      options
     );
-  };
+    const hasNoBuilds = !builds || !builds.length;
 
-  // Upload all files if no build exists for this project yet
-  if (initialUpload || hasNoBuilds) {
-    await handleProjectUpload(
-      accountId,
-      projectConfig,
-      projectDir,
-      startWatching
+    const startWatching = async () => {
+      await createWatcher(
+        accountId,
+        projectConfig,
+        projectDir,
+        handleBuildStatus,
+        handleUserInput
+      );
+    };
+
+    // Upload all files if no build exists for this project yet
+    if (initialUpload || hasNoBuilds) {
+      await handleProjectUpload(
+        accountId,
+        projectConfig,
+        projectDir,
+        startWatching
+      );
+    } else {
+      await startWatching();
+    }
+  } catch (e) {
+    logApiErrorInstance(
+      e,
+      new ApiErrorContext({ accountId, projectName: projectConfig.name })
     );
-  } else {
-    await startWatching();
   }
 };
 

@@ -1,7 +1,12 @@
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('../lang');
 const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { promptUser } = require('./promptUtils');
+const { getAccountId } = require('../commonOpts');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('@hubspot/cli-lib/errorHandlers');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { EXIT_CODES } = require('../enums/exitCodes');
 
@@ -59,20 +64,31 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
       choices: async ({ projectName }) => {
         const name = projectName || promptOptions.project;
 
-        await ensureProjectExists(accountId, name, {
-          allowCreate: false,
-        });
-        const { deployedBuild } = await fetchProject(accountId, name);
+        try {
+          await ensureProjectExists(accountId, name, {
+            allowCreate: false,
+          });
+          const { deployedBuild } = await fetchProject(accountId, name);
 
-        if (deployedBuild && deployedBuild.subbuildStatuses) {
-          return deployedBuild.subbuildStatuses
-            .filter(subbuild => subbuild.buildType === 'APP')
-            .map(subbuild => ({
-              name: subbuild.buildName,
-              value: subbuild.buildName,
-            }));
-        } else {
-          logger.debug('Failed to fetch project');
+          if (deployedBuild && deployedBuild.subbuildStatuses) {
+            return deployedBuild.subbuildStatuses
+              .filter(subbuild => subbuild.buildType === 'PRIVATE_APP')
+              .map(subbuild => ({
+                name: subbuild.buildName,
+                value: subbuild.buildName,
+              }));
+          } else {
+            logger.debug('Failed to fetch project');
+            process.exit(EXIT_CODES.ERROR);
+          }
+        } catch (e) {
+          const { projectConfig } = await getProjectConfig();
+          const projectName = projectConfig.name;
+
+          logApiErrorInstance(
+            e,
+            new ApiErrorContext({ accountId: getAccountId(), projectName })
+          );
           process.exit(EXIT_CODES.ERROR);
         }
       },
