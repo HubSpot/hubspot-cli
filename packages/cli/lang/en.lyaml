@@ -878,9 +878,9 @@ en:
         uploadWarning:
           appLabel: "[App]"
           uiExtensionLabel: "[UI Extension]"
-          configEdit: "You edited the configuration file {{#bold}}{{ path }}{{/bold}}. Changes to configuration files cannot be handled by the local dev server."
           missingComponents: "The deployed build for this project does not contain {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
-          header: "{{ reason }} To reflect these changes:"
+          defaultWarning: "Changing project configuration requires a new project build."
+          header: "{{ warning }} To reflect these changes and continue testing:"
           stopDev: "  * Stop {{ command }}"
           runUpload: "  * Run {{ command }}"
           restartDev: "  * Re-run {{ command }}"

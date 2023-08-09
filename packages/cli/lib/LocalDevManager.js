@@ -176,11 +176,13 @@ class LocalDevManager {
   }
 
   logUploadWarning(reason) {
+    const warning = reason || i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
-    if (!this.uploadWarnings[reason]) {
+    if (!this.uploadWarnings[warning]) {
       logger.log();
-      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
+      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
       logger.log(
         i18n(`${i18nKey}.uploadWarning.stopDev`, {
           command: uiCommandReference('hs project dev'),
@@ -197,8 +199,8 @@ class LocalDevManager {
         })
       );
 
-      this.mostRecentUploadWarning = reason;
-      this.uploadWarnings[reason] = true;
+      this.mostRecentUploadWarning = warning;
+      this.uploadWarnings[warning] = true;
     }
   }
 
@@ -295,11 +297,7 @@ class LocalDevManager {
 
   handleWatchEvent(filePath, event, configPaths) {
     if (configPaths.includes(filePath)) {
-      this.logUploadWarning(
-        i18n(`${i18nKey}.uploadWarning.configEdit`, {
-          path: path.relative(this.projectDir, filePath),
-        })
-      );
+      this.logUploadWarning();
     } else {
       this.devServerFileChange(filePath, event);
     }
