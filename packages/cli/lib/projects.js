@@ -133,24 +133,15 @@ const createProjectConfig = async (
     }`
   );
 
+  await downloadGitHubRepoContents(templateSource, template.path, projectPath);
+  const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+  writeProjectConfig(projectConfigPath, {
+    ..._config,
+    name: projectName,
+  });
+
   if (template.name === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
-
-    writeProjectConfig(projectConfigPath, {
-      name: projectName,
-      srcDir: 'src',
-    });
-  } else {
-    await downloadGitHubRepoContents(
-      templateSource,
-      template.path,
-      projectPath
-    );
-    const _config = JSON.parse(fs.readFileSync(projectConfigPath));
-    writeProjectConfig(projectConfigPath, {
-      ..._config,
-      name: projectName,
-    });
   }
 
   return true;
