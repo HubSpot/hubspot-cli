@@ -78,9 +78,6 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  if (!options.debug) {
-    console.clear();
-  }
   uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
@@ -211,11 +208,6 @@ exports.handler = async options => {
 
   SpinniesManager.init();
 
-  if (!options.debug) {
-    console.clear();
-  }
-  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
-
   if (!projectExists) {
     // Create the project without prompting if this is a newly created sandbox
     let shouldCreateProject = createNewSandbox;
@@ -242,13 +234,14 @@ exports.handler = async options => {
     if (shouldCreateProject) {
       await showPlatformVersionWarning(accountId, projectConfig);
 
+      SpinniesManager.add('createProject', {
+        text: i18n(`${i18nKey}.status.creatingProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        }),
+      });
+
       try {
-        SpinniesManager.add('createProject', {
-          text: i18n(`${i18nKey}.status.creatingProject`, {
-            accountIdentifier: uiAccountDescription(targetAccountId),
-            projectName: projectConfig.name,
-          }),
-        });
         await createProject(targetAccountId, projectConfig.name);
         SpinniesManager.succeed('createProject', {
           text: i18n(`${i18nKey}.status.createdProject`, {
@@ -258,6 +251,7 @@ exports.handler = async options => {
           succeedColor: 'white',
         });
       } catch (err) {
+        SpinniesManager.fail('createProject');
         logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
@@ -317,7 +311,7 @@ exports.handler = async options => {
 
       logger.log();
       failedSubTasks.forEach(failedSubTask => {
-        console.log(failedSubTask.errorMessage);
+        console.error(failedSubTask.errorMessage);
       });
       logger.log();
 
