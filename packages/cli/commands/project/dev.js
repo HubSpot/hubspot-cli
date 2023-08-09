@@ -234,13 +234,14 @@ exports.handler = async options => {
     if (shouldCreateProject) {
       await showPlatformVersionWarning(accountId, projectConfig);
 
+      SpinniesManager.add('createProject', {
+        text: i18n(`${i18nKey}.status.creatingProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        }),
+      });
+
       try {
-        SpinniesManager.add('createProject', {
-          text: i18n(`${i18nKey}.status.creatingProject`, {
-            accountIdentifier: uiAccountDescription(targetAccountId),
-            projectName: projectConfig.name,
-          }),
-        });
         await createProject(targetAccountId, projectConfig.name);
         SpinniesManager.succeed('createProject', {
           text: i18n(`${i18nKey}.status.createdProject`, {
@@ -250,6 +251,7 @@ exports.handler = async options => {
           succeedColor: 'white',
         });
       } catch (err) {
+        SpinniesManager.fail('createProject');
         logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }

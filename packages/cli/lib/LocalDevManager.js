@@ -64,12 +64,13 @@ class LocalDevManager {
 
     // Local dev currently relies on the existence of a deployed build in the target account
     if (!this.deployedBuild) {
-      logger.log();
       logger.error(
         i18n(`${i18nKey}.noDeployedBuild`, {
           accountIdentifier: uiAccountDescription(this.targetAccountId),
+          uploadCommand: this.getUploadCommand(),
         })
       );
+      logger.log();
       process.exit(EXIT_CODES.SUCCESS);
     }
 
@@ -77,7 +78,6 @@ class LocalDevManager {
 
     // The project is empty, there is nothing to run locally
     if (!components.length) {
-      logger.log();
       logger.error(i18n(`${i18nKey}.noComponents`));
       process.exit(EXIT_CODES.SUCCESS);
     }
@@ -88,12 +88,10 @@ class LocalDevManager {
 
     // The project does not contain any components that support local development
     if (!runnableComponents.length) {
-      logger.log();
       logger.error(i18n(`${i18nKey}.noRunnableComponents`));
       process.exit(EXIT_CODES.SUCCESS);
     }
 
-    logger.log();
     const setupSucceeded = await this.devServerSetup(runnableComponents);
 
     if (!setupSucceeded) {
@@ -167,13 +165,20 @@ class LocalDevManager {
     });
   }
 
+  getUploadCommand() {
+    const currentDefaultAccount = getConfigDefaultAccount();
+
+    return this.targetAccountId !== getAccountId(currentDefaultAccount)
+      ? uiCommandReference(
+          `hs project upload --account=${this.targetAccountId}`
+        )
+      : uiCommandReference('hs project upload');
+  }
+
   logUploadWarning(reason) {
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
     if (!this.uploadWarnings[reason]) {
-      const currentDefaultAccount = getConfigDefaultAccount();
-      const defaultAccountId = getAccountId(currentDefaultAccount);
-
       logger.log();
       logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { reason }));
       logger.log(
@@ -181,21 +186,11 @@ class LocalDevManager {
           command: uiCommandReference('hs project dev'),
         })
       );
-      if (this.targetAccountId !== defaultAccountId) {
-        logger.log(
-          i18n(`${i18nKey}.uploadWarning.runUploadWithAccount`, {
-            command: uiCommandReference(
-              `hs project upload --account=${this.targetAccountId}`
-            ),
-          })
-        );
-      } else {
-        logger.log(
-          i18n(`${i18nKey}.uploadWarning.runUpload`, {
-            command: uiCommandReference('hs project upload'),
-          })
-        );
-      }
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.runUpload`, {
+          command: this.getUploadCommand(),
+        })
+      );
       logger.log(
         i18n(`${i18nKey}.uploadWarning.restartDev`, {
           command: uiCommandReference('hs project dev'),

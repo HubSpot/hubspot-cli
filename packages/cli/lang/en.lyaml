@@ -865,8 +865,8 @@ en:
         noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
+        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
         noComponents: "There are no components in this project."
-        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}."
         noRunnableComponents: "There are no components in this project that support local development."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
@@ -883,7 +883,6 @@ en:
           header: "{{ reason }} To reflect these changes:"
           stopDev: "  * Stop {{ command }}"
           runUpload: "  * Run {{ command }}"
-          runUploadWithAccount: "  * Run {{ command }}"
           restartDev: "  * Re-run {{ command }}"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
