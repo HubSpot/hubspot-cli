@@ -78,9 +78,6 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  if (!options.debug) {
-    console.clear();
-  }
   uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
@@ -211,11 +208,6 @@ exports.handler = async options => {
 
   SpinniesManager.init();
 
-  if (!options.debug) {
-    console.clear();
-  }
-  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
-
   if (!projectExists) {
     // Create the project without prompting if this is a newly created sandbox
     let shouldCreateProject = createNewSandbox;
@@ -317,7 +309,7 @@ exports.handler = async options => {
 
       logger.log();
       failedSubTasks.forEach(failedSubTask => {
-        console.log(failedSubTask.errorMessage);
+        console.error(failedSubTask.errorMessage);
       });
       logger.log();
 
