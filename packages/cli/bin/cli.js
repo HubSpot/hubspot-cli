@@ -42,7 +42,11 @@ const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
+const notifier = updateNotifier({
+  pkg: { ...pkg, name: '@hubspot/cli' },
+  distTag: 'latest',
+  shouldNotifyInNpmScript: true,
+});
 
 const i18nKey = 'cli.commands.generalErrors';
 
@@ -51,7 +55,6 @@ const CLI_UPGRADE_MESSAGE =
   '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli';
 
 notifier.notify({
-  shouldNotifyInNpmScript: true,
   message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
 });
 
