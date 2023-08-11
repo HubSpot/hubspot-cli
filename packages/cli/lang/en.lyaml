@@ -743,7 +743,7 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
-              updateExplanation: "Existing serverless functions will start using this new value within 20 seconds."
+              updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
