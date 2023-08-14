@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -12,7 +13,11 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const {
+  ensureProjectExists,
+  getProjectConfig,
+  pollDeployStatus,
+} = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
@@ -40,6 +45,21 @@ exports.handler = async options => {
 
   if (!projectOption && projectConfig) {
     projectName = projectConfig.name;
+  }
+
+  const projectExists = await ensureProjectExists(accountId, projectName, {
+    allowCreate: false,
+    noLogs: true,
+  });
+
+  if (!projectExists) {
+    logger.error(
+      i18n(`${i18nKey}.errors.projectNotFound`, {
+        projectName: chalk.bold(projectName),
+        accountId: chalk.bold(accountId),
+      })
+    );
+    return;
   }
 
   const namePromptResponse = await projectNamePrompt(accountId, {

@@ -517,6 +517,7 @@ en:
               deploy: "Deploy error: {{ details }}"
               noBuilds: "Deploy error: no builds for this project were found."
               noBuildId: "You must specify a build to deploy"
+              projectNotFound: "{{ projectName }} does not exists in account {{ accountId }}. Run `{{#yellow}}hs project upload{{/yellow}}` to upload your project files to HubSpot."
             examples:
               default: "Deploy the latest build of the current project"
               withOptions: "Deploy build 5 of the project my-project"
