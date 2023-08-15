@@ -1,4 +1,3 @@
-const process = require('process');
 const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
@@ -42,11 +41,13 @@ const getTerminalUISupport = () => {
  * @param {object} options
  * @returns {string}
  */
-const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
+const uiLink = (linkText, url) => {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
+
   if (terminalUISupport.hyperlinks) {
     const CLOSE_SEQUENCE = '\u001B]8;;\u0007';
+
     const result = [
       '\u001B]8;;',
       encodedUrl,
@@ -55,16 +56,7 @@ const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
       CLOSE_SEQUENCE,
     ].join('');
 
-    // Required b/c spinnies will automatically line-break long lines. "indent" is added to account for indented spinnies
-    // See https://github.com/jbcarpanelli/spinnies/blob/d672dedcab8c8ce0f6de0bb26ca5582bf602afd7/utils.js#L68-L74
-    const indent = 5;
-    const columns =
-      (process.stderr.columns || 95) - CLOSE_SEQUENCE.length - indent;
-    const validLength = !inSpinnies || result.length < columns;
-
-    if (validLength) {
-      return terminalUISupport.color ? chalk.cyan(result) : result;
-    }
+    return terminalUISupport.color ? chalk.cyan(result) : result;
   }
 
   return terminalUISupport.color
@@ -105,7 +97,7 @@ const uiFeatureHighlight = (commands, title) => {
     commands.forEach((c, i) => {
       const commandKey = `${i18nKey}.commandKeys.${c}`;
       const message = i18n(`${commandKey}.message`, {
-        command: chalk.bold(i18n(`${commandKey}.command`)),
+        command: uiCommandReference(i18n(`${commandKey}.command`)),
       });
       if (i !== 0) {
         logger.log('');
@@ -121,20 +113,11 @@ const uiBetaMessage = message => {
   logger.log(chalk.hex(UI_COLORS.SORBET)(i18n(`${i18nKey}.betaTag`)), message);
 };
 
-const uiBetaWarning = logMessage => {
-  const i18nKey = 'cli.lib.ui.betaWarning';
-
-  logger.log(i18n(`${i18nKey}.header`));
-  logMessage();
-  logger.log(i18n(`${i18nKey}.footer`));
-};
-
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
   uiBetaMessage,
-  uiBetaWarning,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
