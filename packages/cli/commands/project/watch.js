@@ -13,6 +13,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { uiBetaTag } = require('../../lib/ui');
 const {
   ensureProjectExists,
   getProjectConfig,
@@ -34,7 +35,7 @@ const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
 exports.command = 'watch [path]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
   const {

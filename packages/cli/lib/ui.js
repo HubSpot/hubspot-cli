@@ -87,7 +87,15 @@ const uiInfoSection = (title, logContent) => {
 };
 
 const uiCommandReference = command => {
-  return chalk.bold(chalk.hex(UI_COLORS.MARIGOLD_DARK)(`\`${command}\``));
+  const terminalUISupport = getTerminalUISupport();
+
+  const commandReference = `\`${command}\``;
+
+  return chalk.bold(
+    terminalUISupport.color
+      ? chalk.hex(UI_COLORS.MARIGOLD_DARK)(commandReference)
+      : commandReference
+  );
 };
 
 const uiFeatureHighlight = (commands, title) => {
@@ -107,17 +115,28 @@ const uiFeatureHighlight = (commands, title) => {
   });
 };
 
-const uiBetaMessage = message => {
+const uiBetaTag = (message, log = true) => {
   const i18nKey = 'cli.lib.ui';
 
-  logger.log(chalk.hex(UI_COLORS.SORBET)(i18n(`${i18nKey}.betaTag`)), message);
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.betaTag`);
+
+  const result = `${
+    terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
+  } ${message}`;
+
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
 };
 
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
-  uiBetaMessage,
+  uiBetaTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,

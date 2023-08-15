@@ -25,7 +25,7 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
   uiAccountDescription,
-  uiBetaMessage,
+  uiBetaTag,
   uiCommandReference,
   uiLine,
 } = require('../../lib/ui');
@@ -66,7 +66,7 @@ const {
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -78,7 +78,7 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
+  uiBetaTag(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));

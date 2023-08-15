@@ -3,15 +3,15 @@ const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
 const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { uiBetaMessage, uiLink } = require('../lib/ui');
+const { uiBetaTag, uiLink } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.customObject';
 
 exports.command = ['custom-object', 'custom', 'co'];
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const logBetaMessage = () => {
-  uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
+  uiBetaTag(i18n(`${i18nKey}.betaMessage`));
   logger.log(
     uiLink(
       i18n(`${i18nKey}.seeMoreLink`),

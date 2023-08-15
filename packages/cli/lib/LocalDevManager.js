@@ -23,7 +23,7 @@ const {
   UI_COLORS,
   uiCommandReference,
   uiAccountDescription,
-  uiBetaMessage,
+  uiBetaTag,
   uiLink,
   uiLine,
 } = require('./ui');
@@ -100,7 +100,7 @@ class LocalDevManager {
       console.clear();
     }
 
-    uiBetaMessage(i18n(`${i18nKey}.betaMessage`));
+    uiBetaTag(i18n(`${i18nKey}.betaMessage`));
     logger.log();
     logger.log(
       chalk.hex(UI_COLORS.SORBET)(

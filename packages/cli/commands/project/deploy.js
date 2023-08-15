@@ -21,6 +21,7 @@ const {
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
+const { uiBetaTag } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
@@ -28,7 +29,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 
 exports.command = 'deploy [--project] [--buildId]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

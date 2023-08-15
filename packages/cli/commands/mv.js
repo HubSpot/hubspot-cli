@@ -15,6 +15,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
+const { uiBetaTag } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.mv';
 
@@ -28,7 +29,7 @@ const getCorrectedDestPath = (srcPath, destPath) => {
 };
 
 exports.command = 'mv <srcPath> <destPath>';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

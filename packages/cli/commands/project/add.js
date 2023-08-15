@@ -7,11 +7,12 @@ const { i18n } = require('../../lib/lang');
 const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
 const { createProjectComponent } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.project.subcommands.add';
 
 exports.command = 'add';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
