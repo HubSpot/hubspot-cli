@@ -26,7 +26,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { overwriteFilePrompt } = require('../lib/prompts/overwriteFilePrompt');
+const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
@@ -206,13 +206,18 @@ exports.handler = async options => {
       options.convertFields
     );
 
-    if (options.overwrite) {
-      //  If overwrite is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
-      const overwriteFile = await overwriteFilePrompt(dest);
-      if (overwriteFile) {
+    if (options.clean) {
+      //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
+      let cleanUpload = options.force;
+      if (!options.force) {
+        cleanUpload = await cleanUploadPrompt(accountId, dest);
+      }
+      if (cleanUpload) {
         try {
           await deleteFile(accountId, dest);
-          logger.log(i18n(`${i18nKey}.overwriting`, { accountId, path: dest }));
+          logger.log(
+            i18n(`${i18nKey}.cleaning`, { accountId, filePath: dest })
+          );
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
@@ -295,8 +300,13 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
   });
-  yargs.option('overwrite', {
-    describe: i18n(`${i18nKey}.options.overwrite.describe`),
+  yargs.option('clean', {
+    describe: i18n(`${i18nKey}.options.clean.describe`),
+    type: 'boolean',
+    default: false,
+  });
+  yargs.option('force', {
+    describe: i18n(`${i18nKey}.options.force.describe`),
     type: 'boolean',
     default: false,
   });
