@@ -180,7 +180,7 @@ en:
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "See {{ link }} to find out more."
+        seeMoreLink: "View our docs to find out more."
         subcommands:
           create:
             describe: "Create custom object instances"
@@ -744,7 +744,7 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
-              updateReupload: "Make sure to `{{#yellow}}upload{{/yellow}}` all serverless functions using this secret to access its new value."
+              updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
@@ -866,8 +866,8 @@ en:
         noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
+        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
         noComponents: "There are no components in this project."
-        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}."
         noRunnableComponents: "There are no components in this project that support local development."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
@@ -879,12 +879,11 @@ en:
         uploadWarning:
           appLabel: "[App]"
           uiExtensionLabel: "[UI Extension]"
-          configEdit: "You edited the configuration file {{#bold}}{{ path }}{{/bold}}. Changes to configuration files cannot be handled by the local dev server."
           missingComponents: "The deployed build for this project does not contain {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
-          header: "{{ reason }} To reflect these changes:"
+          defaultWarning: "Changing project configuration requires a new project build."
+          header: "{{ warning }} To reflect these changes and continue testing:"
           stopDev: "  * Stop {{ command }}"
           runUpload: "  * Run {{ command }}"
-          runUploadWithAccount: "  * Run {{ command }}"
           restartDev: "  * Re-run {{ command }}"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
@@ -961,7 +960,7 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally"
+              message: "Run {{ command }} to set up your test environment and start local development"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update CRM object definitions in your sandbox"
