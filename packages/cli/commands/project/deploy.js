@@ -25,6 +25,7 @@ const { getAccountConfig } = require('@hubspot/cli-lib');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 
 exports.command = 'deploy [--project] [--buildId]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -56,10 +57,11 @@ exports.handler = async options => {
     logger.error(
       i18n(`${i18nKey}.errors.projectNotFound`, {
         projectName: chalk.bold(projectName),
-        accountId: chalk.bold(accountId),
+        accountIdentifier: uiAccountDescription(accountId),
+        command: uiCommandReference('hs project upload'),
       })
     );
-    return;
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const namePromptResponse = await projectNamePrompt(accountId, {
