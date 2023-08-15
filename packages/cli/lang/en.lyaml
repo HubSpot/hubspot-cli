@@ -180,7 +180,7 @@ en:
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "See {{ link }} to find out more."
+        seeMoreLink: "View our docs to find out more."
         subcommands:
           create:
             describe: "Create custom object instances"
@@ -959,7 +959,7 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally"
+              message: "Run {{ command }} to set up your test environment and start local development"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update CRM object definitions in your sandbox"
