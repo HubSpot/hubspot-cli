@@ -1109,7 +1109,7 @@ en:
           enterName: "[--project] Enter project name:"
           errors:
             invalidName: "You entered an invalid name. Please try again."
-            projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""
+            projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
         feedbackPrompt:
           feedbackType:
             message: "What type of feedback would you like to leave?"
