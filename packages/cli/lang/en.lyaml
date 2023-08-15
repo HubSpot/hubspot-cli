@@ -517,6 +517,7 @@ en:
               deploy: "Deploy error: {{ details }}"
               noBuilds: "Deploy error: no builds for this project were found."
               noBuildId: "You must specify a build to deploy"
+              projectNotFound: "{{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
             examples:
               default: "Deploy the latest build of the current project"
               withOptions: "Deploy build 5 of the project my-project"
@@ -959,7 +960,7 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally"
+              message: "Run {{ command }} to set up your test environment and start local development"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update CRM object definitions in your sandbox"
