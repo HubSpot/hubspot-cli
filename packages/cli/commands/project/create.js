@@ -14,13 +14,13 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
-const { uiFeatureHighlight } = require('../../lib/ui');
+const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
 exports.command = 'create';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

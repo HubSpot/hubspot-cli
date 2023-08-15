@@ -22,7 +22,7 @@ const {
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const { uiLink } = require('../../lib/ui');
+const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   getProjectConfig,
@@ -35,7 +35,7 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const i18nKey = 'cli.commands.project.subcommands.listBuilds';
 
 exports.command = 'list-builds [path]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

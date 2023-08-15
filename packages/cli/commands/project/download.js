@@ -23,12 +23,13 @@ const {
   downloadProjectPrompt,
 } = require('../../lib/prompts/downloadProjectPrompt');
 const { i18n } = require('../../lib/lang');
+const { uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'download [--project]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

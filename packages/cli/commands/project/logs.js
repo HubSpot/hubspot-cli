@@ -32,7 +32,7 @@ const {
 // } = require('@hubspot/cli-lib/api/results');
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { uiLine, uiLink } = require('../../lib/ui');
+const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 // const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
@@ -136,7 +136,7 @@ const getPrivateAppsUrl = accountId => {
 // };
 
 exports.command = 'logs [--project] [--app] [--function] [--endpoint]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

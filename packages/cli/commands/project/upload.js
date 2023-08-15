@@ -6,7 +6,7 @@ const {
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { uiLine } = require('../../lib/ui');
+const { uiBetaTag, uiLine } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -33,7 +33,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const i18nKey = 'cli.commands.project.subcommands.upload';
 
 exports.command = 'upload [path]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
