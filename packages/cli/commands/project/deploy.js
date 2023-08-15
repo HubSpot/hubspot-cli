@@ -13,11 +13,7 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  ensureProjectExists,
-  getProjectConfig,
-  pollDeployStatus,
-} = require('../../lib/projects');
+const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
@@ -47,22 +43,6 @@ exports.handler = async options => {
 
   if (!projectOption && projectConfig) {
     projectName = projectConfig.name;
-  }
-
-  const projectExists = await ensureProjectExists(accountId, projectName, {
-    allowCreate: false,
-    noLogs: true,
-  });
-
-  if (!projectExists) {
-    logger.error(
-      i18n(`${i18nKey}.errors.projectNotFound`, {
-        projectName: chalk.bold(projectName),
-        accountIdentifier: uiAccountDescription(accountId),
-        command: uiCommandReference('hs project upload'),
-      })
-    );
-    process.exit(EXIT_CODES.ERROR);
   }
 
   const namePromptResponse = await projectNamePrompt(accountId, {
@@ -121,6 +101,15 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
+    if (e.statusCode === 404) {
+      logger.error(
+        i18n(`${i18nKey}.errors.projectNotFound`, {
+          projectName: chalk.bold(projectName),
+          accountIdentifier: uiAccountDescription(accountId),
+          command: uiCommandReference('hs project upload'),
+        })
+      );
+    }
     if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else {
