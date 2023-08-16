@@ -1,6 +1,6 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
-const { uiAccountDescription } = require('../ui');
+const { uiAccountDescription, uiCommandReference } = require('../ui');
 const { isSandbox, getAccountName } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/cli-lib');
 const { getSandboxUsageLimits } = require('@hubspot/cli-lib/sandboxes');
@@ -36,6 +36,7 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
     if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
       disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
+        authCommand: uiCommandReference('hs auth'),
         limit: sandboxUsage['DEVELOPER'].limit,
       });
     } else {
