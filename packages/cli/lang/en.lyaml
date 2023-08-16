@@ -1122,7 +1122,7 @@ en:
             buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
         cleanUploadPrompt:
-          message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this? y/N"
+          message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
       convertFields:
         positionals:
           src:
