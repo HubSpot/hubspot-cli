@@ -891,6 +891,7 @@ en:
           stopDev: "  * Stop {{ command }}"
           runUpload: "  * Run {{ command }}"
           restartDev: "  * Re-run {{ command }}"
+          pushToGithub: "  * Commit and push your changes to GitHub"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
           setupError: "Failed to setup local dev server: {{ message }}"
