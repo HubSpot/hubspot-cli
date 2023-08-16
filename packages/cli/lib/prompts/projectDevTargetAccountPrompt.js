@@ -34,9 +34,15 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   let disabledMessage = false;
 
   if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
-    disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
-      limit: sandboxUsage['DEVELOPER'].limit,
-    });
+    if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
+      disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
+        limit: sandboxUsage['DEVELOPER'].limit,
+      });
+    } else {
+      disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
+        limit: sandboxUsage['DEVELOPER'].limit,
+      });
+    }
   }
 
   // Order choices by Developer Sandbox -> Standard Sandbox
