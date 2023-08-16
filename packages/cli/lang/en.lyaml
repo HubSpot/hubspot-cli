@@ -988,8 +988,8 @@ en:
           createNewSandboxOption: "<Test on a new development sandbox>"
           chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
-          sandboxLimit: "Your portal reached the limit of {{ limit }} development sandboxes"
-          sandboxLimitWithSuggestion: "Your portal reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
+          sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
+          sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
           confirmDefaultSandboxAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
