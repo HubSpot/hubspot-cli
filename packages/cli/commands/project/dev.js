@@ -200,10 +200,14 @@ exports.handler = async options => {
   );
 
   let deployedBuild;
+  let isGithubLinked;
 
   if (projectExists) {
     const project = await fetchProject(targetAccountId, projectConfig.name);
     deployedBuild = project.deployedBuild;
+    isGithubLinked =
+      project.sourceIntegration &&
+      project.sourceIntegration.source === 'GITHUB';
   }
 
   SpinniesManager.init();
@@ -327,6 +331,7 @@ exports.handler = async options => {
     projectConfig,
     projectDir,
     targetAccountId,
+    isGithubLinked,
   });
 
   await LocalDev.start();

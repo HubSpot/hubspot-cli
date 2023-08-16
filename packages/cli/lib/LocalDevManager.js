@@ -44,6 +44,7 @@ class LocalDevManager {
     this.projectDir = options.projectDir;
     this.debug = options.debug || false;
     this.deployedBuild = options.deployedBuild;
+    this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
 
@@ -188,11 +189,15 @@ class LocalDevManager {
           command: uiCommandReference('hs project dev'),
         })
       );
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.runUpload`, {
-          command: this.getUploadCommand(),
-        })
-      );
+      if (this.isGithubLinked) {
+        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
+      } else {
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUpload`, {
+            command: this.getUploadCommand(),
+          })
+        );
+      }
       logger.log(
         i18n(`${i18nKey}.uploadWarning.restartDev`, {
           command: uiCommandReference('hs project dev'),
