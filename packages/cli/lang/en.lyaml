@@ -804,6 +804,7 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
+          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
         options:
           options:
             describe: "Options to pass to javascript fields files"
@@ -811,6 +812,10 @@ en:
             describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
           convertFields:
             describe: "If true, converts any javascript fields files contained in module folder or project root."
+          clean:
+            describe: "Will cause upload to delete files in your HubSpot account that are not found locally."
+          force:
+            describe: "Skips confirmation prompts when doing a clean upload."
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
@@ -822,6 +827,7 @@ en:
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
         notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
+        cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
@@ -1122,6 +1128,8 @@ en:
           errors:
             buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+        cleanUploadPrompt:
+          message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
       convertFields:
         positionals:
           src:
