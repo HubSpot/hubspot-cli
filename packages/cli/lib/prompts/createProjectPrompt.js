@@ -10,6 +10,7 @@ const { i18n } = require('../lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
   HUBSPOT_PROJECT_COMPONENTS_VERSION,
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } = require('../constants');
@@ -30,8 +31,9 @@ const createTemplateOptions = async templateSource => {
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : HUBSPOT_PROJECT_COMPONENTS_VERSION;
   const config = await fetchJsonFromRepository(
-    templateSource,
-    `${branch}/config.json`,
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    `config.json`,
+    branch,
     hasCustomTemplateSource
   );
 

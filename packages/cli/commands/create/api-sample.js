@@ -40,7 +40,8 @@ module.exports = {
     downloadSpinner.start();
     const samplesConfig = await fetchJsonFromRepository(
       'HubSpot/sample-apps-list',
-      'main/samples.json'
+      'samples.json',
+      'main'
     );
     downloadSpinner.stop();
     if (!samplesConfig) {

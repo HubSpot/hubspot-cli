@@ -45,7 +45,10 @@ const {
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { HUBSPOT_PROJECT_COMPONENTS_VERSION } = require('./constants');
+const {
+  HUBSPOT_PROJECT_COMPONENTS_VERSION,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+} = require('./constants');
 
 const i18nKey = 'cli.lib.projects';
 
@@ -135,11 +138,13 @@ const createProjectConfig = async (
   );
 
   const hasCustomTemplateSource = Boolean(templateSource);
-  const pathWithRef = hasCustomTemplateSource
-    ? template.path
-    : `${template.path}?ref=${HUBSPOT_PROJECT_COMPONENTS_VERSION}`;
 
-  await downloadGitHubRepoContents(templateSource, pathWithRef, projectPath);
+  await downloadGitHubRepoContents(
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    template.path,
+    projectPath,
+    hasCustomTemplateSource ? {} : { ref: HUBSPOT_PROJECT_COMPONENTS_VERSION }
+  );
   const _config = JSON.parse(fs.readFileSync(projectConfigPath));
   writeProjectConfig(projectConfigPath, {
     ..._config,
@@ -821,7 +826,7 @@ const createProjectComponent = async (component, name) => {
   );
 
   await downloadGitHubRepoContents(
-    'HubSpot/hubspot-project-components',
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
     componentPath
   );
