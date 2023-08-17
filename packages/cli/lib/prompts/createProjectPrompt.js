@@ -9,6 +9,10 @@ const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const {
+  HUBSPOT_PROJECT_COMPONENTS_VERSION,
+  DEFAULT_PROJECT_TEMPLATE_BRANCH,
+} = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
 
@@ -21,11 +25,14 @@ const hasAllProperties = projectList => {
 };
 
 const createTemplateOptions = async templateSource => {
-  const isTemplateSource = !!templateSource;
+  const hasCustomTemplateSource = Boolean(templateSource);
+  const branch = hasCustomTemplateSource
+    ? DEFAULT_PROJECT_TEMPLATE_BRANCH
+    : HUBSPOT_PROJECT_COMPONENTS_VERSION;
   const config = await fetchJsonFromRepository(
     templateSource,
-    'main/config.json',
-    isTemplateSource
+    `${branch}/config.json`,
+    hasCustomTemplateSource
   );
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
