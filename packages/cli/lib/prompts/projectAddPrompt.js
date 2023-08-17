@@ -9,7 +9,6 @@ const { PROJECT_COMPONENT_TYPES } = require('@hubspot/cli-lib/lib/constants');
 
 const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 
-// @TODO - switch this to v1
 const createTypeOptions = async () => {
   const config = await fetchJsonFromRepository(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
