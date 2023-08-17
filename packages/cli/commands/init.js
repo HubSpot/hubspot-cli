@@ -133,11 +133,17 @@ exports.handler = async options => {
     );
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
-    trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
+    await trackAuthAction(
+      'init',
+      authType,
+      TRACKING_STATUS.COMPLETE,
+      accountId
+    );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
-    trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
