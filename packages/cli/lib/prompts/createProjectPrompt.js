@@ -32,7 +32,7 @@ const createTemplateOptions = async templateSource => {
     : HUBSPOT_PROJECT_COMPONENTS_VERSION;
   const config = await fetchJsonFromRepository(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    `config.json`,
+    'config.json',
     branch,
     hasCustomTemplateSource
   );

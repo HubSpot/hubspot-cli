@@ -828,7 +828,10 @@ const createProjectComponent = async (component, name) => {
   await downloadGitHubRepoContents(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
-    componentPath
+    componentPath,
+    {
+      ref: HUBSPOT_PROJECT_COMPONENTS_VERSION,
+    }
   );
 };
 
