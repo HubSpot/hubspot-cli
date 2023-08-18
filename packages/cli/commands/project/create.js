@@ -57,7 +57,8 @@ exports.handler = async options => {
     path.resolve(getCwd(), options.location || location),
     options.name || name,
     template || { path: options.template },
-    options.templateSource
+    options.templateSource,
+    githubRef
   );
 
   logger.log('');
