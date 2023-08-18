@@ -15,7 +15,11 @@ const {
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
+const {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+} = require('../../lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { fetchReleaseData } = require('@hubspot/cli-lib/github');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
@@ -27,7 +31,21 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const { name, template, location } = await createProjectPrompt(options);
+  const hasCustomTemplateSource = Boolean(options.templateSource);
+
+  let githubRef = '';
+
+  if (hasCustomTemplateSource) {
+    const releaseData = await fetchReleaseData(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
+    );
+    githubRef = releaseData.tag_name;
+  }
+
+  const { name, template, location } = await createProjectPrompt(
+    githubRef,
+    options
+  );
 
   trackCommandUsage(
     'project-create',
