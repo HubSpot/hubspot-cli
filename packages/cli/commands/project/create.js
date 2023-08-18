@@ -35,7 +35,7 @@ exports.handler = async options => {
 
   let githubRef = '';
 
-  if (hasCustomTemplateSource) {
+  if (!hasCustomTemplateSource) {
     const releaseData = await fetchReleaseData(
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
     );

@@ -64,7 +64,7 @@ module.exports = {
     const created = await cloneGitHubRepo(
       filePath,
       assetType,
-      sampleType,
+      `HubSpot/${sampleType}`,
       sampleLanguage,
       {
         ...options,
