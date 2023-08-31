@@ -32,11 +32,13 @@ function getAppCardConfigs(appConfig, appPath) {
 
   if (cards) {
     cards.forEach(({ file }) => {
-      const cardConfigPath = path.join(appPath, file);
-      const cardConfig = loadConfigFile(cardConfigPath);
+      if (typeof file === 'string') {
+        const cardConfigPath = path.join(appPath, file);
+        const cardConfig = loadConfigFile(cardConfigPath);
 
-      if (cardConfig) {
-        cardConfigs.push(cardConfig);
+        if (cardConfig) {
+          cardConfigs.push(cardConfig);
+        }
       }
     });
   }
@@ -84,14 +86,16 @@ async function findProjectComponents(projectSourceDir) {
           0,
           projectFile.indexOf(APP_COMPONENT_CONFIG)
         );
-        const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
+        if (typeof appPath === 'string') {
+          const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
 
-        components.push({
-          type: COMPONENT_TYPES.app,
-          config: parsedAppConfig,
-          runnable: !isLegacy,
-          path: appPath,
-        });
+          components.push({
+            type: COMPONENT_TYPES.app,
+            config: parsedAppConfig,
+            runnable: !isLegacy,
+            path: appPath,
+          });
+        }
       }
     }
   });
