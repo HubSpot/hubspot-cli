@@ -1071,7 +1071,7 @@ en:
         createProjectPrompt:
           enterName: "[--name] Give your project a name: "
           enterLocation: "[--location] Where should the project be created?"
-          selectTemplate: "[--template] Start from a template?"
+          selectTemplate: "[--template] Choose a project template: "
           errors:
             nameRequired: "A project name is required"
             locationRequired: "A project location is required"

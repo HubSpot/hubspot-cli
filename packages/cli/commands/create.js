@@ -76,6 +76,8 @@ exports.handler = async options => {
   const argsToPass = { assetType, name, dest, options };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
+  trackCommandUsage('create', { assetType }, getAccountId(options));
+
   try {
     await fs.ensureDir(dest);
   } catch (e) {
@@ -94,8 +96,6 @@ exports.handler = async options => {
   if (asset.validate && !asset.validate(argsToPass)) return;
 
   await asset.execute(argsToPass);
-
-  trackCommandUsage('create', { assetType }, getAccountId(options));
 };
 
 exports.builder = yargs => {
