@@ -9,6 +9,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   getAccountId,
+  addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -19,44 +20,47 @@ const i18nKey = 'cli.commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';
-// Hiding since this command is still experimental
-exports.describe = null; //'Lint a file or folder for HubL syntax';
+exports.describe = 'Lint a file or folder for HubL errors and warnings';
 
 exports.handler = async options => {
-  const { path: lintPath } = options;
-
   await loadAndValidateOptions(options);
 
+  const { path: lintPath } = options;
   const accountId = getAccountId(options);
   const localPath = resolveLocalPath(lintPath);
-  const groupName = i18n(`${i18nKey}.groupName`, {
-    path: localPath,
-  });
 
   trackCommandUsage('lint', null, accountId);
 
+  const groupName = i18n(`${i18nKey}.groupName`, {
+    path: localPath,
+  });
+  let errorCount = 0;
+
   logger.group(groupName);
-  let count = 0;
+
   try {
     await lint(accountId, localPath, result => {
-      count += printHublValidationResult(result);
+      errorCount = printHublValidationResult(result);
     });
   } catch (err) {
-    logger.groupEnd(groupName);
     logErrorInstance(err, { accountId });
     process.exit(EXIT_CODES.ERROR);
   }
-  logger.groupEnd(groupName);
-  logger.log(
-    i18n(`${i18nKey}.issuesFound`, {
-      count,
-    })
-  );
+
+  logger.groupEnd();
+  errorCount === 0
+    ? logger.log(i18n(`${i18nKey}.noIssuesFound`))
+    : logger.log(
+        i18n(`${i18nKey}.issuesFound`, {
+          errorCount,
+        })
+      );
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

@@ -406,7 +406,8 @@ en:
         errors:
           configFileExists: "The config file {{ configPath }} already exists."
       lint:
-        issuesFound: "{{ count }} issues found."
+        issuesFound: "{{ errorCount }} issues found."
+        noIssuesFound: "No issues found."
         groupName: "Linting {{ path }}"
         positionals:
           path:
