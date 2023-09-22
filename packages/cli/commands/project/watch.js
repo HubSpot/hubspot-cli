@@ -30,7 +30,7 @@ const {
 } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleKeypress, handleExit } = require('../../lib/process');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 

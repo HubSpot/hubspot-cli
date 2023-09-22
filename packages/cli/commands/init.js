@@ -7,7 +7,7 @@ const {
   updateDefaultAccount,
 } = require('@hubspot/cli-lib/lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
-const { handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleExit } = require('../lib/process');
 const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const {
