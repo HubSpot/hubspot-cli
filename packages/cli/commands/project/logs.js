@@ -14,10 +14,6 @@ const {
   fetchProject,
   fetchDeployComponentsMetadata,
 } = require('@hubspot/cli-lib/api/dfs');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
 // const {
 //   getProjectAppFunctionLogs,
 //   getLatestProjectAppFunctionLog,
@@ -30,6 +26,7 @@ const {
 //   getFunctionLogs,
 //   getLatestFunctionLog,
 // } = require('@hubspot/cli-lib/api/results');
+const { getTableContents, getTableHeader } = require('../../lib/table');
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
