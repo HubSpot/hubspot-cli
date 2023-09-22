@@ -24,7 +24,9 @@
     "moment": "^2.29.1",
     "open": "^7.0.3",
     "ora": "^4.0.3",
+    "p-queue": "^7.4.1",
     "strip-ansi": "^5.2.0",
+    "table": "^6.8.1",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
     "yargs": "15.4.1"
