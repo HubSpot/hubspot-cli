@@ -2,7 +2,10 @@ const { getEnv } = require('@hubspot/cli-lib/lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getTableContents, getTableHeader } = require('./table');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const open = require('open');
 

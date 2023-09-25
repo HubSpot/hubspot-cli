@@ -5,7 +5,10 @@ const {
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
 const { getFunctionArrays } = require('../../lib/functions');
-const { getTableContents, getTableHeader } = require('../../lib/table');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 
 const {
   addConfigOptions,

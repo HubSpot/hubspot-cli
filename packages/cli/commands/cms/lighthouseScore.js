@@ -6,7 +6,10 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getTableContents, getTableHeader } = require('../../lib/table');
+const {
+  getTableContents,
+  getTableHeader,
+} = require('@hubspot/cli-lib/lib/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
