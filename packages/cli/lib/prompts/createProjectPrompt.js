@@ -9,6 +9,10 @@ const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  DEFAULT_PROJECT_TEMPLATE_BRANCH,
+} = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
 
@@ -20,12 +24,17 @@ const hasAllProperties = projectList => {
   );
 };
 
-const createTemplateOptions = async templateSource => {
-  const isTemplateSource = !!templateSource;
+const createTemplateOptions = async (templateSource, githubRef) => {
+  const hasCustomTemplateSource = Boolean(templateSource);
+  let branch = hasCustomTemplateSource
+    ? DEFAULT_PROJECT_TEMPLATE_BRANCH
+    : githubRef;
+
   const config = await fetchJsonFromRepository(
-    templateSource,
-    'main/config.json',
-    isTemplateSource
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    'config.json',
+    branch,
+    hasCustomTemplateSource
   );
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {
@@ -41,9 +50,10 @@ const createTemplateOptions = async templateSource => {
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };
 
-const createProjectPrompt = async (promptOptions = {}) => {
+const createProjectPrompt = async (githubRef, promptOptions = {}) => {
   const projectTemplates = await createTemplateOptions(
-    promptOptions.templateSource
+    promptOptions.templateSource,
+    githubRef
   );
 
   return promptUser([

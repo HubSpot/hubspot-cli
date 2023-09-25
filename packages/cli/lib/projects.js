@@ -45,6 +45,7 @@ const {
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
 } = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'cli.lib.projects';
 
@@ -96,7 +97,8 @@ const createProjectConfig = async (
   projectPath,
   projectName,
   template,
-  templateSource
+  templateSource,
+  githubRef
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -133,7 +135,14 @@ const createProjectConfig = async (
     }`
   );
 
-  await downloadGitHubRepoContents(templateSource, template.path, projectPath);
+  const hasCustomTemplateSource = Boolean(templateSource);
+
+  await downloadGitHubRepoContents(
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    template.path,
+    projectPath,
+    hasCustomTemplateSource ? {} : { ref: githubRef }
+  );
   const _config = JSON.parse(fs.readFileSync(projectConfigPath));
   writeProjectConfig(projectConfigPath, {
     ..._config,
@@ -796,7 +805,11 @@ const logFeedbackMessage = buildId => {
   }
 };
 
-const createProjectComponent = async (component, name) => {
+const createProjectComponent = async (
+  component,
+  name,
+  projectComponentsVersion
+) => {
   const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
@@ -815,9 +828,12 @@ const createProjectComponent = async (component, name) => {
   );
 
   await downloadGitHubRepoContents(
-    'HubSpot/hubspot-project-components',
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
-    componentPath
+    componentPath,
+    {
+      ref: projectComponentsVersion,
+    }
   );
 };
 

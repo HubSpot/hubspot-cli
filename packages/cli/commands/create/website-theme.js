@@ -14,6 +14,12 @@ module.exports = {
       // releaseType has to be 'REPOSITORY' to download a specific branch
       options.releaseType = GITHUB_RELEASE_TYPES.REPOSITORY;
     }
-    cloneGitHubRepo(dest, assetType, 'cms-theme-boilerplate', 'src', options);
+    cloneGitHubRepo(
+      dest,
+      assetType,
+      'HubSpot/cms-theme-boilerplate',
+      'src',
+      options
+    );
   },
 };
