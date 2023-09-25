@@ -19,8 +19,11 @@ const isHelperIdentifier = identifier => {
 
 const generateReplaceFn = (matchedText, startIndex, replacementString) => {
   return currentStringValue =>
-    `${currentStringValue.slice(0, startIndex)}${replacementString ||
-      ''}${currentStringValue.slice(startIndex + matchedText.length)}`;
+    `${currentStringValue.slice(0, startIndex)}${
+      replacementString !== null && replacementString !== undefined
+        ? replacementString
+        : ''
+    }${currentStringValue.slice(startIndex + matchedText.length)}`;
 };
 
 /**
