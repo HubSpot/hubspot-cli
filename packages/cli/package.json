@@ -16,6 +16,7 @@
     "chokidar": "^3.0.1",
     "cli-cursor": "^3.1.0",
     "cli-progress": "^3.11.2",
+    "debounce": "^1.2.0",
     "express": "^4.17.1",
     "findup-sync": "^4.0.0",
     "fs-extra": "^8.1.0",
