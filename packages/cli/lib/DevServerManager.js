@@ -4,6 +4,15 @@ const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
 const { promptUser } = require('./prompts/promptUtils');
 const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
+const {
+  startPortManagerServer,
+  portManagerHasActiveServers,
+  stopPortManagerServer,
+  getServerInstanceId,
+} = require('@hubspot/local-dev-lib/portManager');
+const {
+  assignPortToServerInstance,
+} = require('../../../../hubspot-local-dev-lib/dist/lib/portManager');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -61,6 +70,7 @@ class DevServerManager {
     this.debug = debug;
     this.componentsByType = this.arrangeComponentsByType(components);
 
+    await startPortManagerServer();
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
         if (serverInterface.setup) {
@@ -81,11 +91,19 @@ class DevServerManager {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
+          const serverInstanceId = getServerInstanceId(
+            serverInterface.getServerId(),
+            projectConfig.name
+          );
+
+          const port = await assignPortToServerInstance(serverInstanceId);
+
           await serverInterface.start({
             accountId,
             debug: this.debug,
             httpClient,
             projectConfig,
+            port,
           });
         }
       });
@@ -113,6 +131,10 @@ class DevServerManager {
           await serverInterface.cleanup();
         }
       });
+
+      if (!portManagerHasActiveServers()) {
+        stopPortManagerServer();
+      }
     }
   }
 }
