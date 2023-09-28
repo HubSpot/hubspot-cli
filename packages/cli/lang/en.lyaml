@@ -907,6 +907,7 @@ en:
           emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
           compressed: "Project files compressed: {{ byteCount }} bytes"
           compressing: "Compressing build files to \"{{ path }}\""
+          fileFiltered: "Ignoring \"{{ filename }}\""
         ensureProjectExists:
           createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
           createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."

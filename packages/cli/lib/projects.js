@@ -522,9 +522,15 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(srcDir, false, file =>
-    shouldIgnoreFile(file.name, true) ? false : file
-  );
+  archive.directory(srcDir, false, file => {
+    const ignored = shouldIgnoreFile(file.name, true);
+    if (ignored) {
+      logger.debug(`${i18nKey}.handleProjectUpload.fileFiltered`, {
+        filename: file.name,
+      });
+    }
+    return ignored ? false : file;
+  });
 
   archive.finalize();
 
