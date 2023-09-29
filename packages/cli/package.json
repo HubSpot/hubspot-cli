@@ -26,6 +26,7 @@
     "ora": "^4.0.3",
     "p-queue": "^6.0.2",
     "strip-ansi": "^5.2.0",
+    "table": "^6.6.0",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
     "yargs": "15.4.1"
