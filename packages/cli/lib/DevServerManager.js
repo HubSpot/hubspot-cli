@@ -91,19 +91,26 @@ class DevServerManager {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
-          const serverInstanceId = getServerInstanceId(
-            serverInterface.getServerId(),
-            projectConfig.name
-          );
+          const serverIds = serverInterface.getServerIds();
 
-          const port = await assignPortToServerInstance(serverInstanceId);
+          const ports = {};
+
+          for (let i = 0; i < serverIds.length; i++) {
+            const serverId = serverIds[i];
+            const instanceId = getServerInstanceId(
+              serverId,
+              projectConfig.name
+            );
+            const port = await assignPortToServerInstance(instanceId);
+            ports[serverId] = port;
+          }
 
           await serverInterface.start({
             accountId,
             debug: this.debug,
             httpClient,
             projectConfig,
-            port,
+            ports,
           });
         }
       });
