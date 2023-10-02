@@ -18,7 +18,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   //await loadAndValidateOptions(options);
 
-  const { src, dest, notify } = options;
+  const { src, dest, notify, skipInitial } = options;
 
   const accountId = getAccountId(options);
   const absoluteSrc = path.resolve(getCwd(), src);
@@ -27,12 +27,12 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const filesToUpload = await getUploadableFileList(absoluteSrc, false);
-
+  const filePaths = await getUploadableFileList(absoluteSrc, false);
   trackCommandUsage('preview', accountId);
   preview(accountId, absoluteSrc, dest, {
     notify,
-    filesToUpload,
+    filePaths,
+    skipInitial,
   });
 };
 
@@ -50,6 +50,11 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.notify.describe`),
     type: 'string',
     requiresArg: true,
+  });
+  yargs.option('skipInitial', {
+    alias: 'skip',
+    describe: i18n(`${i18nKey}.options.skipInitial.describe`),
+    type: 'boolean',
   });
   return yargs;
 };
