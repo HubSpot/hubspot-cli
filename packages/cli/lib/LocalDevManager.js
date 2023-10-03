@@ -92,6 +92,7 @@ class LocalDevManager {
       logger.error(
         i18n(`${i18nKey}.noRunnableComponents`, {
           projectSourceDir: this.projectSourceDir,
+          command: uiCommandReference('hs project add'),
         })
       );
       process.exit(EXIT_CODES.SUCCESS);

@@ -893,7 +893,7 @@ en:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
         noComponents: "There are no components in this project."
-        noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}."
+        noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
