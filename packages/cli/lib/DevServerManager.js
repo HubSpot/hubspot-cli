@@ -8,7 +8,7 @@ const {
   startPortManagerServer,
   portManagerHasActiveServers,
   stopPortManagerServer,
-  getServerInstanceId,
+  // getServerInstanceId,
 } = require('@hubspot/local-dev-lib/portManager');
 const {
   assignPortToServerInstance,
@@ -97,11 +97,14 @@ class DevServerManager {
 
           for (let i = 0; i < serverIds.length; i++) {
             const serverId = serverIds[i];
-            const instanceId = getServerInstanceId(
-              serverId,
-              projectConfig.name
-            );
-            const port = await assignPortToServerInstance(instanceId);
+
+            // For now, only support one instance of each server
+            // const instanceId = getServerInstanceId(
+            //   serverId,
+            //   projectConfig.name
+            // );
+
+            const port = await assignPortToServerInstance(serverId);
             ports[serverId] = port;
           }
 
