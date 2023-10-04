@@ -522,9 +522,27 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(srcDir, false, file =>
-    shouldIgnoreFile(file.name, true) ? false : file
-  );
+  let loggedIgnoredNodeModule = false;
+
+  archive.directory(srcDir, false, file => {
+    const ignored = shouldIgnoreFile(file.name, true);
+    if (ignored) {
+      const isNodeModule = file.name.includes('node_modules');
+
+      if (!isNodeModule || !loggedIgnoredNodeModule) {
+        logger.debug(
+          i18n(`${i18nKey}.handleProjectUpload.fileFiltered`, {
+            filename: file.name,
+          })
+        );
+      }
+
+      if (isNodeModule && !loggedIgnoredNodeModule) {
+        loggedIgnoredNodeModule = true;
+      }
+    }
+    return ignored ? false : file;
+  });
 
   archive.finalize();
 
