@@ -4,7 +4,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('@hubspot/cli-lib/errorHandlers');
-const { getFunctionArrays } = require('@hubspot/cli-lib/lib/functions');
+const { getFunctionArrays } = require('../../lib/getFunctionArrays');
 const {
   getTableContents,
   getTableHeader,

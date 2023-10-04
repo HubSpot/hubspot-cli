@@ -2,8 +2,8 @@ const path = require('path');
 const chokidar = require('chokidar');
 const chalk = require('chalk');
 const { i18n } = require('./lang');
+const { handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { handleKeypress } = require('@hubspot/cli-lib/lib/process');
 const {
   getAccountId,
   getConfigDefaultAccount,

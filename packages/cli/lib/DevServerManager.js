@@ -103,9 +103,19 @@ class DevServerManager {
             //   serverId,
             //   projectConfig.name
             // );
+            const instanceId = serverId;
 
-            const port = await assignPortToServerInstance(serverId);
-            ports[serverId] = port;
+            try {
+              const port = await assignPortToServerInstance(instanceId);
+              ports[serverId] = port;
+            } catch (e) {
+              if (e.response.status === 409) {
+                throw new Error(
+                  `Failed to start dev server with instanceId ${instanceId}. An instance of this server is already running.`
+                );
+              }
+              throw e;
+            }
           }
 
           await serverInterface.start({
