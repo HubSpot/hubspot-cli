@@ -893,7 +893,7 @@ en:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
         noComponents: "There are no components in this project."
-        noRunnableComponents: "There are no components in this project that support local development."
+        noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
@@ -904,7 +904,7 @@ en:
         uploadWarning:
           appLabel: "[App]"
           uiExtensionLabel: "[UI Extension]"
-          missingComponents: "The deployed build for this project does not contain {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
+          missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
           defaultWarning: "Changing project configuration requires a new project build."
           header: "{{ warning }} To reflect these changes and continue testing:"
           stopDev: "  * Stop {{ command }}"
