@@ -4,7 +4,6 @@ const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getAccountId } = require('../lib/commonOpts');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-//const { loadAndValidateOptions } = require('../lib/validation');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { preview } = require('@hubspot/cli-lib/lib/preview');
 const { getUploadableFileList } = require('../lib/upload');
@@ -16,8 +15,6 @@ exports.command = 'preview <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  //await loadAndValidateOptions(options);
-
   const { src, dest, notify, skipInitial } = options;
 
   const accountId = getAccountId(options);
@@ -44,12 +41,6 @@ exports.builder = yargs => {
   yargs.positional('dest', {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
-  });
-  yargs.option('notify', {
-    alias: 'n',
-    describe: i18n(`${i18nKey}.options.notify.describe`),
-    type: 'string',
-    requiresArg: true,
   });
   yargs.option('skipInitial', {
     alias: 'skip',
