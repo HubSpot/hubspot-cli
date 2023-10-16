@@ -5,10 +5,7 @@ const {
   getAccountId,
   checkAndWarnGitInclusion,
 } = require('@hubspot/cli-lib');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers');
+const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const {
   LOG_LEVEL,
@@ -21,6 +18,41 @@ loadConfig();
 checkAndWarnGitInclusion(getConfigPath());
 
 const pluginName = 'HubSpotAutoUploadPlugin';
+
+const parseValidationErrors = (responseBody = {}) => {
+  const errorMessages = [];
+
+  const { errors, message } = responseBody;
+
+  if (message) {
+    errorMessages.push(message);
+  }
+
+  if (errors) {
+    const specificErrors = errors.map(error => {
+      let errorMessage = error.message;
+      if (error.errorTokens && error.errorTokens.line) {
+        errorMessage = `line ${error.errorTokens.line}: ${errorMessage}`;
+      }
+      return errorMessage;
+    });
+    errorMessages.push(...specificErrors);
+  }
+
+  return errorMessages;
+};
+
+function logValidationErrors(error, context) {
+  const { response = {} } = error;
+  const validationErrors = parseValidationErrors(response.body);
+  if (validationErrors.length) {
+    validationErrors.forEach(err => {
+      logger.error(err);
+    });
+  }
+  logger.debug(error);
+  logger.debug(context);
+}
 
 class HubSpotAutoUploadPlugin {
   constructor(options = {}) {
@@ -67,14 +99,24 @@ class HubSpotAutoUploadPlugin {
           })
           .catch(error => {
             webpackLogger.error(`Uploading ${dest} failed`);
-            logApiUploadErrorInstance(
-              error,
-              new ApiErrorContext({
-                accountId: this.accountId,
-                request: dest,
-                payload: filepath,
-              })
-            );
+            const context = {
+              accountId: this.accountId,
+              request: dest,
+              payload: filepath,
+              statusCode: error.statusCode,
+            };
+            if (
+              error.statusCode === 400 &&
+              error.response &&
+              error.response.body &&
+              (error.response.body.message || error.response.body.errors)
+            ) {
+              logValidationErrors(error, context);
+            } else {
+              console.error(error.message);
+              console.debug(error);
+              console.debug(context);
+            }
           });
       });
     });
