@@ -12,11 +12,11 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   debugErrorAndContext,
   logErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
+} = require('./errorHandlers/standardErrors');
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('./errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/cli-lib');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');

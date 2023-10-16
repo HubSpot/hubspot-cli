@@ -4,7 +4,7 @@ const { fetchProjects } = require('@hubspot/cli-lib/api/dfs');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 

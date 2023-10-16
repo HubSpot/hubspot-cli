@@ -21,7 +21,7 @@ const SpinniesManager = require('../../lib/SpinniesManager');
 const { deleteAccount } = require('@hubspot/cli-lib/lib/config');
 const {
   isSpecifiedHubSpotAuthError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('../../lib/errorHandlers/apiErrors');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 

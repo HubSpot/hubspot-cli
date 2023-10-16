@@ -9,7 +9,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { POLLING_DELAY } = require('@hubspot/cli-lib/lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {

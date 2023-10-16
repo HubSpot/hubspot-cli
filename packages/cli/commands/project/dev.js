@@ -50,18 +50,17 @@ const {
   PROJECT_DEPLOY_TEXT,
   ERROR_TYPES,
 } = require('@hubspot/cli-lib/lib/constants');
-const {
-  logErrorInstance,
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
+  logApiErrorInstance,
+  ApiErrorContext,
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('../../lib/errorHandlers/apiErrors');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 

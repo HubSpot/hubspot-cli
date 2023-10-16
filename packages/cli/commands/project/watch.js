@@ -3,7 +3,7 @@ const { createWatcher } = require('../../lib/projectsWatch');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {

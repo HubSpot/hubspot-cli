@@ -25,7 +25,7 @@ const {
 // const {
 //   logApiErrorInstance,
 //   ApiErrorContext,
-// } = require('@hubspot/cli-lib/errorHandlers');
+// } = require('../../lib/errorHandlers/apiErrors');
 // const {
 //   getFunctionLogs,
 //   getLatestFunctionLog,

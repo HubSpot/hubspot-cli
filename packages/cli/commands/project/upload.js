@@ -22,12 +22,10 @@ const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/cli-lib');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {
-  isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+  isSpecifiedError,
+} = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
