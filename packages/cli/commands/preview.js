@@ -15,7 +15,7 @@ exports.command = 'preview <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest, notify, skipInitial } = options;
+  const { src, dest, notify, initialUpload } = options;
 
   const accountId = getAccountId(options);
   const absoluteSrc = path.resolve(getCwd(), src);
@@ -29,7 +29,7 @@ exports.handler = async options => {
   preview(accountId, absoluteSrc, dest, {
     notify,
     filePaths,
-    skipInitial,
+    initialUpload,
   });
 };
 
@@ -42,9 +42,9 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
   });
-  yargs.option('skipInitial', {
-    alias: 'skip',
-    describe: i18n(`${i18nKey}.options.skipInitial.describe`),
+  yargs.option('initial-upload', {
+    alias: 'i',
+    describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
   return yargs;
