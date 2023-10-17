@@ -70,7 +70,7 @@ function logErrorInstance(error, context) {
   if (error instanceof Error || error.message || error.reason) {
     // Error or Error subclass
     const name = error.name || 'Error';
-    const message = i18n(`${i18nKey}.genericErrorOcurred`, { name });
+    const message = [i18n(`${i18nKey}.genericErrorOccured`, { name })];
     [(error.message, error.reason)].forEach(msg => {
       if (msg) {
         message.push(msg);
@@ -79,7 +79,7 @@ function logErrorInstance(error, context) {
     logger.error(message.join(' '));
   } else {
     // Unknown errors
-    logger.error(i18n(`${i18nKey}.unknownErrorOcurred`));
+    logger.error(i18n(`${i18nKey}.unknownErrorOccured`));
   }
   debugErrorAndContext(error, context);
 }
