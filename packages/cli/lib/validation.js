@@ -13,7 +13,7 @@ const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cli-lib/lib/constants');
-const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
