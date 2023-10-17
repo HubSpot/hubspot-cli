@@ -12,6 +12,9 @@ const {
   logErrorInstance,
   ErrorContext,
 } = require('./standardErrors');
+const { i18n } = require('../lang');
+
+const i18nKey = 'cli.lib.errorHandlers.apiErrors';
 
 const isApiStatusCodeError = err =>
   err.name === 'StatusCodeError' ||
@@ -63,9 +66,6 @@ const isSpecifiedHubSpotAuthError = (
     subCategoryErr
   );
 };
-
-const contactSupportString =
-  'Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists.';
 
 const parseValidationErrors = (responseBody = {}) => {
   const errorMessages = [];
@@ -174,52 +174,56 @@ function logApiStatusCodeError(error, context) {
   const isProjectGatingError = isGatingError(error) && projectName;
   switch (statusCode) {
     case 400:
-      errorMessage.push(`The ${messageDetail} was bad.`);
+      errorMessage.push(i18n(`${i18nKey}.codes.400`, { messageDetail }));
       break;
     case 401:
-      errorMessage.push(`The ${messageDetail} was unauthorized.`);
+      errorMessage.push(i18n(`${i18nKey}.codes.401`, { messageDetail }));
       break;
     case 403:
       if (isProjectMissingScopeError) {
         errorMessage.push(
-          `Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for ${context.accountId}, and generate a new one. Then run \`hs auth\` to update the CLI with the new key.`
+          i18n(`${i18nKey}.codes.403MissingScope`, {
+            accountId: context.accountId || '',
+          })
         );
       } else if (isProjectGatingError) {
         errorMessage.push(
-          `The current target account ${context.accountId} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216.`
+          i18n(`${i18nKey}.codes.403Gating`, {
+            accountId: context.accountId || '',
+          })
         );
       } else {
-        errorMessage.push(`The ${messageDetail} was forbidden.`);
+        errorMessage.push(i18n(`${i18nKey}.codes.403`, { messageDetail }));
       }
       break;
     case 404:
       if (context.request) {
         errorMessage.push(
-          `The ${action} failed because "${context.request}" was not found in account ${context.accountId}.`
+          i18n(`${i18nKey}.codes.404Request`, {
+            action: action || 'request',
+            request: context.request,
+            account: context.accountId || '',
+          })
         );
       } else {
-        errorMessage.push(`The ${messageDetail} was not found.`);
+        errorMessage.push(i18n(`${i18nKey}.codes.404`, { messageDetail }));
       }
       break;
     case 429:
-      errorMessage.push(
-        `The ${messageDetail} surpassed the rate limit. Retry in one minute.`
-      );
+      errorMessage.push(i18n(`${i18nKey}.codes.429`, { messageDetail }));
       break;
     case 503:
-      errorMessage.push(
-        `The ${messageDetail} could not be handled at this time. ${contactSupportString}`
-      );
+      errorMessage.push(i18n(`${i18nKey}.codes.503`, { messageDetail }));
       break;
     default:
       if (statusCode >= 500 && statusCode < 600) {
         errorMessage.push(
-          `The ${messageDetail} failed due to a server error. ${contactSupportString}`
+          i18n(`${i18nKey}.codes.500Generic`, { messageDetail })
         );
       } else if (statusCode >= 400 && statusCode < 500) {
-        errorMessage.push(`The ${messageDetail} failed due to a client error.`);
+        i18n(`${i18nKey}.codes.400Generic`, { messageDetail });
       } else {
-        errorMessage.push(`The ${messageDetail} failed.`);
+        errorMessage.push(i18n(`${i18nKey}.codes.generic`, { messageDetail }));
       }
       break;
   }
@@ -280,26 +284,31 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
   try {
     scopesData = await fetchScopeData(accountId, scopeGroup);
   } catch (e) {
-    logger.debug(`Error verifying access of scopeGroup ${scopeGroup}: ${e}`);
+    logger.debug(
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
+        scopeGroup,
+        error: e,
+      })
+    );
     return;
   }
   const { portalScopesInGroup, userScopesInGroup } = scopesData;
 
   if (!portalScopesInGroup.length) {
     logger.error(
-      'Your account does not have access to this action. Talk to an account admin to request it.'
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.portalMissingScope`)
     );
     return;
   }
 
   if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
     logger.error(
-      "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.userMissingScope`)
     );
     return;
   } else {
     logger.error(
-      'Your access key does not allow this action. Please generate a new access key by running "hs auth personalaccesskey".'
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.genericMissingScope`)
     );
     return;
   }

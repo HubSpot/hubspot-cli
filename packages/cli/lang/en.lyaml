@@ -1259,6 +1259,28 @@ en:
               label: "Lead Flows"
             marketing-email:
               label: "Marketing emails"
+      errorHandlers:
+        apiErrors:
+          messageDetail: "{{ request }} in account {{ accountId }}"
+          unableToUpload: 'Unable to upload "{{ payload }}.'
+          codes:
+            400: "The {{ messageDetail }} was bad."
+            401: "The {{ messageDetail }} was unauthorized."
+            403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403: "The {{ messageDetail }} was forbidden."
+            404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
+            404: "The {{ messageDetail }} was not found."
+            429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
+            503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            500generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            400generic: "The {{ messageDetail }} failed due to a client error."
+            generic: "The {{ messageDetail }} failed."
+          verifyAccessKeyAndUserAccess:
+            fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
+            portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
+            userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+            genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
 
 
 
