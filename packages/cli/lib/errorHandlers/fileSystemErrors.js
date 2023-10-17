@@ -4,6 +4,9 @@ const {
   isSystemError,
   debugErrorAndContext,
 } = require('./standardErrors');
+const { i18n } = require('../lang');
+
+const i18nKey = 'cli.lib.errorHandlers.fileSystemErrors';
 
 class FileSystemErrorContext extends ErrorContext {
   constructor(props = {}) {
@@ -35,10 +38,12 @@ function logFileSystemErrorInstance(error, context) {
   const filepath = context.filepath
     ? `"${context.filepath}"`
     : 'a file or folder';
-  const message = [`An error occurred while ${fileAction} ${filepath}.`];
+  const message = [i18n(`${i18nKey}.errorOccured`, { fileAction, filepath })];
   // Many `fs` errors will be `SystemError`s
   if (isSystemError(error)) {
-    message.push(`This is the result of a system error: ${error.message}`);
+    message.push(
+      i18n(`${i18nKey}.errorExplanation`, { errorMessage: error.message })
+    );
   }
   logger.error(message.join(' '));
   debugErrorAndContext(error, context);

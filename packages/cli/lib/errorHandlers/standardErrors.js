@@ -1,5 +1,8 @@
 const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { i18n } = require('../lang');
+
+const i18nKey = 'cli.lib.errorHandlers.standardErrors';
 
 const isSystemError = err =>
   err.errno != null && err.code != null && err.syscall != null;
@@ -22,18 +25,22 @@ class ErrorContext {
 function debugErrorAndContext(error, context) {
   if (error.name === 'StatusCodeError') {
     const { statusCode, message, response } = error;
-    logger.debug('Error: %o', {
-      statusCode,
-      message,
-      url: response.request.href,
-      method: response.request.method,
-      response: response.body,
-      headers: response.headers,
-    });
+    logger.debug(
+      i18n(`${i18nKey}.errorOccured`, {
+        error: {
+          statusCode,
+          message,
+          url: response.request.href,
+          method: response.request.method,
+          response: response.body,
+          headers: response.headers,
+        },
+      })
+    );
   } else {
-    logger.debug('Error: %o', error);
+    logger.debug(i18n(`${i18nKey}.errorOccured`, { error }));
   }
-  logger.debug('Context: %o', context);
+  logger.debug(i18n(`${i18nKey}.errorContect`, { context }));
 }
 
 /**
@@ -44,7 +51,7 @@ function debugErrorAndContext(error, context) {
  * @param {ErrorContext} context
  */
 function logSystemError(error, context) {
-  logger.error(`A system error has occurred: ${error.message}`);
+  logger.error(i18n(`${i18nKey}.systemErrorOccured`, { error: error.message }));
   debugErrorAndContext(error, context);
 }
 
@@ -63,8 +70,9 @@ function logErrorInstance(error, context) {
   if (error instanceof Error || error.message || error.reason) {
     // Error or Error subclass
     const name = error.name || 'Error';
-    const message = [`A ${name} has occurred.`];
-    [error.message, error.reason].forEach(msg => {
+    const message = i18n(`${i18nKey}.genericErrorOcurred`, { name })[
+      (error.message, error.reason)
+    ].forEach(msg => {
       if (msg) {
         message.push(msg);
       }
@@ -72,7 +80,7 @@ function logErrorInstance(error, context) {
     logger.error(message.join(' '));
   } else {
     // Unknown errors
-    logger.error(`An unknown error has occurred.`);
+    logger.error(i18n(`${i18nKey}.unknownErrorOcurred`));
   }
   debugErrorAndContext(error, context);
 }
