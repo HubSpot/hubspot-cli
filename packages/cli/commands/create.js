@@ -24,7 +24,7 @@
 const fs = require('fs-extra');
 const {
   logFileSystemErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../lib/errorHandlers/fileSystemErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');

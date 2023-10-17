@@ -10,7 +10,7 @@ const { getCwd } = require('@hubspot/cli-lib/path');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { extractZipArchive } = require('@hubspot/cli-lib/archive');
 const {

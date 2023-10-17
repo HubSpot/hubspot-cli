@@ -5,7 +5,7 @@ const { default: PQueue } = require('p-queue');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('./errorHandlers/apiErrors');
 const { i18n } = require('@hubspot/cli-lib/lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');

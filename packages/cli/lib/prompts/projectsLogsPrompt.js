@@ -6,7 +6,7 @@ const { getProjectConfig, ensureProjectExists } = require('../projects');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { EXIT_CODES } = require('../enums/exitCodes');
 

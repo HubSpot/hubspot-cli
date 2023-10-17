@@ -4,9 +4,6 @@ const cors = require('cors');
 const chalk = require('chalk');
 const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
-  logErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const {
   getTableContents,
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
@@ -181,7 +178,9 @@ const startServer = async callback => {
       },
     };
   } catch (e) {
-    logErrorInstance(e, {
+    logger.error(`A system error has occurred: ${e.message}`);
+    logger.debug(e);
+    logger.debug({
       port,
       accountId,
       functionPath,

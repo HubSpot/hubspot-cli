@@ -8,7 +8,7 @@ const {
   logServerlessFunctionApiErrorInstance,
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('./errorHandlers/apiErrors');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
