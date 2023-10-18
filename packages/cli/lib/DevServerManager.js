@@ -8,11 +8,7 @@ const {
   startPortManagerServer,
   portManagerHasActiveServers,
   stopPortManagerServer,
-  // getServerInstanceId,
 } = require('@hubspot/local-dev-lib/portManager');
-const {
-  assignPortToServerInstance,
-} = require('../../../../hubspot-local-dev-lib/dist/lib/portManager');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -91,39 +87,11 @@ class DevServerManager {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
-          const serverIds = serverInterface.getServerIds();
-
-          const ports = {};
-
-          for (let i = 0; i < serverIds.length; i++) {
-            const serverId = serverIds[i];
-
-            // For now, only support one instance of each server
-            // const instanceId = getServerInstanceId(
-            //   serverId,
-            //   projectConfig.name
-            // );
-            const instanceId = serverId;
-
-            try {
-              const port = await assignPortToServerInstance(instanceId);
-              ports[serverId] = port;
-            } catch (e) {
-              if (e.response.status === 409) {
-                throw new Error(
-                  `Failed to start dev server with instanceId ${instanceId}. An instance of this server is already running.`
-                );
-              }
-              throw e;
-            }
-          }
-
           await serverInterface.start({
             accountId,
             debug: this.debug,
             httpClient,
             projectConfig,
-            ports,
           });
         }
       });
