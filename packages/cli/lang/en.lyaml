@@ -838,7 +838,7 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
       preview:
-        describe: "Description of preview command"
+        describe: "Watch and upload a directory on your computer for changes and start a local development server to preview files"
         positionals:
           src:
             describe: "Path to the local directory your files are in, relative to your current working directory"
