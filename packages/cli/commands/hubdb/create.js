@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { createHubDbTable } = require('@hubspot/cli-lib/hubdb');
 

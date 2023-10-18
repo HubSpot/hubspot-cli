@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');

@@ -9,7 +9,7 @@ const {
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,

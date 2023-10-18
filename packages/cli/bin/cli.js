@@ -5,7 +5,7 @@ const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
 
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
   trackHelpUsage,

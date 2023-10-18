@@ -9,9 +9,13 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
+  logErrorInstance,
   debugErrorAndContext,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/standardErrors');
+const {
+  isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
+} = require('../../lib/errorHandlers/apiErrors');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
 const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
@@ -26,10 +30,7 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+
 const { getAccountName } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 

@@ -1,7 +1,9 @@
 const path = require('path');
 const { isConfigFlagEnabled } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logErrorInstance,
+} = require('../../../lib/errorHandlers/standardErrors');
 const { ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
 const { downloadSchema, getResolvedPath } = require('@hubspot/cli-lib/schema');
 const { fetchSchema } = require('@hubspot/cli-lib/api/fileTransport');

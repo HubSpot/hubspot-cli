@@ -29,10 +29,6 @@ const {
   fetchProject,
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
 const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
@@ -42,9 +38,11 @@ const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./SpinniesManager');
 const {
+  logApiErrorInstance,
+  ApiErrorContext,
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'cli.lib.projects';
@@ -522,9 +520,27 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(srcDir, false, file =>
-    shouldIgnoreFile(file.name, true) ? false : file
-  );
+  let loggedIgnoredNodeModule = false;
+
+  archive.directory(srcDir, false, file => {
+    const ignored = shouldIgnoreFile(file.name, true);
+    if (ignored) {
+      const isNodeModule = file.name.includes('node_modules');
+
+      if (!isNodeModule || !loggedIgnoredNodeModule) {
+        logger.debug(
+          i18n(`${i18nKey}.handleProjectUpload.fileFiltered`, {
+            filename: file.name,
+          })
+        );
+      }
+
+      if (isNodeModule && !loggedIgnoredNodeModule) {
+        loggedIgnoredNodeModule = true;
+      }
+    }
+    return ignored ? false : file;
+  });
 
   archive.finalize();
 

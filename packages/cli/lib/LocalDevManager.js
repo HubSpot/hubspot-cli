@@ -89,7 +89,12 @@ class LocalDevManager {
 
     // The project does not contain any components that support local development
     if (!runnableComponents.length) {
-      logger.error(i18n(`${i18nKey}.noRunnableComponents`));
+      logger.error(
+        i18n(`${i18nKey}.noRunnableComponents`, {
+          projectSourceDir: this.projectSourceDir,
+          command: uiCommandReference('hs project add'),
+        })
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
 

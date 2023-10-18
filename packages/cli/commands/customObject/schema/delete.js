@@ -1,5 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logErrorInstance,
+} = require('../../../lib/errorHandlers/standardErrors');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
