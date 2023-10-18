@@ -11,6 +11,27 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 
 const i18nKey = 'cli.commands.preview';
 
+const validateSrcPath = src => {
+  const logInvalidPath = () => {
+    logger.log(
+      i18n(`${i18nKey}.errors.invalidPath`, {
+        path: src,
+      })
+    );
+  };
+  try {
+    const stats = fs.statSync(src);
+    if (!stats.isDirectory()) {
+      logInvalidPath();
+      return false;
+    }
+  } catch (e) {
+    logInvalidPath();
+    return false;
+  }
+  return true;
+};
+
 exports.command = 'preview <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
@@ -47,26 +68,11 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
+  yargs.option('notify', {
+    alias: 'n',
+    describe: i18n(`${i18nKey}.options.notify.describe`),
+    type: 'string',
+    requiresArg: true,
+  });
   return yargs;
-};
-
-const validateSrcPath = src => {
-  const logInvalidPath = () => {
-    logger.log(
-      i18n(`${i18nKey}.errors.invalidPath`, {
-        path: src,
-      })
-    );
-  };
-  try {
-    const stats = fs.statSync(src);
-    if (!stats.isDirectory()) {
-      logInvalidPath();
-      return false;
-    }
-  } catch (e) {
-    logInvalidPath();
-    return false;
-  }
-  return true;
 };
