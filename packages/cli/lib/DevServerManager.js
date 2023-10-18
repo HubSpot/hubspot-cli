@@ -8,7 +8,7 @@ const {
   startPortManagerServer,
   portManagerHasActiveServers,
   stopPortManagerServer,
-  requestPortForSeverInstance,
+  requestPorts,
 } = require('@hubspot/local-dev-lib/portManager');
 
 const i18nKey = 'cli.lib.DevServerManager';
@@ -93,7 +93,7 @@ class DevServerManager {
             debug: this.debug,
             httpClient,
             projectConfig,
-            requestPort: requestPortForSeverInstance,
+            requestPorts,
           });
         }
       });
