@@ -13,7 +13,7 @@ const i18nKey = 'cli.commands.preview';
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
-    logger.log(
+    logger.error(
       i18n(`${i18nKey}.errors.invalidPath`, {
         path: src,
       })
