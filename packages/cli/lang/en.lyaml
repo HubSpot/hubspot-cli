@@ -850,7 +850,7 @@ en:
           notify:
             describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
           initialUpload:
-            describe: "Initial upload to preview buffer (how can we better explain this to end user?)"
+            describe: "Upload directory before watching for updates"
       convertFields:
         describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
