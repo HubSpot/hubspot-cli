@@ -994,6 +994,10 @@ en:
             sandboxSyncStandardCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update all supported assets to your sandbox from production"
+            sampleProjects:
+              linkText: "HubSpot's sample projects"
+              url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
+              message: "See {{ link }}"
       commonOpts:
         options:
           portal:
