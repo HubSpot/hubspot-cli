@@ -106,6 +106,7 @@ const uiFeatureHighlight = (commands, title) => {
       const commandKey = `${i18nKey}.commandKeys.${c}`;
       const message = i18n(`${commandKey}.message`, {
         command: uiCommandReference(i18n(`${commandKey}.command`)),
+        link: uiLink(i18n(`${commandKey}.linkText`), i18n(`${commandKey}.url`)),
       });
       if (i !== 0) {
         logger.log('');

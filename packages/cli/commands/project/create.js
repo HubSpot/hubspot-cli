@@ -67,6 +67,7 @@ exports.handler = async options => {
     'projectDevCommand',
     'projectHelpCommand',
     'feedbackCommand',
+    'sampleProjects',
   ]);
 };
 
