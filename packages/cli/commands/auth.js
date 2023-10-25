@@ -16,7 +16,7 @@ const {
   getConfig,
   getConfigPath,
 } = require('@hubspot/cli-lib/lib/config');
-const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,
