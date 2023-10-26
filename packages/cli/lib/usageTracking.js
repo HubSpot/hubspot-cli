@@ -1,6 +1,6 @@
 const { trackUsage } = require('@hubspot/cli-lib/api/fileMapper');
 const { getAccountConfig } = require('@hubspot/cli-lib');
-const { isTrackingAllowed } = require('@hubspot/cli-lib/lib/config');
+const { isTrackingAllowed } = require('@hubspot/local-dev-lib/config');
 const { API_KEY_AUTH_METHOD } = require('@hubspot/cli-lib/lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { version } = require('../package.json');

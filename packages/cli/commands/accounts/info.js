@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getAccessToken } = require('@hubspot/cli-lib/personalAccessKey.js');
 const {
   getAccountId,

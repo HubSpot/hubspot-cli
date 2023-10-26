@@ -13,7 +13,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
+const { getConfigAccounts } = require('@hubspot/local-dev-lib/config');
 const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const {
   getProjectConfig,

@@ -23,7 +23,7 @@ const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');

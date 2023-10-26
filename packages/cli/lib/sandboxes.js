@@ -18,7 +18,7 @@ const {
   fetchTypes,
   getSandboxUsageLimits,
 } = require('@hubspot/cli-lib/sandboxes');
-const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
