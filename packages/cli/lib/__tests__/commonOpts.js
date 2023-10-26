@@ -1,14 +1,14 @@
+const { Mode, DEFAULT_MODE } = require('@hubspot/cli-lib');
 const {
-  Mode,
-  DEFAULT_MODE,
   getAndLoadConfigIfNeeded,
   getAccountId,
   getAccountConfig,
   loadConfigFromEnvironment,
-} = require('@hubspot/cli-lib');
+} = require('@hubspot/local-dev-lib/config');
 const { getMode } = require('../commonOpts');
 
 jest.mock('@hubspot/cli-lib');
+jest.mock('@hubspot/local-dev-lib/config');
 
 describe('@hubspot/cli/lib/commonOpts', () => {
   describe('getMode()', () => {

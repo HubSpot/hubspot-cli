@@ -19,7 +19,7 @@ const {
   showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {
   logApiErrorInstance,

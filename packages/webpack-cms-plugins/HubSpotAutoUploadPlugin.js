@@ -1,10 +1,10 @@
 const { upload } = require('@hubspot/cli-lib/api/fileMapper');
+const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   loadConfig,
   getConfigPath,
   getAccountId,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+} = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const {

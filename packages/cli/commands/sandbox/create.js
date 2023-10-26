@@ -8,7 +8,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
+const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const {

@@ -2,7 +2,6 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
-const { getConfig } = require('@hubspot/cli-lib');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
@@ -18,7 +17,7 @@ const { getAccountName } = require('../../lib/sandboxes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('@hubspot/cli-lib/lib/table');
 const SpinniesManager = require('../../lib/SpinniesManager');
-const { deleteAccount } = require('@hubspot/local-dev-lib/config');
+const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
 } = require('../../lib/errorHandlers/apiErrors');

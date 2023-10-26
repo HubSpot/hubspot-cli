@@ -10,7 +10,10 @@ const {
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
 const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
-const { getEnv, isConfigFlagEnabled } = require('@hubspot/cli-lib');
+const {
+  getEnv,
+  isConfigFlagEnabled,
+} = require('@hubspot/local-dev-lib/config');
 const { updateSchema } = require('@hubspot/cli-lib/api/schema');
 const {
   updateSchema: updateSchemaFromHubFile,
