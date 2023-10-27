@@ -36,7 +36,7 @@ exports.command = 'preview <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest, notify, initialUpload } = options;
+  const { src, dest, notify, initialUpload, noSsl } = options;
 
   const accountId = getAccountId(options);
   const absoluteSrc = path.resolve(getCwd(), src);
@@ -51,6 +51,7 @@ exports.handler = async options => {
     notify,
     filePaths,
     initialUpload,
+    noSsl,
   });
 };
 
@@ -73,6 +74,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.notify.describe`),
     type: 'string',
     requiresArg: true,
+  });
+  yargs.option('no-ssl', {
+    describe: i18n(`${i18nKey}.options.noSsl.describe`),
+    type: 'boolean',
   });
   return yargs;
 };
