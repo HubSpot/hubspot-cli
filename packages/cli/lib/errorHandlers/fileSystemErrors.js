@@ -38,7 +38,7 @@ function logFileSystemErrorInstance(error, context) {
   const filepath = context.filepath
     ? `"${context.filepath}"`
     : 'a file or folder';
-  const message = [i18n(`${i18nKey}.errorOccured`, { fileAction, filepath })];
+  const message = [i18n(`${i18nKey}.errorOccurred`, { fileAction, filepath })];
   // Many `fs` errors will be `SystemError`s
   if (isSystemError(error)) {
     message.push(
