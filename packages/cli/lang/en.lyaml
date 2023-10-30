@@ -1267,11 +1267,11 @@ en:
         standardErrors:
           errorOccurred: "Error: {{ error }}"
           errorContext: "Context: {{ context }}"
-          systemErrorOccurred: "A system error has occured: {{ errorMessage }}"
-          genericErrorOccured: "A {{ name }} has occurred."
-          unknownErrorOccured: "An unknown error has occured"
+          systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
+          genericErrorOccurred: "A {{ name }} has occurred."
+          unknownErrorOccurred: "An unknown error has occurred"
         fileSystemErrors:
-          errorOccured: "An error occurred while {{ fileAction }} {{ filepath }}."
+          errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
           errorExplanation: "This is the result of a system error: {{ errorMessage }}"
         apiErrors:
           messageDetail: "{{ request }} in account {{ accountId }}"

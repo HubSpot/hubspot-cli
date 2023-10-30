@@ -26,7 +26,7 @@ function debugErrorAndContext(error, context) {
   if (error.name === 'StatusCodeError') {
     const { statusCode, message, response } = error;
     logger.debug(
-      i18n(`${i18nKey}.errorOccured`, {
+      i18n(`${i18nKey}.errorOccurred`, {
         error: {
           statusCode,
           message,
@@ -38,9 +38,9 @@ function debugErrorAndContext(error, context) {
       })
     );
   } else {
-    logger.debug(i18n(`${i18nKey}.errorOccured`, { error }));
+    logger.debug(i18n(`${i18nKey}.errorOccurred`, { error }));
   }
-  logger.debug(i18n(`${i18nKey}.errorContect`, { context }));
+  logger.debug(i18n(`${i18nKey}.errorContext`, { context }));
 }
 
 /**
@@ -51,7 +51,9 @@ function debugErrorAndContext(error, context) {
  * @param {ErrorContext} context
  */
 function logSystemError(error, context) {
-  logger.error(i18n(`${i18nKey}.systemErrorOccured`, { error: error.message }));
+  logger.error(
+    i18n(`${i18nKey}.systemErrorOccurred`, { error: error.message })
+  );
   debugErrorAndContext(error, context);
 }
 
@@ -70,7 +72,7 @@ function logErrorInstance(error, context) {
   if (error instanceof Error || error.message || error.reason) {
     // Error or Error subclass
     const name = error.name || 'Error';
-    const message = [i18n(`${i18nKey}.genericErrorOccured`, { name })];
+    const message = [i18n(`${i18nKey}.genericErrorOccurred`, { name })];
     [(error.message, error.reason)].forEach(msg => {
       if (msg) {
         message.push(msg);
@@ -79,7 +81,7 @@ function logErrorInstance(error, context) {
     logger.error(message.join(' '));
   } else {
     // Unknown errors
-    logger.error(i18n(`${i18nKey}.unknownErrorOccured`));
+    logger.error(i18n(`${i18nKey}.unknownErrorOccurred`));
   }
   debugErrorAndContext(error, context);
 }
