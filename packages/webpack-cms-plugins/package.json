@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/webpack-cms-plugins",
-  "version": "4.2.1-beta.3",
+  "version": "5.0.2",
   "description": "Webpack plugins for using with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
