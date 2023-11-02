@@ -489,7 +489,7 @@
     dotenv "^16.3.1"
     express "^4.18.2"
 
-"@hubspot/cli-lib@^4.1.6", "@hubspot/cli-lib@^4.2.2":
+"@hubspot/cli-lib@^4.1.6":
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-4.2.2.tgz#3c5483d3f38c09c4a84371dd81320a81f52565a0"
   integrity sha512-LVgHk5KfjzCBTz1QubW3GJ/axJ7odQI6xsqfUAsa3s05i8dDaOBdKTp8aNFkdfC3VbCchnvP5ofPThJ0rjxnyw==
@@ -513,11 +513,12 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/cli-lib@^5.0.1":
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-5.0.1.tgz#2f87101fb26007f5ed659320b68a076293c43da4"
-  integrity sha512-Zb7cuy/gBsNDzw7ift3KPAXh1OSMYfw0t+C4HBrPyZpebhY0Zvj28YJZxZz2j8ZzQu+c/XsANQUwkEBu6qDuKw==
+"@hubspot/cli-lib@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-6.0.0.tgz#835c8666a25aed0703a5546a023f4b19469729db"
+  integrity sha512-BNafBv9z0pJAw7p+z7acXtFH3p1godVNPQE28hItxe+YmVFsboAWpAE+ONBfbBOe+PHqE1+MIUw0bIuWVxnepQ==
   dependencies:
+    "@hubspot/local-dev-lib" "0.0.7"
     chalk "^2.4.2"
     chokidar "^3.0.1"
     content-disposition "^0.5.3"
@@ -526,7 +527,7 @@
     findup-sync "^3.0.0"
     fs-extra "^8.1.0"
     ignore "^5.1.4"
-    jest "^26.6.3"
+    jest "^28.1.3"
     js-yaml "^4.1.0"
     moment "^2.24.0"
     p-queue "^6.0.2"
@@ -537,7 +538,7 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/local-dev-lib@^0.0.7":
+"@hubspot/local-dev-lib@0.0.7", "@hubspot/local-dev-lib@^0.0.7":
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.0.7.tgz#039d27dcbac71132dea7dd379b3245a7c5ace1b1"
   integrity sha512-wKWK3aT1yX54Q40ow+IvXUVY7yworav+fjFURSFFkqND2EvlijuCeeGObgx4xfYZRjYa+Sv56Sn6mFKZjdgQSQ==

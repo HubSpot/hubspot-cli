@@ -1,5 +1,5 @@
 const { promptUser } = require('./promptUtils');
-const { getAccountId } = require('@hubspot/cli-lib/lib/config');
+const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { fetchProjects } = require('@hubspot/cli-lib/api/dfs');
 const {
   logApiErrorInstance,

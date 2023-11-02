@@ -7,7 +7,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getAccountId,
   getConfigDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const { PROJECT_CONFIG_FILE } = require('@hubspot/cli-lib/lib/constants');
 const SpinniesManager = require('./SpinniesManager');
 const DevServerManager = require('./DevServerManager');

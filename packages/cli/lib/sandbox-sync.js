@@ -20,7 +20,7 @@ const {
   isMissingScopeError,
 } = require('./errorHandlers/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
-const { getAccountId } = require('@hubspot/cli-lib');
+const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');
 
 const i18nKey = 'cli.lib.sandbox.sync';

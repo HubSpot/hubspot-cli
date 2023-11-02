@@ -18,7 +18,7 @@ const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');

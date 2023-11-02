@@ -13,7 +13,11 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
+const {
+  getConfigAccounts,
+  getAccountConfig,
+  getEnv,
+} = require('@hubspot/local-dev-lib/config');
 const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const {
   getProjectConfig,
@@ -37,7 +41,6 @@ const {
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox } = require('../../lib/sandboxes');
-const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
