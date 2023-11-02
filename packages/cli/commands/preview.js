@@ -36,7 +36,7 @@ exports.command = 'preview <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest, notify, skipUpload, noSsl, port } = options;
+  const { src, dest, notify, skipUpload, noSsl, port, debug } = options;
 
   const accountId = getAccountId(options);
   const absoluteSrc = path.resolve(getCwd(), src);
@@ -53,6 +53,7 @@ exports.handler = async options => {
     skipUpload,
     noSsl,
     port,
+    debug,
   });
 };
 
@@ -64,11 +65,6 @@ exports.builder = yargs => {
   yargs.positional('dest', {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
-  });
-  yargs.option('skipUpload', {
-    alias: 'skip',
-    describe: i18n(`${i18nKey}.options.skipUpload.describe`),
-    type: 'boolean',
   });
   yargs.option('notify', {
     alias: 'n',
@@ -83,6 +79,15 @@ exports.builder = yargs => {
   yargs.option('port', {
     describe: i18n(`${i18nKey}.options.port.describe`),
     type: 'number',
+  });
+  yargs.option('debug', {
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('skipUpload', {
+    alias: 'skip',
+    describe: false,
+    type: 'boolean',
   });
   return yargs;
 };
