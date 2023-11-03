@@ -20,7 +20,7 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 
 const i18nKey = 'cli.lib.sandbox.create';
 

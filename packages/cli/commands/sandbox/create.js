@@ -20,7 +20,7 @@ const {
   syncTypes,
   validateSandboxUsageLimits,
 } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   trackCommandUsage,
