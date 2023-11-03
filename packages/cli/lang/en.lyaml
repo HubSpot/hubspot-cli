@@ -917,6 +917,8 @@ en:
           startError: "Failed to start local dev server: {{ message }}"
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
       projects:
+        config:
+          srcOutsideProjectDir: "Project source directory '{{ srcDir }}' should be contained within '{{ projectDir }}'"
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
