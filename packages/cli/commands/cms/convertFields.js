@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { createIgnoreFilter } = require('@hubspot/cli-lib/ignoreRules');
+const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/cli-lib/lib/walk');
