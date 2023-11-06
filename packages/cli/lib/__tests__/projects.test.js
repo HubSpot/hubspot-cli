@@ -69,9 +69,10 @@ describe('@hubspot/cli/lib/projects', () => {
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringMatching(
-            new RegExp(`.*'..'.*contained within.*'${projectDir}'.*`)
-          )
+          expect.stringContaining('srcDir: ".."')
+        );
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(`within ${projectDir}`)
         );
       });
 
@@ -83,9 +84,10 @@ describe('@hubspot/cli/lib/projects', () => {
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringMatching(
-            new RegExp(`.*'/'.*contained within.*'${projectDir}'.*`)
-          )
+          expect.stringContaining('srcDir: "/"')
+        );
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(`within ${projectDir}`)
         );
       });
 
@@ -96,9 +98,10 @@ describe('@hubspot/cli/lib/projects', () => {
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringMatching(
-            new RegExp(`.*'${srcDir}'.*contained within.*'${projectDir}'.*`)
-          )
+          expect.stringContaining(`srcDir: "${srcDir}"`)
+        );
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining(`within ${projectDir}`)
         );
       });
     });
