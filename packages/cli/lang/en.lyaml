@@ -918,7 +918,7 @@ en:
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
       projects:
         config:
-          srcOutsideProjectDir: "Project source directory '{{ srcDir }}' should be contained within '{{ projectDir }}'"
+          srcOutsideProjectDir: "Invalid line in {{ projectConfig}}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t`srcDir` should be a relative path to a directory within {{ projectDir }}, such as \".\" or \"./src\""
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"

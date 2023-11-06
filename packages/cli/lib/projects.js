@@ -171,10 +171,15 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 
   const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
   if (!resolvedPath.startsWith(projectDir)) {
+    const projectConfigFile = path.relative(
+      '.',
+      path.join(projectDir, PROJECT_CONFIG_FILE)
+    );
     logger.error(
       i18n(`${i18nKey}.config.srcOutsideProjectDir`, {
         srcDir: projectConfig.srcDir,
         projectDir,
+        projectConfig: projectConfigFile,
       })
     );
     return process.exit(EXIT_CODES.ERROR);
