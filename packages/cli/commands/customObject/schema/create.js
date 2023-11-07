@@ -9,7 +9,10 @@ const {
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
-const { getEnv, isConfigFlagEnabled } = require('@hubspot/cli-lib/');
+const {
+  getEnv,
+  isConfigFlagEnabled,
+} = require('@hubspot/local-dev-lib/config');
 const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
 const { createSchema } = require('@hubspot/cli-lib/api/schema');
 const {

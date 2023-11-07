@@ -1,4 +1,4 @@
-const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
+const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -15,8 +15,9 @@ const {
   writeConfig,
   getConfig,
   getConfigPath,
-} = require('@hubspot/cli-lib/lib/config');
-const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+  loadConfig,
+} = require('@hubspot/local-dev-lib/config');
+const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,

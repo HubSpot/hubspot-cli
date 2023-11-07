@@ -18,12 +18,14 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
-const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
+  getConfig,
+  getEnv,
+  getAccountConfig,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');

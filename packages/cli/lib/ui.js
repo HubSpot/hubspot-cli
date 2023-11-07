@@ -1,7 +1,7 @@
 const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
-const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
@@ -106,6 +106,7 @@ const uiFeatureHighlight = (commands, title) => {
       const commandKey = `${i18nKey}.commandKeys.${c}`;
       const message = i18n(`${commandKey}.message`, {
         command: uiCommandReference(i18n(`${commandKey}.command`)),
+        link: uiLink(i18n(`${commandKey}.linkText`), i18n(`${commandKey}.url`)),
       });
       if (i !== 0) {
         logger.log('');

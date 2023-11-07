@@ -1,19 +1,18 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  getAccountConfig,
-  loadConfigFromEnvironment,
-  Mode,
-  loadConfig,
-  getConfigPath,
-  validateConfig,
-  checkAndWarnGitInclusion,
-} = require('@hubspot/cli-lib');
+const { Mode, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cli-lib/lib/constants');
-const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
+const {
+  loadConfig,
+  getConfigPath,
+  validateConfig,
+  getAccountConfig,
+  loadConfigFromEnvironment,
+} = require('@hubspot/local-dev-lib/config');
 const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {

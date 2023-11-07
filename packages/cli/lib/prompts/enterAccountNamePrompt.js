@@ -1,4 +1,4 @@
-const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');

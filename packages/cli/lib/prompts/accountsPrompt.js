@@ -1,4 +1,4 @@
-const { updateDefaultAccount } = require('@hubspot/cli-lib/lib/config');
+const { updateDefaultAccount } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { getAccountName } = require('../sandboxes');

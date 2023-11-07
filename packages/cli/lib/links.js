@@ -1,4 +1,4 @@
-const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');

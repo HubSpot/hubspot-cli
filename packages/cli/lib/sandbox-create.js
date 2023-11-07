@@ -18,7 +18,7 @@ const {
   isSpecifiedError,
 } = require('./errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const { getEnv, getAccountId } = require('@hubspot/cli-lib');
+const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
 

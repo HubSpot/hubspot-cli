@@ -1,11 +1,10 @@
 const Logger = require('@hubspot/cli-lib/logger');
+const { DEFAULT_MODE, Mode } = require('@hubspot/cli-lib');
 const {
   getAccountId: getAccountIdFromConfig,
   getAccountConfig,
   getAndLoadConfigIfNeeded,
-  DEFAULT_MODE,
-  Mode,
-} = require('@hubspot/cli-lib');
+} = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 
 const i18nKey = 'cli.lib.commonOpts';

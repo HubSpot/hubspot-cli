@@ -5,7 +5,7 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');

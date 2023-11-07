@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { renameAccount } = require('@hubspot/cli-lib/lib/config');
+const { renameAccount } = require('@hubspot/local-dev-lib/config');
 
 const {
   addConfigOptions,
