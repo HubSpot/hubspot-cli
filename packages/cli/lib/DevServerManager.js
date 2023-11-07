@@ -122,8 +122,10 @@ class DevServerManager {
         }
       });
 
-      if (!portManagerHasActiveServers()) {
-        stopPortManagerServer();
+      const hasActiveServers = await portManagerHasActiveServers();
+
+      if (!hasActiveServers) {
+        await stopPortManagerServer();
       }
     }
   }
