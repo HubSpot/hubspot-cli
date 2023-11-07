@@ -25,6 +25,7 @@ const {
   handleProjectUpload,
   pollProjectBuildAndDeploy,
   showPlatformVersionWarning,
+  validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
@@ -86,6 +87,8 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  validateProjectConfig(projectConfig, projectDir);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;

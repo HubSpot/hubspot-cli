@@ -159,21 +159,36 @@ const validateProjectConfig = (projectConfig, projectDir) => {
     logger.error(
       `Project config not found. Try running 'hs project create' first.`
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
       'Project config is missing required fields. Try running `hs project create`.'
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
+  const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
+  if (!resolvedPath.startsWith(projectDir)) {
+    const projectConfigFile = path.relative(
+      '.',
+      path.join(projectDir, PROJECT_CONFIG_FILE)
+    );
+    logger.error(
+      i18n(`${i18nKey}.config.srcOutsideProjectDir`, {
+        srcDir: projectConfig.srcDir,
+        projectConfig: projectConfigFile,
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!fs.existsSync(resolvedPath)) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 };
 
