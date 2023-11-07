@@ -178,7 +178,6 @@ const validateProjectConfig = (projectConfig, projectDir) => {
     logger.error(
       i18n(`${i18nKey}.config.srcOutsideProjectDir`, {
         srcDir: projectConfig.srcDir,
-        projectDir,
         projectConfig: projectConfigFile,
       })
     );

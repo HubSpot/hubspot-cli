@@ -71,9 +71,6 @@ describe('@hubspot/cli/lib/projects', () => {
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: ".."')
         );
-        expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringContaining(`within ${projectDir}`)
-        );
       });
 
       it('for root directory', () => {
@@ -86,9 +83,6 @@ describe('@hubspot/cli/lib/projects', () => {
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: "/"')
         );
-        expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringContaining(`within ${projectDir}`)
-        );
       });
 
       it('for complicated directory', () => {
@@ -99,9 +93,6 @@ describe('@hubspot/cli/lib/projects', () => {
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
         expect(errorSpy).toHaveBeenCalledWith(
           expect.stringContaining(`srcDir: "${srcDir}"`)
-        );
-        expect(errorSpy).toHaveBeenCalledWith(
-          expect.stringContaining(`within ${projectDir}`)
         );
       });
     });
