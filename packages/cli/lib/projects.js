@@ -29,7 +29,7 @@ const {
   fetchProject,
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');

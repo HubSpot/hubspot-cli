@@ -34,7 +34,7 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const { getAccountName } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 

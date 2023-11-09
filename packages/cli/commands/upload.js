@@ -15,7 +15,7 @@ const {
 } = require('../lib/errorHandlers/apiErrors');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 
 const {
   addConfigOptions,

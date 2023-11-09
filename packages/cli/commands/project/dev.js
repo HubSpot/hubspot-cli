@@ -48,7 +48,7 @@ const {
   DEVELOPER_SANDBOX,
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
