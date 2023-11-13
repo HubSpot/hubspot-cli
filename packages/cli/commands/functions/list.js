@@ -8,7 +8,7 @@ const { getFunctionArrays } = require('../../lib/getFunctionArrays');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/loggingUtils/table');
 
 const {
   addConfigOptions,
