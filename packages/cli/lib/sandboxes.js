@@ -11,7 +11,7 @@ const {
   fetchTaskStatus,
   fetchTypes,
   getSandboxUsageLimits,
-} = require('@hubspot/cli-lib/sandboxes');
+} = require('@hubspot/local-dev-lib/sandboxes');
 const {
   accountNameExistsInConfig,
   getConfig,

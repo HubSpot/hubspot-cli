@@ -3,7 +3,7 @@ const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
 const { isSandbox, getAccountName } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { getSandboxUsageLimits } = require('@hubspot/cli-lib/sandboxes');
+const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';

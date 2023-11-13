@@ -10,7 +10,7 @@ const {
   sandboxTypeMap,
   syncTypes,
 } = require('./sandboxes');
-const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
+const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
 const {
   debugErrorAndContext,
   logErrorInstance,

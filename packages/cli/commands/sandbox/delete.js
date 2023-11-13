@@ -16,7 +16,7 @@ const {
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
 } = require('../../lib/errorHandlers/apiErrors');
-const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
+const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
