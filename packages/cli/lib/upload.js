@@ -1,5 +1,5 @@
 const path = require('path');
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { fieldsJsPrompt } = require('../lib/prompts/cmsFieldPrompt');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');

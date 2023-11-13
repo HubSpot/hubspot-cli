@@ -3,7 +3,7 @@ const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
 const { i18n } = require('../../lib/lang');
 const {

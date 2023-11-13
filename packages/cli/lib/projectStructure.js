@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const COMPONENT_TYPES = Object.freeze({
