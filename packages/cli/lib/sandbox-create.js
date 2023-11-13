@@ -17,7 +17,7 @@ const {
   isMissingScopeError,
   isSpecifiedError,
 } = require('./errorHandlers/apiErrors');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');

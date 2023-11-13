@@ -6,7 +6,7 @@ const chalk = require('chalk');
 const findup = require('findup-sync');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   ENVIRONMENTS,
   FEEDBACK_INTERVAL,

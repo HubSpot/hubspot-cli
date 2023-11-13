@@ -31,7 +31,7 @@ const {
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getAccountName } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');

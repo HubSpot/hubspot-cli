@@ -4,7 +4,7 @@ const {
   DEFAULT_OAUTH_SCOPES,
 } = require('@hubspot/cli-lib/lib/constants');
 const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { promptUser } = require('./promptUtils');
 const { accountNamePrompt } = require('./enterAccountNamePrompt');

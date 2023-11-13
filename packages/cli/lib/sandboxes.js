@@ -21,7 +21,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');

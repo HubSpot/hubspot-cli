@@ -57,7 +57,7 @@ const {
 
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
   ApiErrorContext,
