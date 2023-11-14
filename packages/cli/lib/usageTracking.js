@@ -1,4 +1,4 @@
-const { trackUsage } = require('@hubspot/local-dev-lib/trackUsage');
+const { trackUsage } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   isTrackingAllowed,
   getAccountConfig,
