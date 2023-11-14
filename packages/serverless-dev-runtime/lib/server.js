@@ -6,7 +6,7 @@ const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/local-dev-lib/loggingUtils/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 
 const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');

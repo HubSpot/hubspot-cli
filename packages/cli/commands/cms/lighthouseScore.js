@@ -9,7 +9,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/local-dev-lib/loggingUtils/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');

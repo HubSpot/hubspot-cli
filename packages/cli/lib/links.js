@@ -5,7 +5,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/local-dev-lib/loggingUtils/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 
 const open = require('open');
 
