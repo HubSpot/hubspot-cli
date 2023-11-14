@@ -1,5 +1,8 @@
 const readline = require('readline');
 const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
+const { i18n } = require('./lang');
+
+const i18nKey = 'cli.lib.process';
 
 const handleExit = callback => {
   const terminationSignals = [
@@ -20,14 +23,14 @@ const handleExit = callback => {
       // Prevent duplicate exit handling
       if (!exitInProgress) {
         exitInProgress = true;
-        const isSIGHUP = 'SIGHUP';
+        const isSIGHUP = signal === 'SIGHUP';
 
         // Prevent logs when terminal closes
         if (isSIGHUP) {
           setLogLevel(LOG_LEVEL.NONE);
         }
 
-        logger.debug(`Attempting to gracefully exit. Triggered by ${signal}`);
+        logger.debug(i18n(`${i18nKey}.exitDebug`, { signal }));
         await callback({ isSIGHUP });
       }
     });
