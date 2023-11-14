@@ -338,7 +338,7 @@ exports.handler = async options => {
 
   await LocalDev.start();
 
-  handleExit(() => LocalDev.stop());
+  handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
 };
 
 exports.builder = yargs => {

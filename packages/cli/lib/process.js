@@ -4,12 +4,12 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const handleExit = callback => {
   const terminationSignals = [
     'beforeExit',
-    'SIGINT',
-    'SIGUSR1',
-    'SIGUSR2',
+    'SIGINT', // Terminal trying to interrupt (Ctrl + C)
+    'SIGUSR1', // Start Debugger User-defined signal 1
+    'SIGUSR2', // User-defined signal 2
     'uncaughtException',
-    'SIGTERM',
-    'SIGHUP',
+    'SIGTERM', // Represents a graceful termination
+    'SIGHUP', // Parent terminal has been closed
   ];
   let exitInProgress = false;
 
@@ -21,7 +21,7 @@ const handleExit = callback => {
       // Prevent duplicate exit handling
       if (!exitInProgress) {
         exitInProgress = true;
-        await callback();
+        await callback({ isSIGHUP: signal === 'SIGHUP' });
       }
     });
   });
