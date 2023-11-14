@@ -1,4 +1,5 @@
 const readline = require('readline');
+const { logger } = require('@hubspot/cli-lib/logger');
 
 const handleExit = callback => {
   const terminationSignals = [
@@ -10,11 +11,18 @@ const handleExit = callback => {
     'SIGTERM',
     'SIGHUP',
   ];
+  let exitInProgress = false;
+
   terminationSignals.forEach(signal => {
     process.removeAllListeners(signal);
 
     process.on(signal, async () => {
-      await callback();
+      logger.debug(`Attempting to gracefully exit. Triggered by ${signal}`);
+      // Prevent duplicate exit handling
+      if (!exitInProgress) {
+        exitInProgress = true;
+        await callback();
+      }
     });
   });
 };
