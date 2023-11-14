@@ -17,7 +17,6 @@ const handleExit = callback => {
     process.removeAllListeners(signal);
 
     process.on(signal, async () => {
-      logger.debug(`Attempting to gracefully exit. Triggered by ${signal}`);
       // Prevent duplicate exit handling
       if (!exitInProgress) {
         exitInProgress = true;
@@ -28,6 +27,7 @@ const handleExit = callback => {
           setLogLevel(LOG_LEVEL.NONE);
         }
 
+        logger.debug(`Attempting to gracefully exit. Triggered by ${signal}`);
         await callback({ isSIGHUP });
       }
     });
