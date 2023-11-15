@@ -849,8 +849,10 @@ en:
         options:
           notify:
             describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-          initialUpload:
-            describe: "Upload directory before watching for updates"
+          noSsl:
+            describe: "Disable HTTPS"
+          port:
+            describe: "The port on which to start the local server"
       convertFields:
         describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
