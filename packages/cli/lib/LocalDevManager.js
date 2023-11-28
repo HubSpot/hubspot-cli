@@ -141,25 +141,30 @@ class LocalDevManager {
     this.compareLocalProjectToDeployed(runnableComponents);
   }
 
-  async stop() {
-    SpinniesManager.add('cleanupMessage', {
-      text: i18n(`${i18nKey}.exitingStart`),
-    });
-
+  async stop(showProgress = true) {
+    if (showProgress) {
+      SpinniesManager.add('cleanupMessage', {
+        text: i18n(`${i18nKey}.exitingStart`),
+      });
+    }
     await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
 
     if (!cleanupSucceeded) {
-      SpinniesManager.fail('cleanupMessage', {
-        text: i18n(`${i18nKey}.exitingFail`),
-      });
+      if (showProgress) {
+        SpinniesManager.fail('cleanupMessage', {
+          text: i18n(`${i18nKey}.exitingFail`),
+        });
+      }
       process.exit(EXIT_CODES.ERROR);
     }
 
-    SpinniesManager.succeed('cleanupMessage', {
-      text: i18n(`${i18nKey}.exitingSucceed`),
-    });
+    if (showProgress) {
+      SpinniesManager.succeed('cleanupMessage', {
+        text: i18n(`${i18nKey}.exitingSucceed`),
+      });
+    }
     process.exit(EXIT_CODES.SUCCESS);
   }
 
