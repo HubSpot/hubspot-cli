@@ -8,7 +8,9 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
-const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');
+const {
+  checkAndAddConfigToGitignore,
+} = require('@hubspot/local-dev-lib/gitignore');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
@@ -117,7 +119,7 @@ exports.handler = async options => {
     );
     const configPath = getConfigPath();
 
-    checkAndUpdateGitignore(configPath);
+    checkAndAddConfigToGitignore(configPath);
 
     logger.log('');
     logger.success(
