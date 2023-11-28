@@ -885,6 +885,8 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      process:
+        exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
         notInitialized: "The Dev Server Manager must be initialized before it is started."
