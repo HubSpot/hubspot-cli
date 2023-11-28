@@ -73,7 +73,7 @@ function logErrorInstance(error, context) {
     // Error or Error subclass
     const name = error.name || 'Error';
     const message = [i18n(`${i18nKey}.genericErrorOccurred`, { name })];
-    [(error.message, error.reason)].forEach(msg => {
+    [error.message, error.reason].forEach(msg => {
       if (msg) {
         message.push(msg);
       }
