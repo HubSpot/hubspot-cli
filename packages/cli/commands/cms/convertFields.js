@@ -3,7 +3,7 @@ const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
 const { i18n } = require('../../lib/lang');
 const {
@@ -12,6 +12,7 @@ const {
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const i18nKey = 'cli.commands.convertFields';
 
 exports.command = 'convert-fields';
@@ -54,7 +55,12 @@ exports.handler = async options => {
     if (fieldsJs.rejected) return;
     fieldsJs.saveOutput();
   } else if (stats.isDirectory()) {
-    const filePaths = await walk(src);
+    let filePaths = [];
+    try {
+      filePaths = await walk(src);
+    } catch (e) {
+      logErrorInstance(e);
+    }
     const allowedFilePaths = filePaths
       .filter(file => {
         if (!isAllowedExtension(file)) {

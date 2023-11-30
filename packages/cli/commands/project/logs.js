@@ -1,5 +1,5 @@
 const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,
@@ -17,7 +17,7 @@ const {
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 // const {
 //   getProjectAppFunctionLogs,
 //   getLatestProjectAppFunctionLog,

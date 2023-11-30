@@ -15,7 +15,7 @@ const {
 } = require('../../lib/commonOpts');
 const { getAccountName } = require('../../lib/sandboxes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getTableContents } = require('@hubspot/cli-lib/lib/table');
+const { getTableContents } = require('@hubspot/local-dev-lib/logging/table');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {

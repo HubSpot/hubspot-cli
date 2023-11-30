@@ -1,16 +1,22 @@
 const path = require('path');
-const { walk } = require('@hubspot/cli-lib/lib/walk');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { fieldsJsPrompt } = require('../lib/prompts/cmsFieldPrompt');
 const { isAllowedExtension } = require('@hubspot/cli-lib/path');
 const { isConvertableFieldJs } = require('@hubspot/cli-lib/lib/handleFieldsJs');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.
  * If convertFields is true then will check for any JS fields conflicts (i.e., JS fields file and fields.json file) and prompt to resolve
  */
 const getUploadableFileList = async (src, convertFields) => {
-  const filePaths = await walk(src);
+  let filePaths = [];
+  try {
+    filePaths = await walk(src);
+  } catch (e) {
+    logErrorInstance(e);
+  }
   const allowedFiles = filePaths
     .filter(file => {
       if (!isAllowedExtension(file)) {

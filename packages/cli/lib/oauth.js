@@ -4,7 +4,7 @@ const OAuth2Manager = require('@hubspot/cli-lib/lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { addOauthToAccountConfig } = require('@hubspot/cli-lib/oauth');
 const { handleExit } = require('./process');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
