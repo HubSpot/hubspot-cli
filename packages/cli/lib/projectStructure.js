@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const COMPONENT_TYPES = Object.freeze({
   app: 'app',
@@ -73,8 +74,13 @@ function getIsLegacyApp(appConfig, appPath) {
 
 async function findProjectComponents(projectSourceDir) {
   const components = [];
+  let projectFiles = [];
 
-  const projectFiles = await walk(projectSourceDir);
+  try {
+    projectFiles = await walk(projectSourceDir);
+  } catch (e) {
+    logErrorInstance(e);
+  }
 
   projectFiles.forEach(projectFile => {
     // Find app components

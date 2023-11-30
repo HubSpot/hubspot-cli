@@ -12,6 +12,7 @@ const {
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 const i18nKey = 'cli.commands.convertFields';
 
 exports.command = 'convert-fields';
@@ -54,7 +55,12 @@ exports.handler = async options => {
     if (fieldsJs.rejected) return;
     fieldsJs.saveOutput();
   } else if (stats.isDirectory()) {
-    const filePaths = await walk(src);
+    let filePaths = [];
+    try {
+      filePaths = await walk(src);
+    } catch (e) {
+      logErrorInstance(e);
+    }
     const allowedFilePaths = filePaths
       .filter(file => {
         if (!isAllowedExtension(file)) {
