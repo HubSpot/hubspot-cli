@@ -11,7 +11,10 @@ const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
 } = require('@hubspot/local-dev-lib/gitignore');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const {
+  logErrorInstance,
+  debugErrorAndContext,
+} = require('../lib/errorHandlers/standardErrors');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -119,7 +122,11 @@ exports.handler = async options => {
     );
     const configPath = getConfigPath();
 
-    checkAndAddConfigToGitignore(configPath);
+    try {
+      checkAndAddConfigToGitignore(configPath);
+    } catch (e) {
+      debugErrorAndContext(e);
+    }
 
     logger.log('');
     logger.success(

@@ -30,8 +30,8 @@ const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const archiveLogCallbacks = buildLogCallbacks({
-  init: 'Extracting project source...',
-  copy: 'Copying project source...',
+  init: `${i18nKey}.archiveLogCallbacks.init`,
+  copy: `${i18nKey}.archiveLogCallbacks.copy`,
 });
 
 exports.command = 'download [--project]';

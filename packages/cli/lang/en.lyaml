@@ -631,6 +631,9 @@ en:
                 describe: "The name of the project to download"
               dest:
                 describe: "Destination folder for the project"
+            archiveLogCallbacks:
+              init: "Extracting project source..."
+              copy: "Copying project source..."
           open:
             describe: "Open the specified project's details page in the browser"
             options:
