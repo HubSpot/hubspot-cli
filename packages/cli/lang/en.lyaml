@@ -631,6 +631,9 @@ en:
                 describe: "The name of the project to download"
               dest:
                 describe: "Destination folder for the project"
+            archiveLogCallbacks:
+              init: "Extracting project source..."
+              copy: "Copying project source..."
           open:
             describe: "Open the specified project's details page in the browser"
             options:
@@ -1271,6 +1274,7 @@ en:
         standardErrors:
           errorOccurred: "Error: {{ error }}"
           errorContext: "Context: {{ context }}"
+          errorCause: "Cause: {{ cause }}"
           systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
           genericErrorOccurred: "A {{ name }} has occurred."
           unknownErrorOccurred: "An unknown error has occurred"

@@ -1,3 +1,4 @@
+const util = require('util');
 const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('../lang');
@@ -40,7 +41,18 @@ function debugErrorAndContext(error, context) {
   } else {
     logger.debug(i18n(`${i18nKey}.errorOccurred`, { error }));
   }
-  logger.debug(i18n(`${i18nKey}.errorContext`, { context }));
+  if (error.cause) {
+    logger.debug(
+      i18n(`${i18nKey}.errorCause`, {
+        cause: util.inspect(error.cause, false, null, true),
+      })
+    );
+  }
+  logger.debug(
+    i18n(`${i18nKey}.errorContext`, {
+      context: util.inspect(context, false, null, true),
+    })
+  );
 }
 
 /**

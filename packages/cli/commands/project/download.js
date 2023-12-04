@@ -12,7 +12,7 @@ const {
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { extractZipArchive } = require('@hubspot/cli-lib/archive');
+const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const {
   downloadProject,
   fetchProjectBuilds,
@@ -24,9 +24,15 @@ const {
 } = require('../../lib/prompts/downloadProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
+const { buildLogCallbacks } = require('../../lib/logCallbacks');
 
 const i18nKey = 'cli.commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+
+const archiveLogCallbacks = buildLogCallbacks({
+  init: `${i18nKey}.archiveLogCallbacks.init`,
+  copy: `${i18nKey}.archiveLogCallbacks.copy`,
+});
 
 exports.command = 'download [--project]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -93,7 +99,8 @@ exports.handler = async options => {
       zippedProject,
       projectName,
       path.resolve(absoluteDestPath),
-      { includesRootDir: false }
+      { includesRootDir: false },
+      archiveLogCallbacks
     );
 
     logger.log(
