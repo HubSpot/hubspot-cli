@@ -27,5 +27,6 @@ const listSchemas = async accountId => {
 };
 
 module.exports = {
+  logSchemas,
   listSchemas,
 };
