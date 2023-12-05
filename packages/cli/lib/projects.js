@@ -30,7 +30,7 @@ const {
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');

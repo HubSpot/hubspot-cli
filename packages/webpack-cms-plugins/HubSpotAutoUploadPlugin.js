@@ -6,7 +6,7 @@ const {
   getAccountId,
 } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { isAllowedExtension } = require('@hubspot/cli-lib/path');
+const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const {
   LOG_LEVEL,
   setLogLevel,

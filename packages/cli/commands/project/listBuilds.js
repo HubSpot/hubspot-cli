@@ -21,7 +21,7 @@ const {
   getTableContents,
   getTableHeader,
 } = require('@hubspot/local-dev-lib/logging/table');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {

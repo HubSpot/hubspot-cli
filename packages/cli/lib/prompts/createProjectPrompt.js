@@ -1,5 +1,5 @@
 const path = require('path');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const {
   PROJECT_COMPONENT_TYPES,
   PROJECT_PROPERTIES,

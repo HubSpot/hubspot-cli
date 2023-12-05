@@ -7,7 +7,7 @@ const {
   getCwd,
   convertToUnixPath,
   isAllowedExtension,
-} = require('@hubspot/cli-lib/path');
+} = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   ApiErrorContext,

@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
-const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
+const { isAllowedExtension, getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/themes');
