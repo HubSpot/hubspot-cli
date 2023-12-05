@@ -33,7 +33,7 @@ const { getUploadableFileList } = require('../lib/upload');
 const {
   getThemePreviewUrl,
   getThemeJSONPath,
-} = require('@hubspot/cli-lib/lib/files');
+} = require('@hubspot/local-dev-lib/themes');
 const { i18n } = require('../lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
