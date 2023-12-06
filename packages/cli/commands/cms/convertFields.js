@@ -4,7 +4,7 @@ const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { isAllowedExtension, getCwd } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { walk } = require('@hubspot/local-dev-lib/fs');
-const { getThemeJSONPath } = require('@hubspot/cli-lib/lib/files');
+const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
 const { i18n } = require('../../lib/lang');
 const {
   FieldsJs,
