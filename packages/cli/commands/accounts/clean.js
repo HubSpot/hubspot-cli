@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
@@ -21,6 +21,7 @@ const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
 } = require('../../lib/errorHandlers/apiErrors');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 
@@ -69,6 +70,8 @@ exports.handler = async options => {
         })
       ) {
         accountsToRemove.push(account);
+      } else {
+        logErrorInstance(error);
       }
     }
   }

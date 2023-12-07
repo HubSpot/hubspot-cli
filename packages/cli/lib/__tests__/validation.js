@@ -2,7 +2,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 
 const { getAccountId } = require('../commonOpts');
 const { validateAccount } = require('../validation');
