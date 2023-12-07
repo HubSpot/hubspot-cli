@@ -25,7 +25,7 @@ const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
@@ -51,14 +51,22 @@ const TRACKING_STATUS = {
 };
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
-  const configData = await personalAccessKeyPrompt({ env, account });
+  const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
   const { name } = await enterAccountNamePrompt();
-  const accountConfig = {
-    ...configData,
-    name,
-  };
 
-  return updateConfigWithPersonalAccessKey(accountConfig, true);
+  let updatedConfig;
+
+  try {
+    updatedConfig = updateConfigWithPersonalAccessKey(
+      personalAccessKey,
+      env,
+      name,
+      true
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+  return updatedConfig;
 };
 
 const oauthConfigCreationFlow = async env => {

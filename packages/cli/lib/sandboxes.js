@@ -4,7 +4,7 @@ const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const {
@@ -25,6 +25,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -234,14 +235,26 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
  * @returns {String} validName saved into config
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
-  let configData = { env, personalAccessKey: result.personalAccessKey };
-  if (!result.personalAccessKey) {
-    configData = await personalAccessKeyPrompt({
+  let personalAccessKey = result.personalAccessKey;
+  if (personalAccessKey) {
+    const configData = await personalAccessKeyPrompt({
       env,
       account: result.sandbox.sandboxHubId,
     });
+    personalAccessKey = configData.personalAccessKey;
   }
-  const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+  let updatedConfig;
+
+  try {
+    updatedConfig = await updateConfigWithPersonalAccessKey(
+      personalAccessKey,
+      env
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+
   if (!updatedConfig) {
     throw new Error('Failed to update config with personal access key.');
   }
