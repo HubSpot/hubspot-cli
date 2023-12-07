@@ -11,7 +11,7 @@ jest.mock('@hubspot/cli-lib');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/cli-lib/logger');
 jest.mock('@hubspot/cli-lib/oauth');
-jest.mock('@hubspot/cli-lib/personalAccessKey');
+jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
 describe('validation', () => {
