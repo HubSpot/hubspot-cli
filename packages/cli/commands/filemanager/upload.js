@@ -3,7 +3,7 @@ const path = require('path');
 
 const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
 const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
-const { getCwd, convertToUnixPath } = require('@hubspot/cli-lib/path');
+const { getCwd, convertToUnixPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   ApiErrorContext,

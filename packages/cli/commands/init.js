@@ -26,7 +26,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');

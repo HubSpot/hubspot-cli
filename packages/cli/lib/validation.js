@@ -13,12 +13,12 @@ const {
   getAccountConfig,
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
-const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/cli-lib/personalAccessKey');
-const { getCwd, getExt } = require('@hubspot/cli-lib/path');
+const { getCwd, getExt } = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');

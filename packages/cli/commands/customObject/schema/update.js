@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
 } = require('../../../lib/errorHandlers/standardErrors');
-const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   isFileValidJSON,
   loadAndValidateOptions,

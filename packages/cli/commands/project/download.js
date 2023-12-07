@@ -6,7 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const {
   logApiErrorInstance,
   ApiErrorContext,
