@@ -954,6 +954,7 @@ en:
         showPlatformVersionWarning:
           noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
           noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
+          deprecatedVersion: "Projects with platformVersion 2023.1 or unspecified versions will no longer be supported on"
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:

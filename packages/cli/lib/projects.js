@@ -889,6 +889,12 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
       logger.log('');
       logger.debug(e.error);
     }
+  } else if (platformVersion === '2023.1') {
+    logger.log('');
+    logger.warn(
+      i18n(`${i18nKey}.showPlatformVersionWarning.deprecatedVersion`)
+    );
+    logger.log('');
   }
 };
 
