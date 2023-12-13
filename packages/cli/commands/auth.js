@@ -40,7 +40,6 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -99,14 +98,10 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env, account });
 
-      try {
-        updatedConfig = await updateConfigWithPersonalAccessKey(
-          configData.personalAccesskey,
-          env
-        );
-      } catch (e) {
-        logErrorInstance(e);
-      }
+      updatedConfig = await updateConfigWithPersonalAccessKey(
+        configData.personalAccessKey,
+        env
+      );
 
       if (!updatedConfig) {
         break;

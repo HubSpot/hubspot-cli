@@ -20,8 +20,7 @@ const SpinniesManager = require('../../lib/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
-} = require('../../lib/errorHandlers/apiErrors');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 
@@ -59,19 +58,17 @@ exports.handler = async options => {
     } catch (error) {
       if (
         isSpecifiedHubSpotAuthError(error, {
-          statusCode: 401,
+          status: 401,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
         }) ||
         isSpecifiedHubSpotAuthError(error, {
-          statusCode: 404,
+          status: 404,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
         })
       ) {
         accountsToRemove.push(account);
-      } else {
-        logErrorInstance(error);
       }
     }
   }
