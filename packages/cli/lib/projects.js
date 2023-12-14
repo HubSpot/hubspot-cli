@@ -872,7 +872,7 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
   const platformVersion = projectConfig.platformVersion;
   const docsLink = uiLink(
     i18n(`${i18nKey}.showPlatformVersionWarning.docsLink`),
-    'https://developers.hubspot.com/docs/platform/developer-projects-setup'
+    'https://developers.hubspot.com/docs/platform/platform-versioning'
   );
 
   if (!platformVersion) {
