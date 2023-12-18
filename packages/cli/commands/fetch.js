@@ -1,4 +1,4 @@
-const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileMapper');
+const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const {
@@ -41,13 +41,7 @@ exports.handler = async options => {
   trackCommandUsage('fetch', { mode }, accountId);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder({
-    accountId,
-    src,
-    dest: resolveLocalPath(dest),
-    mode,
-    options,
-  });
+  downloadFileOrFolder(accountId, src, resolveLocalPath(dest), mode, options);
 };
 
 exports.builder = yargs => {
