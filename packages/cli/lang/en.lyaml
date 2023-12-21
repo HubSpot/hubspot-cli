@@ -1080,6 +1080,7 @@ en:
           selectTemplate: "Select the type of template to create"
         createModulePrompt:
           enterLabel: "What should the module label be?"
+          selectReactType: "Is this a React module?"
           selectContentType: "What types of content will this module be used in?"
           confirmGlobal: "Is this a global module?"
           errors:

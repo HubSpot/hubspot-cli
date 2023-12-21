@@ -1,7 +1,7 @@
 const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('../../lib/lang');
-const { createModule } = require('@hubspot/cli-lib/modules');
+const { createModule, createReactModule } = require('@hubspot/cli-lib/modules');
 
 const i18nKey = 'cli.commands.create.subcommands.module';
 
@@ -15,8 +15,16 @@ module.exports = {
 
     return true;
   },
-  execute: async ({ name, dest }) => {
+  execute: async ({ name, dest, getInternalVersion }) => {
     const moduleDefinition = await createModulePrompt();
-    await createModule(moduleDefinition, name, dest);
+
+    moduleDefinition.reactType
+      ? await createReactModule(
+          moduleDefinition,
+          name,
+          dest,
+          getInternalVersion
+        )
+      : await createModule(moduleDefinition, name, dest);
   },
 };

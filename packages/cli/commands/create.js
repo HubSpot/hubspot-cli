@@ -39,13 +39,13 @@ const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
-exports.command = 'create <type> [name] [dest]';
+exports.command = 'create <type> [name] [dest] [--internal]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedAssetTypes: SUPPORTED_ASSET_TYPES,
 });
 
 exports.handler = async options => {
-  let { type: assetType, name, dest } = options;
+  let { type: assetType, name, dest, internal: getInternalVersion } = options;
 
   setLogLevel(options);
   logDebugInfo(options);
@@ -73,7 +73,7 @@ exports.handler = async options => {
   }
 
   const asset = assets[assetType];
-  const argsToPass = { assetType, name, dest, options };
+  const argsToPass = { assetType, name, dest, getInternalVersion, options };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
   trackCommandUsage('create', { assetType }, getAccountId(options));
@@ -110,6 +110,10 @@ exports.builder = yargs => {
   yargs.positional('dest', {
     describe: i18n(`${i18nKey}.positionals.dest.describe`),
     type: 'string',
+  });
+  yargs.option('internal', {
+    describe: 'Internal HubSpot version of creation command',
+    type: 'boolean',
   });
 
   return yargs;
