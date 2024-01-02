@@ -30,6 +30,7 @@
     "table": "^6.6.0",
     "tmp": "^0.2.1",
     "update-notifier": "^5.1.0",
+    "vite": "^4.4.9",
     "yargs": "15.4.1"
   },
   "devDependencies": {
