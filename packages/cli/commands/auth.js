@@ -9,7 +9,7 @@ const {
 const { i18n } = require('../lib/lang');
 const {
   updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const {
   updateAccountConfig,
   writeConfig,
@@ -97,7 +97,11 @@ exports.handler = async options => {
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env, account });
-      updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+      updatedConfig = await updateConfigWithPersonalAccessKey(
+        configData.personalAccessKey,
+        env
+      );
 
       if (!updatedConfig) {
         break;

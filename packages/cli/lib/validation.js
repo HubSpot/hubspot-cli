@@ -17,13 +17,14 @@ const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { getOauthManager } = require('@hubspot/cli-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { getCwd, getExt } = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
 const { EXIT_CODES } = require('./enums/exitCodes');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {
   setLogLevel(options);
@@ -151,7 +152,7 @@ async function validateAccount(options) {
         return false;
       }
     } catch (e) {
-      logger.error(e.message);
+      logErrorInstance(e);
       return false;
     }
   } else if (!apiKey) {
