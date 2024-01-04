@@ -560,10 +560,10 @@
     table "^6.8.1"
     unixify "^1.0.0"
 
-"@hubspot/ui-extensions-dev-server@0.8.4":
-  version "0.8.4"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.4.tgz#dec121f44507cb8f6fa9db287a2a7bc229b10673"
-  integrity sha512-uEadYEqdUgyPXs5uwVBB5IVA+2FrGachCAc6+voOp+uV0DgdbYMX+TssCkIHyqL9mf3ieVm2KAhjIhN0sr1x/Q==
+"@hubspot/ui-extensions-dev-server@0.8.6":
+  version "0.8.6"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.6.tgz#d526eb752df647eebcda60e383f376338125e953"
+  integrity sha512-L8KTFc9dBnlhupLJlmirfg6ZyxhU5yew86VhuQUMtootDrHqSvIAGbJeKoWndYMIFINSNntlryTkYaIPsGiQ2g==
   dependencies:
     "@hubspot/app-functions-dev-server" "^0.8.3"
     "@hubspot/cli-lib" "^4.1.6"
