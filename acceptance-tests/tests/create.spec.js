@@ -59,7 +59,7 @@ describe('hs create', () => {
   it('creates a module', async () => {
     await cli.execute(
       ['create', 'module', FOLDERS.module.name],
-      ['label', ENTER, ENTER, 'y', ENTER]
+      ['label', ENTER, ENTER, ENTER]
     );
 
     expect(existsSync(FOLDERS.module.folder)).toBe(true);
