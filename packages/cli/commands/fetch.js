@@ -17,6 +17,15 @@ const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { buildLogCallbacks } = require('../lib/logCallbacks');
+
+const fileMapperLogCallbacks = buildLogCallbacks({
+  skippedExisting: `${i18nKey}.fileMapperLogCallbacks.skippedExisting`,
+  wroteFolder: `${i18nKey}.fileMapperLogCallbacks.wroteFolder`,
+  completedFetch: `${i18nKey}.fileMapperLogCallbacks.completedFetch`,
+  folderFetch: `${i18nKey}.fileMapperLogCallbacks.folderFetch`,
+  completedFolderFetch: `${i18nKey}.fileMapperLogCallbacks.completedFolderFetch`,
+});
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -41,7 +50,14 @@ exports.handler = async options => {
   trackCommandUsage('fetch', { mode }, accountId);
 
   // Fetch and write file/folder.
-  downloadFileOrFolder(accountId, src, resolveLocalPath(dest), mode, options);
+  downloadFileOrFolder(
+    accountId,
+    src,
+    resolveLocalPath(dest),
+    mode,
+    options,
+    fileMapperLogCallbacks
+  );
 };
 
 exports.builder = yargs => {

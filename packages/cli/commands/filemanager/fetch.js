@@ -17,15 +17,11 @@ const i18nKey = 'cli.commands.filemanager.subcommands.fetch';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const downloadLogCallbacks = buildLogCallbacks({
-  skippedExisting: i18n(`${i18nKey}.downloadLogCallbacks.skippedExisting`),
-  fetchFolderStarted: i18n(
-    `${i18nKey}.downloadLogCallbacks.fetchFolderStarted`
-  ),
-  fetchFolderSuccess: i18n(
-    `${i18nKey}.downloadLogCallbacks.fetchFolderSuccess`
-  ),
-  fetchFileStarted: i18n(`${i18nKey}.downloadLogCallbacks.fetchFileStarted`),
-  fetchFileSuccess: i18n(`${i18nKey}.downloadLogCallbacks.fetchFileSuccess`),
+  skippedExisting: `${i18nKey}.downloadLogCallbacks.skippedExisting`,
+  fetchFolderStarted: `${i18nKey}.downloadLogCallbacks.fetchFolderStarted`,
+  fetchFolderSuccess: `${i18nKey}.downloadLogCallbacks.fetchFolderSuccess`,
+  fetchFileStarted: `${i18nKey}.downloadLogCallbacks.fetchFileStarted`,
+  fetchFileSuccess: `${i18nKey}.downloadLogCallbacks.fetchFileSuccess`,
 });
 
 exports.command = 'fetch <src> [dest]';

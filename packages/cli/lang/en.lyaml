@@ -274,6 +274,12 @@ en:
             describe: "Local directory you would like the files to be placed in, relative to your current working directory"
           src:
             describe: "Path in HubSpot Design Tools"
+        fileMapperLogCallbacks:
+          skippedExisting: 'Skipped existing "{{ filepath }}"'
+          wroteFolder: 'Wrote folder "{{ filepath }}"'
+          completedFetch: 'Completed fetch of file "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
+          folderFetch: 'Fetched "{{ src }}" from account {{ accountId }} from the Design Manager successfully'
+          completedFolderFetch: 'Completed fetch of folder "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
       filemanager:
         describe: "Commands for working with the File Manager."
         subcommands:

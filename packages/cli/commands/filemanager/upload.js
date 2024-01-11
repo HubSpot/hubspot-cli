@@ -28,7 +28,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { buildLogCallbacks } = require('../../lib/logCallbacks');
 
 const uploadLogCallbacks = buildLogCallbacks({
-  uploadSuccess: i18n(`${i18nKey}.uploadLogCallbacks.uploadSuccess`),
+  uploadSuccess: `${i18nKey}.uploadLogCallbacks.uploadSuccess`,
 });
 
 exports.command = 'upload <src> <dest>';
