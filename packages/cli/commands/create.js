@@ -17,6 +17,7 @@
  *   assetType: String - Type of the asset (e.g. api-sample, react-app, template)
  *   name:      String - Filename of the asset
  *   dest:      String - The path specified by the user on where to create the asset
+ *   internal:  Boolean - A flag for retrieving the internal spec for the asset type
  *   options:   Object - The options object passed to the command by Yargs
  * }
  */
