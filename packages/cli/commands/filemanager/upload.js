@@ -6,13 +6,15 @@ const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
+  validateSrcAndDestPaths,
+} = require('@hubspot/local-dev-lib/cms/modules');
+const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
+
+const {
   ApiErrorContext,
   logApiUploadErrorInstance,
 } = require('../../lib/errorHandlers/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
-const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-
 const {
   addConfigOptions,
   addAccountOptions,

@@ -1,9 +1,11 @@
+const { createTemplate } = require('@hubspot/local-dev-lib/cms/templates');
+const { logger } = require('@hubspot/cli-lib/logger');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const {
   createTemplatePrompt,
 } = require('../../lib/prompts/createTemplatePrompt');
-const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('../../lib/lang');
-const { createTemplate } = require('@hubspot/cli-lib/templates');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.create.subcommands.template';
 
@@ -19,7 +21,12 @@ module.exports = {
   },
   execute: async ({ name, dest }) => {
     const { templateType } = await createTemplatePrompt();
-    await createTemplate(name, dest, templateType);
+    try {
+      await createTemplate(name, dest, templateType);
+    } catch (e) {
+      logErrorInstance(e);
+      process.exit(EXIT_CODES.ERROR);
+    }
     return { templateType };
   },
 };
