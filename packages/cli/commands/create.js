@@ -115,6 +115,7 @@ exports.builder = yargs => {
   yargs.option('internal', {
     describe: 'Internal HubSpot version of creation command',
     type: 'boolean',
+    hidden: true,
   });
 
   return yargs;
