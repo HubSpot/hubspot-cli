@@ -1,6 +1,6 @@
 const { createTemplate } = require('@hubspot/local-dev-lib/cms/templates');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   createTemplatePrompt,
 } = require('../../lib/prompts/createTemplatePrompt');
