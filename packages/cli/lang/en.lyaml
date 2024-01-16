@@ -1296,8 +1296,8 @@ en:
             404: "The {{ messageDetail }} was not found."
             429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
             503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            500generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            400generic: "The {{ messageDetail }} failed due to a client error."
+            500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            400Generic: "The {{ messageDetail }} failed due to a client error."
             generic: "The {{ messageDetail }} failed."
           verifyAccessKeyAndUserAccess:
             fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
