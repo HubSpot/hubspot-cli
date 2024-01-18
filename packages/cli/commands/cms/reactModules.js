@@ -31,8 +31,6 @@ exports.handler = async options => {
     });
     logger.groupEnd('Modules available to download:');
   } else {
-    console.log(`fetch the react module ${name} to ${dest}`);
-
     const destPath = path.join(dest, `${name}`);
 
     await downloadGitHubRepoContents(
