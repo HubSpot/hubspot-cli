@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { uploadFolder } = require('@hubspot/cli-lib/fileManager');
+const { uploadFolder } = require('@hubspot/local-dev-lib/fileManager');
 const { uploadFile } = require('@hubspot/cli-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -25,6 +25,11 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.filemanager.subcommands.upload';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { buildLogCallbacks } = require('../../lib/logCallbacks');
+
+const uploadLogCallbacks = buildLogCallbacks({
+  uploadSuccess: `${i18nKey}.uploadLogCallbacks.uploadSuccess`,
+});
 
 exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -121,7 +126,7 @@ exports.handler = async options => {
         src,
       })
     );
-    uploadFolder(accountId, absoluteSrcPath, dest)
+    uploadFolder(accountId, absoluteSrcPath, dest, uploadLogCallbacks)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.uploadComplete`, {
