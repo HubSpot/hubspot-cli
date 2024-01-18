@@ -25,12 +25,12 @@ const fileMapperLogCallbacks = buildLogCallbacks({
   wroteFolder: `${i18nKey}.fileMapperLogCallbacks.wroteFolder`,
   completedFetch: {
     key: `${i18nKey}.fileMapperLogCallbacks.completedFetch`,
-    type: 'success',
+    logger: logger.success,
   },
   folderFetch: `${i18nKey}.fileMapperLogCallbacks.folderFetch`,
   completedFolderFetch: {
     key: `${i18nKey}.fileMapperLogCallbacks.completedFolderFetch`,
-    type: 'success',
+    logger: logger.success,
   },
 });
 

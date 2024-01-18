@@ -22,12 +22,12 @@ const downloadLogCallbacks = buildLogCallbacks({
   fetchFolderStarted: `${i18nKey}.downloadLogCallbacks.fetchFolderStarted`,
   fetchFolderSuccess: {
     key: `${i18nKey}.downloadLogCallbacks.fetchFolderSuccess`,
-    type: 'success',
+    logger: logger.success,
   },
   fetchFileStarted: `${i18nKey}.downloadLogCallbacks.fetchFileStarted`,
   fetchFileSuccess: {
     key: `${i18nKey}.downloadLogCallbacks.fetchFileSuccess`,
-    type: 'success',
+    logger: logger.success,
   },
 });
 

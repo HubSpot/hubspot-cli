@@ -9,7 +9,7 @@ function buildLogCallbacks(logData) {
         logger.log(i18n(logData[key], interpolationData));
     } else {
       callbacksObject[key] = interpolationData =>
-        logger[logData[key].type](i18n(logData[key].key, interpolationData));
+        logData[key].logger(i18n(logData[key].key, interpolationData));
     }
   }
   return callbacksObject;
