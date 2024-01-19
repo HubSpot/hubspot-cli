@@ -54,13 +54,13 @@ const TRACKING_STATUS = {
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  const token = await getAccessToken(personalAccessKey, env);
-  const defaultName = toKebabCase(token.hubName);
-  const { name } = await enterAccountNamePrompt(defaultName);
-
   let updatedConfig;
 
   try {
+    const token = await getAccessToken(personalAccessKey, env);
+    const defaultName = toKebabCase(token.hubName);
+    const { name } = await enterAccountNamePrompt(defaultName);
+
     updatedConfig = updateConfigWithAccessToken(
       token,
       personalAccessKey,

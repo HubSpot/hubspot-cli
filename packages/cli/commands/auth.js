@@ -44,6 +44,7 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -104,14 +105,18 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env, account });
 
-      token = await getAccessToken(configData.personalAccessKey, env);
-      defaultName = toKebabCase(token.hubName);
+      try {
+        token = await getAccessToken(configData.personalAccessKey, env);
+        defaultName = toKebabCase(token.hubName);
 
-      updatedConfig = await updateConfigWithAccessToken(
-        token,
-        configData.personalAccessKey,
-        env
-      );
+        updatedConfig = await updateConfigWithAccessToken(
+          token,
+          configData.personalAccessKey,
+          env
+        );
+      } catch (e) {
+        logErrorInstance(e);
+      }
 
       if (!updatedConfig) {
         break;

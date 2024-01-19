@@ -3,7 +3,8 @@ const { i18n } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  updateConfigWithPersonalAccessKey,
+  getAccessToken,
+  updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
@@ -247,7 +248,9 @@ const saveSandboxToConfig = async (env, result, force = false) => {
   let updatedConfig;
 
   try {
-    updatedConfig = await updateConfigWithPersonalAccessKey(
+    const token = await getAccessToken(personalAccessKey, env);
+    updatedConfig = await updateConfigWithAccessToken(
+      token,
       personalAccessKey,
       env
     );
