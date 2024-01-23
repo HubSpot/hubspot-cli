@@ -8,7 +8,8 @@ const {
 } = require('@hubspot/cli-lib/lib/constants');
 const { i18n } = require('../lib/lang');
 const {
-  updateConfigWithPersonalAccessKey,
+  getAccessToken,
+  updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
 const {
   updateAccountConfig,
@@ -17,7 +18,10 @@ const {
   getConfigPath,
   loadConfig,
 } = require('@hubspot/local-dev-lib/config');
-const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
+const {
+  commaSeparatedValues,
+  toKebabCase,
+} = require('@hubspot/local-dev-lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,
@@ -40,6 +44,7 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
+const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -85,6 +90,8 @@ exports.handler = async options => {
   let updatedConfig;
   let validName;
   let successAuthMethod;
+  let token;
+  let defaultName;
 
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
@@ -98,10 +105,18 @@ exports.handler = async options => {
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
       configData = await personalAccessKeyPrompt({ env, account });
 
-      updatedConfig = await updateConfigWithPersonalAccessKey(
-        configData.personalAccessKey,
-        env
-      );
+      try {
+        token = await getAccessToken(configData.personalAccessKey, env);
+        defaultName = toKebabCase(token.hubName);
+
+        updatedConfig = await updateConfigWithAccessToken(
+          token,
+          configData.personalAccessKey,
+          env
+        );
+      } catch (e) {
+        logErrorInstance(e);
+      }
 
       if (!updatedConfig) {
         break;
@@ -110,7 +125,7 @@ exports.handler = async options => {
       validName = updatedConfig.name;
 
       if (!validName) {
-        const { name: namePrompt } = await enterAccountNamePrompt();
+        const { name: namePrompt } = await enterAccountNamePrompt(defaultName);
         validName = namePrompt;
       }
 

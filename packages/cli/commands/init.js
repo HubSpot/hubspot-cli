@@ -24,9 +24,11 @@ const {
 const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  updateConfigWithPersonalAccessKey,
+  getAccessToken,
+  updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');
@@ -52,12 +54,15 @@ const TRACKING_STATUS = {
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
   const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
-  const { name } = await enterAccountNamePrompt();
-
   let updatedConfig;
 
   try {
-    updatedConfig = updateConfigWithPersonalAccessKey(
+    const token = await getAccessToken(personalAccessKey, env);
+    const defaultName = toKebabCase(token.hubName);
+    const { name } = await enterAccountNamePrompt(defaultName);
+
+    updatedConfig = updateConfigWithAccessToken(
+      token,
       personalAccessKey,
       env,
       name,
