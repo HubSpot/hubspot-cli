@@ -3,7 +3,8 @@ const { i18n } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  updateConfigWithPersonalAccessKey,
+  getAccessToken,
+  updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
@@ -247,7 +248,9 @@ const saveSandboxToConfig = async (env, result, force = false) => {
   let updatedConfig;
 
   try {
-    updatedConfig = await updateConfigWithPersonalAccessKey(
+    const token = await getAccessToken(personalAccessKey, env);
+    updatedConfig = await updateConfigWithAccessToken(
+      token,
       personalAccessKey,
       env
     );
@@ -329,6 +332,7 @@ function pollSyncTaskStatus(
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
+  const ignoreTasks = ['gates'];
   let progressCounter = {};
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
@@ -365,7 +369,11 @@ function pollSyncTaskStatus(
         for (const task of taskResult.tasks) {
           // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
           const taskType = task.type;
-          if (!progressBar.get(taskType) && !mergeTasks[taskType]) {
+          if (
+            !progressBar.get(taskType) &&
+            !mergeTasks[taskType] &&
+            !ignoreTasks.includes(taskType)
+          ) {
             // skip creation of lead-flows bar because we're combining lead-flows into the forms bar, otherwise create a bar instance for the type
             progressCounter[taskType] = 0;
             progressBar.create(taskType, 100, 0, {
