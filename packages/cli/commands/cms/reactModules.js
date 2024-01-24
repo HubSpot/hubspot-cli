@@ -9,6 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/standardErrors');
 const { i18n } = require('../../lib/lang');
 const path = require('path');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 
 const i18nKey = 'cli.commands.cms.subcommands.reactModule';
 
@@ -17,6 +18,7 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { name, dest, list } = options;
+  trackCommandUsage('get-react-modules');
 
   //TODO: trackCommandUsage()
   //TODO: i18n
