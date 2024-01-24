@@ -31,8 +31,8 @@ exports.handler = async options => {
       );
 
       logger.group('React modules available to download:');
-      contents.map(x => {
-        logger.log(x.name);
+      contents.forEach(module => {
+        logger.log(module.name);
       });
       logger.groupEnd('React modules available to download:');
     } catch (e) {
