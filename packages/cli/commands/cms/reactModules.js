@@ -1,21 +1,16 @@
 const fs = require('fs');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { listReactModules } = require('@hubspot/cli-lib/modules');
-const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
-const { i18n } = require('../../lib/lang');
 const {
-  logFileSystemErrorInstance,
-} = require('../../lib/errorHandlers/fileSystemErrors');
+  listGithubRepoContents,
+  downloadGithubRepoContents,
+} = require('@hubspot/local-dev-lib/github');
+const {
+  throwErrorWithMessage,
+} = require('@hubspot/local-dev-lib/errors/standardErrors');
+const { i18n } = require('../../lib/lang');
 const path = require('path');
 
 const i18nKey = 'cli.commands.cms.subcommands.reactModule';
-
-const MOCK_AVAILABLE_REACT_MODULES = [
-  'SampleReactModule-V0',
-  'Button-V0',
-  'Button-V1',
-  'ImageGallery-V0',
-];
 
 exports.command = 'get-react-module [name] [dest] [--list]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -23,76 +18,48 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   const { name, dest, list } = options;
 
+  //TODO: trackCommandUsage()
+  //TODO: i18n
+  //TODO: Move logic to local-dev-lib -- modules.ts -- fetchReactModules() and call from here
+
   if (list) {
-    const responseList = await listReactModules();
-    logger.group('Modules available to download:');
-    responseList.map(x => {
-      logger.log(x);
-    });
-    logger.groupEnd('Modules available to download:');
+    try {
+      const contents = await listGithubRepoContents(
+        'HubSpot/cms-sample-assets',
+        'modules/',
+        'dir'
+      );
+
+      logger.group('React modules available to download:');
+      contents.map(x => {
+        logger.log(x.name);
+      });
+      logger.groupEnd('React modules available to download:');
+    } catch (e) {
+      console.log(e); // TODO: Error handling
+    }
   } else {
     const destPath = path.join(dest, `${name}`);
 
-    await downloadGitHubRepoContents(
-      'HubSpot/cms-sample-assets',
-      `modules/${name}`,
-      destPath
-    );
+    if (fs.existsSync(destPath)) {
+      throwErrorWithMessage(`${i18nKey}.errors.pathExists`, {
+        path: destPath,
+      });
+    }
+
+    try {
+      await downloadGithubRepoContents(
+        'HubSpot/cms-sample-assets',
+        `modules/${name}`,
+        destPath
+      );
+
+      logger.success(`${name} succesfully downloaded to ${destPath}`);
+    } catch (e) {
+      // Error to catch: requested module name is incorrect -- results in bad request error
+      console.log(e); // TODO: Error handling
+    }
   }
-
-  /* ----- LIST ------ */
-  /* --list:
-  Query remote repo for dir names for available modules and return output names
-  */
-
-  // const listAvailableModules = async () => {
-  //   console.log('in reactModules.js');
-
-  //   // const modules = MOCK_AVAILABLE_REACT_MODULES;
-  //   const modules = await listReactModules();
-  //   console.log(modules);
-
-  //   // modules.map(module => logger.log(module));
-  // };
-
-  // if (list) {
-  //   listAvailableModules();
-  //   return;
-  // }
-
-  /* --- GET --- */
-  /*
-  Check to see if name matches entries in the remote repo (use list function)
-  If yes - download to dest
-  If no - throw error to logger about how the module name is not correct
-  */
-
-  /* Error states
-
-  Mistyped module name
-  GH fetch error
-  Dest folder doesn't exist
-  No name/dest and no list flag -- should prompt to enter something
-  */
-
-  /*
-  Check to see if dest is a directory otherwise log error
-
-  try {
-    await fs.ensureDir(dest);
-  } catch (e) {
-    logger.error(
-      i18n(`${i18nKey}.errors.unusablePath`, {
-        path: dest,
-      })
-    );
-    logFileSystemErrorInstance(e, {
-      filepath: dest,
-      write: true,
-    });
-    return;
-  }
-  */
 };
 
 exports.builder = yargs => {
