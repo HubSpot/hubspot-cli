@@ -148,18 +148,18 @@ en:
               verbose:
                 describe: "View a detailed output of the lighthouse sores"
           reactModule:
-            describe: "Get a specified React module boilerplate"
-            positionals:
+            describe: "Get a specified default React module"
+            options:
               name:
                 describe: "Name of the react modules to be fetched"
               dest:
                 describe: "Destination to download the react module to"
-            options:
-              list:
-                describe: "List out react module available to download"
+            success:
+              moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
             errors:
-              unusablePath: "\"{{ path }}\" is not a usable path to a directory."
               pathExists: "Folder already exists at \"{{ path }}\""
+              invalidName: "Module not found with that name, please check the spelling of the module you are trying to retrieve."
+            groupLabel: "React modules available to download:"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
