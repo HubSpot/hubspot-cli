@@ -513,10 +513,10 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/cli-lib@^8.0.1":
-  version "8.0.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-8.0.1.tgz#3b076912afbd25e453c4495f5eca231e08ff3355"
-  integrity sha512-VaWvpJhx0SN9OhEMjX2QPTJW+/0i/Dgb4NKoEZm1zc3Cg7gMfx5t1DBecFk2W0GcinNMtOcuMlLReNfJY99uGQ==
+"@hubspot/cli-lib@^8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-8.0.2.tgz#68ebe595049c3f2cb7bf77b31e933c19a3013ed2"
+  integrity sha512-dnUqzWvOcS+x7sy49Rkbfsq5dDDabsBlMwLf/NlrEQW6CwIFHWKcQNW6mVUMhbJNzpUl2O6+R+oV//sKzApI1A==
   dependencies:
     chalk "^2.4.2"
     chokidar "^3.0.1"
@@ -537,10 +537,10 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/local-dev-lib@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.2.1.tgz#7ebf87d25c88977c42ecdbd70dd5e8839e3af07d"
-  integrity sha512-X1Gh3uYqCOtkLFVubXejkPpgjwQsm23xna99TD+yWjKorPWUXliKXEu5qkaVVmAMnorgGKTUS6D8lIA1XGDUdA==
+"@hubspot/local-dev-lib@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.2.2.tgz#bd979197849172190a0fad558b192b6a05933fd7"
+  integrity sha512-zKAlj5ITHzEqEW6Qwz9tZx452kZEKgFEJJxag/MYlANgs+8JF2mu7HC1yB2Zs92mR7WJ1HNgOxrrQuLNd+MdWA==
   dependencies:
     address "^2.0.1"
     axios "^1.3.5"
