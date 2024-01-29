@@ -14,7 +14,7 @@ const {
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const { getOauthManager } = require('@hubspot/cli-lib/oauth');
+const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');

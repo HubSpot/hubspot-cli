@@ -1,15 +1,26 @@
 const express = require('express');
 const open = require('open');
-const OAuth2Manager = require('@hubspot/cli-lib/lib/models/OAuth2Manager');
+const OAuth2Manager = require('@hubspot/local-dev-lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { addOauthToAccountConfig } = require('@hubspot/cli-lib/oauth');
+const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const { buildLogCallbacks } = require('./logCallbacks');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
+
+const i18nKey = 'cli.lib.oath';
+
+const oauthLogCallbacks = buildLogCallbacks({
+  init: `${i18nKey}.logCallbacks.init`,
+  success: {
+    key: `${i18nKey}.logCallbacks.success`,
+    logger: logger.success,
+  },
+});
 
 const buildAuthUrl = oauthManager => {
   return (
@@ -97,7 +108,7 @@ const authenticateWithOauth = async configData => {
   const oauthManager = setupOauth(configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
-  addOauthToAccountConfig(oauthManager);
+  addOauthToAccountConfig(oauthManager, oauthLogCallbacks);
 };
 
 module.exports = {

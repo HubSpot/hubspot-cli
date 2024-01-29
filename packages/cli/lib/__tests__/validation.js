@@ -1,5 +1,5 @@
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { getOauthManager } = require('@hubspot/cli-lib/oauth');
+const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
