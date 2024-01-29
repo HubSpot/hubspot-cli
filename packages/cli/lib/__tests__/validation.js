@@ -10,7 +10,7 @@ const { validateAccount } = require('../validation');
 jest.mock('@hubspot/cli-lib');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/cli-lib/logger');
-jest.mock('@hubspot/cli-lib/oauth');
+jest.mock('@hubspot/local-dev-lib/oauth');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
