@@ -513,10 +513,10 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/cli-lib@^8.0.1":
-  version "8.0.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-8.0.1.tgz#3b076912afbd25e453c4495f5eca231e08ff3355"
-  integrity sha512-VaWvpJhx0SN9OhEMjX2QPTJW+/0i/Dgb4NKoEZm1zc3Cg7gMfx5t1DBecFk2W0GcinNMtOcuMlLReNfJY99uGQ==
+"@hubspot/cli-lib@^8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@hubspot/cli-lib/-/cli-lib-8.0.2.tgz#68ebe595049c3f2cb7bf77b31e933c19a3013ed2"
+  integrity sha512-dnUqzWvOcS+x7sy49Rkbfsq5dDDabsBlMwLf/NlrEQW6CwIFHWKcQNW6mVUMhbJNzpUl2O6+R+oV//sKzApI1A==
   dependencies:
     chalk "^2.4.2"
     chokidar "^3.0.1"
