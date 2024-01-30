@@ -46,7 +46,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    if (e.cause.code === 'ERR_BAD_REQUEST') {
+    if (e.cause && e.cause.code === 'ERR_BAD_REQUEST') {
       logger.error(i18n(`${i18nKey}.errors.invalidName`));
     } else {
       logger.error(e);
