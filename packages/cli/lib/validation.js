@@ -118,7 +118,7 @@ async function validateAccount(options) {
       logger.error(
         `The OAuth2 configuration for account ${accountId} is incorrect`
       );
-      logger.error('Run "hscms auth oauth2" to reauthenticate');
+      logger.error('Run "hs auth --type=oauth2" to reauthenticate');
       return false;
     }
 

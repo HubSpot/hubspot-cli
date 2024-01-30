@@ -154,7 +154,8 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountName = updatedConfig.name || validName;
+  const accountName =
+    (updatedConfig && updatedConfig.name) || validName || configData.name;
 
   const setAsDefault = await setAsDefaultAccountPrompt(accountName);
 
