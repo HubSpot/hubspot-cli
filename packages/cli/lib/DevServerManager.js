@@ -1,4 +1,3 @@
-const httpClient = require('@hubspot/local-dev-lib/http');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
@@ -91,7 +90,6 @@ class DevServerManager {
           await serverInterface.start({
             accountId,
             debug: this.debug,
-            httpClient,
             projectConfig,
             requestPorts,
           });
