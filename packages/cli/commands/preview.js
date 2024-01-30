@@ -33,7 +33,7 @@ const validateSrcPath = src => {
 };
 
 exports.command = 'preview <src> <dest>';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
 
 exports.handler = async options => {
   const { src, dest, notify, skipUpload, noSsl, port, debug } = options;
