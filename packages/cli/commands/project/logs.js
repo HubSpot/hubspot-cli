@@ -13,15 +13,11 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   fetchProject,
   fetchDeployComponentsMetadata,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
 const {
   getTableContents,
   getTableHeader,
 } = require('@hubspot/local-dev-lib/logging/table');
-// const {
-//   getProjectAppFunctionLogs,
-//   getLatestProjectAppFunctionLog,
-// } = require('@hubspot/cli-lib/api/functions');
 // const {
 //   logApiErrorInstance,
 //   ApiErrorContext,
@@ -29,7 +25,9 @@ const {
 // const {
 //   getFunctionLogs,
 //   getLatestFunctionLog,
-// } = require('@hubspot/cli-lib/api/results');
+//   getProjectAppFunctionLogs,
+//   getLatestProjectAppFunctionLog,
+// } = require('@hubspot/local-dev-lib/api/functions');
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');

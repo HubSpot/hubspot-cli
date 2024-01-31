@@ -16,7 +16,7 @@ const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const {
   downloadProject,
   fetchProjectBuilds,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
 const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {

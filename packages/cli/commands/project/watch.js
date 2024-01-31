@@ -27,7 +27,7 @@ const {
 const {
   cancelStagedBuild,
   fetchProjectBuilds,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');

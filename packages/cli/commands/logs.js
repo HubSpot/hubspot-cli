@@ -10,7 +10,7 @@ const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
-} = require('@hubspot/cli-lib/api/results');
+} = require('@hubspot/local-dev-lib/api/functions');
 const { tailLogs } = require('../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');

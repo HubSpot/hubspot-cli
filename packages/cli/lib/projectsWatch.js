@@ -12,11 +12,12 @@ const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const {
   cancelStagedBuild,
+  //TODO LDL does not export these
   provisionBuild,
   uploadFileToBuild,
   deleteFileFromBuild,
   queueBuild,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';

@@ -3,7 +3,7 @@ const {
   logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
+const { updateSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');

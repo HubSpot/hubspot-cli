@@ -5,7 +5,7 @@ const {
   requestValidation,
   getValidationStatus,
   getValidationResults,
-} = require('@hubspot/cli-lib/api/marketplaceValidation');
+} = require('@hubspot/local-dev-lib/api/marketplaceValidation');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 
