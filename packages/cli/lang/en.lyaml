@@ -935,6 +935,10 @@ en:
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
+      oauth:
+        logCallbacks:
+          init: "Updating configuration"
+          success: "Configuration updated"
       projects:
         config:
           srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
