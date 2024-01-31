@@ -33,7 +33,9 @@ const {
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { isMissingScopeError } = require('../../lib/errorHandlers/apiErrors');
+const {
+  isMissingScopeError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
