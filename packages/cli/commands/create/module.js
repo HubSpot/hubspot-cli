@@ -4,14 +4,8 @@ const { i18n } = require('../../lib/lang');
 const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { buildLogCallbacks } = require('../../lib/logCallbacks');
 
 const i18nKey = 'cli.commands.create.subcommands.module';
-
-const createModuleLogCallbacks = buildLogCallbacks({
-  creatingPath: `${i18nKey}.logCallbacks.creatingPath`,
-  creatingModule: `${i18nKey}.logCallbacks.creatingModule`,
-});
 
 module.exports = {
   dest: ({ dest }) => dest,
@@ -25,14 +19,7 @@ module.exports = {
   execute: async ({ name, dest }) => {
     const moduleDefinition = await createModulePrompt();
     try {
-      await createModule(
-        moduleDefinition,
-        name,
-        dest,
-        false,
-        {},
-        createModuleLogCallbacks
-      );
+      await createModule(moduleDefinition, name, dest);
     } catch (e) {
       logErrorInstance(e);
       process.exit(EXIT_CODES.ERROR);

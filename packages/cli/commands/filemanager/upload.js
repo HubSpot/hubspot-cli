@@ -27,11 +27,6 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.filemanager.subcommands.upload';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { buildLogCallbacks } = require('../../lib/logCallbacks');
-
-const uploadLogCallbacks = buildLogCallbacks({
-  uploadSuccess: `${i18nKey}.uploadLogCallbacks.uploadSuccess`,
-});
 
 exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -128,7 +123,7 @@ exports.handler = async options => {
         src,
       })
     );
-    uploadFolder(accountId, absoluteSrcPath, dest, uploadLogCallbacks)
+    uploadFolder(accountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.uploadComplete`, {

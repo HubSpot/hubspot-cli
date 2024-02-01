@@ -1,8 +1,6 @@
 const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileManager');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { resolveLocalPath } = require('../../lib/filesystem');
-const { buildLogCallbacks } = require('../../lib/logCallbacks');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -16,20 +14,6 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = 'cli.commands.filemanager.subcommands.fetch';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
-
-const downloadLogCallbacks = buildLogCallbacks({
-  skippedExisting: `${i18nKey}.downloadLogCallbacks.skippedExisting`,
-  fetchFolderStarted: `${i18nKey}.downloadLogCallbacks.fetchFolderStarted`,
-  fetchFolderSuccess: {
-    key: `${i18nKey}.downloadLogCallbacks.fetchFolderSuccess`,
-    logger: logger.success,
-  },
-  fetchFileStarted: `${i18nKey}.downloadLogCallbacks.fetchFileStarted`,
-  fetchFileSuccess: {
-    key: `${i18nKey}.downloadLogCallbacks.fetchFileSuccess`,
-    logger: logger.success,
-  },
-});
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -57,8 +41,7 @@ exports.handler = async options => {
       src,
       dest,
       false,
-      includeArchived || false,
-      downloadLogCallbacks
+      includeArchived || false
     );
   } catch (err) {
     logErrorInstance(err);
