@@ -6,8 +6,13 @@ const {
 } = require('../../lib/prompts/createTemplatePrompt');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { buildLogCallbacks } = require('../../lib/logCallbacks');
 
 const i18nKey = 'cli.commands.create.subcommands.template';
+
+const createTemplateLogCallbacks = buildLogCallbacks({
+  creatingFile: `${i18nKey}.logCallbacks.creatingFile`,
+});
 
 module.exports = {
   dest: ({ dest }) => dest,
@@ -22,7 +27,13 @@ module.exports = {
   execute: async ({ name, dest }) => {
     const { templateType } = await createTemplatePrompt();
     try {
-      await createTemplate(name, dest, templateType);
+      await createTemplate(
+        name,
+        dest,
+        templateType,
+        null,
+        createTemplateLogCallbacks
+      );
     } catch (e) {
       logErrorInstance(e);
       process.exit(EXIT_CODES.ERROR);

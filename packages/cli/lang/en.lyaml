@@ -171,10 +171,23 @@ en:
               apiSamples: "Loading available API samples"
             success:
               sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
+          function:
+            logCallbacks:
+              destPathAlreadyExists: "The {{ path }} path already exists"
+              createdDest: "Created {{ path }}"
+              failedToCreateFile: "The file {{ configFilePath }} could not be created"
+              createdFunctionFile: "Created {{ path }}"
+              createdConfigFile: "Created {{ path }}"
+              success: "A function for the endpoint '/_hcms/api/{{ endpointPath }}' has been created. Upload {{ folderName }} to try it out"
           module:
+            logCallbacks:
+              creatingModule: "Creating module at {{ path }}"
+              creatingPath: "Creating {{ path }}"
             errors:
               nameRequired: "The \"name\" argument is required when creating a Custom Module."
           template:
+            logCallbacks:
+              creatingFile: "Creating file at {{ path }}"
             errors:
               nameRequired: "The \"name\" argument is required when creating a Template."
       customObject:
