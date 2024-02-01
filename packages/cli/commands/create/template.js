@@ -31,7 +31,7 @@ module.exports = {
         name,
         dest,
         templateType,
-        null,
+        {},
         createTemplateLogCallbacks
       );
     } catch (e) {
