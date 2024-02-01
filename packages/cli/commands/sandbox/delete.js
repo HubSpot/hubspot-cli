@@ -8,17 +8,20 @@ const {
 const { logger } = require('@hubspot/cli-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  logErrorInstance,
-  debugErrorAndContext,
-} = require('../../lib/errorHandlers/standardErrors');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('../../lib/errorHandlers/apiErrors');
 const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
+const {
+  selectAndSetAsDefaultAccountPrompt,
+} = require('../../lib/prompts/accountsPrompt');
+const {
+  isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const {
+  logErrorInstance,
+  debugErrorAndContext,
+} = require('@hubspot/local-dev-lib/errors/errors_DEPRECATED');
 const {
   getConfig,
   getEnv,
@@ -26,9 +29,6 @@ const {
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
-const {
-  selectAndSetAsDefaultAccountPrompt,
-} = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
