@@ -274,6 +274,12 @@ en:
             describe: "Local directory you would like the files to be placed in, relative to your current working directory"
           src:
             describe: "Path in HubSpot Design Tools"
+        fileMapperLogCallbacks:
+          skippedExisting: 'Skipped existing "{{ filepath }}"'
+          wroteFolder: 'Wrote folder "{{ filepath }}"'
+          completedFetch: 'Completed fetch of file "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
+          folderFetch: 'Fetched "{{ src }}" from account {{ accountId }} from the Design Manager successfully'
+          completedFolderFetch: 'Completed fetch of folder "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
       filemanager:
         describe: "Commands for working with the File Manager."
         subcommands:
@@ -289,6 +295,12 @@ en:
                 describe: "Path in HubSpot Design Tools"
               src:
                 describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
+            downloadLogCallbacks:
+              skippedExisting: "Skipped existing {{ filepath }}"
+              fetchFolderStarted: 'Fetching folder from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
+              fetchFolderSuccess: "Completed fetch of folder \"{{ src }}\" to \"{{ dest }}\" from the File Manager"
+              fetchFileStarted: "Fetching file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+              fetchFileSuccess: "Completed fetch of file \"{{ src }}\" to \"{{ dest }}\" from the File Manager"
           upload:
             describe: "Upload a folder or file from your computer to the HubSpot File Manager"
             errors:
@@ -307,6 +319,8 @@ en:
             success:
               upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
               uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
+            uploadLogCallbacks:
+             uploadSuccess: 'Uploaded file "{{ file }}" to "{{ destPath }}"'
       functions:
         describe: "Commands for working with functions."
         subcommands:
@@ -921,6 +935,10 @@ en:
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
+      oauth:
+        logCallbacks:
+          init: "Updating configuration"
+          success: "Configuration updated"
       projects:
         config:
           srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""

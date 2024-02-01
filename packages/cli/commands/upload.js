@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
-const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
+const {
+  getFileMapperQueryValues,
+} = require('@hubspot/local-dev-lib/fileMapper');
 const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
@@ -158,7 +160,7 @@ exports.handler = async options => {
       accountId,
       absoluteSrcPath,
       normalizedDest,
-      getFileMapperQueryValues({ mode, options })
+      getFileMapperQueryValues(mode, options)
     )
       .then(() => {
         logger.success(
