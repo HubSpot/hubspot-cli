@@ -561,7 +561,7 @@
     table "^6.8.1"
     unixify "^1.0.0"
 
-"@hubspot/ui-extensions-dev-server@^0.8.9":
+"@hubspot/ui-extensions-dev-server@0.8.9":
   version "0.8.9"
   resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.9.tgz#0cf970d1f359ef3fa31362cd15f07e307bf520fb"
   integrity sha512-W7ixYZChzGk1MUARrxMoR+KgTwVbU2SObQketgH6vH4D5k3BkSF/PYKRqByBZQjMKxBj/sz00IB85jQSIOVCXA==
