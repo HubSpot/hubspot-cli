@@ -18,7 +18,7 @@ const { i18n } = require('../lib/lang');
 const i18nKey = 'cli.commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { buildLogCallbacks } = require('../lib/logCallbacks');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 const fileMapperLogCallbacks = buildLogCallbacks({
   skippedExisting: `${i18nKey}.fileMapperLogCallbacks.skippedExisting`,
