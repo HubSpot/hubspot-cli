@@ -61,9 +61,11 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isMissingScopeError,
   isSpecifiedError,
 } = require('../../lib/errorHandlers/apiErrors');
+const {
+  isMissingScopeError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
