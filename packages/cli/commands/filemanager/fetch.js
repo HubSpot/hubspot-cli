@@ -13,7 +13,7 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.filemanager.subcommands.fetch';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
