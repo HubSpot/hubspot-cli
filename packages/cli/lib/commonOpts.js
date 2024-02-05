@@ -1,4 +1,7 @@
 const Logger = require('@hubspot/cli-lib/logger');
+const {
+  setLogLevel: setLocalDevLibLogLevel,
+} = require('@hubspot/local-dev-lib/logger');
 const { DEFAULT_MODE, Mode } = require('@hubspot/cli-lib');
 const {
   getAccountId: getAccountIdFromConfig,
@@ -66,8 +69,16 @@ const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
     Logger.setLogLevel(LOG_LEVEL.DEBUG);
+
+    // Update the log level in local-dev-lib's instance of the logger
+    // This will evenutally replace cli-lib's version of it
+    setLocalDevLibLogLevel(LOG_LEVEL.DEBUG);
   } else {
     Logger.setLogLevel(LOG_LEVEL.LOG);
+
+    // Update the log level in local-dev-lib's instance of the logger
+    // This will evenutally replace cli-lib's version of it
+    setLocalDevLibLogLevel(LOG_LEVEL.LOG);
   }
 };
 

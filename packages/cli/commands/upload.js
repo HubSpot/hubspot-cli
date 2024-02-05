@@ -16,8 +16,14 @@ const {
   logApiUploadErrorInstance,
 } = require('../lib/errorHandlers/apiErrors');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
-const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
+const {
+  validateSrcAndDestPaths,
+} = require('@hubspot/local-dev-lib/cms/modules');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
+const {
+  getThemePreviewUrl,
+  getThemeJSONPath,
+} = require('@hubspot/local-dev-lib/cms/themes');
 
 const {
   addConfigOptions,
@@ -32,10 +38,7 @@ const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
-const {
-  getThemePreviewUrl,
-  getThemeJSONPath,
-} = require('@hubspot/local-dev-lib/cms/themes');
+
 const { i18n } = require('../lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');

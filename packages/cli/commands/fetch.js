@@ -1,6 +1,5 @@
 const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
 const { logger } = require('@hubspot/cli-lib/logger');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -17,22 +16,7 @@ const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { buildLogCallbacks } = require('../lib/logCallbacks');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
-
-const fileMapperLogCallbacks = buildLogCallbacks({
-  skippedExisting: `${i18nKey}.fileMapperLogCallbacks.skippedExisting`,
-  wroteFolder: `${i18nKey}.fileMapperLogCallbacks.wroteFolder`,
-  completedFetch: {
-    key: `${i18nKey}.fileMapperLogCallbacks.completedFetch`,
-    logger: logger.success,
-  },
-  folderFetch: `${i18nKey}.fileMapperLogCallbacks.folderFetch`,
-  completedFolderFetch: {
-    key: `${i18nKey}.fileMapperLogCallbacks.completedFolderFetch`,
-    logger: logger.success,
-  },
-});
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -63,8 +47,7 @@ exports.handler = async options => {
       src,
       resolveLocalPath(dest),
       mode,
-      options,
-      fileMapperLogCallbacks
+      options
     );
   } catch (err) {
     logErrorInstance(err);
