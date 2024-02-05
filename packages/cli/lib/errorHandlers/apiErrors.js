@@ -1,6 +1,9 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
+  getAxiosErrorWithContext,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/cli-lib/lib/constants');
@@ -251,6 +254,13 @@ function logApiStatusCodeError(error, context) {
  * @param {ApiErrorContext}          context
  */
 function logApiErrorInstance(error, context) {
+  // Use the new local-dev-lib error handler
+  // NOTE: This will eventually replace the logic in logApiStatusCodeError
+  if (error.isAxiosError) {
+    const errorWithContext = getAxiosErrorWithContext(error, context);
+    logger.error(errorWithContext.message);
+    return;
+  }
   // StatusCodeError
   if (isApiStatusCodeError(error)) {
     logApiStatusCodeError(error, context);

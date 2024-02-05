@@ -4,7 +4,7 @@ const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const {
   getFileMapperQueryValues,
 } = require('@hubspot/local-dev-lib/fileMapper');
-const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
+const { upload, deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,

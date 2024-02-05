@@ -1,4 +1,4 @@
-const { upload } = require('@hubspot/cli-lib/api/fileMapper');
+const { upload } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   loadConfig,
