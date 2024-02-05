@@ -18,7 +18,7 @@ const {
   requestLighthouseScore,
   getLighthouseScoreStatus,
   getLighthouseScore,
-} = require('@hubspot/cli-lib/api/lighthouseScore');
+} = require('@hubspot/local-dev-lib/api/lighthouseScore');
 const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,
