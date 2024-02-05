@@ -40,7 +40,7 @@ const SpinniesManager = require('./SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedError,
+  isSpecifiedError, // Migrate isSpecifiedError to local-dev-lib version only after fetchProject is migrated to local-dev-lib
   isSpecifiedHubSpotAuthError,
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');

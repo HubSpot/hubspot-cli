@@ -1184,6 +1184,7 @@ en:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
             invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
