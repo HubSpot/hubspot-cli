@@ -477,10 +477,10 @@
     node-fetch "^2.6.0"
     url-parse "^1.4.3"
 
-"@hubspot/app-functions-dev-server@^0.8.3":
-  version "0.8.7"
-  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.8.7.tgz#76041d783deec0e50da4773d5a861d61da026e9e"
-  integrity sha512-H3tt0Xu7F7XwBeryaSID5B/KJzylWoUSjV8wATs2nelgXUx/8rnrN6r+F7Z22MhYKVAKBO1rZvV3Bk5+zvcsxQ==
+"@hubspot/app-functions-dev-server@^0.8.9":
+  version "0.8.9"
+  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.8.9.tgz#3b5a7d5735955a1b217364d87e0cfda382ab03be"
+  integrity sha512-V+Pxbbc0kaCVrIEaO5IyRjkzcq9MuQAM5b7YP61y1orRwxS+jC42aK9JbrWSOSIGLulSWXHH5n2enZpK6R31+g==
   dependencies:
     "@hubspot/api-client" "^10.0.0"
     "@hubspot/cli-lib" "^4.1.6"
@@ -561,18 +561,19 @@
     table "^6.8.1"
     unixify "^1.0.0"
 
-"@hubspot/ui-extensions-dev-server@0.8.6":
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.6.tgz#d526eb752df647eebcda60e383f376338125e953"
-  integrity sha512-L8KTFc9dBnlhupLJlmirfg6ZyxhU5yew86VhuQUMtootDrHqSvIAGbJeKoWndYMIFINSNntlryTkYaIPsGiQ2g==
+"@hubspot/ui-extensions-dev-server@0.8.9":
+  version "0.8.9"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.9.tgz#0cf970d1f359ef3fa31362cd15f07e307bf520fb"
+  integrity sha512-W7ixYZChzGk1MUARrxMoR+KgTwVbU2SObQketgH6vH4D5k3BkSF/PYKRqByBZQjMKxBj/sz00IB85jQSIOVCXA==
   dependencies:
-    "@hubspot/app-functions-dev-server" "^0.8.3"
+    "@hubspot/app-functions-dev-server" "^0.8.9"
     "@hubspot/cli-lib" "^4.1.6"
     command-line-args "^5.2.1"
     command-line-usage "^7.0.1"
     console-log-colors "^0.4.0"
     cors "^2.8.5"
     detect-port "1.5.1"
+    estraverse "^5.3.0"
     express "^4.18.2"
     inquirer "8.2.0"
     vite "^4.4.9"
@@ -4107,7 +4108,7 @@ estraverse@^4.1.1:
   resolved "https://registry.yarnpkg.com/estraverse/-/estraverse-4.3.0.tgz#398ad3f3c5a24948be7725e83d11a7de28cdbd1d"
   integrity sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw==
 
-estraverse@^5.1.0, estraverse@^5.2.0:
+estraverse@^5.1.0, estraverse@^5.2.0, estraverse@^5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/estraverse/-/estraverse-5.3.0.tgz#2eea5290702f26ab8fe5370370ff86c965d21123"
   integrity sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA==
