@@ -21,15 +21,14 @@ const {
 // const {
 //   getProjectAppFunctionLogs,
 //   getLatestProjectAppFunctionLog,
+//   getFunctionLogs,
+//   getLatestFunctionLog,
 // } = require('@hubspot/cli-lib/api/functions');
 // const {
 //   logApiErrorInstance,
 //   ApiErrorContext,
 // } = require('../../lib/errorHandlers/apiErrors');
-// const {
-//   getFunctionLogs,
-//   getLatestFunctionLog,
-// } = require('@hubspot/cli-lib/api/results');
+
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
