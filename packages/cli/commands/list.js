@@ -15,7 +15,7 @@ const {
 } = require('../lib/errorHandlers/apiErrors');
 const {
   getDirectoryContentsByPath,
-} = require('@hubspot/cli-lib/api/fileMapper');
+} = require('@hubspot/local-dev-lib/api/fileMapper');
 const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,

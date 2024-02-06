@@ -12,7 +12,7 @@ const {
 } = require('@hubspot/cli-lib/lib/handleFieldsJs');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const i18nKey = 'cli.commands.convertFields';
 
 exports.command = 'convert-fields';

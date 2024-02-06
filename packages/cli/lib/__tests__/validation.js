@@ -1,5 +1,5 @@
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { getOauthManager } = require('@hubspot/cli-lib/oauth');
+const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
@@ -10,7 +10,7 @@ const { validateAccount } = require('../validation');
 jest.mock('@hubspot/cli-lib');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/cli-lib/logger');
-jest.mock('@hubspot/cli-lib/oauth');
+jest.mock('@hubspot/local-dev-lib/oauth');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../commonOpts');
 

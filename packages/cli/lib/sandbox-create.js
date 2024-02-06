@@ -16,7 +16,7 @@ const {
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('./errorHandlers/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/local-dev-lib/sandboxes');
@@ -98,6 +98,22 @@ const buildSandbox = async ({
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: name,
           parentAccountName: accountConfig.name || accountId,
+        })
+      );
+      logger.log('');
+    } else if (
+      isSpecifiedError(err, {
+        statusCode: 403,
+        category: 'BANNED',
+        subCategory: 'SandboxErrors.DEVELOPMENT_SANDBOX_ACCESS_NOT_ALLOWED',
+      })
+    ) {
+      logger.log('');
+      logger.error(
+        i18n(`${i18nKey}.failure.403Gating`, {
+          accountName: name,
+          parentAccountName: accountConfig.name || accountId,
+          accountId,
         })
       );
       logger.log('');

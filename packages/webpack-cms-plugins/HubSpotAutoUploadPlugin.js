@@ -1,4 +1,4 @@
-const { upload } = require('@hubspot/cli-lib/api/fileMapper');
+const { upload } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   loadConfig,
@@ -12,8 +12,15 @@ const {
   setLogLevel,
   setLogger,
 } = require('@hubspot/cli-lib/logger');
+const {
+  setLogLevel: setLocalDevLibLogLevel,
+} = require('@hubspot/local-dev-lib/logger');
 const path = require('path');
+
 setLogLevel(LOG_LEVEL.LOG);
+// Update the log level in local-dev-lib's instance of the logger
+// This will evenutally replace cli-lib's version of it
+setLocalDevLibLogLevel(LOG_LEVEL.LOG);
 loadConfig();
 checkAndWarnGitInclusion(getConfigPath());
 
