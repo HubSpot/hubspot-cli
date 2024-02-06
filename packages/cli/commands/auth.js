@@ -44,7 +44,7 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.auth';
 
@@ -154,7 +154,8 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountName = updatedConfig.name || validName;
+  const accountName =
+    (updatedConfig && updatedConfig.name) || validName || configData.name;
 
   const setAsDefault = await setAsDefaultAccountPrompt(accountName);
 

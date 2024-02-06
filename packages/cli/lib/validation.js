@@ -14,7 +14,7 @@ const {
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const { getOauthManager } = require('@hubspot/cli-lib/oauth');
+const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
@@ -118,7 +118,7 @@ async function validateAccount(options) {
       logger.error(
         `The OAuth2 configuration for account ${accountId} is incorrect`
       );
-      logger.error('Run "hscms auth oauth2" to reauthenticate');
+      logger.error('Run "hs auth --type=oauth2" to reauthenticate');
       return false;
     }
 

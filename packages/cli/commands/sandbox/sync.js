@@ -24,7 +24,7 @@ const {
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { isSpecifiedError } = require('../../lib/errorHandlers/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
