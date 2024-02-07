@@ -7,15 +7,11 @@ const {
   addConfigOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getCwd } = require('@hubspot/cli-lib/path');
 const { preview } = require('@hubspot/cli-lib/lib/preview');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  validateSrcAndDestPaths,
-} = require('@hubspot/local-dev-lib/cms/modules');
 const { previewPrompt } = require('../../lib/prompts/previewPrompt');
 
 const i18nKey = 'cli.commands.preview';
@@ -60,16 +56,6 @@ exports.handler = async options => {
   }
   const absoluteSrc = path.resolve(getCwd(), src);
   validateSrcPath(absoluteSrc);
-
-  const srcDestIssues = await validateSrcAndDestPaths(
-    { isLocal: true, path: src },
-    { isHubSpot: true, path: dest }
-  );
-
-  if (srcDestIssues.length) {
-    srcDestIssues.forEach(({ message }) => logger.error(message));
-    process.exit(EXIT_CODES.WARNING);
-  }
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
   trackCommandUsage('preview', accountId);
