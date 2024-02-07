@@ -1,7 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  logErrorInstance,
-} = require('../../../lib/errorHandlers/standardErrors');
+const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   checkAndConvertToJson,
@@ -14,7 +12,9 @@ const {
   isConfigFlagEnabled,
 } = require('@hubspot/local-dev-lib/config');
 const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
-const { createSchema } = require('@hubspot/cli-lib/api/schema');
+const {
+  createObjectSchema,
+} = require('@hubspot/local-dev-lib/api/customObjects');
 const {
   createSchema: createSchemaFromHubFile,
 } = require('@hubspot/local-dev-lib/api/fileTransport');
@@ -38,7 +38,8 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-create', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!checkAndConvertToJson(filePath)) {
+  const schemaJson = checkAndConvertToJson(filePath);
+  if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -51,7 +52,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      const res = await createSchema(accountId, filePath);
+      const res = await createObjectSchema(accountId, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.schemaViewable`, {
           url: `${getHubSpotWebsiteOrigin(
@@ -61,7 +62,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logErrorInstance(e, { accountId });
+    logApiErrorInstance(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

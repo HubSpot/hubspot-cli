@@ -6,7 +6,9 @@ const {
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
-const { deleteSchema } = require('@hubspot/cli-lib/api/schema');
+const {
+  deleteObjectSchema,
+} = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../../lib/lang');
 
 const i18nKey =
@@ -25,7 +27,7 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-delete', null, accountId);
 
   try {
-    await deleteSchema(accountId, name);
+    await deleteObjectSchema(accountId, name);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
         name,

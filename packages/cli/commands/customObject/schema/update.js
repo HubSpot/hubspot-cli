@@ -1,7 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  logErrorInstance,
-} = require('../../../lib/errorHandlers/standardErrors');
+const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   checkAndConvertToJson,
@@ -14,7 +12,9 @@ const {
   getEnv,
   isConfigFlagEnabled,
 } = require('@hubspot/local-dev-lib/config');
-const { updateSchema } = require('@hubspot/cli-lib/api/schema');
+const {
+  updateObjectSchema,
+} = require('@hubspot/local-dev-lib/api/customObjects');
 const {
   updateSchema: updateSchemaFromHubFile,
 } = require('@hubspot/local-dev-lib/api/fileTransport');
@@ -38,7 +38,8 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-update', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!checkAndConvertToJson(filePath)) {
+  const schemaJson = checkAndConvertToJson(filePath);
+  if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -51,7 +52,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      const res = await updateSchema(accountId, name, filePath);
+      const res = await updateObjectSchema(accountId, name, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.viewAtUrl`, {
           url: `${getHubSpotWebsiteOrigin(
@@ -61,7 +62,8 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logErrorInstance(e, { accountId });
+    console.log(e);
+    logApiErrorInstance(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
         definition,
