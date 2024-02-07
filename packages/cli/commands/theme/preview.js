@@ -13,7 +13,7 @@ const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { previewPrompt } = require('../../lib/prompts/previewPrompt');
-const { EXIT_CODES } = require('@hubspot/cli-lib/lib/enums/exitCodes');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const i18nKey = 'cli.commands.preview';
 
 const validateSrcPath = src => {
