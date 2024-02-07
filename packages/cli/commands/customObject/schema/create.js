@@ -17,7 +17,7 @@ const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
 const { createSchema } = require('@hubspot/cli-lib/api/schema');
 const {
   createSchema: createSchemaFromHubFile,
-} = require('@hubspot/cli-lib/api/fileTransport');
+} = require('@hubspot/local-dev-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { i18n } = require('../../../lib/lang');
 

@@ -17,7 +17,7 @@ const {
 const { updateSchema } = require('@hubspot/cli-lib/api/schema');
 const {
   updateSchema: updateSchemaFromHubFile,
-} = require('@hubspot/cli-lib/api/fileTransport');
+} = require('@hubspot/local-dev-lib/api/fileTransport');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { i18n } = require('../../../lib/lang');
 
