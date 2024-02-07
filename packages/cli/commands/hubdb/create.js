@@ -6,7 +6,7 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { createHubDbTable } = require('@hubspot/cli-lib/hubdb');
 
 const {
-  isFileValidJSON,
+  checkAndConvertToJson,
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -35,7 +35,7 @@ exports.handler = async options => {
 
   try {
     const filePath = path.resolve(getCwd(), src);
-    if (!isFileValidJSON(filePath)) {
+    if (!checkAndConvertToJson(filePath)) {
       process.exit(EXIT_CODES.ERROR);
     }
 

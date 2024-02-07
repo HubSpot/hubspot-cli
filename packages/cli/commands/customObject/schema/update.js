@@ -4,7 +4,7 @@ const {
 } = require('../../../lib/errorHandlers/standardErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
-  isFileValidJSON,
+  checkAndConvertToJson,
   loadAndValidateOptions,
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
@@ -38,7 +38,7 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-update', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!isFileValidJSON(filePath)) {
+  if (!checkAndConvertToJson(filePath)) {
     process.exit(EXIT_CODES.ERROR);
   }
 
