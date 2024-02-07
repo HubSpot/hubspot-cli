@@ -13,7 +13,7 @@ const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { previewPrompt } = require('../../lib/prompts/previewPrompt');
-
+const { EXIT_CODES } = require('@hubspot/cli-lib/lib/enums/exitCodes');
 const i18nKey = 'cli.commands.preview';
 
 const validateSrcPath = src => {
@@ -28,13 +28,13 @@ const validateSrcPath = src => {
     const stats = fs.statSync(src);
     if (!stats.isDirectory()) {
       logInvalidPath();
-      return;
+      return false;
     }
   } catch (e) {
     logInvalidPath();
-    return;
+    return false;
   }
-  return;
+  return true;
 };
 
 exports.command = 'preview';
@@ -54,8 +54,11 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
     return;
   }
+
   const absoluteSrc = path.resolve(getCwd(), src);
-  validateSrcPath(absoluteSrc);
+  if (!validateSrcPath(absoluteSrc)) {
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
   trackCommandUsage('preview', accountId);
