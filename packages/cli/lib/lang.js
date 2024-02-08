@@ -57,6 +57,7 @@ const getTextValue = lookupDotNotation => {
         '.'
       )}. Failed to access prop "${previouslyCheckedProp}".`
     );
+    logger.error('Unable to access language property.');
     return missingTextData;
   }
 
