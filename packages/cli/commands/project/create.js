@@ -14,20 +14,38 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
-const { uiFeatureHighlight } = require('../../lib/ui');
+const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
+const {
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+} = require('../../lib/constants');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { fetchReleaseData } = require('@hubspot/cli-lib/github');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
 exports.command = 'create';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
 
-  const { name, template, location } = await createProjectPrompt(options);
+  const hasCustomTemplateSource = Boolean(options.templateSource);
+
+  let githubRef = '';
+
+  if (!hasCustomTemplateSource) {
+    const releaseData = await fetchReleaseData(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
+    );
+    githubRef = releaseData.tag_name;
+  }
+
+  const { name, template, location } = await createProjectPrompt(
+    githubRef,
+    options
+  );
 
   trackCommandUsage(
     'project-create',
@@ -38,17 +56,18 @@ exports.handler = async options => {
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    options.template || template,
-    options.templateSource
+    template || { path: options.template },
+    options.templateSource,
+    githubRef
   );
 
   logger.log('');
   logger.log(chalk.bold(i18n(`${i18nKey}.logs.welcomeMessage`)));
   uiFeatureHighlight([
-    'projectUploadCommand',
-    'projectDeployCommand',
+    'projectDevCommand',
     'projectHelpCommand',
     'feedbackCommand',
+    'sampleProjects',
   ]);
 };
 

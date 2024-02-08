@@ -3,8 +3,8 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
-const { getFunctionArrays } = require('@hubspot/cli-lib/lib/functions');
+} = require('../../lib/errorHandlers/apiErrors');
+const { getFunctionArrays } = require('../../lib/getFunctionArrays');
 const {
   getTableContents,
   getTableHeader,

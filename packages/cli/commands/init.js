@@ -5,11 +5,11 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
-const { handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleExit } = require('../lib/process');
 const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -133,11 +133,17 @@ exports.handler = async options => {
     );
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
-    trackAuthAction('init', authType, TRACKING_STATUS.COMPLETE, accountId);
+    await trackAuthAction(
+      'init',
+      authType,
+      TRACKING_STATUS.COMPLETE,
+      accountId
+    );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logErrorInstance(err);
-    trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 

@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfig, getConfigPath } = require('@hubspot/cli-lib/lib/config');
+const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
 const {
   getTableContents,
   getTableHeader,

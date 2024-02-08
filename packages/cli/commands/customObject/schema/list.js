@@ -1,10 +1,12 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  logErrorInstance,
+} = require('../../../lib/errorHandlers/standardErrors');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
-const { listSchemas } = require('@hubspot/cli-lib/schema');
+const { listSchemas } = require('../../../lib/schema');
 const { i18n } = require('../../../lib/lang');
 
 const i18nKey = 'cli.commands.customObject.subcommands.schema.subcommands.list';

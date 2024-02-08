@@ -6,7 +6,7 @@ const {
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { uiLine } = require('../../lib/ui');
+const { uiBetaTag, uiLine } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -16,23 +16,22 @@ const {
   logFeedbackMessage,
   validateProjectConfig,
   pollProjectBuildAndDeploy,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
-const {
-  isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+  isSpecifiedError,
+} = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
 
 exports.command = 'upload [path]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -47,6 +46,8 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
+
+  await showPlatformVersionWarning(accountId, projectConfig);
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 

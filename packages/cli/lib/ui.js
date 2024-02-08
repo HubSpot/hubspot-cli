@@ -1,10 +1,15 @@
-const process = require('process');
 const chalk = require('chalk');
 const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
-const { getAccountConfig } = require('@hubspot/cli-lib/lib/config');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
+
+const UI_COLORS = {
+  SORBET: '#FF8F59',
+  MARIGOLD: '#f5c26b',
+  MARIGOLD_DARK: '#dbae60',
+};
 
 /**
  * Outputs horizontal line
@@ -36,11 +41,13 @@ const getTerminalUISupport = () => {
  * @param {object} options
  * @returns {string}
  */
-const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
+const uiLink = (linkText, url) => {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
+
   if (terminalUISupport.hyperlinks) {
     const CLOSE_SEQUENCE = '\u001B]8;;\u0007';
+
     const result = [
       '\u001B]8;;',
       encodedUrl,
@@ -49,16 +56,7 @@ const uiLink = (linkText, url, { inSpinnies = false } = {}) => {
       CLOSE_SEQUENCE,
     ].join('');
 
-    // Required b/c spinnies will automatically line-break long lines. "indent" is added to account for indented spinnies
-    // See https://github.com/jbcarpanelli/spinnies/blob/d672dedcab8c8ce0f6de0bb26ca5582bf602afd7/utils.js#L68-L74
-    const indent = 5;
-    const columns =
-      (process.stderr.columns || 95) - CLOSE_SEQUENCE.length - indent;
-    const validLength = !inSpinnies || result.length < columns;
-
-    if (validLength) {
-      return terminalUISupport.color ? chalk.cyan(result) : result;
-    }
+    return terminalUISupport.color ? chalk.cyan(result) : result;
   }
 
   return terminalUISupport.color
@@ -88,6 +86,18 @@ const uiInfoSection = (title, logContent) => {
   uiLine();
 };
 
+const uiCommandReference = command => {
+  const terminalUISupport = getTerminalUISupport();
+
+  const commandReference = `\`${command}\``;
+
+  return chalk.bold(
+    terminalUISupport.color
+      ? chalk.hex(UI_COLORS.MARIGOLD_DARK)(commandReference)
+      : commandReference
+  );
+};
+
 const uiFeatureHighlight = (commands, title) => {
   const i18nKey = 'cli.lib.ui.featureHighlight';
 
@@ -95,7 +105,8 @@ const uiFeatureHighlight = (commands, title) => {
     commands.forEach((c, i) => {
       const commandKey = `${i18nKey}.commandKeys.${c}`;
       const message = i18n(`${commandKey}.message`, {
-        command: chalk.bold(i18n(`${commandKey}.command`)),
+        command: uiCommandReference(i18n(`${commandKey}.command`)),
+        link: uiLink(i18n(`${commandKey}.linkText`), i18n(`${commandKey}.url`)),
       });
       if (i !== 0) {
         logger.log('');
@@ -105,24 +116,28 @@ const uiFeatureHighlight = (commands, title) => {
   });
 };
 
-const uiBetaMessage = message => {
+const uiBetaTag = (message, log = true) => {
   const i18nKey = 'cli.lib.ui';
 
-  logger.log(chalk.hex('#bda9ea')(i18n(`${i18nKey}.betaTag`)), message);
-};
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.betaTag`);
 
-const uiBetaWarning = logMessage => {
-  const i18nKey = 'cli.lib.ui.betaWarning';
+  const result = `${
+    terminalUISupport.color ? chalk.hex(UI_COLORS.SORBET)(tag) : tag
+  } ${message}`;
 
-  logger.log(i18n(`${i18nKey}.header`));
-  logMessage();
-  logger.log(i18n(`${i18nKey}.footer`));
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
 };
 
 module.exports = {
+  UI_COLORS,
   uiAccountDescription,
-  uiBetaMessage,
-  uiBetaWarning,
+  uiCommandReference,
+  uiBetaTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,

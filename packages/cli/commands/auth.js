@@ -1,4 +1,4 @@
-const { loadConfig, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
+const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
@@ -15,8 +15,9 @@ const {
   writeConfig,
   getConfig,
   getConfigPath,
-} = require('@hubspot/cli-lib/lib/config');
-const { commaSeparatedValues } = require('@hubspot/cli-lib/lib/text');
+  loadConfig,
+} = require('@hubspot/local-dev-lib/config');
+const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,
@@ -31,15 +32,22 @@ const {
 const {
   addConfigOptions,
   setLogLevel,
+  getAccountId,
   addTestingOptions,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const { trackCommandUsage } = require('../lib/usageTracking');
+const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
 
 const i18nKey = 'cli.commands.auth';
+
+const TRACKING_STATUS = {
+  STARTED: 'started',
+  ERROR: 'error',
+  COMPLETE: 'complete',
+};
 
 const ALLOWED_AUTH_METHODS = [
   OAUTH_AUTH_METHOD.value,
@@ -71,6 +79,7 @@ exports.handler = async options => {
   checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
+  trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
 
   let configData;
   let updatedConfig;
@@ -122,6 +131,7 @@ exports.handler = async options => {
   }
 
   if (!successAuthMethod) {
+    await trackAuthAction('auth', authType, TRACKING_STATUS.ERROR);
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -156,6 +166,9 @@ exports.handler = async options => {
     'accountOption',
     'accountsListCommand',
   ]);
+
+  const accountId = getAccountId({ account: accountName });
+  await trackAuthAction('auth', authType, TRACKING_STATUS.COMPLETE, accountId);
 
   process.exit(EXIT_CODES.SUCCESS);
 };

@@ -1,11 +1,6 @@
-const {
-  getConfig,
-  writeConfig,
-  updateAccountConfig,
-  getAccountId,
-} = require('@hubspot/cli-lib');
 const chalk = require('chalk');
 const { i18n } = require('./lang');
+const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   updateConfigWithPersonalAccessKey,
@@ -17,8 +12,13 @@ const {
   fetchTypes,
   getSandboxUsageLimits,
 } = require('@hubspot/cli-lib/sandboxes');
-const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
-const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const {
+  accountNameExistsInConfig,
+  getConfig,
+  writeConfig,
+  updateAccountConfig,
+  getAccountId,
+} = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');

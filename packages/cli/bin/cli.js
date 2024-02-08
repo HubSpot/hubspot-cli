@@ -5,7 +5,7 @@ const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
 
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
   trackHelpUsage,
@@ -42,7 +42,11 @@ const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-const notifier = updateNotifier({ pkg: { ...pkg, name: '@hubspot/cli' } });
+const notifier = updateNotifier({
+  pkg: { ...pkg, name: '@hubspot/cli' },
+  distTag: 'latest',
+  shouldNotifyInNpmScript: true,
+});
 
 const i18nKey = 'cli.commands.generalErrors';
 
@@ -51,7 +55,6 @@ const CLI_UPGRADE_MESSAGE =
   '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli';
 
 notifier.notify({
-  shouldNotifyInNpmScript: true,
   message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
 });
 
@@ -115,7 +118,7 @@ const argv = yargs
   .option('debug', {
     alias: 'd',
     default: false,
-    describe: 'set log level to debug',
+    describe: 'Set log level to debug',
     type: 'boolean',
   })
   .option('noHyperlinks', {

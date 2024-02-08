@@ -1,6 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { ensureProjectExists } = require('../projects');
+const { uiAccountDescription } = require('../ui');
 
 const i18nKey = 'cli.lib.prompts.projectNamePrompt';
 
@@ -20,7 +21,7 @@ const projectNamePrompt = (accountId, options = {}) => {
       if (!projectExists) {
         return i18n(`${i18nKey}.errors.projectDoesNotExist`, {
           projectName: val,
-          accountId,
+          accountIdentifier: uiAccountDescription(accountId),
         });
       }
       return true;

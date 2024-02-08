@@ -1,9 +1,9 @@
 const { i18n } = require('../../lib/lang');
-const { createWatcher } = require('@hubspot/cli-lib/projectsWatch');
+const { createWatcher } = require('../../lib/projectsWatch');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {
@@ -13,6 +13,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { uiBetaTag } = require('../../lib/ui');
 const {
   ensureProjectExists,
   getProjectConfig,
@@ -21,6 +22,7 @@ const {
   pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
+  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const {
   cancelStagedBuild,
@@ -28,12 +30,12 @@ const {
 } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { handleKeypress, handleExit } = require('@hubspot/cli-lib/lib/process');
+const { handleKeypress, handleExit } = require('../../lib/process');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
 exports.command = 'watch [path]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
   const {
@@ -96,6 +98,8 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
+
+  await showPlatformVersionWarning(accountId, projectConfig);
 
   await ensureProjectExists(accountId, projectConfig.name);
 

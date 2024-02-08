@@ -7,10 +7,11 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { i18n } = require('../../lib/lang');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   fetchProject,
@@ -21,7 +22,7 @@ const {
   getTableHeader,
 } = require('@hubspot/cli-lib/lib/table');
 const { getCwd } = require('@hubspot/cli-lib/path');
-const { uiLink } = require('../../lib/ui');
+const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   getProjectConfig,
@@ -31,8 +32,10 @@ const {
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 
+const i18nKey = 'cli.commands.project.subcommands.listBuilds';
+
 exports.command = 'list-builds [path]';
-exports.describe = false;
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

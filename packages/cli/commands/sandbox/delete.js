@@ -9,29 +9,32 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
+  logErrorInstance,
   debugErrorAndContext,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/standardErrors');
+const {
+  isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
+} = require('../../lib/errorHandlers/apiErrors');
 const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
-const { getConfig, getEnv, getAccountConfig } = require('@hubspot/cli-lib');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
+  getConfig,
+  getEnv,
+  getAccountConfig,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
-const {
-  isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
-const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
+
 const { getAccountName } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -168,7 +171,7 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
-    if (err instanceof HubSpotAuthError && err.statusCode === 401) {
+    if (isSpecifiedHubSpotAuthError(err, { statusCode: 401 })) {
       // Intercept invalid key error
       // This command uses the parent portal PAK to delete a sandbox, so we must specify which account needs a new key
       logger.log('');

@@ -67,6 +67,18 @@ en:
               nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
             name: "{{#bold}}Account name{{/bold}}: {{ name }}"
             scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
+          clean:
+            describe: "Checks for inactive accounts and removes them from the CLI config"
+            noResults: "No inactive accounts found to remove."
+            loading:
+              add: "Looking for inactive accounts…"
+            inactiveAccountsFound:
+              one: "1 inactive account found:"
+              other: "{{ count }} inactive accounts found:"
+            confirm:
+              one: "Remove 1 inactive account from the CLI config?"
+              other: "Remove {{ count }} inactive accounts from the CLI config?"
+            removeSuccess: "Removed {{ accountName }} from the CLI config."
       auth:
         describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
         errors:
@@ -168,7 +180,7 @@ en:
       customObject:
         betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
         describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "See {{ link }} to find out more."
+        seeMoreLink: "View our docs to find out more."
         subcommands:
           create:
             describe: "Create custom object instances"
@@ -444,6 +456,7 @@ en:
             describe: "Shortcut of the link you'd like to open"
         selectLink: "Select a link to open"
       project:
+        describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
         subcommands:
           dev:
             describe: "Start local dev for the current project"
@@ -454,20 +467,16 @@ en:
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
+              declineDefaultSandboxExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
             status:
               creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
               failedToCreateProject: "Failed to create project in the target account."
-              startupMessage: "Starting local dev server for {{#bold}}{{ projectName }}{{/bold}} ..."
             prompt:
               createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-              targetNonSandbox: "Continue testing in a non-sandbox account?"
-            options:
-              extension:
-                describe: "The extension that you would like to run locally"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
-              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -508,6 +517,7 @@ en:
               deploy: "Deploy error: {{ details }}"
               noBuilds: "Deploy error: no builds for this project were found."
               noBuildId: "You must specify a build to deploy"
+              projectNotFound: "{{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
             examples:
               default: "Deploy the latest build of the current project"
               withOptions: "Deploy build 5 of the project my-project"
@@ -516,6 +526,8 @@ en:
                 describe: "Project build ID to be deployed"
               project:
                 describe: "Project name"
+          listBuilds:
+            describe: "List the project's builds"
           logs:
             describe: "Get execution logs for a serverless function within a project"
             errors:
@@ -575,12 +587,31 @@ en:
               default: "Watch a project within the myProjectFolder folder"
             logs:
               processExited: "Stopping watcher..."
+              watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
+              resuming: "Resuming watcher..."
+              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
+              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
+              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
+              previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
             positionals:
               path:
                 describe: "Path to a project folder"
             options:
               initialUpload:
                 describe: "Upload directory before watching for updates"
+            debug:
+              pause: "Pausing watcher, attempting to queue build"
+              buildStarted: "Build queued."
+              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
+              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
+              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              attemptNewBuild: "Attempting to create a new build"
+              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
+            errors:
+              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
+              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
           download:
             describe: "Download your project files from HubSpot and write to a path on your computer"
             examples:
@@ -591,6 +622,8 @@ en:
             errors:
               downloadFailed: "Something went wrong downloading the project"
               projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+            warnings:
+              cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
             options:
               buildNumber:
                 describe: "The build number to download"
@@ -599,7 +632,7 @@ en:
               dest:
                 describe: "Destination folder for the project"
           open:
-            describe: "Open available projects for the specified account"
+            describe: "Open the specified project's details page in the browser"
             options:
               project:
                 describe: "Name of project to open"
@@ -730,7 +763,7 @@ en:
                 describe: "Name of the secret to be updated"
             success:
               update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
-              updateReupload: "Make sure to `{{#yellow}}upload{{/yellow}}` all serverless functions using this secret to access its new value."
+              updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
       theme:
         describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
         subcommands:
@@ -790,6 +823,7 @@ en:
           invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
           uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
           someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
+          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
         options:
           options:
             describe: "Options to pass to javascript fields files"
@@ -797,6 +831,10 @@ en:
             describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
           convertFields:
             describe: "If true, converts any javascript fields files contained in module folder or project root."
+          clean:
+            describe: "Will cause upload to delete files in your HubSpot account that are not found locally."
+          force:
+            describe: "Skips confirmation prompts when doing a clean upload."
         previewUrl: "To preview this theme, visit: {{ previewUrl }}"
         positionals:
           src:
@@ -808,6 +846,7 @@ en:
           uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
         uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
         notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
+        cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
       watch:
         describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
         errors:
@@ -865,61 +904,42 @@ en:
           options:
             describe: "Options to pass to javascript fields files"
     lib:
+      process:
+        exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
-      LocalDevManagerV2:
+        notInitialized: "The Dev Server Manager must be initialized before it is started."
+        noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
+      LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
+        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
+        noComponents: "There are no components in this project."
+        noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
         betaMessage: "HubSpot projects local development"
         running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
         quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-        viewInHubSpotLink: "View in HubSpot"
+        viewInHubSpotLink: "View project in HubSpot"
         exitingStart: "Stopping local dev server ..."
         exitingSucceed: "Successfully exited"
         exitingFail: "Failed to cleanup before exiting"
+        uploadWarning:
+          appLabel: "[App]"
+          uiExtensionLabel: "[UI Extension]"
+          missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
+          defaultWarning: "Changing project configuration requires a new project build."
+          header: "{{ warning }} To reflect these changes and continue testing:"
+          stopDev: "  * Stop {{ command }}"
+          runUpload: "  * Run {{ command }}"
+          restartDev: "  * Re-run {{ command }}"
+          pushToGithub: "  * Commit and push your changes to GitHub"
         devServer:
           cleanupError: "Failed to cleanup local dev server: {{ message }}"
+          setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
-      LocalDevManager:
-        failedToInitialize: "Missing required arguments to initialize Local Dev Manager"
-        exitingStart: "Stopping local dev server ..."
-        exitingSucceed: "Successfully exited"
-        exitingFail: "Failed to clean up before exiting"
-        previousStagingBuildCancelled: "Failed to create a staging build because the project was already locked. It is now unlocked. Run the command again."
-        cancelledFromUI: "The dev process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume dev mode, rerun {{#yellow}}`hs project dev`{{/yellow}}."
-        header:
-          betaMessage: "{{#yellow}}{{#bold}}[beta]{{/bold}}{{/yellow}} HubSpot projects local development"
-          running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
-          quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-          viewInHubSpotLink: "View in HubSpot"
-          status:
-            clean: "{{#bold}}Status:{{/bold}} {{#green}}Everything up to date{{/green}}"
-            buildError: "{{#bold}}Status:{{/bold}} {{#red}}Latest build failed{{/red}}"
-            deployError: "{{#bold}}Status:{{/bold}} {{#red}}Latest deploy failed{{/red}}"
-            uploadPending: "{{#bold}}Status:{{/bold}} {{#yellow}}Upload is pending{{/yellow}}"
-            noUploadsAllowed: "{{#bold}}Status:{{/bold}} {{#red}}Change requires upload, but uploads are not allowed{{/red}}"
-            manualUploadRequired: "{{#bold}}Status:{{/bold}} {{#yellow}}Change requires manual upload{{/yellow}}"
-            manualUpload: "{{#bold}}Status:{{/bold}} {{#green}}Manually uploading pending changes{{/green}}"
-        upload:
-          noUploadsAllowed: "The change to {{ filePath }} requires an upload, but the CLI cannot upload to a project that is using a github integration."
-          manualUploadSkipped: "Manually upload and deploy project to production account: {{#green}}(n){{/green}}"
-          manualUploadConfirmed: "Manually upload and deploy project to production account: {{#green}}(Y){{/green}}"
-          manualUploadRequired: "Project file changes require a manual upload and deploy ..."
-          manualUploadExplanation1: "{{#yellow}}> Dev server is running on a {{#bold}}non-sandbox account{{/bold}}.{{/yellow}}"
-          manualUploadExplanation2: "{{#yellow}}> Uploading changes may overwrite production data.{{/yellow}}"
-          manualUploadPrompt: "? Manually upload and deploy project? {{#green}}Y/n{{/green}}"
-          extensionNotAllowed: "Extension not allowed for {{ filePath }}"
-          fileIgnored: "File ignored: {{ filePath }}"
-          uploadingAddChange: "[INFO] Uploading {{ filePath }}"
-          uploadedAddChange: "[INFO] Uploaded {{ filePath }}"
-          uploadingRemoveChange: "[INFO] Removing {{ filePath }}"
-          uploadedRemoveChange: "[INFO] Removed {{ filePath }}"
-          uploadingChanges: "{{#bold}}Building #{{ buildId }} and deploying recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesSucceeded: "{{#bold}}Built #{{ buildId }} and deployed recent changes on {{ accountIdentifier }}{{/bold}}"
-          uploadedChangesFailed: "{{#bold}}Failed to build #{{ buildId }} and deploy recent changes on {{ accountIdentifier }}{{/bold}}"
-        devServer:
-          startError: "{{#red}}[ERROR]{{/red}} Failed to start local dev server"
-          cleanupError: "{{#red}}[ERROR]{{/red}} Failed to cleanup local dev server"
+          fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
       projects:
+        config:
+          srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
         uploadProjectFiles:
           add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
           fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -929,10 +949,13 @@ en:
           emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
           compressed: "Project files compressed: {{ byteCount }} bytes"
           compressing: "Compressing build files to \"{{ path }}\""
+          fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
         ensureProjectExists:
           createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
           createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
           notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+        pollFetchProject:
+          checkingProject: "Checking if project exists in {{ accountIdentifier }}"
         makePollTaskStatusFunc:
           componentCountSingular: "Found 1 component in this project"
           componentCount: "Found {{ numComponents }} components in this project"
@@ -944,8 +967,11 @@ en:
         logFeedbackMessage:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+        showPlatformVersionWarning:
+          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
+          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
       ui:
-        betaTag: "{{#bold}}[beta]{{/bold}}"
+        betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
           header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
           footer: "{{#yellow}}******************************************************************{{/yellow}}"
@@ -984,13 +1010,17 @@ en:
               message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
             projectDevCommand:
               command: "hs project dev"
-              message: "Run {{ command }} to start testing your project locally"
+              message: "Run {{ command }} to set up your test environment and start local development"
             sandboxSyncDevelopmentCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update CRM object definitions in your sandbox"
             sandboxSyncStandardCommand:
               command: "hs sandbox sync"
               message: "Run {{ command }} to to update all supported assets to your sandbox from production"
+            sampleProjects:
+              linkText: "HubSpot's sample projects"
+              url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
+              message: "See {{ link }}"
       commonOpts:
         options:
           portal:
@@ -1011,9 +1041,11 @@ en:
       prompts:
         projectDevTargetAccountPrompt:
           createNewSandboxOption: "<Test on a new development sandbox>"
-          chooseDefaultAccountOption: "<{{#bold}}!{{/bold}} Test on this production account {{#bold}}!{{/bold}}>"
+          chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
-          sandboxLimit: "You’ve reached the limit of {{ limit }} development sandboxes"
+          sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
+          sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
+          confirmDefaultSandboxAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"
@@ -1086,7 +1118,7 @@ en:
         createProjectPrompt:
           enterName: "[--name] Give your project a name: "
           enterLocation: "[--location] Where should the project be created?"
-          selectTemplate: "[--template] Start from a template?"
+          selectTemplate: "[--template] Choose a project template: "
           errors:
             nameRequired: "A project name is required"
             locationRequired: "A project location is required"
@@ -1132,7 +1164,7 @@ en:
           enterName: "[--project] Enter project name:"
           errors:
             invalidName: "You entered an invalid name. Please try again."
-            projectDoesNotExist: "Project \"{{ projectName }}\" could not be found in \"{{ accountId }}\""
+            projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
         feedbackPrompt:
           feedbackType:
             message: "What type of feedback would you like to leave?"
@@ -1151,6 +1183,8 @@ en:
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
+        cleanUploadPrompt:
+          message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
       convertFields:
         positionals:
           src:
@@ -1258,6 +1292,37 @@ en:
               label: "Lead Flows"
             marketing-email:
               label: "Marketing emails"
+      errorHandlers:
+        standardErrors:
+          errorOccurred: "Error: {{ error }}"
+          errorContext: "Context: {{ context }}"
+          systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
+          genericErrorOccurred: "A {{ name }} has occurred."
+          unknownErrorOccurred: "An unknown error has occurred"
+        fileSystemErrors:
+          errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
+          errorExplanation: "This is the result of a system error: {{ errorMessage }}"
+        apiErrors:
+          messageDetail: "{{ request }} in account {{ accountId }}"
+          unableToUpload: 'Unable to upload "{{ payload }}.'
+          codes:
+            400: "The {{ messageDetail }} was bad."
+            401: "The {{ messageDetail }} was unauthorized."
+            403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403: "The {{ messageDetail }} was forbidden."
+            404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
+            404: "The {{ messageDetail }} was not found."
+            429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
+            503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            500generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            400generic: "The {{ messageDetail }} failed due to a client error."
+            generic: "The {{ messageDetail }} failed."
+          verifyAccessKeyAndUserAccess:
+            fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
+            portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
+            userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+            genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
 
 
 

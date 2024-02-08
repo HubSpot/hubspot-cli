@@ -11,17 +11,17 @@ const {
   syncTypes,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const {
+  debugErrorAndContext,
+  logErrorInstance,
+} = require('./errorHandlers/standardErrors');
 const {
   isSpecifiedError,
   isMissingScopeError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('./errorHandlers/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
-const { getAccountId } = require('@hubspot/cli-lib');
+const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');
-const {
-  debugErrorAndContext,
-} = require('@hubspot/cli-lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 

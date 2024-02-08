@@ -16,12 +16,13 @@ const {
   ensureProjectExists,
 } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
+const { uiBetaTag } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.open';
 
 exports.command = 'open [--project]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);

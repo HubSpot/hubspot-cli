@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
 const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
-const { upload } = require('@hubspot/cli-lib/api/fileMapper');
+const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
@@ -10,12 +10,12 @@ const {
 } = require('@hubspot/cli-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  logErrorInstance,
   ApiErrorContext,
   logApiUploadErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../lib/errorHandlers/apiErrors');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 
 const {
   addConfigOptions,
@@ -26,6 +26,7 @@ const {
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
+const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
@@ -204,6 +205,29 @@ exports.handler = async options => {
       absoluteSrcPath,
       options.convertFields
     );
+
+    if (options.clean) {
+      //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
+      let cleanUpload = options.force;
+      if (!options.force) {
+        cleanUpload = await cleanUploadPrompt(accountId, dest);
+      }
+      if (cleanUpload) {
+        try {
+          await deleteFile(accountId, dest);
+          logger.log(
+            i18n(`${i18nKey}.cleaning`, { accountId, filePath: dest })
+          );
+        } catch (error) {
+          logger.error(
+            i18n(`${i18nKey}.errors.deleteFailed`, {
+              accountId,
+              path: dest,
+            })
+          );
+        }
+      }
+    }
     uploadFolder(
       accountId,
       absoluteSrcPath,
@@ -273,6 +297,16 @@ exports.builder = yargs => {
   });
   yargs.option('convertFields', {
     describe: i18n(`${i18nKey}.options.convertFields.describe`),
+    type: 'boolean',
+    default: false,
+  });
+  yargs.option('clean', {
+    describe: i18n(`${i18nKey}.options.clean.describe`),
+    type: 'boolean',
+    default: false,
+  });
+  yargs.option('force', {
+    describe: i18n(`${i18nKey}.options.force.describe`),
     type: 'boolean',
     default: false,
   });

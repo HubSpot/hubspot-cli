@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -8,7 +9,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -16,13 +17,15 @@ const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
-const { getAccountConfig } = require('@hubspot/cli-lib');
+const { uiBetaTag } = require('../../lib/ui');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 
 exports.command = 'deploy [--project] [--buildId]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -98,6 +101,15 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
+    if (e.statusCode === 404) {
+      logger.error(
+        i18n(`${i18nKey}.errors.projectNotFound`, {
+          projectName: chalk.bold(projectName),
+          accountIdentifier: uiAccountDescription(accountId),
+          command: uiCommandReference('hs project upload'),
+        })
+      );
+    }
     if (e.statusCode === 400) {
       logger.error(e.error.message);
     } else {

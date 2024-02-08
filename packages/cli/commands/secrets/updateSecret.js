@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -41,7 +41,7 @@ exports.handler = async options => {
         secretName,
       })
     );
-    logger.log(i18n(`${i18nKey}.success.updateReupload`));
+    logger.log(i18n(`${i18nKey}.success.updateExplanation`));
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.update`, {

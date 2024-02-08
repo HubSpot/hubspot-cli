@@ -40,7 +40,8 @@ module.exports = {
     downloadSpinner.start();
     const samplesConfig = await fetchJsonFromRepository(
       'HubSpot/sample-apps-list',
-      'main/samples.json'
+      'samples.json',
+      'main'
     );
     downloadSpinner.stop();
     if (!samplesConfig) {
@@ -63,7 +64,7 @@ module.exports = {
     const created = await cloneGitHubRepo(
       filePath,
       assetType,
-      sampleType,
+      `HubSpot/${sampleType}`,
       sampleLanguage,
       {
         ...options,

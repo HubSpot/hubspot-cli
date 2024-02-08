@@ -5,62 +5,71 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getConfigAccounts } = require('@hubspot/cli-lib/lib/config');
+const {
+  getConfigAccounts,
+  getAccountConfig,
+  getEnv,
+} = require('@hubspot/local-dev-lib/config');
 const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
-const { handleExit } = require('@hubspot/cli-lib/lib/process');
 const {
   getProjectConfig,
   ensureProjectExists,
   handleProjectUpload,
   pollProjectBuildAndDeploy,
+  showPlatformVersionWarning,
+  validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiAccountDescription, uiBetaMessage, uiLine } = require('../../lib/ui');
+const {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+  uiLine,
+} = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
+  confirmDefaultSandboxAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
-const {
-  LocalDevManager,
-  UPLOAD_PERMISSIONS,
-} = require('../../lib/LocalDevManager');
-const LocalDevManagerV2 = require('../../lib/LocalDevManagerV2');
+const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox } = require('../../lib/sandboxes');
-const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
   DEVELOPER_SANDBOX,
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   ERROR_TYPES,
 } = require('@hubspot/cli-lib/lib/constants');
-const {
-  logErrorInstance,
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
+  logApiErrorInstance,
+  ApiErrorContext,
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+} = require('../../lib/errorHandlers/apiErrors');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
-exports.describe = null; //i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -72,12 +81,14 @@ exports.handler = async options => {
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
-  uiBetaMessage(i18n(`${i18nKey}.logs.betaMessage`));
+  uiBetaTag(i18n(`${i18nKey}.logs.betaMessage`));
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  validateProjectConfig(projectConfig, projectDir);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
@@ -85,7 +96,23 @@ exports.handler = async options => {
   const defaultAccountIsSandbox = isSandbox(accountConfig);
 
   if (!targetAccountId && defaultAccountIsSandbox) {
-    targetAccountId = accountId;
+    logger.log();
+    const useDefaultSandboxAccount = await confirmDefaultSandboxAccountPrompt(
+      accountConfig.name,
+      accountConfig.sandboxAccountType
+    );
+
+    if (useDefaultSandboxAccount) {
+      targetAccountId = accountId;
+    } else {
+      logger.log(
+        i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   if (!targetAccountId) {
@@ -129,6 +156,13 @@ exports.handler = async options => {
     }
     try {
       const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+
+      trackCommandMetadataUsage(
+        'sandbox-create',
+        { step: 'project-dev' },
+        accountId
+      );
+
       const { result } = await buildSandbox({
         name,
         type: DEVELOPER_SANDBOX,
@@ -159,31 +193,26 @@ exports.handler = async options => {
     }
   }
 
+  logger.log();
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,
     {
       allowCreate: false,
       noLogs: true,
-      withPolling: true,
+      withPolling: createNewSandbox,
     }
   );
 
-  const isNonSandboxAccount =
-    !defaultAccountIsSandbox && targetAccountId === accountId;
-
-  let uploadPermission = isNonSandboxAccount
-    ? UPLOAD_PERMISSIONS.manual
-    : UPLOAD_PERMISSIONS.always;
+  let deployedBuild;
+  let isGithubLinked;
 
   if (projectExists) {
-    const { sourceIntegration } = await fetchProject(
-      targetAccountId,
-      projectConfig.name
-    );
-    if (options.extension || sourceIntegration) {
-      uploadPermission = UPLOAD_PERMISSIONS.never;
-    }
+    const project = await fetchProject(targetAccountId, projectConfig.name);
+    deployedBuild = project.deployedBuild;
+    isGithubLinked =
+      project.sourceIntegration &&
+      project.sourceIntegration.source === 'GITHUB';
   }
 
   SpinniesManager.init();
@@ -193,6 +222,7 @@ exports.handler = async options => {
     let shouldCreateProject = createNewSandbox;
 
     if (!shouldCreateProject) {
+      logger.log();
       uiLine();
       logger.warn(
         i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
@@ -211,13 +241,16 @@ exports.handler = async options => {
     }
 
     if (shouldCreateProject) {
+      await showPlatformVersionWarning(accountId, projectConfig);
+
+      SpinniesManager.add('createProject', {
+        text: i18n(`${i18nKey}.status.creatingProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        }),
+      });
+
       try {
-        SpinniesManager.add('createProject', {
-          text: i18n(`${i18nKey}.status.creatingProject`, {
-            accountIdentifier: uiAccountDescription(targetAccountId),
-            projectName: projectConfig.name,
-          }),
-        });
         await createProject(targetAccountId, projectConfig.name);
         SpinniesManager.succeed('createProject', {
           text: i18n(`${i18nKey}.status.createdProject`, {
@@ -227,28 +260,22 @@ exports.handler = async options => {
           succeedColor: 'white',
         });
       } catch (err) {
+        SpinniesManager.fail('createProject');
         logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
       // We cannot continue if the project does not exist in the target account
+      logger.log();
       logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
 
-  SpinniesManager.add('devModeSetup', {
-    text: i18n(`${i18nKey}.status.startupMessage`, {
-      projectName: projectConfig.name,
-    }),
-    isParent: true,
-  });
-
   let initialUploadResult;
 
-  // Create an initial build if the project was newly created in the account or if
-  // our upload permission is set to "always"
-  if (!projectExists || uploadPermission === UPLOAD_PERMISSIONS.always) {
+  // Create an initial build if the project was newly created in the account
+  if (!projectExists) {
     initialUploadResult = await handleProjectUpload(
       targetAccountId,
       projectConfig,
@@ -258,8 +285,6 @@ exports.handler = async options => {
     );
 
     if (initialUploadResult.uploadError) {
-      SpinniesManager.fail('devModeSetup');
-
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
           subCategory: ERROR_TYPES.PROJECT_LOCKED,
@@ -279,73 +304,44 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
-  }
 
-  // Let the user know when the initial build or deploy fails
-  // Do this before starting the dev server for v2 behavior because we cannot
-  // run a server on a broken project
-  if (
-    options.extension &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
-    SpinniesManager.fail('devModeSetup');
+    if (!initialUploadResult.succeeded) {
+      let subTasks = [];
 
-    let subTasks = [];
+      if (initialUploadResult.buildResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+        subTasks =
+          initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      }
 
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      subTasks =
-        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+      const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+      logger.log();
+      failedSubTasks.forEach(failedSubTask => {
+        console.error(failedSubTask.errorMessage);
+      });
+      logger.log();
+
+      process.exit(EXIT_CODES.ERROR);
     }
 
-    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
-
-    logger.log();
-    failedSubTasks.forEach(failedSubTask => {
-      console.log(failedSubTask.errorMessage);
-    });
-    logger.log();
-
-    process.exit(EXIT_CODES.ERROR);
+    deployedBuild = initialUploadResult.buildResult;
   }
 
-  SpinniesManager.remove('devModeSetup');
-
-  const LocalDev = options.extension
-    ? new LocalDevManagerV2({
-        debug: options.debug,
-        extension: options.extension,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-      })
-    : new LocalDevManager({
-        debug: options.debug,
-        projectConfig,
-        projectDir,
-        targetAccountId,
-        uploadPermission,
-      });
+  const LocalDev = new LocalDevManager({
+    debug: options.debug,
+    deployedBuild,
+    projectConfig,
+    projectDir,
+    targetAccountId,
+    isGithubLinked,
+  });
 
   await LocalDev.start();
 
-  // Let the user know when the initial build or deploy fails
-  if (
-    !options.extension &&
-    initialUploadResult &&
-    !initialUploadResult.succeeded
-  ) {
-    if (initialUploadResult.buildResult.status === 'FAILURE') {
-      LocalDev.logBuildError(initialUploadResult.buildResult);
-    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-      LocalDev.logDeployError(initialUploadResult.deployResult);
-    }
-  }
-
-  handleExit(LocalDev.stop);
+  handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
 };
 
 exports.builder = yargs => {
@@ -353,12 +349,6 @@ exports.builder = yargs => {
   addAccountOptions(yargs, true);
   addUseEnvironmentOptions(yargs, true);
   addTestingOptions(yargs, true);
-
-  yargs.option('extension', {
-    describe: i18n(`${i18nKey}.options.extension.describe`),
-    type: 'string',
-    hidden: true,
-  });
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 

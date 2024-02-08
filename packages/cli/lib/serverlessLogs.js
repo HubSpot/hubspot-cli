@@ -1,5 +1,6 @@
 const https = require('https');
 const SpinniesManager = require('./SpinniesManager');
+const { handleExit, handleKeypress } = require('./process');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
@@ -7,9 +8,8 @@ const {
   logServerlessFunctionApiErrorInstance,
   logApiErrorInstance,
   ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('./errorHandlers/apiErrors');
 const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
-const { handleExit, handleKeypress } = require('@hubspot/cli-lib/lib/process');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 

@@ -5,7 +5,7 @@ const {
   STANDARD_SANDBOX,
   DEVELOPER_SANDBOX,
 } = require('../sandboxes');
-const { accountNameExistsInConfig } = require('@hubspot/cli-lib/lib/config');
+const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 

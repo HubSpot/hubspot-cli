@@ -6,7 +6,7 @@ module.exports = {
     cloneGitHubRepo(
       dest,
       assetType,
-      'cms-webpack-serverless-boilerplate',
+      'HubSpot/cms-webpack-serverless-boilerplate',
       '',
       options
     ),

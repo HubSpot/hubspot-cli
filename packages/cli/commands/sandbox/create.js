@@ -8,7 +8,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { getAccountConfig, getEnv } = require('@hubspot/cli-lib');
+const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { buildSandbox } = require('../../lib/sandbox-create');
 const { uiFeatureHighlight } = require('../../lib/ui');
 const {
@@ -20,19 +20,20 @@ const {
   syncTypes,
   validateSandboxUsageLimits,
 } = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/cli-lib/lib/environment');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const {
   sandboxTypePrompt,
   sandboxNamePrompt,
 } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandbox-sync');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
-const {
-  isMissingScopeError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { isMissingScopeError } = require('../../lib/errorHandlers/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
@@ -153,6 +154,12 @@ exports.handler = async options => {
     // Prompt user to sync assets after sandbox creation
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
     const handleSyncSandbox = async syncTasks => {
+      // Send tracking event for secondary action, in this case a sandbox sync within the sandbox create flow
+      trackCommandMetadataUsage(
+        'sandbox-sync',
+        { step: 'sandbox-create' },
+        result.sandbox.sandboxHubId
+      );
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,

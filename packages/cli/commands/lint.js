@@ -1,9 +1,7 @@
-const {
-  lint,
-  printHublValidationResult,
-} = require('@hubspot/cli-lib/validate');
+const { lint } = require('@hubspot/local-dev-lib/validate');
+const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('@hubspot/cli-lib/errorHandlers');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 const {
   addConfigOptions,

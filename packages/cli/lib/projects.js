@@ -5,7 +5,7 @@ const tmp = require('tmp');
 const chalk = require('chalk');
 const findup = require('findup-sync');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { getEnv } = require('@hubspot/cli-lib/lib/config');
+const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
 const {
   ENVIRONMENTS,
@@ -18,6 +18,9 @@ const {
   SPINNER_STATUS,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
+  fetchDefaultVersion,
+} = require('@hubspot/cli-lib/lib/projectPlatformVersion');
+const {
   createProject,
   getBuildStatus,
   getBuildStructure,
@@ -26,11 +29,7 @@ const {
   fetchProject,
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('@hubspot/cli-lib/errorHandlers');
-const { shouldIgnoreFile } = require('@hubspot/cli-lib/ignoreRules');
+const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
@@ -39,8 +38,12 @@ const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./SpinniesManager');
 const {
+  logApiErrorInstance,
+  ApiErrorContext,
   isSpecifiedError,
-} = require('@hubspot/cli-lib/errorHandlers/apiErrors');
+  isSpecifiedHubSpotAuthError,
+} = require('./errorHandlers/apiErrors');
+const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'cli.lib.projects';
 
@@ -92,7 +95,8 @@ const createProjectConfig = async (
   projectPath,
   projectName,
   template,
-  templateSource
+  templateSource,
+  githubRef
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -129,24 +133,22 @@ const createProjectConfig = async (
     }`
   );
 
+  const hasCustomTemplateSource = Boolean(templateSource);
+
+  await downloadGitHubRepoContents(
+    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    template.path,
+    projectPath,
+    hasCustomTemplateSource ? {} : { ref: githubRef }
+  );
+  const _config = JSON.parse(fs.readFileSync(projectConfigPath));
+  writeProjectConfig(projectConfigPath, {
+    ..._config,
+    name: projectName,
+  });
+
   if (template.name === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
-
-    writeProjectConfig(projectConfigPath, {
-      name: projectName,
-      srcDir: 'src',
-    });
-  } else {
-    await downloadGitHubRepoContents(
-      templateSource,
-      template.path,
-      projectPath
-    );
-    const _config = JSON.parse(fs.readFileSync(projectConfigPath));
-    writeProjectConfig(projectConfigPath, {
-      ..._config,
-      name: projectName,
-    });
   }
 
   return true;
@@ -157,21 +159,36 @@ const validateProjectConfig = (projectConfig, projectDir) => {
     logger.error(
       `Project config not found. Try running 'hs project create' first.`
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
     logger.error(
       'Project config is missing required fields. Try running `hs project create`.'
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 
-  if (!fs.existsSync(path.resolve(projectDir, projectConfig.srcDir))) {
+  const resolvedPath = path.resolve(projectDir, projectConfig.srcDir);
+  if (!resolvedPath.startsWith(projectDir)) {
+    const projectConfigFile = path.relative(
+      '.',
+      path.join(projectDir, PROJECT_CONFIG_FILE)
+    );
+    logger.error(
+      i18n(`${i18nKey}.config.srcOutsideProjectDir`, {
+        srcDir: projectConfig.srcDir,
+        projectConfig: projectConfigFile,
+      })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!fs.existsSync(resolvedPath)) {
     logger.error(
       `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
     );
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -181,7 +198,9 @@ const pollFetchProject = async (accountId, projectName) => {
     let pollCount = 0;
     SpinniesManager.init();
     SpinniesManager.add('pollFetchProject', {
-      text: 'Fetching project status',
+      text: i18n(`${i18nKey}.pollFetchProject.checkingProject`, {
+        accountIdentifier: uiAccountDescription(accountId),
+      }),
     });
     const pollInterval = setInterval(async () => {
       try {
@@ -197,14 +216,10 @@ const pollFetchProject = async (accountId, projectName) => {
             statusCode: 403,
             category: 'GATED',
             subCategory: 'BuildPipelineErrorType.PORTAL_GATED',
-          })
+          }) &&
+          pollCount < 15
         ) {
           pollCount += 1;
-        } else if (pollCount >= 15) {
-          // Poll up to max 30s
-          SpinniesManager.remove('pollFetchProject');
-          clearInterval(pollInterval);
-          reject(err);
         } else {
           SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
@@ -277,6 +292,14 @@ const ensureProjectExists = async (
         return false;
       }
     }
+    if (
+      isSpecifiedHubSpotAuthError(err, {
+        statusCode: 401,
+      })
+    ) {
+      logger.error(err.message);
+      process.exit(EXIT_CODES.ERROR);
+    }
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
     process.exit(EXIT_CODES.ERROR);
   }
@@ -312,7 +335,8 @@ const uploadProjectFiles = async (
   accountId,
   projectName,
   filePath,
-  uploadMessage
+  uploadMessage,
+  platformVersion
 ) => {
   SpinniesManager.init({});
   const accountIdentifier = uiAccountDescription(accountId);
@@ -333,7 +357,8 @@ const uploadProjectFiles = async (
       accountId,
       projectName,
       filePath,
-      uploadMessage
+      uploadMessage,
+      platformVersion
     );
 
     buildId = upload.buildId;
@@ -490,7 +515,8 @@ const handleProjectUpload = async (
         accountId,
         projectConfig.name,
         tempFile.name,
-        uploadMessage
+        uploadMessage,
+        projectConfig.platformVersion
       );
 
       if (error) {
@@ -509,9 +535,27 @@ const handleProjectUpload = async (
 
   archive.pipe(output);
 
-  archive.directory(srcDir, false, file =>
-    shouldIgnoreFile(file.name, true) ? false : file
-  );
+  let loggedIgnoredNodeModule = false;
+
+  archive.directory(srcDir, false, file => {
+    const ignored = shouldIgnoreFile(file.name, true);
+    if (ignored) {
+      const isNodeModule = file.name.includes('node_modules');
+
+      if (!isNodeModule || !loggedIgnoredNodeModule) {
+        logger.debug(
+          i18n(`${i18nKey}.handleProjectUpload.fileFiltered`, {
+            filename: file.name,
+          })
+        );
+      }
+
+      if (isNodeModule && !loggedIgnoredNodeModule) {
+        loggedIgnoredNodeModule = true;
+      }
+    }
+    return ignored ? false : file;
+  });
 
   archive.finalize();
 
@@ -560,7 +604,6 @@ const makePollTaskStatusFunc = ({
       succeedColor: 'white',
       failColor: 'white',
       failPrefix: chalk.bold('!'),
-      category: 'projectPollStatus',
     });
 
     const [
@@ -602,7 +645,10 @@ const makePollTaskStatusFunc = ({
         ) + '\n';
 
     SpinniesManager.update(overallTaskSpinniesKey, {
-      text: `${statusStrings.INITIALIZE(taskName)}\n${componentCountText}`,
+      text: `${statusStrings.INITIALIZE(
+        taskName,
+        displayId
+      )}\n${componentCountText}`,
     });
 
     if (!silenceLogs) {
@@ -621,7 +667,6 @@ const makePollTaskStatusFunc = ({
           indent,
           succeedColor: 'white',
           failColor: 'white',
-          category: 'projectPollStatus',
         });
       };
 
@@ -682,11 +727,11 @@ const makePollTaskStatusFunc = ({
           if (isTaskComplete(taskStatus)) {
             if (status === statusText.STATES.SUCCESS) {
               SpinniesManager.succeed(overallTaskSpinniesKey, {
-                text: statusStrings.SUCCESS(taskName),
+                text: statusStrings.SUCCESS(taskName, displayId),
               });
             } else if (status === statusText.STATES.FAILURE) {
               SpinniesManager.fail(overallTaskSpinniesKey, {
-                text: statusStrings.FAIL(taskName),
+                text: statusStrings.FAIL(taskName, displayId),
               });
 
               if (!silenceLogs) {
@@ -706,7 +751,13 @@ const makePollTaskStatusFunc = ({
                 logger.log('See below for a summary of errors.');
                 uiLine();
 
-                failedSubtasks.forEach(subTask => {
+                const displayErrors = failedSubtasks.filter(
+                  subtask =>
+                    subtask.standardError.subCategory !==
+                    'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED'
+                );
+
+                displayErrors.forEach(subTask => {
                   logger.log(
                     `\n--- ${chalk.bold(
                       subTask[statusText.SUBTASK_NAME_KEY]
@@ -743,9 +794,9 @@ const pollBuildStatus = makePollTaskStatusFunc({
   structureFn: getBuildStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
-    INITIALIZE: name => `Building ${chalk.bold(name)}`,
-    SUCCESS: name => `Built ${chalk.bold(name)}`,
-    FAIL: name => `Failed to build ${chalk.bold(name)}`,
+    INITIALIZE: (name, buildId) => `Building ${chalk.bold(name)} #${buildId}`,
+    SUCCESS: (name, buildId) => `Built ${chalk.bold(name)} #${buildId}`,
+    FAIL: (name, buildId) => `Failed to build ${chalk.bold(name)} #${buildId}`,
     SUBTASK_FAIL: (buildId, name) =>
       `Build #${buildId} failed because there was a problem\nbuilding ${chalk.bold(
         name
@@ -763,9 +814,12 @@ const pollDeployStatus = makePollTaskStatusFunc({
   structureFn: getDeployStructure,
   statusText: PROJECT_DEPLOY_TEXT,
   statusStrings: {
-    INITIALIZE: name => `Deploying ${chalk.bold(name)}`,
-    SUCCESS: name => `Deployed ${chalk.bold(name)}`,
-    FAIL: name => `Failed to deploy ${chalk.bold(name)}`,
+    INITIALIZE: (name, buildId) =>
+      `Deploying build #${buildId} in ${chalk.bold(name)}`,
+    SUCCESS: (name, buildId) =>
+      `Deployed build #${buildId} in ${chalk.bold(name)}`,
+    FAIL: (name, buildId) =>
+      `Failed to deploy build #${buildId} in ${chalk.bold(name)}`,
     SUBTASK_FAIL: (deployedBuildId, name) =>
       `Deploy for build #${deployedBuildId} failed because there was a\nproblem deploying ${chalk.bold(
         name
@@ -782,7 +836,11 @@ const logFeedbackMessage = buildId => {
   }
 };
 
-const createProjectComponent = async (component, name) => {
+const createProjectComponent = async (
+  component,
+  name,
+  projectComponentsVersion
+) => {
   const i18nKey = 'cli.commands.project.subcommands.add';
   let componentName = name;
 
@@ -801,10 +859,37 @@ const createProjectComponent = async (component, name) => {
   );
 
   await downloadGitHubRepoContents(
-    'HubSpot/hubspot-project-components',
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
-    componentPath
+    componentPath,
+    {
+      ref: projectComponentsVersion,
+    }
   );
+};
+
+const showPlatformVersionWarning = async (accountId, projectConfig) => {
+  const platformVersion = projectConfig.platformVersion;
+
+  if (!platformVersion) {
+    try {
+      const defaultVersion = await fetchDefaultVersion(accountId);
+      logger.log('');
+      logger.warn(
+        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
+          defaultVersion,
+        })
+      );
+      logger.log('');
+    } catch (e) {
+      logger.log('');
+      logger.warn(
+        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
+      );
+      logger.log('');
+      logger.debug(e.error);
+    }
+  }
 };
 
 module.exports = {
@@ -823,4 +908,5 @@ module.exports = {
   ensureProjectExists,
   logFeedbackMessage,
   createProjectComponent,
+  showPlatformVersionWarning,
 };
