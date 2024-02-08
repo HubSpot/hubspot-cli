@@ -838,21 +838,24 @@ en:
           initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
           notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
       preview:
-        describe: "Start a local development server to watch a directory for changes"
-        positionals:
-          src:
-            describe: "Path to the local directory your files are in, relative to your current working directory"
-          dest:
-            describe: "Path in HubSpot Design Tools. Can be a net new path"
+        describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
         errors:
           invalidPath: "The path \"{{ path }}\" is not a path to a directory"
         options:
+          src:
+            describe: "Path to the local directory your theme is in, relative to your current working directory"
+          dest:
+            describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
           notify:
             describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
           noSsl:
             describe: "Disable HTTPS"
           port:
             describe: "The port on which to start the local server"
+        initialUploadProgressBar:
+          start: "Starting..."
+          uploading: "Uploading..."
+          finish: "Complete!"
       convertFields:
         describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
@@ -1142,6 +1145,12 @@ en:
           errors:
             buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+        previewPrompt:
+          enterSrc: "[--src] Enter a local theme directory to preview."
+          enterDest: "[--dest] Enter the destination path for the src theme in the design manager."
+          errors:
+            srcRequired: "You must specify a source directory."
+            destRequired: "You must specify a destination directory."
       convertFields:
         positionals:
           src:
