@@ -1181,7 +1181,7 @@ en:
             buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
         previewPrompt:
           enterSrc: "[--src] Enter a local theme directory to preview."
-          enterDest: "[--dest] Enter the destination path for the src theme in the design manager."
+          enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
