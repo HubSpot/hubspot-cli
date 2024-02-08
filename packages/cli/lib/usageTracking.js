@@ -1,4 +1,4 @@
-const { trackUsage } = require('@hubspot/cli-lib/api/fileMapper');
+const { trackUsage } = require('@hubspot/local-dev-lib/trackUsage');
 const {
   isTrackingAllowed,
   getAccountConfig,
@@ -138,7 +138,7 @@ const trackAuthAction = async (command, authType, step, accountId) => {
     step,
   };
   try {
-    const response = await trackUsage(
+    await trackUsage(
       'cli-interaction',
       EventClass.INTERACTION,
       usageTrackingEvent,
@@ -146,8 +146,6 @@ const trackAuthAction = async (command, authType, step, accountId) => {
     );
 
     logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
-
-    return response;
   } catch (e) {
     logger.debug('Auth action tracking failed: %s', e.message);
   }

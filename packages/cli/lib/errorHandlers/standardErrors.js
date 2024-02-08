@@ -1,4 +1,7 @@
-const { HubSpotAuthError } = require('@hubspot/cli-lib/lib/models/Errors');
+const util = require('util');
+const {
+  HubSpotAuthError,
+} = require('@hubspot/local-dev-lib/models/HubSpotAuthError');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('../lang');
 
@@ -40,7 +43,18 @@ function debugErrorAndContext(error, context) {
   } else {
     logger.debug(i18n(`${i18nKey}.errorOccurred`, { error }));
   }
-  logger.debug(i18n(`${i18nKey}.errorContext`, { context }));
+  if (error.cause) {
+    logger.debug(
+      i18n(`${i18nKey}.errorCause`, {
+        cause: util.inspect(error.cause, false, null, true),
+      })
+    );
+  }
+  logger.debug(
+    i18n(`${i18nKey}.errorContext`, {
+      context: util.inspect(context, false, null, true),
+    })
+  );
 }
 
 /**
@@ -73,7 +87,7 @@ function logErrorInstance(error, context) {
     // Error or Error subclass
     const name = error.name || 'Error';
     const message = [i18n(`${i18nKey}.genericErrorOccurred`, { name })];
-    [(error.message, error.reason)].forEach(msg => {
+    [error.message, error.reason].forEach(msg => {
       if (msg) {
         message.push(msg);
       }

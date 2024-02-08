@@ -15,8 +15,8 @@ const {
 const {
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
-} = require('../../lib/errorHandlers/apiErrors');
-const { deleteSandbox } = require('@hubspot/cli-lib/sandboxes');
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
@@ -31,7 +31,7 @@ const {
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getAccountName } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');

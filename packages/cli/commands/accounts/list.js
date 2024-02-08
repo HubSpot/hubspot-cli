@@ -3,7 +3,7 @@ const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 
 const {
   addConfigOptions,

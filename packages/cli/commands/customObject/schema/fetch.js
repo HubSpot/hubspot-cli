@@ -5,9 +5,12 @@ const {
   logErrorInstance,
 } = require('../../../lib/errorHandlers/standardErrors');
 const { ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
-const { downloadSchema, getResolvedPath } = require('@hubspot/cli-lib/schema');
+const {
+  downloadSchema,
+  getResolvedPath,
+} = require('@hubspot/local-dev-lib/customObjects');
 const { fetchSchema } = require('@hubspot/cli-lib/api/fileTransport');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');

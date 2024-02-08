@@ -1,10 +1,12 @@
 const express = require('express');
 const open = require('open');
-const OAuth2Manager = require('@hubspot/cli-lib/lib/models/OAuth2Manager');
+const {
+  default: OAuth2Manager,
+} = require('@hubspot/local-dev-lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { addOauthToAccountConfig } = require('@hubspot/cli-lib/oauth');
+const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
@@ -13,11 +15,11 @@ const redirectUri = `http://localhost:${PORT}/oauth-callback`;
 
 const buildAuthUrl = oauthManager => {
   return (
-    `${getHubSpotWebsiteOrigin(oauthManager.env)}/oauth/${
-      oauthManager.accountId
+    `${getHubSpotWebsiteOrigin(oauthManager.account.env)}/oauth/${
+      oauthManager.account.accountId
     }/authorize` +
-    `?client_id=${encodeURIComponent(oauthManager.clientId)}` + // app's client ID
-    `&scope=${encodeURIComponent(oauthManager.scopes.join(' '))}` + // scopes being requested by the app
+    `?client_id=${encodeURIComponent(oauthManager.account.clientId)}` + // app's client ID
+    `&scope=${encodeURIComponent(oauthManager.account.scopes.join(' '))}` + // scopes being requested by the app
     `&redirect_uri=${encodeURIComponent(redirectUri)}` // where to send the user after the consent page
   );
 };
@@ -44,8 +46,8 @@ const authorize = async oauthManager => {
       if (req.query.code) {
         const authCodeProof = {
           grant_type: 'authorization_code',
-          client_id: oauthManager.clientId,
-          client_secret: oauthManager.clientSecret,
+          client_id: oauthManager.account.clientId,
+          client_secret: oauthManager.account.clientSecret,
           redirect_uri: redirectUri,
           code: req.query.code,
         };
@@ -84,13 +86,10 @@ const authorize = async oauthManager => {
 const setupOauth = accountConfig => {
   const accountId = parseInt(accountConfig.portalId, 10);
   const config = getAccountConfig(accountId) || {};
-  return new OAuth2Manager(
-    {
-      ...accountConfig,
-      environment: accountConfig.env || config.env || ENVIRONMENTS.PROD,
-    },
-    logger
-  );
+  return new OAuth2Manager({
+    ...accountConfig,
+    environment: accountConfig.env || config.env || ENVIRONMENTS.PROD,
+  });
 };
 
 const authenticateWithOauth = async configData => {

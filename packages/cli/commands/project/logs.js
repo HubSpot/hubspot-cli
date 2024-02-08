@@ -1,5 +1,5 @@
 const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,
@@ -17,19 +17,18 @@ const {
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 // const {
 //   getProjectAppFunctionLogs,
 //   getLatestProjectAppFunctionLog,
+//   getFunctionLogs,
+//   getLatestFunctionLog,
 // } = require('@hubspot/cli-lib/api/functions');
 // const {
 //   logApiErrorInstance,
 //   ApiErrorContext,
 // } = require('../../lib/errorHandlers/apiErrors');
-// const {
-//   getFunctionLogs,
-//   getLatestFunctionLog,
-// } = require('@hubspot/cli-lib/api/results');
+
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');

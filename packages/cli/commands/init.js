@@ -8,8 +8,13 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
-const { checkAndUpdateGitignore } = require('@hubspot/cli-lib/lib/git');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const {
+  checkAndAddConfigToGitignore,
+} = require('@hubspot/local-dev-lib/gitignore');
+const {
+  logErrorInstance,
+  debugErrorAndContext,
+} = require('../lib/errorHandlers/standardErrors');
 const {
   DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -19,9 +24,11 @@ const {
 const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
-const { getCwd } = require('@hubspot/cli-lib/path');
+  getAccessToken,
+  updateConfigWithAccessToken,
+} = require('@hubspot/local-dev-lib/personalAccessKey');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
 const { promptUser } = require('../lib/prompts/promptUtils');
@@ -46,14 +53,25 @@ const TRACKING_STATUS = {
 };
 
 const personalAccessKeyConfigCreationFlow = async (env, account) => {
-  const configData = await personalAccessKeyPrompt({ env, account });
-  const { name } = await enterAccountNamePrompt();
-  const accountConfig = {
-    ...configData,
-    name,
-  };
+  const { personalAccessKey } = await personalAccessKeyPrompt({ env, account });
+  let updatedConfig;
 
-  return updateConfigWithPersonalAccessKey(accountConfig, true);
+  try {
+    const token = await getAccessToken(personalAccessKey, env);
+    const defaultName = toKebabCase(token.hubName);
+    const { name } = await enterAccountNamePrompt(defaultName);
+
+    updatedConfig = updateConfigWithAccessToken(
+      token,
+      personalAccessKey,
+      env,
+      name,
+      true
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+  return updatedConfig;
 };
 
 const oauthConfigCreationFlow = async env => {
@@ -117,7 +135,11 @@ exports.handler = async options => {
     );
     const configPath = getConfigPath();
 
-    checkAndUpdateGitignore(configPath);
+    try {
+      checkAndAddConfigToGitignore(configPath);
+    } catch (e) {
+      debugErrorAndContext(e);
+    }
 
     logger.log('');
     logger.success(

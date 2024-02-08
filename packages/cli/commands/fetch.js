@@ -1,6 +1,5 @@
-const { downloadFileOrFolder } = require('@hubspot/cli-lib/fileMapper');
+const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
 const { logger } = require('@hubspot/cli-lib/logger');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -17,6 +16,7 @@ const { i18n } = require('../lib/lang');
 
 const i18nKey = 'cli.commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -40,14 +40,19 @@ exports.handler = async options => {
 
   trackCommandUsage('fetch', { mode }, accountId);
 
-  // Fetch and write file/folder.
-  downloadFileOrFolder({
-    accountId,
-    src,
-    dest: resolveLocalPath(dest),
-    mode,
-    options,
-  });
+  try {
+    // Fetch and write file/folder.
+    await downloadFileOrFolder(
+      accountId,
+      src,
+      resolveLocalPath(dest),
+      mode,
+      options
+    );
+  } catch (err) {
+    logErrorInstance(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
 };
 
 exports.builder = yargs => {

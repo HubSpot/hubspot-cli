@@ -1,5 +1,5 @@
 const SpinniesManager = require('./SpinniesManager');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('./lang');
 const {
@@ -10,7 +10,7 @@ const {
   sandboxTypeMap,
   syncTypes,
 } = require('./sandboxes');
-const { initiateSync } = require('@hubspot/cli-lib/sandboxes');
+const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
 const {
   debugErrorAndContext,
   logErrorInstance,
@@ -18,7 +18,7 @@ const {
 const {
   isSpecifiedError,
   isMissingScopeError,
-} = require('./errorHandlers/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');

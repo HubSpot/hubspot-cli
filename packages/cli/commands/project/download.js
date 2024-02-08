@@ -6,13 +6,13 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { extractZipArchive } = require('@hubspot/cli-lib/archive');
+const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const {
   downloadProject,
   fetchProjectBuilds,

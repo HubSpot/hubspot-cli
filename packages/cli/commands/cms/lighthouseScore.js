@@ -9,16 +9,16 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
-const { fetchThemes } = require('@hubspot/cli-lib/api/designManager');
+const { fetchThemes } = require('@hubspot/local-dev-lib/api/designManager');
 const {
   requestLighthouseScore,
   getLighthouseScoreStatus,
   getLighthouseScore,
-} = require('@hubspot/cli-lib/api/lighthouseScore');
+} = require('@hubspot/local-dev-lib/api/lighthouseScore');
 const {
   HUBSPOT_FOLDER,
   MARKETPLACE_FOLDER,

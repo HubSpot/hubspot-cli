@@ -1,21 +1,29 @@
 const fs = require('fs');
 const path = require('path');
 const { uploadFolder, hasUploadErrors } = require('@hubspot/cli-lib');
-const { getFileMapperQueryValues } = require('@hubspot/cli-lib/fileMapper');
-const { upload, deleteFile } = require('@hubspot/cli-lib/api/fileMapper');
+const {
+  getFileMapperQueryValues,
+} = require('@hubspot/local-dev-lib/fileMapper');
+const { upload, deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const {
   getCwd,
   convertToUnixPath,
   isAllowedExtension,
-} = require('@hubspot/cli-lib/path');
+} = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
 } = require('../lib/errorHandlers/apiErrors');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
-const { validateSrcAndDestPaths } = require('@hubspot/cli-lib/modules');
+const {
+  validateSrcAndDestPaths,
+} = require('@hubspot/local-dev-lib/cms/modules');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
+const {
+  getThemePreviewUrl,
+  getThemeJSONPath,
+} = require('@hubspot/local-dev-lib/cms/themes');
 
 const {
   addConfigOptions,
@@ -30,10 +38,7 @@ const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
 const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
-const {
-  getThemePreviewUrl,
-  getThemeJSONPath,
-} = require('@hubspot/cli-lib/lib/files');
+
 const { i18n } = require('../lib/lang');
 const i18nKey = 'cli.commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -155,7 +160,7 @@ exports.handler = async options => {
       accountId,
       absoluteSrcPath,
       normalizedDest,
-      getFileMapperQueryValues({ mode, options })
+      getFileMapperQueryValues(mode, options)
     )
       .then(() => {
         logger.success(

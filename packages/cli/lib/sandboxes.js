@@ -3,15 +3,16 @@ const { i18n } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  updateConfigWithPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+  getAccessToken,
+  updateConfigWithAccessToken,
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const {
   fetchTaskStatus,
   fetchTypes,
   getSandboxUsageLimits,
-} = require('@hubspot/cli-lib/sandboxes');
+} = require('@hubspot/local-dev-lib/sandboxes');
 const {
   accountNameExistsInConfig,
   getConfig,
@@ -21,10 +22,11 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -234,14 +236,28 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
  * @returns {String} validName saved into config
  */
 const saveSandboxToConfig = async (env, result, force = false) => {
-  let configData = { env, personalAccessKey: result.personalAccessKey };
-  if (!result.personalAccessKey) {
-    configData = await personalAccessKeyPrompt({
+  let personalAccessKey = result.personalAccessKey;
+  if (!personalAccessKey) {
+    const configData = await personalAccessKeyPrompt({
       env,
       account: result.sandbox.sandboxHubId,
     });
+    personalAccessKey = configData.personalAccessKey;
   }
-  const updatedConfig = await updateConfigWithPersonalAccessKey(configData);
+
+  let updatedConfig;
+
+  try {
+    const token = await getAccessToken(personalAccessKey, env);
+    updatedConfig = await updateConfigWithAccessToken(
+      token,
+      personalAccessKey,
+      env
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+
   if (!updatedConfig) {
     throw new Error('Failed to update config with personal access key.');
   }
@@ -316,6 +332,7 @@ function pollSyncTaskStatus(
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
+  const ignoreTasks = ['gates'];
   let progressCounter = {};
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
@@ -352,7 +369,11 @@ function pollSyncTaskStatus(
         for (const task of taskResult.tasks) {
           // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
           const taskType = task.type;
-          if (!progressBar.get(taskType) && !mergeTasks[taskType]) {
+          if (
+            !progressBar.get(taskType) &&
+            !mergeTasks[taskType] &&
+            !ignoreTasks.includes(taskType)
+          ) {
             // skip creation of lead-flows bar because we're combining lead-flows into the forms bar, otherwise create a bar instance for the type
             progressCounter[taskType] = 0;
             progressBar.create(taskType, 100, 0, {

@@ -968,8 +968,10 @@ en:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
         showPlatformVersionWarning:
-          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\"."
-          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version."
+          docsLink: "Projects platform versioning (BETA)"
+          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to version \"{{ defaultVersion }}\". Starting Mar 31, 2024, new project builds without a specified version will no longer be supported. To update your project to the latest version, see {{ docsLink }}."
+          noPlatformVersionAlt: "No platformVersion found in hsproject.json. Falling back to default version. Starting Mar 31, 2024, new project builds without a specified version will no longer be supported. To update your project to the latest version, see {{ docsLink }}."
+          deprecatedVersion: "Starting Mar 31, 2024, new project builds with platformVersion 2023.1 or unspecified versions will no longer be supported. It's recommended that you update your project to the latest version. For more info, see {{ docsLink }}."
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
@@ -1207,6 +1209,7 @@ en:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
             invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
@@ -1296,6 +1299,7 @@ en:
         standardErrors:
           errorOccurred: "Error: {{ error }}"
           errorContext: "Context: {{ context }}"
+          errorCause: "Cause: {{ cause }}"
           systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
           genericErrorOccurred: "A {{ name }} has occurred."
           unknownErrorOccurred: "An unknown error has occurred"
@@ -1315,8 +1319,8 @@ en:
             404: "The {{ messageDetail }} was not found."
             429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
             503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            500generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            400generic: "The {{ messageDetail }} failed due to a client error."
+            500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+            400Generic: "The {{ messageDetail }} failed due to a client error."
             generic: "The {{ messageDetail }} failed."
           verifyAccessKeyAndUserAccess:
             fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"

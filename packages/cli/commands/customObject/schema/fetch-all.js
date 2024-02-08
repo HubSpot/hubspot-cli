@@ -6,8 +6,12 @@ const {
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
-const { downloadSchemas, getResolvedPath } = require('@hubspot/cli-lib/schema');
+const {
+  downloadSchemas,
+  getResolvedPath,
+} = require('@hubspot/local-dev-lib/customObjects');
 const { i18n } = require('../../../lib/lang');
+const { logSchemas } = require('../../../lib/schema');
 
 const i18nKey =
   'cli.commands.customObject.subcommands.schema.subcommands.fetchAll';
@@ -23,7 +27,8 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-fetch-all', null, accountId);
 
   try {
-    await downloadSchemas(accountId, options.dest);
+    const schemas = await downloadSchemas(accountId, options.dest);
+    logSchemas(schemas);
     logger.success(
       i18n(`${i18nKey}.success.fetch`, {
         path: getResolvedPath(options.dest),

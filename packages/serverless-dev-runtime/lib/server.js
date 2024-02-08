@@ -4,9 +4,12 @@ const cors = require('cors');
 const chalk = require('chalk');
 const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
+  setLogLevel: setLocalDevLibLogLevel,
+} = require('@hubspot/local-dev-lib/logger');
+const {
   getTableContents,
   getTableHeader,
-} = require('@hubspot/cli-lib/lib/table');
+} = require('@hubspot/local-dev-lib/logging/table');
 
 const { validateInputs } = require('./validation');
 const { getValidatedFunctionData } = require('./data');
@@ -192,6 +195,10 @@ const start = props => {
   setOptions(props);
   const { path: functionPath, watch, debug } = options;
   setLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
+
+  // Update the log level in local-dev-lib's instance of the logger
+  // This will evenutally replace cli-lib's version of it
+  setLocalDevLibLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
   if (watch) {
     watchFolder(functionPath, restartServer);
   }

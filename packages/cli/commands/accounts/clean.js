@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
-} = require('@hubspot/cli-lib/personalAccessKey');
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
@@ -15,12 +15,12 @@ const {
 } = require('../../lib/commonOpts');
 const { getAccountName } = require('../../lib/sandboxes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getTableContents } = require('@hubspot/cli-lib/lib/table');
+const { getTableContents } = require('@hubspot/local-dev-lib/logging/table');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
-} = require('../../lib/errorHandlers/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 
@@ -58,12 +58,12 @@ exports.handler = async options => {
     } catch (error) {
       if (
         isSpecifiedHubSpotAuthError(error, {
-          statusCode: 401,
+          status: 401,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
         }) ||
         isSpecifiedHubSpotAuthError(error, {
-          statusCode: 404,
+          status: 404,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
         })

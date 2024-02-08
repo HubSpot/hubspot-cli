@@ -6,7 +6,7 @@ const chalk = require('chalk');
 const findup = require('findup-sync');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   ENVIRONMENTS,
   FEEDBACK_INTERVAL,
@@ -30,7 +30,7 @@ const {
   uploadProject,
 } = require('@hubspot/cli-lib/api/dfs');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
-const { getCwd, getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
@@ -40,7 +40,7 @@ const SpinniesManager = require('./SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedError,
+  isSpecifiedError, // Migrate isSpecifiedError to local-dev-lib version only after fetchProject is migrated to local-dev-lib
   isSpecifiedHubSpotAuthError,
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
@@ -870,6 +870,10 @@ const createProjectComponent = async (
 
 const showPlatformVersionWarning = async (accountId, projectConfig) => {
   const platformVersion = projectConfig.platformVersion;
+  const docsLink = uiLink(
+    i18n(`${i18nKey}.showPlatformVersionWarning.docsLink`),
+    'https://developers.hubspot.com/docs/platform/platform-versioning'
+  );
 
   if (!platformVersion) {
     try {
@@ -878,17 +882,28 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
       logger.warn(
         i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
           defaultVersion,
+          docsLink,
         })
       );
       logger.log('');
     } catch (e) {
       logger.log('');
       logger.warn(
-        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`)
+        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`, {
+          docsLink,
+        })
       );
       logger.log('');
       logger.debug(e.error);
     }
+  } else if (platformVersion === '2023.1') {
+    logger.log('');
+    logger.warn(
+      i18n(`${i18nKey}.showPlatformVersionWarning.deprecatedVersion`, {
+        docsLink,
+      })
+    );
+    logger.log('');
   }
 };
 

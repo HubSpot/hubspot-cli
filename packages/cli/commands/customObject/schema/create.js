@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   logErrorInstance,
 } = require('../../../lib/errorHandlers/standardErrors');
-const { getAbsoluteFilePath } = require('@hubspot/cli-lib/path');
+const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   isFileValidJSON,
   loadAndValidateOptions,
@@ -18,7 +18,7 @@ const { createSchema } = require('@hubspot/cli-lib/api/schema');
 const {
   createSchema: createSchemaFromHubFile,
 } = require('@hubspot/cli-lib/api/fileTransport');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/cli-lib/lib/urls');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { i18n } = require('../../../lib/lang');
 
 const i18nKey =

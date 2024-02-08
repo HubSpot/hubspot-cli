@@ -10,15 +10,16 @@ const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   getFunctionLogs,
   getLatestFunctionLog,
-} = require('@hubspot/cli-lib/api/results');
+} = require('@hubspot/local-dev-lib/api/functions');
 const { tailLogs } = require('../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.logs';
 
 const handleLogsError = (e, accountId, functionPath) => {
-  if (e.statusCode === 404) {
+  if (e.response.status === 404 || e.response.status == 400) {
     logger.error(
       i18n(`${i18nKey}.errors.noLogsFound`, {
         accountId,
@@ -63,12 +64,14 @@ const endpointLog = async (accountId, options) => {
       logsResp = await getLatestFunctionLog(accountId, functionPath);
     } catch (e) {
       handleLogsError(e, accountId, functionPath);
+      process.exit(EXIT_CODES.ERROR);
     }
   } else {
     try {
       logsResp = await getFunctionLogs(accountId, functionPath, options);
     } catch (e) {
       handleLogsError(e, accountId, functionPath);
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 
