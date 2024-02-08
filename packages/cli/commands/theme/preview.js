@@ -16,7 +16,7 @@ const { previewPrompt } = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { FileUploadResultType } = require('@hubspot/cli-lib/lib/uploadFolder');
 const i18nKey = 'cli.commands.preview';
-const { cliProgress } = require('cli-progress');
+const cliProgress = require('cli-progress');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
