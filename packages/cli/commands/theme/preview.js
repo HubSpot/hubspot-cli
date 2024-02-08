@@ -14,7 +14,13 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { previewPrompt } = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { FileUploadResultType } = require('@hubspot/cli-lib/lib/uploadFolder');
 const i18nKey = 'cli.commands.preview';
+const { cliProgress } = require('cli-progress');
+const {
+  ApiErrorContext,
+  logApiUploadErrorInstance,
+} = require('@hubspot/cli-lib/errorHandlers');
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
@@ -37,7 +43,7 @@ const validateSrcPath = src => {
   return true;
 };
 
-exports.command = 'preview';
+exports.command = 'preview [--src] [--dest]';
 exports.describe = false;
 
 exports.handler = async options => {
@@ -61,6 +67,60 @@ exports.handler = async options => {
   }
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
+
+  const initialUploadProgressBar = new cliProgress.SingleBar(
+    {
+      gracefulExit: true,
+      format: '[{bar}] {percentage}% | {value}/{total} | {label}',
+      hideCursor: true,
+    },
+    cliProgress.Presets.rect
+  );
+  initialUploadProgressBar.start(filePaths.length, 0, {
+    label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
+  });
+  let uploadsHaveStarted = false;
+  const uploadOptions = {
+    onAttemptCallback: () => {
+      /* Intentionally blank */
+    },
+    onSuccessCallback: () => {
+      initialUploadProgressBar.increment();
+      if (!uploadsHaveStarted) {
+        uploadsHaveStarted = true;
+        initialUploadProgressBar.update(0, {
+          label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
+        });
+      }
+    },
+    onFirstErrorCallback: () => {
+      /* Intentionally blank */
+    },
+    onRetryCallback: () => {
+      /* Intentionally blank */
+    },
+    onFinalErrorCallback: () => initialUploadProgressBar.increment(),
+    onFinishCallback: results => {
+      initialUploadProgressBar.update(filePaths.length, {
+        label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
+      });
+      initialUploadProgressBar.stop();
+      results.forEach(result => {
+        if (result.resultType == FileUploadResultType.FAILURE) {
+          logger.error('Uploading file "%s" to "%s" failed', result.file, dest);
+          logApiUploadErrorInstance(
+            result.error,
+            new ApiErrorContext({
+              accountId,
+              request: dest,
+              payload: result.file,
+            })
+          );
+        }
+      });
+    },
+  };
+
   trackCommandUsage('preview', accountId);
 
   preview(accountId, absoluteSrc, dest, {
@@ -70,6 +130,7 @@ exports.handler = async options => {
     noSsl,
     port,
     debug,
+    uploadOptions,
   });
 };
 

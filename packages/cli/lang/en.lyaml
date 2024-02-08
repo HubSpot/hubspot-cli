@@ -852,6 +852,10 @@ en:
             describe: "Disable HTTPS"
           port:
             describe: "The port on which to start the local server"
+        initialUploadProgressBar:
+          start: "Starting..."
+          uploading: "Uploading..."
+          finish: "Complete!"
       convertFields:
         describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
