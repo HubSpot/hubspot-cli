@@ -1,7 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  logErrorInstance,
-} = require('../../../lib/errorHandlers/standardErrors');
+const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
@@ -34,7 +32,7 @@ exports.handler = async options => {
       })
     );
   } catch (e) {
-    logErrorInstance(e);
+    logApiErrorInstance(e);
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
         name,

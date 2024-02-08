@@ -62,7 +62,6 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    console.log(e);
     logApiErrorInstance(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
