@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   addAccountOptions,
   addConfigOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { preview } = require('@hubspot/cli-lib/lib/preview');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -20,7 +20,7 @@ const cliProgress = require('cli-progress');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
-} = require('@hubspot/cli-lib/errorHandlers');
+} = require('../../lib/errorHandlers/apiErrors');
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {

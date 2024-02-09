@@ -1,5 +1,5 @@
 const path = require('path');
-const { getCwd } = require('@hubspot/cli-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
