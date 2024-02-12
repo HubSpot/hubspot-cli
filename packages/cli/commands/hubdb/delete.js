@@ -1,6 +1,6 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { deleteTable } = require('@hubspot/cli-lib/api/hubdb');
+const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 
