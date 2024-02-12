@@ -52,11 +52,12 @@ const getTextValue = lookupDotNotation => {
       previouslyCheckedProp = prop;
     });
   } catch (e) {
-    logger.error(
+    logger.debug(
       `Unable to access language property: ${lookupProps.join(
         '.'
       )}. Failed to access prop "${previouslyCheckedProp}".`
     );
+    logger.error('Unable to access language property.');
     return missingTextData;
   }
 
@@ -92,4 +93,5 @@ const setLangData = (newLocale, newLangObj) => {
 module.exports = {
   i18n,
   setLangData,
+  MISSING_LANGUAGE_DATA_PREFIX,
 };

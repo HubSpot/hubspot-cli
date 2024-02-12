@@ -64,9 +64,11 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isMissingScopeError,
-  isSpecifiedError,
+  isSpecifiedError, // Migrate isSpecifiedError to local-dev-lib version only after uploadProject is migrated to local-dev-lib
 } = require('../../lib/errorHandlers/apiErrors');
+const {
+  isMissingScopeError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';

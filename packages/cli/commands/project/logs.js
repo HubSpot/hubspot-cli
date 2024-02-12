@@ -28,6 +28,7 @@ const {
 //   getProjectAppFunctionLogs,
 //   getLatestProjectAppFunctionLog,
 // } = require('@hubspot/local-dev-lib/api/functions');
+
 const { ensureProjectExists } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');

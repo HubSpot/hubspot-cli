@@ -9,20 +9,9 @@ const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
-const { buildLogCallbacks } = require('./logCallbacks');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
-
-const i18nKey = 'cli.lib.oauth';
-
-const oauthLogCallbacks = buildLogCallbacks({
-  init: `${i18nKey}.logCallbacks.init`,
-  success: {
-    key: `${i18nKey}.logCallbacks.success`,
-    logger: logger.success,
-  },
-});
 
 const buildAuthUrl = oauthManager => {
   return (
@@ -107,7 +96,7 @@ const authenticateWithOauth = async configData => {
   const oauthManager = setupOauth(configData);
   logger.log('Authorizing');
   await authorize(oauthManager);
-  addOauthToAccountConfig(oauthManager, oauthLogCallbacks);
+  addOauthToAccountConfig(oauthManager);
 };
 
 module.exports = {

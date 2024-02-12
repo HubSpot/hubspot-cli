@@ -274,12 +274,6 @@ en:
             describe: "Local directory you would like the files to be placed in, relative to your current working directory"
           src:
             describe: "Path in HubSpot Design Tools"
-        fileMapperLogCallbacks:
-          skippedExisting: 'Skipped existing "{{ filepath }}"'
-          wroteFolder: 'Wrote folder "{{ filepath }}"'
-          completedFetch: 'Completed fetch of file "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
-          folderFetch: 'Fetched "{{ src }}" from account {{ accountId }} from the Design Manager successfully'
-          completedFolderFetch: 'Completed fetch of folder "{{ src }}"{{ version }} to "{{ dest }}" from the Design Manager'
       filemanager:
         describe: "Commands for working with the File Manager."
         subcommands:
@@ -295,12 +289,6 @@ en:
                 describe: "Path in HubSpot Design Tools"
               src:
                 describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
-            downloadLogCallbacks:
-              skippedExisting: "Skipped existing {{ filepath }}"
-              fetchFolderStarted: 'Fetching folder from "{{ src }}" to "{{ dest }}" in the File Manager of account {{ accountId }}'
-              fetchFolderSuccess: "Completed fetch of folder \"{{ src }}\" to \"{{ dest }}\" from the File Manager"
-              fetchFileStarted: "Fetching file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
-              fetchFileSuccess: "Completed fetch of file \"{{ src }}\" to \"{{ dest }}\" from the File Manager"
           upload:
             describe: "Upload a folder or file from your computer to the HubSpot File Manager"
             errors:
@@ -319,8 +307,6 @@ en:
             success:
               upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
               uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
-            uploadLogCallbacks:
-             uploadSuccess: 'Uploaded file "{{ file }}" to "{{ destPath }}"'
       functions:
         describe: "Commands for working with functions."
         subcommands:
@@ -645,9 +631,6 @@ en:
                 describe: "The name of the project to download"
               dest:
                 describe: "Destination folder for the project"
-            archiveLogCallbacks:
-              init: "Extracting project source..."
-              copy: "Copying project source..."
           open:
             describe: "Open the specified project's details page in the browser"
             options:
@@ -935,10 +918,6 @@ en:
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
-      oauth:
-        logCallbacks:
-          init: "Updating configuration"
-          success: "Configuration updated"
       projects:
         config:
           srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
@@ -1205,6 +1184,7 @@ en:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
             invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
