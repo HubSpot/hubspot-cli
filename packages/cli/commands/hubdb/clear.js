@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
 const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
 const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
 
@@ -52,7 +52,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logErrorInstance(e);
+    logApiErrorInstance(e);
   }
 };
 
