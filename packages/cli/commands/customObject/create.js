@@ -1,13 +1,15 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
-  isFileValidJSON,
+  checkAndConvertToJson,
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getAccountId } = require('../../lib/commonOpts');
-const { batchCreateObjects } = require('@hubspot/cli-lib/api/customObject');
+const {
+  batchCreateObjects,
+} = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.customObject.subcommands.create';
@@ -26,15 +28,17 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-batch-create', null, accountId);
 
   const filePath = getAbsoluteFilePath(definition);
-  if (!isFileValidJSON(filePath)) {
+  const objectJson = checkAndConvertToJson(filePath);
+
+  if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
   try {
-    await batchCreateObjects(accountId, name, filePath);
+    await batchCreateObjects(accountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
-    logErrorInstance(e, { accountId });
+    logApiErrorInstance(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

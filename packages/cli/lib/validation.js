@@ -206,29 +206,31 @@ const fileExists = _path => {
   return true;
 };
 
-const isFileValidJSON = _path => {
+const checkAndConvertToJson = _path => {
   const filePath = getAbsoluteFilePath(_path);
   if (!fileExists(filePath)) return false;
 
   if (getExt(_path) !== 'json') {
     logger.error(`The file "${_path}" must be a valid JSON file`);
-    return false;
+    return null;
   }
+
+  let result;
 
   try {
-    JSON.parse(fs.readFileSync(filePath));
+    result = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   } catch (e) {
     logger.error(`The file "${_path}" contains invalid JSON`);
-    return false;
+    result = null;
   }
 
-  return true;
+  return result;
 };
 
 module.exports = {
   validateMode,
   validateAccount,
-  isFileValidJSON,
+  checkAndConvertToJson,
   fileExists,
   loadAndValidateOptions,
 };
