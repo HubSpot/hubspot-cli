@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@hubspot/cli-lib": "^9.0.0",
-    "@hubspot/local-dev-lib": "^0.3.0"
+    "@hubspot/local-dev-lib": "^0.3.1"
   },
   "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
 }

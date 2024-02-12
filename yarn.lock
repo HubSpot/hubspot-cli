@@ -537,7 +537,7 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/local-dev-lib@^0.3.0":
+"@hubspot/local-dev-lib@^0.3.1":
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.3.1.tgz#2137d3d41be41c50193346d15b8f6a8a039adf1c"
   integrity sha512-w3Wjiadw0sJw2akRYbU4PfDK9eXDmm9iEMPNgMN7NH43U68+l2BgDK+KFk5z9bOftHZg1IdF9JuQmSo45q4Ddg==
