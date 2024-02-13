@@ -12,12 +12,12 @@ const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const {
   cancelStagedBuild,
-  //TODO LDL does not export these
   provisionBuild,
   uploadFileToBuild,
   deleteFileFromBuild,
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
@@ -30,25 +30,40 @@ let currentBuildId = null;
 let handleBuildStatus, handleUserInput;
 let timer;
 
-const processStandByQueue = async (accountId, projectName) => {
+const processStandByQueue = async (accountId, projectName, platformVersion) => {
   queue.addAll(
     standbyeQueue.map(({ filePath, remotePath, action }) => {
       return async () => {
-        queueFileOrFolder(accountId, projectName, filePath, remotePath, action);
+        queueFileOrFolder(
+          accountId,
+          projectName,
+          platformVersion,
+          filePath,
+          remotePath,
+          action
+        );
       };
     })
   );
   standbyeQueue.length = 0;
-  debounceQueueBuild(accountId, projectName);
+  debounceQueueBuild(accountId, projectName, platformVersion);
 };
 
-const createNewStagingBuild = async (accountId, projectName) => {
-  currentBuildId = await createNewBuild(accountId, projectName);
+const createNewStagingBuild = async (
+  accountId,
+  projectName,
+  platformVersion
+) => {
+  currentBuildId = await createNewBuild(
+    accountId,
+    projectName,
+    platformVersion
+  );
 
   handleUserInput(accountId, projectName, currentBuildId);
 };
 
-const debounceQueueBuild = (accountId, projectName) => {
+const debounceQueueBuild = (accountId, projectName, platformVersion) => {
   if (timer) {
     clearTimeout(timer);
   }
@@ -59,12 +74,13 @@ const debounceQueueBuild = (accountId, projectName) => {
     await queue.onIdle();
 
     try {
-      await queueBuild(accountId, projectName);
+      await queueBuild(accountId, projectName, platformVersion);
       logger.debug(i18n(`${i18nKey}.debug.buildStarted`, { projectName }));
     } catch (err) {
       if (
-        err.error &&
-        err.error.subCategory === ERROR_TYPES.MISSING_PROJECT_PROVISION
+        isSpecifiedError(err, {
+          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+        })
       ) {
         logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
         process.exit(0);
@@ -80,10 +96,10 @@ const debounceQueueBuild = (accountId, projectName) => {
 
     await handleBuildStatus(accountId, projectName, currentBuildId);
 
-    await createNewStagingBuild(accountId, projectName);
+    await createNewStagingBuild(accountId, projectName, platformVersion);
 
     if (standbyeQueue.length > 0) {
-      await processStandByQueue(accountId, projectName);
+      await processStandByQueue(accountId, projectName, platformVersion);
     }
 
     queue.start();
@@ -95,6 +111,7 @@ const debounceQueueBuild = (accountId, projectName) => {
 const queueFileOrFolder = async (
   accountId,
   projectName,
+  platformVersion,
   filePath,
   remotePath,
   action
@@ -108,7 +125,7 @@ const queueFileOrFolder = async (
     return;
   }
   if (!queue.isPaused) {
-    debounceQueueBuild(accountId, projectName);
+    debounceQueueBuild(accountId, projectName, platformVersion);
   }
 
   logger.debug(i18n(`${i18nKey}.debug.uploading`, { filePath, remotePath }));
@@ -131,14 +148,18 @@ const queueFileOrFolder = async (
   });
 };
 
-const createNewBuild = async (accountId, projectName) => {
+const createNewBuild = async (accountId, projectName, platformVersion) => {
   try {
     logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
-    const { buildId } = await provisionBuild(accountId, projectName);
+    const { buildId } = await provisionBuild(
+      accountId,
+      projectName,
+      platformVersion
+    );
     return buildId;
   } catch (err) {
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-    if (err.error.subCategory !== ERROR_TYPES.PROJECT_LOCKED) {
+    if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
       await cancelStagedBuild(accountId, projectName);
       logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     }
@@ -149,6 +170,7 @@ const createNewBuild = async (accountId, projectName) => {
 const handleWatchEvent = async (
   accountId,
   projectName,
+  platformVersion,
   projectSourceDir,
   filePath,
   action = 'upload'
@@ -166,6 +188,7 @@ const handleWatchEvent = async (
     await queueFileOrFolder(
       accountId,
       projectName,
+      platformVersion,
       filePath,
       remotePath,
       action
@@ -185,7 +208,11 @@ const createWatcher = async (
   handleBuildStatus = handleBuildStatusFn;
   handleUserInput = handleUserInputFn;
 
-  await createNewStagingBuild(accountId, projectConfig.name);
+  await createNewStagingBuild(
+    accountId,
+    projectConfig.name,
+    projectConfig.platformVersion
+  );
 
   const watcher = chokidar.watch(projectSourceDir, {
     ignoreInitial: true,
@@ -196,15 +223,28 @@ const createWatcher = async (
     logger.log(`\n> Press ${chalk.bold('q')} to quit watching\n`);
   });
   watcher.on('add', async path => {
-    handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);
+    handleWatchEvent(
+      accountId,
+      projectConfig.name,
+      projectConfig.platformVersion,
+      projectSourceDir,
+      path
+    );
   });
   watcher.on('change', async path => {
-    handleWatchEvent(accountId, projectConfig.name, projectSourceDir, path);
+    handleWatchEvent(
+      accountId,
+      projectConfig.name,
+      projectConfig.platformVersion,
+      projectSourceDir,
+      path
+    );
   });
   watcher.on('unlink', async path => {
     handleWatchEvent(
       accountId,
       projectConfig.name,
+      projectConfig.platformVersion,
       projectSourceDir,
       path,
       'deleteFile'
@@ -214,6 +254,7 @@ const createWatcher = async (
     handleWatchEvent(
       accountId,
       projectConfig.name,
+      projectConfig.platformVersion,
       projectSourceDir,
       path,
       'deleteFolder'

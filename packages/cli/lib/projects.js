@@ -29,6 +29,7 @@ const {
   fetchProject,
   uploadProject,
 } = require('@hubspot/local-dev-lib/api/projects');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
@@ -40,7 +41,6 @@ const SpinniesManager = require('./SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedError, // Migrate isSpecifiedError to local-dev-lib version only after fetchProject is migrated to local-dev-lib
   isSpecifiedHubSpotAuthError,
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
@@ -247,9 +247,8 @@ const ensureProjectExists = async (
       : await fetchProject(accountId, projectName);
     return !!project;
   } catch (err) {
-    if (err.statusCode === 404) {
+    if (isSpecifiedError(err, { statusCode: 404 })) {
       let shouldCreateProject = forceCreate;
-
       if (allowCreate && !shouldCreateProject) {
         const promptResult = await promptUser([
           {
