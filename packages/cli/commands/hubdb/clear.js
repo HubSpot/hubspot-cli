@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { clearHubDbTableRows } = require('@hubspot/cli-lib/hubdb');
-const { publishTable } = require('@hubspot/cli-lib/api/hubdb');
+const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
+const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -52,7 +52,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logErrorInstance(e);
+    logApiErrorInstance(e);
   }
 };
 
