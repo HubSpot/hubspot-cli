@@ -4,12 +4,10 @@ const { i18n } = require('../lang');
 const { getAccountName } = require('../sandboxes');
 
 const mapAccountChoices = portals =>
-  portals.map(p => {
-    return {
-      name: getAccountName(p),
-      value: p.name || p.portalId,
-    };
-  });
+  portals.map(p => ({
+    name: getAccountName(p, false),
+    value: p.name || p.portalId,
+  }));
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 

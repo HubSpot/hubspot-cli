@@ -12,7 +12,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getSandboxTypeAsString, isSandbox } = require('../../lib/sandboxes');
+const { isSandbox, getSandboxName } = require('../../lib/sandboxes');
 const {
   isDeveloperTestAccount,
   DEV_TEST_ACCOUNT_STRING,
@@ -68,9 +68,7 @@ const getPortalData = mappedPortalData => {
         portalData.push([portal.name, portal.portalId, portal.authType]);
       } else if (isSandbox(portal)) {
         portalData.push([
-          `↳ ${portal.name} [${getSandboxTypeAsString(
-            portal.accountType || portal.sandboxAccountType
-          )} sandbox]`,
+          `↳ ${portal.name} ${getSandboxName(portal)}`,
           portal.portalId,
           portal.authType,
         ]);

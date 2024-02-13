@@ -1,9 +1,9 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const {
-  getSandboxTypeAsString,
   STANDARD_SANDBOX,
   DEVELOPER_SANDBOX,
+  getAccountName,
 } = require('../sandboxes');
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 
@@ -13,11 +13,8 @@ const mapSandboxAccountChoices = portals =>
   portals
     .filter(p => p.sandboxAccountType && p.sandboxAccountType !== null)
     .map(p => {
-      const sandboxName = `[${getSandboxTypeAsString(
-        p.sandboxAccountType
-      )} sandbox] `;
       return {
-        name: `${p.name} ${sandboxName}(${p.portalId})`,
+        name: getAccountName(p, false),
         value: p.name || p.portalId,
       };
     });

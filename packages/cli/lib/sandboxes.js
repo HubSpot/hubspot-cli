@@ -30,6 +30,10 @@ const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  isDeveloperTestAccount,
+  DEV_TEST_ACCOUNT_STRING,
+} = require('./developerTestAccounts');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -64,6 +68,11 @@ const getSandboxTypeAsString = accountType => {
   return 'standard';
 };
 
+const getSandboxName = config =>
+  `[${getSandboxTypeAsString(
+    config.accountType || config.sandboxAccountType
+  )} sandbox] `;
+
 const isSandbox_OLD = config =>
   config.sandboxAccountType && config.sandboxAccountType !== null;
 
@@ -74,13 +83,13 @@ const isSandbox = config =>
     : isSandbox_OLD(config);
 
 function getAccountName(config, bold = true) {
-  const sandboxName = `[${getSandboxTypeAsString(
-    config.sandboxAccountType
-  )} sandbox] `;
-
-  const message = `${config.name} ${isSandbox(config) ? sandboxName : ''}(${
-    config.portalId
-  })`;
+  const message = `${config.name} ${
+    isSandbox(config)
+      ? getSandboxName(config)
+      : isDeveloperTestAccount(config)
+      ? `[${DEV_TEST_ACCOUNT_STRING}] `
+      : ''
+  }(${config.portalId})`;
 
   return bold ? chalk.bold(message) : message;
 }
@@ -462,6 +471,7 @@ module.exports = {
   syncTypes,
   isSandbox,
   isSandbox_OLD,
+  getSandboxName,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
