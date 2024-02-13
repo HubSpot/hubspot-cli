@@ -1,7 +1,9 @@
 const chalk = require('chalk');
 const { logger } = require('@hubspot/cli-lib/logger');
 const { table, getBorderCharacters } = require('table');
-const { fetchSchemas } = require('@hubspot/cli-lib/api/schema');
+const {
+  fetchObjectSchemas,
+} = require('@hubspot/local-dev-lib/api/customObjects');
 
 const logSchemas = schemas => {
   const data = schemas
@@ -22,7 +24,7 @@ const logSchemas = schemas => {
 };
 
 const listSchemas = async accountId => {
-  const response = await fetchSchemas(accountId);
+  const response = await fetchObjectSchemas(accountId);
   logSchemas(response.results);
 };
 

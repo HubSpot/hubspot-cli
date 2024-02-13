@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const { i18n } = require('./lang');
+const { i18n, MISSING_LANGUAGE_DATA_PREFIX } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
@@ -332,7 +332,6 @@ function pollSyncTaskStatus(
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
   };
-  const ignoreTasks = ['gates'];
   let progressCounter = {};
   let pollInterval;
   // Handle manual exit for return key and ctrl+c
@@ -368,16 +367,16 @@ function pollSyncTaskStatus(
         // Array of sync tasks, eg: workflows, pipelines, object-schemas, etc. with each task containing a status of 'PENDING', 'IN_PROGRESS', 'COMPLETE', and 'FAILURE'
         for (const task of taskResult.tasks) {
           // For each sync task, show a progress bar and increment bar each time we run this interval until status is 'COMPLETE'
-          const taskType = task.type;
-          if (
-            !progressBar.get(taskType) &&
-            !mergeTasks[taskType] &&
-            !ignoreTasks.includes(taskType)
-          ) {
+          let taskType = task.type;
+          const taskTypeLabel = i18n(`${i18nKey}.${taskType}.label`);
+          if (taskTypeLabel.startsWith(MISSING_LANGUAGE_DATA_PREFIX)) {
+            continue;
+          }
+          if (!progressBar.get(taskType) && !mergeTasks[taskType]) {
             // skip creation of lead-flows bar because we're combining lead-flows into the forms bar, otherwise create a bar instance for the type
             progressCounter[taskType] = 0;
             progressBar.create(taskType, 100, 0, {
-              label: i18n(`${i18nKey}.${taskType}.label`),
+              label: taskTypeLabel,
             });
           } else if (mergeTasks[taskType]) {
             // It's a lead-flow here, merge status into the forms progress bar
@@ -408,7 +407,7 @@ function pollSyncTaskStatus(
           }
           if (progressBar.get(taskType) && task.status === 'COMPLETE') {
             progressBar.update(taskType, 100, {
-              label: i18n(`${i18nKey}.${taskType}.label`),
+              label: taskTypeLabel,
             });
           } else if (
             // Do not start incrementing for tasks still in PENDING state
@@ -421,7 +420,7 @@ function pollSyncTaskStatus(
               taskType === syncTypes.OBJECT_RECORDS ? 2 : 3 // slower progress for object-records, sync can take up to a few minutes
             );
             progressBar.update(taskType, progressCounter[taskType], {
-              label: i18n(`${i18nKey}.${taskType}.label`),
+              label: taskTypeLabel,
             });
           }
         }
