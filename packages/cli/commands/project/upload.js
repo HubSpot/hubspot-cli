@@ -49,14 +49,10 @@ exports.handler = async options => {
 
   await showPlatformVersionWarning(accountId, projectConfig);
 
-  logger.log('');
-  logger.log(i18n(`${i18nKey}.describe`));
-  logger.log(
-    "$0 project upload myProjectFolder --forceCreate=true --message='Add a message when you upload your project'"
-  );
-  logger.log('');
-
-  await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
+  await ensureProjectExists(accountId, projectConfig.name, {
+    forceCreate,
+    uploadCommand: true,
+  });
 
   try {
     const result = await handleProjectUpload(

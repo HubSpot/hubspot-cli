@@ -238,6 +238,7 @@ const ensureProjectExists = async (
     allowCreate = true,
     noLogs = false,
     withPolling = false,
+    uploadCommand = false,
   } = {}
 ) => {
   const accountIdentifier = uiAccountDescription(accountId);
@@ -251,10 +252,11 @@ const ensureProjectExists = async (
       let shouldCreateProject = forceCreate;
 
       if (allowCreate && !shouldCreateProject) {
+        const promptKey = uploadCommand ? 'createPromptUpload' : 'createPrompt';
         const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
-            message: i18n(`${i18nKey}.ensureProjectExists.createPrompt`, {
+            message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {
               projectName,
               accountIdentifier,
             }),
