@@ -18,7 +18,10 @@ const {
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const {
+  createProject,
+  fetchProject,
+} = require('@hubspot/local-dev-lib/api/projects');
 const {
   getProjectConfig,
   ensureProjectExists,

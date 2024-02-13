@@ -1,5 +1,6 @@
-const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -55,7 +56,7 @@ exports.handler = async options => {
         srcPath,
       })
     );
-    if (error.statusCode === 409) {
+    if (isSpecifiedError(error, { statusCode: 409 })) {
       logger.error(
         i18n(`${i18nKey}.errors.sourcePathExists`, {
           destPath,

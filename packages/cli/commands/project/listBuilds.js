@@ -16,7 +16,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   fetchProject,
   fetchProjectBuilds,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
 const {
   getTableContents,
   getTableHeader,
