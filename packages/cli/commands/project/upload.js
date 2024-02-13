@@ -30,7 +30,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
 
-exports.command = 'upload [path]';
+exports.command = 'upload [path] [--forceCreate] [--message]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
@@ -48,6 +48,13 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   await showPlatformVersionWarning(accountId, projectConfig);
+
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.describe`));
+  logger.log(
+    "$0 project upload myProjectFolder --forceCreate=true --message='Add a message when you upload your project'"
+  );
+  logger.log('');
 
   await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
 
