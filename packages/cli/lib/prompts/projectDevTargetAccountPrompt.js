@@ -85,12 +85,12 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   return targetAccountInfo;
 };
 
-const confirmDefaultSandboxAccountPrompt = async (accountName, accountType) => {
+const confirmDefaultAccountPrompt = async (accountName, accountType) => {
   const { useDefaultAccount } = await promptUser([
     {
       name: 'useDefaultAccount',
       type: 'confirm',
-      message: i18n(`${i18nKey}.confirmDefaultSandboxAccount`, {
+      message: i18n(`${i18nKey}.confirmDefaultAccount`, {
         accountName,
         accountType,
       }),
@@ -101,5 +101,5 @@ const confirmDefaultSandboxAccountPrompt = async (accountName, accountType) => {
 
 module.exports = {
   selectTargetAccountPrompt,
-  confirmDefaultSandboxAccountPrompt,
+  confirmDefaultAccountPrompt,
 };

@@ -37,11 +37,11 @@ const {
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
-  confirmDefaultSandboxAccountPrompt,
+  confirmDefaultAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
-const { isSandbox } = require('../../lib/sandboxes');
+const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
@@ -67,6 +67,10 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const {
+  isDeveloperTestAccount,
+  DEV_TEST_ACCOUNT_STRING,
+} = require('../../lib/developerTestAccounts');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -96,19 +100,27 @@ exports.handler = async options => {
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
   const defaultAccountIsSandbox = isSandbox(accountConfig);
+  const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
+    accountConfig
+  );
 
-  if (!targetAccountId && defaultAccountIsSandbox) {
+  if (
+    !targetAccountId &&
+    (defaultAccountIsSandbox || defaultAccountIsDeveloperTestAccount)
+  ) {
     logger.log();
-    const useDefaultSandboxAccount = await confirmDefaultSandboxAccountPrompt(
+    const useDefaultAccount = await confirmDefaultAccountPrompt(
       accountConfig.name,
-      accountConfig.sandboxAccountType
+      defaultAccountIsSandbox
+        ? `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
+        : DEV_TEST_ACCOUNT_STRING
     );
 
-    if (useDefaultSandboxAccount) {
+    if (useDefaultAccount) {
       targetAccountId = accountId;
     } else {
       logger.log(
-        i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`, {
+        i18n(`${i18nKey}.logs.declineDefaultAccountExplanation`, {
           useCommand: uiCommandReference('hs accounts use'),
           devCommand: uiCommandReference('hs project dev'),
         })

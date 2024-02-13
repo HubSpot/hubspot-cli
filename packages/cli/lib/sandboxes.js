@@ -27,6 +27,9 @@ const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const STANDARD_SANDBOX = 'standard';
 const DEVELOPER_SANDBOX = 'developer';
@@ -51,11 +54,24 @@ const sandboxApiTypeMap = {
   developer: 2,
 };
 
-const getSandboxTypeAsString = type =>
-  type === 'DEVELOPER' ? 'development' : 'standard';
+const getSandboxTypeAsString = accountType => {
+  if (
+    accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX ||
+    accountType === 'DEVELOPER'
+  ) {
+    return 'development';
+  }
+  return 'standard';
+};
+
+const isSandbox_OLD = config =>
+  config.sandboxAccountType && config.sandboxAccountType !== null;
 
 const isSandbox = config =>
-  config.sandboxAccountType && config.sandboxAccountType !== null;
+  config.accountType
+    ? config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
+      config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+    : isSandbox_OLD(config);
 
 function getAccountName(config, bold = true) {
   const sandboxName = `[${getSandboxTypeAsString(
@@ -445,6 +461,7 @@ module.exports = {
   sandboxApiTypeMap,
   syncTypes,
   isSandbox,
+  isSandbox_OLD,
   getSandboxTypeAsString,
   getAccountName,
   saveSandboxToConfig,
