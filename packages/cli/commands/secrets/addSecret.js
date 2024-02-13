@@ -1,6 +1,6 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
+  logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { addSecret } = require('@hubspot/local-dev-lib/api/secrets');
@@ -41,15 +41,14 @@ exports.handler = async options => {
         secretName,
       })
     );
-  } catch (e) {
+  } catch (err) {
     logger.error(
       i18n(`${i18nKey}.errors.add`, {
         secretName,
       })
     );
-    await logServerlessFunctionApiErrorInstance(
-      accountId,
-      e,
+    logApiErrorInstance(
+      err,
       new ApiErrorContext({
         request: 'add secret',
         accountId,

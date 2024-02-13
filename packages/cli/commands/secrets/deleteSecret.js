@@ -1,7 +1,7 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
+  logApiErrorInstance,
 } = require('../../lib/errorHandlers/apiErrors');
 const { deleteSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
@@ -38,15 +38,14 @@ exports.handler = async options => {
         secretName,
       })
     );
-  } catch (e) {
+  } catch (err) {
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
         secretName,
       })
     );
-    await logServerlessFunctionApiErrorInstance(
-      accountId,
-      e,
+    logApiErrorInstance(
+      err,
       new ApiErrorContext({
         request: 'delete a secret',
         accountId,
