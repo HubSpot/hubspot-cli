@@ -13,7 +13,6 @@ const {
   getHubSpotApiOrigin,
   getHubSpotWebsiteOrigin,
 } = require('@hubspot/local-dev-lib/urls');
-const httpClient = require('@hubspot/local-dev-lib/http');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.DevServerManager';
@@ -103,7 +102,6 @@ class DevServerManager {
             debug: this.debug,
             projectConfig,
             requestPorts,
-            httpClient,
           });
         }
       });
