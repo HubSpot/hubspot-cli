@@ -10,6 +10,7 @@ const {
   requestPorts,
 } = require('@hubspot/local-dev-lib/portManager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const httpClient = require('@hubspot/local-dev-lib/http');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -95,6 +96,7 @@ class DevServerManager {
             debug: this.debug,
             projectConfig,
             requestPorts,
+            httpClient,
           });
         }
       });
