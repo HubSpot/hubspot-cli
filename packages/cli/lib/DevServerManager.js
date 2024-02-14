@@ -9,6 +9,7 @@ const {
   stopPortManagerServer,
   requestPorts,
 } = require('@hubspot/local-dev-lib/portManager');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -62,10 +63,10 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ components, debug, onUploadRequired }) {
+  async setup({ components, debug, onUploadRequired, accountId }) {
     this.debug = debug;
     this.componentsByType = this.arrangeComponentsByType(components);
-
+    const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
@@ -75,6 +76,8 @@ class DevServerManager {
             debug,
             onUploadRequired,
             promptUser,
+            logger,
+            env,
           });
         }
       }
