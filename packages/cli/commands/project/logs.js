@@ -8,7 +8,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 // const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
 const {
   fetchProject,

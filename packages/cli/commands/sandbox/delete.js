@@ -5,7 +5,7 @@ const {
   getAccountId,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {

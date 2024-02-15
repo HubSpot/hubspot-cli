@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {

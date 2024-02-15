@@ -8,7 +8,7 @@ const {
   DEVELOPER_SANDBOX,
 } = require('./sandboxes');
 const { i18n } = require('./lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   debugErrorAndContext,
   logErrorInstance,

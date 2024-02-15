@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   findFieldsJsonPath,
   combineThemeCss,

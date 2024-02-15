@@ -1,6 +1,6 @@
-const Logger = require('@hubspot/cli-lib/logger');
 const {
-  setLogLevel: setLocalDevLibLogLevel,
+  LOG_LEVEL,
+  setLogLevel: setLoggerLogLevel,
 } = require('@hubspot/local-dev-lib/logger');
 const { DEFAULT_MODE, Mode } = require('@hubspot/cli-lib');
 const {
@@ -11,7 +11,6 @@ const {
 const { i18n } = require('./lang');
 
 const i18nKey = 'cli.lib.commonOpts';
-const { LOG_LEVEL } = Logger;
 
 const addAccountOptions = program =>
   program.option('portal', {
@@ -68,17 +67,9 @@ const addUseEnvironmentOptions = yargs =>
 const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
-    Logger.setLogLevel(LOG_LEVEL.DEBUG);
-
-    // Update the log level in local-dev-lib's instance of the logger
-    // This will evenutally replace cli-lib's version of it
-    setLocalDevLibLogLevel(LOG_LEVEL.DEBUG);
+    setLoggerLogLevel(LOG_LEVEL.DEBUG);
   } else {
-    Logger.setLogLevel(LOG_LEVEL.LOG);
-
-    // Update the log level in local-dev-lib's instance of the logger
-    // This will evenutally replace cli-lib's version of it
-    setLocalDevLibLogLevel(LOG_LEVEL.LOG);
+    setLoggerLogLevel(LOG_LEVEL.LOG);
   }
 };
 

@@ -1,7 +1,7 @@
 const chalk = require('chalk');
 const { i18n, MISSING_LANGUAGE_DATA_PREFIX } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getAccessToken,
   updateConfigWithAccessToken,

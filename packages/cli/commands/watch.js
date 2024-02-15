@@ -3,7 +3,7 @@ const path = require('path');
 
 const { watch } = require('@hubspot/cli-lib');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const {
   addConfigOptions,

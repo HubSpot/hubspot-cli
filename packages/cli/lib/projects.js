@@ -4,7 +4,7 @@ const archiver = require('archiver');
 const tmp = require('tmp');
 const chalk = require('chalk');
 const findup = require('findup-sync');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
