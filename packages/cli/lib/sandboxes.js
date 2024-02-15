@@ -1,31 +1,16 @@
 const { i18n, MISSING_LANGUAGE_DATA_PREFIX } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
-const {
-  getAccessToken,
-  updateConfigWithAccessToken,
-} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const {
   fetchTaskStatus,
   fetchTypes,
   getSandboxUsageLimits,
 } = require('@hubspot/local-dev-lib/sandboxes');
-const {
-  accountNameExistsInConfig,
-  getConfig,
-  writeConfig,
-  updateAccountConfig,
-  getAccountId,
-} = require('@hubspot/local-dev-lib/config');
+const { getConfig, getAccountId } = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const {
-  personalAccessKeyPrompt,
-} = require('./prompts/personalAccessKeyPrompt');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
@@ -71,14 +56,11 @@ const getSandboxName = config =>
     config.accountType || config.sandboxAccountType
   )} sandbox] `;
 
-const isSandbox_OLD = config =>
-  config.sandboxAccountType && config.sandboxAccountType !== null;
-
 const isSandbox = config =>
   config.accountType
     ? config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
       config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-    : isSandbox_OLD(config);
+    : config.sandboxAccountType && config.sandboxAccountType !== null;
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
@@ -240,78 +222,6 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   }
 };
 
-/**
- * @param {String} env - Environment (QA/Prod)
- * @param {Object} result - Sandbox instance returned from API
- * @param {Boolean} force - Force flag to skip prompt
- * @returns {String} validName saved into config
- */
-const saveSandboxToConfig = async (env, result, force = false) => {
-  let personalAccessKey = result.personalAccessKey;
-  if (!personalAccessKey) {
-    const configData = await personalAccessKeyPrompt({
-      env,
-      account: result.sandbox.sandboxHubId,
-    });
-    personalAccessKey = configData.personalAccessKey;
-  }
-
-  let updatedConfig;
-
-  try {
-    const token = await getAccessToken(personalAccessKey, env);
-    updatedConfig = await updateConfigWithAccessToken(
-      token,
-      personalAccessKey,
-      env
-    );
-  } catch (e) {
-    logErrorInstance(e);
-  }
-
-  if (!updatedConfig) {
-    throw new Error('Failed to update config with personal access key.');
-  }
-
-  let validName = updatedConfig.name;
-  if (!updatedConfig.name) {
-    const nameForConfig = result.sandbox.name
-      .toLowerCase()
-      .split(' ')
-      .join('-');
-    validName = nameForConfig;
-    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
-    if (invalidAccountName) {
-      if (!force) {
-        logger.log('');
-        logger.warn(
-          i18n(
-            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
-            { name: nameForConfig }
-          )
-        );
-        const { name: promptName } = await enterAccountNamePrompt(
-          nameForConfig + `_${result.sandbox.sandboxHubId}`
-        );
-        validName = promptName;
-      } else {
-        // Basic invalid name handling when force flag is passed
-        validName = nameForConfig + `_${result.sandbox.sandboxHubId}`;
-      }
-    }
-  }
-  updateAccountConfig({
-    ...updatedConfig,
-    environment: updatedConfig.env,
-    tokenInfo: updatedConfig.auth.tokenInfo,
-    name: validName,
-  });
-  writeConfig();
-
-  logger.log('');
-  return validName;
-};
-
 const ACTIVE_TASK_POLL_INTERVAL = 1000;
 
 const isTaskComplete = task => {
@@ -454,10 +364,8 @@ module.exports = {
   sandboxApiTypeMap,
   syncTypes,
   isSandbox,
-  isSandbox_OLD,
   getSandboxName,
   getSandboxTypeAsString,
-  saveSandboxToConfig,
   getHasSandboxesByType,
   getSandboxLimit,
   validateSandboxUsageLimits,

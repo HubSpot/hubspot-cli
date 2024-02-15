@@ -2,7 +2,6 @@ const SpinniesManager = require('./SpinniesManager');
 const {
   getSandboxLimit,
   getHasSandboxesByType,
-  saveSandboxToConfig,
   sandboxApiTypeMap,
 } = require('./sandboxes');
 const { i18n } = require('./lang');
@@ -19,13 +18,98 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+const {
+  getAccessToken,
+  updateConfigWithAccessToken,
+} = require('@hubspot/local-dev-lib/personalAccessKey');
 const { uiAccountDescription } = require('./ui');
 const {
   DEVELOPER_SANDBOX_TYPE,
   STANDARD_SANDBOX_TYPE,
 } = require('./constants');
+const {
+  personalAccessKeyPrompt,
+} = require('./prompts/personalAccessKeyPrompt');
+const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
+const {
+  accountNameExistsInConfig,
+  writeConfig,
+  updateAccountConfig,
+} = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.sandbox.create';
+
+/**
+ * @param {String} env - Environment (QA/Prod)
+ * @param {Object} result - Sandbox instance returned from API
+ * @param {Boolean} force - Force flag to skip prompt
+ * @returns {String} validName saved into config
+ */
+const saveSandboxToConfig = async (env, result, force = false) => {
+  let personalAccessKey = result.personalAccessKey;
+  if (!personalAccessKey) {
+    const configData = await personalAccessKeyPrompt({
+      env,
+      account: result.sandbox.sandboxHubId,
+    });
+    personalAccessKey = configData.personalAccessKey;
+  }
+
+  let updatedConfig;
+
+  try {
+    const token = await getAccessToken(personalAccessKey, env);
+    updatedConfig = await updateConfigWithAccessToken(
+      token,
+      personalAccessKey,
+      env
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+
+  if (!updatedConfig) {
+    throw new Error('Failed to update config with personal access key.');
+  }
+
+  let validName = updatedConfig.name;
+  if (!updatedConfig.name) {
+    const nameForConfig = result.sandbox.name
+      .toLowerCase()
+      .split(' ')
+      .join('-');
+    validName = nameForConfig;
+    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
+    if (invalidAccountName) {
+      if (!force) {
+        logger.log('');
+        logger.warn(
+          i18n(
+            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
+            { name: nameForConfig }
+          )
+        );
+        const { name: promptName } = await enterAccountNamePrompt(
+          nameForConfig + `_${result.sandbox.sandboxHubId}`
+        );
+        validName = promptName;
+      } else {
+        // Basic invalid name handling when force flag is passed
+        validName = nameForConfig + `_${result.sandbox.sandboxHubId}`;
+      }
+    }
+  }
+  updateAccountConfig({
+    ...updatedConfig,
+    environment: updatedConfig.env,
+    tokenInfo: updatedConfig.auth.tokenInfo,
+    name: validName,
+  });
+  writeConfig();
+
+  logger.log('');
+  return validName;
+};
 
 /**
  * @param {String} name - Name of sandbox

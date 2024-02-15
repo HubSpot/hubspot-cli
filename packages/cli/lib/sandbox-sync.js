@@ -5,7 +5,6 @@ const { i18n } = require('./lang');
 const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
-  DEVELOPER_SANDBOX,
   sandboxTypeMap,
   syncTypes,
 } = require('./sandboxes');
@@ -21,6 +20,7 @@ const {
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');
+const { DEVELOPER_SANDBOX_TYPE } = require('./constants');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -88,7 +88,8 @@ const syncSandbox = async ({
     });
     if (
       skipPolling &&
-      sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX
+      sandboxTypeMap[accountConfig.sandboxAccountType] ===
+        DEVELOPER_SANDBOX_TYPE
     ) {
       if (syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS)) {
         logger.log(i18n(`${i18nKey}.loading.skipPollingWithContacts`));

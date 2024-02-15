@@ -45,7 +45,6 @@ const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
-  DEVELOPER_SANDBOX,
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
@@ -71,6 +70,7 @@ const {
   isDeveloperTestAccount,
   DEV_TEST_ACCOUNT_STRING,
 } = require('../../lib/developerTestAccounts');
+const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -147,7 +147,11 @@ exports.handler = async options => {
 
   if (createNewSandbox) {
     try {
-      await validateSandboxUsageLimits(accountConfig, DEVELOPER_SANDBOX, env);
+      await validateSandboxUsageLimits(
+        accountConfig,
+        DEVELOPER_SANDBOX_TYPE,
+        env
+      );
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
@@ -169,7 +173,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     try {
-      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX_TYPE);
 
       trackCommandMetadataUsage(
         'sandbox-create',
@@ -179,7 +183,7 @@ exports.handler = async options => {
 
       const { result } = await buildSandbox({
         name,
-        type: DEVELOPER_SANDBOX,
+        type: DEVELOPER_SANDBOX_TYPE,
         accountConfig,
         env,
       });

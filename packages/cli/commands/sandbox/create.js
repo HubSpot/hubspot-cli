@@ -13,7 +13,6 @@ const { buildSandbox } = require('../../lib/sandbox-create');
 const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
-  DEVELOPER_SANDBOX,
   getSandboxTypeAsString,
   getAvailableSyncTypes,
   syncTypes,
@@ -36,6 +35,7 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -191,7 +191,7 @@ exports.handler = async options => {
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
-    if (sandboxType === DEVELOPER_SANDBOX) {
+    if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
       highlightItems.push('projectDevCommand');
     } else {
       highlightItems.push('projectUploadCommand');
