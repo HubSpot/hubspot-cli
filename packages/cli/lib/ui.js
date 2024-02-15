@@ -78,13 +78,13 @@ const uiLink = (linkText, url) => {
  */
 const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
-  const message = `${account.name} ${
-    isSandbox(account)
-      ? getSandboxName(account)
-      : isDeveloperTestAccount(account)
-      ? `[${DEV_TEST_ACCOUNT_STRING}] `
-      : ''
-  }(${account.portalId})`;
+  let accountTypeString = '';
+  if (isSandbox(account)) {
+    accountTypeString = getSandboxName(account);
+  } else if (isDeveloperTestAccount(account)) {
+    accountTypeString = `[${DEV_TEST_ACCOUNT_STRING}] `;
+  }
+  const message = `${account.name} ${accountTypeString}(${account.portalId})`;
   return bold ? chalk.bold(message) : message;
 };
 
