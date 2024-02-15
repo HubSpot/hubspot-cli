@@ -63,22 +63,20 @@ const sortAndMapPortals = portals => {
 const getPortalData = mappedPortalData => {
   const portalData = [];
   Object.values(mappedPortalData).forEach(set => {
-    set.forEach((portal, i) => {
-      if (i === 0) {
-        portalData.push([portal.name, portal.portalId, portal.authType]);
-      } else if (isSandbox(portal)) {
-        portalData.push([
-          `↳ ${portal.name} ${getSandboxName(portal)}`,
-          portal.portalId,
-          portal.authType,
-        ]);
+    set.forEach(portal => {
+      let name = portal.name;
+      if (isSandbox(portal)) {
+        name = `${portal.name} ${getSandboxName(portal)}`;
+        if (set.length > 1) {
+          name = `↳ ${name}`;
+        }
       } else if (isDeveloperTestAccount(portal)) {
-        portalData.push([
-          `↳ ${portal.name} [${DEV_TEST_ACCOUNT_STRING}]`,
-          portal.portalId,
-          portal.authType,
-        ]);
+        name = `${portal.name} [${DEV_TEST_ACCOUNT_STRING}]`;
+        if (set.length > 1) {
+          name = `↳ ${name}`;
+        }
       }
+      portalData.push([name, portal.portalId, portal.authType]);
     });
   });
   return portalData;
