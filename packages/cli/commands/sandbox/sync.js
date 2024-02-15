@@ -13,12 +13,9 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { uiLine } = require('../../lib/ui');
+const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const {
-  getAccountName,
   sandboxTypeMap,
-  DEVELOPER_SANDBOX,
-  STANDARD_SANDBOX,
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
 } = require('../../lib/sandboxes');
@@ -26,6 +23,10 @@ const { syncSandbox } = require('../../lib/sandbox-sync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const {
+  DEVELOPER_SANDBOX_TYPE,
+  STANDARD_SANDBOX_TYPE,
+} = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -62,7 +63,7 @@ exports.handler = async options => {
     logger.log('');
     logger.error(
       i18n(`${i18nKey}.failure.missingParentPortal`, {
-        sandboxName: getAccountName(accountConfig),
+        sandboxName: uiAccountDescription(accountId),
       })
     );
     process.exit(EXIT_CODES.ERROR);
@@ -70,9 +71,9 @@ exports.handler = async options => {
 
   const parentAccountConfig = getAccountConfig(parentAccountId);
   const isDevelopmentSandbox =
-    sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX;
+    sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX_TYPE;
   const isStandardSandbox =
-    sandboxTypeMap[accountConfig.sandboxAccountType] === STANDARD_SANDBOX;
+    sandboxTypeMap[accountConfig.sandboxAccountType] === STANDARD_SANDBOX_TYPE;
 
   let availableSyncTasks;
   try {
@@ -90,7 +91,7 @@ exports.handler = async options => {
     ) {
       logger.error(
         i18n('cli.lib.sandbox.sync.failure.objectNotFound', {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else {
@@ -103,8 +104,8 @@ exports.handler = async options => {
     logger.log(i18n(`${i18nKey}.info.developmentSandbox`));
     logger.log(
       i18n(`${i18nKey}.info.sync`, {
-        parentAccountName: getAccountName(parentAccountConfig),
-        sandboxName: getAccountName(accountConfig),
+        parentAccountName: uiAccountDescription(parentAccountId),
+        sandboxName: uiAccountDescription(accountId),
       })
     );
     uiLine();
@@ -119,8 +120,8 @@ exports.handler = async options => {
           name: 'confirmSandboxSyncPrompt',
           type: 'confirm',
           message: i18n(`${i18nKey}.confirm.developmentSandbox`, {
-            parentAccountName: getAccountName(parentAccountConfig),
-            sandboxName: getAccountName(accountConfig),
+            parentAccountName: uiAccountDescription(parentAccountId),
+            sandboxName: uiAccountDescription(accountId),
           }),
         },
       ]);
@@ -140,8 +141,8 @@ exports.handler = async options => {
     );
     logger.log(
       i18n(`${i18nKey}.info.sync`, {
-        parentAccountName: getAccountName(parentAccountConfig),
-        sandboxName: getAccountName(accountConfig),
+        parentAccountName: uiAccountDescription(parentAccountId),
+        sandboxName: uiAccountDescription(accountId),
       })
     );
     uiLine();
@@ -156,8 +157,8 @@ exports.handler = async options => {
           name: 'confirmSandboxSyncPrompt',
           type: 'confirm',
           message: i18n(`${i18nKey}.confirm.standardSandbox`, {
-            parentAccountName: getAccountName(parentAccountConfig),
-            sandboxName: getAccountName(accountConfig),
+            parentAccountName: uiAccountDescription(parentAccountId),
+            sandboxName: uiAccountDescription(accountId),
           }),
         },
       ]);

@@ -10,12 +10,11 @@ const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { buildSandbox } = require('../../lib/sandbox-create');
-const { uiFeatureHighlight } = require('../../lib/ui');
+const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
   DEVELOPER_SANDBOX,
   getSandboxTypeAsString,
-  getAccountName,
   getAvailableSyncTypes,
   syncTypes,
   validateSandboxUsageLimits,
@@ -123,7 +122,7 @@ exports.handler = async options => {
         name: 'sandboxSyncPrompt',
         type: 'confirm',
         message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
-          parentAccountName: getAccountName(accountConfig),
+          parentAccountName: uiAccountDescription(accountId),
           sandboxName,
         }),
       },

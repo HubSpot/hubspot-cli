@@ -4,8 +4,6 @@ const {
   getHasSandboxesByType,
   saveSandboxToConfig,
   sandboxApiTypeMap,
-  STANDARD_SANDBOX,
-  DEVELOPER_SANDBOX,
 } = require('./sandboxes');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -21,6 +19,11 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+const { uiAccountDescription } = require('./ui');
+const {
+  DEVELOPER_SANDBOX_TYPE,
+  STANDARD_SANDBOX_TYPE,
+} = require('./constants');
 
 const i18nKey = 'cli.lib.sandbox.create';
 
@@ -75,14 +78,14 @@ const buildSandbox = async ({
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
-          accountName: accountConfig.name || accountId,
+          accountName: uiAccountDescription(accountId),
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
         i18n(`${i18nKey}.failure.scopes.instructions`, {
-          accountName: accountConfig.name || accountId,
+          accountName: uiAccountDescription(accountId),
           url,
         })
       );
@@ -97,7 +100,7 @@ const buildSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: name,
-          parentAccountName: accountConfig.name || accountId,
+          parentAccountName: uiAccountDescription(accountId),
         })
       );
       logger.log('');
@@ -112,7 +115,7 @@ const buildSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.403Gating`, {
           accountName: name,
-          parentAccountName: accountConfig.name || accountId,
+          parentAccountName: uiAccountDescription(accountId),
           accountId,
         })
       );
@@ -132,7 +135,7 @@ const buildSandbox = async ({
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
         accountConfig,
-        DEVELOPER_SANDBOX
+        DEVELOPER_SANDBOX_TYPE
       );
       if (hasDevelopmentSandboxes) {
         logger.error(
@@ -141,7 +144,7 @@ const buildSandbox = async ({
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: devSandboxLimit,
             }
           )
@@ -152,7 +155,7 @@ const buildSandbox = async ({
           i18n(
             `${i18nKey}.failure.limit.developer.${plural ? 'other' : 'one'}`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: devSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
             }
@@ -175,7 +178,7 @@ const buildSandbox = async ({
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
         accountConfig,
-        STANDARD_SANDBOX
+        STANDARD_SANDBOX_TYPE
       );
       if (hasStandardSandboxes) {
         logger.error(
@@ -184,7 +187,7 @@ const buildSandbox = async ({
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: standardSandboxLimit,
             }
           )
@@ -195,7 +198,7 @@ const buildSandbox = async ({
           i18n(
             `${i18nKey}.failure.limit.standard.${plural ? 'other' : 'one'}`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: standardSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
             }

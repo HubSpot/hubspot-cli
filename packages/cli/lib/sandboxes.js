@@ -1,4 +1,3 @@
-const chalk = require('chalk');
 const { i18n, MISSING_LANGUAGE_DATA_PREFIX } = require('./lang');
 const { handleExit, handleKeypress } = require('./process');
 const { logger } = require('@hubspot/cli-lib/logger');
@@ -31,26 +30,25 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 const {
-  isDeveloperTestAccount,
-  DEV_TEST_ACCOUNT_STRING,
-} = require('./developerTestAccounts');
-
-const STANDARD_SANDBOX = 'standard';
-const DEVELOPER_SANDBOX = 'developer';
+  STANDARD_SANDBOX_TYPE,
+  DEVELOPER_SANDBOX_TYPE,
+  DEVELOPER_SANDBOX,
+  STANDARD_SANDBOX,
+} = require('./constants');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
 };
 
 const sandboxTypeMap = {
-  DEV: DEVELOPER_SANDBOX,
-  dev: DEVELOPER_SANDBOX,
-  DEVELOPER: DEVELOPER_SANDBOX,
-  developer: DEVELOPER_SANDBOX,
-  DEVELOPMENT: DEVELOPER_SANDBOX,
-  development: DEVELOPER_SANDBOX,
-  STANDARD: STANDARD_SANDBOX,
-  standard: STANDARD_SANDBOX,
+  DEV: DEVELOPER_SANDBOX_TYPE,
+  dev: DEVELOPER_SANDBOX_TYPE,
+  DEVELOPER: DEVELOPER_SANDBOX_TYPE,
+  developer: DEVELOPER_SANDBOX_TYPE,
+  DEVELOPMENT: DEVELOPER_SANDBOX_TYPE,
+  development: DEVELOPER_SANDBOX_TYPE,
+  STANDARD: STANDARD_SANDBOX_TYPE,
+  standard: STANDARD_SANDBOX_TYPE,
 };
 
 const sandboxApiTypeMap = {
@@ -61,11 +59,11 @@ const sandboxApiTypeMap = {
 const getSandboxTypeAsString = accountType => {
   if (
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX ||
-    accountType === 'DEVELOPER'
+    accountType === DEVELOPER_SANDBOX // remove line once sandboxAccountType is removed
   ) {
-    return 'development';
+    return 'development'; // Only place we're using this specific name
   }
-  return 'standard';
+  return STANDARD_SANDBOX_TYPE;
 };
 
 const getSandboxName = config =>
@@ -81,18 +79,6 @@ const isSandbox = config =>
     ? config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
       config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
     : isSandbox_OLD(config);
-
-function getAccountName(config, bold = true) {
-  const message = `${config.name} ${
-    isSandbox(config)
-      ? getSandboxName(config)
-      : isDeveloperTestAccount(config)
-      ? `[${DEV_TEST_ACCOUNT_STRING}] `
-      : ''
-  }(${config.portalId})`;
-
-  return bold ? chalk.bold(message) : message;
-}
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
@@ -178,13 +164,13 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   if (!usage) {
     throw new Error('Unable to fetch sandbox usage limits. Please try again.');
   }
-  if (sandboxType === DEVELOPER_SANDBOX) {
-    if (usage['DEVELOPER'].available === 0) {
-      const devSandboxLimit = usage['DEVELOPER'].limit;
+  if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
+    if (usage[DEVELOPER_SANDBOX].available === 0) {
+      const devSandboxLimit = usage[DEVELOPER_SANDBOX].limit;
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
         accountConfig,
-        DEVELOPER_SANDBOX
+        DEVELOPER_SANDBOX_TYPE
       );
       if (hasDevelopmentSandboxes) {
         throw new Error(
@@ -215,13 +201,13 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       }
     }
   }
-  if (sandboxType === STANDARD_SANDBOX) {
-    if (usage['STANDARD'].available === 0) {
-      const standardSandboxLimit = usage['STANDARD'].limit;
+  if (sandboxType === STANDARD_SANDBOX_TYPE) {
+    if (usage[STANDARD_SANDBOX].available === 0) {
+      const standardSandboxLimit = usage[STANDARD_SANDBOX].limit;
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
         accountConfig,
-        STANDARD_SANDBOX
+        STANDARD_SANDBOX_TYPE
       );
       if (hasStandardSandboxes) {
         throw new Error(
@@ -464,8 +450,6 @@ function pollSyncTaskStatus(
 }
 
 module.exports = {
-  STANDARD_SANDBOX,
-  DEVELOPER_SANDBOX,
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,
@@ -473,7 +457,6 @@ module.exports = {
   isSandbox_OLD,
   getSandboxName,
   getSandboxTypeAsString,
-  getAccountName,
   saveSandboxToConfig,
   getHasSandboxesByType,
   getSandboxLimit,

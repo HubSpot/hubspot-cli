@@ -5,7 +5,6 @@ const { i18n } = require('./lang');
 const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
-  getAccountName,
   DEVELOPER_SANDBOX,
   sandboxTypeMap,
   syncTypes,
@@ -109,7 +108,7 @@ const syncSandbox = async ({
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.missingScopes`, {
-          accountName: getAccountName(parentAccountConfig),
+          accountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -122,7 +121,7 @@ const syncSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: uiAccountDescription(accountId),
-          parentAccountName: getAccountName(parentAccountConfig),
+          parentAccountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -147,7 +146,7 @@ const syncSandbox = async ({
       // This will only trigger if a user is not a super admin of the target account.
       logger.error(
         i18n(`${i18nKey}.failure.notSuperAdmin`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else if (
@@ -159,7 +158,7 @@ const syncSandbox = async ({
     ) {
       logger.error(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else {
