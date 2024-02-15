@@ -34,7 +34,6 @@ class DevServerManager {
         serverInterface: DevModeInterface,
       },
     };
-    this.debug = false;
   }
 
   async iterateDevServers(callback) {
@@ -67,8 +66,7 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ components, debug, onUploadRequired, accountId }) {
-    this.debug = debug;
+  async setup({ components, onUploadRequired, accountId }) {
     this.componentsByType = this.arrangeComponentsByType(components);
     const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
@@ -77,7 +75,6 @@ class DevServerManager {
         if (serverInterface.setup) {
           await serverInterface.setup({
             components: compatibleComponents,
-            debug,
             onUploadRequired,
             promptUser,
             logger,
@@ -99,7 +96,6 @@ class DevServerManager {
         if (serverInterface.start) {
           await serverInterface.start({
             accountId,
-            debug: this.debug,
             projectConfig,
             requestPorts,
           });
