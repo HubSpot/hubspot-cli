@@ -8,7 +8,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { preview } = require('@hubspot/cli-lib/lib/preview');
+const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
