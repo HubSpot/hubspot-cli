@@ -9,7 +9,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { buildSandbox } = require('../../lib/sandbox-create');
+const { buildSandbox } = require('../../lib/sandboxCreate');
 const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
@@ -29,7 +29,7 @@ const {
   sandboxNamePrompt,
 } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { syncSandbox } = require('../../lib/sandbox-sync');
+const { syncSandbox } = require('../../lib/sandboxSync');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isMissingScopeError,

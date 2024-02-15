@@ -19,7 +19,7 @@ const {
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
 } = require('../../lib/sandboxes');
-const { syncSandbox } = require('../../lib/sandbox-sync');
+const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
