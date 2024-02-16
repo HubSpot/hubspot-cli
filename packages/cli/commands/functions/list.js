@@ -5,11 +5,7 @@ const {
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { getFunctionArrays } = require('../../lib/getFunctionArrays');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/local-dev-lib/logging/table');
-
+const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
   addConfigOptions,
   addAccountOptions,

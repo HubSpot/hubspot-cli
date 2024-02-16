@@ -1,7 +1,9 @@
 const moment = require('moment');
 const chalk = require('chalk');
-const { logger, Styles } = require('@hubspot/cli-lib/logger');
-const { MAX_RUNTIME } = require('./constants');
+const { logger, Styles } = require('@hubspot/local-dev-lib/logger');
+const { i18n } = require('../lang');
+
+const i18nKey = 'lib.ui.serverlessFunctionLogs';
 
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS = {
@@ -71,7 +73,11 @@ function processLog(log, options) {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
-    logger.error(`Unable to process log ${JSON.stringify(log)}`);
+    logger.error(
+      i18n(`${i18nKey}.unableToProcessLog`, {
+        log: JSON.stringify(log),
+      })
+    );
   }
 }
 
@@ -87,36 +93,10 @@ function processLogs(logsResp, options) {
   }
 }
 
-const logFunctionExecution = ({
-  status,
-  payload,
-  startTime,
-  endTime,
-  memoryUsed,
-  options,
-}) => {
-  const runTime = endTime - startTime;
-  const roundedRuntime = Math.round(runTime * 100);
-  const roundedMemoryUsed = Math.round(memoryUsed);
-  const executionData = {
-    executionTime: runTime,
-    duration: `${roundedRuntime} ms`,
-    status,
-    createdAt: startTime,
-    memory: `${roundedMemoryUsed}/128 MB`,
-    id: -1,
-    payload,
-  };
-
-  logger.log(processLogs(executionData, options));
-
-  if (runTime > MAX_RUNTIME) {
-    logger.warn(
-      `Function runtime ${roundedRuntime}ms exceeded maximum runtime of ${MAX_RUNTIME}. See https://developers.hubspot.com/docs/cms/features/serverless-functions#know-your-limits for more info.`
-    );
-  }
-};
+function outputLogs(logsResp, options) {
+  logger.log(processLogs(logsResp, options));
+}
 
 module.exports = {
-  logFunctionExecution,
+  outputLogs,
 };

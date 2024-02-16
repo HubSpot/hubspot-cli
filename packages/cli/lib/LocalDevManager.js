@@ -9,7 +9,7 @@ const {
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const { PROJECT_CONFIG_FILE } = require('@hubspot/cli-lib/lib/constants');
-const SpinniesManager = require('./SpinniesManager');
+const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');

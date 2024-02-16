@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/cli-lib/logger');
-const { Mode, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
+const { Mode } = require('@hubspot/cli-lib');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
@@ -24,6 +24,7 @@ const { logDebugInfo } = require('./debugInfo');
 const fs = require('fs');
 const path = require('path');
 const { EXIT_CODES } = require('./enums/exitCodes');
+const { checkAndWarnGitInclusion } = require('./ui/git');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {

@@ -21,7 +21,7 @@ const {
   SPINNERS,
   terminalSupportsUnicode,
   writeStream,
-} = require('./spinniesUtils');
+} = require('./SpinniesUtils');
 
 class SpinniesManager {
   constructor() {

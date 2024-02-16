@@ -20,7 +20,7 @@ const {
   updateAccountConfig,
   getAccountId,
 } = require('@hubspot/local-dev-lib/config');
-const CliProgressMultibarManager = require('./CliProgressMultibarManager');
+const CliProgressMultibarManager = require('./ui/CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {

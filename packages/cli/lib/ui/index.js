@@ -1,8 +1,8 @@
 const chalk = require('chalk');
-const supportsHyperlinks = require('../lib/supportHyperlinks');
-const supportsColor = require('../lib/supportsColor');
+const supportsHyperlinks = require('./supportHyperlinks');
+const supportsColor = require('./supportsColor');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { i18n } = require('./lang');
+const { i18n } = require('../lang');
 const { logger } = require('@hubspot/cli-lib/logger');
 
 const UI_COLORS = {
