@@ -19,11 +19,16 @@ const {
   getSyncTypesWithContactRecordsPrompt,
   isDevelopmentSandbox,
   isStandardSandbox,
+  isSandbox,
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const {
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -40,17 +45,22 @@ exports.handler = async options => {
 
   trackCommandUsage(
     'sandbox-sync',
-    { type: accountConfig.sandboxAccountType },
+    { type: accountConfig.accountType },
     accountId
   );
 
   if (
     // Check if default account is a sandbox, otherwise exit
-    // sandboxAccountType is null for non-sandbox portals, and one of 'DEVELOPER' or 'STANDARD' for sandbox portals. Undefined is to handle older config entries.
-    accountConfig.sandboxAccountType === undefined ||
-    accountConfig.sandboxAccountType === null
+    !isSandbox(accountConfig)
   ) {
-    logger.error(i18n(`${i18nKey}.failure.notSandbox`));
+    logger.error(
+      i18n(`${i18nKey}.failure.notSandbox`, {
+        accountType:
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[
+            HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
+          ],
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
