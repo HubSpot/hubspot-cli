@@ -35,7 +35,9 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -77,7 +79,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   }
-  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
+  const sandboxType = type ? sandboxTypeMap[type] : typePrompt.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
@@ -117,11 +119,15 @@ exports.handler = async options => {
   let contactRecordsSyncPromptResult = true;
   if (!force) {
     const syncI18nKey = 'cli.lib.sandbox.sync';
+    const sandboxLangKey =
+      sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+        ? 'developer'
+        : 'standard';
     const { sandboxSyncPrompt } = await promptUser([
       {
         name: 'sandboxSyncPrompt',
         type: 'confirm',
-        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
+        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxLangKey}`, {
           parentAccountName: uiAccountDescription(accountId),
           sandboxName,
         }),
@@ -135,7 +141,7 @@ exports.handler = async options => {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',
           message: i18n(
-            `${syncI18nKey}.confirm.syncContactRecords.${sandboxType}`
+            `${syncI18nKey}.confirm.syncContactRecords.${sandboxLangKey}`
           ),
         },
       ]);
@@ -191,7 +197,7 @@ exports.handler = async options => {
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
-    if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
+    if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
       highlightItems.push('projectDevCommand');
     } else {
       highlightItems.push('projectUploadCommand');

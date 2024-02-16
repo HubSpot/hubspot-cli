@@ -73,7 +73,9 @@ const {
   isDeveloperTestAccount,
   DEV_TEST_ACCOUNT_STRING,
 } = require('../../lib/developerTestAccounts');
-const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -152,7 +154,7 @@ exports.handler = async options => {
     try {
       await validateSandboxUsageLimits(
         accountConfig,
-        DEVELOPER_SANDBOX_TYPE,
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
         env
       );
     } catch (err) {
@@ -176,7 +178,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     try {
-      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX_TYPE);
+      const { name } = await sandboxNamePrompt(
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+      );
 
       trackCommandMetadataUsage(
         'sandbox-create',
@@ -186,7 +190,7 @@ exports.handler = async options => {
 
       const { result } = await buildSandbox({
         name,
-        type: DEVELOPER_SANDBOX_TYPE,
+        type: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
         accountConfig,
         env,
       });

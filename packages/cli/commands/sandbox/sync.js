@@ -15,18 +15,15 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const {
-  sandboxTypeMap,
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
+  isDevelopmentSandbox,
+  isStandardSandbox,
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const {
-  DEVELOPER_SANDBOX_TYPE,
-  STANDARD_SANDBOX_TYPE,
-} = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.sync';
 
@@ -70,10 +67,6 @@ exports.handler = async options => {
   }
 
   const parentAccountConfig = getAccountConfig(parentAccountId);
-  const isDevelopmentSandbox =
-    sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX_TYPE;
-  const isStandardSandbox =
-    sandboxTypeMap[accountConfig.sandboxAccountType] === STANDARD_SANDBOX_TYPE;
 
   let availableSyncTasks;
   try {
@@ -100,7 +93,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (isDevelopmentSandbox) {
+  if (isDevelopmentSandbox(accountConfig)) {
     logger.log(i18n(`${i18nKey}.info.developmentSandbox`));
     logger.log(
       i18n(`${i18nKey}.info.sync`, {
@@ -129,7 +122,7 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.SUCCESS);
       }
     }
-  } else if (isStandardSandbox) {
+  } else if (isStandardSandbox(accountConfig)) {
     const standardSyncUrl = `${getHubSpotWebsiteOrigin(
       env
     )}/sandboxes-developer/${parentAccountId}/sync?step=select_sync_path&id=${parentAccountId}_${accountId}`;

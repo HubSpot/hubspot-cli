@@ -39,9 +39,9 @@ exports.handler = async options => {
   const { forceCreate, path: projectPath, message } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
+  const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: sandboxType }, accountId);
+  trackCommandUsage('project-upload', { type: accountType }, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 

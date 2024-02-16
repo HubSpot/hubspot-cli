@@ -36,9 +36,9 @@ exports.handler = async options => {
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
   const { project: projectOption, buildId: buildIdOption } = options;
-  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
+  const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-deploy', { type: sandboxType }, accountId);
+  trackCommandUsage('project-deploy', { type: accountType }, accountId);
 
   const { projectConfig } = await getProjectConfig();
 
