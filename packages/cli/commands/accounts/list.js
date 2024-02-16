@@ -13,13 +13,11 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, getSandboxName } = require('../../lib/sandboxes');
-const {
-  isDeveloperTestAccount,
-  DEV_TEST_ACCOUNT_STRING,
-} = require('../../lib/developerTestAccounts');
+const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
 const { i18n } = require('../../lib/lang');
 const {
   HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.accounts.subcommands.list';
@@ -31,22 +29,18 @@ const sortAndMapPortals = portals => {
   const mappedPortalData = {};
   // Standard and app developer portals
   portals
-    .filter(p =>
-      p.accountType
-        ? p.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
-          p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER
-        : p.sandboxAccountType === null
+    .filter(
+      p =>
+        p.accountType &&
+        (p.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
+          p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
     .forEach(portal => {
       mappedPortalData[portal.portalId] = [portal];
     });
   // Non-standard portals (sandbox, developer test account)
   portals
-    .filter(p =>
-      p.accountType
-        ? isSandbox(p) || isDeveloperTestAccount(p)
-        : p.sandboxAccountType !== null
-    )
+    .filter(p => p.accountType && (isSandbox(p) || isDeveloperTestAccount(p)))
     .forEach(p => {
       if (p.parentAccountId) {
         mappedPortalData[p.parentAccountId] = [
@@ -71,7 +65,9 @@ const getPortalData = mappedPortalData => {
           name = `↳ ${name}`;
         }
       } else if (isDeveloperTestAccount(portal)) {
-        name = `${portal.name} [${DEV_TEST_ACCOUNT_STRING}]`;
+        name = `${portal.name} [${
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+        }]`;
         if (set.length > 1) {
           name = `↳ ${name}`;
         }

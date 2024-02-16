@@ -69,12 +69,10 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const {
-  isDeveloperTestAccount,
-  DEV_TEST_ACCOUNT_STRING,
-} = require('../../lib/developerTestAccounts');
+const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -118,7 +116,7 @@ exports.handler = async options => {
       accountConfig.name,
       defaultAccountIsSandbox
         ? `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
-        : DEV_TEST_ACCOUNT_STRING
+        : HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
     );
 
     if (useDefaultAccount) {

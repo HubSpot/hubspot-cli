@@ -13,7 +13,6 @@ const { buildSandbox } = require('../../lib/sandboxCreate');
 const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
-  getSandboxTypeAsString,
   getAvailableSyncTypes,
   syncTypes,
   validateSandboxUsageLimits,
@@ -37,6 +36,7 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
@@ -56,13 +56,16 @@ exports.handler = async options => {
 
   // Default account is not a production portal
   if (
-    accountConfig.sandboxAccountType &&
-    accountConfig.sandboxAccountType !== null
+    accountConfig.accountType &&
+    accountConfig.accountType !== HUBSPOT_ACCOUNT_TYPES.STANDARD
   ) {
     logger.error(
-      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
-        sandboxName: accountConfig.name,
+      i18n(`${i18nKey}.failure.invalidAccountType`, {
+        accountType:
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[
+            HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
+          ],
+        accountName: accountConfig.name,
       })
     );
     process.exit(EXIT_CODES.ERROR);
