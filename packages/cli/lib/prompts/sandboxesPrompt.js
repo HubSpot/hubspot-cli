@@ -5,12 +5,13 @@ const { uiAccountDescription } = require('../ui');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const { isSandbox } = require('../sandboxes');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
 const mapSandboxAccountChoices = portals =>
   portals
-    .filter(p => p.sandboxAccountType && p.sandboxAccountType !== null)
+    .filter(p => isSandbox(p))
     .map(p => {
       return {
         name: uiAccountDescription(p.portalId, false),
@@ -20,9 +21,7 @@ const mapSandboxAccountChoices = portals =>
 
 const mapNonSandboxAccountChoices = portals =>
   portals
-    .filter(
-      p => p.sandboxAccountType === null || p.sandboxAccountType === undefined
-    )
+    .filter(p => !isSandbox(p))
     .map(p => {
       return {
         name: `${p.name} (${p.portalId})`,
@@ -31,8 +30,9 @@ const mapNonSandboxAccountChoices = portals =>
     });
 
 const sandboxNamePrompt = (type = HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) => {
-  const isDeveloperSandbox = type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
-  const namePromptMessage = isDeveloperSandbox
+  const isDevelopmentSandbox =
+    type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
+  const namePromptMessage = isDevelopmentSandbox
     ? `${i18nKey}.name.developmentSandboxMessage`
     : `${i18nKey}.name.message`;
   return promptUser([
@@ -49,7 +49,7 @@ const sandboxNamePrompt = (type = HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) => {
           ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
           : true;
       },
-      default: `New ${isDeveloperSandbox ? 'development ' : ''}sandbox`,
+      default: `New ${isDevelopmentSandbox ? 'development ' : ''}sandbox`,
     },
   ]);
 };
