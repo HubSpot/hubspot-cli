@@ -158,7 +158,7 @@ en:
               moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
             errors:
               pathExists: "Folder already exists at \"{{ path }}\""
-              invalidName: "Module not found with that name, please check the spelling of the module you are trying to retrieve."
+              invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
             groupLabel: "React modules available to download:"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
