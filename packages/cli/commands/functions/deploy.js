@@ -15,7 +15,7 @@ const { logger } = require('@hubspot/cli-lib/logger');
 const {
   buildPackage,
   getBuildStatus,
-} = require('@hubspot/cli-lib/api/functions');
+} = require('@hubspot/local-dev-lib/api/functions');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');

@@ -30,7 +30,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'cli.commands.project.subcommands.upload';
 
-exports.command = 'upload [path]';
+exports.command = 'upload [path] [--forceCreate] [--message]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
@@ -49,7 +49,10 @@ exports.handler = async options => {
 
   await showPlatformVersionWarning(accountId, projectConfig);
 
-  await ensureProjectExists(accountId, projectConfig.name, { forceCreate });
+  await ensureProjectExists(accountId, projectConfig.name, {
+    forceCreate,
+    uploadCommand: true,
+  });
 
   try {
     const result = await handleProjectUpload(

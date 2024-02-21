@@ -9,6 +9,11 @@ const {
   stopPortManagerServer,
   requestPorts,
 } = require('@hubspot/local-dev-lib/portManager');
+const {
+  getHubSpotApiOrigin,
+  getHubSpotWebsiteOrigin,
+} = require('@hubspot/local-dev-lib/urls');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
@@ -29,7 +34,6 @@ class DevServerManager {
         serverInterface: DevModeInterface,
       },
     };
-    this.debug = false;
   }
 
   async iterateDevServers(callback) {
@@ -62,19 +66,22 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ components, debug, onUploadRequired }) {
-    this.debug = debug;
+  async setup({ components, onUploadRequired, accountId }) {
     this.componentsByType = this.arrangeComponentsByType(components);
-
+    const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
     await this.iterateDevServers(
       async (serverInterface, compatibleComponents) => {
         if (serverInterface.setup) {
           await serverInterface.setup({
             components: compatibleComponents,
-            debug,
             onUploadRequired,
             promptUser,
+            logger,
+            urls: {
+              api: getHubSpotApiOrigin(env),
+              web: getHubSpotWebsiteOrigin(env),
+            },
           });
         }
       }
@@ -89,7 +96,6 @@ class DevServerManager {
         if (serverInterface.start) {
           await serverInterface.start({
             accountId,
-            debug: this.debug,
             projectConfig,
             requestPorts,
           });

@@ -11,7 +11,10 @@ const {
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/cli-lib/logger');
-const { deployProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const {
+  deployProject,
+  fetchProject,
+} = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');

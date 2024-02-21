@@ -18,7 +18,10 @@ const {
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const { createProject, fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const {
+  createProject,
+  fetchProject,
+} = require('@hubspot/local-dev-lib/api/projects');
 const {
   getProjectConfig,
   ensureProjectExists,
@@ -37,15 +40,14 @@ const {
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
   selectTargetAccountPrompt,
-  confirmDefaultSandboxAccountPrompt,
+  confirmDefaultAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
-const { isSandbox } = require('../../lib/sandboxes');
+const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
-  DEVELOPER_SANDBOX,
   getAvailableSyncTypes,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
@@ -55,8 +57,8 @@ const {
   ERROR_TYPES,
 } = require('@hubspot/cli-lib/lib/constants');
 
-const { buildSandbox } = require('../../lib/sandbox-create');
-const { syncSandbox } = require('../../lib/sandbox-sync');
+const { buildSandbox } = require('../../lib/sandboxCreate');
+const { syncSandbox } = require('../../lib/sandboxSync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
@@ -67,6 +69,11 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const {
+  isDeveloperTestAccount,
+  DEV_TEST_ACCOUNT_STRING,
+} = require('../../lib/developerTestAccounts');
+const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -96,19 +103,27 @@ exports.handler = async options => {
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
   const defaultAccountIsSandbox = isSandbox(accountConfig);
+  const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
+    accountConfig
+  );
 
-  if (!targetAccountId && defaultAccountIsSandbox) {
+  if (
+    !targetAccountId &&
+    (defaultAccountIsSandbox || defaultAccountIsDeveloperTestAccount)
+  ) {
     logger.log();
-    const useDefaultSandboxAccount = await confirmDefaultSandboxAccountPrompt(
+    const useDefaultAccount = await confirmDefaultAccountPrompt(
       accountConfig.name,
-      accountConfig.sandboxAccountType
+      defaultAccountIsSandbox
+        ? `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
+        : DEV_TEST_ACCOUNT_STRING
     );
 
-    if (useDefaultSandboxAccount) {
+    if (useDefaultAccount) {
       targetAccountId = accountId;
     } else {
       logger.log(
-        i18n(`${i18nKey}.logs.declineDefaultSandboxExplanation`, {
+        i18n(`${i18nKey}.logs.declineDefaultAccountExplanation`, {
           useCommand: uiCommandReference('hs accounts use'),
           devCommand: uiCommandReference('hs project dev'),
         })
@@ -135,7 +150,11 @@ exports.handler = async options => {
 
   if (createNewSandbox) {
     try {
-      await validateSandboxUsageLimits(accountConfig, DEVELOPER_SANDBOX, env);
+      await validateSandboxUsageLimits(
+        accountConfig,
+        DEVELOPER_SANDBOX_TYPE,
+        env
+      );
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
@@ -157,7 +176,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     try {
-      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX);
+      const { name } = await sandboxNamePrompt(DEVELOPER_SANDBOX_TYPE);
 
       trackCommandMetadataUsage(
         'sandbox-create',
@@ -167,7 +186,7 @@ exports.handler = async options => {
 
       const { result } = await buildSandbox({
         name,
-        type: DEVELOPER_SANDBOX,
+        type: DEVELOPER_SANDBOX_TYPE,
         accountConfig,
         env,
       });
