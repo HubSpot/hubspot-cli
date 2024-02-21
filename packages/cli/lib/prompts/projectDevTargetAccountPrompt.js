@@ -1,15 +1,16 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
-const { isSandbox, getAccountName } = require('../sandboxes');
+const { isSandbox } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const { DEVELOPER_SANDBOX, STANDARD_SANDBOX } = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
 const mapSandboxAccount = accountConfig => ({
-  name: getAccountName(accountConfig, false),
+  name: uiAccountDescription(accountConfig.portalId, false),
   value: {
     targetAccountId: getAccountId(accountConfig.name),
     createNewSandbox: false,
@@ -33,15 +34,18 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
     );
   let disabledMessage = false;
 
-  if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
-    if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
+  if (
+    sandboxUsage[DEVELOPER_SANDBOX] &&
+    sandboxUsage[DEVELOPER_SANDBOX].available === 0
+  ) {
+    if (sandboxAccounts.length < sandboxUsage[DEVELOPER_SANDBOX].limit) {
       disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
         authCommand: uiCommandReference('hs auth'),
-        limit: sandboxUsage['DEVELOPER'].limit,
+        limit: sandboxUsage[DEVELOPER_SANDBOX].limit,
       });
     } else {
       disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
-        limit: sandboxUsage['DEVELOPER'].limit,
+        limit: sandboxUsage[DEVELOPER_SANDBOX].limit,
       });
     }
   }
@@ -49,10 +53,10 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   // Order choices by Developer Sandbox -> Standard Sandbox
   const choices = [
     ...sandboxAccounts
-      .filter(a => a.sandboxAccountType === 'DEVELOPER')
+      .filter(a => a.sandboxAccountType === DEVELOPER_SANDBOX)
       .map(mapSandboxAccount),
     ...sandboxAccounts
-      .filter(a => a.sandboxAccountType === 'STANDARD')
+      .filter(a => a.sandboxAccountType === STANDARD_SANDBOX)
       .map(mapSandboxAccount),
     {
       name: i18n(`${i18nKey}.createNewSandboxOption`),
@@ -85,12 +89,12 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   return targetAccountInfo;
 };
 
-const confirmDefaultSandboxAccountPrompt = async (accountName, accountType) => {
+const confirmDefaultAccountPrompt = async (accountName, accountType) => {
   const { useDefaultAccount } = await promptUser([
     {
       name: 'useDefaultAccount',
       type: 'confirm',
-      message: i18n(`${i18nKey}.confirmDefaultSandboxAccount`, {
+      message: i18n(`${i18nKey}.confirmDefaultAccount`, {
         accountName,
         accountType,
       }),
@@ -101,5 +105,5 @@ const confirmDefaultSandboxAccountPrompt = async (accountName, accountType) => {
 
 module.exports = {
   selectTargetAccountPrompt,
-  confirmDefaultSandboxAccountPrompt,
+  confirmDefaultAccountPrompt,
 };

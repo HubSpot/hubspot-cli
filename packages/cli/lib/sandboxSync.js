@@ -5,8 +5,6 @@ const { i18n } = require('./lang');
 const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
-  getAccountName,
-  DEVELOPER_SANDBOX,
   sandboxTypeMap,
   syncTypes,
 } = require('./sandboxes');
@@ -22,6 +20,7 @@ const {
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');
+const { DEVELOPER_SANDBOX_TYPE } = require('./constants');
 
 const i18nKey = 'cli.lib.sandbox.sync';
 
@@ -89,7 +88,8 @@ const syncSandbox = async ({
     });
     if (
       skipPolling &&
-      sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX
+      sandboxTypeMap[accountConfig.sandboxAccountType] ===
+        DEVELOPER_SANDBOX_TYPE
     ) {
       if (syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS)) {
         logger.log(i18n(`${i18nKey}.loading.skipPollingWithContacts`));
@@ -109,7 +109,7 @@ const syncSandbox = async ({
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.missingScopes`, {
-          accountName: getAccountName(parentAccountConfig),
+          accountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -122,7 +122,7 @@ const syncSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: uiAccountDescription(accountId),
-          parentAccountName: getAccountName(parentAccountConfig),
+          parentAccountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -147,7 +147,7 @@ const syncSandbox = async ({
       // This will only trigger if a user is not a super admin of the target account.
       logger.error(
         i18n(`${i18nKey}.failure.notSuperAdmin`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else if (
@@ -159,7 +159,7 @@ const syncSandbox = async ({
     ) {
       logger.error(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else {

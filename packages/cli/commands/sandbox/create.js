@@ -9,13 +9,11 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { buildSandbox } = require('../../lib/sandbox-create');
-const { uiFeatureHighlight } = require('../../lib/ui');
+const { buildSandbox } = require('../../lib/sandboxCreate');
+const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
-  DEVELOPER_SANDBOX,
   getSandboxTypeAsString,
-  getAccountName,
   getAvailableSyncTypes,
   syncTypes,
   validateSandboxUsageLimits,
@@ -31,12 +29,13 @@ const {
   sandboxNamePrompt,
 } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { syncSandbox } = require('../../lib/sandbox-sync');
+const { syncSandbox } = require('../../lib/sandboxSync');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -123,7 +122,7 @@ exports.handler = async options => {
         name: 'sandboxSyncPrompt',
         type: 'confirm',
         message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
-          parentAccountName: getAccountName(accountConfig),
+          parentAccountName: uiAccountDescription(accountId),
           sandboxName,
         }),
       },
@@ -192,7 +191,7 @@ exports.handler = async options => {
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
-    if (sandboxType === DEVELOPER_SANDBOX) {
+    if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
       highlightItems.push('projectDevCommand');
     } else {
       highlightItems.push('projectUploadCommand');

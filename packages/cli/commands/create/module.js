@@ -16,10 +16,10 @@ module.exports = {
     }
     return true;
   },
-  execute: async ({ name, dest }) => {
+  execute: async ({ name, dest, getInternalVersion }) => {
     const moduleDefinition = await createModulePrompt();
     try {
-      await createModule(moduleDefinition, name, dest);
+      await createModule(moduleDefinition, name, dest, getInternalVersion);
     } catch (e) {
       logErrorInstance(e);
       process.exit(EXIT_CODES.ERROR);
