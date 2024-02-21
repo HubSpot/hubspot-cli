@@ -46,7 +46,7 @@ const {
   FieldsJs,
   isConvertableFieldJs,
   cleanupTmpDirSync,
-} = require('@hubspot/cli-lib/lib/handleFieldsJs');
+} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
 exports.command = 'upload [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
