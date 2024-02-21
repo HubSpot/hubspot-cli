@@ -54,7 +54,7 @@ exports.handler = async options => {
     !isSandbox(accountConfig)
   ) {
     logger.error(
-      i18n(`${i18nKey}.failure.notSandbox`, {
+      i18n(`${i18nKey}.failure.invalidAccountType`, {
         accountType:
           HUBSPOT_ACCOUNT_TYPE_STRINGS[
             HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]

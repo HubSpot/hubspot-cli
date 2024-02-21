@@ -74,7 +74,7 @@ exports.handler = async options => {
   let typePrompt;
   let namePrompt;
 
-  if ((type && !sandboxTypeMap[type]) || !type) {
+  if ((type && !sandboxTypeMap[type.toLowerCase()]) || !type) {
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
@@ -82,7 +82,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   }
-  const sandboxType = type ? sandboxTypeMap[type] : typePrompt.type;
+  const sandboxType = type
+    ? sandboxTypeMap[type.toLowerCase()]
+    : typePrompt.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
