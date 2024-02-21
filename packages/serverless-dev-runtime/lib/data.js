@@ -1,5 +1,5 @@
 const fs = require('fs-extra');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getDotEnvData } = require('./secrets');
 const { MOCK_DATA, MAX_SECRETS, ROUTE_PATH_PREFIX } = require('./constants');
 

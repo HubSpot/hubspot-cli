@@ -2,7 +2,7 @@ const util = require('util');
 const {
   HubSpotAuthError,
 } = require('@hubspot/local-dev-lib/models/HubSpotAuthError');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.errorHandlers.standardErrors';

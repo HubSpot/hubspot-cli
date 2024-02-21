@@ -5,7 +5,7 @@ const {
   FEEDBACK_OPTIONS,
   FEEDBACK_URLS,
 } = require('@hubspot/cli-lib/lib/constants');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const {
   feedbackTypePrompt,

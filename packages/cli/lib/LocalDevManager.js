@@ -3,7 +3,7 @@ const chokidar = require('chokidar');
 const chalk = require('chalk');
 const { i18n } = require('./lang');
 const { handleKeypress } = require('./process');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getAccountId,
   getConfigDefaultAccount,

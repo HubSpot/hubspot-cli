@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {

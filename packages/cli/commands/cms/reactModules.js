@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { retrieveDefaultModule } = require('@hubspot/local-dev-lib/cms/modules');
 const { i18n } = require('../../lib/lang');
 const path = require('path');

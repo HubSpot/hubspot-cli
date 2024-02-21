@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { table, getBorderCharacters } = require('table');
 const {
   fetchObjectSchemas,

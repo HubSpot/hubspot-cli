@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
 const { promptUser } = require('./prompts/promptUtils');

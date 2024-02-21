@@ -4,7 +4,7 @@ const {
 const {
   folderOverwritePrompt,
 } = require('../../lib/prompts/folderOverwritePrompt');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
 const ora = require('ora');

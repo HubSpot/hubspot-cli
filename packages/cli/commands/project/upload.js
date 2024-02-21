@@ -5,7 +5,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiLine } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
