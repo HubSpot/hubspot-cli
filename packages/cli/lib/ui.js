@@ -4,6 +4,11 @@ const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/cli-lib/logger');
+const { isSandbox, getSandboxName } = require('./sandboxes');
+const {
+  isDeveloperTestAccount,
+  DEV_TEST_ACCOUNT_STRING,
+} = require('./developerTestAccounts');
 
 const UI_COLORS = {
   SORBET: '#FF8F59',
@@ -65,16 +70,22 @@ const uiLink = (linkText, url) => {
 };
 
 /**
- * Returns formatted account name and ID
+ * Returns formatted account name, account type (if applicable), and ID
  *
  * @param {number} accountId
+ * @param {boolean} bold
  * @returns {string}
  */
-const uiAccountDescription = accountId => {
+const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
-  return chalk.bold(
-    account.name ? `${account.name} (${account.portalId})` : account.portalId
-  );
+  let accountTypeString = '';
+  if (isSandbox(account)) {
+    accountTypeString = getSandboxName(account);
+  } else if (isDeveloperTestAccount(account)) {
+    accountTypeString = `[${DEV_TEST_ACCOUNT_STRING}] `;
+  }
+  const message = `${account.name} ${accountTypeString}(${account.portalId})`;
+  return bold ? chalk.bold(message) : message;
 };
 
 const uiInfoSection = (title, logContent) => {

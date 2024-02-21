@@ -27,7 +27,8 @@ const {
 const {
   cancelStagedBuild,
   fetchProjectBuilds,
-} = require('@hubspot/cli-lib/api/dfs');
+} = require('@hubspot/local-dev-lib/api/projects');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
@@ -64,7 +65,11 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
         await cancelStagedBuild(accountId, projectName);
         process.exit(EXIT_CODES.SUCCESS);
       } catch (err) {
-        if (err.error.subCategory === ERROR_TYPES.BUILD_NOT_IN_PROGRESS) {
+        if (
+          isSpecifiedError(err, {
+            subCategory: ERROR_TYPES.BUILD_NOT_IN_PROGRESS,
+          })
+        ) {
           process.exit(EXIT_CODES.SUCCESS);
         } else {
           logApiErrorInstance(

@@ -322,8 +322,8 @@ class LocalDevManager {
     try {
       await DevServerManager.setup({
         components,
-        debug: this.debug,
         onUploadRequired: this.logUploadWarning.bind(this),
+        accountId: this.targetAccountId,
       });
       return true;
     } catch (e) {

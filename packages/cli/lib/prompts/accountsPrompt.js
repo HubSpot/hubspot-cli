@@ -1,15 +1,13 @@
 const { updateDefaultAccount } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
-const { getAccountName } = require('../sandboxes');
+const { uiAccountDescription } = require('../ui');
 
 const mapAccountChoices = portals =>
-  portals.map(p => {
-    return {
-      name: getAccountName(p),
-      value: p.name || p.portalId,
-    };
-  });
+  portals.map(p => ({
+    name: uiAccountDescription(p.portalId, false),
+    value: p.name || p.portalId,
+  }));
 
 const i18nKey = 'cli.commands.accounts.subcommands.use';
 
