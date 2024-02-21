@@ -147,6 +147,19 @@ en:
                 describe: "Medium to test against"
               verbose:
                 describe: "View a detailed output of the lighthouse sores"
+          reactModule:
+            describe: "Get a specified default React module"
+            options:
+              name:
+                describe: "Name of the react modules to be fetched"
+              dest:
+                describe: "Destination to download the react module to"
+            success:
+              moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
+            errors:
+              pathExists: "Folder already exists at \"{{ path }}\""
+              invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
+            groupLabel: "React modules available to download:"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
@@ -467,7 +480,7 @@ en:
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
               initialUploadMessage: "HubSpot Local Dev Server Startup"
-              declineDefaultSandboxExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
+              declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
             status:
               creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
               createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
@@ -952,6 +965,7 @@ en:
           fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
         ensureProjectExists:
           createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
+          createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
           createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
           notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
         pollFetchProject:
@@ -1047,7 +1061,7 @@ en:
           promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
           sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
           sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
-          confirmDefaultSandboxAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
+          confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
             message: "[--project] Enter the project name:"
@@ -1096,6 +1110,7 @@ en:
           selectTemplate: "Select the type of template to create"
         createModulePrompt:
           enterLabel: "What should the module label be?"
+          selectReactType: "Is this a React module?"
           selectContentType: "What types of content will this module be used in?"
           confirmGlobal: "Is this a global module?"
           errors:

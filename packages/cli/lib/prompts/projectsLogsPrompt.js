@@ -1,5 +1,5 @@
 const { i18n } = require('../lang');
-const { fetchProject } = require('@hubspot/cli-lib/api/dfs');
+const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('../commonOpts');
 const { getProjectConfig, ensureProjectExists } = require('../projects');

@@ -15,6 +15,14 @@ const MODULE_LABEL_PROMPT = {
     return true;
   },
 };
+
+const REACT_TYPE_PROMPT = {
+  type: 'confirm',
+  name: 'reactType',
+  message: i18n(`${i18nKey}.selectReactType`),
+  default: false,
+};
+
 const CONTENT_TYPES_PROMPT = {
   type: 'checkbox',
   name: 'contentTypes',
@@ -44,7 +52,12 @@ const GLOBAL_PROMPT = {
 };
 
 function createModulePrompt() {
-  return promptUser([MODULE_LABEL_PROMPT, CONTENT_TYPES_PROMPT, GLOBAL_PROMPT]);
+  return promptUser([
+    MODULE_LABEL_PROMPT,
+    REACT_TYPE_PROMPT,
+    CONTENT_TYPES_PROMPT,
+    GLOBAL_PROMPT,
+  ]);
 }
 
 module.exports = {

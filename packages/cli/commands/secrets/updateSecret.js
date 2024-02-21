@@ -1,9 +1,9 @@
 const { logger } = require('@hubspot/cli-lib/logger');
 const {
-  logServerlessFunctionApiErrorInstance,
   ApiErrorContext,
+  logApiErrorInstance,
 } = require('../../lib/errorHandlers/apiErrors');
-const { updateSecret } = require('@hubspot/cli-lib/api/secrets');
+const { updateSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -42,15 +42,14 @@ exports.handler = async options => {
       })
     );
     logger.log(i18n(`${i18nKey}.success.updateExplanation`));
-  } catch (e) {
+  } catch (err) {
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
         secretName,
       })
     );
-    await logServerlessFunctionApiErrorInstance(
-      accountId,
-      e,
+    logApiErrorInstance(
+      err,
       new ApiErrorContext({
         request: 'update secret',
         accountId,
