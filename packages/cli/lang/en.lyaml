@@ -147,6 +147,19 @@ en:
                 describe: "Medium to test against"
               verbose:
                 describe: "View a detailed output of the lighthouse sores"
+          reactModule:
+            describe: "Get a specified default React module"
+            options:
+              name:
+                describe: "Name of the react modules to be fetched"
+              dest:
+                describe: "Destination to download the react module to"
+            success:
+              moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
+            errors:
+              pathExists: "Folder already exists at \"{{ path }}\""
+              invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
+            groupLabel: "React modules available to download:"
       create:
         describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
         errors:
@@ -1078,6 +1091,7 @@ en:
           selectTemplate: "Select the type of template to create"
         createModulePrompt:
           enterLabel: "What should the module label be?"
+          selectReactType: "Is this a React module?"
           selectContentType: "What types of content will this module be used in?"
           confirmGlobal: "Is this a global module?"
           errors:
