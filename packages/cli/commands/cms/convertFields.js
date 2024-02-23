@@ -15,7 +15,7 @@ const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const i18nKey = 'cli.commands.convertFields';
 
-exports.command = 'convert-fields';
+exports.command = 'convert-fields [src] [--fieldOptions]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const invalidPath = src => {
