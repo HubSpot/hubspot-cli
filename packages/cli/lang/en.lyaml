@@ -689,7 +689,7 @@ en:
               optionMissing:
                 type: "Invalid or missing sandbox --type option in command. Please try again."
                 name: "Invalid or missing sandbox --name option in command. Please try again."
-              creatingWithinSandbox: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ sandboxName }}{{/bold}} is a {{ sandboxType }} sandbox.
+              invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
                 \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
                 \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
           delete:
@@ -737,7 +737,7 @@ en:
               developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
               standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             failure:
-              notSandbox: "Sync must be run in a sandbox account. Your default account is a production account. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
+              invalidAccountType: "Sync must be run in a sandbox account. Your default account is a {{ accountType }}. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
               missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
                 \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
                 \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"

@@ -5,10 +5,11 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { isSandbox, getSandboxName } = require('./sandboxes');
+const { isDeveloperTestAccount } = require('./developerTestAccounts');
 const {
-  isDeveloperTestAccount,
-  DEV_TEST_ACCOUNT_STRING,
-} = require('./developerTestAccounts');
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const UI_COLORS = {
   SORBET: '#FF8F59',
@@ -82,7 +83,9 @@ const uiAccountDescription = (accountId, bold = true) => {
   if (isSandbox(account)) {
     accountTypeString = getSandboxName(account);
   } else if (isDeveloperTestAccount(account)) {
-    accountTypeString = `[${DEV_TEST_ACCOUNT_STRING}] `;
+    accountTypeString = `[${
+      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+    }] `;
   }
   const message = `${account.name} ${accountTypeString}(${account.portalId})`;
   return bold ? chalk.bold(message) : message;

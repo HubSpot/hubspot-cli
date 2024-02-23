@@ -14,53 +14,45 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const {
-  STANDARD_SANDBOX_TYPE,
-  DEVELOPER_SANDBOX_TYPE,
-  DEVELOPER_SANDBOX,
-  STANDARD_SANDBOX,
-} = require('./constants');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
 };
 
 const sandboxTypeMap = {
-  DEV: DEVELOPER_SANDBOX_TYPE,
-  dev: DEVELOPER_SANDBOX_TYPE,
-  DEVELOPER: DEVELOPER_SANDBOX_TYPE,
-  developer: DEVELOPER_SANDBOX_TYPE,
-  DEVELOPMENT: DEVELOPER_SANDBOX_TYPE,
-  development: DEVELOPER_SANDBOX_TYPE,
-  STANDARD: STANDARD_SANDBOX_TYPE,
-  standard: STANDARD_SANDBOX_TYPE,
+  dev: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  developer: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  development: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+  standard: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
 };
 
 const sandboxApiTypeMap = {
-  standard: 1,
-  developer: 2,
+  [HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX]: 1,
+  [HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX]: 2,
 };
 
 const getSandboxTypeAsString = accountType => {
-  if (
-    accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX ||
-    accountType === DEVELOPER_SANDBOX // remove line once sandboxAccountType is removed
-  ) {
+  if (accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
     return 'development'; // Only place we're using this specific name
   }
-  return STANDARD_SANDBOX_TYPE;
+  return 'standard';
 };
 
 const getSandboxName = config =>
-  `[${getSandboxTypeAsString(
-    config.accountType || config.sandboxAccountType
-  )} sandbox] `;
+  `[${getSandboxTypeAsString(config.accountType)} sandbox] `;
 
 const isSandbox = config =>
-  config.accountType
-    ? config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
-      config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-    : config.sandboxAccountType && config.sandboxAccountType !== null;
+  config.accountType &&
+  (config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
+    config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX);
+
+const isStandardSandbox = config =>
+  config.accountType &&
+  config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX;
+
+const isDevelopmentSandbox = config =>
+  config.accountType &&
+  config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
@@ -70,8 +62,8 @@ function getHasSandboxesByType(parentAccountConfig, type) {
       (portal.parentAccountId !== null ||
         portal.parentAccountId !== undefined) &&
       portal.parentAccountId === parentPortalId &&
-      portal.sandboxAccountType &&
-      sandboxTypeMap[portal.sandboxAccountType] === type
+      portal.accountType &&
+      portal.accountType === type
     ) {
       return true;
     }
@@ -116,14 +108,15 @@ const getSyncTypesWithContactRecordsPrompt = async (
     syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
     !skipPrompt
   ) {
+    const langKey = isDevelopmentSandbox(accountConfig)
+      ? 'developer'
+      : 'standard';
     const { contactRecordsSyncPrompt } = await promptUser([
       {
         name: 'contactRecordsSyncPrompt',
         type: 'confirm',
         message: i18n(
-          `cli.lib.sandbox.sync.confirm.syncContactRecords.${
-            sandboxTypeMap[accountConfig.sandboxAccountType]
-          }`
+          `cli.lib.sandbox.sync.confirm.syncContactRecords.${langKey}`
         ),
       },
     ]);
@@ -146,13 +139,13 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   if (!usage) {
     throw new Error('Unable to fetch sandbox usage limits. Please try again.');
   }
-  if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
-    if (usage[DEVELOPER_SANDBOX].available === 0) {
-      const devSandboxLimit = usage[DEVELOPER_SANDBOX].limit;
+  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
+    if (usage['DEVELOPER'].available === 0) {
+      const devSandboxLimit = usage['DEVELOPER'].limit;
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
         accountConfig,
-        DEVELOPER_SANDBOX_TYPE
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
       );
       if (hasDevelopmentSandboxes) {
         throw new Error(
@@ -183,13 +176,13 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       }
     }
   }
-  if (sandboxType === STANDARD_SANDBOX_TYPE) {
-    if (usage[STANDARD_SANDBOX].available === 0) {
-      const standardSandboxLimit = usage[STANDARD_SANDBOX].limit;
+  if (sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) {
+    if (usage['STANDARD'].available === 0) {
+      const standardSandboxLimit = usage['STANDARD'].limit;
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
         accountConfig,
-        STANDARD_SANDBOX_TYPE
+        HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
       );
       if (hasStandardSandboxes) {
         throw new Error(
@@ -364,6 +357,8 @@ module.exports = {
   sandboxApiTypeMap,
   syncTypes,
   isSandbox,
+  isStandardSandbox,
+  isDevelopmentSandbox,
   getSandboxName,
   getSandboxTypeAsString,
   getHasSandboxesByType,

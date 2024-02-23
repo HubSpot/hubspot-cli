@@ -13,7 +13,6 @@ const { buildSandbox } = require('../../lib/sandboxCreate');
 const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
-  getSandboxTypeAsString,
   getAvailableSyncTypes,
   syncTypes,
   validateSandboxUsageLimits,
@@ -35,7 +34,10 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { DEVELOPER_SANDBOX_TYPE } = require('../../lib/constants');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.create';
 
@@ -54,13 +56,16 @@ exports.handler = async options => {
 
   // Default account is not a production portal
   if (
-    accountConfig.sandboxAccountType &&
-    accountConfig.sandboxAccountType !== null
+    accountConfig.accountType &&
+    accountConfig.accountType !== HUBSPOT_ACCOUNT_TYPES.STANDARD
   ) {
     logger.error(
-      i18n(`${i18nKey}.failure.creatingWithinSandbox`, {
-        sandboxType: getSandboxTypeAsString(accountConfig.sandboxAccountType),
-        sandboxName: accountConfig.name,
+      i18n(`${i18nKey}.failure.invalidAccountType`, {
+        accountType:
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[
+            HUBSPOT_ACCOUNT_TYPES[accountConfig.accountType]
+          ],
+        accountName: accountConfig.name,
       })
     );
     process.exit(EXIT_CODES.ERROR);
@@ -69,7 +74,7 @@ exports.handler = async options => {
   let typePrompt;
   let namePrompt;
 
-  if ((type && !sandboxTypeMap[type]) || !type) {
+  if ((type && !sandboxTypeMap[type.toLowerCase()]) || !type) {
     if (!force) {
       typePrompt = await sandboxTypePrompt();
     } else {
@@ -77,7 +82,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   }
-  const sandboxType = sandboxTypeMap[type] || sandboxTypeMap[typePrompt.type];
+  const sandboxType = type
+    ? sandboxTypeMap[type.toLowerCase()]
+    : typePrompt.type;
 
   // Check usage limits and exit if parent portal has no available sandboxes for the selected type
   try {
@@ -117,11 +124,15 @@ exports.handler = async options => {
   let contactRecordsSyncPromptResult = true;
   if (!force) {
     const syncI18nKey = 'cli.lib.sandbox.sync';
+    const sandboxLangKey =
+      sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+        ? 'developer'
+        : 'standard';
     const { sandboxSyncPrompt } = await promptUser([
       {
         name: 'sandboxSyncPrompt',
         type: 'confirm',
-        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxType}`, {
+        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxLangKey}`, {
           parentAccountName: uiAccountDescription(accountId),
           sandboxName,
         }),
@@ -135,7 +146,7 @@ exports.handler = async options => {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',
           message: i18n(
-            `${syncI18nKey}.confirm.syncContactRecords.${sandboxType}`
+            `${syncI18nKey}.confirm.syncContactRecords.${sandboxLangKey}`
           ),
         },
       ]);
@@ -191,7 +202,7 @@ exports.handler = async options => {
     }
 
     const highlightItems = ['accountsUseCommand', 'projectCreateCommand'];
-    if (sandboxType === DEVELOPER_SANDBOX_TYPE) {
+    if (sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX) {
       highlightItems.push('projectDevCommand');
     } else {
       highlightItems.push('projectUploadCommand');
