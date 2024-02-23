@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/cli-lib/lib/constants');
 const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { promptUser } = require('./promptUtils');
 const { accountNamePrompt } = require('./enterAccountNamePrompt');
 const { i18n } = require('../lang');

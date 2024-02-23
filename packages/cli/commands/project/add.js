@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { fetchReleaseData } = require('@hubspot/cli-lib/github');

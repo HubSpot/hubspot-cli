@@ -7,7 +7,7 @@ const {
 const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,

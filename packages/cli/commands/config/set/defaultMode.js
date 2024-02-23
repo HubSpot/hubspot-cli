@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { updateDefaultMode } = require('@hubspot/local-dev-lib/config');
 const { Mode } = require('@hubspot/cli-lib');
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');

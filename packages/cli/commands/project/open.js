@@ -9,7 +9,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getProjectConfig,
   getProjectDetailUrl,

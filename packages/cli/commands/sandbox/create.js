@@ -18,7 +18,7 @@ const {
   validateSandboxUsageLimits,
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   trackCommandUsage,
   trackCommandMetadataUsage,

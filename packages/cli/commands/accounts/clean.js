@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');

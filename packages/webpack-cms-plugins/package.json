@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/webpack-cms-plugins",
-  "version": "5.1.4-beta.0",
+  "version": "5.1.4-beta.2",
   "description": "Webpack plugins for using with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@hubspot/cli-lib": "^9.0.0",
-    "@hubspot/local-dev-lib": "^0.3.3"
+    "@hubspot/local-dev-lib": "^0.3.4"
   },
   "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
 }

@@ -7,7 +7,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
 
 const PORT = 3000;

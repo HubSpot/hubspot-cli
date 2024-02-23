@@ -3,7 +3,7 @@ const supportsHyperlinks = require('../lib/supportHyperlinks');
 const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { isSandbox, getSandboxName } = require('./sandboxes');
 const { isDeveloperTestAccount } = require('./developerTestAccounts');
 const {

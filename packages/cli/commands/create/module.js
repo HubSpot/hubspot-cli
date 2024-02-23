@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { createModule } = require('@hubspot/local-dev-lib/cms/modules');
 const { i18n } = require('../../lib/lang');
 const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
@@ -16,10 +16,10 @@ module.exports = {
     }
     return true;
   },
-  execute: async ({ name, dest }) => {
+  execute: async ({ name, dest, getInternalVersion }) => {
     const moduleDefinition = await createModulePrompt();
     try {
-      await createModule(moduleDefinition, name, dest);
+      await createModule(moduleDefinition, name, dest, getInternalVersion);
     } catch (e) {
       logErrorInstance(e);
       process.exit(EXIT_CODES.ERROR);

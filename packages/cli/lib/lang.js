@@ -2,7 +2,7 @@ const util = require('util');
 const path = require('path');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { interpolate } = require('./interpolation');
 
 const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';

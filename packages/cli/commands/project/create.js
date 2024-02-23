@@ -18,7 +18,7 @@ const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } = require('../../lib/constants');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchReleaseData } = require('@hubspot/cli-lib/github');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
