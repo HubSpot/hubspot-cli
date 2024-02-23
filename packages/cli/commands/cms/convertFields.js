@@ -15,7 +15,7 @@ const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const i18nKey = 'cli.commands.convertFields';
 
-exports.command = 'convert-fields [src] [--fieldOptions]';
+exports.command = 'convert-fields';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const invalidPath = src => {
@@ -85,7 +85,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('src', {
+  yargs.option('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });
