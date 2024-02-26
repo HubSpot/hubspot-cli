@@ -561,10 +561,10 @@
     table "^6.8.1"
     unixify "^1.0.0"
 
-"@hubspot/theme-preview-dev-server@0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.2.tgz#df32488c86b445a8ab232553ccbc7f2808ea728f"
-  integrity sha512-TRTKme4cs19AsEEr8fYkGOGdLbfxu1VEe6brCbS24f+1d17VvVO9bU7xGsuGL5a31dSX97GVnavhBrXNsgpl+w==
+"@hubspot/theme-preview-dev-server@0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.3.tgz#78077b2891f2e867a8f033a8b584fea188e89257"
+  integrity sha512-hVl0l0kwE7aloRtStV3o/lAsjKD2yK3W4Y3CsvZ8XoBSoUxubNdNgh/A92jD+vRgHu9cAIlAlYJ4166vl+/tTQ==
   dependencies:
     "@types/node-fetch" "^2.6.11"
     chokidar "^3.6.0"
