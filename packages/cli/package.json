@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hubspot/cli-lib": "^9.0.0",
-    "@hubspot/local-dev-lib": "^0.3.4",
+    "@hubspot/local-dev-lib": "^0.3.6",
     "@hubspot/serverless-dev-runtime": "5.1.4-beta.1",
     "@hubspot/ui-extensions-dev-server": "0.8.9",
     "archiver": "^5.3.0",
