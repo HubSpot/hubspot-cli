@@ -1,6 +1,6 @@
 const path = require('path');
 const { isConfigFlagEnabled } = require('@hubspot/local-dev-lib/config');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   logErrorInstance,
 } = require('../../../lib/errorHandlers/standardErrors');

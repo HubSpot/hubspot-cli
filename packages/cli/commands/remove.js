@@ -1,5 +1,5 @@
 const { deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   logApiErrorInstance,
   ApiErrorContext,

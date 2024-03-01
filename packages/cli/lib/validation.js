@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { Mode, checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
 const {
   API_KEY_AUTH_METHOD,

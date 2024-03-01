@@ -5,7 +5,7 @@ const {
   sandboxApiTypeMap,
 } = require('./sandboxes');
 const { i18n } = require('./lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   debugErrorAndContext,
   logErrorInstance,
@@ -24,10 +24,6 @@ const {
 } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { uiAccountDescription } = require('./ui');
 const {
-  DEVELOPER_SANDBOX_TYPE,
-  STANDARD_SANDBOX_TYPE,
-} = require('./constants');
-const {
   personalAccessKeyPrompt,
 } = require('./prompts/personalAccessKeyPrompt');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
@@ -36,6 +32,9 @@ const {
   writeConfig,
   updateAccountConfig,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.lib.sandbox.create';
 
@@ -113,7 +112,7 @@ const saveSandboxToConfig = async (env, result, force = false) => {
 
 /**
  * @param {String} name - Name of sandbox
- * @param {String} type - Sandbox type to be created (standard/developer)
+ * @param {String} type - Sandbox type to be created (STANDARD_SANDBOX/DEVELOPMENT_SANDBOX)
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
@@ -131,7 +130,11 @@ const buildSandbox = async ({
   const accountId = getAccountId(accountConfig.portalId);
 
   let result;
-  const spinniesI18nKey = `${i18nKey}.loading.${type}`;
+  const loadingLangKey =
+    type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+      ? 'developer'
+      : 'standard';
+  const spinniesI18nKey = `${i18nKey}.loading.${loadingLangKey}`;
 
   try {
     logger.log('');
@@ -140,7 +143,6 @@ const buildSandbox = async ({
         sandboxName: name,
       }),
     });
-
     const sandboxApiType = sandboxApiTypeMap[type]; // API expects sandbox type as 1 or 2
     result = await createSandbox(accountId, name, sandboxApiType);
 
@@ -219,7 +221,7 @@ const buildSandbox = async ({
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
         accountConfig,
-        DEVELOPER_SANDBOX_TYPE
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
       );
       if (hasDevelopmentSandboxes) {
         logger.error(
@@ -262,7 +264,7 @@ const buildSandbox = async ({
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
         accountConfig,
-        STANDARD_SANDBOX_TYPE
+        HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
       );
       if (hasStandardSandboxes) {
         logger.error(

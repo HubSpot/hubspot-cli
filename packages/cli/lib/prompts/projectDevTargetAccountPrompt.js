@@ -4,8 +4,10 @@ const { uiAccountDescription, uiCommandReference } = require('../ui');
 const { isSandbox } = require('../sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
-const { logger } = require('@hubspot/cli-lib/logger');
-const { DEVELOPER_SANDBOX, STANDARD_SANDBOX } = require('../constants');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
@@ -34,18 +36,15 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
     );
   let disabledMessage = false;
 
-  if (
-    sandboxUsage[DEVELOPER_SANDBOX] &&
-    sandboxUsage[DEVELOPER_SANDBOX].available === 0
-  ) {
-    if (sandboxAccounts.length < sandboxUsage[DEVELOPER_SANDBOX].limit) {
+  if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
+    if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
       disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
         authCommand: uiCommandReference('hs auth'),
-        limit: sandboxUsage[DEVELOPER_SANDBOX].limit,
+        limit: sandboxUsage['DEVELOPER'].limit,
       });
     } else {
       disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
-        limit: sandboxUsage[DEVELOPER_SANDBOX].limit,
+        limit: sandboxUsage['DEVELOPER'].limit,
       });
     }
   }
@@ -53,10 +52,10 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   // Order choices by Developer Sandbox -> Standard Sandbox
   const choices = [
     ...sandboxAccounts
-      .filter(a => a.sandboxAccountType === DEVELOPER_SANDBOX)
+      .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX)
       .map(mapSandboxAccount),
     ...sandboxAccounts
-      .filter(a => a.sandboxAccountType === STANDARD_SANDBOX)
+      .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX)
       .map(mapSandboxAccount),
     {
       name: i18n(`${i18nKey}.createNewSandboxOption`),

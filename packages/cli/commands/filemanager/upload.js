@@ -4,7 +4,7 @@ const path = require('path');
 const { uploadFolder } = require('@hubspot/local-dev-lib/fileManager');
 const { uploadFile } = require('@hubspot/local-dev-lib/api/fileManager');
 const { getCwd, convertToUnixPath } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   validateSrcAndDestPaths,
 } = require('@hubspot/local-dev-lib/cms/modules');

@@ -5,7 +5,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiLine } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -39,9 +39,9 @@ exports.handler = async options => {
   const { forceCreate, path: projectPath, message } = options;
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
-  const sandboxType = accountConfig && accountConfig.sandboxAccountType;
+  const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: sandboxType }, accountId);
+  trackCommandUsage('project-upload', { type: accountType }, accountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 

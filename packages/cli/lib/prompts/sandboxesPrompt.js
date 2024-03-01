@@ -3,17 +3,15 @@ const { i18n } = require('../lang');
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('../ui');
 const {
-  DEVELOPER_SANDBOX,
-  STANDARD_SANDBOX,
-  STANDARD_SANDBOX_TYPE,
-  DEVELOPER_SANDBOX_TYPE,
-} = require('../constants');
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
+const { isSandbox } = require('../sandboxes');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 
 const mapSandboxAccountChoices = portals =>
   portals
-    .filter(p => p.sandboxAccountType && p.sandboxAccountType !== null)
+    .filter(p => isSandbox(p))
     .map(p => {
       return {
         name: uiAccountDescription(p.portalId, false),
@@ -23,9 +21,7 @@ const mapSandboxAccountChoices = portals =>
 
 const mapNonSandboxAccountChoices = portals =>
   portals
-    .filter(
-      p => p.sandboxAccountType === null || p.sandboxAccountType === undefined
-    )
+    .filter(p => !isSandbox(p))
     .map(p => {
       return {
         name: `${p.name} (${p.portalId})`,
@@ -33,9 +29,10 @@ const mapNonSandboxAccountChoices = portals =>
       };
     });
 
-const sandboxNamePrompt = (type = STANDARD_SANDBOX_TYPE) => {
-  const isDeveloperSandbox = type === DEVELOPER_SANDBOX_TYPE;
-  const namePromptMessage = isDeveloperSandbox
+const sandboxNamePrompt = (type = HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) => {
+  const isDevelopmentSandbox =
+    type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
+  const namePromptMessage = isDevelopmentSandbox
     ? `${i18nKey}.name.developmentSandboxMessage`
     : `${i18nKey}.name.message`;
   return promptUser([
@@ -52,7 +49,7 @@ const sandboxNamePrompt = (type = STANDARD_SANDBOX_TYPE) => {
           ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
           : true;
       },
-      default: `New ${isDeveloperSandbox ? 'development ' : ''}sandbox`,
+      default: `New ${isDevelopmentSandbox ? 'development ' : ''}sandbox`,
     },
   ]);
 };
@@ -60,11 +57,11 @@ const sandboxNamePrompt = (type = STANDARD_SANDBOX_TYPE) => {
 const sandboxTypeChoices = [
   {
     name: i18n(`${i18nKey}.type.developer`),
-    value: DEVELOPER_SANDBOX,
+    value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
   },
   {
     name: i18n(`${i18nKey}.type.standard`),
-    value: STANDARD_SANDBOX,
+    value: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
   },
 ];
 
@@ -76,7 +73,7 @@ const sandboxTypePrompt = () => {
       type: 'list',
       look: false,
       choices: sandboxTypeChoices,
-      default: DEVELOPER_SANDBOX,
+      default: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
     },
   ]);
 };
