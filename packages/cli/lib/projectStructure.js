@@ -9,15 +9,10 @@ const COMPONENT_TYPES = Object.freeze({
   publicApp: 'public-app',
 });
 
-const PRIVATE_APP_COMPONENT_CONFIG = 'app.json';
-const PUBLIC_APP_COMPONENT_CONFIG = 'public-app.json';
-
 const CONFIG_TYPE_MAP = {
-  [PRIVATE_APP_COMPONENT_CONFIG]: COMPONENT_TYPES.privateApp,
-  [PUBLIC_APP_COMPONENT_CONFIG]: COMPONENT_TYPES.publicApp,
+  'app.json': COMPONENT_TYPES.privateApp,
+  'public-app.json': COMPONENT_TYPES.publicApp,
 };
-
-const CONFIG_FILES = Object.keys(CONFIG_TYPE_MAP);
 
 function loadConfigFile(configPath) {
   if (configPath) {
@@ -95,7 +90,7 @@ async function findProjectComponents(projectSourceDir) {
     // Find app components
     const { base, dir } = path.parse(projectFile);
 
-    if (CONFIG_FILES.includes(base)) {
+    if (Object.keys(CONFIG_TYPE_MAP).includes(base)) {
       const parsedAppConfig = loadConfigFile(projectFile);
 
       if (parsedAppConfig && parsedAppConfig.name) {
@@ -116,7 +111,7 @@ async function findProjectComponents(projectSourceDir) {
 }
 
 module.exports = {
-  APP_COMPONENT_CONFIG,
+  CONFIG_TYPE_MAP,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
