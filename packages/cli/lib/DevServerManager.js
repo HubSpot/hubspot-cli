@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { COMPONENT_TYPE_MAP } = require('./projectStructure');
+const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
 const { promptUser } = require('./prompts/promptUtils');
 const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
@@ -19,6 +19,7 @@ const i18nKey = 'cli.lib.DevServerManager';
 
 const SERVER_KEYS = {
   app: 'app',
+  publicApp: 'publicApp',
 };
 
 class DevServerManager {
@@ -30,7 +31,11 @@ class DevServerManager {
     this.path = null;
     this.devServers = {
       [SERVER_KEYS.app]: {
-        componentType: COMPONENT_TYPE_MAP.app,
+        componentType: COMPONENT_TYPES.app,
+        serverInterface: DevModeInterface,
+      },
+      [SERVER_KEYS.publicApp]: {
+        componentType: COMPONENT_TYPES.publicApp,
         serverInterface: DevModeInterface,
       },
     };
