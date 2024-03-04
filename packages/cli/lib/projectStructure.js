@@ -9,10 +9,19 @@ const COMPONENT_TYPES = Object.freeze({
   publicApp: 'public-app',
 });
 
-const CONFIG_TYPE_MAP = {
-  'app.json': COMPONENT_TYPES.privateApp,
-  'public-app.json': COMPONENT_TYPES.publicApp,
+const CONFIG_FILES = {
+  [COMPONENT_TYPES.privateApp]: 'app.json',
+  [COMPONENT_TYPES.publicApp]: 'public-app.json',
 };
+
+function getTypeFromConfigFile(configFile) {
+  for (let key in CONFIG_FILES) {
+    if (CONFIG_FILES[key] === configFile) {
+      return key;
+    }
+  }
+  return null;
+}
 
 function loadConfigFile(configPath) {
   if (configPath) {
@@ -90,7 +99,7 @@ async function findProjectComponents(projectSourceDir) {
     // Find app components
     const { base, dir } = path.parse(projectFile);
 
-    if (Object.keys(CONFIG_TYPE_MAP).includes(base)) {
+    if (Object.values(CONFIG_FILES).includes(base)) {
       const parsedAppConfig = loadConfigFile(projectFile);
 
       if (parsedAppConfig && parsedAppConfig.name) {
@@ -98,7 +107,7 @@ async function findProjectComponents(projectSourceDir) {
         const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
 
         components.push({
-          type: CONFIG_TYPE_MAP[base],
+          type: getTypeFromConfigFile(base),
           config: parsedAppConfig,
           runnable: !isLegacy,
           path: appPath,
@@ -111,7 +120,7 @@ async function findProjectComponents(projectSourceDir) {
 }
 
 module.exports = {
-  CONFIG_TYPE_MAP,
+  CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,

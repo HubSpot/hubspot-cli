@@ -18,7 +18,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const i18nKey = 'cli.lib.DevServerManager';
 
 const SERVER_KEYS = {
-  app: 'app',
+  privateApp: 'privateApp',
   publicApp: 'publicApp',
 };
 
@@ -30,8 +30,8 @@ class DevServerManager {
     this.server = null;
     this.path = null;
     this.devServers = {
-      [SERVER_KEYS.app]: {
-        componentType: COMPONENT_TYPES.app,
+      [SERVER_KEYS.privateApp]: {
+        componentType: COMPONENT_TYPES.privateApp,
         serverInterface: DevModeInterface,
       },
       [SERVER_KEYS.publicApp]: {

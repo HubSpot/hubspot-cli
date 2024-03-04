@@ -14,7 +14,7 @@ const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
 const {
-  CONFIG_TYPE_MAP,
+  CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
@@ -287,7 +287,7 @@ class LocalDevManager {
       .map(component => {
         const appConfigPath = path.join(
           component.path,
-          CONFIG_TYPE_MAP[component.type]
+          CONFIG_FILES[component.type]
         );
         return appConfigPath;
       });
