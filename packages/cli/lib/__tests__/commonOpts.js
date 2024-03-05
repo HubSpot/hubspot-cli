@@ -10,7 +10,6 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { getMode } = require('../commonOpts');
 
-jest.mock('@hubspot/local-dev-lib');
 jest.mock('@hubspot/local-dev-lib/config');
 
 describe('@hubspot/cli/lib/commonOpts', () => {
