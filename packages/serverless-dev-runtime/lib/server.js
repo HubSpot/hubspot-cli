@@ -2,9 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
-const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
 const {
-  setLogLevel: setLocalDevLibLogLevel,
+  logger,
+  setLogLevel,
+  LOG_LEVEL,
 } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('./table');
 
@@ -193,9 +194,6 @@ const start = props => {
   const { path: functionPath, watch, debug } = options;
   setLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
 
-  // Update the log level in local-dev-lib's instance of the logger
-  // This will evenutally replace cli-lib's version of it
-  setLocalDevLibLogLevel(debug ? LOG_LEVEL.DEBUG : LOG_LEVEL.LOG);
   if (watch) {
     watchFolder(functionPath, restartServer);
   }

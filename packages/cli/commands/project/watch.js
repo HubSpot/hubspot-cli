@@ -4,7 +4,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const {
   addAccountOptions,

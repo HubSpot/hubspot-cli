@@ -10,7 +10,7 @@ const {
   convertToUnixPath,
   isAllowedExtension,
 } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
@@ -46,7 +46,7 @@ const {
   FieldsJs,
   isConvertableFieldJs,
   cleanupTmpDirSync,
-} = require('@hubspot/cli-lib/lib/handleFieldsJs');
+} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
 exports.command = 'upload [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);

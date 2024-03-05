@@ -1,14 +1,12 @@
 const SpinniesManager = require('./ui/SpinniesManager');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
-  getAccountName,
-  DEVELOPER_SANDBOX,
-  sandboxTypeMap,
   syncTypes,
+  isDevelopmentSandbox,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
 const {
@@ -52,7 +50,7 @@ const syncSandbox = async ({
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
   const syncStatusUrl = `${baseUrl}/sandboxes-developer/${parentAccountId}/${getSandboxTypeAsString(
-    accountConfig.sandboxAccountType
+    accountConfig.accountType
   )}`;
 
   try {
@@ -87,10 +85,7 @@ const syncSandbox = async ({
         accountName: uiAccountDescription(accountId),
       }),
     });
-    if (
-      skipPolling &&
-      sandboxTypeMap[accountConfig.sandboxAccountType] === DEVELOPER_SANDBOX
-    ) {
+    if (skipPolling && isDevelopmentSandbox(accountConfig)) {
       if (syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS)) {
         logger.log(i18n(`${i18nKey}.loading.skipPollingWithContacts`));
       } else {
@@ -109,7 +104,7 @@ const syncSandbox = async ({
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.missingScopes`, {
-          accountName: getAccountName(parentAccountConfig),
+          accountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -122,7 +117,7 @@ const syncSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: uiAccountDescription(accountId),
-          parentAccountName: getAccountName(parentAccountConfig),
+          parentAccountName: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -147,7 +142,7 @@ const syncSandbox = async ({
       // This will only trigger if a user is not a super admin of the target account.
       logger.error(
         i18n(`${i18nKey}.failure.notSuperAdmin`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else if (
@@ -159,7 +154,7 @@ const syncSandbox = async ({
     ) {
       logger.error(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(accountId),
         })
       );
     } else {

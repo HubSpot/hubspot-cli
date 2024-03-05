@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/local-dev-lib/config');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { promptUser } = require('../../../lib/prompts/promptUtils');

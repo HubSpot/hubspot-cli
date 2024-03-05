@@ -2,14 +2,14 @@ const path = require('path');
 const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
 const { isAllowedExtension, getCwd } = require('@hubspot/local-dev-lib/path');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
 const { i18n } = require('../../lib/lang');
 const {
   FieldsJs,
   isConvertableFieldJs,
-} = require('@hubspot/cli-lib/lib/handleFieldsJs');
+} = require('@hubspot/local-dev-lib/cms/handleFieldsJs');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
@@ -85,7 +85,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('src', {
+  yargs.option('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
   });

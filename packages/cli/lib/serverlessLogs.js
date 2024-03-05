@@ -2,7 +2,7 @@ const https = require('https');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { handleExit, handleKeypress } = require('./process');
 const chalk = require('chalk');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { outputLogs } = require('./ui/serverlessFunctionLogs');
 const {
   logServerlessFunctionApiErrorInstance,

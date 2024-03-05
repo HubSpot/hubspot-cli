@@ -5,7 +5,7 @@ const {
   getAccountId,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -22,7 +22,6 @@ const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   getConfig,
   getEnv,
-  getAccountConfig,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -33,8 +32,8 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
-const { getAccountName } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+const { uiAccountDescription } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.sandbox.subcommands.delete';
 
@@ -69,7 +68,6 @@ exports.handler = async options => {
   const sandboxAccountId = getAccountId({
     account: account || accountPrompt.account,
   });
-  const accountConfig = getAccountConfig(sandboxAccountId);
   const isDefaultAccount =
     sandboxAccountId === getAccountId(config.defaultPortal);
 
@@ -94,7 +92,6 @@ exports.handler = async options => {
     }
   }
 
-  const parentAccount = getAccountConfig(parentAccountId);
   const url = `${baseUrl}/sandboxes/${parentAccountId}`;
   const command = `hs auth ${
     getEnv(sandboxAccountId) === 'qa' ? '--qa' : ''
@@ -115,14 +112,14 @@ exports.handler = async options => {
 
   logger.debug(
     i18n(`${i18nKey}.debug.deleting`, {
-      account: getAccountName(accountConfig),
+      account: uiAccountDescription(sandboxAccountId),
     })
   );
 
   if (isDefaultAccount) {
     logger.info(
       i18n(`${i18nKey}.defaultAccountWarning`, {
-        account: getAccountName(accountConfig),
+        account: uiAccountDescription(sandboxAccountId),
       })
     );
     logger.log('');
@@ -135,7 +132,7 @@ exports.handler = async options => {
           name: 'confirmSandboxDeletePrompt',
           type: 'confirm',
           message: i18n(`${i18nKey}.confirm`, {
-            account: getAccountName(accountConfig),
+            account: uiAccountDescription(sandboxAccountId),
           }),
         },
       ]);
@@ -177,7 +174,7 @@ exports.handler = async options => {
       logger.log('');
       logger.error(
         i18n(`${i18nKey}.failure.invalidKey`, {
-          account: getAccountName(parentAccount),
+          account: uiAccountDescription(parentAccountId),
         })
       );
     } else if (
@@ -190,8 +187,8 @@ exports.handler = async options => {
       logger.log('');
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
-          accountName: getAccountName(accountConfig),
-          parentAccountName: getAccountName(parentAccount),
+          accountName: uiAccountDescription(sandboxAccountId),
+          parentAccountName: uiAccountDescription(parentAccountId),
         })
       );
       logger.log('');
@@ -205,7 +202,7 @@ exports.handler = async options => {
       logger.log('');
       logger.warn(
         i18n(`${i18nKey}.failure.objectNotFound`, {
-          account: getAccountName(accountConfig),
+          account: uiAccountDescription(sandboxAccountId),
         })
       );
       logger.log('');

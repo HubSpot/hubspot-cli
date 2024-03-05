@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
@@ -9,8 +9,13 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getSandboxTypeAsString } = require('../../lib/sandboxes');
+const { isSandbox, getSandboxName } = require('../../lib/sandboxes');
+const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
 const { i18n } = require('../../lib/lang');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.commands.accounts.subcommands.list';
 
@@ -19,29 +24,28 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 const sortAndMapPortals = portals => {
   const mappedPortalData = {};
+  // Standard and app developer portals
   portals
-    .sort((a, b) => {
-      if (a.sandboxAccountType === null && b.sandboxAccountType !== null) {
-        return -1;
-      }
-      if (a.sandboxAccountType !== null && b.sandboxAccountType === null) {
-        return 1;
-      }
-      return 0;
-    })
+    .filter(
+      p =>
+        p.accountType &&
+        (p.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD ||
+          p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
+    )
     .forEach(portal => {
-      if (
-        portal.sandboxAccountType !== undefined &&
-        portal.sandboxAccountType === null
-      ) {
-        mappedPortalData[portal.portalId] = [portal];
-      } else if (portal.sandboxAccountType && portal.parentAccountId) {
-        mappedPortalData[portal.parentAccountId] = [
-          ...(mappedPortalData[portal.parentAccountId] || []),
-          portal,
+      mappedPortalData[portal.portalId] = [portal];
+    });
+  // Non-standard portals (sandbox, developer test account)
+  portals
+    .filter(p => p.accountType && (isSandbox(p) || isDeveloperTestAccount(p)))
+    .forEach(p => {
+      if (p.parentAccountId) {
+        mappedPortalData[p.parentAccountId] = [
+          ...(mappedPortalData[p.parentAccountId] || []),
+          p,
         ];
       } else {
-        mappedPortalData[portal.portalId] = [portal];
+        mappedPortalData[p.portalId] = [p];
       }
     });
   return mappedPortalData;
@@ -50,18 +54,22 @@ const sortAndMapPortals = portals => {
 const getPortalData = mappedPortalData => {
   const portalData = [];
   Object.values(mappedPortalData).forEach(set => {
-    set.forEach((portal, i) => {
-      if (i === 0) {
-        portalData.push([portal.name, portal.portalId, portal.authType]);
-      } else {
-        portalData.push([
-          `↳ ${portal.name} [${getSandboxTypeAsString(
-            portal.sandboxAccountType
-          )} sandbox]`,
-          portal.portalId,
-          portal.authType,
-        ]);
+    set.forEach(portal => {
+      let name = portal.name;
+      if (isSandbox(portal)) {
+        name = `${portal.name} ${getSandboxName(portal)}`;
+        if (set.length > 1) {
+          name = `↳ ${name}`;
+        }
+      } else if (isDeveloperTestAccount(portal)) {
+        name = `${portal.name} [${
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+        }]`;
+        if (set.length > 1) {
+          name = `↳ ${name}`;
+        }
       }
+      portalData.push([name, portal.portalId, portal.authType]);
     });
   });
   return portalData;

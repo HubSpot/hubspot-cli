@@ -2,13 +2,10 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const {
   getSandboxLimit,
   getHasSandboxesByType,
-  saveSandboxToConfig,
   sandboxApiTypeMap,
-  STANDARD_SANDBOX,
-  DEVELOPER_SANDBOX,
 } = require('./sandboxes');
 const { i18n } = require('./lang');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   debugErrorAndContext,
   logErrorInstance,
@@ -21,12 +18,101 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getEnv, getAccountId } = require('@hubspot/local-dev-lib/config');
 const { createSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+const {
+  getAccessToken,
+  updateConfigWithAccessToken,
+} = require('@hubspot/local-dev-lib/personalAccessKey');
+const { uiAccountDescription } = require('./ui');
+const {
+  personalAccessKeyPrompt,
+} = require('./prompts/personalAccessKeyPrompt');
+const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
+const {
+  accountNameExistsInConfig,
+  writeConfig,
+  updateAccountConfig,
+} = require('@hubspot/local-dev-lib/config');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'cli.lib.sandbox.create';
 
 /**
+ * @param {String} env - Environment (QA/Prod)
+ * @param {Object} result - Sandbox instance returned from API
+ * @param {Boolean} force - Force flag to skip prompt
+ * @returns {String} validName saved into config
+ */
+const saveSandboxToConfig = async (env, result, force = false) => {
+  let personalAccessKey = result.personalAccessKey;
+  if (!personalAccessKey) {
+    const configData = await personalAccessKeyPrompt({
+      env,
+      account: result.sandbox.sandboxHubId,
+    });
+    personalAccessKey = configData.personalAccessKey;
+  }
+
+  let updatedConfig;
+
+  try {
+    const token = await getAccessToken(personalAccessKey, env);
+    updatedConfig = await updateConfigWithAccessToken(
+      token,
+      personalAccessKey,
+      env
+    );
+  } catch (e) {
+    logErrorInstance(e);
+  }
+
+  if (!updatedConfig) {
+    throw new Error('Failed to update config with personal access key.');
+  }
+
+  let validName = updatedConfig.name;
+  if (!updatedConfig.name) {
+    const nameForConfig = result.sandbox.name
+      .toLowerCase()
+      .split(' ')
+      .join('-');
+    validName = nameForConfig;
+    const invalidAccountName = accountNameExistsInConfig(nameForConfig);
+    if (invalidAccountName) {
+      if (!force) {
+        logger.log('');
+        logger.warn(
+          i18n(
+            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
+            { name: nameForConfig }
+          )
+        );
+        const { name: promptName } = await enterAccountNamePrompt(
+          nameForConfig + `_${result.sandbox.sandboxHubId}`
+        );
+        validName = promptName;
+      } else {
+        // Basic invalid name handling when force flag is passed
+        validName = nameForConfig + `_${result.sandbox.sandboxHubId}`;
+      }
+    }
+  }
+  updateAccountConfig({
+    ...updatedConfig,
+    environment: updatedConfig.env,
+    tokenInfo: updatedConfig.auth.tokenInfo,
+    name: validName,
+  });
+  writeConfig();
+
+  logger.log('');
+  return validName;
+};
+
+/**
  * @param {String} name - Name of sandbox
- * @param {String} type - Sandbox type to be created (standard/developer)
+ * @param {String} type - Sandbox type to be created (STANDARD_SANDBOX/DEVELOPMENT_SANDBOX)
  * @param {Object} accountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @returns {Object} Object containing sandboxConfigName string and sandbox instance from API
@@ -44,7 +130,11 @@ const buildSandbox = async ({
   const accountId = getAccountId(accountConfig.portalId);
 
   let result;
-  const spinniesI18nKey = `${i18nKey}.loading.${type}`;
+  const loadingLangKey =
+    type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+      ? 'developer'
+      : 'standard';
+  const spinniesI18nKey = `${i18nKey}.loading.${loadingLangKey}`;
 
   try {
     logger.log('');
@@ -53,7 +143,6 @@ const buildSandbox = async ({
         sandboxName: name,
       }),
     });
-
     const sandboxApiType = sandboxApiTypeMap[type]; // API expects sandbox type as 1 or 2
     result = await createSandbox(accountId, name, sandboxApiType);
 
@@ -75,14 +164,14 @@ const buildSandbox = async ({
     if (isMissingScopeError(err)) {
       logger.error(
         i18n(`${i18nKey}.failure.scopes.message`, {
-          accountName: accountConfig.name || accountId,
+          accountName: uiAccountDescription(accountId),
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
         i18n(`${i18nKey}.failure.scopes.instructions`, {
-          accountName: accountConfig.name || accountId,
+          accountName: uiAccountDescription(accountId),
           url,
         })
       );
@@ -97,7 +186,7 @@ const buildSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.invalidUser`, {
           accountName: name,
-          parentAccountName: accountConfig.name || accountId,
+          parentAccountName: uiAccountDescription(accountId),
         })
       );
       logger.log('');
@@ -112,7 +201,7 @@ const buildSandbox = async ({
       logger.error(
         i18n(`${i18nKey}.failure.403Gating`, {
           accountName: name,
-          parentAccountName: accountConfig.name || accountId,
+          parentAccountName: uiAccountDescription(accountId),
           accountId,
         })
       );
@@ -132,7 +221,7 @@ const buildSandbox = async ({
       const plural = devSandboxLimit !== 1;
       const hasDevelopmentSandboxes = getHasSandboxesByType(
         accountConfig,
-        DEVELOPER_SANDBOX
+        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
       );
       if (hasDevelopmentSandboxes) {
         logger.error(
@@ -141,7 +230,7 @@ const buildSandbox = async ({
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: devSandboxLimit,
             }
           )
@@ -152,7 +241,7 @@ const buildSandbox = async ({
           i18n(
             `${i18nKey}.failure.limit.developer.${plural ? 'other' : 'one'}`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: devSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
             }
@@ -175,7 +264,7 @@ const buildSandbox = async ({
       const plural = standardSandboxLimit !== 1;
       const hasStandardSandboxes = getHasSandboxesByType(
         accountConfig,
-        STANDARD_SANDBOX
+        HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
       );
       if (hasStandardSandboxes) {
         logger.error(
@@ -184,7 +273,7 @@ const buildSandbox = async ({
               plural ? 'other' : 'one'
             }`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: standardSandboxLimit,
             }
           )
@@ -195,7 +284,7 @@ const buildSandbox = async ({
           i18n(
             `${i18nKey}.failure.limit.standard.${plural ? 'other' : 'one'}`,
             {
-              accountName: accountConfig.name || accountId,
+              accountName: uiAccountDescription(accountId),
               limit: standardSandboxLimit,
               link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
             }

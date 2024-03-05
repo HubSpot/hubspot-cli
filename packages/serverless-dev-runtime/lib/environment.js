@@ -1,4 +1,4 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   AWS_RESERVED_VARS,
   AWS_RESERVED_VARS_INFO_URL,

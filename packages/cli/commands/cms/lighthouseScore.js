@@ -5,7 +5,7 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');

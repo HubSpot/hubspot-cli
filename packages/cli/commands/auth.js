@@ -1,5 +1,5 @@
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
-const { logger } = require('@hubspot/cli-lib/logger');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,

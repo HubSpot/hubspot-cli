@@ -1,6 +1,7 @@
 const moment = require('moment');
 const chalk = require('chalk');
-const { logger, Styles } = require('@hubspot/cli-lib/logger');
+const { logger, Styles } = require('@hubspot/local-dev-lib/logger');
+
 const { MAX_RUNTIME } = require('./constants');
 
 const SEPARATOR = ' - ';

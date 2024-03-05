@@ -1,4 +1,6 @@
-const { logger } = require('@hubspot/cli-lib/logger');
+const fs = require('fs');
+const path = require('path');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { Mode } = require('@hubspot/cli-lib');
 const {
   API_KEY_AUTH_METHOD,
@@ -13,16 +15,17 @@ const {
   getAccountConfig,
   loadConfigFromEnvironment,
 } = require('@hubspot/local-dev-lib/config');
-const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
-const { getCwd, getExt } = require('@hubspot/local-dev-lib/path');
+const {
+  getAbsoluteFilePath,
+  getCwd,
+  getExt,
+} = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
-const fs = require('fs');
-const path = require('path');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { checkAndWarnGitInclusion } = require('./ui/git');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');

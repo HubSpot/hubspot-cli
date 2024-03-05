@@ -1,5 +1,9 @@
 const readline = require('readline');
-const { logger, setLogLevel, LOG_LEVEL } = require('@hubspot/cli-lib/logger');
+const {
+  logger,
+  setLogLevel,
+  LOG_LEVEL,
+} = require('@hubspot/local-dev-lib/logger');
 const {
   setLogLevel: setLocalDevLibLogLevel,
 } = require('@hubspot/local-dev-lib/logger');
