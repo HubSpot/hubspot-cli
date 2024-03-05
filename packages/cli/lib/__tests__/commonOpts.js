@@ -1,4 +1,7 @@
-const { Mode, DEFAULT_MODE } = require('@hubspot/cli-lib');
+const {
+  MODE,
+  DEFAULT_MODE,
+} = require('@hubspot/local-dev-lib/constants/files');
 const {
   getAndLoadConfigIfNeeded,
   getAccountId,
@@ -7,7 +10,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { getMode } = require('../commonOpts');
 
-jest.mock('@hubspot/cli-lib');
+jest.mock('@hubspot/local-dev-lib');
 jest.mock('@hubspot/local-dev-lib/config');
 
 describe('@hubspot/cli/lib/commonOpts', () => {
@@ -19,7 +22,7 @@ describe('@hubspot/cli/lib/commonOpts', () => {
     const devAccountConfig = {
       accountId: accounts.DEV,
       name: 'DEV',
-      defaultMode: Mode.draft,
+      defaultMode: MODE.draft,
     };
     const prodAccountConfig = {
       accountId: accounts.PROD,
@@ -31,7 +34,7 @@ describe('@hubspot/cli/lib/commonOpts', () => {
     };
     const configWithDefaultMode = {
       ...config,
-      defaultMode: Mode.draft,
+      defaultMode: MODE.draft,
     };
     afterEach(() => {
       getAndLoadConfigIfNeeded.mockReset();
@@ -44,8 +47,8 @@ describe('@hubspot/cli/lib/commonOpts', () => {
         it('should return the mode specified by the command option if present.', () => {
           getAndLoadConfigIfNeeded.mockReturnValue(configWithDefaultMode);
           getAccountConfig.mockReturnValue(devAccountConfig);
-          expect(getMode({ mode: Mode.draft })).toBe(Mode.draft);
-          expect(getMode({ mode: Mode.publish })).toBe(Mode.publish);
+          expect(getMode({ mode: MODE.draft })).toBe(MODE.draft);
+          expect(getMode({ mode: MODE.publish })).toBe(MODE.publish);
           expect(getMode({ mode: 'undefined-mode' })).toBe('undefined-mode');
         });
       });
@@ -55,7 +58,7 @@ describe('@hubspot/cli/lib/commonOpts', () => {
           getAccountId.mockReturnValue(accounts.DEV);
           getAccountConfig.mockReturnValue(devAccountConfig);
           loadConfigFromEnvironment.mockReturnValue(undefined);
-          expect(getMode({ account: accounts.DEV })).toBe(Mode.draft);
+          expect(getMode({ account: accounts.DEV })).toBe(MODE.draft);
         });
       });
       describe('3. hubspot.config.yml -> config.defaultMode', () => {
@@ -64,7 +67,7 @@ describe('@hubspot/cli/lib/commonOpts', () => {
           getAccountId.mockReturnValue(accounts.PROD);
           getAccountConfig.mockReturnValue(prodAccountConfig);
           loadConfigFromEnvironment.mockReturnValue(undefined);
-          expect(getMode({ account: accounts.PROD })).toBe(Mode.draft);
+          expect(getMode({ account: accounts.PROD })).toBe(MODE.draft);
         });
       });
       describe('4. DEFAULT_MODE', () => {
