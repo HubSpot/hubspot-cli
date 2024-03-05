@@ -103,14 +103,13 @@ async function findProjectComponents(projectSourceDir) {
       const parsedAppConfig = loadConfigFile(projectFile);
 
       if (parsedAppConfig && parsedAppConfig.name) {
-        const appPath = `${dir}/`;
-        const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
+        const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
 
         components.push({
           type: getTypeFromConfigFile(base),
           config: parsedAppConfig,
           runnable: !isLegacy,
-          path: appPath,
+          path: dir,
         });
       }
     }
