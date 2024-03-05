@@ -18,9 +18,6 @@ const {
   SPINNER_STATUS,
 } = require('@hubspot/cli-lib/lib/constants');
 const {
-  fetchDefaultVersion,
-} = require('@hubspot/cli-lib/lib/projectPlatformVersion');
-const {
   createProject,
   getBuildStatus,
   getBuildStructure,
@@ -877,26 +874,13 @@ const showPlatformVersionWarning = async (accountId, projectConfig) => {
   );
 
   if (!platformVersion) {
-    try {
-      const defaultVersion = await fetchDefaultVersion(accountId);
-      logger.log('');
-      logger.warn(
-        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
-          defaultVersion,
-          docsLink,
-        })
-      );
-      logger.log('');
-    } catch (e) {
-      logger.log('');
-      logger.warn(
-        i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersionAlt`, {
-          docsLink,
-        })
-      );
-      logger.log('');
-      logger.debug(e.error);
-    }
+    logger.log('');
+    logger.warn(
+      i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
+        docsLink,
+      })
+    );
+    logger.log('');
   } else if (platformVersion === '2023.1') {
     logger.log('');
     logger.warn(
