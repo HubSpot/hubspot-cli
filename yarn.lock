@@ -571,7 +571,7 @@
     express "^4.18.2"
     node-fetch "2.7.0"
 
-"@hubspot/ui-extensions-dev-server@^0.8.11":
+"@hubspot/ui-extensions-dev-server@0.8.11":
   version "0.8.11"
   resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.11.tgz#4bb3f32f6a623de08c873b3b7f2d8e50edbfb0ee"
   integrity sha512-oJBLBgD6vuXZgZinD4m1n2haej/R2awnsXUpl6dn+KhaGW3khZHUU/01Y0hkwVolI2dGq9No4muw4FcMVbgLgQ==
