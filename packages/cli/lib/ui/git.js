@@ -3,7 +3,7 @@ const { checkGitInclusion } = require('@hubspot/local-dev-lib/gitignore');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('../lang');
 
-const i18nKey = 'lib.ui.git';
+const i18nKey = 'cli.lib.ui.git';
 
 function checkAndWarnGitInclusion(configPath) {
   try {

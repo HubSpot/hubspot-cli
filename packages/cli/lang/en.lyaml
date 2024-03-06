@@ -1037,14 +1037,14 @@ en:
               url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
               message: "See {{ link }}"
         git:
-          securityIssue": "Security Issue Detected",
-          configFileTracked": "The HubSpot config file can be tracked by git.",
-          fileName": "File: \"{{ configPath }}\"",
-          remediate": "To remediate:",
-          moveConfig": "- Move the config file to your home directory: '{{ homeDir }}'",
-          addGitignore": "- Add gitignore pattern '{{ configPath }}' to a .gitignore file in root of your repository.",
-          noRemote": "- Ensure that the config file has not already been pushed to a remote repository.",
-          checkFailed": "Unable to determine if config file is properly ignored by git."
+          securityIssue: "Security Issue Detected"
+          configFileTracked: "The HubSpot config file can be tracked by git."
+          fileName: "File: \"{{ configPath }}\""
+          remediate: "To remediate:"
+          moveConfig: "- Move the config file to your home directory: '{{ homeDir }}'"
+          addGitignore: "- Add gitignore pattern '{{ configPath }}' to a .gitignore file in root of your repository."
+          noRemote: "- Ensure that the config file has not already been pushed to a remote repository."
+          checkFailed: "Unable to determine if config file is properly ignored by git."
         serverlessFunctionLogs:
           unableToProcessLog: "Unable to process log {{ log }}"
       commonOpts:
