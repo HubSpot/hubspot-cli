@@ -60,6 +60,10 @@ const PROJECT_TASK_TYPES = {
   APP_FUNCTION: 'function',
   CRM_CARD_V2: 'crm card',
 };
+const PROJECT_COMPONENT_TYPES = {
+  PROJECTS: 'projects',
+  COMPONENTS: 'components',
+};
 
 module.exports = {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -76,4 +80,5 @@ module.exports = {
   PROJECT_DEPLOY_TEXT,
   PROJECT_ERROR_TYPES,
   PROJECT_TASK_TYPES,
+  PROJECT_COMPONENT_TYPES,
 };

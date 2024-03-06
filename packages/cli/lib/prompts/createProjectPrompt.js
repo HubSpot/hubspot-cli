@@ -1,9 +1,6 @@
 const path = require('path');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const {
-  PROJECT_COMPONENT_TYPES,
-  PROJECT_PROPERTIES,
-} = require('@hubspot/cli-lib/lib/constants');
+const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
 const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../lang');
@@ -15,6 +12,8 @@ const {
 } = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.createProjectPrompt';
+
+const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
 const hasAllProperties = projectList => {
   return projectList.every(config =>
