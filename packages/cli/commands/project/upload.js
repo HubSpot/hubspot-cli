@@ -20,7 +20,7 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -66,7 +66,7 @@ exports.handler = async options => {
     if (result.uploadError) {
       if (
         isSpecifiedError(result.uploadError, {
-          subCategory: ERROR_TYPES.PROJECT_LOCKED,
+          subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
         })
       ) {
         logger.log();
