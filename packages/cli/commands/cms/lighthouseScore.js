@@ -19,10 +19,7 @@ const {
   getLighthouseScoreStatus,
   getLighthouseScore,
 } = require('@hubspot/local-dev-lib/api/lighthouseScore');
-const {
-  HUBSPOT_FOLDER,
-  MARKETPLACE_FOLDER,
-} = require('@hubspot/cli-lib/lib/constants');
+const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../../lib/constants');
 const { uiLink } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 

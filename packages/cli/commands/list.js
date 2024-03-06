@@ -16,10 +16,7 @@ const {
 const {
   getDirectoryContentsByPath,
 } = require('@hubspot/local-dev-lib/api/fileMapper');
-const {
-  HUBSPOT_FOLDER,
-  MARKETPLACE_FOLDER,
-} = require('@hubspot/cli-lib/lib/constants');
+const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('..lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
