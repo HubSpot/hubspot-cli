@@ -5,10 +5,23 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const COMPONENT_TYPES = Object.freeze({
-  app: 'app',
+  privateApp: 'private-app',
+  publicApp: 'public-app',
 });
 
-const APP_COMPONENT_CONFIG = 'app.json';
+const CONFIG_FILES = {
+  [COMPONENT_TYPES.privateApp]: 'app.json',
+  [COMPONENT_TYPES.publicApp]: 'public-app.json',
+};
+
+function getTypeFromConfigFile(configFile) {
+  for (let key in CONFIG_FILES) {
+    if (CONFIG_FILES[key] === configFile) {
+      return key;
+    }
+  }
+  return null;
+}
 
 function loadConfigFile(configPath) {
   if (configPath) {
@@ -84,24 +97,20 @@ async function findProjectComponents(projectSourceDir) {
 
   projectFiles.forEach(projectFile => {
     // Find app components
-    if (projectFile.endsWith(APP_COMPONENT_CONFIG)) {
+    const { base, dir } = path.parse(projectFile);
+
+    if (Object.values(CONFIG_FILES).includes(base)) {
       const parsedAppConfig = loadConfigFile(projectFile);
 
       if (parsedAppConfig && parsedAppConfig.name) {
-        const appPath = projectFile.substring(
-          0,
-          projectFile.indexOf(APP_COMPONENT_CONFIG)
-        );
-        if (typeof appPath === 'string') {
-          const isLegacy = getIsLegacyApp(parsedAppConfig, appPath);
+        const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
 
-          components.push({
-            type: COMPONENT_TYPES.app,
-            config: parsedAppConfig,
-            runnable: !isLegacy,
-            path: appPath,
-          });
-        }
+        components.push({
+          type: getTypeFromConfigFile(base),
+          config: parsedAppConfig,
+          runnable: !isLegacy,
+          path: dir,
+        });
       }
     }
   });
@@ -110,7 +119,7 @@ async function findProjectComponents(projectSourceDir) {
 }
 
 module.exports = {
-  APP_COMPONENT_CONFIG,
+  CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,

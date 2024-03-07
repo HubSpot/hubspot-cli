@@ -14,7 +14,7 @@ const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
 const {
-  APP_COMPONENT_CONFIG,
+  CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
@@ -243,7 +243,7 @@ class LocalDevManager {
     let missingComponents = [];
 
     runnableComponents.forEach(({ type, config, path }) => {
-      if (type === COMPONENT_TYPES.app) {
+      if (Object.values(COMPONENT_TYPES).includes(type)) {
         const cardConfigs = getAppCardConfigs(config, path);
 
         if (!deployedComponentNames.includes(config.name)) {
@@ -283,9 +283,12 @@ class LocalDevManager {
     });
 
     const configPaths = runnableComponents
-      .filter(({ type }) => type === COMPONENT_TYPES.app)
+      .filter(({ type }) => Object.values(COMPONENT_TYPES).includes(type))
       .map(component => {
-        const appConfigPath = path.join(component.path, APP_COMPONENT_CONFIG);
+        const appConfigPath = path.join(
+          component.path,
+          CONFIG_FILES[component.type]
+        );
         return appConfigPath;
       });
 
