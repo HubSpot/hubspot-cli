@@ -221,7 +221,7 @@ en:
                   schemaViewable: "Schema can be viewed at {{ url }}"
               delete:
                 describe: "Delete a custom object schema"
-                error:
+                errors:
                   delete: "Unable to delete {{ name }}"
                 examples:
                   default: "Delete \"schemaName\" schema"

@@ -18,7 +18,7 @@ const {
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
-const { PROJECT_ERROR_TYPES } = require('./constantss');
+const { PROJECT_ERROR_TYPES } = require('./constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
