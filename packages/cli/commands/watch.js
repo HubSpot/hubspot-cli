@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { watch } = require('@hubspot/cli-lib');
+const { watch } = require('@hubspot/local-dev-lib/cms/watch');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
