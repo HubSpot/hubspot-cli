@@ -69,11 +69,17 @@ const {
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
+const {
+  isDeveloperTestAccount,
+  isAppDeveloperAccount,
+} = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  developerTestAccountNamePrompt,
+} = require('../../lib/prompts/developerTestAccountNamePrompt');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -102,6 +108,7 @@ exports.handler = async options => {
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
   const defaultAccountIsSandbox = isSandbox(accountConfig);
   const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
     accountConfig
@@ -135,17 +142,23 @@ exports.handler = async options => {
   if (!targetAccountId) {
     logger.log();
     uiLine();
-    logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
+    if (isAppDeveloperAccount(accountConfig)) {
+      logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
+    } else {
+      logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
+    }
     uiLine();
     logger.log();
 
     const {
       targetAccountId: promptTargetAccountId,
       createNewSandbox: promptCreateNewSandbox,
+      createNewDeveloperTestAccount: promptCreateNewDeveloperTestAccount,
     } = await selectTargetAccountPrompt(accounts, accountConfig);
 
     targetAccountId = promptTargetAccountId;
     createNewSandbox = promptCreateNewSandbox;
+    createNewDeveloperTestAccount = promptCreateNewDeveloperTestAccount;
   }
 
   if (createNewSandbox) {
@@ -214,6 +227,47 @@ exports.handler = async options => {
       logErrorInstance(err);
       process.exit(EXIT_CODES.ERROR);
     }
+  }
+
+  if (createNewDeveloperTestAccount) {
+    try {
+      // TODO: validate usage limits
+    } catch (err) {
+      if (isMissingScopeError(err)) {
+        logger.error(
+          i18n('cli.lib.sandbox.create.failure.scopes.message', {
+            accountName: accountConfig.name || accountId,
+          })
+        );
+        const websiteOrigin = getHubSpotWebsiteOrigin(env);
+        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+        logger.info(
+          i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+            accountName: accountConfig.name || accountId,
+            url,
+          })
+        );
+      } else {
+        logErrorInstance(err);
+      }
+      process.exit(EXIT_CODES.ERROR);
+    }
+    // Create dev test account here
+    try {
+      const { name } = await developerTestAccountNamePrompt();
+      trackCommandMetadataUsage(
+        'developer-sandbox-create',
+        { step: 'project-dev' },
+        accountId
+      );
+      console.log('NAME HERE: ', name);
+      // TODO: build dev test account
+    } catch (err) {
+      logErrorInstance(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   logger.log();

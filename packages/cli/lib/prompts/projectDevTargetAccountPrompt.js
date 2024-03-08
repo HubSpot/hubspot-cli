@@ -6,8 +6,13 @@ const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
 const {
   HUBSPOT_ACCOUNT_TYPES,
+  HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const {
+  isAppDeveloperAccount,
+  isDeveloperTestAccount,
+} = require('../developerTestAccounts');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
@@ -20,59 +25,87 @@ const mapSandboxAccount = accountConfig => ({
 });
 
 const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
-  let sandboxUsage = {};
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
+  let choices = [];
 
-  try {
-    sandboxUsage = await getSandboxUsageLimits(defaultAccountId);
-  } catch (err) {
-    logger.debug('Unable to fetch sandbox usage limits: ', err);
-  }
-
-  const sandboxAccounts = accounts
-    .reverse()
-    .filter(
-      config => isSandbox(config) && config.parentAccountId === defaultAccountId
-    );
-  let disabledMessage = false;
-
-  if (sandboxUsage['DEVELOPER'] && sandboxUsage['DEVELOPER'].available === 0) {
-    if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
-      disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
-        authCommand: uiCommandReference('hs auth'),
-        limit: sandboxUsage['DEVELOPER'].limit,
-      });
-    } else {
-      disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
-        limit: sandboxUsage['DEVELOPER'].limit,
-      });
+  if (isAppDeveloperAccount(defaultAccountConfig)) {
+    // TODO: check test account limits
+    const devTestAccounts = accounts
+      .reverse()
+      .filter(
+        config =>
+          isDeveloperTestAccount(config) &&
+          config.parentAccountId === defaultAccountId
+      );
+    choices = [
+      ...devTestAccounts.map(mapSandboxAccount),
+      {
+        name: i18n(`${i18nKey}.createNewDeveloperTestAccountOption`),
+        value: {
+          targetAccountId: null,
+          createNewDeveloperTestAccount: true,
+        },
+        // disabled: disabledMessage,
+      },
+    ];
+  } else {
+    let sandboxUsage = {};
+    try {
+      sandboxUsage = await getSandboxUsageLimits(defaultAccountId);
+    } catch (err) {
+      logger.debug('Unable to fetch sandbox usage limits: ', err);
     }
-  }
 
-  // Order choices by Developer Sandbox -> Standard Sandbox
-  const choices = [
-    ...sandboxAccounts
-      .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX)
-      .map(mapSandboxAccount),
-    ...sandboxAccounts
-      .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX)
-      .map(mapSandboxAccount),
-    {
-      name: i18n(`${i18nKey}.createNewSandboxOption`),
-      value: {
-        targetAccountId: null,
-        createNewSandbox: true,
+    const sandboxAccounts = accounts
+      .reverse()
+      .filter(
+        config =>
+          isSandbox(config) && config.parentAccountId === defaultAccountId
+      );
+    let disabledMessage = false;
+
+    if (
+      sandboxUsage['DEVELOPER'] &&
+      sandboxUsage['DEVELOPER'].available === 0
+    ) {
+      if (sandboxAccounts.length < sandboxUsage['DEVELOPER'].limit) {
+        disabledMessage = i18n(`${i18nKey}.sandboxLimitWithSuggestion`, {
+          authCommand: uiCommandReference('hs auth'),
+          limit: sandboxUsage['DEVELOPER'].limit,
+        });
+      } else {
+        disabledMessage = i18n(`${i18nKey}.sandboxLimit`, {
+          limit: sandboxUsage['DEVELOPER'].limit,
+        });
+      }
+    }
+    // Order choices by Developer Sandbox -> Standard Sandbox
+    choices = [
+      ...sandboxAccounts
+        .filter(
+          a => a.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+        )
+        .map(mapSandboxAccount),
+      ...sandboxAccounts
+        .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX)
+        .map(mapSandboxAccount),
+      {
+        name: i18n(`${i18nKey}.createNewSandboxOption`),
+        value: {
+          targetAccountId: null,
+          createNewSandbox: true,
+        },
+        disabled: disabledMessage,
       },
-      disabled: disabledMessage,
-    },
-    {
-      name: i18n(`${i18nKey}.chooseDefaultAccountOption`),
-      value: {
-        targetAccountId: defaultAccountId,
-        createNewSandbox: false,
+      {
+        name: i18n(`${i18nKey}.chooseDefaultAccountOption`),
+        value: {
+          targetAccountId: defaultAccountId,
+          createNewSandbox: false,
+        },
       },
-    },
-  ];
+    ];
+  }
 
   const { targetAccountInfo } = await promptUser([
     {
@@ -80,6 +113,9 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
       type: 'list',
       message: i18n(`${i18nKey}.promptMessage`, {
         accountIdentifier: uiAccountDescription(defaultAccountId),
+        accountType: isAppDeveloperAccount(defaultAccountConfig)
+          ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+          : 'sandbox account',
       }),
       choices,
     },

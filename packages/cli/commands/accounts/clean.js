@@ -13,7 +13,6 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { getAccountName } = require('../../lib/sandboxes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('@hubspot/local-dev-lib/logging/table');
 const SpinniesManager = require('../../lib/SpinniesManager');
@@ -21,6 +20,7 @@ const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { uiAccountDescription } = require('../../lib/ui');
 
 const i18nKey = 'cli.commands.accounts.subcommands.clean';
 
@@ -87,7 +87,7 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [getAccountName(p)]),
+        accountsToRemove.map(p => [uiAccountDescription(p)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,7 +111,7 @@ exports.handler = async options => {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: getAccountName(accountToRemove),
+            accountName: uiAccountDescription(accountToRemove),
           })
         );
       }
