@@ -86,6 +86,7 @@ function processLogs(logsResp, options) {
       })
       .join('\n');
   }
+  return processLog(logsResp, options);
 }
 
 const logFunctionExecution = ({

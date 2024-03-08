@@ -1,21 +1,27 @@
 const fs = require('fs-extra');
+const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { getDotEnvData } = require('./secrets');
 const { MOCK_DATA, MAX_SECRETS, ROUTE_PATH_PREFIX } = require('./constants');
 
-const getValidatedFunctionData = path => {
+const getValidatedFunctionData = functionPath => {
   // Allow passing serverless folder path with and without .functions extension
-  const splitPath = path.split('.');
-  const functionPath =
+  const splitPath = functionPath.split('.');
+  const functionPathWithExtension =
     splitPath[splitPath.length - 1] === 'functions'
-      ? path
-      : `${path}.functions`;
+      ? functionPath
+      : `${functionPath}.functions`;
 
-  if (!fs.existsSync(functionPath)) {
+  const resolvedFunctionPath = path.resolve(
+    getCwd(),
+    functionPathWithExtension
+  );
+  if (!fs.existsSync(resolvedFunctionPath)) {
     logger.error(`The path ${functionPath} does not exist.`);
     return;
   } else {
-    const stats = fs.lstatSync(functionPath);
+    const stats = fs.lstatSync(resolvedFunctionPath);
     if (!stats.isDirectory()) {
       logger.error(`${functionPath} is not a valid functions directory.`);
       return;
@@ -23,7 +29,7 @@ const getValidatedFunctionData = path => {
   }
 
   const { endpoints = [], environment = {}, secrets = [] } = JSON.parse(
-    fs.readFileSync(`${functionPath}/serverless.json`, {
+    fs.readFileSync(`${resolvedFunctionPath}/serverless.json`, {
       encoding: 'utf-8',
     })
   );
@@ -41,7 +47,7 @@ const getValidatedFunctionData = path => {
   }
 
   return {
-    srcPath: functionPath,
+    srcPath: resolvedFunctionPath,
     endpoints,
     environment,
     routes,
