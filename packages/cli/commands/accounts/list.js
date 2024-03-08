@@ -13,7 +13,10 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, getSandboxName } = require('../../lib/sandboxes');
-const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
+const {
+  isDeveloperTestAccount,
+  isAppDeveloperAccount,
+} = require('../../lib/developerTestAccounts');
 const { i18n } = require('../../lib/lang');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -71,6 +74,10 @@ const getPortalData = mappedPortalData => {
         if (set.length > 1) {
           name = `↳ ${name}`;
         }
+      } else if (isAppDeveloperAccount(portal)) {
+        name = `${portal.name} [${
+          HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]
+        }]`;
       }
       portalData.push([name, portal.portalId, portal.authType]);
     });
