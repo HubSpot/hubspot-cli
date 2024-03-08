@@ -6,7 +6,7 @@ const {
 const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/cli-lib/lib/constants');
+} = require('@hubspot/local-dev-lib/constants/auth');
 const {
   fetchScopeData,
 } = require('@hubspot/cli-lib/api/localDevAuth/authenticated');
@@ -338,7 +338,7 @@ async function logServerlessFunctionApiErrorInstance(
   context
 ) {
   if (isMissingScopeError(error)) {
-    await verifyAccessKeyAndUserAccess(accountId, SCOPE_GROUPS.functions);
+    await verifyAccessKeyAndUserAccess(accountId, SCOPE_GROUPS.CMS_FUNCTIONS);
     return;
   }
 

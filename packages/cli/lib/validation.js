@@ -4,7 +4,7 @@ const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/cli-lib/lib/constants');
+} = require('@hubspot/local-dev-lib/constants/auth');
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const {
   loadConfig,

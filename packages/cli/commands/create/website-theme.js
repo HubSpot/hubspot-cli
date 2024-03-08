@@ -1,4 +1,5 @@
 const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
+// TODO: Swap to local-dev-lib after swapping github utils dep
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { getIsInProject } = require('../../lib/projects');
 

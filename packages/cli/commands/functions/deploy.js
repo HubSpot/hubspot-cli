@@ -10,7 +10,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const { POLLING_DELAY } = require('@hubspot/cli-lib/lib/constants');
+const { POLLING_DELAY } = require('../../lib/constants');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   buildPackage,

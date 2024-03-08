@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const ora = require('ora');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
+// TODO: Swap to local-dev-lib after swapping github utils dep
 const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
 const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../../lib/lang');

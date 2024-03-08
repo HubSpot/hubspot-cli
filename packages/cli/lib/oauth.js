@@ -8,7 +8,9 @@ const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;

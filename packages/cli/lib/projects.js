@@ -9,14 +9,15 @@ const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
+const {
   FEEDBACK_INTERVAL,
   POLLING_DELAY,
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
-  SPINNER_STATUS,
-} = require('@hubspot/cli-lib/lib/constants');
+} = require('./constants');
 const {
   createProject,
   getBuildStatus,
@@ -43,6 +44,10 @@ const {
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'cli.lib.projects';
+
+const SPINNER_STATUS = {
+  SPINNING: 'spinning',
+};
 
 const writeProjectConfig = (configPath, config) => {
   try {

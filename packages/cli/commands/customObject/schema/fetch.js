@@ -4,7 +4,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   logErrorInstance,
 } = require('../../../lib/errorHandlers/standardErrors');
-const { ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
+const { CONFIG_FLAGS } = require('../../../lib/constants');
 const {
   downloadSchema,
   getResolvedPath,
@@ -33,7 +33,7 @@ exports.handler = async options => {
   trackCommandUsage('custom-object-schema-fetch', null, accountId);
 
   try {
-    if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
+    if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       const fullpath = path.resolve(getCwd(), dest);
       await fetchSchema(accountId, name, fullpath);
       logger.success(

@@ -3,7 +3,9 @@ const {
   isTrackingAllowed,
   getAccountConfig,
 } = require('@hubspot/local-dev-lib/config');
-const { API_KEY_AUTH_METHOD } = require('@hubspot/cli-lib/lib/constants');
+const {
+  API_KEY_AUTH_METHOD,
+} = require('@hubspot/local-dev-lib/constants/auth');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { version } = require('../package.json');
 const { getPlatform } = require('./environment');
