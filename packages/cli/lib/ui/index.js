@@ -1,11 +1,12 @@
 const chalk = require('chalk');
-const supportsHyperlinks = require('../lib/supportHyperlinks');
-const supportsColor = require('../lib/supportsColor');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { isSandbox, getSandboxName } = require('./sandboxes');
-const { isDeveloperTestAccount } = require('./developerTestAccounts');
+const supportsHyperlinks = require('./supportHyperlinks');
+const supportsColor = require('./supportsColor');
+const { isSandbox, getSandboxName } = require('../sandboxes');
+const { isDeveloperTestAccount } = require('../developerTestAccounts');
+const { i18n } = require('../lang');
+
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
   HUBSPOT_ACCOUNT_TYPES,

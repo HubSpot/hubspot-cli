@@ -11,15 +11,12 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-// const { outputLogs } = require('@hubspot/cli-lib/lib/logs');
+// const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
 const {
   fetchProject,
   fetchDeployComponentsMetadata,
 } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/local-dev-lib/logging/table');
+const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 // const {
 //   logApiErrorInstance,
 //   ApiErrorContext,

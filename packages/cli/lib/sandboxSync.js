@@ -1,4 +1,4 @@
-const SpinniesManager = require('./SpinniesManager');
+const SpinniesManager = require('./ui/SpinniesManager');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');

@@ -35,7 +35,7 @@ const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
-const SpinniesManager = require('./SpinniesManager');
+const SpinniesManager = require('./ui/SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,

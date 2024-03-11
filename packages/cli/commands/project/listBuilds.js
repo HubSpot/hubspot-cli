@@ -17,10 +17,7 @@ const {
   fetchProject,
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/local-dev-lib/logging/table');
+const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');

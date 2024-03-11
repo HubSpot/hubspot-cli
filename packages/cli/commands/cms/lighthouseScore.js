@@ -1,4 +1,4 @@
-const SpinniesManager = require('../../lib/SpinniesManager');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -6,10 +6,7 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/local-dev-lib/logging/table');
+const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');

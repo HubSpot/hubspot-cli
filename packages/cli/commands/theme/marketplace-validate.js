@@ -1,4 +1,4 @@
-const SpinniesManager = require('../../lib/SpinniesManager');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addConfigOptions,
   addAccountOptions,
