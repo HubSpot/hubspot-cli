@@ -18,7 +18,7 @@ const {
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { PROJECT_ERROR_TYPES } = require('./constants');
 
 const i18nKey = 'cli.commands.project.subcommands.watch';
 
@@ -79,7 +79,7 @@ const debounceQueueBuild = (accountId, projectName, platformVersion) => {
     } catch (err) {
       if (
         isSpecifiedError(err, {
-          subCategory: ERROR_TYPES.MISSING_PROJECT_PROVISION,
+          subCategory: PROJECT_ERROR_TYPES.MISSING_PROJECT_PROVISION,
         })
       ) {
         logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
@@ -159,7 +159,9 @@ const createNewBuild = async (accountId, projectName, platformVersion) => {
     return buildId;
   } catch (err) {
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
-    if (isSpecifiedError(err, { subCategory: ERROR_TYPES.PROJECT_LOCKED })) {
+    if (
+      isSpecifiedError(err, { subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED })
+    ) {
       await cancelStagedBuild(accountId, projectName);
       logger.log(i18n(`${i18nKey}.logs.previousStagingBuildCancelled`));
     }

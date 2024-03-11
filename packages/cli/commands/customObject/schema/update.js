@@ -2,12 +2,15 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
+const {
   checkAndConvertToJson,
   loadAndValidateOptions,
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
-const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
+const { CONFIG_FLAGS } = require('../../../lib/constants');
 const {
   getEnv,
   isConfigFlagEnabled,
@@ -44,7 +47,7 @@ exports.handler = async options => {
   }
 
   try {
-    if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
+    if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       await updateSchemaFromHubFile(accountId, filePath);
       logger.success(
         i18n(`${i18nKey}.success.update`, {

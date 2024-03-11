@@ -1,5 +1,7 @@
 const { getEnv } = require('@hubspot/local-dev-lib/config');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('./ui/table');

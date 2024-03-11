@@ -16,11 +16,15 @@ const {
   debugErrorAndContext,
 } = require('../lib/errorHandlers/standardErrors');
 const {
-  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/local-dev-lib/constants/auth');
+const {
   ENVIRONMENTS,
-} = require('@hubspot/cli-lib/lib/constants');
+} = require('@hubspot/local-dev-lib/constants/environments');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+} = require('@hubspot/local-dev-lib/constants/config');
 const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {

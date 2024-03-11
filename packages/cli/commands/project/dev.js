@@ -54,8 +54,8 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
-  ERROR_TYPES,
-} = require('@hubspot/cli-lib/lib/constants');
+  PROJECT_ERROR_TYPES,
+} = require('../../lib/constants');
 
 const { buildSandbox } = require('../../lib/sandboxCreate');
 const { syncSandbox } = require('../../lib/sandboxSync');
@@ -310,7 +310,7 @@ exports.handler = async options => {
     if (initialUploadResult.uploadError) {
       if (
         isSpecifiedError(initialUploadResult.uploadError, {
-          subCategory: ERROR_TYPES.PROJECT_LOCKED,
+          subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
         })
       ) {
         logger.log();

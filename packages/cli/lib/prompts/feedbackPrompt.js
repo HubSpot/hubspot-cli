@@ -1,6 +1,6 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
-const { FEEDBACK_OPTIONS } = require('@hubspot/cli-lib/lib/constants');
+const { FEEDBACK_OPTIONS } = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.feedbackPrompt';
 

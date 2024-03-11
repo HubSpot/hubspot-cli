@@ -1,10 +1,7 @@
 const open = require('open');
 
 const { i18n } = require('../lib/lang');
-const {
-  FEEDBACK_OPTIONS,
-  FEEDBACK_URLS,
-} = require('@hubspot/cli-lib/lib/constants');
+const { FEEDBACK_OPTIONS, FEEDBACK_URLS } = require('../lib/constants');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const {

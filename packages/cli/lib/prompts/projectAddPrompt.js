@@ -2,7 +2,7 @@ const { promptUser } = require('./promptUtils');
 const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
 const { i18n } = require('../lang');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('../constants');
-const { PROJECT_COMPONENT_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { PROJECT_COMPONENT_TYPES } = require('../constants');
 
 const i18nKey = 'cli.lib.prompts.projectAddPrompt';
 

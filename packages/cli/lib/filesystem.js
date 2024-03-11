@@ -1,6 +1,8 @@
 const path = require('path');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { FOLDER_DOT_EXTENSIONS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  FOLDER_DOT_EXTENSIONS,
+} = require('@hubspot/local-dev-lib/constants/extensions');
 
 function resolveLocalPath(filepath) {
   return filepath && typeof filepath === 'string'

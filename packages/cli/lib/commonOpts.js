@@ -2,7 +2,10 @@ const {
   LOG_LEVEL,
   setLogLevel: setLoggerLogLevel,
 } = require('@hubspot/local-dev-lib/logger');
-const { DEFAULT_MODE, Mode } = require('@hubspot/cli-lib');
+const {
+  DEFAULT_MODE,
+  MODE,
+} = require('@hubspot/local-dev-lib/constants/files');
 const {
   getAccountId: getAccountIdFromConfig,
   getAccountConfig,
@@ -35,7 +38,7 @@ const addOverwriteOptions = yargs =>
   });
 
 const addModeOptions = (yargs, { read, write }) => {
-  const modes = `<${Object.values(Mode).join(' | ')}>`;
+  const modes = `<${Object.values(MODE).join(' | ')}>`;
 
   return yargs.option('mode', {
     alias: 'm',

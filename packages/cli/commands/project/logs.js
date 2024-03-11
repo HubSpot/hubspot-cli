@@ -1,6 +1,8 @@
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { ENVIRONMENTS } = require('@hubspot/cli-lib/lib/constants');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
 const {
   addAccountOptions,
   addConfigOptions,

@@ -5,7 +5,7 @@ const {
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { ERROR_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -67,7 +67,7 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
       } catch (err) {
         if (
           isSpecifiedError(err, {
-            subCategory: ERROR_TYPES.BUILD_NOT_IN_PROGRESS,
+            subCategory: PROJECT_ERROR_TYPES.BUILD_NOT_IN_PROGRESS,
           })
         ) {
           process.exit(EXIT_CODES.SUCCESS);

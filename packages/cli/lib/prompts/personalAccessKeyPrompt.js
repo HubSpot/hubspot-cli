@@ -2,7 +2,7 @@ const open = require('open');
 const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
-} = require('@hubspot/cli-lib/lib/constants');
+} = require('@hubspot/local-dev-lib/constants/auth');
 const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');

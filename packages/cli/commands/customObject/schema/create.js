@@ -11,7 +11,10 @@ const {
   getEnv,
   isConfigFlagEnabled,
 } = require('@hubspot/local-dev-lib/config');
-const { ENVIRONMENTS, ConfigFlags } = require('@hubspot/cli-lib/lib/constants');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
+const { CONFIG_FLAGS } = require('../../../lib/constants');
 const {
   createObjectSchema,
 } = require('@hubspot/local-dev-lib/api/customObjects');
@@ -44,7 +47,7 @@ exports.handler = async options => {
   }
 
   try {
-    if (isConfigFlagEnabled(ConfigFlags.USE_CUSTOM_OBJECT_HUBFILE)) {
+    if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       await createSchemaFromHubFile(accountId, filePath);
       logger.success(
         i18n(`${i18nKey}.success.schemaCreated`, {
