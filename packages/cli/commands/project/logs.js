@@ -11,7 +11,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-// const { outputLogs } = require('../lib/ui/serverlessFunctionLogs');
+// const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
 const {
   fetchProject,
   fetchDeployComponentsMetadata,
