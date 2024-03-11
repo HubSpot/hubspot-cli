@@ -21,6 +21,10 @@ const {
   ApiErrorContext,
   logApiUploadErrorInstance,
 } = require('../../lib/errorHandlers/apiErrors');
+const { handleExit, handleKeypress } = require('../../lib/process');
+
+exports.command = 'preview [--src] [--dest]';
+exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
@@ -43,8 +47,19 @@ const validateSrcPath = src => {
   return true;
 };
 
-exports.command = 'preview [--src] [--dest]';
-exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
+const handleUserInput = () => {
+  const onTerminate = () => {
+    logger.log(i18n(`${i18nKey}.logs.processExited`));
+    process.exit(EXIT_CODES.SUCCESS);
+  };
+
+  handleExit(onTerminate);
+  handleKeypress(key => {
+    if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      onTerminate();
+    }
+  });
+};
 
 exports.handler = async options => {
   const { notify, skipUpload, noSsl, port, debug } = options;
@@ -131,6 +146,7 @@ exports.handler = async options => {
     port,
     debug,
     uploadOptions,
+    handleUserInput,
   });
 };
 
