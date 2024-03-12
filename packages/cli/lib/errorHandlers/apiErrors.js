@@ -15,6 +15,7 @@ const {
   logErrorInstance,
   ErrorContext,
 } = require('./standardErrors');
+const { overrideErrors } = require('./overrrideErrors');
 const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.errorHandlers.apiErrors';
@@ -257,6 +258,7 @@ function logApiErrorInstance(error, context) {
   // Use the new local-dev-lib error handler
   // NOTE: This will eventually replace the logic in logApiStatusCodeError
   if (error.isAxiosError) {
+    if (overrideErrors(error)) return;
     const errorWithContext = getAxiosErrorWithContext(error, context);
     logger.error(errorWithContext.message);
     return;
