@@ -47,6 +47,7 @@ class LocalDevManager {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
+    this.childProcess = null;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -127,10 +128,29 @@ class LocalDevManager {
     uiLine();
     logger.log();
 
-    await this.devServerStart();
+    if (runnableComponents[0].type === COMPONENT_TYPES.jsRendering) {
+      logger.log(
+        'JS Rendering component detected. Searching for dev server package...'
+      );
+      const { getModulePath, startChild } = await import(
+        './findAndRunModule.mjs'
+      );
+      const modulePath = getModulePath(
+        '@hubspot/cms-dev-server',
+        runnableComponents[0]
+      );
+      if (modulePath) {
+        this.childProcess = startChild(modulePath, runnableComponents[0]);
+      } else {
+        logger.error('Unable to locate cms-dev-server package');
+        process.exit(EXIT_CODES.ERROR);
+      }
+    } else {
+      await this.devServerStart();
 
-    // Initialize project file watcher to detect configuration file changes
-    this.startWatching(runnableComponents);
+      // Initialize project file watcher to detect configuration file changes
+      this.startWatching(runnableComponents);
+    }
 
     this.updateKeypressListeners();
 
@@ -158,6 +178,10 @@ class LocalDevManager {
         });
       }
       process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (this.childProcess) {
+      this.childProcess.kill();
     }
 
     if (showProgress) {
@@ -243,7 +267,10 @@ class LocalDevManager {
     let missingComponents = [];
 
     runnableComponents.forEach(({ type, config, path }) => {
-      if (Object.values(COMPONENT_TYPES).includes(type)) {
+      if (
+        type === COMPONENT_TYPES.privateApp ||
+        type === COMPONENT_TYPES.publicApp
+      ) {
         const cardConfigs = getAppCardConfigs(config, path);
 
         if (!deployedComponentNames.includes(config.name)) {
@@ -310,7 +337,9 @@ class LocalDevManager {
   }
 
   async stopWatching() {
-    await this.watcher.close();
+    if (this.watcher) {
+      await this.watcher.close();
+    }
   }
 
   handleWatchEvent(filePath, event, configPaths) {

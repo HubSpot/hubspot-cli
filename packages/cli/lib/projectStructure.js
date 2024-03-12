@@ -7,11 +7,13 @@ const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const COMPONENT_TYPES = Object.freeze({
   privateApp: 'private-app',
   publicApp: 'public-app',
+  jsRendering: 'js-rendering',
 });
 
 const CONFIG_FILES = {
   [COMPONENT_TYPES.privateApp]: 'app.json',
   [COMPONENT_TYPES.publicApp]: 'public-app.json',
+  [COMPONENT_TYPES.jsRendering]: 'cms-assets.json',
 };
 
 function getTypeFromConfigFile(configFile) {
@@ -100,17 +102,26 @@ async function findProjectComponents(projectSourceDir) {
     const { base, dir } = path.parse(projectFile);
 
     if (Object.values(CONFIG_FILES).includes(base)) {
-      const parsedAppConfig = loadConfigFile(projectFile);
+      const parsedConfig = loadConfigFile(projectFile);
 
-      if (parsedAppConfig && parsedAppConfig.name) {
-        const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
+      if (parsedConfig) {
+        if (parsedConfig.label && typeof parsedConfig.outputPath === 'string') {
+          components.push({
+            type: getTypeFromConfigFile(base),
+            config: parsedConfig,
+            runnable: true,
+            path: dir,
+          });
+        } else if (parsedConfig.name) {
+          const isLegacy = getIsLegacyApp(parsedConfig, dir);
 
-        components.push({
-          type: getTypeFromConfigFile(base),
-          config: parsedAppConfig,
-          runnable: !isLegacy,
-          path: dir,
-        });
+          components.push({
+            type: getTypeFromConfigFile(base),
+            config: parsedConfig,
+            runnable: !isLegacy,
+            path: dir,
+          });
+        }
       }
     }
   });
