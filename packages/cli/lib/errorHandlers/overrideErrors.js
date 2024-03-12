@@ -13,22 +13,17 @@ function createPlatformVersionError(subCategory, errorData) {
     i18n(`${i18nKey}.platformVersionErrors.docsLink`),
     'https://developers.hubspot.com/docs/platform/platform-versioning'
   );
-  let translationKey;
 
-  if (
-    subCategory === PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
-  ) {
-    translationKey = 'unspecifiedPlatformVersion';
-  } else if (
-    subCategory === PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED
-  ) {
-    translationKey = 'platformVersionRetired';
-  } else if (
-    subCategory ===
-    PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
-  ) {
-    translationKey = 'nonExistentPlatformVersion';
-  }
+  const errorTypeToTranslationKey = {
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
+      'unspecifiedPlatformVersion',
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
+      'platformVersionRetired',
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST]:
+      'nonExistentPlatformVersion',
+  };
+
+  const translationKey = errorTypeToTranslationKey[subCategory];
 
   uiLine();
   logger.error(i18n(`${i18nKey}.platformVersionErrors.header`));
