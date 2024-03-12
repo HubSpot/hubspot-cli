@@ -1219,6 +1219,25 @@ en:
         options:
           options:
             describe: "Options to pass to javascript fields files"
+      developerTestAccount:
+        create:
+          loading:
+            add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+          success:
+            configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+          failure:
+            invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+            limit: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+              \n- To connect a developer test account to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+            alreadyInConfig: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+              \n- To use an existing developer test account, run {{#bold}}hs accounts use{{/bold}}."
+            scopes:
+              message: "The personal access key you provided doesn't include developer test account permissions."
+              instructions: "To update CLI permissions for \"{{ accountName }}\":
+                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes developer test account permissions.
+                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
       sandbox:
         create:
           loading:

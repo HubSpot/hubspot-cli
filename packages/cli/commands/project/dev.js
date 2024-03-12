@@ -72,6 +72,7 @@ const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isDeveloperTestAccount,
   isAppDeveloperAccount,
+  validateDevTestAccountUsage,
 } = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -80,6 +81,9 @@ const {
 const {
   developerTestAccountNamePrompt,
 } = require('../../lib/prompts/developerTestAccountNamePrompt');
+const {
+  buildDeveloperTestAccount,
+} = require('../../lib/developerTestAccountCreate');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -231,7 +235,7 @@ exports.handler = async options => {
 
   if (createNewDeveloperTestAccount) {
     try {
-      // TODO: validate usage limits
+      await validateDevTestAccountUsage(accountConfig);
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
@@ -256,12 +260,19 @@ exports.handler = async options => {
     try {
       const { name } = await developerTestAccountNamePrompt();
       trackCommandMetadataUsage(
-        'developer-sandbox-create',
+        'developer-test-account-create',
         { step: 'project-dev' },
         accountId
       );
-      console.log('NAME HERE: ', name);
       // TODO: build dev test account
+
+      const { result } = await buildDeveloperTestAccount(
+        name,
+        accountConfig,
+        env
+      );
+
+      targetAccountId = result.id;
     } catch (err) {
       logErrorInstance(err);
       process.exit(EXIT_CODES.ERROR);
