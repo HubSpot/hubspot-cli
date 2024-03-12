@@ -3,13 +3,9 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');
 const { i18n } = require('../lang');
-const { uiLink } = require('../ui');
+const { uiLine, uiLink } = require('../ui');
 
 const i18nKey = 'cli.lib.errorHandlers.overrideErrors';
-
-function createDashes() {
-  return '-'.repeat(79);
-}
 
 function createPlatformVersionError(subCategory, errorData) {
   const platformVersion = errorData.context.PLATFORM_VERSION[0];
@@ -34,8 +30,8 @@ function createPlatformVersionError(subCategory, errorData) {
     translationKey = 'nonExistentPlatformVersion';
   }
 
-  logger.log(createDashes());
-  logger.log(i18n(`${i18nKey}.platformVersionErrors.header`));
+  uiLine();
+  logger.error(i18n(`${i18nKey}.platformVersionErrors.header`));
   logger.log(
     i18n(`${i18nKey}.platformVersionErrors.${translationKey}`, {
       platformVersion,
@@ -47,7 +43,7 @@ function createPlatformVersionError(subCategory, errorData) {
       docsLink,
     })
   );
-  logger.log(createDashes());
+  uiLine();
 }
 
 function overrideErrors(err) {
