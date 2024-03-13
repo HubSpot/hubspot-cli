@@ -1,9 +1,7 @@
-const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
-// TODO: Swap to local-dev-lib after swapping github utils dep
-const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
+const { cloneGitHubRepo } = require('@hubspot/local-dev-lib/github');
 const { getIsInProject } = require('../../lib/projects');
 
-const PROJECT_BOILERPLATE_REF = 'cms-boilerplate-developer-projects';
+const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
 
 module.exports = {
   dest: ({ name, assetType }) => name || assetType,
@@ -11,16 +9,12 @@ module.exports = {
     const isInProject = await getIsInProject(dest);
 
     if (isInProject) {
-      options.ref = PROJECT_BOILERPLATE_REF;
-      // releaseType has to be 'REPOSITORY' to download a specific branch
-      options.releaseType = GITHUB_RELEASE_TYPES.REPOSITORY;
+      options.branch = PROJECT_BOILERPLATE_BRANCH;
     }
-    cloneGitHubRepo(
-      dest,
-      assetType,
-      'HubSpot/cms-theme-boilerplate',
-      'src',
-      options
-    );
+    cloneGitHubRepo('HubSpot/cms-theme-boilerplate', dest, {
+      type: assetType,
+      sourceDir: 'src',
+      ...options,
+    });
   },
 };
