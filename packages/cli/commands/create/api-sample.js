@@ -10,7 +10,7 @@ const fs = require('fs-extra');
 const ora = require('ora');
 const {
   fetchFileFromRepository,
-  cloneGitHubRepo,
+  cloneGithubRepo,
 } = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../../lib/lang');
 
@@ -62,7 +62,7 @@ module.exports = {
         sampleLanguage,
       })
     );
-    const created = await cloneGitHubRepo(`HubSpot/${sampleType}`, filePath, {
+    const created = await cloneGithubRepo(`HubSpot/${sampleType}`, filePath, {
       type: assetType,
       sourceDir: sampleLanguage,
       ...options,

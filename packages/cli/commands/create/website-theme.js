@@ -1,4 +1,4 @@
-const { cloneGitHubRepo } = require('@hubspot/local-dev-lib/github');
+const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
 const { getIsInProject } = require('../../lib/projects');
 
 const PROJECT_BOILERPLATE_BRANCH = 'cms-boilerplate-developer-projects';
@@ -11,7 +11,7 @@ module.exports = {
     if (isInProject) {
       options.branch = PROJECT_BOILERPLATE_BRANCH;
     }
-    cloneGitHubRepo('HubSpot/cms-theme-boilerplate', dest, {
+    cloneGithubRepo('HubSpot/cms-theme-boilerplate', dest, {
       type: assetType,
       sourceDir: 'src',
       ...options,
