@@ -1,7 +1,7 @@
 const process = require('process');
 const os = require('os');
 const tty = require('tty');
-const hasFlag = require('./hasFlag');
+const hasFlag = require('../hasFlag');
 
 const { env } = process;
 

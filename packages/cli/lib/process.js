@@ -4,9 +4,7 @@ const {
   setLogLevel,
   LOG_LEVEL,
 } = require('@hubspot/local-dev-lib/logger');
-const {
-  setLogLevel: setLocalDevLibLogLevel,
-} = require('@hubspot/local-dev-lib/logger');
+const { setLogLevel: setCliLibLogLevel } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('./lang');
 
 const i18nKey = 'cli.lib.process';
@@ -36,9 +34,9 @@ const handleExit = callback => {
         if (isSIGHUP) {
           setLogLevel(LOG_LEVEL.NONE);
 
-          // Update the log level in local-dev-lib's instance of the logger
-          // This will evenutally replace cli-lib's version of it
-          setLocalDevLibLogLevel(LOG_LEVEL.LOG);
+          // Update the log level in cli-lib's instance of the logger
+          // We can remove this when we remove cli-lib as a dep
+          setCliLibLogLevel(LOG_LEVEL.NONE);
         }
 
         logger.debug(i18n(`${i18nKey}.exitDebug`, { signal }));

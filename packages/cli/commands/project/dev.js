@@ -42,7 +42,7 @@ const {
   selectTargetAccountPrompt,
   confirmDefaultAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
-const SpinniesManager = require('../../lib/SpinniesManager');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');

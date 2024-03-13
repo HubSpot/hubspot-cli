@@ -4,10 +4,7 @@ const {
 } = require('@hubspot/local-dev-lib/constants/environments');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  getTableContents,
-  getTableHeader,
-} = require('@hubspot/local-dev-lib/logging/table');
+const { getTableContents, getTableHeader } = require('./ui/table');
 
 const open = require('open');
 

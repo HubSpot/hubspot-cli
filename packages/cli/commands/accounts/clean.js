@@ -14,8 +14,8 @@ const {
   addTestingOptions,
 } = require('../../lib/commonOpts');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { getTableContents } = require('@hubspot/local-dev-lib/logging/table');
-const SpinniesManager = require('../../lib/SpinniesManager');
+const { getTableContents } = require('../../lib/ui/table');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,

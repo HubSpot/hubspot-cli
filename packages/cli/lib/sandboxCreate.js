@@ -1,4 +1,4 @@
-const SpinniesManager = require('./SpinniesManager');
+const SpinniesManager = require('./ui/SpinniesManager');
 const {
   getSandboxLimit,
   getHasSandboxesByType,

@@ -1,5 +1,6 @@
+const os = require('os');
 const { upload } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { checkAndWarnGitInclusion } = require('@hubspot/cli-lib');
+const { checkGitInclusion } = require('@hubspot/local-dev-lib/gitignore');
 const {
   loadConfig,
   getConfigPath,
@@ -18,6 +19,33 @@ const path = require('path');
 setLogLevel(LOG_LEVEL.LOG);
 
 loadConfig();
+
+function checkAndWarnGitInclusion(configPath) {
+  try {
+    const { inGit, configIgnored } = checkGitInclusion(configPath);
+
+    if (!inGit || configIgnored) return;
+    logger.warn('Security Issue Detected');
+    logger.warn('The HubSpot config file can be tracked by git.');
+    logger.warn(`File "${configPath}"`);
+    logger.warn('To remediate:');
+    logger.warn(
+      `- Move the config file to your home directory: "${os.homedir()}"`
+    );
+    logger.warn(
+      `- Add gitignore pattern "${configPath}" to a .gitignore file in root of your repository.`
+    );
+    logger.warn(
+      '- Ensure that the config file has not already been pushed to a remote repository.'
+    );
+  } catch (e) {
+    // fail silently
+    logger.debug(
+      'Unable to determine if config file is properly ignored by git.'
+    );
+  }
+}
+
 checkAndWarnGitInclusion(getConfigPath());
 
 const pluginName = 'HubSpotAutoUploadPlugin';
