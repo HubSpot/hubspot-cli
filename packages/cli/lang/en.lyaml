@@ -908,6 +908,8 @@ en:
           start: "Starting..."
           uploading: "Uploading..."
           finish: "Complete!"
+        logs:
+          processExited: "Stopping dev server..."
       convertFields:
         describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
         positionals:
