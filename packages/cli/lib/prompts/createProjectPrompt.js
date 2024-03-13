@@ -2,7 +2,7 @@ const path = require('path');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
 const { promptUser } = require('./promptUtils');
-const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
+const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -29,11 +29,10 @@ const createTemplateOptions = async (templateSource, githubRef) => {
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 
-  const config = await fetchJsonFromRepository(
+  const config = await fetchFileFromRepository(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     'config.json',
-    branch,
-    hasCustomTemplateSource
+    branch
   );
 
   if (!config || !config[PROJECT_COMPONENT_TYPES.PROJECTS]) {

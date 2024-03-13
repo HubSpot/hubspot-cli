@@ -30,7 +30,7 @@ const {
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
+const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -137,11 +137,11 @@ const createProjectConfig = async (
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
-  await downloadGitHubRepoContents(
+  await downloadGithubRepoContents(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     template.path,
     projectPath,
-    hasCustomTemplateSource ? {} : { ref: githubRef }
+    hasCustomTemplateSource ? undefined : githubRef
   );
   const _config = JSON.parse(fs.readFileSync(projectConfigPath));
   writeProjectConfig(projectConfigPath, {
@@ -861,13 +861,11 @@ const createProjectComponent = async (
     componentName
   );
 
-  await downloadGitHubRepoContents(
+  await downloadGithubRepoContents(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
     componentPath,
-    {
-      ref: projectComponentsVersion,
-    }
+    projectComponentsVersion
   );
 };
 

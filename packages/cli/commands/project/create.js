@@ -19,7 +19,7 @@ const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } = require('../../lib/constants');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { fetchReleaseData } = require('@hubspot/cli-lib/github');
+const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
 const i18nKey = 'cli.commands.project.subcommands.create';
 
