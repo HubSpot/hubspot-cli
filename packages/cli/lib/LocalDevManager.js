@@ -129,20 +129,12 @@ class LocalDevManager {
     logger.log();
 
     if (runnableComponents[0].type === COMPONENT_TYPES.jsRendering) {
-      logger.log(
-        'JS Rendering component detected. Searching for dev server package...'
-      );
-      const { getModulePath, startChild } = await import(
-        './findAndRunModule.mjs'
-      );
-      const modulePath = getModulePath(
+      const { runModule } = await import('./findAndRunModule.mjs');
+      this.childProcess = runModule(
         '@hubspot/cms-dev-server',
-        runnableComponents[0]
+        runnableComponents[0].path
       );
-      if (modulePath) {
-        this.childProcess = startChild(modulePath, runnableComponents[0]);
-      } else {
-        logger.error('Unable to locate cms-dev-server package');
+      if (!this.childProcess) {
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
