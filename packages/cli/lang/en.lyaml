@@ -983,10 +983,6 @@ en:
         logFeedbackMessage:
           feedbackHeader: "We'd love to hear your feedback!"
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
-        showPlatformVersionWarning:
-          docsLink: "Projects platform versioning (BETA)"
-          noPlatformVersion: "No platformVersion found in hsproject.json. Falling back to default version. Starting Mar 31, 2024, new project builds without a specified version will no longer be supported. To update your project to the latest version, see {{ docsLink }}."
-          deprecatedVersion: "Starting Mar 31, 2024, new project builds with platformVersion 2023.1 or unspecified versions will no longer be supported. It's recommended that you update your project to the latest version. For more info, see {{ docsLink }}."
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
@@ -1357,7 +1353,7 @@ en:
         overrideErrors:
           platformVersionErrors:
             header: "Platform version update required"
-            unspecifiedPlatformVersion: "Projects with {{#bold}}unspecified platformVersion{{/bold}} are no longer supported."
+            unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
             platformVersionRetired: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are no longer supported."
             nonExistentPlatformVersion: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are not supported."
             updateProject: "Please update your project to the latest version and try again."
