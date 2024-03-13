@@ -36,12 +36,12 @@ cd /path/to/other-npm-package
 yarn link @hubspot/cli
 ```
 
-## Local development with cli-lib
-When contributing to hubspot-cli, you may also need to make changes to cli-lib. To use a local version of cli-lib as a dependancy, use [yarn link](https://classic.yarnpkg.com/lang/en/docs/cli/link/).
-1. Run `yarn link` in cli-lib to set up a symlink.
-2. Run `yarn link @hubspot/cli-lib` in hubspot-cli to use the symlinked local package.
+## Local development with local-dev-lib
+When contributing to hubspot-cli, you may also need to make changes to cli-local-dev-lib. To use a local version of local-dev-lib as a dependancy, use [yarn link](https://classic.yarnpkg.com/lang/en/docs/cli/link/).
+1. Run `yarn local-dev` in `local-dev-lib`
+2. Run `yarn link @hubspot/local-dev-lib` in the hubspot-cli root and again in `packages/cli` to use the symlinked local package.
 
-To stop using your local cli-lib, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
+To stop using your local `localpdev-lib`, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
 
 ## Testing
 Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
@@ -49,10 +49,9 @@ see the `engine` entry in the [cli package.json](./packages/cli/package.json).
 
 Using [nvm](https://github.com/nvm-sh/nvm) to switch between versions will help speed up development.
 
-Tests on the CLI are located in three places:
+Tests on the CLI are located in two places:
 - `/acceptance-tests/tests`
 - `/packages/cli/lib/__tests__`
-- `/packages/cli-lib/lib/__tests__`
 
 The acceptance tests are run using `yarn test-cli`. You will need to do some configuration before being able to run the acceptance tests. See the [acceptance-tests folder](./acceptance-tests/README.md) for more information.
 
