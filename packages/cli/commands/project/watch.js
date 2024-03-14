@@ -22,7 +22,6 @@ const {
   pollDeployStatus,
   validateProjectConfig,
   logFeedbackMessage,
-  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const {
   cancelStagedBuild,
@@ -103,8 +102,6 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
-
-  await showPlatformVersionWarning(accountId, projectConfig);
 
   await ensureProjectExists(accountId, projectConfig.name);
 

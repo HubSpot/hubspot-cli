@@ -869,32 +869,6 @@ const createProjectComponent = async (
   );
 };
 
-const showPlatformVersionWarning = async (accountId, projectConfig) => {
-  const platformVersion = projectConfig.platformVersion;
-  const docsLink = uiLink(
-    i18n(`${i18nKey}.showPlatformVersionWarning.docsLink`),
-    'https://developers.hubspot.com/docs/platform/platform-versioning'
-  );
-
-  if (!platformVersion) {
-    logger.log('');
-    logger.warn(
-      i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
-        docsLink,
-      })
-    );
-    logger.log('');
-  } else if (platformVersion === '2023.1') {
-    logger.log('');
-    logger.warn(
-      i18n(`${i18nKey}.showPlatformVersionWarning.deprecatedVersion`, {
-        docsLink,
-      })
-    );
-    logger.log('');
-  }
-};
-
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -911,5 +885,4 @@ module.exports = {
   ensureProjectExists,
   logFeedbackMessage,
   createProjectComponent,
-  showPlatformVersionWarning,
 };
