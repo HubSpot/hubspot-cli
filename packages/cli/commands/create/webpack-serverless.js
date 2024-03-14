@@ -1,13 +1,10 @@
-const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
+const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
 
 module.exports = {
   dest: ({ name, assetType }) => name || assetType,
   execute: async ({ options, dest, assetType }) =>
-    cloneGitHubRepo(
-      dest,
-      assetType,
-      'HubSpot/cms-webpack-serverless-boilerplate',
-      '',
-      options
-    ),
+    cloneGithubRepo('HubSpot/cms-webpack-serverless-boilerplate', dest, {
+      type: assetType,
+      ...options,
+    }),
 };
