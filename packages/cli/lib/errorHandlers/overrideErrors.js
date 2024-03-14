@@ -7,12 +7,20 @@ const { uiLine, uiLink } = require('../ui');
 
 const i18nKey = 'cli.lib.errorHandlers.overrideErrors';
 
-function createPlatformVersionError(subCategory, errorData) {
-  const platformVersion = errorData.context.PLATFORM_VERSION[0];
+function createPlatformVersionError(subCategory, errData) {
   const docsLink = uiLink(
     i18n(`${i18nKey}.platformVersionErrors.docsLink`),
     'https://developers.hubspot.com/docs/platform/platform-versioning'
   );
+
+  const platformVersionKey = {
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
+      'unspecified platformVersion',
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
+      errData.context.RETIRED_PLATFORM_VERSION,
+    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST]:
+      errData.context.PLATFORM_VERSION,
+  };
 
   const errorTypeToTranslationKey = {
     [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
@@ -23,6 +31,7 @@ function createPlatformVersionError(subCategory, errorData) {
       'nonExistentPlatformVersion',
   };
 
+  const platformVersion = platformVersionKey[subCategory] || '';
   const translationKey = errorTypeToTranslationKey[subCategory];
 
   uiLine();
