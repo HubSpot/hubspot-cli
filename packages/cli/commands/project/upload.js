@@ -16,7 +16,6 @@ const {
   logFeedbackMessage,
   validateProjectConfig,
   pollProjectBuildAndDeploy,
-  showPlatformVersionWarning,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -46,8 +45,6 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
-
-  await showPlatformVersionWarning(accountId, projectConfig);
 
   await ensureProjectExists(accountId, projectConfig.name, {
     forceCreate,

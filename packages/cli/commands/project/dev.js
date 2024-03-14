@@ -27,7 +27,6 @@ const {
   ensureProjectExists,
   handleProjectUpload,
   pollProjectBuildAndDeploy,
-  showPlatformVersionWarning,
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -264,8 +263,6 @@ exports.handler = async options => {
     }
 
     if (shouldCreateProject) {
-      await showPlatformVersionWarning(accountId, projectConfig);
-
       SpinniesManager.add('createProject', {
         text: i18n(`${i18nKey}.status.creatingProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
