@@ -30,7 +30,7 @@ const {
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
-const { downloadGitHubRepoContents } = require('@hubspot/cli-lib/github');
+const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
@@ -137,11 +137,11 @@ const createProjectConfig = async (
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
-  await downloadGitHubRepoContents(
+  await downloadGithubRepoContents(
     templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     template.path,
     projectPath,
-    hasCustomTemplateSource ? {} : { ref: githubRef }
+    hasCustomTemplateSource ? undefined : githubRef
   );
   const _config = JSON.parse(fs.readFileSync(projectConfigPath));
   writeProjectConfig(projectConfigPath, {
@@ -861,40 +861,12 @@ const createProjectComponent = async (
     componentName
   );
 
-  await downloadGitHubRepoContents(
+  await downloadGithubRepoContents(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
     component.path,
     componentPath,
-    {
-      ref: projectComponentsVersion,
-    }
+    projectComponentsVersion
   );
-};
-
-const showPlatformVersionWarning = async (accountId, projectConfig) => {
-  const platformVersion = projectConfig.platformVersion;
-  const docsLink = uiLink(
-    i18n(`${i18nKey}.showPlatformVersionWarning.docsLink`),
-    'https://developers.hubspot.com/docs/platform/platform-versioning'
-  );
-
-  if (!platformVersion) {
-    logger.log('');
-    logger.warn(
-      i18n(`${i18nKey}.showPlatformVersionWarning.noPlatformVersion`, {
-        docsLink,
-      })
-    );
-    logger.log('');
-  } else if (platformVersion === '2023.1') {
-    logger.log('');
-    logger.warn(
-      i18n(`${i18nKey}.showPlatformVersionWarning.deprecatedVersion`, {
-        docsLink,
-      })
-    );
-    logger.log('');
-  }
 };
 
 module.exports = {
@@ -913,5 +885,4 @@ module.exports = {
   ensureProjectExists,
   logFeedbackMessage,
   createProjectComponent,
-  showPlatformVersionWarning,
 };

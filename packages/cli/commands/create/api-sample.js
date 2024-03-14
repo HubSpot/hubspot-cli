@@ -8,10 +8,10 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
 const ora = require('ora');
-const { fetchJsonFromRepository } = require('@hubspot/cli-lib/github');
-// TODO: Swap to local-dev-lib after swapping github utils dep
-const { GITHUB_RELEASE_TYPES } = require('@hubspot/cli-lib/lib/constants');
-const { cloneGitHubRepo } = require('@hubspot/cli-lib/github');
+const {
+  fetchFileFromRepository,
+  cloneGithubRepo,
+} = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'cli.commands.create.subcommands.apiSample';
@@ -39,7 +39,7 @@ module.exports = {
     }
     const downloadSpinner = ora(i18n(`${i18nKey}.loading.apiSamples`));
     downloadSpinner.start();
-    const samplesConfig = await fetchJsonFromRepository(
+    const samplesConfig = await fetchFileFromRepository(
       'HubSpot/sample-apps-list',
       'samples.json',
       'main'
@@ -62,16 +62,11 @@ module.exports = {
         sampleLanguage,
       })
     );
-    const created = await cloneGitHubRepo(
-      filePath,
-      assetType,
-      `HubSpot/${sampleType}`,
-      sampleLanguage,
-      {
-        ...options,
-        releaseType: GITHUB_RELEASE_TYPES.REPOSITORY,
-      }
-    );
+    const created = await cloneGithubRepo(`HubSpot/${sampleType}`, filePath, {
+      type: assetType,
+      sourceDir: sampleLanguage,
+      ...options,
+    });
     if (created) {
       if (fs.existsSync(`${filePath}/.env.template`)) {
         fs.copySync(`${filePath}/.env.template`, `${filePath}/.env`);
