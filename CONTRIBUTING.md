@@ -41,7 +41,7 @@ When contributing to hubspot-cli, you may also need to make changes to cli-local
 1. Run `yarn local-dev` in `local-dev-lib`
 2. Run `yarn link @hubspot/local-dev-lib` in the hubspot-cli root and again in `packages/cli` to use the symlinked local package.
 
-To stop using your local `localpdev-lib`, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
+To stop using your local `local-dev-lib`, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
 
 ## Testing
 Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
