@@ -924,7 +924,7 @@ en:
       DevServerManager:
         portConflict: "The port {{ port }} is already in use."
         notInitialized: "The Dev Server Manager must be initialized before it is started."
-        noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
+        noCompatibleComponents: "Skipping call to {{ componentKey }} server because there are no compatible components in the project."
       LocalDevManager:
         failedToInitialize: "Missing required arguments to initialize Local Dev"
         noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."

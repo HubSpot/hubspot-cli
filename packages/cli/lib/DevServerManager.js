@@ -17,9 +17,13 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.DevServerManager';
 
-const SERVER_KEYS = {
+const COMPONENT_KEYS = {
   privateApp: 'privateApp',
   publicApp: 'publicApp',
+};
+
+const SERVER_IDS = {
+  UIE_DEV_SERVER: 'UIE_DEV_SERVER',
 };
 
 class DevServerManager {
@@ -30,31 +34,40 @@ class DevServerManager {
     this.server = null;
     this.path = null;
     this.devServers = {
-      [SERVER_KEYS.privateApp]: {
+      [COMPONENT_KEYS.privateApp]: {
         componentType: COMPONENT_TYPES.privateApp,
         serverInterface: DevModeInterface,
+        id: SERVER_IDS.UIE_DEV_SERVER,
       },
-      [SERVER_KEYS.publicApp]: {
+      [COMPONENT_KEYS.publicApp]: {
         componentType: COMPONENT_TYPES.publicApp,
         serverInterface: DevModeInterface,
+        id: SERVER_IDS.UIE_DEV_SERVER,
       },
     };
   }
 
   async iterateDevServers(callback) {
-    const serverKeys = Object.keys(this.devServers);
+    const componentKeys = Object.keys(this.devServers);
+    const iteratedServerIds = [];
 
-    for (let i = 0; i < serverKeys.length; i++) {
-      const serverKey = serverKeys[i];
-      const devServer = this.devServers[serverKey];
+    for (let i = 0; i < componentKeys.length; i++) {
+      const componentKey = componentKeys[i];
+      const devServer = this.devServers[componentKey];
 
       const compatibleComponents =
         this.componentsByType[devServer.componentType] || {};
 
-      if (Object.keys(compatibleComponents).length) {
+      if (
+        Object.keys(compatibleComponents).length &&
+        !iteratedServerIds.includes(devServer.id)
+      ) {
+        iteratedServerIds.push(devServer.id);
         await callback(devServer.serverInterface, compatibleComponents);
       } else {
-        logger.debug(i18n(`${i18nKey}.noCompatibleComponents`, { serverKey }));
+        logger.debug(
+          i18n(`${i18nKey}.noCompatibleComponents`, { componentKey })
+        );
       }
     }
   }
