@@ -380,12 +380,8 @@ const uploadProjectFiles = async (
       })
     );
   } catch (err) {
-    SpinniesManager.fail('upload', {
-      text: i18n(`${i18nKey}.uploadProjectFiles.fail`, {
-        accountIdentifier,
-        projectName,
-      }),
-    });
+    SpinniesManager.fail('upload');
+    logApiErrorInstance(err);
 
     error = err;
   }
