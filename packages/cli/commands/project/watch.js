@@ -125,12 +125,33 @@ exports.handler = async options => {
 
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
-      await handleProjectUpload(
+      const result = await handleProjectUpload(
         accountId,
         projectConfig,
         projectDir,
         startWatching
       );
+
+      if (result.uploadError) {
+        if (
+          isSpecifiedError(result.uploadError, {
+            subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
+          })
+        ) {
+          logger.log();
+          logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+          logger.log();
+        } else {
+          logApiErrorInstance(
+            result.uploadError,
+            new ApiErrorContext({
+              accountId,
+              projectName: projectConfig.name,
+            })
+          );
+        }
+        process.exit(EXIT_CODES.ERROR);
+      }
     } else {
       await startWatching();
     }
