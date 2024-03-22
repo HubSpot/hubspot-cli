@@ -4,6 +4,7 @@ const {
   isMissingScopeError,
   isApiUploadValidationError,
   getAxiosErrorWithContext,
+  parseValidationErrors,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
   SCOPE_GROUPS,
@@ -21,29 +22,6 @@ const { overrideErrors } = require('./overrideErrors');
 const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.errorHandlers.apiErrors';
-
-const parseValidationErrors = (responseBody = {}) => {
-  const errorMessages = [];
-
-  const { errors, message } = responseBody;
-
-  if (message) {
-    errorMessages.push(message);
-  }
-
-  if (errors) {
-    const specificErrors = errors.map(error => {
-      let errorMessage = error.message;
-      if (error.errorTokens && error.errorTokens.line) {
-        errorMessage = `line ${error.errorTokens.line}: ${errorMessage}`;
-      }
-      return errorMessage;
-    });
-    errorMessages.push(...specificErrors);
-  }
-
-  return errorMessages;
-};
 
 class ApiErrorContext extends ErrorContext {
   constructor(props = {}) {
