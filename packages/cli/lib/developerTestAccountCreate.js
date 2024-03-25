@@ -1,4 +1,4 @@
-const SpinniesManager = require('./SpinniesManager');
+const SpinniesManager = require('./ui/SpinniesManager');
 const {
   getAccountId,
   accountNameExistsInConfig,
@@ -32,6 +32,7 @@ const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const i18nKey = 'cli.lib.developerTestAccount';
 
 const saveDevTestAccountToConfig = async (env, result, force = false) => {
+  console.log('result here: ', result);
   let personalAccessKey = result.personalAccessKey;
   if (!personalAccessKey) {
     const configData = await personalAccessKeyPrompt({
@@ -44,6 +45,7 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
   let updatedConfig;
   try {
     const token = await getAccessToken(personalAccessKey, env);
+    console.log('TOKEN: ', token);
     updatedConfig = await updateConfigWithAccessToken(
       token,
       personalAccessKey,
@@ -83,6 +85,7 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
       }
     }
   }
+  console.log('updating account config with: ', updatedConfig);
   updateAccountConfig({
     ...updatedConfig,
     environment: updatedConfig.env,
@@ -99,6 +102,7 @@ const buildDeveloperTestAccount = async ({
   name,
   accountConfig,
   env,
+  maxTestPortals,
   force = false,
 }) => {
   SpinniesManager.init({
@@ -117,6 +121,13 @@ const buildDeveloperTestAccount = async ({
       }),
     });
     result = await createDeveloperTestAccount(accountId, name);
+    console.log('RESULT OF DEV TEST ACCT CREATE: ', result);
+    SpinniesManager.succeed('devTestAcctCreate', {
+      text: i18n(`${spinniesI18nKey}.succeed`, {
+        name: result.accountName,
+        accountId: result.id,
+      }),
+    });
   } catch (err) {
     debugErrorAndContext(err);
 
@@ -128,35 +139,33 @@ const buildDeveloperTestAccount = async ({
 
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n(`${i18nKey}.failure.scopes.message`, {
+        i18n(`${i18nKey}.create.failure.scopes.message`, {
           accountName: uiAccountDescription(accountId),
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n(`${i18nKey}.failure.scopes.instructions`, {
+        i18n(`${i18nKey}.create.failure.scopes.instructions`, {
           accountName: uiAccountDescription(accountId),
           url,
         })
       );
     } else if (
       isSpecifiedError(err, {
-        statusCode: 403,
-        category: 'BANNED',
-        subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
+        statusCode: 400,
+        errorType: 'TEST_PORTAL_LIMIT_REACHED',
       })
     ) {
       logger.log('');
       logger.error(
-        i18n(`${i18nKey}.failure.invalidUser`, {
-          accountName: name,
-          parentAccountName: uiAccountDescription(accountId),
+        i18n(`${i18nKey}.create.failure.limit`, {
+          accountName: uiAccountDescription(accountId),
+          limit: maxTestPortals,
         })
       );
       logger.log('');
     } else {
-      // TODO: handle over limit errors
       logErrorInstance(err);
     }
     throw err;

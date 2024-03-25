@@ -71,7 +71,7 @@ const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-  validateDevTestAccountUsage,
+  // validateDevTestAccountUsage,
 } = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -233,8 +233,17 @@ exports.handler = async options => {
   }
 
   if (createNewDeveloperTestAccount) {
+    let currentPortalCount = 0;
+    let maxTestPortals = 10;
     try {
-      await validateDevTestAccountUsage(accountConfig);
+      // TODO: comment back in once endpoint accepts oauth and external auth
+      // const validateResult = await validateDevTestAccountUsage(accountConfig);
+      // if (validateResult) {
+      //   currentPortalCount = validateResult.results
+      //     ? validateResult.results.length
+      //     : 0;
+      //   maxTestPortals = validateResult.maxTestPortals;
+      // }
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
@@ -255,29 +264,27 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.ERROR);
     }
-    // Create dev test account here
+
     try {
-      const { name } = await developerTestAccountNamePrompt();
+      const { name } = await developerTestAccountNamePrompt(currentPortalCount);
       trackCommandMetadataUsage(
         'developer-test-account-create',
         { step: 'project-dev' },
         accountId
       );
-      // TODO: build dev test account
 
-      const { result } = await buildDeveloperTestAccount(
+      const { result } = await buildDeveloperTestAccount({
         name,
         accountConfig,
-        env
-      );
+        env,
+        maxTestPortals,
+      });
 
       targetAccountId = result.id;
     } catch (err) {
       logErrorInstance(err);
       process.exit(EXIT_CODES.ERROR);
     }
-
-    process.exit(EXIT_CODES.SUCCESS);
   }
 
   logger.log();

@@ -4,7 +4,7 @@ const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.lib.prompts.developerTestAccountPrompt';
 
-const developerTestAccountNamePrompt = () => {
+const developerTestAccountNamePrompt = currentPortalCount => {
   return promptUser([
     {
       name: 'name',
@@ -19,7 +19,7 @@ const developerTestAccountNamePrompt = () => {
           ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
           : true;
       },
-      default: `Developer test account ${new Date().toLocaleString()}`,
+      default: `Developer test account ${currentPortalCount + 1}`,
     },
   ]);
 };
