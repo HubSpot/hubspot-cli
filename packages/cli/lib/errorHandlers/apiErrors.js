@@ -7,9 +7,7 @@ const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
-const {
-  fetchScopeData,
-} = require('@hubspot/cli-lib/api/localDevAuth/authenticated');
+const { fetchScopeData } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   debugErrorAndContext,
   logErrorInstance,
