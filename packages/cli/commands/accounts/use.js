@@ -4,7 +4,7 @@ const {
   getConfigPath,
   updateDefaultAccount,
   getAccountId: getAccountIdFromConfig,
-} = require('@hubspot/cli-lib/lib/config');
+} = require('@hubspot/local-dev-lib/config');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');

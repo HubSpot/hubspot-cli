@@ -9,11 +9,19 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
-const { base64EncodeString } = require('@hubspot/cli-lib/lib/encoding');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const TAIL_DELAY = 5000;
+
+const base64EncodeString = valueToEncode => {
+  if (typeof valueToEncode !== 'string') {
+    return valueToEncode;
+  }
+
+  const stringBuffer = Buffer.from(valueToEncode);
+  return encodeURIComponent(stringBuffer.toString('base64'));
+};
 
 const handleUserInput = () => {
   const onTerminate = async () => {

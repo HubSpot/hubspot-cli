@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { Mode } = require('@hubspot/cli-lib');
+const { MODE } = require('@hubspot/local-dev-lib/constants/files');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
@@ -175,10 +175,10 @@ async function validateAccount(options) {
  */
 function validateMode(options) {
   const mode = getMode(options);
-  if (Mode[mode]) {
+  if (MODE[mode]) {
     return true;
   }
-  const modesMessage = `Available modes are: ${Object.values(Mode).join(
+  const modesMessage = `Available modes are: ${Object.values(MODE).join(
     ', '
   )}.`;
   if (mode != null) {
