@@ -536,10 +536,10 @@
     table "^6.6.0"
     unixify "1.0.0"
 
-"@hubspot/local-dev-lib@^0.3.10":
-  version "0.3.10"
-  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.3.10.tgz#82861692ef69614920b5b5b6957d275be23003d1"
-  integrity sha512-EKaMnM9KXRB8F4mGuLZg6yWoCRJggTJ4xU+Wl3sb9MUkGqJTxNLQ7bc3w+tlJNOXW8tog7+7iIC9VxAxAicvbQ==
+"@hubspot/local-dev-lib@^0.3.11":
+  version "0.3.11"
+  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-0.3.11.tgz#c2f7300d9ec9b41662bada0fc533d45842f86dc2"
+  integrity sha512-aEQQYvzE8UqL65RvBxVefCSRB1+ixy+HAXZrP5M+t1C5K6klpPr+n2WLZkXwL8V5ptozCCOZDeaKNAWiQ8Au4w==
   dependencies:
     address "^2.0.1"
     axios "^1.3.5"
