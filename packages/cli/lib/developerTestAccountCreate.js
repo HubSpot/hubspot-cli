@@ -32,7 +32,6 @@ const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 const i18nKey = 'cli.lib.developerTestAccount';
 
 const saveDevTestAccountToConfig = async (env, result, force = false) => {
-  console.log('result here: ', result);
   let personalAccessKey = result.personalAccessKey;
   if (!personalAccessKey) {
     const configData = await personalAccessKeyPrompt({
@@ -45,7 +44,6 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
   let updatedConfig;
   try {
     const token = await getAccessToken(personalAccessKey, env);
-    console.log('TOKEN: ', token);
     updatedConfig = await updateConfigWithAccessToken(
       token,
       personalAccessKey,
@@ -85,7 +83,7 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
       }
     }
   }
-  console.log('updating account config with: ', updatedConfig);
+
   updateAccountConfig({
     ...updatedConfig,
     environment: updatedConfig.env,
@@ -121,7 +119,7 @@ const buildDeveloperTestAccount = async ({
       }),
     });
     result = await createDeveloperTestAccount(accountId, name);
-    console.log('RESULT OF DEV TEST ACCT CREATE: ', result);
+
     SpinniesManager.succeed('devTestAcctCreate', {
       text: i18n(`${spinniesI18nKey}.succeed`, {
         name: result.accountName,

@@ -58,7 +58,9 @@ const validateDevTestAccountUsage = async accountConfig => {
         );
       }
     }
+    return response;
   }
+  return null;
 };
 module.exports = {
   isDeveloperTestAccount,

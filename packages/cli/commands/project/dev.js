@@ -71,7 +71,7 @@ const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-  // validateDevTestAccountUsage,
+  validateDevTestAccountUsage,
 } = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -236,14 +236,13 @@ exports.handler = async options => {
     let currentPortalCount = 0;
     let maxTestPortals = 10;
     try {
-      // TODO: comment back in once endpoint accepts oauth and external auth
-      // const validateResult = await validateDevTestAccountUsage(accountConfig);
-      // if (validateResult) {
-      //   currentPortalCount = validateResult.results
-      //     ? validateResult.results.length
-      //     : 0;
-      //   maxTestPortals = validateResult.maxTestPortals;
-      // }
+      const validateResult = await validateDevTestAccountUsage(accountConfig);
+      if (validateResult) {
+        currentPortalCount = validateResult.results
+          ? validateResult.results.length
+          : 0;
+        maxTestPortals = validateResult.maxTestPortals;
+      }
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
