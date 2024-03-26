@@ -39,11 +39,9 @@ class ApiErrorContext extends ErrorContext {
  */
 function logValidationErrors(error, context) {
   const { response = {} } = error;
-  const validationErrors = parseValidationErrors(response.body);
+  const validationErrors = parseValidationErrors(response.data);
   if (validationErrors.length) {
-    validationErrors.forEach(err => {
-      logger.error(err);
-    });
+    logger.error(validationErrors.join('\n- '));
   }
   debugErrorAndContext(error, context);
 }
