@@ -1071,8 +1071,7 @@ en:
           promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
           sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
           sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
-          developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts"
-          developerTestAccountLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
+          developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
           confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:

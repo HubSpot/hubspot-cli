@@ -10,6 +10,9 @@ const {
 } = require('@hubspot/local-dev-lib/constants/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
+  fetchDeveloperTestAccounts,
+} = require('@hubspot/local-dev-lib/developerTestAccounts');
+const {
   isAppDeveloperAccount,
   isDeveloperTestAccount,
 } = require('../developerTestAccounts');
@@ -29,7 +32,16 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
   let choices = [];
 
   if (isAppDeveloperAccount(defaultAccountConfig)) {
-    // TODO: check test account limits
+    let devTestAccountUsage = undefined;
+    try {
+      devTestAccountUsage = await fetchDeveloperTestAccounts(defaultAccountId);
+    } catch (err) {
+      logger.debug(
+        'Unable to fetch developer test account usage limits: ',
+        err
+      );
+    }
+
     const devTestAccounts = accounts
       .reverse()
       .filter(
@@ -37,6 +49,17 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
           isDeveloperTestAccount(config) &&
           config.parentAccountId === defaultAccountId
       );
+    let disabledMessage = false;
+    if (
+      devTestAccountUsage &&
+      devTestAccountUsage.results.length >= devTestAccountUsage.maxTestPortals
+    ) {
+      disabledMessage = i18n(`${i18nKey}.developerTestAccountLimit`, {
+        authCommand: uiCommandReference('hs auth'),
+        limit: devTestAccountUsage.maxTestPortals,
+      });
+    }
+
     choices = [
       ...devTestAccounts.map(mapSandboxAccount),
       {
@@ -45,7 +68,7 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
           targetAccountId: null,
           createNewDeveloperTestAccount: true,
         },
-        // disabled: disabledMessage,
+        disabled: disabledMessage,
       },
     ];
   } else {

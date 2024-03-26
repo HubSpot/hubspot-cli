@@ -71,7 +71,7 @@ const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-  validateDevTestAccountUsage,
+  validateDevTestAccountUsageLimits,
 } = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -236,7 +236,9 @@ exports.handler = async options => {
     let currentPortalCount = 0;
     let maxTestPortals = 10;
     try {
-      const validateResult = await validateDevTestAccountUsage(accountConfig);
+      const validateResult = await validateDevTestAccountUsageLimits(
+        accountConfig
+      );
       if (validateResult) {
         currentPortalCount = validateResult.results
           ? validateResult.results.length

@@ -34,7 +34,7 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
 
 const i18nKey = 'cli.lib.developerTestAccount';
 
-const validateDevTestAccountUsage = async accountConfig => {
+const validateDevTestAccountUsageLimits = async accountConfig => {
   const accountId = getAccountId(accountConfig.portalId);
   const response = await fetchDeveloperTestAccounts(accountId);
   if (response) {
@@ -65,5 +65,5 @@ const validateDevTestAccountUsage = async accountConfig => {
 module.exports = {
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-  validateDevTestAccountUsage,
+  validateDevTestAccountUsageLimits,
 };
