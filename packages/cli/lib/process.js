@@ -4,7 +4,6 @@ const {
   setLogLevel,
   LOG_LEVEL,
 } = require('@hubspot/local-dev-lib/logger');
-const { setLogLevel: setCliLibLogLevel } = require('@hubspot/cli-lib/logger');
 const { i18n } = require('./lang');
 
 const i18nKey = 'cli.lib.process';
@@ -33,10 +32,6 @@ const handleExit = callback => {
         // Prevent logs when terminal closes
         if (isSIGHUP) {
           setLogLevel(LOG_LEVEL.NONE);
-
-          // Update the log level in cli-lib's instance of the logger
-          // We can remove this when we remove cli-lib as a dep
-          setCliLibLogLevel(LOG_LEVEL.NONE);
         }
 
         logger.debug(i18n(`${i18nKey}.exitDebug`, { signal }));

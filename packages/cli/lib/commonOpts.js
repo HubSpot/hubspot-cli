@@ -3,9 +3,6 @@ const {
   setLogLevel: setLoggerLogLevel,
 } = require('@hubspot/local-dev-lib/logger');
 const {
-  setLogLevel: setCliLibLoggerLogLevel,
-} = require('@hubspot/cli-lib/logger');
-const {
   DEFAULT_MODE,
   MODE,
 } = require('@hubspot/local-dev-lib/constants/files');
@@ -74,14 +71,8 @@ const setLogLevel = (options = {}) => {
   const { debug } = options;
   if (debug) {
     setLoggerLogLevel(LOG_LEVEL.DEBUG);
-
-    // TODO remove this when we remove cli-lib as a dep
-    setCliLibLoggerLogLevel(LOG_LEVEL.DEBUG);
   } else {
     setLoggerLogLevel(LOG_LEVEL.LOG);
-
-    // TODO remove this when we remove cli-lib as a dep
-    setCliLibLoggerLogLevel(LOG_LEVEL.LOG);
   }
 };
 

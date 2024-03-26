@@ -6,7 +6,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
-const { i18n } = require('@hubspot/cli-lib/lib/lang');
+const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
