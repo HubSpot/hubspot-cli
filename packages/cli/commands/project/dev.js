@@ -248,17 +248,20 @@ exports.handler = async options => {
     } catch (err) {
       if (isMissingScopeError(err)) {
         logger.error(
-          i18n('cli.lib.sandbox.create.failure.scopes.message', {
+          i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
             accountName: accountConfig.name || accountId,
           })
         );
         const websiteOrigin = getHubSpotWebsiteOrigin(env);
         const url = `${websiteOrigin}/personal-access-key/${accountId}`;
         logger.info(
-          i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
-            accountName: accountConfig.name || accountId,
-            url,
-          })
+          i18n(
+            'cli.lib.developerTestAccount.create.failure.scopes.instructions',
+            {
+              accountName: accountConfig.name || accountId,
+              url,
+            }
+          )
         );
       } else {
         logErrorInstance(err);
