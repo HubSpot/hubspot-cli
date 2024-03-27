@@ -9,7 +9,7 @@ const { i18n } = require('../../lib/lang');
 const {
   FieldsJs,
   isConvertableFieldJs,
-} = require('@hubspot/local-dev-lib/cms/handleFieldsJs');
+} = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
