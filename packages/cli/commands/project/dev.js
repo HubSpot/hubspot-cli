@@ -68,11 +68,21 @@ const {
   isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
+const {
+  isDeveloperTestAccount,
+  isAppDeveloperAccount,
+  validateDevTestAccountUsageLimits,
+} = require('../../lib/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  developerTestAccountNamePrompt,
+} = require('../../lib/prompts/developerTestAccountNamePrompt');
+const {
+  buildDeveloperTestAccount,
+} = require('../../lib/developerTestAccountCreate');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -101,6 +111,7 @@ exports.handler = async options => {
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
   const defaultAccountIsSandbox = isSandbox(accountConfig);
   const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
     accountConfig
@@ -134,17 +145,23 @@ exports.handler = async options => {
   if (!targetAccountId) {
     logger.log();
     uiLine();
-    logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
+    if (isAppDeveloperAccount(accountConfig)) {
+      logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
+    } else {
+      logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
+    }
     uiLine();
     logger.log();
 
     const {
       targetAccountId: promptTargetAccountId,
       createNewSandbox: promptCreateNewSandbox,
+      createNewDeveloperTestAccount: promptCreateNewDeveloperTestAccount,
     } = await selectTargetAccountPrompt(accounts, accountConfig);
 
     targetAccountId = promptTargetAccountId;
     createNewSandbox = promptCreateNewSandbox;
+    createNewDeveloperTestAccount = promptCreateNewDeveloperTestAccount;
   }
 
   if (createNewSandbox) {
@@ -209,6 +226,65 @@ exports.handler = async options => {
         allowEarlyTermination: false, // Don't let user terminate early in this flow
         skipPolling: true, // Skip polling, sync will run and complete in the background
       });
+    } catch (err) {
+      logErrorInstance(err);
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  if (createNewDeveloperTestAccount) {
+    let currentPortalCount = 0;
+    let maxTestPortals = 10;
+    try {
+      const validateResult = await validateDevTestAccountUsageLimits(
+        accountConfig
+      );
+      if (validateResult) {
+        currentPortalCount = validateResult.results
+          ? validateResult.results.length
+          : 0;
+        maxTestPortals = validateResult.maxTestPortals;
+      }
+    } catch (err) {
+      if (isMissingScopeError(err)) {
+        logger.error(
+          i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
+            accountName: accountConfig.name || accountId,
+          })
+        );
+        const websiteOrigin = getHubSpotWebsiteOrigin(env);
+        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+        logger.info(
+          i18n(
+            'cli.lib.developerTestAccount.create.failure.scopes.instructions',
+            {
+              accountName: accountConfig.name || accountId,
+              url,
+            }
+          )
+        );
+      } else {
+        logErrorInstance(err);
+      }
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    try {
+      const { name } = await developerTestAccountNamePrompt(currentPortalCount);
+      trackCommandMetadataUsage(
+        'developer-test-account-create',
+        { step: 'project-dev' },
+        accountId
+      );
+
+      const { result } = await buildDeveloperTestAccount({
+        name,
+        accountConfig,
+        env,
+        maxTestPortals,
+      });
+
+      targetAccountId = result.id;
     } catch (err) {
       logErrorInstance(err);
       process.exit(EXIT_CODES.ERROR);

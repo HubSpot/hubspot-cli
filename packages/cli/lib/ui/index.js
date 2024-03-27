@@ -4,7 +4,10 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
 const { isSandbox, getSandboxName } = require('../sandboxes');
-const { isDeveloperTestAccount } = require('../developerTestAccounts');
+const {
+  isDeveloperTestAccount,
+  isAppDeveloperAccount,
+} = require('../developerTestAccounts');
 const { i18n } = require('../lang');
 
 const {
@@ -86,6 +89,10 @@ const uiAccountDescription = (accountId, bold = true) => {
   } else if (isDeveloperTestAccount(account)) {
     accountTypeString = `[${
       HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+    }] `;
+  } else if (isAppDeveloperAccount(account)) {
+    accountTypeString = `[${
+      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]
     }] `;
   }
   const message = `${account.name} ${accountTypeString}(${account.portalId})`;
