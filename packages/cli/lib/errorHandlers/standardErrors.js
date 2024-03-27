@@ -1,15 +1,11 @@
 const util = require('util');
-const {
-  HubSpotAuthError,
-} = require('@hubspot/local-dev-lib/models/HubSpotAuthError');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const {
+  isSystemError,
+} = require('@hubspot/local-dev-lib/errors/standardErrors');
 const { i18n } = require('../lang');
 
 const i18nKey = 'cli.lib.errorHandlers.standardErrors';
-
-const isSystemError = err =>
-  err.errno != null && err.code != null && err.syscall != null;
-const isFatalError = err => err instanceof HubSpotAuthError;
 
 // TODO: Make these TS interfaces
 class ErrorContext {
@@ -103,7 +99,5 @@ function logErrorInstance(error, context) {
 module.exports = {
   debugErrorAndContext,
   ErrorContext,
-  isFatalError,
-  isSystemError,
   logErrorInstance,
 };

@@ -27,7 +27,10 @@ const {
   fetchProject,
   uploadProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const {
+  isSpecifiedError,
+  isSpecifiedHubSpotAuthError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
@@ -39,7 +42,6 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedHubSpotAuthError,
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 

@@ -19,11 +19,11 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedError,
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
