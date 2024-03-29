@@ -20,10 +20,8 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const parentPortalId = getAccountId(appDeveloperAccountConfig.portalId);
   for (const portal of config.portals) {
     if (
-      (portal.parentAccountId !== null ||
-        portal.parentAccountId !== undefined) &&
+      Boolean(portal.parentAccountId) &&
       portal.parentAccountId === parentPortalId &&
-      portal.accountType &&
       portal.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST
     ) {
       return true;
