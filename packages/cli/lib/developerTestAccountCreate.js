@@ -41,20 +41,12 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
     personalAccessKey = configData.personalAccessKey;
   }
 
-  let updatedConfig;
-  try {
-    const token = await getAccessToken(personalAccessKey, env);
-    updatedConfig = await updateConfigWithAccessToken(
-      token,
-      personalAccessKey,
-      env
-    );
-  } catch (e) {
-    logErrorInstance(e);
-  }
-  if (!updatedConfig) {
-    throw new Error('Failed to update config with personal access key.');
-  }
+  const token = await getAccessToken(personalAccessKey, env);
+  const updatedConfig = await updateConfigWithAccessToken(
+    token,
+    personalAccessKey,
+    env
+  );
 
   let validName = updatedConfig.name;
   if (!updatedConfig.name) {

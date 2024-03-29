@@ -19,7 +19,7 @@ const {
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
-const mapSandboxAccount = accountConfig => ({
+const mapNestedAccount = accountConfig => ({
   name: uiAccountDescription(accountConfig.portalId, false),
   value: {
     targetAccountId: getAccountId(accountConfig.name),
@@ -61,7 +61,7 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
     }
 
     choices = [
-      ...devTestAccounts.map(mapSandboxAccount),
+      ...devTestAccounts.map(mapNestedAccount),
       {
         name: i18n(`${i18nKey}.createNewDeveloperTestAccountOption`),
         value: {
@@ -108,10 +108,10 @@ const selectTargetAccountPrompt = async (accounts, defaultAccountConfig) => {
         .filter(
           a => a.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
         )
-        .map(mapSandboxAccount),
+        .map(mapNestedAccount),
       ...sandboxAccounts
         .filter(a => a.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX)
-        .map(mapSandboxAccount),
+        .map(mapNestedAccount),
       {
         name: i18n(`${i18nKey}.createNewSandboxOption`),
         value: {
