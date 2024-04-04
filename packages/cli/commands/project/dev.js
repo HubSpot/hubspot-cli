@@ -68,10 +68,13 @@ const {
   isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const { findProjectComponents } = require('../../lib/projectStructure');
+const {
+  findProjectComponents,
+  getProjectComponentTypes,
+  COMPONENT_TYPES,
+} = require('../../lib/projectStructure');
 const {
   isDeveloperTestAccount,
-  isAppDeveloperAccount,
   validateDevTestAccountUsageLimits,
 } = require('../../lib/developerTestAccounts');
 const {
@@ -110,26 +113,32 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   const components = await findProjectComponents(projectDir);
+  const componentTypes = getProjectComponentTypes(components);
+  const hasPrivateApps = componentTypes[COMPONENT_TYPES.privateApp];
+  const hasPublicApps = componentTypes[COMPONENT_TYPES.publicApp];
+
+  if (hasPrivateApps && hasPublicApps) {
+    logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
+    process.exit(EXIT_CODES.SUCCESS);
+  }
 
   const accounts = getConfigAccounts();
+
+  const defaultAccountIsRecommendedType = hasPublicApps
+    ? isDeveloperTestAccount(accountConfig)
+    : isSandbox(accountConfig);
+
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
   let createNewDeveloperTestAccount = false;
-  const defaultAccountIsSandbox = isSandbox(accountConfig);
-  const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
-    accountConfig
-  );
 
-  if (
-    !targetAccountId &&
-    (defaultAccountIsSandbox || defaultAccountIsDeveloperTestAccount)
-  ) {
+  if (!targetAccountId && defaultAccountIsRecommendedType) {
     logger.log();
     const useDefaultAccount = await confirmDefaultAccountPrompt(
       accountConfig.name,
-      defaultAccountIsSandbox
-        ? `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
-        : HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+      hasPublicApps
+        ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+        : `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
     );
 
     if (useDefaultAccount) {
@@ -148,7 +157,7 @@ exports.handler = async options => {
   if (!targetAccountId) {
     logger.log();
     uiLine();
-    if (isAppDeveloperAccount(accountConfig)) {
+    if (hasPublicApps) {
       logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
     } else {
       logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
