@@ -69,6 +69,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { isDeveloperTestAccount } = require('../../lib/developerTestAccounts');
+const { findProjectComponents } = require('../../lib/projectStructure');
 const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
@@ -97,6 +98,8 @@ exports.handler = async options => {
   }
 
   validateProjectConfig(projectConfig, projectDir);
+
+  const components = await findProjectComponents(projectDir);
 
   const accounts = getConfigAccounts();
   let targetAccountId = options.account ? accountId : null;
@@ -357,6 +360,7 @@ exports.handler = async options => {
     projectDir,
     targetAccountId,
     isGithubLinked,
+    components,
   });
 
   await LocalDev.start();
