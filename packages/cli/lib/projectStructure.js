@@ -118,9 +118,16 @@ async function findProjectComponents(projectSourceDir) {
   return components;
 }
 
+function getProjectComponentTypes(components) {
+  const projectContents = {};
+  components.forEach(({ type }) => (projectContents[type] = true));
+  return projectContents;
+}
+
 module.exports = {
   CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
+  getProjectComponentTypes,
 };
