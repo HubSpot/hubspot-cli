@@ -1261,7 +1261,7 @@ en:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
             invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
-            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
@@ -1365,7 +1365,7 @@ en:
             400: "The {{ messageDetail }} was bad."
             401: "The {{ messageDetail }} was unauthorized."
             403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
             403: "The {{ messageDetail }} was forbidden."
             404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
             404: "The {{ messageDetail }} was not found."
