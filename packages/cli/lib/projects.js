@@ -26,6 +26,8 @@ const {
   getDeployStructure,
   fetchProject,
   uploadProject,
+  fetchBuildWarnLogs,
+  fetchDeployWarnLogs,
 } = require('@hubspot/local-dev-lib/api/projects');
 const {
   isSpecifiedError,
@@ -445,7 +447,10 @@ const pollProjectBuildAndDeploy = async (
           }
         )
       );
+
+      displayWarnLogs(accountId, projectConfig.name, buildId);
     }
+
     const deployStatus = await pollDeployStatus(
       accountId,
       projectConfig.name,
@@ -473,6 +478,12 @@ const pollProjectBuildAndDeploy = async (
     logger.error(e);
   }
 
+  displayWarnLogs(
+    accountId,
+    projectConfig.name,
+    result.deployResult.deployId,
+    true
+  );
   return result;
 };
 
@@ -871,6 +882,28 @@ const createProjectComponent = async (
   );
 };
 
+const displayWarnLogs = async (
+  accountId,
+  projectName,
+  taskId,
+  isDeploy = false
+) => {
+  let result;
+
+  if (isDeploy) {
+    result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+  } else {
+    result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+  }
+
+  if (result && result.logs.length) {
+    result.logs.forEach(log => {
+      logger.warn(log.message);
+      logger.log('');
+    });
+  }
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -887,4 +920,5 @@ module.exports = {
   ensureProjectExists,
   logFeedbackMessage,
   createProjectComponent,
+  displayWarnLogs,
 };
