@@ -38,7 +38,8 @@ const {
 } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
 const {
-  selectTargetAccountPrompt,
+  selectSandboxTargetAccountPrompt,
+  selectDeveloperTestTargetAccountPrompt,
   confirmDefaultAccountPrompt,
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
@@ -165,15 +166,18 @@ exports.handler = async options => {
     uiLine();
     logger.log();
 
+    const targetAccountPrompt = hasPublicApps
+      ? selectDeveloperTestTargetAccountPrompt
+      : selectSandboxTargetAccountPrompt;
+
     const {
       targetAccountId: promptTargetAccountId,
-      createNewSandbox: promptCreateNewSandbox,
-      createNewDeveloperTestAccount: promptCreateNewDeveloperTestAccount,
-    } = await selectTargetAccountPrompt(accounts, accountConfig);
+      createNestedAccount,
+    } = await targetAccountPrompt(accounts, accountConfig, hasPublicApps);
 
     targetAccountId = promptTargetAccountId;
-    createNewSandbox = promptCreateNewSandbox;
-    createNewDeveloperTestAccount = promptCreateNewDeveloperTestAccount;
+    createNewSandbox = !hasPublicApps && createNestedAccount;
+    createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
   }
 
   if (createNewSandbox) {
