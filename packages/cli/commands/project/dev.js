@@ -30,27 +30,11 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  uiAccountDescription,
-  uiBetaTag,
-  uiCommandReference,
-  uiLine,
-} = require('../../lib/ui');
+const { uiAccountDescription, uiBetaTag, uiLine } = require('../../lib/ui');
 const { confirmPrompt } = require('../../lib/prompts/promptUtils');
-const {
-  selectSandboxTargetAccountPrompt,
-  selectDeveloperTestTargetAccountPrompt,
-  confirmDefaultAccountPrompt,
-} = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
-const { getSandboxTypeAsString } = require('../../lib/sandboxes');
-const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
-const {
-  validateSandboxUsageLimits,
-  getAvailableSyncTypes,
-} = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   PROJECT_BUILD_TEXT,
@@ -58,8 +42,6 @@ const {
   PROJECT_ERROR_TYPES,
 } = require('../../lib/constants');
 
-const { buildSandbox } = require('../../lib/sandboxCreate');
-const { syncSandbox } = require('../../lib/sandboxSync');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
@@ -79,15 +61,16 @@ const {
   validateDevTestAccountUsageLimits,
 } = require('../../lib/developerTestAccounts');
 const {
-  HUBSPOT_ACCOUNT_TYPES,
-  HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
-const {
   developerTestAccountNamePrompt,
 } = require('../../lib/prompts/developerTestAccountNamePrompt');
 const {
   buildDeveloperTestAccount,
 } = require('../../lib/developerTestAccountCreate');
+const {
+  confirmDefaultAccountIsTarget,
+  suggestRecommendedNestedAccount,
+  createSandboxForLocalDev,
+} = require('../../lib/localDev');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -134,121 +117,23 @@ exports.handler = async options => {
   let createNewDeveloperTestAccount = false;
 
   if (!targetAccountId && defaultAccountIsRecommendedType) {
-    logger.log();
-    const useDefaultAccount = await confirmDefaultAccountPrompt(
-      accountConfig.name,
-      hasPublicApps
-        ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-        : `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
-    );
-
-    if (useDefaultAccount) {
-      targetAccountId = accountId;
-    } else {
-      logger.log(
-        i18n(`${i18nKey}.logs.declineDefaultAccountExplanation`, {
-          useCommand: uiCommandReference('hs accounts use'),
-          devCommand: uiCommandReference('hs project dev'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
+    confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
+    targetAccountId = accountId;
   }
 
-  // TODO: Somewhere around here we need to make sure user has a developer test account
-  // We also may need to make sure user
-
   if (!targetAccountId) {
-    logger.log();
-    uiLine();
-    if (hasPublicApps) {
-      logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
-    } else {
-      logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
-    }
-    uiLine();
-    logger.log();
-
-    const targetAccountPrompt = hasPublicApps
-      ? selectDeveloperTestTargetAccountPrompt
-      : selectSandboxTargetAccountPrompt;
-
     const {
-      targetAccountId: promptTargetAccountId,
+      targetAccountId: selectedTargetAccountId,
       createNestedAccount,
-    } = await targetAccountPrompt(accounts, accountConfig, hasPublicApps);
+    } = suggestRecommendedNestedAccount(accounts, accountConfig, hasPublicApps);
 
-    targetAccountId = promptTargetAccountId;
+    targetAccountId = selectedTargetAccountId;
     createNewSandbox = !hasPublicApps && createNestedAccount;
     createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
   }
 
   if (createNewSandbox) {
-    try {
-      await validateSandboxUsageLimits(
-        accountConfig,
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        env
-      );
-    } catch (err) {
-      if (isMissingScopeError(err)) {
-        logger.error(
-          i18n('cli.lib.sandbox.create.failure.scopes.message', {
-            accountName: accountConfig.name || accountId,
-          })
-        );
-        const websiteOrigin = getHubSpotWebsiteOrigin(env);
-        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-        logger.info(
-          i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
-            accountName: accountConfig.name || accountId,
-            url,
-          })
-        );
-      } else {
-        logErrorInstance(err);
-      }
-      process.exit(EXIT_CODES.ERROR);
-    }
-    try {
-      const { name } = await sandboxNamePrompt(
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-      );
-
-      trackCommandMetadataUsage(
-        'sandbox-create',
-        { step: 'project-dev' },
-        accountId
-      );
-
-      const { result } = await buildSandbox({
-        name,
-        type: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        accountConfig,
-        env,
-      });
-
-      targetAccountId = result.sandbox.sandboxHubId;
-
-      const sandboxAccountConfig = getAccountConfig(
-        result.sandbox.sandboxHubId
-      );
-      const syncTasks = await getAvailableSyncTypes(
-        accountConfig,
-        sandboxAccountConfig
-      );
-      await syncSandbox({
-        accountConfig: sandboxAccountConfig,
-        parentAccountConfig: accountConfig,
-        env,
-        syncTasks,
-        allowEarlyTermination: false, // Don't let user terminate early in this flow
-        skipPolling: true, // Skip polling, sync will run and complete in the background
-      });
-    } catch (err) {
-      logErrorInstance(err);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    targetAccountId = createSandboxForLocalDev(accountId, accountConfig, env);
   }
 
   if (createNewDeveloperTestAccount) {
