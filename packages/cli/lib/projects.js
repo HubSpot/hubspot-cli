@@ -478,12 +478,14 @@ const pollProjectBuildAndDeploy = async (
     logger.error(e);
   }
 
-  displayWarnLogs(
-    accountId,
-    projectConfig.name,
-    result.deployResult.deployId,
-    true
-  );
+  if (result && result.deployResult) {
+    displayWarnLogs(
+      accountId,
+      projectConfig.name,
+      result.deployResult.deployId,
+      true
+    );
+  }
   return result;
 };
 
