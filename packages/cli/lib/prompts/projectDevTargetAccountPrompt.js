@@ -21,6 +21,7 @@ const mapNestedAccount = accountConfig => ({
   value: {
     targetAccountId: getAccountId(accountConfig.name),
     createNestedAccount: false,
+    parentAccountId: accountConfig.parentAccountId,
   },
 });
 

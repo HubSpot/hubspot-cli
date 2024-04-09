@@ -102,8 +102,8 @@ exports.handler = async options => {
   let createNewDeveloperTestAccount = false;
 
   if (!targetAccountId && defaultAccountIsRecommendedType) {
-    confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
-    targetAccountId = accountId;
+    await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
+    targetAccountId = hasPublicApps ? accountConfig.parentAccountId : accountId;
   } else if (!targetAccountId) {
     checkCorrectParentAccountType(accountConfig, hasPublicApps);
   }
@@ -111,26 +111,31 @@ exports.handler = async options => {
   if (!targetAccountId) {
     const {
       targetAccountId: selectedTargetAccountId,
+      parentAccountId,
       createNestedAccount,
-    } = suggestRecommendedNestedAccount(accounts, accountConfig, hasPublicApps);
+    } = await suggestRecommendedNestedAccount(
+      accounts,
+      accountConfig,
+      hasPublicApps
+    );
 
-    targetAccountId = selectedTargetAccountId;
+    targetAccountId = hasPublicApps ? parentAccountId : selectedTargetAccountId;
     createNewSandbox = !hasPublicApps && createNestedAccount;
     createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
   }
 
   if (createNewSandbox) {
-    targetAccountId = createSandboxForLocalDev(accountId, accountConfig, env);
-  }
-  if (createNewDeveloperTestAccount) {
-    targetAccountId = createDeveloperTestAccountForLocalDev(
+    targetAccountId = await createSandboxForLocalDev(
       accountId,
       accountConfig,
       env
     );
   }
+  if (createNewDeveloperTestAccount) {
+    await createDeveloperTestAccountForLocalDev(accountId, accountConfig, env);
+    targetAccountId = accountId;
+  }
 
-  logger.log();
   const projectExists = await ensureProjectExists(
     targetAccountId,
     projectConfig.name,

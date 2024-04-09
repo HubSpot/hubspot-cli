@@ -33,7 +33,7 @@ const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine } = require('./ui');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { trackCommandMetadataUsage } = require('./lib/usageTracking');
+const { trackCommandMetadataUsage } = require('./usageTracking');
 const { isAppDeveloperAccount } = require('./accountTypes');
 
 // TODO: Maybe give these to their own lang key
@@ -63,7 +63,7 @@ const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
 
 // Confirm the default account supports the creation of the recommended nested account type
 // Exit if not
-const checkCorrectParentAccountType = async (accountConfig, hasPublicApps) => {
+const checkCorrectParentAccountType = (accountConfig, hasPublicApps) => {
   if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
     logger.error(i18n(`${i18nKey}.errors.standardAccountNotSupported`));
     process.exit(EXIT_CODES.SUCCESS);
