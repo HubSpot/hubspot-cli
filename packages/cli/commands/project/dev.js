@@ -44,7 +44,8 @@ const {
 } = require('../../lib/prompts/projectDevTargetAccountPrompt');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
-const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
+const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
+const { getSandboxTypeAsString } = require('../../lib/sandboxes');
 const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
   validateSandboxUsageLimits,
@@ -75,7 +76,6 @@ const {
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
 const {
-  isDeveloperTestAccount,
   validateDevTestAccountUsageLimits,
 } = require('../../lib/developerTestAccounts');
 const {
@@ -154,6 +154,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   }
+
+  // TODO: Somewhere around here we need to make sure user has a developer test account
+  // We also may need to make sure user
 
   if (!targetAccountId) {
     logger.log();
