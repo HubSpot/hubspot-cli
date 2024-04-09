@@ -16,17 +16,25 @@ const {
 } = require('./prompts/projectDevTargetAccountPrompt');
 const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
 const {
+  developerTestAccountNamePrompt,
+} = require('./prompts/developerTestAccountNamePrompt');
+const {
   validateSandboxUsageLimits,
   getSandboxTypeAsString,
   getAvailableSyncTypes,
 } = require('./sandboxes');
-const { buildSandbox } = require('./lib/sandboxCreate');
-const { syncSandbox } = require('./lib/sandboxSync');
+const { buildSandbox } = require('./sandboxCreate');
+const { syncSandbox } = require('./sandboxSync');
+const {
+  validateDevTestAccountUsageLimits,
+} = require('./developerTestAccounts');
+const { buildDeveloperTestAccount } = require('./developerTestAccountCreate');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine } = require('./ui');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { trackCommandMetadataUsage } = require('./lib/usageTracking');
+const { isAppDeveloperAccount } = require('./accountTypes');
 
 // TODO: Maybe give these to their own lang key
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -49,6 +57,19 @@ const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
         devCommand: uiCommandReference('hs project dev'),
       })
     );
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account supports the creation of the recommended nested account type
+// Exit if not
+const checkCorrectParentAccountType = async (accountConfig, hasPublicApps) => {
+  if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
+    logger.error(i18n(`${i18nKey}.errors.standardAccountNotSupported`));
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+  if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
+    logger.error(i18n(`${i18nKey}.errors.appDeveloperAccountNotSupported`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -144,8 +165,74 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
   }
 };
 
+// Create a developer test account and return its accountId
+const createDeveloperTestAccountForLocalDev = async (
+  accountId,
+  accountConfig,
+  env
+) => {
+  let currentPortalCount = 0;
+  let maxTestPortals = 10;
+  try {
+    const validateResult = await validateDevTestAccountUsageLimits(
+      accountConfig
+    );
+    if (validateResult) {
+      currentPortalCount = validateResult.results
+        ? validateResult.results.length
+        : 0;
+      maxTestPortals = validateResult.maxTestPortals;
+    }
+  } catch (err) {
+    if (isMissingScopeError(err)) {
+      logger.error(
+        i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
+          accountName: accountConfig.name || accountId,
+        })
+      );
+      const websiteOrigin = getHubSpotWebsiteOrigin(env);
+      const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+      logger.info(
+        i18n(
+          'cli.lib.developerTestAccount.create.failure.scopes.instructions',
+          {
+            accountName: accountConfig.name || accountId,
+            url,
+          }
+        )
+      );
+    } else {
+      logErrorInstance(err);
+    }
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  try {
+    const { name } = await developerTestAccountNamePrompt(currentPortalCount);
+    trackCommandMetadataUsage(
+      'developer-test-account-create',
+      { step: 'project-dev' },
+      accountId
+    );
+
+    const { result } = await buildDeveloperTestAccount({
+      name,
+      accountConfig,
+      env,
+      maxTestPortals,
+    });
+
+    return result.id;
+  } catch (err) {
+    logErrorInstance(err);
+    process.exit(EXIT_CODES.ERROR);
+  }
+};
+
 module.exports = {
   confirmDefaultAccountIsTarget,
+  checkCorrectParentAccountType,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
+  createDeveloperTestAccountForLocalDev,
 };

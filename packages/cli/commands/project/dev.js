@@ -5,10 +5,7 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const {
-  trackCommandUsage,
-  trackCommandMetadataUsage,
-} = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
@@ -42,34 +39,22 @@ const {
   PROJECT_ERROR_TYPES,
 } = require('../../lib/constants');
 
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const {
-  isMissingScopeError,
-  isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
   findProjectComponents,
   getProjectComponentTypes,
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
 const {
-  validateDevTestAccountUsageLimits,
-} = require('../../lib/developerTestAccounts');
-const {
-  developerTestAccountNamePrompt,
-} = require('../../lib/prompts/developerTestAccountNamePrompt');
-const {
-  buildDeveloperTestAccount,
-} = require('../../lib/developerTestAccountCreate');
-const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
+  checkCorrectParentAccountType,
   createSandboxForLocalDev,
+  createDeveloperTestAccountForLocalDev,
 } = require('../../lib/localDev');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -119,6 +104,8 @@ exports.handler = async options => {
   if (!targetAccountId && defaultAccountIsRecommendedType) {
     confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
     targetAccountId = accountId;
+  } else if (!targetAccountId) {
+    checkCorrectParentAccountType(accountConfig, hasPublicApps);
   }
 
   if (!targetAccountId) {
@@ -135,64 +122,12 @@ exports.handler = async options => {
   if (createNewSandbox) {
     targetAccountId = createSandboxForLocalDev(accountId, accountConfig, env);
   }
-
   if (createNewDeveloperTestAccount) {
-    let currentPortalCount = 0;
-    let maxTestPortals = 10;
-    try {
-      const validateResult = await validateDevTestAccountUsageLimits(
-        accountConfig
-      );
-      if (validateResult) {
-        currentPortalCount = validateResult.results
-          ? validateResult.results.length
-          : 0;
-        maxTestPortals = validateResult.maxTestPortals;
-      }
-    } catch (err) {
-      if (isMissingScopeError(err)) {
-        logger.error(
-          i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
-            accountName: accountConfig.name || accountId,
-          })
-        );
-        const websiteOrigin = getHubSpotWebsiteOrigin(env);
-        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-        logger.info(
-          i18n(
-            'cli.lib.developerTestAccount.create.failure.scopes.instructions',
-            {
-              accountName: accountConfig.name || accountId,
-              url,
-            }
-          )
-        );
-      } else {
-        logErrorInstance(err);
-      }
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    try {
-      const { name } = await developerTestAccountNamePrompt(currentPortalCount);
-      trackCommandMetadataUsage(
-        'developer-test-account-create',
-        { step: 'project-dev' },
-        accountId
-      );
-
-      const { result } = await buildDeveloperTestAccount({
-        name,
-        accountConfig,
-        env,
-        maxTestPortals,
-      });
-
-      targetAccountId = result.id;
-    } catch (err) {
-      logErrorInstance(err);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    targetAccountId = createDeveloperTestAccountForLocalDev(
+      accountId,
+      accountConfig,
+      env
+    );
   }
 
   logger.log();

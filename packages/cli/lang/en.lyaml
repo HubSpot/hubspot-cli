@@ -492,6 +492,8 @@ en:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
               invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+              standardAccountNotSupported: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+              appDeveloperAccountNotSupported: "Your current default account is a Developer Account. To develop this project locally, switch to a standard account using using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
             examples:
               default: "Start local dev for the current project"
           create:
