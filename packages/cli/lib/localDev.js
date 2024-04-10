@@ -5,9 +5,11 @@ const {
 } = require('@hubspot/local-dev-lib/constants/config');
 const {
   isMissingScopeError,
+  isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { createProject } = require('@hubspot/local-dev-lib/api/projects');
 
 const {
   confirmDefaultAccountPrompt,
@@ -18,6 +20,7 @@ const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
 const {
   developerTestAccountNamePrompt,
 } = require('./prompts/developerTestAccountNamePrompt');
+const { confirmPrompt } = require('./prompts/promptUtils');
 const {
   validateSandboxUsageLimits,
   getSandboxTypeAsString,
@@ -30,11 +33,25 @@ const {
 } = require('./developerTestAccounts');
 const { buildDeveloperTestAccount } = require('./developerTestAccountCreate');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
-const { uiCommandReference, uiLine } = require('./ui');
+const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
+const SpinniesManager = require('./ui/SpinniesManager');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { trackCommandMetadataUsage } = require('./usageTracking');
 const { isAppDeveloperAccount } = require('./accountTypes');
+const {
+  handleProjectUpload,
+  pollProjectBuildAndDeploy,
+} = require('./projects');
+const {
+  PROJECT_ERROR_TYPES,
+  PROJECT_BUILD_TEXT,
+  PROJECT_DEPLOY_TEXT,
+} = require('./constants');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('./errorHandlers/apiErrors');
 
 // TODO: Maybe give these to their own lang key
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -229,10 +246,131 @@ const createDeveloperTestAccountForLocalDev = async (
   }
 };
 
+// Prompt the user to create a new project if one doesn't exist on their target account
+const createNewProjectForLocalDev = async (
+  projectConfig,
+  targetAccountId,
+  shouldCreateWithoutConfirmation
+) => {
+  // Create the project without prompting if this is a newly created sandbox
+  let shouldCreateProject = shouldCreateWithoutConfirmation;
+
+  if (!shouldCreateProject) {
+    logger.log();
+    uiLine();
+    logger.warn(
+      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      })
+    );
+    uiLine();
+
+    shouldCreateProject = await confirmPrompt(
+      i18n(`${i18nKey}.prompt.createProject`, {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      })
+    );
+  }
+
+  if (shouldCreateProject) {
+    SpinniesManager.add('createProject', {
+      text: i18n(`${i18nKey}.status.creatingProject`, {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      }),
+    });
+
+    try {
+      await createProject(targetAccountId, projectConfig.name);
+      SpinniesManager.succeed('createProject', {
+        text: i18n(`${i18nKey}.status.createdProject`, {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        }),
+        succeedColor: 'white',
+      });
+    } catch (err) {
+      SpinniesManager.fail('createProject');
+      logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } else {
+    // We cannot continue if the project does not exist in the target account
+    logger.log();
+    logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Create an initial build if the project was newly created in the account
+// Return the newly deployed build
+const createInitialBuildForNewProject = async (
+  projectConfig,
+  projectDir,
+  targetAccountId
+) => {
+  const initialUploadResult = await handleProjectUpload(
+    targetAccountId,
+    projectConfig,
+    projectDir,
+    (...args) => pollProjectBuildAndDeploy(...args, true),
+    i18n(`${i18nKey}.logs.initialUploadMessage`)
+  );
+
+  if (initialUploadResult.uploadError) {
+    if (
+      isSpecifiedError(initialUploadResult.uploadError, {
+        subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
+      })
+    ) {
+      logger.log();
+      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+      logger.log();
+    } else {
+      logApiErrorInstance(
+        initialUploadResult.uploadError,
+        new ApiErrorContext({
+          accountId: targetAccountId,
+          projectName: projectConfig.name,
+        })
+      );
+    }
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!initialUploadResult.succeeded) {
+    let subTasks = [];
+
+    if (initialUploadResult.buildResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
+    } else if (initialUploadResult.deployResult.status === 'FAILURE') {
+      subTasks =
+        initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
+    }
+
+    const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
+
+    logger.log();
+    failedSubTasks.forEach(failedSubTask => {
+      console.error(failedSubTask.errorMessage);
+    });
+    logger.log();
+
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  return initialUploadResult.buildResult;
+};
+
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkCorrectParentAccountType,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
+  createNewProjectForLocalDev,
+  createInitialBuildForNewProject,
 };
