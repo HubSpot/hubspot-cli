@@ -146,15 +146,13 @@ exports.handler = async options => {
   SpinniesManager.init();
 
   if (!projectExists) {
-    createNewProjectForLocalDev(
+    await createNewProjectForLocalDev(
       projectConfig,
       targetAccountId,
       createNewSandbox
     );
-  }
 
-  if (!projectExists) {
-    deployedBuild = createInitialBuildForNewProject(
+    deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
       targetAccountId
