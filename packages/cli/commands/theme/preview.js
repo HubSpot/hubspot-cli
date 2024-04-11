@@ -15,14 +15,16 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { previewPrompt } = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { FileUploadResultType } = require('@hubspot/cli-lib/lib/uploadFolder');
-const i18nKey = 'cli.commands.preview';
 const cliProgress = require('cli-progress');
 const {
   ApiErrorContext,
   logApiUploadErrorInstance,
 } = require('../../lib/errorHandlers/apiErrors');
 const { handleExit, handleKeypress } = require('../../lib/process');
+const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
+const { getIsInProject, getProjectConfig } = require('../../lib/projects');
 
+const i18nKey = 'cli.commands.preview';
 exports.command = 'preview [--src] [--dest]';
 exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
 
@@ -68,17 +70,32 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const previewPromptAnswers = await previewPrompt(options);
-  const src = options.src || previewPromptAnswers.src;
-  let dest = options.dest || previewPromptAnswers.dest;
-  if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
-    return;
-  }
+  let absoluteSrc;
+  let dest;
+  if (!getIsInProject()) {
+    const previewPromptAnswers = await previewPrompt(options);
+    const src = options.src || previewPromptAnswers.src;
+    let dest = options.dest || previewPromptAnswers.dest;
+    if (!dest) {
+      logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
+      return;
+    }
 
-  const absoluteSrc = path.resolve(getCwd(), src);
-  if (!validateSrcPath(absoluteSrc)) {
-    process.exit(EXIT_CODES.ERROR);
+    absoluteSrc = path.resolve(getCwd(), src);
+    if (!validateSrcPath(absoluteSrc)) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } else {
+    const { projectConfig } = await getProjectConfig();
+    const themeJsonPath = getThemeJSONPath();
+    if (!themeJsonPath) {
+      logger.error(i18n(`${i18nKey}.errors.mustBeUsedInTheme`));
+      return;
+    }
+    const { dir: themeDir } = path.parse(themeJsonPath);
+    absoluteSrc = themeDir;
+    const { base: themeName } = path.parse(themeDir);
+    dest = `@project/${projectConfig.name}/${themeName}`;
   }
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);

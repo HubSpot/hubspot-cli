@@ -893,6 +893,8 @@ en:
         describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
         errors:
           invalidPath: "The path \"{{ path }}\" is not a path to a directory"
+          destinationRequired: "A destination must be provided"
+          mustBeUsedInTheme: "To preview a theme built as a project theme component, run within the theme directory."
         options:
           src:
             describe: "Path to the local directory your theme is in, relative to your current working directory"
