@@ -5,7 +5,7 @@ const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { addRequestHeader } = require('@hubspot/local-dev-lib/http');
+const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
@@ -112,7 +112,7 @@ const performChecks = argv => {
 };
 
 const setRequestHeaders = () => {
-  addRequestHeader('X-Parent-User-Agent', `HubSpot CLI/${pkg.version}`);
+  addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
 const argv = yargs
