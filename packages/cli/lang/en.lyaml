@@ -475,25 +475,10 @@ en:
             describe: "Start local dev for the current project"
             logs:
               betaMessage: "HubSpot projects local development"
-              nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
-              nonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
               placeholderAccountSelection: "Using default account as target account (for now)"
-              projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
-              choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
-              initialUploadMessage: "HubSpot Local Dev Server Startup"
-              declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-            status:
-              creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
-              createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
-              failedToCreateProject: "Failed to create project in the target account."
-            prompt:
-              createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
-              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
               invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
-              standardAccountNotSupported: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
-              appDeveloperAccountNotSupported: "Your current default account is a Developer Account. To develop this project locally, switch to a standard account using using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -956,6 +941,25 @@ en:
           setupError: "Failed to setup local dev server: {{ message }}"
           startError: "Failed to start local dev server: {{ message }}"
           fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
+      localDev:
+        confirmDefaultAccountIsTarget:
+          declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
+        checkCorrectParentAccountType:
+          standardAccountNotSupported: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+          appDeveloperAccountNotSupported: "Your current default account is a Developer Account. To develop this project locally, switch to a standard account using using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+        suggestRecommendedNestedAccount:
+          nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
+          nonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
+        createNewProjectForLocalDev:
+          projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
+          createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
+          choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
+          creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
+          createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
+          failedToCreateProject: "Failed to create project in the target account."
+        createInitialBuildForNewProject:
+          initialUploadMessage: "HubSpot Local Dev Server Startup"
+          projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
       projects:
         config:
           srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""

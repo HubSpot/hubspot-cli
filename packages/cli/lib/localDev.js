@@ -53,8 +53,7 @@ const {
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
 
-// TODO: Maybe give these to their own lang key
-const i18nKey = 'cli.commands.project.subcommands.dev';
+const i18nKey = 'cli.lib.localDev';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
@@ -69,10 +68,13 @@ const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
 
   if (!useDefaultAccount) {
     logger.log(
-      i18n(`${i18nKey}.logs.declineDefaultAccountExplanation`, {
-        useCommand: uiCommandReference('hs accounts use'),
-        devCommand: uiCommandReference('hs project dev'),
-      })
+      i18n(
+        `${i18nKey}.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
+        {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        }
+      )
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -82,11 +84,19 @@ const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
 // Exit if not
 const checkCorrectParentAccountType = (accountConfig, hasPublicApps) => {
   if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.errors.standardAccountNotSupported`));
+    logger.error(
+      i18n(
+        `${i18nKey}.checkCorrectParentAccountType.standardAccountNotSupported`
+      )
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
   if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.errors.appDeveloperAccountNotSupported`));
+    logger.error(
+      i18n(
+        `${i18nKey}.checkCorrectParentAccountType.appDeveloperAccountNotSupported`
+      )
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -100,9 +110,15 @@ const suggestRecommendedNestedAccount = async (
   logger.log();
   uiLine();
   if (hasPublicApps) {
-    logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
+    logger.warn(
+      i18n(
+        `${i18nKey}.suggestRecommendedNestedAccount.nonDeveloperTestAccountWarning`
+      )
+    );
   } else {
-    logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
+    logger.warn(
+      i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
+    );
   }
   uiLine();
   logger.log();
@@ -259,15 +275,18 @@ const createNewProjectForLocalDev = async (
     logger.log();
     uiLine();
     logger.warn(
-      i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
-        accountIdentifier: uiAccountDescription(targetAccountId),
-        projectName: projectConfig.name,
-      })
+      i18n(
+        `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
+        {
+          accountIdentifier: uiAccountDescription(targetAccountId),
+          projectName: projectConfig.name,
+        }
+      )
     );
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
-      i18n(`${i18nKey}.prompt.createProject`, {
+      i18n(`${i18nKey}.createNewProjectForLocalDev.createProject`, {
         accountIdentifier: uiAccountDescription(targetAccountId),
         projectName: projectConfig.name,
       })
@@ -276,7 +295,7 @@ const createNewProjectForLocalDev = async (
 
   if (shouldCreateProject) {
     SpinniesManager.add('createProject', {
-      text: i18n(`${i18nKey}.status.creatingProject`, {
+      text: i18n(`${i18nKey}.createNewProjectForLocalDev.creatingProject`, {
         accountIdentifier: uiAccountDescription(targetAccountId),
         projectName: projectConfig.name,
       }),
@@ -285,7 +304,7 @@ const createNewProjectForLocalDev = async (
     try {
       await createProject(targetAccountId, projectConfig.name);
       SpinniesManager.succeed('createProject', {
-        text: i18n(`${i18nKey}.status.createdProject`, {
+        text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
           projectName: projectConfig.name,
         }),
@@ -293,13 +312,17 @@ const createNewProjectForLocalDev = async (
       });
     } catch (err) {
       SpinniesManager.fail('createProject');
-      logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
+      logger.log(
+        i18n(`${i18nKey}.createNewProjectForLocalDev.failedToCreateProject`)
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     // We cannot continue if the project does not exist in the target account
     logger.log();
-    logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
+    logger.log(
+      i18n(`${i18nKey}.createNewProjectForLocalDev.choseNotToCreateProject`)
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -316,7 +339,7 @@ const createInitialBuildForNewProject = async (
     projectConfig,
     projectDir,
     (...args) => pollProjectBuildAndDeploy(...args, true),
-    i18n(`${i18nKey}.logs.initialUploadMessage`)
+    i18n(`${i18nKey}.createInitialBuildForNewProject.initialUploadMessage`)
   );
 
   if (initialUploadResult.uploadError) {
@@ -326,7 +349,9 @@ const createInitialBuildForNewProject = async (
       })
     ) {
       logger.log();
-      logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
+      logger.error(
+        i18n(`${i18nKey}.createInitialBuildForNewProject.projectLockedError`)
+      );
       logger.log();
     } else {
       logApiErrorInstance(
