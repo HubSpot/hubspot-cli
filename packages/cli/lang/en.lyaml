@@ -476,6 +476,7 @@ en:
             logs:
               betaMessage: "HubSpot projects local development"
               nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
+              nonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
               placeholderAccountSelection: "Using default account as target account (for now)"
               projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
               choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
@@ -1065,10 +1066,12 @@ en:
       prompts:
         projectDevTargetAccountPrompt:
           createNewSandboxOption: "<Test on a new development sandbox>"
+          createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
           chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
-          promptMessage: "[--account] Choose a sandbox under {{ accountIdentifier }} to test with:"
+          promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
           sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
           sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
+          developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
           confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         projectLogsPrompt:
           projectName:
@@ -1150,6 +1153,13 @@ en:
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
             noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
             missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+        developerTestAccountPrompt:
+          name:
+            message: "Name your developer test account"
+            errors:
+              invalidName: "You entered an invalid name. Please try again."
+              nameRequired: "The name may not be blank. Please try again."
+              accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
         downloadProjectPrompt:
           selectProject: "Select a project to download:"
           errors:
@@ -1217,6 +1227,25 @@ en:
         options:
           options:
             describe: "Options to pass to javascript fields files"
+      developerTestAccount:
+        create:
+          loading:
+            add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+          success:
+            configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
+          failure:
+            invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+            limit: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+              \n- To connect a developer test account to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+            alreadyInConfig: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+              \n- To use an existing developer test account, run {{#bold}}hs accounts use{{/bold}}."
+            scopes:
+              message: "The personal access key you provided doesn't include developer test account permissions."
+              instructions: "To update CLI permissions for \"{{ accountName }}\":
+                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes developer test account permissions.
+                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
       sandbox:
         create:
           loading:
@@ -1232,7 +1261,7 @@ en:
             configFileUpdated: "{{ configFilename }} updated with {{ authMethod }} for account {{ account }}."
           failure:
             invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
-            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
             limit:
               developer:
                 one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
@@ -1336,7 +1365,7 @@ en:
             400: "The {{ messageDetail }} was bad."
             401: "The {{ messageDetail }} was unauthorized."
             403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/whats-new/betas?productUpdateId=13860216."
+            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
             403: "The {{ messageDetail }} was forbidden."
             404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
             404: "The {{ messageDetail }} was not found."

@@ -16,6 +16,7 @@ const {
   logFeedbackMessage,
   validateProjectConfig,
   pollProjectBuildAndDeploy,
+  displayWarnLogs,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -91,6 +92,8 @@ exports.handler = async options => {
       );
       uiLine();
       logFeedbackMessage(result.buildId);
+
+      displayWarnLogs(accountId, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
