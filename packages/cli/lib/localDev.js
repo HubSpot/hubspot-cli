@@ -38,7 +38,10 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const { i18n } = require('./lang');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { trackCommandMetadataUsage } = require('./usageTracking');
-const { isAppDeveloperAccount } = require('./accountTypes');
+const {
+  isAppDeveloperAccount,
+  isDeveloperTestAccount,
+} = require('./accountTypes');
 const {
   handleProjectUpload,
   pollProjectBuildAndDeploy,
@@ -57,11 +60,11 @@ const i18nKey = 'cli.lib.localDev';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
-const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
+const confirmDefaultAccountIsTarget = async accountConfig => {
   logger.log();
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
-    hasPublicApps
+    isDeveloperTestAccount(accountConfig)
       ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
       : `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
   );

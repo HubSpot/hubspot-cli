@@ -25,7 +25,12 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiBetaTag } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
-const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
+const {
+  isSandbox,
+  isDeveloperTestAccount,
+  isStandardAccount,
+  isAppDeveloperAccount,
+} = require('../../lib/accountTypes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 
 const {
@@ -80,7 +85,8 @@ exports.handler = async options => {
   const accounts = getConfigAccounts();
 
   const defaultAccountIsRecommendedType =
-    isDeveloperTestAccount || (!hasPublicApps && isSandbox(accountConfig));
+    isDeveloperTestAccount(accountConfig) ||
+    (!hasPublicApps && isSandbox(accountConfig));
 
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
@@ -105,8 +111,9 @@ exports.handler = async options => {
     );
 
     targetAccountId = hasPublicApps ? parentAccountId : selectedTargetAccountId;
-    createNewSandbox = !hasPublicApps && createNestedAccount;
-    createNewDeveloperTestAccount = hasPublicApps && createNestedAccount;
+    createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
+    createNewDeveloperTestAccount =
+      isAppDeveloperAccount(accountConfig) && createNestedAccount;
   }
 
   if (createNewSandbox) {
