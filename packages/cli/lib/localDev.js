@@ -80,21 +80,12 @@ const confirmDefaultAccountIsTarget = async (accountConfig, hasPublicApps) => {
   }
 };
 
-// Confirm the default account supports the creation of the recommended nested account type
-// Exit if not
-const checkCorrectParentAccountType = (accountConfig, hasPublicApps) => {
-  if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
+// Confirm the default account is a developer account if developing public apps
+const checkIfAppDeveloperAccount = accountConfig => {
+  if (!isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(
         `${i18nKey}.checkCorrectParentAccountType.standardAccountNotSupported`
-      )
-    );
-    process.exit(EXIT_CODES.SUCCESS);
-  }
-  if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.checkCorrectParentAccountType.appDeveloperAccountNotSupported`
       )
     );
     process.exit(EXIT_CODES.SUCCESS);
@@ -112,7 +103,13 @@ const suggestRecommendedNestedAccount = async (
   if (hasPublicApps) {
     logger.warn(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.nonDeveloperTestAccountWarning`
+        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+      )
+    );
+  } else if (isAppDeveloperAccount(accountConfig)) {
+    logger.warn(
+      i18n(
+        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else {
@@ -123,7 +120,7 @@ const suggestRecommendedNestedAccount = async (
   uiLine();
   logger.log();
 
-  const targetAccountPrompt = hasPublicApps
+  const targetAccountPrompt = isAppDeveloperAccount(accountConfig)
     ? selectDeveloperTestTargetAccountPrompt
     : selectSandboxTargetAccountPrompt;
 
@@ -392,7 +389,7 @@ const createInitialBuildForNewProject = async (
 
 module.exports = {
   confirmDefaultAccountIsTarget,
-  checkCorrectParentAccountType,
+  checkIfAppDeveloperAccount,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,

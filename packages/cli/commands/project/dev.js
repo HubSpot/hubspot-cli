@@ -36,7 +36,7 @@ const {
 const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
-  checkCorrectParentAccountType,
+  checkIfAppDeveloperAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
@@ -79,9 +79,8 @@ exports.handler = async options => {
 
   const accounts = getConfigAccounts();
 
-  const defaultAccountIsRecommendedType = hasPublicApps
-    ? isDeveloperTestAccount(accountConfig)
-    : isSandbox(accountConfig);
+  const defaultAccountIsRecommendedType =
+    isDeveloperTestAccount || (!hasPublicApps && isSandbox(accountConfig));
 
   let targetAccountId = options.account ? accountId : null;
   let createNewSandbox = false;
@@ -90,8 +89,8 @@ exports.handler = async options => {
   if (!targetAccountId && defaultAccountIsRecommendedType) {
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
     targetAccountId = hasPublicApps ? accountConfig.parentAccountId : accountId;
-  } else if (!targetAccountId) {
-    checkCorrectParentAccountType(accountConfig, hasPublicApps);
+  } else if (!targetAccountId && hasPublicApps) {
+    checkIfAppDeveloperAccount(accountConfig);
   }
 
   if (!targetAccountId) {

@@ -946,10 +946,10 @@ en:
           declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
         checkCorrectParentAccountType:
           standardAccountNotSupported: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
-          appDeveloperAccountNotSupported: "Your current default account is a Developer Account. To develop this project locally, switch to a standard account using using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
         suggestRecommendedNestedAccount:
           nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
-          nonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
+          publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
+          privateAppNonDeveloperTestAccountWarning: "Local development of private apps is only supported in {{#bold}}developer test accounts{{/bold}}"
         createNewProjectForLocalDev:
           projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
           createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
