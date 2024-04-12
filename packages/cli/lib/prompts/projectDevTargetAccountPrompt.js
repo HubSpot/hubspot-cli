@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
-const { isSandbox } = require('../accountTypes');
+const { isSandbox, isDeveloperTestAccount } = require('../accountTypes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
 const {
@@ -12,7 +12,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchDeveloperTestAccounts,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
-const { isDeveloperTestAccount } = require('../accountTypes');
 
 const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
 
