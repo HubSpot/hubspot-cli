@@ -16,7 +16,6 @@ const { getProjectDetailUrl } = require('./projects');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
-  findProjectComponents,
   getAppCardConfigs,
 } = require('./projectStructure');
 const {
@@ -47,6 +46,7 @@ class LocalDevManager {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
+    this.runnableComponents = this.getRunnableComponents(options.components);
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -57,6 +57,27 @@ class LocalDevManager {
       logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
+
+    // The project is empty, there is nothing to run locally
+    if (!options.components.length) {
+      logger.error(i18n(`${i18nKey}.noComponents`));
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
+    // The project does not contain any components that support local development
+    if (!this.runnableComponents.length) {
+      logger.error(
+        i18n(`${i18nKey}.noRunnableComponents`, {
+          projectSourceDir: this.projectSourceDir,
+          command: uiCommandReference('hs project add'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  }
+
+  getRunnableComponents(components) {
+    return components.filter(component => component.runnable);
   }
 
   async start() {
@@ -75,30 +96,7 @@ class LocalDevManager {
       process.exit(EXIT_CODES.SUCCESS);
     }
 
-    const components = await findProjectComponents(this.projectSourceDir);
-
-    // The project is empty, there is nothing to run locally
-    if (!components.length) {
-      logger.error(i18n(`${i18nKey}.noComponents`));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-
-    const runnableComponents = components.filter(
-      component => component.runnable
-    );
-
-    // The project does not contain any components that support local development
-    if (!runnableComponents.length) {
-      logger.error(
-        i18n(`${i18nKey}.noRunnableComponents`, {
-          projectSourceDir: this.projectSourceDir,
-          command: uiCommandReference('hs project add'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-
-    const setupSucceeded = await this.devServerSetup(runnableComponents);
+    const setupSucceeded = await this.devServerSetup();
 
     if (!setupSucceeded) {
       process.exit(EXIT_CODES.ERROR);
@@ -130,7 +128,7 @@ class LocalDevManager {
     await this.devServerStart();
 
     // Initialize project file watcher to detect configuration file changes
-    this.startWatching(runnableComponents);
+    this.startWatching();
 
     this.updateKeypressListeners();
 
@@ -138,7 +136,7 @@ class LocalDevManager {
 
     // Verify that there are no mismatches between components in the local project
     // and components in the deployed build of the project.
-    this.compareLocalProjectToDeployed(runnableComponents);
+    this.compareLocalProjectToDeployed();
   }
 
   async stop(showProgress = true) {
@@ -235,14 +233,14 @@ class LocalDevManager {
     }.bind(this);
   }
 
-  compareLocalProjectToDeployed(runnableComponents) {
+  compareLocalProjectToDeployed() {
     const deployedComponentNames = this.deployedBuild.subbuildStatuses.map(
       subbuildStatus => subbuildStatus.buildName
     );
 
     let missingComponents = [];
 
-    runnableComponents.forEach(({ type, config, path }) => {
+    this.runnableComponents.forEach(({ type, config, path }) => {
       if (Object.values(COMPONENT_TYPES).includes(type)) {
         const cardConfigs = getAppCardConfigs(config, path);
 
@@ -277,12 +275,12 @@ class LocalDevManager {
     }
   }
 
-  startWatching(runnableComponents) {
+  startWatching() {
     this.watcher = chokidar.watch(this.projectDir, {
       ignoreInitial: true,
     });
 
-    const configPaths = runnableComponents
+    const configPaths = this.runnableComponents
       .filter(({ type }) => Object.values(COMPONENT_TYPES).includes(type))
       .map(component => {
         const appConfigPath = path.join(
@@ -321,10 +319,10 @@ class LocalDevManager {
     }
   }
 
-  async devServerSetup(components) {
+  async devServerSetup() {
     try {
       await DevServerManager.setup({
-        components,
+        components: this.runnableComponents,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
       });

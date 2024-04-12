@@ -5,7 +5,7 @@ const { uiAccountDescription } = require('../ui');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { isSandbox } = require('../sandboxes');
+const { isSandbox } = require('../accountTypes');
 
 const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
 

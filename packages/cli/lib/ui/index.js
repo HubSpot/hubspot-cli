@@ -3,11 +3,12 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
-const { isSandbox, getSandboxName } = require('../sandboxes');
 const {
+  isSandbox,
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-} = require('../developerTestAccounts');
+} = require('../accountTypes');
+const { getSandboxName } = require('../sandboxes');
 const { i18n } = require('../lang');
 
 const {
