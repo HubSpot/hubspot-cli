@@ -130,6 +130,8 @@ exports.handler = async options => {
       accountConfig,
       env
     );
+    // We will be running our tests against this new sandbox account
+    targetTestingAccountId = targetProjectAccountId;
   }
   if (createNewDeveloperTestAccount) {
     targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
