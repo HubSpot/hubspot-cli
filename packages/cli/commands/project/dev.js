@@ -88,20 +88,26 @@ exports.handler = async options => {
     isDeveloperTestAccount(accountConfig) ||
     (!hasPublicApps && isSandbox(accountConfig));
 
-  let targetAccountId = options.account ? accountId : null;
+  // The account that the project must exist in
+  let targetProjectAccountId = options.account ? accountId : null;
+  // The account that we are locally testing against
+  let targetTestingAccountId = targetProjectAccountId;
+
   let createNewSandbox = false;
   let createNewDeveloperTestAccount = false;
 
-  if (!targetAccountId && defaultAccountIsRecommendedType) {
+  if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
-    targetAccountId = hasPublicApps ? accountConfig.parentAccountId : accountId;
-  } else if (!targetAccountId && hasPublicApps) {
+    targetProjectAccountId = hasPublicApps
+      ? accountConfig.parentAccountId
+      : accountId;
+  } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
 
-  if (!targetAccountId) {
+  if (!targetProjectAccountId) {
     const {
-      targetAccountId: selectedTargetAccountId,
+      targetAccountId,
       parentAccountId,
       createNestedAccount,
     } = await suggestRecommendedNestedAccount(
@@ -110,26 +116,31 @@ exports.handler = async options => {
       hasPublicApps
     );
 
-    targetAccountId = hasPublicApps ? parentAccountId : selectedTargetAccountId;
+    targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
+    targetTestingAccountId = targetAccountId;
+
     createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
     createNewDeveloperTestAccount =
       isAppDeveloperAccount(accountConfig) && createNestedAccount;
   }
 
   if (createNewSandbox) {
-    targetAccountId = await createSandboxForLocalDev(
+    targetProjectAccountId = await createSandboxForLocalDev(
       accountId,
       accountConfig,
       env
     );
   }
   if (createNewDeveloperTestAccount) {
-    await createDeveloperTestAccountForLocalDev(accountId, accountConfig, env);
-    targetAccountId = accountId;
+    targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+      accountId,
+      accountConfig,
+      env
+    );
   }
 
   const projectExists = await ensureProjectExists(
-    targetAccountId,
+    targetProjectAccountId,
     projectConfig.name,
     {
       allowCreate: false,
@@ -142,7 +153,10 @@ exports.handler = async options => {
   let isGithubLinked;
 
   if (projectExists) {
-    const project = await fetchProject(targetAccountId, projectConfig.name);
+    const project = await fetchProject(
+      targetProjectAccountId,
+      projectConfig.name
+    );
     deployedBuild = project.deployedBuild;
     isGithubLinked =
       project.sourceIntegration &&
@@ -154,14 +168,14 @@ exports.handler = async options => {
   if (!projectExists) {
     await createNewProjectForLocalDev(
       projectConfig,
-      targetAccountId,
+      targetProjectAccountId,
       createNewSandbox
     );
 
     deployedBuild = await createInitialBuildForNewProject(
       projectConfig,
       projectDir,
-      targetAccountId
+      targetProjectAccountId
     );
   }
 
@@ -170,7 +184,7 @@ exports.handler = async options => {
     deployedBuild,
     projectConfig,
     projectDir,
-    targetAccountId,
+    targetAccountId: targetTestingAccountId,
     isGithubLinked,
     components,
   });
