@@ -16,14 +16,15 @@ const {
   logFeedbackMessage,
   validateProjectConfig,
   pollProjectBuildAndDeploy,
+  displayWarnLogs,
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   logApiErrorInstance,
   ApiErrorContext,
-  isSpecifiedError,
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
@@ -91,6 +92,8 @@ exports.handler = async options => {
       );
       uiLine();
       logFeedbackMessage(result.buildId);
+
+      displayWarnLogs(accountId, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {

@@ -17,7 +17,9 @@ const {
   previewProjectPrompt,
 } = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { FileUploadResultType } = require('@hubspot/cli-lib/lib/uploadFolder');
+const {
+  FILE_UPLOAD_RESULT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/files');
 const cliProgress = require('cli-progress');
 const {
   ApiErrorContext,
@@ -155,7 +157,7 @@ exports.handler = async options => {
       });
       initialUploadProgressBar.stop();
       results.forEach(result => {
-        if (result.resultType == FileUploadResultType.FAILURE) {
+        if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
           logger.error('Uploading file "%s" to "%s" failed', result.file, dest);
           logApiUploadErrorInstance(
             result.error,
