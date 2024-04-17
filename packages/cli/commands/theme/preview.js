@@ -78,14 +78,9 @@ const determineSrcAndDest = async options => {
     // Not in a project, prompt for src and dest of traditional theme
     const previewPromptAnswers = await previewPrompt(options);
     const src = options.src || previewPromptAnswers.src;
-    let dest = options.dest || previewPromptAnswers.dest;
-    if (!dest) {
-      logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
-      return;
-    }
-
+    dest = options.dest || previewPromptAnswers.dest;
     absoluteSrc = path.resolve(getCwd(), src);
-    if (!validateSrcPath(absoluteSrc)) {
+    if (!dest || !validateSrcPath(absoluteSrc)) {
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
