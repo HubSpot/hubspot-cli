@@ -48,7 +48,7 @@ const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
 
-const i18nKey = 'cli.commands.init';
+const i18nKey = 'commands.init';
 
 const TRACKING_STATUS = {
   STARTED: 'started',

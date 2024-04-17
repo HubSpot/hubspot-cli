@@ -9,7 +9,7 @@ const {
   shouldOpenBrowserPrompt,
 } = require('../lib/prompts/feedbackPrompt');
 
-const i18nKey = 'cli.commands.project.subcommands.feedback';
+const i18nKey = 'commands.project.subcommands.feedback';
 
 exports.command = 'feedback';
 exports.describe = i18n(`${i18nKey}.describe`);

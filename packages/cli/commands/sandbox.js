@@ -4,7 +4,7 @@ const create = require('./sandbox/create');
 const del = require('./sandbox/delete');
 const sync = require('./sandbox/sync');
 
-const i18nKey = 'cli.commands.sandbox';
+const i18nKey = 'commands.sandbox';
 
 exports.command = 'sandbox';
 exports.describe = i18n(`${i18nKey}.describe`);

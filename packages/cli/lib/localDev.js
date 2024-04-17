@@ -56,7 +56,7 @@ const {
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
 
-const i18nKey = 'cli.lib.localDev';
+const i18nKey = 'lib.localDev';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
@@ -141,14 +141,14 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
   } catch (err) {
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n('cli.lib.sandbox.create.failure.scopes.message', {
+        i18n('lib.sandbox.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+        i18n('lib.sandbox.create.failure.scopes.instructions', {
           accountName: accountConfig.name || accountId,
           url,
         })
@@ -219,20 +219,17 @@ const createDeveloperTestAccountForLocalDev = async (
   } catch (err) {
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
+        i18n('lib.developerTestAccount.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n(
-          'cli.lib.developerTestAccount.create.failure.scopes.instructions',
-          {
-            accountName: accountConfig.name || accountId,
-            url,
-          }
-        )
+        i18n('lib.developerTestAccount.create.failure.scopes.instructions', {
+          accountName: accountConfig.name || accountId,
+          url,
+        })
       );
     } else {
       logErrorInstance(err);

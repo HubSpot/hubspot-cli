@@ -6,7 +6,7 @@ const listCommand = require('./schema/list');
 const updateSchema = require('./schema/update');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.customObject.subcommands.schema';
+const i18nKey = 'commands.customObject.subcommands.schema';
 
 exports.command = 'schema';
 exports.describe = i18n(`${i18nKey}.describe`);

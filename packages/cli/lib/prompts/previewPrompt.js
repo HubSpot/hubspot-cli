@@ -3,7 +3,7 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.previewPrompt';
+const i18nKey = 'lib.prompts.previewPrompt';
 
 const previewPrompt = (promptOptions = {}) => {
   return promptUser([

@@ -13,8 +13,7 @@ const {
 const { i18n } = require('../../../lib/lang');
 const { logSchemas } = require('../../../lib/schema');
 
-const i18nKey =
-  'cli.commands.customObject.subcommands.schema.subcommands.fetchAll';
+const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetchAll';
 
 exports.command = 'fetch-all [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);

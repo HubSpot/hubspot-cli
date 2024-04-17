@@ -32,7 +32,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
-const i18nKey = 'cli.commands.project.subcommands.watch';
+const i18nKey = 'commands.project.subcommands.watch';
 
 exports.command = 'watch [path]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

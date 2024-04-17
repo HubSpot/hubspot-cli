@@ -8,7 +8,7 @@ const { setDefaultMode } = require('./set/defaultMode');
 const { setHttpTimeout } = require('./set/httpTimeout');
 const { setAllowUsageTracking } = require('./set/allowUsageTracking');
 
-const i18nKey = 'cli.commands.config.subcommands.set';
+const i18nKey = 'commands.config.subcommands.set';
 
 exports.command = 'set';
 exports.describe = i18n(`${i18nKey}.describe`);

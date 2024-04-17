@@ -7,7 +7,7 @@ const {
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.create.subcommands.template';
+const i18nKey = 'commands.create.subcommands.template';
 
 module.exports = {
   dest: ({ dest }) => dest,

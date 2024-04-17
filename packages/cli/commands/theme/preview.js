@@ -17,7 +17,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
   FILE_UPLOAD_RESULT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/files');
-const i18nKey = 'cli.commands.preview';
+const i18nKey = 'commands.preview';
 const cliProgress = require('cli-progress');
 const {
   ApiErrorContext,

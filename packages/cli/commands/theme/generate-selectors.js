@@ -22,7 +22,7 @@ const CSS_SELECTORS_REGEX = new RegExp(/([\s\w:.,\0-[\]]*){/, 'i');
 const CSS_EXPRESSION_REGEX = new RegExp(/(?!\s)([^}])*(?![.#\s,>])[^}]*}/, 'g');
 const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
-const i18nKey = 'cli.commands.theme.subcommands.generateSelectors';
+const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
 exports.command = 'generate-selectors <themePath>';
 exports.describe = i18n(`${i18nKey}.describe`);

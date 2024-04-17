@@ -24,8 +24,7 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey =
-  'cli.commands.customObject.subcommands.schema.subcommands.create';
+const i18nKey = 'commands.customObject.subcommands.schema.subcommands.create';
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
 exports.command = 'create <definition>';

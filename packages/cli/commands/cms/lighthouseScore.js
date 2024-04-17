@@ -20,7 +20,7 @@ const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../../lib/constants');
 const { uiLink } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.cms.subcommands.lighthouseScore';
+const i18nKey = 'commands.cms.subcommands.lighthouseScore';
 
 const DEFAULT_TABLE_HEADER = [
   'Accessibility',

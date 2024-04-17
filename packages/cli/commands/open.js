@@ -9,7 +9,7 @@ const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.open';
+const i18nKey = 'commands.open';
 
 const separator = ' => ';
 const createListPrompt = async accountId =>

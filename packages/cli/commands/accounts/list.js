@@ -22,7 +22,7 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'cli.commands.accounts.subcommands.list';
+const i18nKey = 'commands.accounts.subcommands.list';
 
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);

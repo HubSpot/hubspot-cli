@@ -3,7 +3,7 @@ const { i18n } = require('../lang');
 const { ensureProjectExists } = require('../projects');
 const { uiAccountDescription } = require('../ui');
 
-const i18nKey = 'cli.lib.prompts.projectNamePrompt';
+const i18nKey = 'lib.prompts.projectNamePrompt';
 
 const projectNamePrompt = (accountId, options = {}) => {
   return promptUser({

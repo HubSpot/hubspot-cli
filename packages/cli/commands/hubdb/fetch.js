@@ -13,7 +13,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.fetch';
+const i18nKey = 'commands.hubdb.subcommands.fetch';
 
 exports.command = 'fetch <tableId> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);

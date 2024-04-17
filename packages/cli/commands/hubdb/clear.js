@@ -14,7 +14,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.clear';
+const i18nKey = 'commands.hubdb.subcommands.clear';
 
 exports.command = 'clear <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);

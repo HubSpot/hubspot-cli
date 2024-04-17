@@ -122,7 +122,7 @@ const uiCommandReference = command => {
 };
 
 const uiFeatureHighlight = (commands, title) => {
-  const i18nKey = 'cli.lib.ui.featureHighlight';
+  const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
     commands.forEach((c, i) => {
@@ -140,7 +140,7 @@ const uiFeatureHighlight = (commands, title) => {
 };
 
 const uiBetaTag = (message, log = true) => {
-  const i18nKey = 'cli.lib.ui';
+  const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`${i18nKey}.betaTag`);

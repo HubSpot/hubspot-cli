@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.createTemplatePrompt';
+const i18nKey = 'lib.prompts.createTemplatePrompt';
 
 const TEMPLATE_TYPE_PROMPT = {
   type: 'list',

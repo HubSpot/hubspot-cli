@@ -9,8 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey =
-  'cli.commands.customObject.subcommands.schema.subcommands.delete';
+const i18nKey = 'commands.customObject.subcommands.schema.subcommands.delete';
 
 exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);

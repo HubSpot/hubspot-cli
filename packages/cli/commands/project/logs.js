@@ -36,7 +36,7 @@ const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { i18n } = require('../../lib/lang');
 // const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.project.subcommands.logs';
+const i18nKey = 'commands.project.subcommands.logs';
 
 const getPrivateAppsUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
