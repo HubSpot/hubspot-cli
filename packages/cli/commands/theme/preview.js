@@ -91,6 +91,10 @@ const determineSrcAndDest = async options => {
       const themeComponents = projectComponents.filter(
         c => c.type === COMPONENT_TYPES.hublTheme
       );
+      if (themeComponents.length === 0) {
+        logger.error(i18n(`${i18nKey}.errors.noThemeComponents`));
+        process.exit(EXIT_CODES.ERROR);
+      }
       const answer = await previewProjectPrompt(themeComponents);
       themeJsonPath = `${answer.themeComponentPath}/theme.json`;
     }

@@ -893,6 +893,7 @@ en:
         describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
         errors:
           invalidPath: "The path \"{{ path }}\" is not a path to a directory"
+          noThemeComponents: "Your project has no theme components available to preview."
         options:
           src:
             describe: "Path to the local directory your theme is in, relative to your current working directory"
