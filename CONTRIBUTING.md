@@ -66,7 +66,7 @@ yarn check-deps # Should output "No dependency issues found"
 ```
 
 ## Merging
-To merge, either create, or have a maintainer create a blank branch, and set your PRs base branch to the blank branch. Merge your PR into the blank branch, and ensure that it passes the build. Then merge the new branch into master.
+To merge, either create, or have a maintainer create a blank branch, and set your PRs base branch to the blank branch. Merge your PR into the blank branch, and ensure that it passes the build. Then merge the new branch into main.
 
 
 ## Documentation
