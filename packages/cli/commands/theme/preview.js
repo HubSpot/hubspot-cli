@@ -12,7 +12,10 @@ const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { previewPrompt } = require('../../lib/prompts/previewPrompt');
+const {
+  previewPrompt,
+  previewProjectPrompt,
+} = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { FileUploadResultType } = require('@hubspot/cli-lib/lib/uploadFolder');
 const cliProgress = require('cli-progress');
@@ -22,7 +25,11 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { handleExit, handleKeypress } = require('../../lib/process');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
-const { getIsInProject, getProjectConfig } = require('../../lib/projects');
+const { getProjectConfig } = require('../../lib/projects');
+const {
+  findProjectComponents,
+  COMPONENT_TYPES,
+} = require('../../lib/projectStructure');
 
 const i18nKey = 'cli.commands.preview';
 exports.command = 'preview [--src] [--dest]';
@@ -63,16 +70,12 @@ const handleUserInput = () => {
   });
 };
 
-exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug } = options;
-
-  await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
-
+const determineSrcAndDest = async options => {
   let absoluteSrc;
   let dest;
-  if (!getIsInProject()) {
+  const { projectDir, projectConfig } = await getProjectConfig();
+  if (!(projectDir && projectConfig)) {
+    // Not in a project, prompt for src and dest of traditional theme
     const previewPromptAnswers = await previewPrompt(options);
     const src = options.src || previewPromptAnswers.src;
     let dest = options.dest || previewPromptAnswers.dest;
@@ -86,17 +89,32 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    const { projectConfig } = await getProjectConfig();
-    const themeJsonPath = getThemeJSONPath();
+    // In a project
+    let themeJsonPath = getThemeJSONPath();
     if (!themeJsonPath) {
-      logger.error(i18n(`${i18nKey}.errors.mustBeUsedInTheme`));
-      return;
+      const projectComponents = await findProjectComponents(projectDir);
+      const themeComponents = projectComponents.filter(
+        c => c.type === COMPONENT_TYPES.hublTheme
+      );
+      const answer = await previewProjectPrompt(themeComponents);
+      themeJsonPath = `${answer.themeComponentPath}/theme.json`;
     }
     const { dir: themeDir } = path.parse(themeJsonPath);
     absoluteSrc = themeDir;
     const { base: themeName } = path.parse(themeDir);
-    dest = `@project/${projectConfig.name}/${themeName}`;
+    dest = `@projects/${projectConfig.name}/${themeName}`;
   }
+  return { absoluteSrc, dest };
+};
+
+exports.handler = async options => {
+  const { notify, skipUpload, noSsl, port, debug } = options;
+
+  await loadAndValidateOptions(options);
+
+  const accountId = getAccountId(options);
+
+  const { absoluteSrc, dest } = await determineSrcAndDest(options);
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 

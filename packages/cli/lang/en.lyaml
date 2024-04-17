@@ -1207,6 +1207,7 @@ en:
         previewPrompt:
           enterSrc: "[--src] Enter a local theme directory to preview."
           enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
+          themeProjectSelect: "[--theme] Select which theme to preview."
           errors:
             srcRequired: "You must specify a source directory."
             destRequired: "You must specify a destination directory."
