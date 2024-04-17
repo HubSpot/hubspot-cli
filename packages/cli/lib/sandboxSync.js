@@ -2,11 +2,11 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
+const { isDevelopmentSandbox } = require('./accountTypes');
 const {
   getAvailableSyncTypes,
   pollSyncTaskStatus,
   syncTypes,
-  isDevelopmentSandbox,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
 const {

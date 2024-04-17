@@ -9,11 +9,13 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { isSandbox, getSandboxName } = require('../../lib/sandboxes');
+const { getSandboxName } = require('../../lib/sandboxes');
 const {
+  isSandbox,
   isDeveloperTestAccount,
   isAppDeveloperAccount,
-} = require('../../lib/developerTestAccounts');
+} = require('../../lib/accountTypes');
+
 const { i18n } = require('../../lib/lang');
 const {
   HUBSPOT_ACCOUNT_TYPES,
