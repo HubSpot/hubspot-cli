@@ -46,6 +46,7 @@ const {
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  useExistingDevTestAccount,
 } = require('../../lib/localDev');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -110,6 +111,7 @@ exports.handler = async options => {
       targetAccountId,
       parentAccountId,
       createNestedAccount,
+      notInConfigAccount,
     } = await suggestRecommendedNestedAccount(
       accounts,
       accountConfig,
@@ -118,6 +120,11 @@ exports.handler = async options => {
 
     targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
     targetTestingAccountId = targetAccountId;
+
+    // Only used for developer test accounts that are not yet in the config
+    if (notInConfigAccount) {
+      await useExistingDevTestAccount(env, notInConfigAccount);
+    }
 
     createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
     createNewDeveloperTestAccount =

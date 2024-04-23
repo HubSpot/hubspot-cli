@@ -15,6 +15,7 @@ const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
+  confirmUseExistingDeveloperTestAccountPrompt,
 } = require('./prompts/projectDevTargetAccountPrompt');
 const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
 const {
@@ -31,7 +32,10 @@ const { syncSandbox } = require('./sandboxSync');
 const {
   validateDevTestAccountUsageLimits,
 } = require('./developerTestAccounts');
-const { buildDeveloperTestAccount } = require('./developerTestAccountCreate');
+const {
+  buildDeveloperTestAccount,
+  saveDevTestAccountToConfig,
+} = require('./developerTestAccountCreate');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
 const SpinniesManager = require('./ui/SpinniesManager');
@@ -55,6 +59,9 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
+const {
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/local-dev-lib/constants/auth');
 
 const i18nKey = 'cli.lib.localDev';
 
@@ -262,6 +269,34 @@ const createDeveloperTestAccountForLocalDev = async (
   }
 };
 
+// Prompt user to confirm usage of an existing developer test account that is not currently in the config
+const useExistingDevTestAccount = async (env, account) => {
+  const useExistingDevTestAcct = await confirmUseExistingDeveloperTestAccountPrompt(
+    account
+  );
+  if (!useExistingDevTestAcct) {
+    logger.log('');
+    logger.log(
+      i18n(
+        `${i18nKey}.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
+        {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        }
+      )
+    );
+    logger.log('');
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+  const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
+  logger.success(
+    i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
+      accountName: devTestAcctConfigName,
+      authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+    })
+  );
+};
+
 // Prompt the user to create a new project if one doesn't exist on their target account
 const createNewProjectForLocalDev = async (
   projectConfig,
@@ -396,6 +431,7 @@ module.exports = {
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
+  useExistingDevTestAccount,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
 };
