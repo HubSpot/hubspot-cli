@@ -42,6 +42,7 @@ const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
   checkIfAppDeveloperAccount,
+  checkIfDeveloperTestAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
@@ -91,7 +92,13 @@ exports.handler = async options => {
   // The account that the project must exist in
   let targetProjectAccountId = options.account ? accountId : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = targetProjectAccountId;
+  let targetTestingAccountId = options.account ? accountId : null;
+
+  if (options.account && hasPublicApps) {
+    checkIfDeveloperTestAccount(accountConfig);
+    targetProjectAccountId = accountConfig.parentAccountId;
+    targetTestingAccountId = accountId;
+  }
 
   let createNewSandbox = false;
   let createNewDeveloperTestAccount = false;
@@ -172,7 +179,8 @@ exports.handler = async options => {
     await createNewProjectForLocalDev(
       projectConfig,
       targetProjectAccountId,
-      createNewSandbox
+      createNewSandbox,
+      hasPublicApps
     );
 
     deployedBuild = await createInitialBuildForNewProject(
