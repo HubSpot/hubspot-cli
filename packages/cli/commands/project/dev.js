@@ -128,6 +128,8 @@ exports.handler = async options => {
 
     targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
     targetTestingAccountId = targetAccountId;
+
+    // Only used for developer test accounts that are not yet in the config
     if (notInConfigAccount) {
       const useExistingDevTestAcct = await confirmUseExistingDeveloperTestAccountPrompt(
         notInConfigAccount
