@@ -22,7 +22,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
+const { uiBetaTag } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -46,16 +46,8 @@ const {
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  useExistingDevTestAccount,
 } = require('../../lib/localDev');
-const {
-  confirmUseExistingDeveloperTestAccountPrompt,
-} = require('../../lib/prompts/projectDevTargetAccountPrompt');
-const {
-  saveDevTestAccountToConfig,
-} = require('../../lib/developerTestAccountCreate');
-const {
-  PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('@hubspot/local-dev-lib/constants/auth');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -131,33 +123,7 @@ exports.handler = async options => {
 
     // Only used for developer test accounts that are not yet in the config
     if (notInConfigAccount) {
-      const useExistingDevTestAcct = await confirmUseExistingDeveloperTestAccountPrompt(
-        notInConfigAccount
-      );
-      if (!useExistingDevTestAcct) {
-        logger.log('');
-        logger.log(
-          i18n(
-            `cli.lib.localDev.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
-            {
-              useCommand: uiCommandReference('hs accounts use'),
-              devCommand: uiCommandReference('hs project dev'),
-            }
-          )
-        );
-        logger.log('');
-        process.exit(EXIT_CODES.SUCCESS);
-      }
-      const devTestAcctConfigName = await saveDevTestAccountToConfig(
-        env,
-        notInConfigAccount
-      );
-      logger.success(
-        i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
-          accountName: devTestAcctConfigName,
-          authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
-        })
-      );
+      await useExistingDevTestAccount(env, notInConfigAccount);
     }
 
     createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
