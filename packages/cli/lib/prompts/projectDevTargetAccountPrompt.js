@@ -24,6 +24,12 @@ const mapNestedAccount = accountConfig => ({
   },
 });
 
+const getNonConfigDeveloperTestAccountName = account => {
+  return `${account.accountName} [${
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
+  }] (${account.id})`;
+};
+
 const selectSandboxTargetAccountPrompt = async (
   accounts,
   defaultAccountConfig
@@ -94,9 +100,11 @@ const selectDeveloperTestTargetAccountPrompt = async (
 ) => {
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
   let choices = [];
-  let devTestAccountUsage = undefined;
+  let devTestAccountsResponse = undefined;
   try {
-    devTestAccountUsage = await fetchDeveloperTestAccounts(defaultAccountId);
+    devTestAccountsResponse = await fetchDeveloperTestAccounts(
+      defaultAccountId
+    );
   } catch (err) {
     logger.debug('Unable to fetch developer test account usage limits: ', err);
   }
@@ -110,17 +118,37 @@ const selectDeveloperTestTargetAccountPrompt = async (
     );
   let disabledMessage = false;
   if (
-    devTestAccountUsage &&
-    devTestAccountUsage.results.length >= devTestAccountUsage.maxTestPortals
+    devTestAccountsResponse &&
+    devTestAccountsResponse.results.length >=
+      devTestAccountsResponse.maxTestPortals
   ) {
     disabledMessage = i18n(`${i18nKey}.developerTestAccountLimit`, {
       authCommand: uiCommandReference('hs auth'),
-      limit: devTestAccountUsage.maxTestPortals,
+      limit: devTestAccountsResponse.maxTestPortals,
+    });
+  }
+
+  let devTestAccountsNotInConfig = [];
+  if (devTestAccountsResponse && devTestAccountsResponse.results) {
+    const inConfigIds = devTestAccounts.map(d => d.portalId);
+    devTestAccountsResponse.results.forEach(acct => {
+      if (inConfigIds.indexOf(acct.id) < 0) {
+        devTestAccountsNotInConfig.push({
+          name: getNonConfigDeveloperTestAccountName(acct),
+          value: {
+            targetAccountId: acct.id,
+            createdNestedAccount: false,
+            parentAccountId: defaultAccountId,
+            notInConfigAccount: acct,
+          },
+        });
+      }
     });
   }
 
   choices = [
     ...devTestAccounts.map(mapNestedAccount),
+    ...devTestAccountsNotInConfig,
     {
       name: i18n(`${i18nKey}.createNewDeveloperTestAccountOption`),
       value: {
@@ -172,8 +200,22 @@ const confirmDefaultAccountPrompt = async (accountName, accountType) => {
   return useDefaultAccount;
 };
 
+const confirmUseExistingDeveloperTestAccountPrompt = async account => {
+  const { confirmUseExistingDeveloperTestAccount } = await promptUser([
+    {
+      name: 'confirmUseExistingDeveloperTestAccount',
+      type: 'confirm',
+      message: i18n(`${i18nKey}.confirmUseExistingDeveloperTestAccount`, {
+        accountName: getNonConfigDeveloperTestAccountName(account),
+      }),
+    },
+  ]);
+  return confirmUseExistingDeveloperTestAccount;
+};
+
 module.exports = {
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
   confirmDefaultAccountPrompt,
+  confirmUseExistingDeveloperTestAccountPrompt,
 };
