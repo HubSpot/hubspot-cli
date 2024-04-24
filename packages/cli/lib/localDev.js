@@ -93,11 +93,15 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
 // Confirm the default account is a developer account if developing public apps
 const checkIfAppDeveloperAccount = accountConfig => {
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.checkCorrectParentAccountType.standardAccountNotSupported`
-      )
-    );
+    logger.error(i18n(`${i18nKey}.checkIfAppDevloperAccount`));
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account is a developer account if developing public apps
+const checkIfDeveloperTestAccount = accountConfig => {
+  if (!isDeveloperTestAccount(accountConfig)) {
+    logger.error(i18n(`${i18nKey}.checkIfDeveloperTestAccount`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -301,23 +305,25 @@ const useExistingDevTestAccount = async (env, account) => {
 const createNewProjectForLocalDev = async (
   projectConfig,
   targetAccountId,
-  shouldCreateWithoutConfirmation
+  shouldCreateWithoutConfirmation,
+  hasPublicApps
 ) => {
   // Create the project without prompting if this is a newly created sandbox
   let shouldCreateProject = shouldCreateWithoutConfirmation;
 
   if (!shouldCreateProject) {
+    const explanationString = i18n(
+      hasPublicApps
+        ? `${i18nKey}.createNewProjectForLocalDev.publicAppProjectMustExistExplanation`
+        : `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
+      {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      }
+    );
     logger.log();
     uiLine();
-    logger.warn(
-      i18n(
-        `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
-        {
-          accountIdentifier: uiAccountDescription(targetAccountId),
-          projectName: projectConfig.name,
-        }
-      )
-    );
+    logger.warn(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
@@ -428,6 +434,7 @@ const createInitialBuildForNewProject = async (
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
+  checkIfDeveloperTestAccount,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,

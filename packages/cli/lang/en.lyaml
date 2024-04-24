@@ -945,14 +945,15 @@ en:
       localDev:
         confirmDefaultAccountIsTarget:
           declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-        checkCorrectParentAccountType:
-          standardAccountNotSupported: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+        checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+        checkIfDeveloperTestAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
         suggestRecommendedNestedAccount:
           nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
           publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
           privateAppNonDeveloperTestAccountWarning: "Local development of private apps is only supported in {{#bold}}developer test accounts{{/bold}}"
         createNewProjectForLocalDev:
           projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
+          publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
           createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
           choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
           creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
