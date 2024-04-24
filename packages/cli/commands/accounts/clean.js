@@ -111,7 +111,7 @@ exports.handler = async options => {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: uiAccountDescription(accountToRemove.portalId),
+            accountName: accountToRemove.name,
           })
         );
       }
