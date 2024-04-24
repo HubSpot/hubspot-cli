@@ -50,10 +50,14 @@ exports.handler = async options => {
   trackCommandUsage('project-download', null, accountId);
 
   try {
-    const projectExists = await ensureProjectExists(accountId, projectName, {
-      allowCreate: false,
-      noLogs: true,
-    });
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
+    );
 
     if (!projectExists) {
       logger.error(

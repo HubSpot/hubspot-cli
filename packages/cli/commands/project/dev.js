@@ -157,7 +157,7 @@ exports.handler = async options => {
     targetProjectAccountId = accountId;
   }
 
-  const projectExists = await ensureProjectExists(
+  const { projectExists, project } = await ensureProjectExists(
     targetProjectAccountId,
     projectConfig.name,
     {
