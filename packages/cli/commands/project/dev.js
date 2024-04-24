@@ -109,6 +109,7 @@ exports.handler = async options => {
     targetProjectAccountId = hasPublicApps
       ? accountConfig.parentAccountId
       : accountId;
+    targetTestingAccountId = accountId;
   } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
