@@ -47,6 +47,7 @@ const {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
+  checkAndPromptPublicAppInstallation,
 } = require('../../lib/localDev');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
@@ -185,6 +186,10 @@ exports.handler = async options => {
       projectDir,
       targetProjectAccountId
     );
+  }
+
+  if (hasPublicApps) {
+    checkAndPromptPublicAppInstallation(targetTestingAccountId, project.id);
   }
 
   const LocalDev = new LocalDevManager({
