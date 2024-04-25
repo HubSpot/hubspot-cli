@@ -10,6 +10,9 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
+const {
+  fetchAppInstallationData,
+} = require('@hubspot/local-dev-lib/api/localDevAuth');
 
 const {
   confirmDefaultAccountPrompt,
@@ -431,6 +434,20 @@ const createInitialBuildForNewProject = async (
   return initialUploadResult.buildResult;
 };
 
+const checkAndPromptPublicAppInstallation = async (
+  targetTestingAccountId,
+  projectId,
+  appUid,
+  requiredScopeGroups
+) => {
+  await fetchAppInstallationData(
+    targetTestingAccountId,
+    projectId,
+    appUid,
+    requiredScopeGroups
+  );
+};
+
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
@@ -441,4 +458,5 @@ module.exports = {
   useExistingDevTestAccount,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  checkAndPromptPublicAppInstallation,
 };

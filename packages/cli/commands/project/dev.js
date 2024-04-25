@@ -15,7 +15,6 @@ const {
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const {
   getProjectConfig,
   ensureProjectExists,
@@ -167,19 +166,9 @@ exports.handler = async options => {
     }
   );
 
-  let deployedBuild;
-  let isGithubLinked;
-
-  if (projectExists) {
-    const project = await fetchProject(
-      targetProjectAccountId,
-      projectConfig.name
-    );
-    deployedBuild = project.deployedBuild;
-    isGithubLinked =
-      project.sourceIntegration &&
-      project.sourceIntegration.source === 'GITHUB';
-  }
+  let deployedBuild = project.deployedBuild;
+  let isGithubLinked =
+    project.sourceIntegration && project.sourceIntegration.source === 'GITHUB';
 
   SpinniesManager.init();
 
