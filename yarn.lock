@@ -462,10 +462,10 @@
     node-fetch "^2.6.0"
     url-parse "^1.4.3"
 
-"@hubspot/app-functions-dev-server@^0.8.14":
-  version "0.8.14"
-  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.8.14.tgz#42880e418d12137c63a7df4fee5b58ea3c7c8766"
-  integrity sha512-9nZs1NUQQa2hcGsCVH6jFQA3VvzL0lKdxuULtrdigINw1QkBBfJYgJGaxunOp5Qo6bLnSfBX0UcxkiRCqujOvw==
+"@hubspot/app-functions-dev-server@^0.8.15":
+  version "0.8.15"
+  resolved "https://registry.yarnpkg.com/@hubspot/app-functions-dev-server/-/app-functions-dev-server-0.8.15.tgz#5d96b8d4be303ee09b6d7261e93861e6934c68e8"
+  integrity sha512-7lbAuhjFZ+5sFlenlUBd4RkrAQtTDQql7v4bTKOpAD7aUnHeVXvRKUNV67mdI6d/OS/e8Oc82CiBjwJ6tsXueg==
   dependencies:
     "@hubspot/api-client" "^10.0.0"
     axios "^1.6.7"
@@ -510,12 +510,12 @@
     express "^4.18.2"
     node-fetch "2.7.0"
 
-"@hubspot/ui-extensions-dev-server@0.8.14":
-  version "0.8.14"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.14.tgz#dc12b58425a7eab468f9614c2e5f282da2091ef9"
-  integrity sha512-Nt9ieDcIq8Qqucfp9Hu4C6gsAy6UoSb9jsoNUunMnQB3uY7Kk32mhmEFaW3D6oBk47T72WE3sFW+hVKMM32Yqg==
+"@hubspot/ui-extensions-dev-server@0.8.15":
+  version "0.8.15"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.15.tgz#a49659eb19eb73acd00cc8de711b51ec1e95380b"
+  integrity sha512-vx31VatB1eTKqeCT+uyObixicAOOwdROYQgMzSkjILpGChD1kYRVOxpGqWi28I4vKoLGOL/Jixff8BOwTkIE8A==
   dependencies:
-    "@hubspot/app-functions-dev-server" "^0.8.14"
+    "@hubspot/app-functions-dev-server" "^0.8.15"
     cors "^2.8.5"
     detect-port "1.5.1"
     estraverse "^5.3.0"
