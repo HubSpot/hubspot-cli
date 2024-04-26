@@ -479,6 +479,7 @@ en:
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+              parentAccountNotConfigured: "To locally test your project on {{ accountIdentifier }} you must connect the CLI to its parent account. Run {{ authCommand }} to authenticate the parent account."
             examples:
               default: "Start local dev for the current project"
           create:
