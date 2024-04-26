@@ -4,6 +4,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
@@ -12,6 +13,9 @@ const chalk = require('chalk');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
+const {
+  selectPublicAppPrompt,
+} = require('../../lib/prompts/selectPublicAppPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
@@ -30,10 +34,22 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
+  const accountConfig = getAccountConfig(accountId);
 
   const hasCustomTemplateSource = Boolean(options.templateSource);
 
   let githubRef = '';
+
+  const { migrateApp } = options;
+  if (migrateApp) {
+    const { appId } = await selectPublicAppPrompt({
+      accountId,
+      accountName: accountConfig.name,
+      options,
+    });
+    console.log('appId', appId);
+    return;
+  }
 
   if (!hasCustomTemplateSource) {
     const releaseData = await fetchReleaseData(
@@ -88,6 +104,11 @@ exports.builder = yargs => {
     templateSource: {
       describe: i18n(`${i18nKey}.options.templateSource.describe`),
       type: 'string',
+    },
+    migrateApp: {
+      describe: i18n(`${i18nKey}.options.migrateApp.describe`),
+      type: 'boolean',
+      default: false,
     },
   });
 

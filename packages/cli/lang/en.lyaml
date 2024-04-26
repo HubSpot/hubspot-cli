@@ -496,6 +496,8 @@ en:
                 describe: "The starting template"
               templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
+              migrateApp:
+                describe: "Migrate a public app to the projects framework"
           add:
             describe: "Create a new component within a project"
             options:
@@ -1163,6 +1165,12 @@ en:
             invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
             noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
             missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+        selectPublicAppPrompt:
+          selectAppId: "[--appId] Choose an app under {{ accountName }} to migrate:"
+          errors:
+            noPublicAppsInAccount: "There are currently no public apps under {{ accountName }}"
+            errorFetchingApps: "There was an error fetching public apps."
+            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         developerTestAccountPrompt:
           name:
             message: "Name your developer test account"
