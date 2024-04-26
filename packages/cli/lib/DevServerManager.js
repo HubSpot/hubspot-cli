@@ -71,7 +71,7 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ components, onUploadRequired, accountId, setActiveComponent }) {
+  async setup({ components, onUploadRequired, accountId, setActiveApp }) {
     this.componentsByType = this.arrangeComponentsByType(components);
     const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
@@ -87,7 +87,7 @@ class DevServerManager {
               api: getHubSpotApiOrigin(env),
               web: getHubSpotWebsiteOrigin(env),
             },
-            setActiveComponent,
+            setActiveApp,
           });
         }
       }
