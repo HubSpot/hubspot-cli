@@ -26,7 +26,7 @@ const {
 const { handleExit, handleKeypress } = require('../../lib/process');
 
 exports.command = 'preview [--src] [--dest]';
-exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
