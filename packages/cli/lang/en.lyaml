@@ -479,7 +479,7 @@ en:
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
-              parentAccountNotConfigured: "To locally develop your project on {{ accountIdentifier }} you must authenticate the CLI with the App Developer Account {{ accountId}}. Run {{ authCommand }} to authenticate the parent account."
+              parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId}} associated with {{ accountIdentifier }}."
             examples:
               default: "Start local dev for the current project"
           create:
