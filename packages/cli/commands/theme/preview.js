@@ -35,7 +35,7 @@ const {
 
 const i18nKey = 'cli.commands.preview';
 exports.command = 'preview [--src] [--dest]';
-exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
