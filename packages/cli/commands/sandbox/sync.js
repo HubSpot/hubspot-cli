@@ -15,11 +15,13 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiLine, uiAccountDescription } = require('../../lib/ui');
 const {
+  isSandbox,
+  isStandardSandbox,
+  isDevelopmentSandbox,
+} = require('../../lib/accountTypes');
+const {
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
-  isDevelopmentSandbox,
-  isStandardSandbox,
-  isSandbox,
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
