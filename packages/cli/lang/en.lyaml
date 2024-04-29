@@ -498,6 +498,8 @@ en:
                 describe: "Path to custom GitHub repository from which to create project template"
               migrateApp:
                 describe: "Migrate a public app to the projects framework"
+              cloneApp:
+                describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details, auth settings, and webhook subscriptions"
           add:
             describe: "Create a new component within a project"
             options:
@@ -1166,7 +1168,8 @@ en:
             noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
             missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
         selectPublicAppPrompt:
-          selectAppId: "[--appId] Choose an app under {{ accountName }} to migrate:"
+          selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
+          selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
           errors:
             noPublicAppsInAccount: "There are currently no public apps under {{ accountName }}"
             errorFetchingApps: "There was an error fetching public apps."

@@ -40,11 +40,12 @@ exports.handler = async options => {
 
   let githubRef = '';
 
-  const { migrateApp } = options;
-  if (migrateApp) {
+  const { migrateApp, cloneApp } = options;
+  if (migrateApp || cloneApp) {
     const { appId } = await selectPublicAppPrompt({
       accountId,
       accountName: accountConfig.name,
+      migrateApp,
       options,
     });
     console.log('appId', appId);
@@ -107,6 +108,11 @@ exports.builder = yargs => {
     },
     migrateApp: {
       describe: i18n(`${i18nKey}.options.migrateApp.describe`),
+      type: 'boolean',
+      default: false,
+    },
+    cloneApp: {
+      describe: i18n(`${i18nKey}.options.cloneApp.describe`),
       type: 'boolean',
       default: false,
     },
