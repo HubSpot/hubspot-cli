@@ -87,7 +87,7 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p)]),
+        accountsToRemove.map(p => [uiAccountDescription(p.portalId)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,7 +111,7 @@ exports.handler = async options => {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: uiAccountDescription(accountToRemove),
+            accountName: accountToRemove.name,
           })
         );
       }
