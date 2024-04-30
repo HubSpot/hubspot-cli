@@ -41,9 +41,21 @@ const validateAppId = async (
   appId,
   migrateApp,
   cloneApp,
+  options,
   accountId,
   accountName
 ) => {
+  const { template, templateSource } = options;
+  if (appId && template) {
+    logger.error(i18n(`${i18nKey}.errors.noTemplateWithApp`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (appId && templateSource) {
+    logger.error(i18n(`${i18nKey}.errors.noTemplateSourceWithApp`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   if (
     (appId && migrateApp && cloneApp) ||
     (appId && !(migrateApp || cloneApp))

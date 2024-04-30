@@ -1001,6 +1001,8 @@ en:
         errors:
           invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
           migrateOrCloneUnspecified: "Please specify whether you'd like to migrate (--migrateApp) or clone (--cloneApp) your public app"
+          noTemplateWithApp: "Templates (--template) are not supported when migrating or cloning a public app"
+          noTemplateSourceWithApp: "Alternate template sources (--templateSource) are not supported when migrating or cloning a public app"
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:

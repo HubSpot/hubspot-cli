@@ -56,7 +56,14 @@ exports.handler = async options => {
     ));
 
   if (appId) {
-    validateAppId(appId, migrateApp, cloneApp, accountId, accountConfig.name);
+    validateAppId(
+      appId,
+      migrateApp,
+      cloneApp,
+      options,
+      accountId,
+      accountConfig.name
+    );
   }
 
   if (!hasCustomTemplateSource) {
