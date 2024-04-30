@@ -69,7 +69,7 @@ const createProjectPrompt = async (githubRef, promptOptions = {}, appId) => {
     {
       name: 'location',
       message: i18n(`${i18nKey}.enterLocation`),
-      when: !promptOptions.location,
+      when: !promptOptions.location && !promptOptions.migrateApp,
       default: answers => {
         return path.resolve(getCwd(), answers.name || promptOptions.name);
       },

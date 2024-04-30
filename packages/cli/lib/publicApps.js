@@ -45,7 +45,7 @@ const validateAppId = async (
   accountId,
   accountName
 ) => {
-  const { template, templateSource } = options;
+  const { template, templateSource, location } = options;
   if (appId && template) {
     logger.error(i18n(`${i18nKey}.errors.noTemplateWithApp`));
     process.exit(EXIT_CODES.ERROR);
@@ -53,6 +53,11 @@ const validateAppId = async (
 
   if (appId && templateSource) {
     logger.error(i18n(`${i18nKey}.errors.noTemplateSourceWithApp`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (migrateApp && location) {
+    logger.error(i18n(`${i18nKey}.errors.noLocationWithMigrateApp`));
     process.exit(EXIT_CODES.ERROR);
   }
 
