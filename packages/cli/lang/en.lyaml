@@ -479,6 +479,7 @@ en:
             errors:
               noProjectConfig: "No project detected. Please run this command again from a project directory."
               invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+              parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
             examples:
               default: "Start local dev for the current project"
           create:
@@ -1392,8 +1393,8 @@ en:
           platformVersionErrors:
             header: "Platform version update required"
             unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
-            platformVersionRetired: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are no longer supported."
-            nonExistentPlatformVersion: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are not supported."
+            platformVersionRetired: "Projects with {{#bold}}platformVersion {{ platformVersion }}{{/bold}} are no longer supported."
+            nonExistentPlatformVersion: "Projects with {{#bold}}platformVersion {{ platformVersion }}{{/bold}} are not supported."
             updateProject: "Please update your project to the latest version and try again."
             docsLink: "Projects platform versioning (BETA)"
             betaLink: "For more info, see {{ docsLink }}."
