@@ -166,13 +166,17 @@ exports.handler = async options => {
     }
   );
 
-  let deployedBuild = project.deployedBuild;
-  let isGithubLinked =
-    project.sourceIntegration && project.sourceIntegration.source === 'GITHUB';
+  let deployedBuild;
+  let isGithubLinked;
 
   SpinniesManager.init();
 
-  if (!projectExists) {
+  if (projectExists) {
+    deployedBuild = project.deployedBuild;
+    isGithubLinked =
+      project.sourceIntegration &&
+      project.sourceIntegration.source === 'GITHUB';
+  } else {
     await createNewProjectForLocalDev(
       projectConfig,
       targetProjectAccountId,
