@@ -39,6 +39,9 @@ const i18nKey = 'lib.LocalDevManager';
 class LocalDevManager {
   constructor(options) {
     this.targetAccountId = options.targetAccountId;
+    // The account that the project exists in. This is not always the targetAccountId
+    this.targetProjectAccountId = options.parentAccountId || options.accountId;
+
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
     this.debug = options.debug || false;
@@ -88,7 +91,7 @@ class LocalDevManager {
     if (!this.deployedBuild) {
       logger.error(
         i18n(`${i18nKey}.noDeployedBuild`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           uploadCommand: this.getUploadCommand(),
         })
       );
@@ -117,7 +120,10 @@ class LocalDevManager {
     logger.log(
       uiLink(
         i18n(`${i18nKey}.viewInHubSpotLink`),
-        getProjectDetailUrl(this.projectConfig.name, this.targetAccountId)
+        getProjectDetailUrl(
+          this.projectConfig.name,
+          this.targetProjectAccountId
+        )
       )
     );
     logger.log();
@@ -177,9 +183,9 @@ class LocalDevManager {
   getUploadCommand() {
     const currentDefaultAccount = getConfigDefaultAccount();
 
-    return this.targetAccountId !== getAccountId(currentDefaultAccount)
+    return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
       ? uiCommandReference(
-          `hs project upload --account=${this.targetAccountId}`
+          `hs project upload --account=${this.targetProjectAccountId}`
         )
       : uiCommandReference('hs project upload');
   }

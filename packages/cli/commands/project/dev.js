@@ -22,7 +22,11 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiBetaTag } = require('../../lib/ui');
+const {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+} = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -42,10 +46,12 @@ const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
   checkIfAppDeveloperAccount,
+  checkIfDeveloperTestAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  useExistingDevTestAccount,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -91,16 +97,41 @@ exports.handler = async options => {
   // The account that the project must exist in
   let targetProjectAccountId = options.account ? accountId : null;
   // The account that we are locally testing against
-  let targetTestingAccountId = targetProjectAccountId;
+  let targetTestingAccountId = options.account ? accountId : null;
+
+  if (options.account && hasPublicApps) {
+    checkIfDeveloperTestAccount(accountConfig);
+    targetProjectAccountId = accountConfig.parentAccountId;
+    targetTestingAccountId = accountId;
+  }
 
   let createNewSandbox = false;
   let createNewDeveloperTestAccount = false;
 
+  // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
+    targetTestingAccountId = accountId;
+
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
-    targetProjectAccountId = hasPublicApps
-      ? accountConfig.parentAccountId
-      : accountId;
+
+    if (hasPublicApps) {
+      // Exit if the user has not authed the parent account in the config
+      if (!getAccountConfig(accountConfig.parentAccountId)) {
+        logger.error(
+          i18n(`${i18nKey}.errors.parentAccountNotConfigured`, {
+            accountId: accountConfig.parentAccountId,
+            accountIdentifier: uiAccountDescription(targetTestingAccountId),
+            authCommand: uiCommandReference(
+              `hs auth --account=${accountConfig.parentAccountId}`
+            ),
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
+      targetProjectAccountId = accountConfig.parentAccountId;
+    } else {
+      targetProjectAccountId = accountId;
+    }
   } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
@@ -110,6 +141,7 @@ exports.handler = async options => {
       targetAccountId,
       parentAccountId,
       createNestedAccount,
+      notInConfigAccount,
     } = await suggestRecommendedNestedAccount(
       accounts,
       accountConfig,
@@ -118,6 +150,11 @@ exports.handler = async options => {
 
     targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
     targetTestingAccountId = targetAccountId;
+
+    // Only used for developer test accounts that are not yet in the config
+    if (notInConfigAccount) {
+      await useExistingDevTestAccount(env, notInConfigAccount);
+    }
 
     createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
     createNewDeveloperTestAccount =
@@ -139,6 +176,7 @@ exports.handler = async options => {
       accountConfig,
       env
     );
+    targetProjectAccountId = accountId;
   }
 
   const projectExists = await ensureProjectExists(
@@ -171,7 +209,8 @@ exports.handler = async options => {
     await createNewProjectForLocalDev(
       projectConfig,
       targetProjectAccountId,
-      createNewSandbox
+      createNewSandbox,
+      hasPublicApps
     );
 
     deployedBuild = await createInitialBuildForNewProject(
@@ -182,13 +221,14 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
+    components,
     debug: options.debug,
     deployedBuild,
+    isGithubLinked,
+    parentAccountId: targetProjectAccountId,
     projectConfig,
     projectDir,
     targetAccountId: targetTestingAccountId,
-    isGithubLinked,
-    components,
   });
 
   await LocalDev.start();

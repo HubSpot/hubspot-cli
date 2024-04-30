@@ -15,6 +15,7 @@ const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
+  confirmUseExistingDeveloperTestAccountPrompt,
 } = require('./prompts/projectDevTargetAccountPrompt');
 const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
 const {
@@ -31,7 +32,10 @@ const { syncSandbox } = require('./sandboxSync');
 const {
   validateDevTestAccountUsageLimits,
 } = require('./developerTestAccounts');
-const { buildDeveloperTestAccount } = require('./developerTestAccountCreate');
+const {
+  buildDeveloperTestAccount,
+  saveDevTestAccountToConfig,
+} = require('./developerTestAccountCreate');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
 const SpinniesManager = require('./ui/SpinniesManager');
@@ -55,6 +59,9 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
+const {
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('@hubspot/local-dev-lib/constants/auth');
 
 const i18nKey = 'lib.localDev';
 
@@ -86,11 +93,15 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
 // Confirm the default account is a developer account if developing public apps
 const checkIfAppDeveloperAccount = accountConfig => {
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.checkCorrectParentAccountType.standardAccountNotSupported`
-      )
-    );
+    logger.error(i18n(`${i18nKey}.checkIfAppDevloperAccount`));
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account is a developer account if developing public apps
+const checkIfDeveloperTestAccount = accountConfig => {
+  if (!isDeveloperTestAccount(accountConfig)) {
+    logger.error(i18n(`${i18nKey}.checkIfDeveloperTestAccount`));
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -259,27 +270,57 @@ const createDeveloperTestAccountForLocalDev = async (
   }
 };
 
+// Prompt user to confirm usage of an existing developer test account that is not currently in the config
+const useExistingDevTestAccount = async (env, account) => {
+  const useExistingDevTestAcct = await confirmUseExistingDeveloperTestAccountPrompt(
+    account
+  );
+  if (!useExistingDevTestAcct) {
+    logger.log('');
+    logger.log(
+      i18n(
+        `${i18nKey}.confirmDefaultAccountIsTarget.declineDefaultAccountExplanation`,
+        {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        }
+      )
+    );
+    logger.log('');
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+  const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
+  logger.success(
+    i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
+      accountName: devTestAcctConfigName,
+      authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
+    })
+  );
+};
+
 // Prompt the user to create a new project if one doesn't exist on their target account
 const createNewProjectForLocalDev = async (
   projectConfig,
   targetAccountId,
-  shouldCreateWithoutConfirmation
+  shouldCreateWithoutConfirmation,
+  hasPublicApps
 ) => {
   // Create the project without prompting if this is a newly created sandbox
   let shouldCreateProject = shouldCreateWithoutConfirmation;
 
   if (!shouldCreateProject) {
+    const explanationString = i18n(
+      hasPublicApps
+        ? `${i18nKey}.createNewProjectForLocalDev.publicAppProjectMustExistExplanation`
+        : `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
+      {
+        accountIdentifier: uiAccountDescription(targetAccountId),
+        projectName: projectConfig.name,
+      }
+    );
     logger.log();
     uiLine();
-    logger.warn(
-      i18n(
-        `${i18nKey}.createNewProjectForLocalDev.projectMustExistExplanation`,
-        {
-          accountIdentifier: uiAccountDescription(targetAccountId),
-          projectName: projectConfig.name,
-        }
-      )
-    );
+    logger.warn(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
@@ -390,9 +431,11 @@ const createInitialBuildForNewProject = async (
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
+  checkIfDeveloperTestAccount,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
+  useExistingDevTestAccount,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
 };
