@@ -13,11 +13,14 @@ const chalk = require('chalk');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
-const {
-  selectPublicAppPrompt,
-} = require('../../lib/prompts/selectPublicAppPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
+const {
+  fetchPublicApp,
+  migratePublicApp,
+  clonePublicApp,
+  validateAppId,
+} = require('../../lib/publicApps');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -41,15 +44,19 @@ exports.handler = async options => {
   let githubRef = '';
 
   const { migrateApp, cloneApp } = options;
-  if (migrateApp || cloneApp) {
-    const { appId } = await selectPublicAppPrompt({
-      accountId,
-      accountName: accountConfig.name,
+
+  const appId =
+    options.appId ||
+    (await fetchPublicApp(
       migrateApp,
+      cloneApp,
       options,
-    });
-    console.log('appId', appId);
-    return;
+      accountId,
+      accountConfig.name
+    ));
+
+  if (appId) {
+    validateAppId(appId, migrateApp, cloneApp, accountId, accountConfig.name);
   }
 
   if (!hasCustomTemplateSource) {
@@ -61,7 +68,8 @@ exports.handler = async options => {
 
   const { name, template, location } = await createProjectPrompt(
     githubRef,
-    options
+    options,
+    appId
   );
 
   trackCommandUsage(
@@ -69,6 +77,16 @@ exports.handler = async options => {
     { type: options.template || template },
     accountId
   );
+
+  if (appId) {
+    if (migrateApp) {
+      return migratePublicApp(appId);
+    }
+
+    if (cloneApp) {
+      return clonePublicApp(appId);
+    }
+  }
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
@@ -115,6 +133,10 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.cloneApp.describe`),
       type: 'boolean',
       default: false,
+    },
+    appId: {
+      describe: i18n(`${i18nKey}.options.cloneApp.describe`),
+      type: 'number',
     },
   });
 

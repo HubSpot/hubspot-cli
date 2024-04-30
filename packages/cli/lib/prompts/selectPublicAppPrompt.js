@@ -27,10 +27,15 @@ const selectPublicAppPrompt = async ({
   accountId,
   accountName,
   migrateApp,
+  cloneApp,
   promptOptions = {},
 }) => {
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
+  const translationKey = migrateApp
+    ? 'selectAppIdMigrate'
+    : cloneApp
+    ? 'selectAppIdClone'
+    : '';
 
   return promptUser([
     {
@@ -60,5 +65,6 @@ const selectPublicAppPrompt = async ({
 };
 
 module.exports = {
+  fetchPublicAppOptions,
   selectPublicAppPrompt,
 };
