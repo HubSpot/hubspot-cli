@@ -39,7 +39,7 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'cli.commands.sandbox.subcommands.create';
+const i18nKey = 'commands.sandbox.subcommands.create';
 
 exports.command = 'create [--name] [--type]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -92,14 +92,14 @@ exports.handler = async options => {
   } catch (err) {
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n('cli.lib.sandbox.create.failure.scopes.message', {
+        i18n('lib.sandbox.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+        i18n('lib.sandbox.create.failure.scopes.instructions', {
           accountName: accountConfig.name || accountId,
           url,
         })
@@ -123,7 +123,7 @@ exports.handler = async options => {
   let sandboxSyncPromptResult = true;
   let contactRecordsSyncPromptResult = true;
   if (!force) {
-    const syncI18nKey = 'cli.lib.sandbox.sync';
+    const syncI18nKey = 'lib.sandbox.sync';
     const sandboxLangKey =
       sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
         ? 'developer'

@@ -16,7 +16,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.functions.subcommands.list';
+const i18nKey = 'commands.functions.subcommands.list';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'list';

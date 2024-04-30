@@ -47,7 +47,7 @@ const {
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
-const i18nKey = 'cli.lib.projects';
+const i18nKey = 'lib.projects';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -859,7 +859,7 @@ const createProjectComponent = async (
   name,
   projectComponentsVersion
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.add';
+  const i18nKey = 'commands.project.subcommands.add';
   let componentName = name;
 
   const configInfo = await getProjectConfig();

@@ -12,7 +12,7 @@ const open = require('./project/open');
 const dev = require('./project/dev');
 const add = require('./project/add');
 
-const i18nKey = 'cli.commands.project';
+const i18nKey = 'commands.project';
 
 exports.command = 'project';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

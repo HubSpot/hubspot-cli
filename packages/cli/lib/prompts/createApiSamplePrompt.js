@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.createApiSamplePrompt';
+const i18nKey = 'lib.prompts.createApiSamplePrompt';
 
 const getSampleTypesPrompt = choices => ({
   type: 'rawlist',

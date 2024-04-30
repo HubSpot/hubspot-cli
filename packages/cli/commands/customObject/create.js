@@ -12,7 +12,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.customObject.subcommands.create';
+const i18nKey = 'commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <name> <definition>';

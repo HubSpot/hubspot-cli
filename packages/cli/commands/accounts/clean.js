@@ -22,7 +22,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { uiAccountDescription } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.accounts.subcommands.clean';
+const i18nKey = 'commands.accounts.subcommands.clean';
 
 exports.command = 'clean';
 exports.describe = i18n(`${i18nKey}.describe`);

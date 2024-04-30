@@ -7,7 +7,7 @@ const info = require('./accounts/info');
 const remove = require('./accounts/remove');
 const clean = require('./accounts/clean');
 
-const i18nKey = 'cli.commands.accounts';
+const i18nKey = 'commands.accounts';
 
 exports.command = 'accounts';
 exports.describe = i18n(`${i18nKey}.describe`);

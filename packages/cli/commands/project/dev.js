@@ -54,7 +54,7 @@ const {
   useExistingDevTestAccount,
 } = require('../../lib/localDev');
 
-const i18nKey = 'cli.commands.project.subcommands.dev';
+const i18nKey = 'commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

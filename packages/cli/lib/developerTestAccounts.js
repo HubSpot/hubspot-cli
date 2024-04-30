@@ -22,7 +22,7 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
   return false;
 };
 
-const i18nKey = 'cli.lib.developerTestAccount';
+const i18nKey = 'lib.developerTestAccount';
 
 const validateDevTestAccountUsageLimits = async accountConfig => {
   const accountId = getAccountId(accountConfig.portalId);

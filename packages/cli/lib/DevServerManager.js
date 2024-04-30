@@ -15,7 +15,7 @@ const {
 } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
-const i18nKey = 'cli.lib.DevServerManager';
+const i18nKey = 'lib.DevServerManager';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',

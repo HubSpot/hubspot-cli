@@ -18,7 +18,7 @@ const { uiAccountDescription } = require('../../lib/ui');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.add';
+const i18nKey = 'commands.secrets.subcommands.add';
 
 exports.command = 'add <name>';
 exports.describe = i18n(`${i18nKey}.describe`);

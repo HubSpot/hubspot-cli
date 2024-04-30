@@ -10,7 +10,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../enums/exitCodes');
 
-const i18nKey = 'cli.lib.prompts.projectLogsPrompt';
+const i18nKey = 'lib.prompts.projectLogsPrompt';
 
 const SERVERLESS_FUNCTION_TYPES = {
   APP_FUNCTION: 'app-function',

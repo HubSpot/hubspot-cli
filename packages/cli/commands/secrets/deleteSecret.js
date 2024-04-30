@@ -17,7 +17,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.delete';
+const i18nKey = 'commands.secrets.subcommands.delete';
 
 exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);

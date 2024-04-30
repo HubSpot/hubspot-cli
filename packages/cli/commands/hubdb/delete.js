@@ -12,7 +12,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.delete';
+const i18nKey = 'commands.hubdb.subcommands.delete';
 
 exports.command = 'delete <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);

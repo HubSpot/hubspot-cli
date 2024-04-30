@@ -29,7 +29,7 @@ const {
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 
-const i18nKey = 'cli.commands.project.subcommands.listBuilds';
+const i18nKey = 'commands.project.subcommands.listBuilds';
 
 exports.command = 'list-builds [path]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

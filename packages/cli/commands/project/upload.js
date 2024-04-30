@@ -28,7 +28,7 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.project.subcommands.upload';
+const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload [path] [--forceCreate] [--message]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

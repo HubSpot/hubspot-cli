@@ -21,7 +21,7 @@ const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');
 
-const i18nKey = 'cli.lib.sandbox.sync';
+const i18nKey = 'lib.sandbox.sync';
 
 /**
  * @param {Object} accountConfig - Account config of sandbox portal

@@ -13,7 +13,7 @@ const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
 } = require('../../lib/constants');
 
-const i18nKey = 'cli.commands.project.subcommands.add';
+const i18nKey = 'commands.project.subcommands.add';
 
 exports.command = 'add';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

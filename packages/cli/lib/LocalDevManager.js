@@ -34,7 +34,7 @@ const WATCH_EVENTS = {
   unlinkDir: 'unlinkDir',
 };
 
-const i18nKey = 'cli.lib.LocalDevManager';
+const i18nKey = 'lib.LocalDevManager';
 
 class LocalDevManager {
   constructor(options) {

@@ -17,8 +17,7 @@ const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey =
-  'cli.commands.customObject.subcommands.schema.subcommands.fetch';
+const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetch';
 
 exports.command = 'fetch <name> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);

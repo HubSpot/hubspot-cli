@@ -25,7 +25,7 @@ const {
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.project.subcommands.download';
+const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'download [--project]';

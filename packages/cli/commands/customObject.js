@@ -5,7 +5,7 @@ const { i18n } = require('../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiBetaTag, uiLink } = require('../lib/ui');
 
-const i18nKey = 'cli.commands.customObject';
+const i18nKey = 'commands.customObject';
 
 exports.command = ['custom-object', 'custom', 'co'];
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
