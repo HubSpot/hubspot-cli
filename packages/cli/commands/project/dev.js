@@ -221,6 +221,7 @@ exports.handler = async options => {
     parentAccountId: targetProjectAccountId,
     projectConfig,
     projectDir,
+    projectId: project.id,
     targetAccountId: targetTestingAccountId,
   });
 

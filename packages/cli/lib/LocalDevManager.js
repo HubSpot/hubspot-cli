@@ -5,6 +5,9 @@ const { i18n } = require('./lang');
 const { handleKeypress } = require('./process');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
+  fetchAppInstallationData,
+} = require('@hubspot/local-dev-lib/api/localDevAuth');
+const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -44,6 +47,7 @@ class LocalDevManager {
 
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.projectId = options.projectId;
     this.debug = options.debug || false;
     this.deployedBuild = options.deployedBuild;
     this.isGithubLinked = options.isGithubLinked;
@@ -85,10 +89,12 @@ class LocalDevManager {
   }
 
   async setActiveApp(appUid) {
-    console.log(appUid, this.runnableComponents);
     this.activeApp = this.runnableComponents.find(component => {
       return component.config.uid === appUid;
     });
+
+    const installationData = await this.getActiveAppInstallationData();
+    console.log(installationData);
     // TODO: Show the install warnings the first time this gets set
   }
 
@@ -179,6 +185,16 @@ class LocalDevManager {
       });
     }
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  getActiveAppInstallationData() {
+    return fetchAppInstallationData(
+      this.targetAccountId,
+      this.projectId,
+      this.activeApp.config.uid,
+      this.activeApp.config.auth.requiredScopes,
+      this.activeApp.config.auth.optionalScopes
+    );
   }
 
   updateKeypressListeners() {
