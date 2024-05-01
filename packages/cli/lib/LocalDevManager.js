@@ -29,6 +29,7 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -89,13 +90,21 @@ class LocalDevManager {
   }
 
   async setActiveApp(appUid) {
+    if (!appUid) {
+      // TODO: What do we do here?
+      return;
+    }
     this.activeApp = this.runnableComponents.find(component => {
       return component.config.uid === appUid;
     });
 
-    const installationData = await this.getActiveAppInstallationData();
-    console.log(installationData);
-    // TODO: Show the install warnings the first time this gets set
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      try {
+        await this.checkPublicAppInstallation();
+      } catch (e) {
+        logErrorInstance(e);
+      }
+    }
   }
 
   async start() {
@@ -195,6 +204,16 @@ class LocalDevManager {
       this.activeApp.config.auth.requiredScopes,
       this.activeApp.config.auth.optionalScopes
     );
+  }
+
+  async checkPublicAppInstallation() {
+    const {
+      isInstalledWithScopeGroups: isInstalled,
+    } = await this.getActiveAppInstallationData();
+
+    if (!isInstalled) {
+      // Prompt
+    }
   }
 
   updateKeypressListeners() {
