@@ -84,9 +84,11 @@ class LocalDevManager {
     return components.filter(component => component.runnable);
   }
 
-  async setActiveApp(app) {
-    this.activeApp = app;
-
+  async setActiveApp(appUid) {
+    console.log(appUid, this.runnableComponents);
+    this.activeApp = this.runnableComponents.find(component => {
+      return component.config.uid === appUid;
+    });
     // TODO: Show the install warnings the first time this gets set
   }
 
