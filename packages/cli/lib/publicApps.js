@@ -80,6 +80,5 @@ module.exports = {
   migratePublicApp,
   clonePublicApp,
   fetchPublicApp,
-  fetchPublicAppOptions,
   validateAppId,
 };
