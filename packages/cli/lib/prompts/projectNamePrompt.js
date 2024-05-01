@@ -14,7 +14,7 @@ const projectNamePrompt = (accountId, options = {}) => {
       if (typeof val !== 'string' || !val) {
         return i18n(`${i18nKey}.errors.invalidName`);
       }
-      const projectExists = await ensureProjectExists(accountId, val, {
+      const { projectExists } = await ensureProjectExists(accountId, val, {
         allowCreate: false,
         noLogs: true,
       });

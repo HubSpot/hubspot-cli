@@ -50,6 +50,7 @@ class LocalDevManager {
     this.watcher = null;
     this.uploadWarnings = {};
     this.runnableComponents = this.getRunnableComponents(options.components);
+    this.activeApp = null;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -81,6 +82,12 @@ class LocalDevManager {
 
   getRunnableComponents(components) {
     return components.filter(component => component.runnable);
+  }
+
+  async setActiveApp(app) {
+    this.activeApp = app;
+
+    // TODO: Show the install warnings the first time this gets set
   }
 
   async start() {
@@ -331,6 +338,7 @@ class LocalDevManager {
         components: this.runnableComponents,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
+        setActiveApp: this.setActiveApp.bind(this),
       });
       return true;
     } catch (e) {

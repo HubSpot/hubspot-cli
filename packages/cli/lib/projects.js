@@ -252,7 +252,7 @@ const ensureProjectExists = async (
     const project = withPolling
       ? await pollFetchProject(accountId, projectName)
       : await fetchProject(accountId, projectName);
-    return !!project;
+    return { projectExists: !!project, project };
   } catch (err) {
     if (isSpecifiedError(err, { statusCode: 404 })) {
       let shouldCreateProject = forceCreate;
@@ -273,14 +273,14 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          await createProject(accountId, projectName);
+          const project = await createProject(accountId, projectName);
           logger.success(
             i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
               projectName,
               accountIdentifier,
             })
           );
-          return true;
+          return { projectExists: true, project };
         } catch (err) {
           return logApiErrorInstance(
             err,
@@ -296,7 +296,7 @@ const ensureProjectExists = async (
             })
           );
         }
-        return false;
+        return { projectExists: false };
       }
     }
     if (

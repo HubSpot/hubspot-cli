@@ -10,7 +10,6 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
-
 const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,

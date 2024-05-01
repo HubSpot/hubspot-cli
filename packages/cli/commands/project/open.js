@@ -37,9 +37,13 @@ exports.handler = async options => {
   let projectName = project;
 
   if (projectName) {
-    const projectExists = await ensureProjectExists(accountId, projectName, {
-      allowCreate: false,
-    });
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+      }
+    );
 
     if (!projectExists) {
       process.exit(EXIT_CODES.ERROR);
