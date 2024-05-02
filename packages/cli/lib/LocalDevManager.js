@@ -8,6 +8,9 @@ const {
   fetchAppInstallationData,
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
+  fetchPublicAppsForPortal,
+} = require('@hubspot/local-dev-lib/api/appsDev');
+const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -30,6 +33,7 @@ const {
   uiLine,
 } = require('./ui');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -56,6 +60,7 @@ class LocalDevManager {
     this.uploadWarnings = {};
     this.runnableComponents = this.getRunnableComponents(options.components);
     this.activeApp = null;
+    this.activePublicAppData = null;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -100,11 +105,28 @@ class LocalDevManager {
 
     if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
       try {
+        await this.setActivePublicAppData();
         await this.checkPublicAppInstallation();
       } catch (e) {
         logErrorInstance(e);
       }
     }
+  }
+
+  async setActivePublicAppData() {
+    if (!this.activeApp) {
+      return;
+    }
+
+    const portalPublicApps = await fetchPublicAppsForPortal(
+      this.targetProjectAccountId
+    );
+
+    const activePublicAppData = portalPublicApps.find(
+      ({ sourceId }) => sourceId === this.activeApp.config.uid
+    );
+
+    this.activePublicAppData = activePublicAppData;
   }
 
   async start() {
@@ -212,7 +234,7 @@ class LocalDevManager {
     } = await this.getActiveAppInstallationData();
 
     if (!isInstalled) {
-      // Prompt
+      await installPublicAppPrompt();
     }
   }
 
