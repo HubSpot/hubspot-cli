@@ -235,17 +235,12 @@ class LocalDevManager {
     } = await this.getActiveAppInstallationData();
 
     if (!isInstalled) {
-      const {
-        clientId,
-        requiredScopes,
-        redirectUrls,
-      } = this.activePublicAppData;
-
       await installPublicAppPrompt(
         this.env,
-        clientId,
-        requiredScopes,
-        redirectUrls
+        this.targetAccountId,
+        this.activePublicAppData.clientId,
+        this.activeApp.config.auth.requiredScopes,
+        this.activeApp.config.auth.redirectUrls
       );
     }
   }

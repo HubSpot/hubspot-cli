@@ -7,7 +7,13 @@ const { EXIT_CODES } = require('../enums/exitCodes');
 
 const i18nKey = 'lib.prompts.installPublicAppPrompt';
 
-const installPublicAppPrompt = async (env, clientId, scopes, redirectUrls) => {
+const installPublicAppPrompt = async (
+  env,
+  targetAccountId,
+  clientId,
+  scopes,
+  redirectUrls
+) => {
   logger.log(i18n(`${i18nKey}.explanation`));
 
   const { shouldOpenBrowser } = await promptUser({
@@ -24,7 +30,7 @@ const installPublicAppPrompt = async (env, clientId, scopes, redirectUrls) => {
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
 
   const url =
-    `${websiteOrigin}/oauth/authorize` +
+    `${websiteOrigin}/oauth/${targetAccountId}/authorize` +
     `?client_id=${encodeURIComponent(clientId)}` +
     `&scope=${encodeURIComponent(scopes)}` +
     `&redirect_uri=${encodeURIComponent(redirectUrls)}`;
