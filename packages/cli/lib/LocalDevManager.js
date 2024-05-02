@@ -61,6 +61,7 @@ class LocalDevManager {
     this.runnableComponents = this.getRunnableComponents(options.components);
     this.activeApp = null;
     this.activePublicAppData = null;
+    this.env = options.env;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -234,7 +235,18 @@ class LocalDevManager {
     } = await this.getActiveAppInstallationData();
 
     if (!isInstalled) {
-      await installPublicAppPrompt();
+      const {
+        clientId,
+        requiredScopes,
+        redirectUrls,
+      } = this.activePublicAppData;
+
+      await installPublicAppPrompt(
+        this.env,
+        clientId,
+        requiredScopes,
+        redirectUrls
+      );
     }
   }
 

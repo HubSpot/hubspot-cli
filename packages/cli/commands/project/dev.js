@@ -223,6 +223,7 @@ exports.handler = async options => {
     projectDir,
     projectId: project.id,
     targetAccountId: targetTestingAccountId,
+    env,
   });
 
   await LocalDev.start();
