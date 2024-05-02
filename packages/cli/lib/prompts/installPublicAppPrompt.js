@@ -14,6 +14,7 @@ const installPublicAppPrompt = async (
   scopes,
   redirectUrls
 ) => {
+  logger.log('');
   logger.log(i18n(`${i18nKey}.explanation`));
 
   const { shouldOpenBrowser } = await promptUser({
