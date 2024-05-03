@@ -475,10 +475,10 @@
     express "^4.18.2"
     uuid "^9.0.1"
 
-"@hubspot/local-dev-lib@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-1.0.1.tgz#a796e11d7b16cb445215dd403abb1090e4f906d5"
-  integrity sha512-x6DF8kXW62bdRXDINSPKmHvqNRWukbm/oOy7oxqGMY102JQLkQ1UpGziaCV9QRzLOi6HU9jQv4G2XzuGt93nag==
+"@hubspot/local-dev-lib@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-1.1.0.tgz#6c6fd7cc94a2d7d74c822ea0623fb47ce94f6a27"
+  integrity sha512-vchW2L5atfBDYyiCEWVAZ15oiUwhInNIM+eQwFU5zDCQuOTAikPubwFdUCd4ydYduA8ZBpNrxiJOasRqk/9NBQ==
   dependencies:
     address "^2.0.1"
     axios "^1.3.5"
