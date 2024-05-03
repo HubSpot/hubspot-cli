@@ -4,7 +4,6 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
@@ -15,12 +14,6 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { createProjectConfig } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
-const {
-  fetchPublicApp,
-  migratePublicApp,
-  clonePublicApp,
-  validateAppId,
-} = require('../../lib/publicApps');
 const { uiBetaTag, uiFeatureHighlight } = require('../../lib/ui');
 const {
   HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -37,34 +30,10 @@ exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
 
   const hasCustomTemplateSource = Boolean(options.templateSource);
 
   let githubRef = '';
-
-  const { migrateApp, cloneApp } = options;
-
-  const appId =
-    options.appId ||
-    (await fetchPublicApp(
-      migrateApp,
-      cloneApp,
-      options,
-      accountId,
-      accountConfig.name
-    ));
-
-  if (appId) {
-    validateAppId(
-      appId,
-      migrateApp,
-      cloneApp,
-      options,
-      accountId,
-      accountConfig.name
-    );
-  }
 
   if (!hasCustomTemplateSource) {
     const releaseData = await fetchReleaseData(
@@ -75,8 +44,7 @@ exports.handler = async options => {
 
   const { name, template, location } = await createProjectPrompt(
     githubRef,
-    options,
-    appId
+    options
   );
 
   trackCommandUsage(
@@ -84,16 +52,6 @@ exports.handler = async options => {
     { type: options.template || template },
     accountId
   );
-
-  if (appId) {
-    if (migrateApp) {
-      return migratePublicApp(appId);
-    }
-
-    if (cloneApp) {
-      return clonePublicApp(appId);
-    }
-  }
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
@@ -130,20 +88,6 @@ exports.builder = yargs => {
     templateSource: {
       describe: i18n(`${i18nKey}.options.templateSource.describe`),
       type: 'string',
-    },
-    migrateApp: {
-      describe: i18n(`${i18nKey}.options.migrateApp.describe`),
-      type: 'boolean',
-      default: false,
-    },
-    cloneApp: {
-      describe: i18n(`${i18nKey}.options.cloneApp.describe`),
-      type: 'boolean',
-      default: false,
-    },
-    appId: {
-      describe: i18n(`${i18nKey}.options.cloneApp.describe`),
-      type: 'number',
     },
   });
 

@@ -496,10 +496,17 @@ en:
                 describe: "The starting template"
               templateSource:
                 describe: "Path to custom GitHub repository from which to create project template"
-              migrateApp:
-                describe: "Migrate a public app to the projects framework"
-              cloneApp:
-                describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details, auth settings, and webhook subscriptions"
+          migrateApp:
+            describe: "Migrate a public app to the projects framework"
+            examples:
+              default: "Migrate a public app to the projects framework"
+            options:
+              appId:
+                describe: "The ID for the public app being migrated to the projects framework"
+              location:
+                describe: "Directory where project should be created"
+              name:
+                describe: "Project name (cannot be changed)"
           add:
             describe: "Create a new component within a project"
             options:
