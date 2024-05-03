@@ -8,27 +8,20 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const i18nKey = 'cli.lib.publicApps';
 
-const fetchPublicApp = async (
-  migrateApp,
-  cloneApp,
-  options,
-  accountId,
-  accountName
-) => {
-  if (migrateApp || cloneApp) {
-    const { appId } = await selectPublicAppPrompt({
-      accountId,
-      accountName,
-      migrateApp,
-      cloneApp,
-      options,
-    });
-    return appId;
-  }
+const fetchPublicApp = async (accountId, accountName, options, migrateApp) => {
+  const { appId } = await selectPublicAppPrompt({
+    accountId,
+    accountName,
+    options,
+    migrateApp,
+  });
+  return appId;
 };
 
-const migratePublicApp = async appId => {
+const migratePublicApp = async (appId, name, location) => {
   console.log('Migrating appId', appId);
+  console.log('Name:', name);
+  console.log('Location:', location);
   return;
 };
 
@@ -37,38 +30,7 @@ const clonePublicApp = async appId => {
   return;
 };
 
-const validateAppId = async (
-  appId,
-  migrateApp,
-  cloneApp,
-  options,
-  accountId,
-  accountName
-) => {
-  const { template, templateSource, location } = options;
-  if (appId && template) {
-    logger.error(i18n(`${i18nKey}.errors.noTemplateWithApp`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  if (appId && templateSource) {
-    logger.error(i18n(`${i18nKey}.errors.noTemplateSourceWithApp`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  if (migrateApp && location) {
-    logger.error(i18n(`${i18nKey}.errors.noLocationWithMigrateApp`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
-  if (
-    (appId && migrateApp && cloneApp) ||
-    (appId && !(migrateApp || cloneApp))
-  ) {
-    logger.error(i18n(`${i18nKey}.errors.migrateOrCloneUnspecified`));
-    process.exit(EXIT_CODES.ERROR);
-  }
-
+const validateAppId = async (appId, accountId, accountName) => {
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
   if (!publicApps.find(a => a.id === appId)) {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));

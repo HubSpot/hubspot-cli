@@ -49,10 +49,13 @@ const createTemplateOptions = async (templateSource, githubRef) => {
 };
 
 const createProjectPrompt = async (githubRef, promptOptions = {}, appId) => {
-  const projectTemplates = await createTemplateOptions(
-    promptOptions.templateSource,
-    githubRef
-  );
+  let projectTemplates = [];
+  if (!appId) {
+    projectTemplates = await createTemplateOptions(
+      promptOptions.templateSource,
+      githubRef
+    );
+  }
 
   return promptUser([
     {
@@ -69,7 +72,7 @@ const createProjectPrompt = async (githubRef, promptOptions = {}, appId) => {
     {
       name: 'location',
       message: i18n(`${i18nKey}.enterLocation`),
-      when: !promptOptions.location && !promptOptions.migrateApp,
+      when: !promptOptions.location,
       default: answers => {
         return path.resolve(getCwd(), answers.name || promptOptions.name);
       },

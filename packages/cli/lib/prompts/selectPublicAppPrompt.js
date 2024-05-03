@@ -8,15 +8,19 @@ const i18nKey = 'cli.lib.prompts.selectPublicAppPrompt';
 
 const fetchPublicAppOptions = async (accountId, accountName) => {
   try {
-    const publicApps = await fetchPublicApps(accountId);
+    const response = await fetchPublicApps(accountId);
+    const publicApps = response.results;
+    const filteredPublicApps = publicApps.filter(
+      app => !app.projectId && !app.sourceId
+    );
 
-    if (!publicApps.length) {
+    if (!filteredPublicApps.length) {
       logger.error(
         i18n(`${i18nKey}.errors.noPublicAppsInAccount`, { accountName })
       );
       process.exit(EXIT_CODES.ERROR);
     }
-    return publicApps;
+    return filteredPublicApps;
   } catch (error) {
     logger.error(i18n(`${i18nKey}.errors.errorFetchingApps`));
     process.exit(EXIT_CODES.ERROR);
@@ -26,16 +30,11 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
 const selectPublicAppPrompt = async ({
   accountId,
   accountName,
-  migrateApp,
-  cloneApp,
   promptOptions = {},
+  migrateApp = false,
 }) => {
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const translationKey = migrateApp
-    ? 'selectAppIdMigrate'
-    : cloneApp
-    ? 'selectAppIdClone'
-    : '';
+  const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
 
   return promptUser([
     {
