@@ -25,8 +25,10 @@ const migratePublicApp = async (appId, name, location) => {
   return;
 };
 
-const clonePublicApp = async appId => {
+const clonePublicApp = async (appId, name, location) => {
   console.log('Cloning appId', appId);
+  console.log('Name:', name);
+  console.log('Location:', location);
   return;
 };
 

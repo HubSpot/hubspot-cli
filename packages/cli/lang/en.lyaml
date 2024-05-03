@@ -507,6 +507,17 @@ en:
                 describe: "Directory where project should be created"
               name:
                 describe: "Project name (cannot be changed)"
+          cloneApp:
+            describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
+            examples:
+              default: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
+            options:
+              appId:
+                describe: "The ID for the public app being cloned"
+              location:
+                describe: "Directory where project should be created"
+              name:
+                describe: "Project name (cannot be changed)"
           add:
             describe: "Create a new component within a project"
             options:
@@ -1007,10 +1018,6 @@ en:
       publicApps:
         errors:
           invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
-          migrateOrCloneUnspecified: "Please specify whether you'd like to migrate (--migrateApp) or clone (--cloneApp) your public app"
-          noTemplateWithApp: "Templates (--template) are not supported when migrating or cloning a public app"
-          noTemplateSourceWithApp: "Alternate template sources (--templateSource) are not supported when migrating or cloning a public app"
-          noLocationWithMigrateApp: "Location (--location) is not supported when migrating a public app"
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
