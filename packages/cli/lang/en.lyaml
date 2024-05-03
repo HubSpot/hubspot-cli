@@ -927,6 +927,7 @@ en:
       exitingStart: "Stopping local dev server ..."
       exitingSucceed: "Successfully exited"
       exitingFail: "Failed to cleanup before exiting"
+      missingUid: "Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run {{#bold}}`hs project dev`{{/bold}}."
       uploadWarning:
         appLabel: "[App]"
         uiExtensionLabel: "[UI Extension]"

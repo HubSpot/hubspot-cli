@@ -97,8 +97,8 @@ class LocalDevManager {
 
   async setActiveApp(appUid) {
     if (!appUid) {
-      // TODO: What do we do here?
-      return;
+      logger.error(i18n(`${i18nKey}.missingUid`));
+      process.exit(EXIT_CODES.ERROR);
     }
     this.activeApp = this.runnableComponents.find(component => {
       return component.config.uid === appUid;
