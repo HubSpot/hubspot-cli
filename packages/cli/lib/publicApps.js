@@ -5,6 +5,10 @@ const {
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const {
+  migrateApp,
+  checkMigrationStatus,
+} = require('@hubspot/local-dev-lib/api/projects');
 
 const i18nKey = 'cli.lib.publicApps';
 
@@ -18,11 +22,12 @@ const fetchPublicApp = async (accountId, accountName, options, migrateApp) => {
   return appId;
 };
 
-const migratePublicApp = async (appId, name, location) => {
-  console.log('Migrating appId', appId);
-  console.log('Name:', name);
-  console.log('Location:', location);
-  return;
+const migratePublicApp = async (accountId, appId, name) => {
+  await migrateApp(accountId, appId, name);
+};
+
+const getMigrationStatus = async (accountId, id) => {
+  await checkMigrationStatus(accountId, id);
 };
 
 const clonePublicApp = async (appId, name, location) => {
@@ -42,6 +47,7 @@ const validateAppId = async (appId, accountId, accountName) => {
 
 module.exports = {
   migratePublicApp,
+  getMigrationStatus,
   clonePublicApp,
   fetchPublicApp,
   validateAppId,

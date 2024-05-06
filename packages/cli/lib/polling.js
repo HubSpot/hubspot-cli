@@ -9,7 +9,7 @@ const poll = (callback, accountId, taskId) => {
       if (status === 'SUCCESS') {
         clearInterval(pollInterval);
         resolve(pollResp);
-      } else if (status === 'ERROR') {
+      } else if (status === 'ERROR' || status === 'FAILURE') {
         clearInterval(pollInterval);
         reject(pollResp);
       }

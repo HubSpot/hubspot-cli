@@ -4,7 +4,6 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -13,10 +12,20 @@ const {
 const { i18n } = require('../../lib/lang');
 const {
   fetchPublicApp,
+  getMigrationStatus,
   migratePublicApp,
   validateAppId,
 } = require('../../lib/publicApps');
+const { poll } = require('../../lib/polling');
 const { uiBetaTag } = require('../../lib/ui');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
+const {
+  logApiErrorInstance,
+  ApiErrorContext,
+} = require('../../lib/errorHandlers/apiErrors');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { logger } = require('@hubspot/local-dev-lib/logger');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'cli.commands.project.subcommands.migrateApp';
 
@@ -43,7 +52,23 @@ exports.handler = async options => {
   trackCommandUsage('migrate-app', {}, accountId);
 
   if (appId) {
-    await migratePublicApp(appId, name, location);
+    try {
+      SpinniesManager.init();
+
+      SpinniesManager.add('migrateApp', {
+        text: i18n(`${i18nKey}.migrationStatus.initiated`),
+      });
+
+      const { id } = await migratePublicApp(accountId, appId, name, location);
+      await poll(getMigrationStatus, accountId, id);
+      SpinniesManager.remove('migrateApp');
+      logger.success(i18n(`${i18nKey}.migrationStatus.success`));
+      process.exit(EXIT_CODES.SUCCESS);
+    } catch (e) {
+      SpinniesManager.remove('migrateApp');
+      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 };
 

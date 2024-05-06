@@ -507,6 +507,9 @@ en:
                 describe: "Directory where project should be created"
               name:
                 describe: "Project name (cannot be changed)"
+            migrationStatus:
+              initiated: "App migration initiated"
+              success: "App migration successful"
           cloneApp:
             describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
             examples:
