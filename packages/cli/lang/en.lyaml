@@ -927,6 +927,7 @@ en:
       exitingStart: "Stopping local dev server ..."
       exitingSucceed: "Successfully exited"
       exitingFail: "Failed to cleanup before exiting"
+      missingUid: "Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run {{ devCommand }}."
       uploadWarning:
         appLabel: "[App]"
         uiExtensionLabel: "[UI Extension]"
@@ -1231,6 +1232,10 @@ en:
           destRequired: "You must specify a destination directory."
       cleanUploadPrompt:
         message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
+      installPublicAppPrompt:
+        explanation: "Local development requires this app to be installed in the target test account"
+        prompt: "Open hubspot.com to install this app?"
+        decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
     convertFields:
       positionals:
         src:

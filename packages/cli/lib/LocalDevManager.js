@@ -5,6 +5,12 @@ const { i18n } = require('./lang');
 const { handleKeypress } = require('./process');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
+  fetchAppInstallationData,
+} = require('@hubspot/local-dev-lib/api/localDevAuth');
+const {
+  fetchPublicAppsForPortal,
+} = require('@hubspot/local-dev-lib/api/appsDev');
+const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -26,6 +32,8 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -44,6 +52,7 @@ class LocalDevManager {
 
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.projectId = options.projectId;
     this.debug = options.debug || false;
     this.deployedBuild = options.deployedBuild;
     this.isGithubLinked = options.isGithubLinked;
@@ -51,6 +60,8 @@ class LocalDevManager {
     this.uploadWarnings = {};
     this.runnableComponents = this.getRunnableComponents(options.components);
     this.activeApp = null;
+    this.activePublicAppData = null;
+    this.env = options.env;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -84,10 +95,43 @@ class LocalDevManager {
     return components.filter(component => component.runnable);
   }
 
-  async setActiveApp(app) {
-    this.activeApp = app;
+  async setActiveApp(appUid) {
+    if (!appUid) {
+      logger.error(
+        i18n(`${i18nKey}.missingUid`, {
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+    this.activeApp = this.runnableComponents.find(component => {
+      return component.config.uid === appUid;
+    });
 
-    // TODO: Show the install warnings the first time this gets set
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      try {
+        await this.setActivePublicAppData();
+        await this.checkPublicAppInstallation();
+      } catch (e) {
+        logErrorInstance(e);
+      }
+    }
+  }
+
+  async setActivePublicAppData() {
+    if (!this.activeApp) {
+      return;
+    }
+
+    const portalPublicApps = await fetchPublicAppsForPortal(
+      this.targetProjectAccountId
+    );
+
+    const activePublicAppData = portalPublicApps.find(
+      ({ sourceId }) => sourceId === this.activeApp.config.uid
+    );
+
+    this.activePublicAppData = activePublicAppData;
   }
 
   async start() {
@@ -177,6 +221,32 @@ class LocalDevManager {
       });
     }
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  getActiveAppInstallationData() {
+    return fetchAppInstallationData(
+      this.targetAccountId,
+      this.projectId,
+      this.activeApp.config.uid,
+      this.activeApp.config.auth.requiredScopes,
+      this.activeApp.config.auth.optionalScopes
+    );
+  }
+
+  async checkPublicAppInstallation() {
+    const {
+      isInstalledWithScopeGroups: isInstalled,
+    } = await this.getActiveAppInstallationData();
+
+    if (!isInstalled) {
+      await installPublicAppPrompt(
+        this.env,
+        this.targetAccountId,
+        this.activePublicAppData.clientId,
+        this.activeApp.config.auth.requiredScopes,
+        this.activeApp.config.auth.redirectUrls
+      );
+    }
   }
 
   updateKeypressListeners() {
