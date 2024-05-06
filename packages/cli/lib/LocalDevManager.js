@@ -97,7 +97,11 @@ class LocalDevManager {
 
   async setActiveApp(appUid) {
     if (!appUid) {
-      logger.error(i18n(`${i18nKey}.missingUid`));
+      logger.error(
+        i18n(`${i18nKey}.missingUid`, {
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
     this.activeApp = this.runnableComponents.find(component => {
