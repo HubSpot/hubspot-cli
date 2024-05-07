@@ -17,13 +17,14 @@ const {
   validateAppId,
 } = require('../../lib/publicApps');
 const { poll } = require('../../lib/polling');
-const { uiBetaTag } = require('../../lib/ui');
+const { uiBetaTag, uiLine, uiCommandReference } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
@@ -50,13 +51,39 @@ exports.handler = async options => {
   const { name, location } = await createProjectPrompt('', options, appId);
 
   trackCommandUsage('migrate-app', {}, accountId);
+  if (appId && name && location) {
+    logger.log('');
+    uiLine();
+    logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`), false));
+    logger.log(i18n(`${i18nKey}.warning.projectConversion`));
+    logger.log(i18n(`${i18nKey}.warning.appConfig`));
+    logger.log('');
+    logger.log(i18n(`${i18nKey}.warning.buildAndDeploy`));
+    logger.log('');
+    logger.log(i18n(`${i18nKey}.warning.existingApps`));
+    logger.log('');
+    logger.log(
+      i18n(`${i18nKey}.warning.cloneApp`, {
+        command: uiCommandReference('hs project clone-app'),
+      })
+    );
+    uiLine();
 
-  if (appId) {
+    const { shouldCreateApp } = await promptUser({
+      name: 'shouldCreateApp',
+      type: 'confirm',
+      message: i18n(`${i18nKey}.createAppPrompt`),
+    });
+
+    if (!shouldCreateApp) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+
     try {
       SpinniesManager.init();
 
       SpinniesManager.add('migrateApp', {
-        text: i18n(`${i18nKey}.migrationStatus.initiated`),
+        text: i18n(`${i18nKey}.migrationStatus.inProgress`),
       });
 
       const { id } = await migratePublicApp(accountId, appId, name, location);

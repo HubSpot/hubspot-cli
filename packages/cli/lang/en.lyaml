@@ -508,8 +508,16 @@ en:
               name:
                 describe: "Project name (cannot be changed)"
             migrationStatus:
-              initiated: "App migration initiated"
+              inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
               success: "App migration successful"
+            warning:
+              title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
+              projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
+              appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
+              buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
+              existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
+              cloneApp: "We strongly recommend using {{command}} to test this process in a development app before replacing production."
+            createAppPrompt: "Proceed with migrating this app to a project component?"
           cloneApp:
             describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
             examples:
