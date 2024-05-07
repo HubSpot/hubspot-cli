@@ -23,7 +23,6 @@ const {
 const { confirmPrompt } = require('./prompts/promptUtils');
 const {
   validateSandboxUsageLimits,
-  getSandboxTypeAsString,
   getAvailableSyncTypes,
 } = require('./sandboxes');
 const { buildSandbox } = require('./sandboxCreate');
@@ -70,9 +69,7 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
   logger.log();
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
-    isDeveloperTestAccount(accountConfig)
-      ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-      : `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
   );
 
   if (!useDefaultAccount) {

@@ -39,9 +39,6 @@ const getSandboxTypeAsString = accountType => {
   return 'standard';
 };
 
-const getSandboxName = config =>
-  `[${getSandboxTypeAsString(config.accountType)} sandbox] `;
-
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
   const parentPortalId = getAccountId(parentAccountConfig.portalId);
@@ -342,7 +339,6 @@ module.exports = {
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,
-  getSandboxName,
   getSandboxTypeAsString,
   getHasSandboxesByType,
   getSandboxLimit,
