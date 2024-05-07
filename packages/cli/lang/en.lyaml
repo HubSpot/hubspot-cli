@@ -951,7 +951,7 @@ en:
       suggestRecommendedNestedAccount:
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
-        privateAppNonDeveloperTestAccountWarning: "Local development of private apps is only supported in {{#bold}}developer test accounts{{/bold}}"
+        privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
       createNewProjectForLocalDev:
         projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
         publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
