@@ -111,6 +111,7 @@ class LocalDevManager {
     if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
       try {
         await this.setActivePublicAppData();
+        await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
         logErrorInstance(e);
@@ -132,6 +133,23 @@ class LocalDevManager {
     );
 
     this.activePublicAppData = activePublicAppData;
+  }
+
+  async checkActivePublicAppInstalls() {
+    // Add check for installs once we have that info
+    if (!this.activePublicAppData) {
+      return;
+    }
+    uiLine();
+    logger.warn(
+      i18n(`${i18nKey}.activeInstallWarning.installCount`, {
+        appName: '[APP NAME]',
+        installCount: '[COUNT]',
+      })
+    );
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.explanation`));
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.confirmation`));
+    uiLine();
   }
 
   async start() {
