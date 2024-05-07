@@ -648,7 +648,7 @@ en:
             bug:
               describe: "Open Github issues in your browser to report a bug."
             general:
-              describe: "Open the projects feedback form in your browser."
+              describe: "Open Github issues in your browser to give feedback."
     remove:
       describe: "Delete a file or folder from HubSpot."
       deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -1217,7 +1217,7 @@ en:
           bug: "[--bug] Report a bug"
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
-        generalPrompt: "Open the projects feedback form in your browser?"
+        generalPrompt: "Create an issue on Github in your browser?"
       buildIdPrompt:
         enterBuildId: "[--build] Deploy which build?"
         errors:
