@@ -114,19 +114,19 @@ const suggestRecommendedNestedAccount = async (
   logger.log();
   uiLine();
   if (hasPublicApps) {
-    logger.warn(
+    logger.log(
       i18n(
         `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.warn(
+    logger.log(
       i18n(
         `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else {
-    logger.warn(
+    logger.log(
       i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
     );
   }
