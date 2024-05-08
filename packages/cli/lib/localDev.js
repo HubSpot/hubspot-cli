@@ -319,7 +319,7 @@ const createNewProjectForLocalDev = async (
     );
     logger.log();
     uiLine();
-    logger.warn(explanationString);
+    logger.log(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
