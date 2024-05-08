@@ -893,9 +893,17 @@ const displayWarnLogs = async (
   let result;
 
   if (isDeploy) {
-    result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+    try {
+      result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+    } catch (e) {
+      logApiErrorInstance(e);
+    }
   } else {
-    result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+    try {
+      result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+    } catch (e) {
+      logApiErrorInstance(e);
+    }
   }
 
   if (result && result.logs.length) {

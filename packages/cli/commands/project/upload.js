@@ -93,7 +93,7 @@ exports.handler = async options => {
       uiLine();
       logFeedbackMessage(result.buildId);
 
-      displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
