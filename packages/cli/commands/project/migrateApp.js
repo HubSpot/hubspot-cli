@@ -17,7 +17,12 @@ const {
   validateAppId,
 } = require('../../lib/publicApps');
 const { poll } = require('../../lib/polling');
-const { uiBetaTag, uiLine, uiCommandReference } = require('../../lib/ui');
+const {
+  uiBetaTag,
+  uiLine,
+  uiCommandReference,
+  uiLink,
+} = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   logApiErrorInstance,
@@ -87,10 +92,25 @@ exports.handler = async options => {
       });
 
       const { id } = await migratePublicApp(accountId, appId, name, location);
-      await poll(getMigrationStatus, accountId, id);
-      SpinniesManager.remove('migrateApp');
-      logger.success(i18n(`${i18nKey}.migrationStatus.success`));
-      process.exit(EXIT_CODES.SUCCESS);
+      const { status } = await poll(getMigrationStatus, accountId, id);
+
+      if (status === 'SUCCESS') {
+        SpinniesManager.succeed('migrateApp', {
+          text: i18n(`${i18nKey}.migrationStatus.done`),
+          succeedColor: 'white',
+        });
+        logger.log('');
+        uiLine();
+        logger.success(i18n(`${i18nKey}.migrationStatus.success`));
+        logger.log('');
+        logger.log(
+          uiLink(
+            i18n(`${i18nKey}.projectDetailsLink`),
+            'https://developers.hubspot.com/docs/api/crm/crm-custom-objects'
+          )
+        );
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     } catch (e) {
       SpinniesManager.remove('migrateApp');
       logApiErrorInstance(e, new ApiErrorContext({ accountId }));
