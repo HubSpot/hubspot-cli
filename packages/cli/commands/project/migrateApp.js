@@ -93,7 +93,6 @@ exports.handler = async options => {
 
       const { id } = await migratePublicApp(accountId, appId, name, location);
       const { status } = await poll(getMigrationStatus, accountId, id);
-
       if (status === 'SUCCESS') {
         SpinniesManager.succeed('migrateApp', {
           text: i18n(`${i18nKey}.migrationStatus.done`),
@@ -112,7 +111,10 @@ exports.handler = async options => {
         process.exit(EXIT_CODES.SUCCESS);
       }
     } catch (e) {
-      SpinniesManager.remove('migrateApp');
+      SpinniesManager.fail('migrateApp', {
+        text: i18n(`${i18nKey}.migrationStatus.failure`),
+        failColor: 'white',
+      });
       logApiErrorInstance(e, new ApiErrorContext({ accountId }));
       process.exit(EXIT_CODES.ERROR);
     }

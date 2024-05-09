@@ -511,6 +511,7 @@ en:
               inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
               success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
               done: "Converting app configuration to public-app.json component definition ... DONE"
+              failure: "Converting app configuration to public-app.json component definition ... FAILED"
             warning:
               title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
               projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
