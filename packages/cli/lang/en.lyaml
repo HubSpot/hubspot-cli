@@ -933,6 +933,7 @@ en:
         uiExtensionLabel: "[UI Extension]"
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "Changing project configuration requires a new project build."
+        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend created a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"

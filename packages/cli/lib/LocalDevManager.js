@@ -144,7 +144,7 @@ class LocalDevManager {
     // TODO: Replace with final copy
 
     logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
-    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
+    logger.log(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
     uiLine();
   }
 
@@ -283,7 +283,13 @@ class LocalDevManager {
   }
 
   logUploadWarning(reason) {
-    const warning = reason || i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    let warning = reason;
+    if (!reason) {
+      warning =
+        this.activeApp.type === COMPONENT_TYPES.publicApp
+          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`)
+          : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    }
 
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
