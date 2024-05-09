@@ -79,8 +79,8 @@ exports.handler = async options => {
 
   const components = await findProjectComponents(projectDir);
   const componentTypes = getProjectComponentTypes(components);
-  const hasPrivateApps = componentTypes[COMPONENT_TYPES.privateApp];
-  const hasPublicApps = componentTypes[COMPONENT_TYPES.publicApp];
+  const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
+  const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
 
   if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
