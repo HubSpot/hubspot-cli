@@ -136,19 +136,15 @@ class LocalDevManager {
   }
 
   async checkActivePublicAppInstalls() {
-    // Add check for installs once we have that info
+    // TODO: Add check for installs once we have that info
     if (!this.activePublicAppData) {
       return;
     }
     uiLine();
-    logger.warn(
-      i18n(`${i18nKey}.activeInstallWarning.installCount`, {
-        appName: '[APP NAME]',
-        installCount: '[COUNT]',
-      })
-    );
-    logger.warn(i18n(`${i18nKey}.activeInstallWarning.explanation`));
-    logger.warn(i18n(`${i18nKey}.activeInstallWarning.confirmation`));
+    // TODO: Replace with final copy
+
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
     uiLine();
   }
 

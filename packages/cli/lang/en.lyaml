@@ -940,6 +940,8 @@ en:
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
+        genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
+        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend created a copy of this app to develop on instead."
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend created a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
       devServer:
