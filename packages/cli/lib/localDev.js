@@ -291,7 +291,7 @@ const useExistingDevTestAccount = async (env, account) => {
   }
   const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
   logger.success(
-    i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
+    i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,
       authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
     })
