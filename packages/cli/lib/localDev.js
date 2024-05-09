@@ -340,7 +340,7 @@ const createNewProjectForLocalDev = async (
     });
 
     try {
-      await createProject(targetAccountId, projectConfig.name);
+      const project = await createProject(targetAccountId, projectConfig.name);
       SpinniesManager.succeed('createProject', {
         text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
@@ -348,6 +348,7 @@ const createNewProjectForLocalDev = async (
         }),
         succeedColor: 'white',
       });
+      return project;
     } catch (err) {
       SpinniesManager.fail('createProject');
       logger.log(

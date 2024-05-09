@@ -178,7 +178,7 @@ exports.handler = async options => {
     targetProjectAccountId = accountId;
   }
 
-  const { projectExists, project } = await ensureProjectExists(
+  let { projectExists, project } = await ensureProjectExists(
     targetProjectAccountId,
     projectConfig.name,
     {
@@ -199,7 +199,7 @@ exports.handler = async options => {
       project.sourceIntegration &&
       project.sourceIntegration.source === 'GITHUB';
   } else {
-    await createNewProjectForLocalDev(
+    project = await createNewProjectForLocalDev(
       projectConfig,
       targetProjectAccountId,
       createNewSandbox,
