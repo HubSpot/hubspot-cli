@@ -1,3 +1,4 @@
+const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -30,8 +31,12 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
+const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
+const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const i18nKey = 'cli.commands.project.subcommands.migrateApp';
 
@@ -55,8 +60,11 @@ exports.handler = async options => {
 
   const { name, location } = await createProjectPrompt('', options, appId);
 
+  const projectName = options.name || name;
+  const projectLocation = options.location || location;
+
   trackCommandUsage('migrate-app', {}, accountId);
-  if (appId && name && location) {
+  if (appId && projectName && projectLocation) {
     logger.log('');
     uiLine();
     logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`), false));
@@ -91,9 +99,22 @@ exports.handler = async options => {
         text: i18n(`${i18nKey}.migrationStatus.inProgress`),
       });
 
-      const { id } = await migratePublicApp(accountId, appId, name, location);
+      const { id } = await migratePublicApp(accountId, appId, projectName);
       const { status } = await poll(getMigrationStatus, accountId, id);
       if (status === 'SUCCESS') {
+        const absoluteDestPath = path.resolve(getCwd(), projectLocation);
+        const { env } = getAccountConfig(accountId);
+        const baseUrl = getHubSpotWebsiteOrigin(env);
+
+        const zippedProject = await downloadProject(accountId, projectName, 1);
+
+        await extractZipArchive(
+          zippedProject,
+          projectName,
+          path.resolve(absoluteDestPath),
+          { includesRootDir: false }
+        );
+
         SpinniesManager.succeed('migrateApp', {
           text: i18n(`${i18nKey}.migrationStatus.done`),
           succeedColor: 'white',
@@ -105,7 +126,7 @@ exports.handler = async options => {
         logger.log(
           uiLink(
             i18n(`${i18nKey}.projectDetailsLink`),
-            'https://developers.hubspot.com/docs/api/crm/crm-custom-objects'
+            `${baseUrl}/developer-projects/${accountId}/project/${projectName}`
           )
         );
         process.exit(EXIT_CODES.SUCCESS);

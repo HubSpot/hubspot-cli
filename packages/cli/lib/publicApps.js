@@ -23,11 +23,13 @@ const fetchPublicApp = async (accountId, accountName, options, migrateApp) => {
 };
 
 const migratePublicApp = async (accountId, appId, name) => {
-  await migrateApp(accountId, appId, name);
+  const response = await migrateApp(accountId, appId, name);
+  return response;
 };
 
 const getMigrationStatus = async (accountId, id) => {
-  await checkMigrationStatus(accountId, id);
+  const response = await checkMigrationStatus(accountId, id);
+  return response;
 };
 
 const clonePublicApp = async (appId, name, location) => {
