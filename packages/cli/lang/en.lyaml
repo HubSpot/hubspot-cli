@@ -648,7 +648,7 @@ en:
             bug:
               describe: "Open Github issues in your browser to report a bug."
             general:
-              describe: "Open the projects feedback form in your browser."
+              describe: "Open Github issues in your browser to give feedback."
     remove:
       describe: "Delete a file or folder from HubSpot."
       deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -917,7 +917,7 @@ en:
       noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
     LocalDevManager:
       failedToInitialize: "Missing required arguments to initialize Local Dev"
-      noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
+      noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
       noComponents: "There are no components in this project."
       noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
@@ -957,7 +957,7 @@ en:
       suggestRecommendedNestedAccount:
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
-        privateAppNonDeveloperTestAccountWarning: "Local development of private apps is only supported in {{#bold}}developer test accounts{{/bold}}"
+        privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
       createNewProjectForLocalDev:
         projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
         publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
@@ -1223,7 +1223,7 @@ en:
           bug: "[--bug] Report a bug"
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
-        generalPrompt: "Open the projects feedback form in your browser?"
+        generalPrompt: "Create an issue on Github in your browser?"
       buildIdPrompt:
         enterBuildId: "[--build] Deploy which build?"
         errors:

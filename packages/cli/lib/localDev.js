@@ -114,19 +114,20 @@ const suggestRecommendedNestedAccount = async (
   logger.log();
   uiLine();
   if (hasPublicApps) {
-    logger.warn(
+    logger.log(
       i18n(
         `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.warn(
+    logger.error(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+        `${i18nKey}.suggestRecommendedNestedAccount.privateAppInAppDeveloperAccountError`
       )
     );
+    process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.warn(
+    logger.log(
       i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
     );
   }
@@ -319,7 +320,7 @@ const createNewProjectForLocalDev = async (
     );
     logger.log();
     uiLine();
-    logger.warn(explanationString);
+    logger.log(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
@@ -417,7 +418,7 @@ const createInitialBuildForNewProject = async (
 
     logger.log();
     failedSubTasks.forEach(failedSubTask => {
-      console.error(failedSubTask.errorMessage);
+      logger.error(failedSubTask.errorMessage);
     });
     logger.log();
 

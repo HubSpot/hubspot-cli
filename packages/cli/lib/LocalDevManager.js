@@ -156,6 +156,7 @@ class LocalDevManager {
     if (!this.deployedBuild) {
       logger.error(
         i18n(`${i18nKey}.noDeployedBuild`, {
+          projectName: this.projectConfig.name,
           accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           uploadCommand: this.getUploadCommand(),
         })
