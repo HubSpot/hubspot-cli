@@ -418,7 +418,7 @@ const createInitialBuildForNewProject = async (
 
     logger.log();
     failedSubTasks.forEach(failedSubTask => {
-      console.error(failedSubTask.errorMessage);
+      logger.error(failedSubTask.errorMessage);
     });
     logger.log();
 

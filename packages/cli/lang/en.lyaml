@@ -917,7 +917,7 @@ en:
       noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
     LocalDevManager:
       failedToInitialize: "Missing required arguments to initialize Local Dev"
-      noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
+      noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
       noComponents: "There are no components in this project."
       noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
