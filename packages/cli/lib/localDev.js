@@ -127,7 +127,7 @@ const suggestRecommendedNestedAccount = async (
     );
     process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.warn(
+    logger.log(
       i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
     );
   }
@@ -320,7 +320,7 @@ const createNewProjectForLocalDev = async (
     );
     logger.log();
     uiLine();
-    logger.warn(explanationString);
+    logger.log(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
