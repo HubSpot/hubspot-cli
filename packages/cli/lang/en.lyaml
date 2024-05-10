@@ -933,7 +933,7 @@ en:
         uiExtensionLabel: "[UI Extension]"
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
         defaultWarning: "Changing project configuration requires a new project build."
-        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend created a copy of this app to test your changes before proceding."
+        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
@@ -942,8 +942,8 @@ en:
       activeInstallWarning:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
         genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
-        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend created a copy of this app to develop on instead."
-        explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend created a copy of this app to use instead."
+        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend creating a copy of this app to develop on instead."
+        explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
