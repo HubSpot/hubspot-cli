@@ -33,8 +33,8 @@ const installPublicAppPrompt = async (
   const url =
     `${websiteOrigin}/oauth/${targetAccountId}/authorize` +
     `?client_id=${encodeURIComponent(clientId)}` +
-    `&scope=${encodeURIComponent(scopes)}` +
-    `&redirect_uri=${encodeURIComponent(redirectUrls)}`;
+    `&scope=${encodeURIComponent(scopes.join(' '))}` +
+    `&redirect_uri=${encodeURIComponent(redirectUrls[0])}`;
 
   open(url);
 };
