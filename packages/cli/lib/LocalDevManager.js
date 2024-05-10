@@ -111,6 +111,7 @@ class LocalDevManager {
     if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
       try {
         await this.setActivePublicAppData();
+        await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
         logErrorInstance(e);
@@ -132,6 +133,19 @@ class LocalDevManager {
     );
 
     this.activePublicAppData = activePublicAppData;
+  }
+
+  async checkActivePublicAppInstalls() {
+    // TODO: Add check for installs once we have that info
+    if (!this.activePublicAppData) {
+      return;
+    }
+    uiLine();
+    // TODO: Replace with final copy
+
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
+    logger.log(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
+    uiLine();
   }
 
   async start() {
@@ -269,7 +283,13 @@ class LocalDevManager {
   }
 
   logUploadWarning(reason) {
-    const warning = reason || i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    let warning = reason;
+    if (!reason) {
+      warning =
+        this.activeApp.type === COMPONENT_TYPES.publicApp
+          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`)
+          : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    }
 
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
