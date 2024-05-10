@@ -291,7 +291,7 @@ const useExistingDevTestAccount = async (env, account) => {
   }
   const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
   logger.success(
-    i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
+    i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,
       authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
     })
@@ -340,7 +340,7 @@ const createNewProjectForLocalDev = async (
     });
 
     try {
-      await createProject(targetAccountId, projectConfig.name);
+      const project = await createProject(targetAccountId, projectConfig.name);
       SpinniesManager.succeed('createProject', {
         text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
@@ -348,6 +348,7 @@ const createNewProjectForLocalDev = async (
         }),
         succeedColor: 'white',
       });
+      return project;
     } catch (err) {
       SpinniesManager.fail('createProject');
       logger.log(
