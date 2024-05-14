@@ -18,8 +18,13 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
-
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const {
+  logApiUploadErrorInstance,
+  ApiErrorContext,
+} = require('../lib/errorHandlers/apiErrors');
 const i18nKey = 'commands.watch';
+
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch [--src] [--dest]';
@@ -87,14 +92,55 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('watch', { mode }, accountId);
-  watch(accountId, absoluteSrcPath, dest, {
-    mode,
-    remove,
-    disableInitial: initialUpload ? false : true,
-    notify,
-    commandOptions: options,
-    filePaths: filesToUpload,
-  });
+
+  const postInitialUploadCallback = null;
+  const onUploadFolderError = error => {
+    logger.error(
+      i18n(`${i18nKey}.errors.folderFailed`, {
+        src,
+        dest,
+        accountId,
+      })
+    );
+    logErrorInstance(error, {
+      accountId,
+    });
+  };
+  const onQueueAddError = null;
+  const onUploadFileError = (file, dest, accountId) => error => {
+    logger.error(
+      i18n(`${i18nKey}.errors.fileFailed`, {
+        file,
+        dest,
+        accountId,
+      })
+    );
+    logApiUploadErrorInstance(
+      error,
+      new ApiErrorContext({
+        accountId,
+        request: dest,
+        payload: file,
+      })
+    );
+  };
+  watch(
+    accountId,
+    absoluteSrcPath,
+    dest,
+    {
+      mode,
+      remove,
+      disableInitial: initialUpload ? false : true,
+      notify,
+      commandOptions: options,
+      filePaths: filesToUpload,
+    },
+    postInitialUploadCallback,
+    onUploadFolderError,
+    onQueueAddError,
+    onUploadFileError
+  );
 };
 
 exports.builder = yargs => {

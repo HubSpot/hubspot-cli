@@ -852,6 +852,8 @@ en:
     watch:
       describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
       errors:
+        folderFailed: "Initial uploading of folder \"{{ src }}\" to \"{{ dest }}\" in account {{ accountId }} had failures"
+        fileFailed: "Upload of file \"{{ file }}\" to \"{{ dest }}\" in account {{ accountId }} failed"
         destinationRequired: "A destination directory needs to be passed"
         invalidPath: "The \"{{ path }}\" is not a path to a directory"
       options:
