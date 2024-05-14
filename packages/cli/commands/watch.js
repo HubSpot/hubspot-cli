@@ -95,7 +95,11 @@ exports.handler = async options => {
   const postInitialUploadCallback = null;
   const onUploadFolderError = error => {
     logger.error(
-      `Initial uploading of folder "${src}" to "${dest} in account ${accountId} failed`
+      i18n(`${i18nKey}.errors.folderFailed`, {
+        src,
+        dest,
+        accountId,
+      })
     );
     logErrorInstance(error, {
       accountId,
@@ -104,7 +108,11 @@ exports.handler = async options => {
   const onQueueAddError = null;
   const onUploadFileError = (file, dest, accountId) => error => {
     logger.error(
-      `Upload of file "${file}" to "${dest}" in account ${accountId} failed`
+      i18n(`${i18nKey}.errors.fileFailed`, {
+        file,
+        dest,
+        accountId,
+      })
     );
     logApiUploadErrorInstance(
       error,
