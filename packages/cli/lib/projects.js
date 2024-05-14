@@ -17,6 +17,7 @@ const {
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
+  PROJECT_ERROR_TYPES,
 } = require('./constants');
 const {
   createProject,
@@ -772,7 +773,9 @@ const makePollTaskStatusFunc = ({
                 const displayErrors = failedSubtasks.filter(
                   subtask =>
                     subtask.standardError.subCategory !==
-                    'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED'
+                      PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
+                    subtask.standardError.subCategory !==
+                      PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
                 );
 
                 displayErrors.forEach(subTask => {
