@@ -18,12 +18,7 @@ const {
   validateAppId,
 } = require('../../lib/publicApps');
 const { poll } = require('../../lib/polling');
-const {
-  uiBetaTag,
-  uiLine,
-  uiCommandReference,
-  uiLink,
-} = require('../../lib/ui');
+const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   logApiErrorInstance,
@@ -86,11 +81,7 @@ exports.handler = async options => {
     logger.log('');
     logger.log(i18n(`${i18nKey}.warning.existingApps`));
     logger.log('');
-    logger.log(
-      i18n(`${i18nKey}.warning.cloneApp`, {
-        command: uiCommandReference('hs project clone-app'),
-      })
-    );
+    logger.log(i18n(`${i18nKey}.warning.copyApp`));
     uiLine();
 
     const { shouldCreateApp } = await promptUser({

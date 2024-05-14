@@ -518,24 +518,13 @@ en:
               appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
               buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
               existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
-              cloneApp: "We strongly recommend using {{command}} to test this process in a development app before replacing production."
+              copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
             createAppPrompt: "Proceed with migrating this app to a project component?"
             projectDetailsLink: "View project details in your developer account"
             errors:
               invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
                 \n- Run {{#bold}}hs accounts use{{/bold}} to switch your default account to an app developer account.
                 \n- Run {{#bold}}hs auth{{/bold}} to connect an app developer account to the HubSpot CLI.\n"
-          cloneApp:
-            describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
-            examples:
-              default: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
-            options:
-              appId:
-                describe: "The ID for the public app being cloned"
-              location:
-                describe: "Directory where project should be created"
-              name:
-                describe: "Project name (cannot be changed)"
           add:
             describe: "Create a new component within a project"
             options:
