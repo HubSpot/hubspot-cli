@@ -18,7 +18,11 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
-
+const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const {
+  logApiUploadErrorInstance,
+  ApiErrorContext,
+} = require('../lib/errorHandlers/apiErrors');
 const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
@@ -87,14 +91,44 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('watch', { mode }, accountId);
-  watch(accountId, absoluteSrcPath, dest, {
-    mode,
-    remove,
-    disableInitial: initialUpload ? false : true,
-    notify,
-    commandOptions: options,
-    filePaths: filesToUpload,
-  });
+  const postInitialUploadCallback = null;
+  const onUploadFolderError = error => {
+    logger.error(
+      `Initial uploading of folder "${src}" to "${dest} in account ${accountId} failed`
+    );
+    logErrorInstance(error, {
+      accountId,
+    });
+  };
+  const onQueueAddError = null;
+  const onUploadFileError = (file, dest) => error => {
+    logger.error(`Failed upload of ${file} to ${dest}`);
+    logApiUploadErrorInstance(
+      error,
+      new ApiErrorContext({
+        accountId,
+        request: dest,
+        payload: file,
+      })
+    );
+  };
+  watch(
+    accountId,
+    absoluteSrcPath,
+    dest,
+    {
+      mode,
+      remove,
+      disableInitial: initialUpload ? false : true,
+      notify,
+      commandOptions: options,
+      filePaths: filesToUpload,
+    },
+    postInitialUploadCallback,
+    onUploadFolderError,
+    onQueueAddError,
+    onUploadFileError
+  );
 };
 
 exports.builder = yargs => {
