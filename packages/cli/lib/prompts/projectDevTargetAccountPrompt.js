@@ -13,7 +13,7 @@ const {
   fetchDeveloperTestAccounts,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
 
-const i18nKey = 'cli.lib.prompts.projectDevTargetAccountPrompt';
+const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
 const mapNestedAccount = accountConfig => ({
   name: uiAccountDescription(accountConfig.portalId, false),

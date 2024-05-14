@@ -3,7 +3,7 @@ const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.enterAccountNamePrompt';
+const i18nKey = 'lib.prompts.enterAccountNamePrompt';
 
 const accountNamePrompt = defaultName => ({
   name: 'name',

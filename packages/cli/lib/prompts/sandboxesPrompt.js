@@ -7,7 +7,7 @@ const {
 } = require('@hubspot/local-dev-lib/constants/config');
 const { isSandbox } = require('../accountTypes');
 
-const i18nKey = 'cli.lib.prompts.sandboxesPrompt';
+const i18nKey = 'lib.prompts.sandboxesPrompt';
 
 const mapSandboxAccountChoices = portals =>
   portals

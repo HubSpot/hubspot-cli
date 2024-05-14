@@ -28,7 +28,7 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.project.subcommands.upload';
+const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload [path] [--forceCreate] [--message]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -93,7 +93,7 @@ exports.handler = async options => {
       uiLine();
       logFeedbackMessage(result.buildId);
 
-      displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {

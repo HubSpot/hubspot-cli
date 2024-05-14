@@ -17,7 +17,7 @@ const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { uiBetaTag } = require('../lib/ui');
 
-const i18nKey = 'cli.commands.mv';
+const i18nKey = 'commands.mv';
 
 const getCorrectedDestPath = (srcPath, destPath) => {
   if (!isPathFolder(srcPath)) {

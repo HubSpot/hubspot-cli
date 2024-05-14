@@ -20,7 +20,7 @@ const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.list';
+const i18nKey = 'commands.list';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'list [path]';

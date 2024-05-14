@@ -2,7 +2,7 @@ const marketplaceValidate = require('./module/marketplace-validate');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 // const { i18n } = require('../lib/lang');
 
-// const i18nKey = 'cli.commands.module';
+// const i18nKey = 'commands.module';
 
 exports.command = 'module';
 exports.describe = false; //i18n(`${i18nKey}.describe`);

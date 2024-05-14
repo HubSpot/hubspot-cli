@@ -36,7 +36,7 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'cli.lib.sandbox.create';
+const i18nKey = 'lib.sandbox.create';
 
 /**
  * @param {String} env - Environment (QA/Prod)
@@ -83,10 +83,9 @@ const saveSandboxToConfig = async (env, result, force = false) => {
       if (!force) {
         logger.log('');
         logger.warn(
-          i18n(
-            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
-            { name: nameForConfig }
-          )
+          i18n(`lib.prompts.enterAccountNamePrompt.errors.accountNameExists`, {
+            name: nameForConfig,
+          })
         );
         const { name: promptName } = await enterAccountNamePrompt(
           nameForConfig + `_${result.sandbox.sandboxHubId}`

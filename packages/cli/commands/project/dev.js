@@ -15,14 +15,17 @@ const {
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const {
   getProjectConfig,
   ensureProjectExists,
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { uiBetaTag } = require('../../lib/ui');
+const {
+  uiAccountDescription,
+  uiBetaTag,
+  uiCommandReference,
+} = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -50,7 +53,7 @@ const {
   useExistingDevTestAccount,
 } = require('../../lib/localDev');
 
-const i18nKey = 'cli.commands.project.subcommands.dev';
+const i18nKey = 'commands.project.subcommands.dev';
 
 exports.command = 'dev [--account]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -76,8 +79,8 @@ exports.handler = async options => {
 
   const components = await findProjectComponents(projectDir);
   const componentTypes = getProjectComponentTypes(components);
-  const hasPrivateApps = componentTypes[COMPONENT_TYPES.privateApp];
-  const hasPublicApps = componentTypes[COMPONENT_TYPES.publicApp];
+  const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
+  const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
 
   if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
@@ -104,12 +107,30 @@ exports.handler = async options => {
   let createNewSandbox = false;
   let createNewDeveloperTestAccount = false;
 
+  // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
-    await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
-    targetProjectAccountId = hasPublicApps
-      ? accountConfig.parentAccountId
-      : accountId;
     targetTestingAccountId = accountId;
+
+    await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
+
+    if (hasPublicApps) {
+      // Exit if the user has not authed the parent account in the config
+      if (!getAccountConfig(accountConfig.parentAccountId)) {
+        logger.error(
+          i18n(`${i18nKey}.errors.parentAccountNotConfigured`, {
+            accountId: accountConfig.parentAccountId,
+            accountIdentifier: uiAccountDescription(targetTestingAccountId),
+            authCommand: uiCommandReference(
+              `hs auth --account=${accountConfig.parentAccountId}`
+            ),
+          })
+        );
+        process.exit(EXIT_CODES.ERROR);
+      }
+      targetProjectAccountId = accountConfig.parentAccountId;
+    } else {
+      targetProjectAccountId = accountId;
+    }
   } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
@@ -157,7 +178,7 @@ exports.handler = async options => {
     targetProjectAccountId = accountId;
   }
 
-  const projectExists = await ensureProjectExists(
+  let { projectExists, project } = await ensureProjectExists(
     targetProjectAccountId,
     projectConfig.name,
     {
@@ -170,21 +191,15 @@ exports.handler = async options => {
   let deployedBuild;
   let isGithubLinked;
 
+  SpinniesManager.init();
+
   if (projectExists) {
-    const project = await fetchProject(
-      targetProjectAccountId,
-      projectConfig.name
-    );
     deployedBuild = project.deployedBuild;
     isGithubLinked =
       project.sourceIntegration &&
       project.sourceIntegration.source === 'GITHUB';
-  }
-
-  SpinniesManager.init();
-
-  if (!projectExists) {
-    await createNewProjectForLocalDev(
+  } else {
+    project = await createNewProjectForLocalDev(
       projectConfig,
       targetProjectAccountId,
       createNewSandbox,
@@ -199,13 +214,16 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
+    components,
     debug: options.debug,
     deployedBuild,
+    isGithubLinked,
+    parentAccountId: targetProjectAccountId,
     projectConfig,
     projectDir,
+    projectId: project.id,
     targetAccountId: targetTestingAccountId,
-    isGithubLinked,
-    components,
+    env,
   });
 
   await LocalDev.start();

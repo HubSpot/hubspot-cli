@@ -19,7 +19,7 @@ const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { uiBetaTag } = require('../../lib/ui');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.project.subcommands.open';
+const i18nKey = 'commands.project.subcommands.open';
 
 exports.command = 'open [--project]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -37,9 +37,13 @@ exports.handler = async options => {
   let projectName = project;
 
   if (projectName) {
-    const projectExists = await ensureProjectExists(accountId, projectName, {
-      allowCreate: false,
-    });
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+      }
+    );
 
     if (!projectExists) {
       process.exit(EXIT_CODES.ERROR);

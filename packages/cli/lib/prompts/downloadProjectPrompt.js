@@ -8,7 +8,7 @@ const {
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.downloadProjectPrompt';
+const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
 const createProjectsList = async () => {
   const accountId = getAccountId();

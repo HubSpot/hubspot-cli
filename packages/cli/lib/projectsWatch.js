@@ -20,7 +20,7 @@ const {
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { PROJECT_ERROR_TYPES } = require('./constants');
 
-const i18nKey = 'cli.commands.project.subcommands.watch';
+const i18nKey = 'commands.project.subcommands.watch';
 
 const queue = new PQueue({
   concurrency: 10,

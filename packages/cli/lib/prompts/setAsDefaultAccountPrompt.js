@@ -5,7 +5,7 @@ const {
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.setAsDefaultAccountPrompt';
+const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
 
 const setAsDefaultAccountPrompt = async accountName => {
   const config = getConfig();

@@ -39,9 +39,6 @@ const getSandboxTypeAsString = accountType => {
   return 'standard';
 };
 
-const getSandboxName = config =>
-  `[${getSandboxTypeAsString(config.accountType)} sandbox] `;
-
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
   const parentPortalId = getAccountId(parentAccountConfig.portalId);
@@ -103,9 +100,7 @@ const getSyncTypesWithContactRecordsPrompt = async (
       {
         name: 'contactRecordsSyncPrompt',
         type: 'confirm',
-        message: i18n(
-          `cli.lib.sandbox.sync.confirm.syncContactRecords.${langKey}`
-        ),
+        message: i18n(`lib.sandbox.sync.confirm.syncContactRecords.${langKey}`),
       },
     ]);
     if (!contactRecordsSyncPrompt) {
@@ -138,7 +133,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       if (hasDevelopmentSandboxes) {
         throw new Error(
           i18n(
-            `cli.lib.sandbox.create.failure.alreadyInConfig.developer.${
+            `lib.sandbox.create.failure.alreadyInConfig.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -151,7 +146,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `cli.lib.sandbox.create.failure.limit.developer.${
+            `lib.sandbox.create.failure.limit.developer.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -175,7 +170,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
       if (hasStandardSandboxes) {
         throw new Error(
           i18n(
-            `cli.lib.sandbox.create.failure.alreadyInConfig.standard.${
+            `lib.sandbox.create.failure.alreadyInConfig.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -188,7 +183,7 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
         const baseUrl = getHubSpotWebsiteOrigin(env);
         throw new Error(
           i18n(
-            `cli.lib.sandbox.create.failure.limit.standard.${
+            `lib.sandbox.create.failure.limit.standard.${
               plural ? 'other' : 'one'
             }`,
             {
@@ -229,7 +224,7 @@ function pollSyncTaskStatus(
   syncStatusUrl,
   allowEarlyTermination = true
 ) {
-  const i18nKey = 'cli.lib.sandbox.sync.types';
+  const i18nKey = 'lib.sandbox.sync.types';
   const progressBar = CliProgressMultibarManager.init();
   const mergeTasks = {
     'lead-flows': 'forms', // lead-flows are a subset of forms. We combine these in the UI as a single item, so we want to merge here for consistency.
@@ -244,7 +239,7 @@ function pollSyncTaskStatus(
     logger.log('Exiting, sync will continue in the background.');
     logger.log('');
     logger.log(
-      i18n('cli.lib.sandbox.sync.info.syncStatus', {
+      i18n('lib.sandbox.sync.info.syncStatus', {
         url: syncStatusUrl,
       })
     );
@@ -344,7 +339,6 @@ module.exports = {
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,
-  getSandboxName,
   getSandboxTypeAsString,
   getHasSandboxesByType,
   getSandboxLimit,

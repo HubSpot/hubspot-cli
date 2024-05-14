@@ -5,6 +5,12 @@ const { i18n } = require('./lang');
 const { handleKeypress } = require('./process');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
+  fetchAppInstallationData,
+} = require('@hubspot/local-dev-lib/api/localDevAuth');
+const {
+  fetchPublicAppsForPortal,
+} = require('@hubspot/local-dev-lib/api/appsDev');
+const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -26,6 +32,8 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -34,19 +42,26 @@ const WATCH_EVENTS = {
   unlinkDir: 'unlinkDir',
 };
 
-const i18nKey = 'cli.lib.LocalDevManager';
+const i18nKey = 'lib.LocalDevManager';
 
 class LocalDevManager {
   constructor(options) {
     this.targetAccountId = options.targetAccountId;
+    // The account that the project exists in. This is not always the targetAccountId
+    this.targetProjectAccountId = options.parentAccountId || options.accountId;
+
     this.projectConfig = options.projectConfig;
     this.projectDir = options.projectDir;
+    this.projectId = options.projectId;
     this.debug = options.debug || false;
     this.deployedBuild = options.deployedBuild;
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
     this.runnableComponents = this.getRunnableComponents(options.components);
+    this.activeApp = null;
+    this.activePublicAppData = null;
+    this.env = options.env;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -80,6 +95,59 @@ class LocalDevManager {
     return components.filter(component => component.runnable);
   }
 
+  async setActiveApp(appUid) {
+    if (!appUid) {
+      logger.error(
+        i18n(`${i18nKey}.missingUid`, {
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+    this.activeApp = this.runnableComponents.find(component => {
+      return component.config.uid === appUid;
+    });
+
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      try {
+        await this.setActivePublicAppData();
+        await this.checkActivePublicAppInstalls();
+        await this.checkPublicAppInstallation();
+      } catch (e) {
+        logErrorInstance(e);
+      }
+    }
+  }
+
+  async setActivePublicAppData() {
+    if (!this.activeApp) {
+      return;
+    }
+
+    const portalPublicApps = await fetchPublicAppsForPortal(
+      this.targetProjectAccountId
+    );
+
+    const activePublicAppData = portalPublicApps.find(
+      ({ sourceId }) => sourceId === this.activeApp.config.uid
+    );
+
+    this.activePublicAppData = activePublicAppData;
+  }
+
+  async checkActivePublicAppInstalls() {
+    // TODO: Add check for installs once we have that info
+    if (!this.activePublicAppData) {
+      return;
+    }
+    uiLine();
+    // TODO: Replace with final copy
+
+    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
+    logger.log(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
+    uiLine();
+  }
+
   async start() {
     SpinniesManager.stopAll();
     SpinniesManager.init();
@@ -88,7 +156,8 @@ class LocalDevManager {
     if (!this.deployedBuild) {
       logger.error(
         i18n(`${i18nKey}.noDeployedBuild`, {
-          accountIdentifier: uiAccountDescription(this.targetAccountId),
+          projectName: this.projectConfig.name,
+          accountIdentifier: uiAccountDescription(this.targetProjectAccountId),
           uploadCommand: this.getUploadCommand(),
         })
       );
@@ -117,7 +186,10 @@ class LocalDevManager {
     logger.log(
       uiLink(
         i18n(`${i18nKey}.viewInHubSpotLink`),
-        getProjectDetailUrl(this.projectConfig.name, this.targetAccountId)
+        getProjectDetailUrl(
+          this.projectConfig.name,
+          this.targetProjectAccountId
+        )
       )
     );
     logger.log();
@@ -166,6 +238,32 @@ class LocalDevManager {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
+  getActiveAppInstallationData() {
+    return fetchAppInstallationData(
+      this.targetAccountId,
+      this.projectId,
+      this.activeApp.config.uid,
+      this.activeApp.config.auth.requiredScopes,
+      this.activeApp.config.auth.optionalScopes
+    );
+  }
+
+  async checkPublicAppInstallation() {
+    const {
+      isInstalledWithScopeGroups: isInstalled,
+    } = await this.getActiveAppInstallationData();
+
+    if (!isInstalled) {
+      await installPublicAppPrompt(
+        this.env,
+        this.targetAccountId,
+        this.activePublicAppData.clientId,
+        this.activeApp.config.auth.requiredScopes,
+        this.activeApp.config.auth.redirectUrls
+      );
+    }
+  }
+
   updateKeypressListeners() {
     handleKeypress(async key => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
@@ -177,15 +275,21 @@ class LocalDevManager {
   getUploadCommand() {
     const currentDefaultAccount = getConfigDefaultAccount();
 
-    return this.targetAccountId !== getAccountId(currentDefaultAccount)
+    return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
       ? uiCommandReference(
-          `hs project upload --account=${this.targetAccountId}`
+          `hs project upload --account=${this.targetProjectAccountId}`
         )
       : uiCommandReference('hs project upload');
   }
 
   logUploadWarning(reason) {
-    const warning = reason || i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    let warning = reason;
+    if (!reason) {
+      warning =
+        this.activeApp.type === COMPONENT_TYPES.publicApp
+          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`)
+          : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
+    }
 
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
@@ -325,6 +429,7 @@ class LocalDevManager {
         components: this.runnableComponents,
         onUploadRequired: this.logUploadWarning.bind(this),
         accountId: this.targetAccountId,
+        setActiveApp: this.setActiveApp.bind(this),
       });
       return true;
     } catch (e) {

@@ -29,7 +29,7 @@ const {
 } = require('./prompts/personalAccessKeyPrompt');
 const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
 
-const i18nKey = 'cli.lib.developerTestAccount';
+const i18nKey = 'lib.developerTestAccount';
 
 const saveDevTestAccountToConfig = async (env, result, force = false) => {
   let personalAccessKey = result.personalAccessKey;
@@ -60,10 +60,9 @@ const saveDevTestAccountToConfig = async (env, result, force = false) => {
       if (!force) {
         logger.log('');
         logger.warn(
-          i18n(
-            `cli.lib.prompts.enterAccountNamePrompt.errors.accountNameExists`,
-            { name: nameForConfig }
-          )
+          i18n(`lib.prompts.enterAccountNamePrompt.errors.accountNameExists`, {
+            name: nameForConfig,
+          })
         );
         const { name: promptName } = await enterAccountNamePrompt(
           nameForConfig + `_${result.id}`

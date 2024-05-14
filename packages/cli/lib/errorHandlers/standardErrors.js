@@ -5,7 +5,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/standardErrors');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.errorHandlers.standardErrors';
+const i18nKey = 'lib.errorHandlers.standardErrors';
 
 // TODO: Make these TS interfaces
 class ErrorContext {

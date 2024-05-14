@@ -47,7 +47,7 @@ const {
 } = require('./errorHandlers/apiErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
-const i18nKey = 'cli.lib.projects';
+const i18nKey = 'lib.projects';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -252,7 +252,7 @@ const ensureProjectExists = async (
     const project = withPolling
       ? await pollFetchProject(accountId, projectName)
       : await fetchProject(accountId, projectName);
-    return !!project;
+    return { projectExists: !!project, project };
   } catch (err) {
     if (isSpecifiedError(err, { statusCode: 404 })) {
       let shouldCreateProject = forceCreate;
@@ -273,14 +273,14 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          await createProject(accountId, projectName);
+          const project = await createProject(accountId, projectName);
           logger.success(
             i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
               projectName,
               accountIdentifier,
             })
           );
-          return true;
+          return { projectExists: true, project };
         } catch (err) {
           return logApiErrorInstance(
             err,
@@ -296,7 +296,7 @@ const ensureProjectExists = async (
             })
           );
         }
-        return false;
+        return { projectExists: false };
       }
     }
     if (
@@ -859,7 +859,7 @@ const createProjectComponent = async (
   name,
   projectComponentsVersion
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.add';
+  const i18nKey = 'commands.project.subcommands.add';
   let componentName = name;
 
   const configInfo = await getProjectConfig();
@@ -893,9 +893,17 @@ const displayWarnLogs = async (
   let result;
 
   if (isDeploy) {
-    result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+    try {
+      result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+    } catch (e) {
+      logApiErrorInstance(e);
+    }
   } else {
-    result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+    try {
+      result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+    } catch (e) {
+      logApiErrorInstance(e);
+    }
   }
 
   if (result && result.logs.length) {

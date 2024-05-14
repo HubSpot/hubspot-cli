@@ -15,7 +15,7 @@ const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.remove';
+const i18nKey = 'commands.remove';
 
 exports.command = 'remove <path>';
 exports.describe = i18n(`${i18nKey}.describe`);

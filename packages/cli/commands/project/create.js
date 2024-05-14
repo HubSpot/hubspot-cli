@@ -21,7 +21,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
-const i18nKey = 'cli.commands.project.subcommands.create';
+const i18nKey = 'commands.project.subcommands.create';
 
 exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

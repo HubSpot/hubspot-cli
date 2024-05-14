@@ -10,7 +10,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getTableContents } = require('../../lib/ui/table');
 
-const i18nKey = 'cli.commands.accounts.subcommands.info';
+const i18nKey = 'commands.accounts.subcommands.info';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.command = 'info [--account]';

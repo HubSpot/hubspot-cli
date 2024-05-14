@@ -32,7 +32,7 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'cli.commands.sandbox.subcommands.sync';
+const i18nKey = 'commands.sandbox.subcommands.sync';
 
 exports.command = 'sync';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -95,7 +95,7 @@ exports.handler = async options => {
       })
     ) {
       logger.error(
-        i18n('cli.lib.sandbox.sync.failure.objectNotFound', {
+        i18n('lib.sandbox.sync.failure.objectNotFound', {
           account: uiAccountDescription(accountId),
         })
       );

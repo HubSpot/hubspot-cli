@@ -23,7 +23,8 @@ const {
   logApiUploadErrorInstance,
   ApiErrorContext,
 } = require('../lib/errorHandlers/apiErrors');
-const i18nKey = 'cli.commands.watch';
+const i18nKey = 'commands.watch';
+
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch [--src] [--dest]';

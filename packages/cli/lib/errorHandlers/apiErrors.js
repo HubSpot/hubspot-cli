@@ -19,7 +19,7 @@ const {
 const { overrideErrors } = require('./overrideErrors');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.errorHandlers.apiErrors';
+const i18nKey = 'lib.errorHandlers.apiErrors';
 
 class ApiErrorContext extends ErrorContext {
   constructor(props = {}) {

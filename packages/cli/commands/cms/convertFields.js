@@ -13,7 +13,7 @@ const {
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const i18nKey = 'cli.commands.convertFields';
+const i18nKey = 'commands.convertFields';
 
 exports.command = 'convert-fields';
 exports.describe = i18n(`${i18nKey}.describe`);

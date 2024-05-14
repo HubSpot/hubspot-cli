@@ -15,7 +15,7 @@ const {
 } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
-const i18nKey = 'cli.lib.DevServerManager';
+const i18nKey = 'lib.DevServerManager';
 
 const SERVER_KEYS = {
   privateApp: 'privateApp',
@@ -71,7 +71,7 @@ class DevServerManager {
     }, {});
   }
 
-  async setup({ components, onUploadRequired, accountId }) {
+  async setup({ components, onUploadRequired, accountId, setActiveApp }) {
     this.componentsByType = this.arrangeComponentsByType(components);
     const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
@@ -87,6 +87,7 @@ class DevServerManager {
               api: getHubSpotApiOrigin(env),
               web: getHubSpotWebsiteOrigin(env),
             },
+            setActiveApp,
           });
         }
       }

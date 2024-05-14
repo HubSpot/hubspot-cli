@@ -18,7 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.create';
+const i18nKey = 'commands.hubdb.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <src>';

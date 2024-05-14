@@ -43,7 +43,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
 const { i18n } = require('../lib/lang');
-const i18nKey = 'cli.commands.upload';
+const i18nKey = 'commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {
   FieldsJs,

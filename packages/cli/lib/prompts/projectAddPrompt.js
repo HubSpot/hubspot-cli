@@ -4,7 +4,7 @@ const { i18n } = require('../lang');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('../constants');
 const { PROJECT_COMPONENT_TYPES } = require('../constants');
 
-const i18nKey = 'cli.lib.prompts.projectAddPrompt';
+const i18nKey = 'lib.prompts.projectAddPrompt';
 
 const createTypeOptions = async projectComponentsVersion => {
   const config = await fetchFileFromRepository(

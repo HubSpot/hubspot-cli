@@ -25,7 +25,7 @@ const {
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.project.subcommands.download';
+const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'download [--project]';
@@ -50,10 +50,14 @@ exports.handler = async options => {
   trackCommandUsage('project-download', null, accountId);
 
   try {
-    const projectExists = await ensureProjectExists(accountId, projectName, {
-      allowCreate: false,
-      noLogs: true,
-    });
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
+    );
 
     if (!projectExists) {
       logger.error(

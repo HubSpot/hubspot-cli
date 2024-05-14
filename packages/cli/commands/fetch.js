@@ -14,7 +14,7 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.fetch';
+const i18nKey = 'commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
