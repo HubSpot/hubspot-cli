@@ -521,6 +521,10 @@ en:
               cloneApp: "We strongly recommend using {{command}} to test this process in a development app before replacing production."
             createAppPrompt: "Proceed with migrating this app to a project component?"
             projectDetailsLink: "View project details in your developer account"
+            errors:
+              invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+                \n- Run {{#bold}}hs accounts use{{/bold}} to switch your default account to an app developer account.
+                \n- Run {{#bold}}hs auth{{/bold}} to connect an app developer account to the HubSpot CLI.\n"
           cloneApp:
             describe: "Create a new project locally, with a single public-app.json component definition that reflects your production app's basic details"
             examples:

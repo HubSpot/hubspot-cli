@@ -31,6 +31,7 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -48,6 +49,16 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
+
+  if (!isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.errors.invalidAccountType`, {
+        accountName: accountConfig.name,
+        accountType: accountConfig.accountType,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   let appId;
   if (options.appId) {
