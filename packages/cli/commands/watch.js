@@ -91,6 +91,7 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('watch', { mode }, accountId);
+
   const postInitialUploadCallback = null;
   const onUploadFolderError = error => {
     logger.error(
@@ -101,8 +102,10 @@ exports.handler = async options => {
     });
   };
   const onQueueAddError = null;
-  const onUploadFileError = (file, dest) => error => {
-    logger.error(`Failed upload of ${file} to ${dest}`);
+  const onUploadFileError = (file, dest, accountId) => error => {
+    logger.error(
+      `Upload of file "${file}" to "${dest}" in account ${accountId} failed`
+    );
     logApiUploadErrorInstance(
       error,
       new ApiErrorContext({

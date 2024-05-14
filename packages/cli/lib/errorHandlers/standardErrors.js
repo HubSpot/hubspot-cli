@@ -93,7 +93,6 @@ function logErrorInstance(error, context) {
     // Unknown errors
     logger.error(i18n(`${i18nKey}.unknownErrorOccurred`));
   }
-
   debugErrorAndContext(error, context);
 }
 
