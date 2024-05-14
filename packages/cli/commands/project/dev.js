@@ -5,10 +5,7 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const {
-  trackCommandUsage,
-  trackCommandMetadataUsage,
-} = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
@@ -18,71 +15,40 @@ const {
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const {
-  createProject,
-  fetchProject,
-} = require('@hubspot/local-dev-lib/api/projects');
+const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const {
   getProjectConfig,
   ensureProjectExists,
-  handleProjectUpload,
-  pollProjectBuildAndDeploy,
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  uiAccountDescription,
-  uiBetaTag,
-  uiCommandReference,
-  uiLine,
-} = require('../../lib/ui');
-const { confirmPrompt } = require('../../lib/prompts/promptUtils');
-const {
-  selectTargetAccountPrompt,
-  confirmDefaultAccountPrompt,
-} = require('../../lib/prompts/projectDevTargetAccountPrompt');
+const { uiBetaTag } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
-const { isSandbox, getSandboxTypeAsString } = require('../../lib/sandboxes');
-const { sandboxNamePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
-  validateSandboxUsageLimits,
-  getAvailableSyncTypes,
-} = require('../../lib/sandboxes');
-const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const {
-  PROJECT_BUILD_TEXT,
-  PROJECT_DEPLOY_TEXT,
-  PROJECT_ERROR_TYPES,
-} = require('../../lib/constants');
-
-const { buildSandbox } = require('../../lib/sandboxCreate');
-const { syncSandbox } = require('../../lib/sandboxSync');
-const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
-const {
-  isMissingScopeError,
-  isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const {
+  isSandbox,
   isDeveloperTestAccount,
+  isStandardAccount,
   isAppDeveloperAccount,
-  validateDevTestAccountUsageLimits,
-} = require('../../lib/developerTestAccounts');
+} = require('../../lib/accountTypes');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+
 const {
-  HUBSPOT_ACCOUNT_TYPES,
-  HUBSPOT_ACCOUNT_TYPE_STRINGS,
-} = require('@hubspot/local-dev-lib/constants/config');
+  findProjectComponents,
+  getProjectComponentTypes,
+  COMPONENT_TYPES,
+} = require('../../lib/projectStructure');
 const {
-  developerTestAccountNamePrompt,
-} = require('../../lib/prompts/developerTestAccountNamePrompt');
-const {
-  buildDeveloperTestAccount,
-} = require('../../lib/developerTestAccountCreate');
+  confirmDefaultAccountIsTarget,
+  suggestRecommendedNestedAccount,
+  checkIfAppDeveloperAccount,
+  checkIfDeveloperTestAccount,
+  createSandboxForLocalDev,
+  createDeveloperTestAccountForLocalDev,
+  createNewProjectForLocalDev,
+  createInitialBuildForNewProject,
+  useExistingDevTestAccount,
+} = require('../../lib/localDev');
 
 const i18nKey = 'cli.commands.project.subcommands.dev';
 
@@ -108,192 +74,91 @@ exports.handler = async options => {
 
   validateProjectConfig(projectConfig, projectDir);
 
-  const accounts = getConfigAccounts();
-  let targetAccountId = options.account ? accountId : null;
-  let createNewSandbox = false;
-  let createNewDeveloperTestAccount = false;
-  const defaultAccountIsSandbox = isSandbox(accountConfig);
-  const defaultAccountIsDeveloperTestAccount = isDeveloperTestAccount(
-    accountConfig
-  );
+  const components = await findProjectComponents(projectDir);
+  const componentTypes = getProjectComponentTypes(components);
+  const hasPrivateApps = componentTypes[COMPONENT_TYPES.privateApp];
+  const hasPublicApps = componentTypes[COMPONENT_TYPES.publicApp];
 
-  if (
-    !targetAccountId &&
-    (defaultAccountIsSandbox || defaultAccountIsDeveloperTestAccount)
-  ) {
-    logger.log();
-    const useDefaultAccount = await confirmDefaultAccountPrompt(
-      accountConfig.name,
-      defaultAccountIsSandbox
-        ? `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
-        : HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-    );
-
-    if (useDefaultAccount) {
-      targetAccountId = accountId;
-    } else {
-      logger.log(
-        i18n(`${i18nKey}.logs.declineDefaultAccountExplanation`, {
-          useCommand: uiCommandReference('hs accounts use'),
-          devCommand: uiCommandReference('hs project dev'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
+  if (hasPrivateApps && hasPublicApps) {
+    logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
-  if (!targetAccountId) {
-    logger.log();
-    uiLine();
-    if (isAppDeveloperAccount(accountConfig)) {
-      logger.warn(i18n(`${i18nKey}.logs.nonDeveloperTestAccountWarning`));
-    } else {
-      logger.warn(i18n(`${i18nKey}.logs.nonSandboxWarning`));
-    }
-    uiLine();
-    logger.log();
+  const accounts = getConfigAccounts();
 
+  const defaultAccountIsRecommendedType =
+    isDeveloperTestAccount(accountConfig) ||
+    (!hasPublicApps && isSandbox(accountConfig));
+
+  // The account that the project must exist in
+  let targetProjectAccountId = options.account ? accountId : null;
+  // The account that we are locally testing against
+  let targetTestingAccountId = options.account ? accountId : null;
+
+  if (options.account && hasPublicApps) {
+    checkIfDeveloperTestAccount(accountConfig);
+    targetProjectAccountId = accountConfig.parentAccountId;
+    targetTestingAccountId = accountId;
+  }
+
+  let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
+
+  if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
+    await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
+    targetProjectAccountId = hasPublicApps
+      ? accountConfig.parentAccountId
+      : accountId;
+    targetTestingAccountId = accountId;
+  } else if (!targetProjectAccountId && hasPublicApps) {
+    checkIfAppDeveloperAccount(accountConfig);
+  }
+
+  if (!targetProjectAccountId) {
     const {
-      targetAccountId: promptTargetAccountId,
-      createNewSandbox: promptCreateNewSandbox,
-      createNewDeveloperTestAccount: promptCreateNewDeveloperTestAccount,
-    } = await selectTargetAccountPrompt(accounts, accountConfig);
+      targetAccountId,
+      parentAccountId,
+      createNestedAccount,
+      notInConfigAccount,
+    } = await suggestRecommendedNestedAccount(
+      accounts,
+      accountConfig,
+      hasPublicApps
+    );
 
-    targetAccountId = promptTargetAccountId;
-    createNewSandbox = promptCreateNewSandbox;
-    createNewDeveloperTestAccount = promptCreateNewDeveloperTestAccount;
+    targetProjectAccountId = hasPublicApps ? parentAccountId : targetAccountId;
+    targetTestingAccountId = targetAccountId;
+
+    // Only used for developer test accounts that are not yet in the config
+    if (notInConfigAccount) {
+      await useExistingDevTestAccount(env, notInConfigAccount);
+    }
+
+    createNewSandbox = isStandardAccount(accountConfig) && createNestedAccount;
+    createNewDeveloperTestAccount =
+      isAppDeveloperAccount(accountConfig) && createNestedAccount;
   }
 
   if (createNewSandbox) {
-    try {
-      await validateSandboxUsageLimits(
-        accountConfig,
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        env
-      );
-    } catch (err) {
-      if (isMissingScopeError(err)) {
-        logger.error(
-          i18n('cli.lib.sandbox.create.failure.scopes.message', {
-            accountName: accountConfig.name || accountId,
-          })
-        );
-        const websiteOrigin = getHubSpotWebsiteOrigin(env);
-        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-        logger.info(
-          i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
-            accountName: accountConfig.name || accountId,
-            url,
-          })
-        );
-      } else {
-        logErrorInstance(err);
-      }
-      process.exit(EXIT_CODES.ERROR);
-    }
-    try {
-      const { name } = await sandboxNamePrompt(
-        HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-      );
-
-      trackCommandMetadataUsage(
-        'sandbox-create',
-        { step: 'project-dev' },
-        accountId
-      );
-
-      const { result } = await buildSandbox({
-        name,
-        type: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-        accountConfig,
-        env,
-      });
-
-      targetAccountId = result.sandbox.sandboxHubId;
-
-      const sandboxAccountConfig = getAccountConfig(
-        result.sandbox.sandboxHubId
-      );
-      const syncTasks = await getAvailableSyncTypes(
-        accountConfig,
-        sandboxAccountConfig
-      );
-      await syncSandbox({
-        accountConfig: sandboxAccountConfig,
-        parentAccountConfig: accountConfig,
-        env,
-        syncTasks,
-        allowEarlyTermination: false, // Don't let user terminate early in this flow
-        skipPolling: true, // Skip polling, sync will run and complete in the background
-      });
-    } catch (err) {
-      logErrorInstance(err);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    targetProjectAccountId = await createSandboxForLocalDev(
+      accountId,
+      accountConfig,
+      env
+    );
+    // We will be running our tests against this new sandbox account
+    targetTestingAccountId = targetProjectAccountId;
   }
-
   if (createNewDeveloperTestAccount) {
-    let currentPortalCount = 0;
-    let maxTestPortals = 10;
-    try {
-      const validateResult = await validateDevTestAccountUsageLimits(
-        accountConfig
-      );
-      if (validateResult) {
-        currentPortalCount = validateResult.results
-          ? validateResult.results.length
-          : 0;
-        maxTestPortals = validateResult.maxTestPortals;
-      }
-    } catch (err) {
-      if (isMissingScopeError(err)) {
-        logger.error(
-          i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
-            accountName: accountConfig.name || accountId,
-          })
-        );
-        const websiteOrigin = getHubSpotWebsiteOrigin(env);
-        const url = `${websiteOrigin}/personal-access-key/${accountId}`;
-        logger.info(
-          i18n(
-            'cli.lib.developerTestAccount.create.failure.scopes.instructions',
-            {
-              accountName: accountConfig.name || accountId,
-              url,
-            }
-          )
-        );
-      } else {
-        logErrorInstance(err);
-      }
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    try {
-      const { name } = await developerTestAccountNamePrompt(currentPortalCount);
-      trackCommandMetadataUsage(
-        'developer-test-account-create',
-        { step: 'project-dev' },
-        accountId
-      );
-
-      const { result } = await buildDeveloperTestAccount({
-        name,
-        accountConfig,
-        env,
-        maxTestPortals,
-      });
-
-      targetAccountId = result.id;
-    } catch (err) {
-      logErrorInstance(err);
-      process.exit(EXIT_CODES.ERROR);
-    }
+    targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
+      accountId,
+      accountConfig,
+      env
+    );
+    targetProjectAccountId = accountId;
   }
 
-  logger.log();
   const projectExists = await ensureProjectExists(
-    targetAccountId,
+    targetProjectAccountId,
     projectConfig.name,
     {
       allowCreate: false,
@@ -306,7 +171,10 @@ exports.handler = async options => {
   let isGithubLinked;
 
   if (projectExists) {
-    const project = await fetchProject(targetAccountId, projectConfig.name);
+    const project = await fetchProject(
+      targetProjectAccountId,
+      projectConfig.name
+    );
     deployedBuild = project.deployedBuild;
     isGithubLinked =
       project.sourceIntegration &&
@@ -316,114 +184,18 @@ exports.handler = async options => {
   SpinniesManager.init();
 
   if (!projectExists) {
-    // Create the project without prompting if this is a newly created sandbox
-    let shouldCreateProject = createNewSandbox;
-
-    if (!shouldCreateProject) {
-      logger.log();
-      uiLine();
-      logger.warn(
-        i18n(`${i18nKey}.logs.projectMustExistExplanation`, {
-          accountIdentifier: uiAccountDescription(targetAccountId),
-          projectName: projectConfig.name,
-        })
-      );
-      uiLine();
-
-      shouldCreateProject = await confirmPrompt(
-        i18n(`${i18nKey}.prompt.createProject`, {
-          accountIdentifier: uiAccountDescription(targetAccountId),
-          projectName: projectConfig.name,
-        })
-      );
-    }
-
-    if (shouldCreateProject) {
-      SpinniesManager.add('createProject', {
-        text: i18n(`${i18nKey}.status.creatingProject`, {
-          accountIdentifier: uiAccountDescription(targetAccountId),
-          projectName: projectConfig.name,
-        }),
-      });
-
-      try {
-        await createProject(targetAccountId, projectConfig.name);
-        SpinniesManager.succeed('createProject', {
-          text: i18n(`${i18nKey}.status.createdProject`, {
-            accountIdentifier: uiAccountDescription(targetAccountId),
-            projectName: projectConfig.name,
-          }),
-          succeedColor: 'white',
-        });
-      } catch (err) {
-        SpinniesManager.fail('createProject');
-        logger.log(i18n(`${i18nKey}.status.failedToCreateProject`));
-        process.exit(EXIT_CODES.ERROR);
-      }
-    } else {
-      // We cannot continue if the project does not exist in the target account
-      logger.log();
-      logger.log(i18n(`${i18nKey}.logs.choseNotToCreateProject`));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-  }
-
-  let initialUploadResult;
-
-  // Create an initial build if the project was newly created in the account
-  if (!projectExists) {
-    initialUploadResult = await handleProjectUpload(
-      targetAccountId,
+    await createNewProjectForLocalDev(
       projectConfig,
-      projectDir,
-      (...args) => pollProjectBuildAndDeploy(...args, true),
-      i18n(`${i18nKey}.logs.initialUploadMessage`)
+      targetProjectAccountId,
+      createNewSandbox,
+      hasPublicApps
     );
 
-    if (initialUploadResult.uploadError) {
-      if (
-        isSpecifiedError(initialUploadResult.uploadError, {
-          subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
-        })
-      ) {
-        logger.log();
-        logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
-        logger.log();
-      } else {
-        logApiErrorInstance(
-          initialUploadResult.uploadError,
-          new ApiErrorContext({
-            accountId,
-            projectName: projectConfig.name,
-          })
-        );
-      }
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    if (!initialUploadResult.succeeded) {
-      let subTasks = [];
-
-      if (initialUploadResult.buildResult.status === 'FAILURE') {
-        subTasks =
-          initialUploadResult.buildResult[PROJECT_BUILD_TEXT.SUBTASK_KEY];
-      } else if (initialUploadResult.deployResult.status === 'FAILURE') {
-        subTasks =
-          initialUploadResult.deployResult[PROJECT_DEPLOY_TEXT.SUBTASK_KEY];
-      }
-
-      const failedSubTasks = subTasks.filter(task => task.status === 'FAILURE');
-
-      logger.log();
-      failedSubTasks.forEach(failedSubTask => {
-        console.error(failedSubTask.errorMessage);
-      });
-      logger.log();
-
-      process.exit(EXIT_CODES.ERROR);
-    }
-
-    deployedBuild = initialUploadResult.buildResult;
+    deployedBuild = await createInitialBuildForNewProject(
+      projectConfig,
+      projectDir,
+      targetProjectAccountId
+    );
   }
 
   const LocalDev = new LocalDevManager({
@@ -431,8 +203,9 @@ exports.handler = async options => {
     deployedBuild,
     projectConfig,
     projectDir,
-    targetAccountId,
+    targetAccountId: targetTestingAccountId,
     isGithubLinked,
+    components,
   });
 
   await LocalDev.start();

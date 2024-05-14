@@ -7,14 +7,6 @@ const {
   fetchDeveloperTestAccounts,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
 
-const isDeveloperTestAccount = config =>
-  config.accountType &&
-  config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
-
-const isAppDeveloperAccount = config =>
-  config.accountType &&
-  config.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER;
-
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const config = getConfig();
   const parentPortalId = getAccountId(appDeveloperAccountConfig.portalId);
@@ -61,7 +53,5 @@ const validateDevTestAccountUsageLimits = async accountConfig => {
   return null;
 };
 module.exports = {
-  isDeveloperTestAccount,
-  isAppDeveloperAccount,
   validateDevTestAccountUsageLimits,
 };

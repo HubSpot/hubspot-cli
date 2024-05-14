@@ -10,6 +10,7 @@ const {
 const { getConfig, getAccountId } = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./ui/CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
+const { isDevelopmentSandbox } = require('./accountTypes');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -40,19 +41,6 @@ const getSandboxTypeAsString = accountType => {
 
 const getSandboxName = config =>
   `[${getSandboxTypeAsString(config.accountType)} sandbox] `;
-
-const isSandbox = config =>
-  config.accountType &&
-  (config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
-    config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX);
-
-const isStandardSandbox = config =>
-  config.accountType &&
-  config.accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX;
-
-const isDevelopmentSandbox = config =>
-  config.accountType &&
-  config.accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
@@ -356,9 +344,6 @@ module.exports = {
   sandboxTypeMap,
   sandboxApiTypeMap,
   syncTypes,
-  isSandbox,
-  isStandardSandbox,
-  isDevelopmentSandbox,
   getSandboxName,
   getSandboxTypeAsString,
   getHasSandboxesByType,

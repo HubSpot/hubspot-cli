@@ -62,7 +62,7 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
-    const defaultName = toKebabCase(token.hubName);
+    const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
     const { name } = await enterAccountNamePrompt(defaultName);
 
     updatedConfig = updateConfigWithAccessToken(

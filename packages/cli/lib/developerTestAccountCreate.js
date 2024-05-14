@@ -183,4 +183,5 @@ const buildDeveloperTestAccount = async ({
 
 module.exports = {
   buildDeveloperTestAccount,
+  saveDevTestAccountToConfig,
 };

@@ -7,11 +7,13 @@ const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const COMPONENT_TYPES = Object.freeze({
   privateApp: 'private-app',
   publicApp: 'public-app',
+  hublTheme: 'hubl-theme',
 });
 
 const CONFIG_FILES = {
   [COMPONENT_TYPES.privateApp]: 'app.json',
   [COMPONENT_TYPES.publicApp]: 'public-app.json',
+  [COMPONENT_TYPES.hublTheme]: 'theme.json',
 };
 
 function getTypeFromConfigFile(configFile) {
@@ -102,13 +104,14 @@ async function findProjectComponents(projectSourceDir) {
     if (Object.values(CONFIG_FILES).includes(base)) {
       const parsedAppConfig = loadConfigFile(projectFile);
 
-      if (parsedAppConfig && parsedAppConfig.name) {
+      if (parsedAppConfig) {
         const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
+        const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
 
         components.push({
           type: getTypeFromConfigFile(base),
           config: parsedAppConfig,
-          runnable: !isLegacy,
+          runnable: !isLegacy && !isHublTheme,
           path: dir,
         });
       }
@@ -118,9 +121,16 @@ async function findProjectComponents(projectSourceDir) {
   return components;
 }
 
+function getProjectComponentTypes(components) {
+  const projectContents = {};
+  components.forEach(({ type }) => (projectContents[type] = true));
+  return projectContents;
+}
+
 module.exports = {
   CONFIG_FILES,
   COMPONENT_TYPES,
   findProjectComponents,
   getAppCardConfigs,
+  getProjectComponentTypes,
 };
