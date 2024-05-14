@@ -3,17 +3,10 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
-const {
-  isSandbox,
-  isDeveloperTestAccount,
-  isAppDeveloperAccount,
-} = require('../accountTypes');
-const { getSandboxName } = require('../sandboxes');
 const { i18n } = require('../lang');
 
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
-  HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 
 const UI_COLORS = {
@@ -84,19 +77,9 @@ const uiLink = (linkText, url) => {
  */
 const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
-  let accountTypeString = '';
-  if (isSandbox(account)) {
-    accountTypeString = getSandboxName(account);
-  } else if (isDeveloperTestAccount(account)) {
-    accountTypeString = `[${
-      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-    }] `;
-  } else if (isAppDeveloperAccount(account)) {
-    accountTypeString = `[${
-      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]
-    }] `;
-  }
-  const message = `${account.name} ${accountTypeString}(${account.portalId})`;
+  const message = `${account.name} [${
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
+  }] (${account.portalId})`;
   return bold ? chalk.bold(message) : message;
 };
 

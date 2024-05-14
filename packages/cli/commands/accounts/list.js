@@ -9,12 +9,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getSandboxName } = require('../../lib/sandboxes');
-const {
-  isSandbox,
-  isDeveloperTestAccount,
-  isAppDeveloperAccount,
-} = require('../../lib/accountTypes');
+const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
 
 const { i18n } = require('../../lib/lang');
 const {
@@ -63,23 +58,17 @@ const getPortalData = mappedPortalData => {
       p => p.portalId === parseInt(key, 10)
     )[0];
     set.forEach(portal => {
-      let name = portal.name;
+      let name = `${portal.name} [${
+        HUBSPOT_ACCOUNT_TYPE_STRINGS[portal.accountType]
+      }]`;
       if (isSandbox(portal)) {
-        name = `${portal.name} ${getSandboxName(portal)}`;
         if (hasParentPortal && set.length > 1) {
           name = `↳ ${name}`;
         }
       } else if (isDeveloperTestAccount(portal)) {
-        name = `${portal.name} [${
-          HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-        }]`;
         if (hasParentPortal && set.length > 1) {
           name = `↳ ${name}`;
         }
-      } else if (isAppDeveloperAccount(portal)) {
-        name = `${portal.name} [${
-          HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]
-        }]`;
       }
       portalData.push([name, portal.portalId, portal.authType]);
     });
