@@ -795,6 +795,28 @@ en:
           positionals:
             src:
               describe: "Path to the theme within the Design Manager."
+        preview:
+          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
+          errors:
+            invalidPath: "The path \"{{ path }}\" is not a path to a directory"
+            noThemeComponents: "Your project has no theme components available to preview."
+          options:
+            src:
+              describe: "Path to the local directory your theme is in, relative to your current working directory"
+            dest:
+              describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
+            notify:
+              describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+            noSsl:
+              describe: "Disable HTTPS"
+            port:
+              describe: "The port on which to start the local server"
+          initialUploadProgressBar:
+            start: "Starting..."
+            uploading: "Uploading..."
+            finish: "Complete!"
+          logs:
+            processExited: "Stopping dev server..."
     module:
       describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
       subcommands:
@@ -880,28 +902,6 @@ en:
         disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
         initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
         notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
-    preview:
-      describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
-      errors:
-        invalidPath: "The path \"{{ path }}\" is not a path to a directory"
-        noThemeComponents: "Your project has no theme components available to preview."
-      options:
-        src:
-          describe: "Path to the local directory your theme is in, relative to your current working directory"
-        dest:
-          describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
-        notify:
-          describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-        noSsl:
-          describe: "Disable HTTPS"
-        port:
-          describe: "The port on which to start the local server"
-      initialUploadProgressBar:
-        start: "Starting..."
-        uploading: "Uploading..."
-        finish: "Complete!"
-      logs:
-        processExited: "Stopping dev server..."
     convertFields:
       describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
       positionals:

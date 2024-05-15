@@ -33,7 +33,8 @@ const {
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
 
-const i18nKey = 'commands.preview';
+const i18nKey = 'commands.theme.subcommands.preview';
+
 exports.command = 'preview [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
