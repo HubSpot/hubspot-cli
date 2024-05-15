@@ -296,25 +296,21 @@ class LocalDevManager {
     if (!this.uploadWarnings[warning]) {
       logger.log();
       logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.stopDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
       if (this.isGithubLinked) {
-        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
-      } else {
         logger.log(
-          i18n(`${i18nKey}.uploadWarning.runUpload`, {
-            command: this.getUploadCommand(),
+          i18n(`${i18nKey}.uploadWarning.stopDev`, {
+            command: uiCommandReference('hs project dev'),
           })
         );
+        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
+        logger.log(
+          i18n(`${i18nKey}.uploadWarning.restartDev`, {
+            command: uiCommandReference('hs project dev'),
+          })
+        );
+      } else {
+        // TODO: Run Prompt
       }
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.restartDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
 
       this.mostRecentUploadWarning = warning;
       this.uploadWarnings[warning] = true;

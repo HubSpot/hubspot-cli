@@ -938,7 +938,6 @@ en:
         defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
-        runUpload: "  * Run {{ command }}"
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
