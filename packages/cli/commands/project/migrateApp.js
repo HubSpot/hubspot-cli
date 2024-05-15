@@ -114,7 +114,7 @@ exports.handler = async options => {
           zippedProject,
           projectName,
           path.resolve(absoluteDestPath),
-          { includesRootDir: false }
+          { includesRootDir: true }
         );
 
         SpinniesManager.succeed('migrateApp', {
@@ -138,7 +138,7 @@ exports.handler = async options => {
         text: i18n(`${i18nKey}.migrationStatus.failure`),
         failColor: 'white',
       });
-      logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+      logApiErrorInstance(e.error, new ApiErrorContext({ accountId }));
       process.exit(EXIT_CODES.ERROR);
     }
   }
