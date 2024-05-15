@@ -102,7 +102,7 @@ exports.handler = async options => {
       });
 
       const { id } = await migratePublicApp(accountId, appId, projectName);
-      const { status } = await poll(getMigrationStatus, accountId, id);
+      const { status, project } = await poll(getMigrationStatus, accountId, id);
       if (status === 'SUCCESS') {
         const absoluteDestPath = path.resolve(getCwd(), projectLocation);
         const { env } = getAccountConfig(accountId);
@@ -128,7 +128,7 @@ exports.handler = async options => {
         logger.log(
           uiLink(
             i18n(`${i18nKey}.projectDetailsLink`),
-            `${baseUrl}/developer-projects/${accountId}/project/${projectName}`
+            `${baseUrl}/developer-projects/${accountId}/project/${project.name}`
           )
         );
         process.exit(EXIT_CODES.SUCCESS);
