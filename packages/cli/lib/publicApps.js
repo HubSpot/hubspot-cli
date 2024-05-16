@@ -4,6 +4,7 @@ const {
 } = require('./prompts/selectPublicAppPrompt');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { i18n } = require('./lang');
+const { uiLine } = require('./ui');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   migrateApp,
@@ -42,7 +43,10 @@ const clonePublicApp = async (appId, name, location) => {
 const validateAppId = async (appId, accountId, accountName) => {
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
   if (!publicApps.find(a => a.id === appId)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+    uiLine();
+    logger.error(i18n(`${i18nKey}.errors.noApps`));
+    logger.log(i18n(`${i18nKey}.errors.noAppsMessage`, { accountName }));
+    uiLine();
     process.exit(EXIT_CODES.ERROR);
   }
 };

@@ -1025,7 +1025,8 @@ en:
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
       publicApps:
         errors:
-          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+          noApps: "{{#bold}}No apps to convert{{/bold}}"
+          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be converted to the projects framework."
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
@@ -1200,7 +1201,8 @@ en:
           selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
           selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
           errors:
-            noPublicAppsInAccount: "There are currently no public apps under {{ accountName }}"
+            noApps: "{{#bold}}No apps to convert{{/bold}}"
+            noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be converted to the projects framework."
             errorFetchingApps: "There was an error fetching public apps."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         developerTestAccountPrompt:

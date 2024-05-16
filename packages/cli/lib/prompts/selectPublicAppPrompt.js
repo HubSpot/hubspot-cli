@@ -1,5 +1,6 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
+const { uiLine } = require('../ui');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchPublicApps } = require('@hubspot/local-dev-lib/api/appsDev');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -15,13 +16,15 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
     );
 
     if (!filteredPublicApps.length) {
-      logger.error(
-        i18n(`${i18nKey}.errors.noPublicAppsInAccount`, { accountName })
-      );
+      uiLine();
+      logger.error(i18n(`${i18nKey}.errors.noApps`));
+      logger.log(i18n(`${i18nKey}.errors.noAppsMessage`, { accountName }));
+      uiLine();
       process.exit(EXIT_CODES.ERROR);
     }
     return filteredPublicApps;
   } catch (error) {
+    logger.debug(error);
     logger.error(i18n(`${i18nKey}.errors.errorFetchingApps`));
     process.exit(EXIT_CODES.ERROR);
   }
