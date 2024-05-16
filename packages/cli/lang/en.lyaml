@@ -1200,8 +1200,8 @@ en:
           selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
           selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
           errors:
-            noApps: "{{#bold}}No apps to convert{{/bold}}"
-            noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be converted to the projects framework."
+            noApps: "{{#bold}}No apps to migrate{{/bold}}"
+            noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
             errorFetchingApps: "There was an error fetching public apps."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         developerTestAccountPrompt:

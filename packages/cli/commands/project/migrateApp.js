@@ -77,7 +77,7 @@ exports.handler = async options => {
 
   await validateAppId(appId, accountId, uiAccountDescription(accountId));
 
-  const { name, location } = await createProjectPrompt('', options, false);
+  const { name, location } = await createProjectPrompt('', options, true);
 
   const projectName = options.name || name;
   const projectLocation = options.location || location;
