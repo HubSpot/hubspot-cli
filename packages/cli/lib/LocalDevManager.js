@@ -18,7 +18,11 @@ const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getProjectDetailUrl } = require('./projects');
+const {
+  getProjectDetailUrl,
+  handleProjectUpload,
+  pollProjectBuildAndDeploy,
+} = require('./projects');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
@@ -34,6 +38,10 @@ const {
 } = require('./ui');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
+const {
+  publicAppUploadPrompt,
+  privateAppUploadPrompt,
+} = require('./prompts/localDevUploadPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -282,7 +290,7 @@ class LocalDevManager {
       : uiCommandReference('hs project upload');
   }
 
-  logUploadWarning(reason) {
+  async warnAndPromptUpload(reason) {
     let warning = reason;
     if (!reason) {
       warning =
@@ -293,28 +301,48 @@ class LocalDevManager {
 
     // Avoid logging the warning to the console if it is currently the most
     // recently logged warning. We do not want to spam the console with the same message.
-    if (!this.uploadWarnings[warning]) {
-      logger.log();
-      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
-      if (this.isGithubLinked) {
-        logger.log(
-          i18n(`${i18nKey}.uploadWarning.stopDev`, {
-            command: uiCommandReference('hs project dev'),
-          })
-        );
-        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
-        logger.log(
-          i18n(`${i18nKey}.uploadWarning.restartDev`, {
-            command: uiCommandReference('hs project dev'),
-          })
-        );
-      } else {
-        // TODO: Run Prompt
-      }
-
-      this.mostRecentUploadWarning = warning;
-      this.uploadWarnings[warning] = true;
+    if (this.uploadWarnings[warning]) {
+      return;
     }
+
+    logger.log();
+    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
+
+    if (this.isGithubLinked) {
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.stopDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
+      logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.restartDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
+    } else {
+      logger.log();
+      uiLine();
+      const prompt =
+        this.activeApp.type === COMPONENT_TYPES.publicApp
+          ? publicAppUploadPrompt
+          : privateAppUploadPrompt;
+
+      const shouldUpload = await prompt();
+
+      if (shouldUpload) {
+        await handleProjectUpload(
+          this.targetProjectAccountId,
+          this.projectConfig,
+          this.projectDir,
+          (...args) => pollProjectBuildAndDeploy(...args, true),
+          'TESTING'
+        );
+      }
+    }
+
+    this.mostRecentUploadWarning = warning;
+    this.uploadWarnings[warning] = true;
   }
 
   monitorConsoleOutput() {
@@ -367,7 +395,7 @@ class LocalDevManager {
     });
 
     if (missingComponents.length) {
-      this.logUploadWarning(
+      this.warnAndPromptUpload(
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
           missingComponents: missingComponents.join(', '),
         })
@@ -413,7 +441,7 @@ class LocalDevManager {
 
   handleWatchEvent(filePath, event, configPaths) {
     if (configPaths.includes(filePath)) {
-      this.logUploadWarning();
+      this.warnAndPromptUpload();
     } else {
       this.devServerFileChange(filePath, event);
     }
@@ -423,7 +451,7 @@ class LocalDevManager {
     try {
       await DevServerManager.setup({
         components: this.runnableComponents,
-        onUploadRequired: this.logUploadWarning.bind(this),
+        onUploadRequired: this.warnAndPromptUpload.bind(this),
         accountId: this.targetAccountId,
         setActiveApp: this.setActiveApp.bind(this),
       });
