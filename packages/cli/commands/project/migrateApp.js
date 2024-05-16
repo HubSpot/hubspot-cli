@@ -33,6 +33,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 
 const i18nKey = 'cli.commands.project.subcommands.migrateApp';
 
@@ -64,10 +65,27 @@ exports.handler = async options => {
     await validateAppId(appId, accountId, accountConfig.name);
   }
 
-  const { name, location } = await createProjectPrompt('', options, appId);
+  const { name, location } = await createProjectPrompt('', options, false);
 
   const projectName = options.name || name;
   const projectLocation = options.location || location;
+
+  let projectExists = false;
+  try {
+    await fetchProject(accountId, projectName);
+    projectExists = true;
+  } catch (e) {
+    projectExists = false;
+  }
+
+  if (projectExists) {
+    logger.error(
+      i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+        projectName,
+      })
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   trackCommandUsage('migrate-app', {}, accountId);
   if (appId && projectName && projectLocation) {

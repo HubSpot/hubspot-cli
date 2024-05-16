@@ -525,6 +525,7 @@ en:
               invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
                 \n- Run {{#bold}}hs accounts use{{/bold}} to switch your default account to an app developer account.
                 \n- Run {{#bold}}hs auth{{/bold}} to connect an app developer account to the HubSpot CLI.\n"
+              projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
           add:
             describe: "Create a new component within a project"
             options:
