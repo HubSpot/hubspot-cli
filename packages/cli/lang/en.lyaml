@@ -523,8 +523,8 @@ en:
             projectDetailsLink: "View project details in your developer account"
             errors:
               invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-                \n- Run {{#bold}}hs accounts use{{/bold}} to switch your default account to an app developer account.
-                \n- Run {{#bold}}hs auth{{/bold}} to connect an app developer account to the HubSpot CLI.\n"
+                \n- Run {{ useCommand }} to switch your default account to an app developer account.
+                \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
               projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
           add:
             describe: "Create a new component within a project"
@@ -1025,8 +1025,7 @@ en:
           feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
       publicApps:
         errors:
-          noApps: "{{#bold}}No apps to convert{{/bold}}"
-          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be converted to the projects framework."
+          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
       ui:
         betaTag: "{{#bold}}[BETA]{{/bold}}"
         betaWarning:
