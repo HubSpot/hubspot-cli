@@ -308,19 +308,9 @@ class LocalDevManager {
     logger.log();
     logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
 
-    if (this.isGithubLinked) {
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.stopDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
-      logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.restartDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
-    } else {
+    let uploadSuccess = false;
+
+    if (!this.isGithubLinked) {
       logger.log();
       uiLine();
       const prompt =
@@ -331,14 +321,43 @@ class LocalDevManager {
       const shouldUpload = await prompt();
 
       if (shouldUpload) {
-        await handleProjectUpload(
+        const { succeeded } = await handleProjectUpload(
           this.targetProjectAccountId,
           this.projectConfig,
           this.projectDir,
-          (...args) => pollProjectBuildAndDeploy(...args, true),
-          'TESTING'
+          (...args) => pollProjectBuildAndDeploy(...args, true)
         );
+
+        if (succeeded) {
+          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
+        } else {
+          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
+        }
+        uploadSuccess = succeeded;
+      } else {
+        logger.log('');
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
       }
+    }
+
+    if (this.isGithubLinked || !uploadSuccess) {
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.stopDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
+      this.isGithubLinked
+        ? logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`))
+        : logger.log(
+            i18n(`${i18nKey}.uploadWarning.runUpload`, {
+              command: this.getUploadCommand(),
+            })
+          );
+      logger.log(
+        i18n(`${i18nKey}.uploadWarning.restartDev`, {
+          command: uiCommandReference('hs project dev'),
+        })
+      );
     }
 
     this.mostRecentUploadWarning = warning;

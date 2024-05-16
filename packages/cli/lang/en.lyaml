@@ -940,6 +940,11 @@ en:
         stopDev: "  * Stop {{ command }}"
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
+        runUpload: "  * Run {{ command }}"
+        prompt:
+          success: "Project upload successful. Resuming local development."
+          failure: "Project upload failed."
+          decline: "To see your latest config changes reflected:"
       activeInstallWarning:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
         genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
