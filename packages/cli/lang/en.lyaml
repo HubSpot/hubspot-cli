@@ -496,6 +496,37 @@ en:
               describe: "The starting template"
             templateSource:
               describe: "Path to custom GitHub repository from which to create project template"
+        migrateApp:
+          describe: "Migrate a public app to the projects framework"
+          examples:
+            default: "Migrate a public app to the projects framework"
+          options:
+            appId:
+              describe: "The ID for the public app being migrated to the projects framework"
+            location:
+              describe: "Directory where project should be created"
+            name:
+              describe: "Project name (cannot be changed)"
+          migrationStatus:
+            inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
+            done: "Converting app configuration to public-app.json component definition ... DONE"
+            failure: "Converting app configuration to public-app.json component definition ... FAILED"
+          warning:
+            title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
+            projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
+            appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
+            buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
+            existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
+            copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
+          createAppPrompt: "Proceed with migrating this app to a project component?"
+          projectDetailsLink: "View project details in your developer account"
+          errors:
+            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+              \n- Run {{ useCommand }} to switch your default account to an app developer account.
+              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
+            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
@@ -1173,6 +1204,14 @@ en:
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
           missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+      selectPublicAppPrompt:
+        selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
+        selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
+        errors:
+          noApps: "{{#bold}}No apps to migrate{{/bold}}"
+          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
+          errorFetchingApps: "There was an error fetching public apps."
+          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
       developerTestAccountPrompt:
         name:
           message: "Name your developer test account"

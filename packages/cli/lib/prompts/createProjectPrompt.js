@@ -48,11 +48,18 @@ const createTemplateOptions = async (templateSource, githubRef) => {
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };
 
-const createProjectPrompt = async (githubRef, promptOptions = {}) => {
-  const projectTemplates = await createTemplateOptions(
-    promptOptions.templateSource,
-    githubRef
-  );
+const createProjectPrompt = async (
+  githubRef,
+  promptOptions = {},
+  skipTemplatePrompt = false
+) => {
+  let projectTemplates = [];
+  if (!skipTemplatePrompt) {
+    projectTemplates = await createTemplateOptions(
+      promptOptions.templateSource,
+      githubRef
+    );
+  }
 
   return promptUser([
     {
@@ -91,8 +98,9 @@ const createProjectPrompt = async (githubRef, promptOptions = {}) => {
           : i18n(`${i18nKey}.selectTemplate`);
       },
       when:
-        !promptOptions.template ||
-        !projectTemplates.find(t => t.name === promptOptions.template),
+        !skipTemplatePrompt &&
+        (!promptOptions.template ||
+          !projectTemplates.find(t => t.name === promptOptions.template)),
       type: 'list',
       choices: projectTemplates.map(template => {
         return {
