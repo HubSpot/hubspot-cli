@@ -79,15 +79,11 @@ exports.handler = async options => {
           migrateApp: true,
         });
 
-  const validateAppId = async (appId, accountId, accountName) => {
-    const publicApps = await fetchPublicAppOptions(accountId, accountName);
-    if (!publicApps.find(a => a.id === appId)) {
-      logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
-      process.exit(EXIT_CODES.ERROR);
-    }
-  };
-
-  await validateAppId(appId, accountId, accountName);
+  const publicApps = await fetchPublicAppOptions(accountId, accountName);
+  if (!publicApps.find(a => a.id === appId)) {
+    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const { name, location } = await createProjectPrompt('', options, true);
 
