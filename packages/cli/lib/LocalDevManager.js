@@ -306,7 +306,9 @@ class LocalDevManager {
     }
 
     logger.log();
-    logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
+    this.isGithubLinked
+      ? logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }))
+      : logger.warn(warning);
 
     let uploadSuccess = false;
 
@@ -358,10 +360,10 @@ class LocalDevManager {
           command: uiCommandReference('hs project dev'),
         })
       );
-    }
 
-    this.mostRecentUploadWarning = warning;
-    this.uploadWarnings[warning] = true;
+      this.mostRecentUploadWarning = warning;
+      this.uploadWarnings[warning] = true;
+    }
   }
 
   monitorConsoleOutput() {
