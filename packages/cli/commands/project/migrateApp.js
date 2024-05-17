@@ -153,7 +153,7 @@ exports.handler = async options => {
         zippedProject,
         projectName,
         path.resolve(absoluteDestPath),
-        { includesRootDir: true }
+        { includesRootDir: true, hideLogs: true }
       );
 
       SpinniesManager.succeed('migrateApp', {
