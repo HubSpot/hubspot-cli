@@ -307,7 +307,7 @@ class LocalDevManager {
 
     logger.log();
     this.isGithubLinked
-      ? logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }))
+      ? logger.warn(i18n(`${i18nKey}.uploadWarning.githubHeader`, { warning }))
       : logger.warn(warning);
 
     let uploadSuccess = false;
