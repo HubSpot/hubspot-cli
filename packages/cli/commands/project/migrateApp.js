@@ -12,11 +12,9 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const {
-  fetchPublicApp,
-  getMigrationStatus,
-  migratePublicApp,
-  validateAppId,
-} = require('../../lib/publicApps');
+  fetchPublicAppOptions,
+  selectPublicAppPrompt,
+} = require('../../lib/prompts/selectPublicAppPrompt');
 const { poll } = require('../../lib/polling');
 const {
   uiBetaTag,
@@ -34,6 +32,10 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { ensureProjectExists } = require('../../lib/projects');
+const {
+  migrateApp,
+  checkMigrationStatus,
+} = require('@hubspot/local-dev-lib/api/projects');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -51,13 +53,14 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
   const accountConfig = getAccountConfig(accountId);
+  const accountName = uiAccountDescription(accountId);
 
   trackCommandUsage('migrate-app', {}, accountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(`${i18nKey}.errors.invalidAccountType`, {
-        accountName: uiAccountDescription(accountId),
+        accountName,
         accountType: accountConfig.accountType,
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
@@ -66,16 +69,25 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const appId =
-    options.appId ||
-    (await fetchPublicApp(
-      accountId,
-      uiAccountDescription(accountId),
-      options,
-      true
-    ));
+  const { appId } =
+    'appId' in options
+      ? options
+      : await selectPublicAppPrompt({
+          accountId,
+          accountName,
+          options,
+          migrateApp: true,
+        });
 
-  await validateAppId(appId, accountId, uiAccountDescription(accountId));
+  const validateAppId = async (appId, accountId, accountName) => {
+    const publicApps = await fetchPublicAppOptions(accountId, accountName);
+    if (!publicApps.find(a => a.id === appId)) {
+      logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+  };
+
+  await validateAppId(appId, accountId, accountName);
 
   const { name, location } = await createProjectPrompt('', options, true);
 
@@ -126,8 +138,10 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.inProgress`),
     });
 
-    const { id } = await migratePublicApp(accountId, appId, projectName);
-    const { status, project } = await poll(getMigrationStatus, accountId, id);
+    const migrateResponse = await migrateApp(accountId, appId, projectName);
+    const { id } = migrateResponse;
+    const pollResponse = await poll(checkMigrationStatus, accountId, id);
+    const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), projectLocation);
       const { env } = getAccountConfig(accountId);
