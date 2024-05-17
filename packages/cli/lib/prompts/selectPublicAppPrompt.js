@@ -2,15 +2,16 @@ const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiLine } = require('../ui');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { fetchPublicApps } = require('@hubspot/local-dev-lib/api/appsDev');
+const {
+  fetchPublicAppsForPortal,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
 const fetchPublicAppOptions = async (accountId, accountName) => {
   try {
-    const response = await fetchPublicApps(accountId);
-    const publicApps = response.results;
+    const publicApps = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
       app => !app.projectId && !app.sourceId
     );
