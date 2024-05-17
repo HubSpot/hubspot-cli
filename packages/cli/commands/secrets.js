@@ -6,7 +6,7 @@ const deleteSecretCommand = require('./secrets/deleteSecret');
 const updateSecretCommand = require('./secrets/updateSecret');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.secrets';
+const i18nKey = 'commands.secrets';
 
 exports.command = 'secrets';
 exports.describe = i18n(`${i18nKey}.describe`);

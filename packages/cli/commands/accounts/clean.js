@@ -22,7 +22,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { uiAccountDescription } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.accounts.subcommands.clean';
+const i18nKey = 'commands.accounts.subcommands.clean';
 
 exports.command = 'clean';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -87,7 +87,7 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p)]),
+        accountsToRemove.map(p => [uiAccountDescription(p.portalId)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,7 +111,7 @@ exports.handler = async options => {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: uiAccountDescription(accountToRemove),
+            accountName: accountToRemove.name,
           })
         );
       }

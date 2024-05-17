@@ -49,7 +49,7 @@ const notifier = updateNotifier({
   shouldNotifyInNpmScript: true,
 });
 
-const i18nKey = 'cli.commands.generalErrors';
+const i18nKey = 'commands.generalErrors';
 
 const CLI_UPGRADE_MESSAGE =
   chalk.bold('The CMS CLI is now the HubSpot CLI') +

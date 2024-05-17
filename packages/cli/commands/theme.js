@@ -4,7 +4,7 @@ const previewCommand = require('./theme/preview');
 
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.theme';
+const i18nKey = 'commands.theme';
 
 exports.command = 'theme';
 exports.describe = i18n(`${i18nKey}.describe`);

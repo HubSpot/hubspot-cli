@@ -33,9 +33,10 @@ const {
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
 
-const i18nKey = 'cli.commands.preview';
+const i18nKey = 'commands.theme.subcommands.preview';
+
 exports.command = 'preview [--src] [--dest]';
-exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {

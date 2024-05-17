@@ -21,7 +21,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.functions.subcommands.deploy';
+const i18nKey = 'commands.functions.subcommands.deploy';
 
 exports.command = 'deploy <path>';
 exports.describe = false;

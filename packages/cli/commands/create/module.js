@@ -5,7 +5,7 @@ const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.create.subcommands.module';
+const i18nKey = 'commands.create.subcommands.module';
 
 module.exports = {
   dest: ({ dest }) => dest,

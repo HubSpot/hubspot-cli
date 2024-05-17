@@ -2,7 +2,7 @@ const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 
-const i18nKey = 'cli.lib.prompts.developerTestAccountPrompt';
+const i18nKey = 'lib.prompts.developerTestAccountPrompt';
 
 const developerTestAccountNamePrompt = currentPortalCount => {
   return promptUser([

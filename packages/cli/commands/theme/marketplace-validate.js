@@ -16,7 +16,7 @@ const {
 } = require('../../lib/marketplace-validate');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
+const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);

@@ -35,7 +35,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { uiAccountDescription } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.sandbox.subcommands.delete';
+const i18nKey = 'commands.sandbox.subcommands.delete';
 
 exports.command = 'delete [--account]';
 exports.describe = i18n(`${i18nKey}.describe`);

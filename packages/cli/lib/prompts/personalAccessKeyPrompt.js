@@ -12,7 +12,7 @@ const { i18n } = require('../lang');
 const { uiInfoSection } = require('../ui');
 const { EXIT_CODES } = require('../enums/exitCodes');
 
-const i18nKey = 'cli.lib.prompts.personalAccessKeyPrompt';
+const i18nKey = 'lib.prompts.personalAccessKeyPrompt';
 
 /**
  * Displays notification to user that we are about to open the browser,

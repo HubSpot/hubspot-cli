@@ -23,7 +23,7 @@ const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
-const i18nKey = 'cli.commands.project.subcommands.deploy';
+const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 

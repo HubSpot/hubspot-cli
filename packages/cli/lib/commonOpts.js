@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 
-const i18nKey = 'cli.lib.commonOpts';
+const i18nKey = 'lib.commonOpts';
 
 const addAccountOptions = program =>
   program.option('portal', {

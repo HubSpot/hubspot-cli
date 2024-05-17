@@ -9,7 +9,7 @@ const { getAccountId } = require('../../../lib/commonOpts');
 const { listSchemas } = require('../../../lib/schema');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey = 'cli.commands.customObject.subcommands.schema.subcommands.list';
+const i18nKey = 'commands.customObject.subcommands.schema.subcommands.list';
 
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);

@@ -1,7 +1,7 @@
 const open = require('open');
 
 const { i18n } = require('../lib/lang');
-const { FEEDBACK_OPTIONS, FEEDBACK_URLS } = require('../lib/constants');
+const { FEEDBACK_URLS } = require('../lib/constants');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const {
@@ -9,7 +9,7 @@ const {
   shouldOpenBrowserPrompt,
 } = require('../lib/prompts/feedbackPrompt');
 
-const i18nKey = 'cli.commands.project.subcommands.feedback';
+const i18nKey = 'commands.project.subcommands.feedback';
 
 exports.command = 'feedback';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -22,10 +22,8 @@ exports.handler = async options => {
   const { shouldOpen } = await shouldOpenBrowserPrompt(type, usedTypeFlag);
 
   if (shouldOpen || usedTypeFlag) {
-    const url =
-      type === FEEDBACK_OPTIONS.BUG || bugFlag
-        ? FEEDBACK_URLS.BUG
-        : FEEDBACK_URLS.GENERAL;
+    // NOTE: for now, all feedback should go to the hubspot-cli repository
+    const url = FEEDBACK_URLS.BUG;
     open(url, { url: true });
     logger.success(i18n(`${i18nKey}.success`, { url }));
   }

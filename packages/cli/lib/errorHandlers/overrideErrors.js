@@ -5,7 +5,7 @@ const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');
 const { i18n } = require('../lang');
 const { uiLine, uiLink } = require('../ui');
 
-const i18nKey = 'cli.lib.errorHandlers.overrideErrors';
+const i18nKey = 'lib.errorHandlers.overrideErrors';
 
 function createPlatformVersionError(subCategory, errData) {
   const docsLink = uiLink(

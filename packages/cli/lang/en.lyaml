@@ -1,1443 +1,1454 @@
 en:
-  cli:
-    commands:
-      generalErrors:
-        srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
-        setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
-      accounts:
-        describe: "Commands for working with accounts."
-        subcommands:
-          list:
-            accounts: "{{#bold}}Accounts{{/bold}}:"
-            defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
-            describe: "List names of accounts defined in config."
-            configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
-            labels:
-              accountId: "Account ID"
-              authType: "Auth Type"
-              name: "Name"
-          rename:
-            describe: "Rename account in config."
-            positionals:
-              accountName:
-                describe: "Name of account to be renamed."
-              newName:
-                describe: "New name for account."
-            success:
-              renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
-          use:
-            describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
-            errors:
-              accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
-            examples:
-              default: "Select a HubSpot account to use as the default account"
-              idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
-              nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
-            options:
-              account:
-                describe: "Account name or id to use as the default"
-            promptMessage: "Select an account to use as the default"
-            success:
-              defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
-          remove:
-            describe: "Remove an account from the config."
-            logs:
-              replaceDefaultAccount: "The removed account was the default account."
-            prompts:
-              selectAccountToRemove: "Select an account to remove from the config"
-            errors:
-              accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
-            examples:
-              default: "Select a HubSpot account to remove from the config"
-              byName: "Remove the account \"MyAccount\" from the config"
-            options:
-              account:
-                describe: "Account name or id to remove"
-            promptMessage: "Select an account to remove"
-            success:
-              accountRemoved: "Account \"{{ accountName }}\" removed from the config"
-          info:
-            accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
-            describe: "Print information about the default account, or about the account specified with the \"--account\" option."
-            errors:
-              notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
-            examples:
-              default: "Print information for the default account"
-              idBased: "Print information for the account with accountId equal to \"1234567\""
-              nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
-            name: "{{#bold}}Account name{{/bold}}: {{ name }}"
-            scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
-          clean:
-            describe: "Checks for inactive accounts and removes them from the CLI config"
-            noResults: "No inactive accounts found to remove."
-            loading:
-              add: "Looking for inactive accounts…"
-            inactiveAccountsFound:
-              one: "1 inactive account found:"
-              other: "{{ count }} inactive accounts found:"
-            confirm:
-              one: "Remove 1 inactive account from the CLI config?"
-              other: "Remove {{ count }} inactive accounts from the CLI config?"
-            removeSuccess: "Removed {{ accountName }} from the CLI config."
-      auth:
-        describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
-        errors:
-          noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
-          unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-        positionals:
-          type:
-            describe: "Authentication mechanism"
-            defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
-        options:
-          account:
-            describe: "HubSpot account to authenticate"
-        success:
-          configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
-      config:
-        describe: "Commands for working with the config file."
-        subcommands:
-          set:
-            describe: "Commands for modifying the CLI configuration"
-            promptMessage: "Select a config option to update"
-            examples:
-              default: "Opens a prompt to select a config item to modify"
-            options:
-              defaultMode:
-                describe: "Set the default mode"
-                promptMessage: "Select mode to be used as the default"
-                error: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
-                success: "Default mode updated to: {{ mode }}"
-              allowUsageTracking:
-                describe: "Enable or disable usage tracking"
-                promptMessage: "Choose to enable or disable usage tracking"
-                success: "Allow usage tracking set to: \"{{ isEnabled }}\""
-                labels:
-                  enabled: "Enabled"
-                  disabled: "Disabled"
-              httpTimeout:
-                describe: "Set the http timeout duration"
-                promptMessage: "Enter http timeout duration"
-                success: "The http timeout has been set to: {{ timeout }}"
-      cms:
-        describe: "Commands for working with the CMS."
-        subcommands:
-          lighthouseScore:
-            describe: "Score a theme using Google lighthouse."
-            examples:
-              default: "Get the lighthouse score for the my-theme theme"
-            info:
-              promptMessage: "Select a theme to score"
-              fetchingThemes: "Fetching available themes"
-              generatingScore: "Generating Google Lighthouse score for {{ theme }}"
-              targetDeviceNote: "Scores are being shown for {{ target }} only."
-              verboseOptionNote: "Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores."
-              pageTemplateScoreTitle: "Page template scores"
-              lighthouseLinksTitle: "Lighthouse links"
-              failedTemplatePathsTitle: "The following templates could not be scored"
-            errors:
-              targetOptionRequired: "[--target] is required for detailed view"
-              invalidTargetOption: "[--target] can only be used for detailed view"
-              themeNotFound: "Theme \"{{ theme }}\" not found. Please rerun using a valid theme path."
-              failedToFetchThemes: "Failed to fetch available themes. Try running again with the [--theme] option"
-              failedToGetLighthouseScore: "Failed to generate a Google Lighthouse score"
-            options:
-              theme:
-                describe: "Path to the theme in the Design Manager"
-              target:
-                describe: "Medium to test against"
-              verbose:
-                describe: "View a detailed output of the lighthouse sores"
-          reactModule:
-            describe: "Get a specified default React module"
-            options:
-              name:
-                describe: "Name of the react modules to be fetched"
-              dest:
-                describe: "Destination to download the react module to"
-            success:
-              moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
-            errors:
-              pathExists: "Folder already exists at \"{{ path }}\""
-              invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
-            groupLabel: "React modules available to download:"
-      create:
-        describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
-        errors:
-          deprecatedAssetType: "The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the \"{{ newCommand }}\" command instead. Then when prompted select \"{{ type }}\"."
-          unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
-          unusablePath: "The \"{{ path }}\" is not a usable path to a directory."
-        positionals:
-          dest:
-            describe: "Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory"
-          name:
-            describe: "Name of new asset"
-          type:
-            describe: "Type of asset"
-        subcommands:
-          apiSample:
-            errors:
-              nameRequired: "The \"name\" argument is required when creating an API Sample."
-              noSamples: "Currently there are no samples available, please, try again later."
-            info:
-              sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
-            loading:
-              apiSamples: "Loading available API samples"
-            success:
-              sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
-          module:
-            errors:
-              nameRequired: "The \"name\" argument is required when creating a Custom Module."
-          template:
-            errors:
-              nameRequired: "The \"name\" argument is required when creating a Template."
-      customObject:
-        betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
-        describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
-        seeMoreLink: "View our docs to find out more."
-        subcommands:
-          create:
-            describe: "Create custom object instances"
-            errors:
-              creationFailed: "Object creation from {{ definition }} failed"
-            positionals:
-              definition:
-                describe: "Local path to the JSON file containing an array of object definitions"
-              name:
-                describe: "Schema name to add the object instance to"
-            success:
-              objectsCreated: "Objects created"
-          schema:
-            describe: "Manage custom object schemas"
-            subcommands:
-              create:
-                describe: "Create a custom object schema"
-                errors:
-                  creationFailed: "Schema creation from {{ definition }} failed"
-                positionals:
-                  definition:
-                    describe: "Local path to the JSON file containing the schema definition"
-                success:
-                  schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
-                  schemaViewable: "Schema can be viewed at {{ url }}"
-              delete:
-                describe: "Delete a custom object schema"
-                errors:
-                  delete: "Unable to delete {{ name }}"
-                examples:
-                  default: "Delete \"schemaName\" schema"
-                positionals:
-                  name:
-                    describe: "Name of the target schema"
-                success:
-                  delete: "Successfully initiated deletion of {{ name }}"
-              fetchAll:
-                describe: "Fetch all custom object schemas for an account"
-                errors:
-                  fetch: "Unable to fetch schemas"
-                examples:
-                  default: "Fetch all schemas for an account and put them in the current working directory"
-                  specifyPath: "Fetch all schemas for an account and put them in a directory named my/folder"
-                positionals:
-                  dest:
-                    describe: "Local folder where schemas will be written"
-                success:
-                  fetch: "Saved schemas to {{ path }}"
-              fetch:
-                describe: "Fetch a custom object schema"
-                errors:
-                  fetch: "Unable to fetch {{ name }}"
-                examples:
-                  default: "Fetch \"schemaId\" schema and put it in the current working directory"
-                  specifyPath: "Fetch \"schemaId\" schema and put it in a directory named my/folder"
-                positionals:
-                  dest:
-                    describe: "Local folder where schema will be written"
-                  name:
-                    describe: "Name of the target schema"
-                success:
-                  save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
-                  savedToPath: "Saved schema to {{ path }}"
-              list:
-                describe: "List schemas available on your account"
-                errors:
-                  list: "Unable to list schemas"
-              update:
-                describe: "Update an existing custom object schema"
-                errors:
-                  update: "Schema update from {{ definition }} failed"
-                positionals:
-                  definition:
-                    describe: "Local path to the JSON file containing the schema definition"
-                  name:
-                    describe: "Name of the target schema"
-                success:
-                  update: "Your schema has been updated in account \"{{ accountId }}\""
-                  viewAtUrl: "Schema can be viewed at {{ url }}"
-      fetch:
-        describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
-        errors:
-          sourceRequired: "A source to fetch is required."
-        options:
-          staging:
-            describe: "Retrieve staged changes for project"
-          assetVersion:
-            describe: "Specify what version of a default asset to fetch"
-        positionals:
-          dest:
-            describe: "Local directory you would like the files to be placed in, relative to your current working directory"
-          src:
-            describe: "Path in HubSpot Design Tools"
-      filemanager:
-        describe: "Commands for working with the File Manager."
-        subcommands:
-          fetch:
-            describe: "Download a folder or file from the HubSpot File Manager to your computer"
-            errors:
-              sourceRequired: "A source to fetch is required."
-            options:
-              includeArchived:
-                describe: "Include files that have been marked as \"archived\""
-            positionals:
-              dest:
-                describe: "Path in HubSpot Design Tools"
-              src:
-                describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
-          upload:
-            describe: "Upload a folder or file from your computer to the HubSpot File Manager"
-            errors:
-              destinationRequired: "A destination path needs to be passed"
-              fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
-              invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
-              upload: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
-              uploadingFailed: "Uploading failed"
-            logs:
-              uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
-            positionals:
-              dest:
-                describe: "Path in HubSpot Design Tools, can be a net new path"
-              src:
-                describe: "Path to the local file, relative to your current working directory"
-            success:
-              upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
-              uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
-      functions:
-        describe: "Commands for working with functions."
-        subcommands:
-          deploy:
-            debug:
-              startingBuildAndDeploy: "Starting build and deploy for .functions folder with path: {{ functionPath }}"
-            errors:
-              buildError: "Build error: {{ details }}"
-              noPackageJson: "Unable to find package.json for function {{ functionPath }}."
-              notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
-            examples:
-              default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
-            loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
-            positionals:
-              path:
-                describe: "Path to .functions folder"
-            success:
-              deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
-          list:
-            debug:
-              gettingFunctions: "Getting currently deployed functions"
-            describe: "List currently deployed functions"
-            info:
-              noFunctions: "No functions found"
-            options:
-              json:
-                describe: "output raw json data"
-          server:
-            debug:
-              startingServer: "Starting local test server for .functions folder with path: {{ functionPath }}"
-            examples:
-              default: "Run a local function test server."
-            options:
-              contact:
-                describe: "Pass contact data to the test function"
-              logOutput:
-                describe: "Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)"
-              port:
-                describe: "Port to run the test server on"
-              watch:
-                describe: "Watch the specified .functions folder for changes and restart the server"
-            positionals:
-              path:
-                describe: "Path to local .functions folder"
-      hubdb:
-        describe: "Manage HubDB tables."
-        subcommands:
-          clear:
-            describe: "Clear all rows in a HubDB table"
-            logs:
-              removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
-              rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
-              tableEmpty: "HubDB table {{ tableId }} is already empty"
-            positionals:
-              tableId:
-                describe: "HubDB Table ID"
-          create:
-            describe: "Create a HubDB table"
-            errors:
-              create: "Creating the table at \"{{ src }}\" failed"
-            positionals:
-              src:
-                describe: "Local path to file used for import"
-            success:
-              create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
-          delete:
-            describe: "Delete a HubDB table"
-            errors:
-              delete: "Deleting the table {{ tableId }} failed"
-            positionals:
-              tableId:
-                describe: "HubDB Table ID"
-            success:
-              delete: "The table {{ tableId }} was deleted from {{ accountId }}"
-          fetch:
-            describe: "Fetch a HubDB table"
-            positionals:
-              dest:
-                describe: "Local destination folder to fetch table to"
-              tableId:
-                describe: "HubDB Table ID"
-            success:
-              fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
-      init:
-        describe: "Initialize {{ configName }} for a HubSpot account."
-        options:
-          auth:
-            describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
-            defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
-          account:
-            describe: "HubSpot account to authenticate"
-        success:
-          configFileCreated: "Created config file \"{{ configPath }}\""
-          configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
-        logs:
-          updateConfig: "To update an existing config file, use the \"hs auth\" command."
-        errors:
-          configFileExists: "The config file {{ configPath }} already exists."
-      lint:
-        issuesFound: "{{ count }} issues found."
-        groupName: "Linting {{ path }}"
-        positionals:
-          path:
-            describe: "Local folder to lint"
-      list:
-        describe: "List remote contents of a directory."
-        gettingPathContents: "Getting contents of {{ path }}."
-        noFilesFoundAtPath: "No files found in {{ path }}."
-        positionals:
-          path:
-            describe: "Remote directory to list contents"
-      logs:
-        describe: "Get logs for a function."
-        errors:
-          noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
-        examples:
-          default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
-          follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
-          limit: "Get 10 most recent logs for function residing at /_hcms/api/my-endpoint"
-        gettingLogs: "Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}."
-        options:
-          compact:
-            describe: "output compact logs"
-          follow:
-            describe: "follow logs"
-          latest:
-            describe: "retrieve most recent log only"
-          limit:
-            describe: "limit the number of logs to output"
-        positionals:
-          endpoint:
-            describe: "Serverless function endpoint"
-        tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
-      mv:
-        describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
-        errors:
-          sourcePathExists: "The folder \"{{ srcPath }}\" already exists in \"{{ destPath }}\"."
-          moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
-        move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
-      open:
-        describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
-        options:
-          list:
-            describe: "List all supported shortcuts"
-        positionals:
-          shortcut:
-            describe: "Shortcut of the link you'd like to open"
-        selectLink: "Select a link to open"
-      project:
-        describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
-        subcommands:
-          dev:
-            describe: "Start local dev for the current project"
-            logs:
-              betaMessage: "HubSpot projects local development"
-              placeholderAccountSelection: "Using default account as target account (for now)"
-            errors:
-              noProjectConfig: "No project detected. Please run this command again from a project directory."
-              invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
-            examples:
-              default: "Start local dev for the current project"
-          create:
-            describe: "Create a new project"
-            logs:
-              welcomeMessage: "Welcome to HubSpot Developer Projects!"
-            examples:
-              default: "Create a new project"
-            options:
-              location:
-                describe: "Directory where project should be created"
-              name:
-                describe: "Project name (cannot be changed)"
-              template:
-                describe: "The starting template"
-              templateSource:
-                describe: "Path to custom GitHub repository from which to create project template"
-          migrateApp:
-            describe: "Migrate a public app to the projects framework"
-            examples:
-              default: "Migrate a public app to the projects framework"
-            options:
-              appId:
-                describe: "The ID for the public app being migrated to the projects framework"
-              location:
-                describe: "Directory where project should be created"
-              name:
-                describe: "Project name (cannot be changed)"
-            migrationStatus:
-              inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
-              success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
-              done: "Converting app configuration to public-app.json component definition ... DONE"
-              failure: "Converting app configuration to public-app.json component definition ... FAILED"
-            warning:
-              title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
-              projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
-              appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
-              buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
-              existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
-              copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
-            createAppPrompt: "Proceed with migrating this app to a project component?"
-            projectDetailsLink: "View project details in your developer account"
-            errors:
-              invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-                \n- Run {{ useCommand }} to switch your default account to an app developer account.
-                \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
-              projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
-          add:
-            describe: "Create a new component within a project"
-            options:
-              name:
-                describe: "Component name"
-              type:
-                describe: "The type of component"
-            creatingComponent:
-              message: "Adding a new component to your project"
-            success:
-              message: "{{ componentName }} was added to your project"
-            error:
-              locationInProject: "The component location must be within a project folder"
-            examples:
-              default: "Create a component within your project"
-          deploy:
-            describe: "Deploy a project build"
-            debug:
-              deploying: "Deploying project at path: {{ path }}"
-            errors:
-              deploy: "Deploy error: {{ details }}"
-              noBuilds: "Deploy error: no builds for this project were found."
-              noBuildId: "You must specify a build to deploy"
-              projectNotFound: "{{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
-            examples:
-              default: "Deploy the latest build of the current project"
-              withOptions: "Deploy build 5 of the project my-project"
-            options:
-              buildId:
-                describe: "Project build ID to be deployed"
-              project:
-                describe: "Project name"
-          listBuilds:
-            describe: "List the project's builds"
+  commands:
+    generalErrors:
+      srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
+      setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
+    accounts:
+      describe: "Commands for working with accounts."
+      subcommands:
+        list:
+          accounts: "{{#bold}}Accounts{{/bold}}:"
+          defaultAccount: "{{#bold}}Default account{{/bold}}: {{ account }}"
+          describe: "List names of accounts defined in config."
+          configPath: "{{#bold}}Config path{{/bold}}: {{ configPath }}"
+          labels:
+            accountId: "Account ID"
+            authType: "Auth Type"
+            name: "Name"
+        rename:
+          describe: "Rename account in config."
+          positionals:
+            accountName:
+              describe: "Name of account to be renamed."
+            newName:
+              describe: "New name for account."
+          success:
+            renamed: "Account \"{{ name }}\" renamed to \"{{ newName }}\""
+        use:
+          describe: "Set the Hubspot account to use as the default account. The default account can be overridden with the \"--account\" option."
+          errors:
+            accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          examples:
+            default: "Select a HubSpot account to use as the default account"
+            idBased: "Set the default account to the account in the config with accountId equal to \"1234567\""
+            nameBased: "Set the default account to the account in the config with name equal to \"MyAccount\""
+          options:
+            account:
+              describe: "Account name or id to use as the default"
+          promptMessage: "Select an account to use as the default"
+          success:
+            defaultAccountUpdated: "Default account updated to \"{{ accountName }}\""
+        remove:
+          describe: "Remove an account from the config."
           logs:
-            describe: "Get execution logs for a serverless function within a project"
-            errors:
-              invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
-            logs:
-              showingLogs: "Showing logs for:"
-              hubspotLogsLink: "View private apps in HubSpot"
-              hubspotLogsDirectLink: "View logs in HubSpot"
-              noLogsFound: "No logs were found for \"{{ name }}\""
-            table:
-              accountHeader: "Account"
-              projectHeader: "Project"
-              appHeader: "App"
-              functionHeader: "Function"
-              endpointHeader: "Endpoint"
-            examples:
-              default: "Open the project logs prompt to get logs for a serverless function"
-              withOptions: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
-            options:
-              app:
-                describe: "App name"
-              compact:
-                describe: "Output compact logs"
-              tail:
-                describe: "Tail logs"
-              latest:
-                describe: "Retrieve most recent log only"
-              limit:
-                describe: "Limit the number of logs to output"
-              project:
-                describe: "Project name"
-              function:
-                describe: "App function name"
-              endpoint:
-                describe: "Public endpoint path"
-          upload:
-            describe: "Upload your project files and create a new build"
-            examples:
-              default: "Upload a project"
-            logs:
-              buildSucceeded: "Build #{{ buildId }} succeeded\n"
-              readyToGoLive: "🚀 Ready to take your project live?"
-              runCommand: "Run `{{ command }}`"
-            errors:
-              projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
-            options:
-              forceCreate:
-                describe: "Automatically create project if it does not exist"
-              message:
-                describe: "Add a message when you upload your project and create a build"
-            positionals:
-              path:
-                describe: "Path to a project folder"
-          watch:
-            describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
-            examples:
-              default: "Watch a project within the myProjectFolder folder"
-            logs:
-              processExited: "Stopping watcher..."
-              watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
-              resuming: "Resuming watcher..."
-              uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
-              deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
-              watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
-              previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
-            positionals:
-              path:
-                describe: "Path to a project folder"
-            options:
-              initialUpload:
-                describe: "Upload directory before watching for updates"
-            debug:
-              pause: "Pausing watcher, attempting to queue build"
-              buildStarted: "Build queued."
-              extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
-              ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
-              uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              attemptNewBuild: "Attempting to create a new build"
-              fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
-            errors:
-              uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
-              deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
-              deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
-          download:
-            describe: "Download your project files from HubSpot and write to a path on your computer"
-            examples:
-              default: "Download the project myProject into myProjectFolder folder"
-            logs:
-              downloadCancelled: "Cancelling project download"
-              downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
-            errors:
-              downloadFailed: "Something went wrong downloading the project"
-              projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
-            warnings:
-              cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
-            options:
-              buildNumber:
-                describe: "The build number to download"
-              project:
-                describe: "The name of the project to download"
-              dest:
-                describe: "Destination folder for the project"
-          open:
-            describe: "Open the specified project's details page in the browser"
-            options:
-              project:
-                describe: "Name of project to open"
-            examples:
-              default: "Opens the projects page for the specified account"
-            success: "Successfully opened \"{{ projectName }}\""
-          feedback:
-            describe: "Leave feedback on HubSpot projects or file a bug report"
-            success: "We opened {{ url }} in your browser."
-            options:
-              bug:
-                describe: "Open Github issues in your browser to report a bug."
-              general:
-                describe: "Open the projects feedback form in your browser."
-      remove:
-        describe: "Delete a file or folder from HubSpot."
-        deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
-        errors:
-          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
-        positionals:
-          path:
-            describe: "Remote hubspot path"
-      sandbox:
-        describe: "Commands for working with sandboxes."
-        subcommands:
-          create:
-            describe: "Create a sandbox account"
-            examples:
-              default: "Creates a standard sandbox account named MySandboxAccount."
-              force: "Skips all confirmation prompts when creating a sandbox account."
-            debug:
-              error: "Error creating sandbox:"
-            info:
-              auth: "Run `hs auth` to authenticate with the new sandbox account."
-            options:
-              name:
-                describe: "Name to use for created sandbox"
-              type:
-                describe: "Type of sandbox to create (standard | development)"
-            failure:
-              optionMissing:
-                type: "Invalid or missing sandbox --type option in command. Please try again."
-                name: "Invalid or missing sandbox --name option in command. Please try again."
-              invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-                \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
-                \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
-          delete:
-            describe: "Delete a sandbox account"
-            debug:
-              deleting: "Deleting sandbox account \"{{ account }}\""
-              error: "Error deleting sandbox account:"
-            examples:
-              default: "Deletes the sandbox account named MySandboxAccount."
-              force: "Skips all confirmation prompts when deleting a sandbox account."
-            confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
-            defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
-            success:
-              delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully."
-              deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
-              configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
-            failure:
-              invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
-              noAccount: "No account specified. Specify an account by using the --account flag."
-              noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
-              noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
-              objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
-              noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
-              invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
-            options:
-              account:
-                describe: "Account name or id to delete"
-          sync:
-            describe: "Sync to a sandbox account"
-            examples:
-              default: "Initiates a sync to a sandbox account."
-              force: "Skips all confirmation prompts when initiating a sync."
-            info:
-              developmentSandbox: "This will sync CRM object definitions."
-              standardSandbox: "This will sync all supported assets.
-                \nTo sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
-              sync: "\nSync direction:
-                \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
-                \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
-                \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
-            warning:
-              developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
-              standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
-            confirm:
-              developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-              standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-            failure:
-              invalidAccountType: "Sync must be run in a sandbox account. Your default account is a {{ accountType }}. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
-              missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
-                \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
-                \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
-      secrets:
-        describe: "Manage HubSpot secrets."
-        subcommands:
-          add:
-            describe: "Add a HubSpot secret"
-            errors:
-              add: "The secret \"{{ secretName }}\" was not added"
-            positionals:
-              name:
-                describe: "Name of the secret"
-            success:
-              add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountIdentifier }}"
-          delete:
-            describe: "Delete a HubSpot secret"
-            errors:
-              delete: "The secret \"{{ secretName }}\" was not deleted"
-            positionals:
-              name:
-                describe: "Name of the secret"
-            success:
-              delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountIdentifier }}"
-          list:
-            describe: "List all HubSpot secrets"
-            errors:
-              list: "The secrets could not be listed"
-            groupLabel: "Secrets for account {{ accountIdentifier }}:"
-          update:
-            describe: "Update an existing HubSpot secret"
-            errors:
-              update: "The secret \"{{ secretName }}\" was not updated"
-            positionals:
-              name:
-                describe: "Name of the secret to be updated"
-            success:
-              update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
-              updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
-      theme:
-        describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
-        subcommands:
-          generateSelectors:
-            describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
-            errors:
-              invalidPath: "Could not find directory \"{{ themePath }}\""
-              fieldsNotFound: "Unable to find theme's fields.json."
-              noSelectorsFound: "No selectors found."
-            success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
-            positionals:
-              themePath:
-                describe: "The path of the theme you'd like to generate an editor-preview.json for."
-          marketplaceValidate:
-            describe: "Validate a theme for the marketplace"
-            errors:
-              invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
-            logs:
-              validatingTheme: "Validating theme \"{{ path }}\" \n"
-            results:
-              required: "Required validation results:"
-              recommended: "Recommended validation results:"
-              warnings:
-                file: "File: {{ file }}"
-                lineNumber: "Line number: {{ line }}"
-              noErrors: "No errors"
-            positionals:
-              src:
-                describe: "Path to the theme within the Design Manager."
-      module:
-        describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
-        subcommands:
-          marketplaceValidate:
-            describe: "Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager."
-            errors:
-              invalidPath: "The path \"{{ path }}\" is not a path to a module within the Design Manager."
-            logs:
-              validatingModule: "Validating module \"{{ path }}\" \n"
-            options:
-              json:
-                describe: "Output raw json data"
-            results:
-              required: "Required validation results:"
-              recommended: "Recommended validation results:"
-              warnings:
-                file: "File: {{ file }}"
-                lineNumber: "Line number: {{ line }}"
-              noErrors: "No errors"
-            positionals:
-              src:
-                describe: "Path to the module within the Design Manager."
-      upload:
-        describe: "Upload a folder or file from your computer to the HubSpot CMS."
-        errors:
-          destinationRequired: "A destination path needs to be passed"
-          fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
-          invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
-          uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
-          someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
-          deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
-        options:
+            replaceDefaultAccount: "The removed account was the default account."
+          prompts:
+            selectAccountToRemove: "Select an account to remove from the config"
+          errors:
+            accountNotFound: "The account \"{{ specifiedAccount }}\" could not be found in {{ configPath }}"
+          examples:
+            default: "Select a HubSpot account to remove from the config"
+            byName: "Remove the account \"MyAccount\" from the config"
           options:
-            describe: "Options to pass to javascript fields files"
-          saveOutput:
-            describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
-          convertFields:
-            describe: "If true, converts any javascript fields files contained in module folder or project root."
-          clean:
-            describe: "Will cause upload to delete files in your HubSpot account that are not found locally."
-          force:
-            describe: "Skips confirmation prompts when doing a clean upload."
-        previewUrl: "To preview this theme, visit: {{ previewUrl }}"
-        positionals:
-          src:
-            describe: "Path to the local file, relative to your current working directory."
-          dest:
-            describe: "Path in HubSpot Design Tools, can be a net new path."
-        success:
-          fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
-          uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
-        uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
-        notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
-        cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
-      watch:
-        describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
-        errors:
-          destinationRequired: "A destination directory needs to be passed"
-          invalidPath: "The \"{{ path }}\" is not a path to a directory"
-        options:
-          disableInitial:
-            describe: "Disable the initial upload when watching a directory (default)"
-          initialUpload:
-            describe: "Upload directory before watching for updates"
-          notify:
-            describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-          remove:
-            describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
-          convertFields:
-            describe: "If true, converts any javascript fields files contained in module folder or project root."
-          saveOutput:
-            describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
+            account:
+              describe: "Account name or id to remove"
+          promptMessage: "Select an account to remove"
+          success:
+            accountRemoved: "Account \"{{ accountName }}\" removed from the config"
+        info:
+          accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
+          describe: "Print information about the default account, or about the account specified with the \"--account\" option."
+          errors:
+            notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
+          examples:
+            default: "Print information for the default account"
+            idBased: "Print information for the account with accountId equal to \"1234567\""
+            nameBased: "Print information for the account in the config with name equal to \"MyAccount\""
+          name: "{{#bold}}Account name{{/bold}}: {{ name }}"
+          scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
+        clean:
+          describe: "Checks for inactive accounts and removes them from the CLI config"
+          noResults: "No inactive accounts found to remove."
+          loading:
+            add: "Looking for inactive accounts…"
+          inactiveAccountsFound:
+            one: "1 inactive account found:"
+            other: "{{ count }} inactive accounts found:"
+          confirm:
+            one: "Remove 1 inactive account from the CLI config?"
+            other: "Remove {{ count }} inactive accounts from the CLI config?"
+          removeSuccess: "Removed {{ accountName }} from the CLI config."
+    auth:
+      describe: "Configure authentication for a HubSpot account. Supported authentication protocols are {{ supportedProtocols }}."
+      errors:
+        noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
+        unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
+      positionals:
+        type:
+          describe: "Authentication mechanism"
+          defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+      options:
+        account:
+          describe: "HubSpot account to authenticate"
+      success:
+        configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
+    config:
+      describe: "Commands for working with the config file."
+      subcommands:
+        set:
+          describe: "Commands for modifying the CLI configuration"
+          promptMessage: "Select a config option to update"
+          examples:
+            default: "Opens a prompt to select a config item to modify"
           options:
-            describe: "Options to pass to javascript fields files"
-        positionals:
-          src:
-            describe: "Path to the local directory your files are in, relative to your current working directory"
-          dest:
-            describe: "Path in HubSpot Design Tools. Can be a net new path"
-        warnings:
-          disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
-          initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
-          notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
-      preview:
-        describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
-        errors:
-          invalidPath: "The path \"{{ path }}\" is not a path to a directory"
-          noThemeComponents: "Your project has no theme components available to preview."
-        options:
-          src:
-            describe: "Path to the local directory your theme is in, relative to your current working directory"
-          dest:
-            describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
-          notify:
-            describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-          noSsl:
-            describe: "Disable HTTPS"
-          port:
-            describe: "The port on which to start the local server"
-        initialUploadProgressBar:
-          start: "Starting..."
-          uploading: "Uploading..."
-          finish: "Complete!"
+            defaultMode:
+              describe: "Set the default mode"
+              promptMessage: "Select mode to be used as the default"
+              error: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+              success: "Default mode updated to: {{ mode }}"
+            allowUsageTracking:
+              describe: "Enable or disable usage tracking"
+              promptMessage: "Choose to enable or disable usage tracking"
+              success: "Allow usage tracking set to: \"{{ isEnabled }}\""
+              labels:
+                enabled: "Enabled"
+                disabled: "Disabled"
+            httpTimeout:
+              describe: "Set the http timeout duration"
+              promptMessage: "Enter http timeout duration"
+              success: "The http timeout has been set to: {{ timeout }}"
+    cms:
+      describe: "Commands for working with the CMS."
+      subcommands:
+        lighthouseScore:
+          describe: "Score a theme using Google lighthouse."
+          examples:
+            default: "Get the lighthouse score for the my-theme theme"
+          info:
+            promptMessage: "Select a theme to score"
+            fetchingThemes: "Fetching available themes"
+            generatingScore: "Generating Google Lighthouse score for {{ theme }}"
+            targetDeviceNote: "Scores are being shown for {{ target }} only."
+            verboseOptionNote: "Theme scores are averages of all theme templates. Use the [--verbose] option to include individual template scores."
+            pageTemplateScoreTitle: "Page template scores"
+            lighthouseLinksTitle: "Lighthouse links"
+            failedTemplatePathsTitle: "The following templates could not be scored"
+          errors:
+            targetOptionRequired: "[--target] is required for detailed view"
+            invalidTargetOption: "[--target] can only be used for detailed view"
+            themeNotFound: "Theme \"{{ theme }}\" not found. Please rerun using a valid theme path."
+            failedToFetchThemes: "Failed to fetch available themes. Try running again with the [--theme] option"
+            failedToGetLighthouseScore: "Failed to generate a Google Lighthouse score"
+          options:
+            theme:
+              describe: "Path to the theme in the Design Manager"
+            target:
+              describe: "Medium to test against"
+            verbose:
+              describe: "View a detailed output of the lighthouse sores"
+        reactModule:
+          describe: "Get a specified default React module"
+          options:
+            name:
+              describe: "Name of the react modules to be fetched"
+            dest:
+              describe: "Destination to download the react module to"
+          success:
+            moduleDownloaded: "\"{{ moduleName }}\" succesfully downloaded to \"{{ path }}\""
+          errors:
+            pathExists: "Folder already exists at \"{{ path }}\""
+            invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
+          groupLabel: "React modules available to download:"
+    create:
+      describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
+      errors:
+        deprecatedAssetType: "The CLI command for asset type {{ assetType }} has been deprecated in an effort to make it easier to know what asset types can be created. Run the \"{{ newCommand }}\" command instead. Then when prompted select \"{{ type }}\"."
+        unsupportedAssetType: "The asset type {{ assetType }} is not supported. Supported asset types are {{ supportedAssetTypes }}."
+        unusablePath: "The \"{{ path }}\" is not a usable path to a directory."
+      positionals:
+        dest:
+          describe: "Destination folder for the new asset, relative to your current working directory. If omitted, this argument will default to your current working directory"
+        name:
+          describe: "Name of new asset"
+        type:
+          describe: "Type of asset"
+      subcommands:
+        apiSample:
+          errors:
+            nameRequired: "The \"name\" argument is required when creating an API Sample."
+            noSamples: "Currently there are no samples available, please, try again later."
+          info:
+            sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
+          loading:
+            apiSamples: "Loading available API samples"
+          success:
+            sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
+        module:
+          errors:
+            nameRequired: "The \"name\" argument is required when creating a Custom Module."
+        template:
+          errors:
+            nameRequired: "The \"name\" argument is required when creating a Template."
+    customObject:
+      betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
+      describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+      seeMoreLink: "View our docs to find out more."
+      subcommands:
+        create:
+          describe: "Create custom object instances"
+          errors:
+            creationFailed: "Object creation from {{ definition }} failed"
+          positionals:
+            definition:
+              describe: "Local path to the JSON file containing an array of object definitions"
+            name:
+              describe: "Schema name to add the object instance to"
+          success:
+            objectsCreated: "Objects created"
+        schema:
+          describe: "Manage custom object schemas"
+          subcommands:
+            create:
+              describe: "Create a custom object schema"
+              errors:
+                creationFailed: "Schema creation from {{ definition }} failed"
+              positionals:
+                definition:
+                  describe: "Local path to the JSON file containing the schema definition"
+              success:
+                schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
+                schemaViewable: "Schema can be viewed at {{ url }}"
+            delete:
+              describe: "Delete a custom object schema"
+              errors:
+                delete: "Unable to delete {{ name }}"
+              examples:
+                default: "Delete \"schemaName\" schema"
+              positionals:
+                name:
+                  describe: "Name of the target schema"
+              success:
+                delete: "Successfully initiated deletion of {{ name }}"
+            fetchAll:
+              describe: "Fetch all custom object schemas for an account"
+              errors:
+                fetch: "Unable to fetch schemas"
+              examples:
+                default: "Fetch all schemas for an account and put them in the current working directory"
+                specifyPath: "Fetch all schemas for an account and put them in a directory named my/folder"
+              positionals:
+                dest:
+                  describe: "Local folder where schemas will be written"
+              success:
+                fetch: "Saved schemas to {{ path }}"
+            fetch:
+              describe: "Fetch a custom object schema"
+              errors:
+                fetch: "Unable to fetch {{ name }}"
+              examples:
+                default: "Fetch \"schemaId\" schema and put it in the current working directory"
+                specifyPath: "Fetch \"schemaId\" schema and put it in a directory named my/folder"
+              positionals:
+                dest:
+                  describe: "Local folder where schema will be written"
+                name:
+                  describe: "Name of the target schema"
+              success:
+                save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
+                savedToPath: "Saved schema to {{ path }}"
+            list:
+              describe: "List schemas available on your account"
+              errors:
+                list: "Unable to list schemas"
+            update:
+              describe: "Update an existing custom object schema"
+              errors:
+                update: "Schema update from {{ definition }} failed"
+              positionals:
+                definition:
+                  describe: "Local path to the JSON file containing the schema definition"
+                name:
+                  describe: "Name of the target schema"
+              success:
+                update: "Your schema has been updated in account \"{{ accountId }}\""
+                viewAtUrl: "Schema can be viewed at {{ url }}"
+    fetch:
+      describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
+      errors:
+        sourceRequired: "A source to fetch is required."
+      options:
+        staging:
+          describe: "Retrieve staged changes for project"
+        assetVersion:
+          describe: "Specify what version of a default asset to fetch"
+      positionals:
+        dest:
+          describe: "Local directory you would like the files to be placed in, relative to your current working directory"
+        src:
+          describe: "Path in HubSpot Design Tools"
+    filemanager:
+      describe: "Commands for working with the File Manager."
+      subcommands:
+        fetch:
+          describe: "Download a folder or file from the HubSpot File Manager to your computer"
+          errors:
+            sourceRequired: "A source to fetch is required."
+          options:
+            includeArchived:
+              describe: "Include files that have been marked as \"archived\""
+          positionals:
+            dest:
+              describe: "Path in HubSpot Design Tools"
+            src:
+              describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
+        upload:
+          describe: "Upload a folder or file from your computer to the HubSpot File Manager"
+          errors:
+            destinationRequired: "A destination path needs to be passed"
+            fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+            invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+            upload: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+            uploadingFailed: "Uploading failed"
+          logs:
+            uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+          positionals:
+            dest:
+              describe: "Path in HubSpot Design Tools, can be a net new path"
+            src:
+              describe: "Path to the local file, relative to your current working directory"
+          success:
+            upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
+            uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
+    functions:
+      describe: "Commands for working with functions."
+      subcommands:
+        deploy:
+          debug:
+            startingBuildAndDeploy: "Starting build and deploy for .functions folder with path: {{ functionPath }}"
+          errors:
+            buildError: "Build error: {{ details }}"
+            noPackageJson: "Unable to find package.json for function {{ functionPath }}."
+            notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
+          examples:
+            default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
+          loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+          positionals:
+            path:
+              describe: "Path to .functions folder"
+          success:
+            deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
+        list:
+          debug:
+            gettingFunctions: "Getting currently deployed functions"
+          describe: "List currently deployed functions"
+          info:
+            noFunctions: "No functions found"
+          options:
+            json:
+              describe: "output raw json data"
+        server:
+          debug:
+            startingServer: "Starting local test server for .functions folder with path: {{ functionPath }}"
+          examples:
+            default: "Run a local function test server."
+          options:
+            contact:
+              describe: "Pass contact data to the test function"
+            logOutput:
+              describe: "Output the response body from the serverless function execution (It is suggested not to use this in production environments as it can reveal any secure data returned by the function in logs)"
+            port:
+              describe: "Port to run the test server on"
+            watch:
+              describe: "Watch the specified .functions folder for changes and restart the server"
+          positionals:
+            path:
+              describe: "Path to local .functions folder"
+    hubdb:
+      describe: "Manage HubDB tables."
+      subcommands:
+        clear:
+          describe: "Clear all rows in a HubDB table"
+          logs:
+            removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
+            rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
+            tableEmpty: "HubDB table {{ tableId }} is already empty"
+          positionals:
+            tableId:
+              describe: "HubDB Table ID"
+        create:
+          describe: "Create a HubDB table"
+          errors:
+            create: "Creating the table at \"{{ src }}\" failed"
+          positionals:
+            src:
+              describe: "Local path to file used for import"
+          success:
+            create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
+        delete:
+          describe: "Delete a HubDB table"
+          errors:
+            delete: "Deleting the table {{ tableId }} failed"
+          positionals:
+            tableId:
+              describe: "HubDB Table ID"
+          success:
+            delete: "The table {{ tableId }} was deleted from {{ accountId }}"
+        fetch:
+          describe: "Fetch a HubDB table"
+          positionals:
+            dest:
+              describe: "Local destination folder to fetch table to"
+            tableId:
+              describe: "HubDB Table ID"
+          success:
+            fetch: "Downloaded HubDB table {{ tableId }} to {{ path }}"
+    init:
+      describe: "Initialize {{ configName }} for a HubSpot account."
+      options:
+        auth:
+          describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
+          defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        account:
+          describe: "HubSpot account to authenticate"
+      success:
+        configFileCreated: "Created config file \"{{ configPath }}\""
+        configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
+      logs:
+        updateConfig: "To update an existing config file, use the \"hs auth\" command."
+      errors:
+        configFileExists: "The config file {{ configPath }} already exists."
+    lint:
+      issuesFound: "{{ count }} issues found."
+      groupName: "Linting {{ path }}"
+      positionals:
+        path:
+          describe: "Local folder to lint"
+    list:
+      describe: "List remote contents of a directory."
+      gettingPathContents: "Getting contents of {{ path }}."
+      noFilesFoundAtPath: "No files found in {{ path }}."
+      positionals:
+        path:
+          describe: "Remote directory to list contents"
+    logs:
+      describe: "Get logs for a function."
+      errors:
+        noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
+      examples:
+        default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
+        follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
+        limit: "Get 10 most recent logs for function residing at /_hcms/api/my-endpoint"
+      gettingLogs: "Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}."
+      options:
+        compact:
+          describe: "output compact logs"
+        follow:
+          describe: "follow logs"
+        latest:
+          describe: "retrieve most recent log only"
+        limit:
+          describe: "limit the number of logs to output"
+      positionals:
+        endpoint:
+          describe: "Serverless function endpoint"
+      tailLogs: "Waiting for log entries for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+    mv:
+      describe: "Move a remote file or folder in HubSpot. This feature is currently in beta and the CLI contract is subject to change."
+      errors:
+        sourcePathExists: "The folder \"{{ srcPath }}\" already exists in \"{{ destPath }}\"."
+        moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
+      move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
+    open:
+      describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
+      options:
+        list:
+          describe: "List all supported shortcuts"
+      positionals:
+        shortcut:
+          describe: "Shortcut of the link you'd like to open"
+      selectLink: "Select a link to open"
+    project:
+      describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
+      subcommands:
+        dev:
+          describe: "Start local dev for the current project"
+          logs:
+            betaMessage: "HubSpot projects local development"
+            placeholderAccountSelection: "Using default account as target account (for now)"
+          errors:
+            noProjectConfig: "No project detected. Please run this command again from a project directory."
+            invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+            parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
+          examples:
+            default: "Start local dev for the current project"
+        create:
+          describe: "Create a new project"
+          logs:
+            welcomeMessage: "Welcome to HubSpot Developer Projects!"
+          examples:
+            default: "Create a new project"
+          options:
+            location:
+              describe: "Directory where project should be created"
+            name:
+              describe: "Project name (cannot be changed)"
+            template:
+              describe: "The starting template"
+            templateSource:
+              describe: "Path to custom GitHub repository from which to create project template"
+        migrateApp:
+          describe: "Migrate a public app to the projects framework"
+          examples:
+            default: "Migrate a public app to the projects framework"
+          options:
+            appId:
+              describe: "The ID for the public app being migrated to the projects framework"
+            location:
+              describe: "Directory where project should be created"
+            name:
+              describe: "Project name (cannot be changed)"
+          migrationStatus:
+            inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
+            done: "Converting app configuration to public-app.json component definition ... DONE"
+            failure: "Converting app configuration to public-app.json component definition ... FAILED"
+          warning:
+            title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
+            projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
+            appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
+            buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
+            existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
+            copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
+          createAppPrompt: "Proceed with migrating this app to a project component?"
+          projectDetailsLink: "View project details in your developer account"
+          errors:
+            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+              \n- Run {{ useCommand }} to switch your default account to an app developer account.
+              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
+            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+        add:
+          describe: "Create a new component within a project"
+          options:
+            name:
+              describe: "Component name"
+            type:
+              describe: "The type of component"
+          creatingComponent:
+            message: "Adding a new component to your project"
+          success:
+            message: "{{ componentName }} was added to your project"
+          error:
+            locationInProject: "The component location must be within a project folder"
+          examples:
+            default: "Create a component within your project"
+        deploy:
+          describe: "Deploy a project build"
+          debug:
+            deploying: "Deploying project at path: {{ path }}"
+          errors:
+            deploy: "Deploy error: {{ details }}"
+            noBuilds: "Deploy error: no builds for this project were found."
+            noBuildId: "You must specify a build to deploy"
+            projectNotFound: "{{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
+          examples:
+            default: "Deploy the latest build of the current project"
+            withOptions: "Deploy build 5 of the project my-project"
+          options:
+            buildId:
+              describe: "Project build ID to be deployed"
+            project:
+              describe: "Project name"
+        listBuilds:
+          describe: "List the project's builds"
         logs:
-          processExited: "Stopping dev server..."
-      convertFields:
-        describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
-        positionals:
-          src:
-            describe: Path to JS Fields file or directory containing javascript fields files.
-        options:
+          describe: "Get execution logs for a serverless function within a project"
+          errors:
+            invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+          logs:
+            showingLogs: "Showing logs for:"
+            hubspotLogsLink: "View private apps in HubSpot"
+            hubspotLogsDirectLink: "View logs in HubSpot"
+            noLogsFound: "No logs were found for \"{{ name }}\""
+          table:
+            accountHeader: "Account"
+            projectHeader: "Project"
+            appHeader: "App"
+            functionHeader: "Function"
+            endpointHeader: "Endpoint"
+          examples:
+            default: "Open the project logs prompt to get logs for a serverless function"
+            withOptions: "Get logs for function named \"my-function\" within the app named \"app\" within the project named \"my-project\""
           options:
-            describe: "Options to pass to javascript fields files"
-    lib:
-      process:
-        exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
-      DevServerManager:
-        portConflict: "The port {{ port }} is already in use."
-        notInitialized: "The Dev Server Manager must be initialized before it is started."
-        noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
-      LocalDevManager:
-        failedToInitialize: "Missing required arguments to initialize Local Dev"
-        noDeployedBuild: "There is no deployed build for this project in {{ accountIdentifier }}. Run {{ uploadCommand }} to upload and deploy your project."
-        noComponents: "There are no components in this project."
-        noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
-        betaMessage: "HubSpot projects local development"
-        running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
-        quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-        viewInHubSpotLink: "View project in HubSpot"
-        exitingStart: "Stopping local dev server ..."
-        exitingSucceed: "Successfully exited"
-        exitingFail: "Failed to cleanup before exiting"
-        uploadWarning:
-          appLabel: "[App]"
-          uiExtensionLabel: "[UI Extension]"
-          missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
-          defaultWarning: "Changing project configuration requires a new project build."
-          header: "{{ warning }} To reflect these changes and continue testing:"
-          stopDev: "  * Stop {{ command }}"
-          runUpload: "  * Run {{ command }}"
-          restartDev: "  * Re-run {{ command }}"
-          pushToGithub: "  * Commit and push your changes to GitHub"
-        devServer:
-          cleanupError: "Failed to cleanup local dev server: {{ message }}"
-          setupError: "Failed to setup local dev server: {{ message }}"
-          startError: "Failed to start local dev server: {{ message }}"
-          fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
-      localDev:
-        confirmDefaultAccountIsTarget:
-          declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-        checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
-        checkIfDeveloperTestAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
-        suggestRecommendedNestedAccount:
-          nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
-          publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
-          privateAppNonDeveloperTestAccountWarning: "Local development of private apps is only supported in {{#bold}}developer test accounts{{/bold}}"
-        createNewProjectForLocalDev:
-          projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
-          publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
-          createProject: "Create new project {{ projectName}} in {{#bold}}[{{ accountIdentifier }}]{{/bold}}?"
-          choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
-          creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
-          createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
-          failedToCreateProject: "Failed to create project in the target account."
-        createInitialBuildForNewProject:
-          initialUploadMessage: "HubSpot Local Dev Server Startup"
-          projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
-      projects:
-        config:
-          srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
-        uploadProjectFiles:
-          add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-          fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-          succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
-          buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
-        handleProjectUpload:
-          emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
-          compressed: "Project files compressed: {{ byteCount }} bytes"
-          compressing: "Compressing build files to \"{{ path }}\""
-          fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
-        ensureProjectExists:
-          createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
-          createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
-          createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
-          notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
-        pollFetchProject:
-          checkingProject: "Checking if project exists in {{ accountIdentifier }}"
-        makePollTaskStatusFunc:
-          componentCountSingular: "Found 1 component in this project"
-          componentCount: "Found {{ numComponents }} components in this project"
-          successStatusText: "DONE"
-          failedStatusText: "FAILED"
-        pollProjectBuildAndDeploy:
-          buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
-          cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
-        logFeedbackMessage:
-          feedbackHeader: "We'd love to hear your feedback!"
-          feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
-      publicApps:
-        errors:
-          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
-      ui:
-        betaTag: "{{#bold}}[BETA]{{/bold}}"
-        betaWarning:
-          header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
-          footer: "{{#yellow}}******************************************************************{{/yellow}}"
-        featureHighlight:
-          defaultTitle: "What's next?"
-          commandKeys:
-            accountOption:
-              command: "--account"
-              message: "Use the {{ command }} option with any command to override the default account"
-            accountsListCommand:
-              command: hs accounts list
-              message: "Run {{ command }} to see a list of configured HubSpot accounts"
-            accountsUseCommand:
-              command: "hs accounts use"
-              message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
-            authCommand:
-              command: "hs auth"
-              message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
-            feedbackCommand:
-              command: "hs feedback"
-              message: "Run {{ command }} to report a bug or leave feedback"
-            helpCommand:
-              command: "hs help"
-              message: "Run {{ command }} to see a list of available commands"
-            projectCreateCommand:
-              command: "hs project create"
-              message: "Run {{ command }} to create a new project"
-            projectDeployCommand:
-              command: "hs project deploy"
-              message: "Ready to take your project live? Run {{ command }}"
-            projectHelpCommand:
-              command: "hs project --help"
-              message: "Run {{ command }} to learn more about available project commands"
-            projectUploadCommand:
-              command: "hs project upload"
-              message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
-            projectDevCommand:
-              command: "hs project dev"
-              message: "Run {{ command }} to set up your test environment and start local development"
-            sandboxSyncDevelopmentCommand:
-              command: "hs sandbox sync"
-              message: "Run {{ command }} to to update CRM object definitions in your sandbox"
-            sandboxSyncStandardCommand:
-              command: "hs sandbox sync"
-              message: "Run {{ command }} to to update all supported assets to your sandbox from production"
-            sampleProjects:
-              linkText: "HubSpot's sample projects"
-              url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
-              message: "See {{ link }}"
-        git:
-          securityIssue: "Security Issue Detected"
-          configFileTracked: "The HubSpot config file can be tracked by git."
-          fileName: "File: \"{{ configPath }}\""
-          remediate: "To remediate:"
-          moveConfig: "- Move the config file to your home directory: '{{ homeDir }}'"
-          addGitignore: "- Add gitignore pattern '{{ configPath }}' to a .gitignore file in root of your repository."
-          noRemote: "- Ensure that the config file has not already been pushed to a remote repository."
-          checkFailed: "Unable to determine if config file is properly ignored by git."
-        serverlessFunctionLogs:
-          unableToProcessLog: "Unable to process log {{ log }}"
-      commonOpts:
+            app:
+              describe: "App name"
+            compact:
+              describe: "Output compact logs"
+            tail:
+              describe: "Tail logs"
+            latest:
+              describe: "Retrieve most recent log only"
+            limit:
+              describe: "Limit the number of logs to output"
+            project:
+              describe: "Project name"
+            function:
+              describe: "App function name"
+            endpoint:
+              describe: "Public endpoint path"
+        upload:
+          describe: "Upload your project files and create a new build"
+          examples:
+            default: "Upload a project"
+          logs:
+            buildSucceeded: "Build #{{ buildId }} succeeded\n"
+            readyToGoLive: "🚀 Ready to take your project live?"
+            runCommand: "Run `{{ command }}`"
+          errors:
+            projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+          options:
+            forceCreate:
+              describe: "Automatically create project if it does not exist"
+            message:
+              describe: "Add a message when you upload your project and create a build"
+          positionals:
+            path:
+              describe: "Path to a project folder"
+        watch:
+          describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
+          examples:
+            default: "Watch a project within the myProjectFolder folder"
+          logs:
+            processExited: "Stopping watcher..."
+            watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
+            resuming: "Resuming watcher..."
+            uploadSucceeded: "Uploaded file \"{{ filePath }}\" to \"{{ remotePath }}\""
+            deleteFileSucceeded: "Deleted file \"{{ remotePath }}\""
+            deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
+            watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
+            previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
+          positionals:
+            path:
+              describe: "Path to a project folder"
+          options:
+            initialUpload:
+              describe: "Upload directory before watching for updates"
+          debug:
+            pause: "Pausing watcher, attempting to queue build"
+            buildStarted: "Build queued."
+            extensionNotAllowed: "Skipping \"{{ filePath }}\" due to unsupported extension"
+            ignored: "Skipping \"{{ filePath }}\" due to an ignore rule"
+            uploading: "Attempting to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+            attemptNewBuild: "Attempting to create a new build"
+            fileAlreadyQueued: "File \"{{ filePath }}\" is already queued for upload"
+          errors:
+            uploadFailed: "Failed to upload file \"{{ filePath }}\" to \"{{ remotePath }}\""
+            deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
+            deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
+        download:
+          describe: "Download your project files from HubSpot and write to a path on your computer"
+          examples:
+            default: "Download the project myProject into myProjectFolder folder"
+          logs:
+            downloadCancelled: "Cancelling project download"
+            downloadSucceeded: "Downloaded build \"{{ buildId }}\" from project \"{{ projectName }}\""
+          errors:
+            downloadFailed: "Something went wrong downloading the project"
+            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}"
+          warnings:
+            cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
+          options:
+            buildNumber:
+              describe: "The build number to download"
+            project:
+              describe: "The name of the project to download"
+            dest:
+              describe: "Destination folder for the project"
+        open:
+          describe: "Open the specified project's details page in the browser"
+          options:
+            project:
+              describe: "Name of project to open"
+          examples:
+            default: "Opens the projects page for the specified account"
+          success: "Successfully opened \"{{ projectName }}\""
+        feedback:
+          describe: "Leave feedback on HubSpot projects or file a bug report"
+          success: "We opened {{ url }} in your browser."
+          options:
+            bug:
+              describe: "Open Github issues in your browser to report a bug."
+            general:
+              describe: "Open Github issues in your browser to give feedback."
+    remove:
+      describe: "Delete a file or folder from HubSpot."
+      deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
+      errors:
+        deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
+      positionals:
+        path:
+          describe: "Remote hubspot path"
+    sandbox:
+      describe: "Commands for working with sandboxes."
+      subcommands:
+        create:
+          describe: "Create a sandbox account"
+          examples:
+            default: "Creates a standard sandbox account named MySandboxAccount."
+            force: "Skips all confirmation prompts when creating a sandbox account."
+          debug:
+            error: "Error creating sandbox:"
+          info:
+            auth: "Run `hs auth` to authenticate with the new sandbox account."
+          options:
+            name:
+              describe: "Name to use for created sandbox"
+            type:
+              describe: "Type of sandbox to create (standard | development)"
+          failure:
+            optionMissing:
+              type: "Invalid or missing sandbox --type option in command. Please try again."
+              name: "Invalid or missing sandbox --name option in command. Please try again."
+            invalidAccountType: "Sandboxes must be created from a production account. Your current default account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+              \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
+              \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
+        delete:
+          describe: "Delete a sandbox account"
+          debug:
+            deleting: "Deleting sandbox account \"{{ account }}\""
+            error: "Error deleting sandbox account:"
+          examples:
+            default: "Deletes the sandbox account named MySandboxAccount."
+            force: "Skips all confirmation prompts when deleting a sandbox account."
+          confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
+          defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
+          success:
+            delete: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully."
+            deleteDefault: "Sandbox \"{{ account }}\" with portalId \"{{ sandboxHubId }}\" was deleted successfully and removed as the default account."
+            configFileUpdated: "Removed account {{ account }} from {{ configFilename }}."
+          failure:
+            invalidUser: "Couldn't delete {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to delete the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
+            noAccount: "No account specified. Specify an account by using the --account flag."
+            noSandboxAccounts: "There are no sandboxes connected to the CLI. To add a sandbox, run {{#bold}}hs auth{{/bold}}."
+            noParentAccount: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}hs auth{{/bold}} and add the parent account."
+            objectNotFound: "Sandbox {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. The account has been removed from the config."
+            noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
+            invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
+          options:
+            account:
+              describe: "Account name or id to delete"
+        sync:
+          describe: "Sync to a sandbox account"
+          examples:
+            default: "Initiates a sync to a sandbox account."
+            force: "Skips all confirmation prompts when initiating a sync."
+          info:
+            developmentSandbox: "This will sync CRM object definitions."
+            standardSandbox: "This will sync all supported assets.
+              \nTo sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
+            sync: "\nSync direction:
+              \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
+              \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
+              \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
+          warning:
+            developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
+            standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
+          confirm:
+            developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+            standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+          failure:
+            invalidAccountType: "Sync must be run in a sandbox account. Your default account is a {{ accountType }}. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
+            missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
+              \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
+              \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
+    secrets:
+      describe: "Manage HubSpot secrets."
+      subcommands:
+        add:
+          describe: "Add a HubSpot secret"
+          errors:
+            add: "The secret \"{{ secretName }}\" was not added"
+          positionals:
+            name:
+              describe: "Name of the secret"
+          success:
+            add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountIdentifier }}"
+        delete:
+          describe: "Delete a HubSpot secret"
+          errors:
+            delete: "The secret \"{{ secretName }}\" was not deleted"
+          positionals:
+            name:
+              describe: "Name of the secret"
+          success:
+            delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountIdentifier }}"
+        list:
+          describe: "List all HubSpot secrets"
+          errors:
+            list: "The secrets could not be listed"
+          groupLabel: "Secrets for account {{ accountIdentifier }}:"
+        update:
+          describe: "Update an existing HubSpot secret"
+          errors:
+            update: "The secret \"{{ secretName }}\" was not updated"
+          positionals:
+            name:
+              describe: "Name of the secret to be updated"
+          success:
+            update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
+            updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
+    theme:
+      describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
+      subcommands:
+        generateSelectors:
+          describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
+          errors:
+            invalidPath: "Could not find directory \"{{ themePath }}\""
+            fieldsNotFound: "Unable to find theme's fields.json."
+            noSelectorsFound: "No selectors found."
+          success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
+          positionals:
+            themePath:
+              describe: "The path of the theme you'd like to generate an editor-preview.json for."
+        marketplaceValidate:
+          describe: "Validate a theme for the marketplace"
+          errors:
+            invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
+          logs:
+            validatingTheme: "Validating theme \"{{ path }}\" \n"
+          results:
+            required: "Required validation results:"
+            recommended: "Recommended validation results:"
+            warnings:
+              file: "File: {{ file }}"
+              lineNumber: "Line number: {{ line }}"
+            noErrors: "No errors"
+          positionals:
+            src:
+              describe: "Path to the theme within the Design Manager."
+        preview:
+          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
+          errors:
+            invalidPath: "The path \"{{ path }}\" is not a path to a directory"
+            noThemeComponents: "Your project has no theme components available to preview."
+          options:
+            src:
+              describe: "Path to the local directory your theme is in, relative to your current working directory"
+            dest:
+              describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
+            notify:
+              describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+            noSsl:
+              describe: "Disable HTTPS"
+            port:
+              describe: "The port on which to start the local server"
+          initialUploadProgressBar:
+            start: "Starting..."
+            uploading: "Uploading..."
+            finish: "Complete!"
+          logs:
+            processExited: "Stopping dev server..."
+    module:
+      describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
+      subcommands:
+        marketplaceValidate:
+          describe: "Validate a module for the marketplace. Make sure to include the suffix .module in the path to the module within the Design Manager."
+          errors:
+            invalidPath: "The path \"{{ path }}\" is not a path to a module within the Design Manager."
+          logs:
+            validatingModule: "Validating module \"{{ path }}\" \n"
+          options:
+            json:
+              describe: "Output raw json data"
+          results:
+            required: "Required validation results:"
+            recommended: "Recommended validation results:"
+            warnings:
+              file: "File: {{ file }}"
+              lineNumber: "Line number: {{ line }}"
+            noErrors: "No errors"
+          positionals:
+            src:
+              describe: "Path to the module within the Design Manager."
+    upload:
+      describe: "Upload a folder or file from your computer to the HubSpot CMS."
+      errors:
+        destinationRequired: "A destination path needs to be passed"
+        fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
+        invalidPath: "The path \"{{ path }}\" is not a path to a file or folder"
+        uploadFailed: "Uploading file \"{{ src }}\" to \"{{ dest }}\" failed"
+        someFilesFailed: "One or more files failed to upload to \"{{ dest }}\" in the Design Manager"
+        deleteFailed: "Deleting \"{{ path }}\" from account {{ accountId }} failed"
+      options:
         options:
-          portal:
-            describe: "HubSpot portal id or name from config"
-          config:
-            describe: "Path to a config file"
-          overwrite:
-            describe: "Overwrite existing files"
-          modes:
-            describe:
-              default: "{{ modes }}"
-              read: "Read from {{ modes }}"
-              write: "Write to {{ modes }}"
-          qa:
-            describe: "Run command in QA mode"
-          useEnv:
-            describe: "Use environment variable config"
-      prompts:
-        projectDevTargetAccountPrompt:
-          createNewSandboxOption: "<Test on a new development sandbox>"
-          createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
-          chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
-          promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
-          sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
-          sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
-          developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
-          confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
-          confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
-        projectLogsPrompt:
-          projectName:
-            message: "[--project] Enter the project name:"
-            error: "Project name is required"
-          logType:
-            message: "Select the type of serverless function"
-            function: "App function"
-            endpoint: "Public endpoint"
-          appName: "[--app] Select the app"
-          functionName: "[--function] Enter the app function name:"
-          endpointName: "[--endpoint] Enter the public endpoint path:"
-        setAsDefaultAccountPrompt:
-          setAsDefaultAccountMessage: "Set this account as the default?"
-          setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
-          keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
-        enterAccountNamePrompt:
-          enterAccountName: "Enter a unique name to reference this account in the CLI:"
+          describe: "Options to pass to javascript fields files"
+        saveOutput:
+          describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
+        convertFields:
+          describe: "If true, converts any javascript fields files contained in module folder or project root."
+        clean:
+          describe: "Will cause upload to delete files in your HubSpot account that are not found locally."
+        force:
+          describe: "Skips confirmation prompts when doing a clean upload."
+      previewUrl: "To preview this theme, visit: {{ previewUrl }}"
+      positionals:
+        src:
+          describe: "Path to the local file, relative to your current working directory."
+        dest:
+          describe: "Path in HubSpot Design Tools, can be a net new path."
+      success:
+        fileUploaded: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+        uploadComplete: "Uploading files to \"{{ dest }}\" in the Design Manager is complete"
+      uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
+      notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
+      cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
+    watch:
+      describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
+      errors:
+        folderFailed: "Initial uploading of folder \"{{ src }}\" to \"{{ dest }}\" in account {{ accountId }} had failures"
+        fileFailed: "Upload of file \"{{ file }}\" to \"{{ dest }}\" in account {{ accountId }} failed"
+        destinationRequired: "A destination directory needs to be passed"
+        invalidPath: "The \"{{ path }}\" is not a path to a directory"
+      options:
+        disableInitial:
+          describe: "Disable the initial upload when watching a directory (default)"
+        initialUpload:
+          describe: "Upload directory before watching for updates"
+        notify:
+          describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+        remove:
+          describe: "Will cause watch to delete files in your HubSpot account that are not found locally."
+        convertFields:
+          describe: "If true, converts any javascript fields files contained in module folder or project root."
+        saveOutput:
+          describe: "If true, saves all output from javascript fields files as 'fields.output.json'."
+        options:
+          describe: "Options to pass to javascript fields files"
+      positionals:
+        src:
+          describe: "Path to the local directory your files are in, relative to your current working directory"
+        dest:
+          describe: "Path in HubSpot Design Tools. Can be a net new path"
+      warnings:
+        disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
+        initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
+        notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
+    convertFields:
+      describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
+      positionals:
+        src:
+          describe: Path to JS Fields file or directory containing javascript fields files.
+      options:
+        options:
+          describe: "Options to pass to javascript fields files"
+  lib:
+    process:
+      exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
+    DevServerManager:
+      portConflict: "The port {{ port }} is already in use."
+      notInitialized: "The Dev Server Manager must be initialized before it is started."
+      noCompatibleComponents: "Skipping call to {{ serverKey }} because there are no compatible components in the project."
+    LocalDevManager:
+      failedToInitialize: "Missing required arguments to initialize Local Dev"
+      noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
+      noComponents: "There are no components in this project."
+      noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
+      betaMessage: "HubSpot projects local development"
+      running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
+      quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
+      viewInHubSpotLink: "View project in HubSpot"
+      exitingStart: "Stopping local dev server ..."
+      exitingSucceed: "Successfully exited"
+      exitingFail: "Failed to cleanup before exiting"
+      missingUid: "Could not find a uid for the selected app. Confirm that the app config file contains the uid field and re-run {{ devCommand }}."
+      uploadWarning:
+        appLabel: "[App]"
+        uiExtensionLabel: "[UI Extension]"
+        missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
+        defaultWarning: "Changing project configuration requires a new project build."
+        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        header: "{{ warning }} To reflect these changes and continue testing:"
+        stopDev: "  * Stop {{ command }}"
+        runUpload: "  * Run {{ command }}"
+        restartDev: "  * Re-run {{ command }}"
+        pushToGithub: "  * Commit and push your changes to GitHub"
+      activeInstallWarning:
+        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
+        genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
+        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend creating a copy of this app to develop on instead."
+        explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
+        confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
+      devServer:
+        cleanupError: "Failed to cleanup local dev server: {{ message }}"
+        setupError: "Failed to setup local dev server: {{ message }}"
+        startError: "Failed to start local dev server: {{ message }}"
+        fileChangeError: "Failed to notify local dev server of file change: {{ message }}"
+    localDev:
+      confirmDefaultAccountIsTarget:
+        declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
+      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+      checkIfDeveloperTestAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
+      suggestRecommendedNestedAccount:
+        nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
+        publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
+        privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
+      createNewProjectForLocalDev:
+        projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
+        publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
+        createProject: "Create new project {{ projectName}} in {{ accountIdentifier }}?"
+        choseNotToCreateProject: "Exiting because this command requires the project to exist in the target account."
+        creatingProject: "Creating project {{ projectName }} in {{ accountIdentifier }}"
+        createdProject: "Created project {{ projectName }} in {{ accountIdentifier }}"
+        failedToCreateProject: "Failed to create project in the target account."
+      createInitialBuildForNewProject:
+        initialUploadMessage: "HubSpot Local Dev Server Startup"
+        projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+    projects:
+      config:
+        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
+      uploadProjectFiles:
+        add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        succeed: "Uploaded {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
+        buildCreated: "Project \"{{ projectName }}\" uploaded and build #{{ buildId }} created"
+      handleProjectUpload:
+        emptySource: "Source directory \"{{ srcDir }}\" is empty. Add files to your project and rerun `{{#yellow}}hs project upload{{/yellow}}` to upload them to HubSpot."
+        compressed: "Project files compressed: {{ byteCount }} bytes"
+        compressing: "Compressing build files to \"{{ path }}\""
+        fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
+      ensureProjectExists:
+        createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
+        createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
+        createSuccess: "New project {{#bold}}{{ projectName }}{{/bold}} successfully created in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+        notFound: "Your project {{#bold}}{{ projectName }}{{/bold}} could not be found in {{#bold}}{{ accountIdentifier }}{{/bold}}."
+      pollFetchProject:
+        checkingProject: "Checking if project exists in {{ accountIdentifier }}"
+      makePollTaskStatusFunc:
+        componentCountSingular: "Found 1 component in this project"
+        componentCount: "Found {{ numComponents }} components in this project"
+        successStatusText: "DONE"
+        failedStatusText: "FAILED"
+      pollProjectBuildAndDeploy:
+        buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
+        cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+      logFeedbackMessage:
+        feedbackHeader: "We'd love to hear your feedback!"
+        feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+    ui:
+      betaTag: "{{#bold}}[BETA]{{/bold}}"
+      betaWarning:
+        header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
+        footer: "{{#yellow}}******************************************************************{{/yellow}}"
+      featureHighlight:
+        defaultTitle: "What's next?"
+        commandKeys:
+          accountOption:
+            command: "--account"
+            message: "Use the {{ command }} option with any command to override the default account"
+          accountsListCommand:
+            command: hs accounts list
+            message: "Run {{ command }} to see a list of configured HubSpot accounts"
+          accountsUseCommand:
+            command: "hs accounts use"
+            message: "Run {{ command }} to set the Hubspot account that the CLI will target by default"
+          authCommand:
+            command: "hs auth"
+            message: "Run {{ command }} to connect the CLI to additional HubSpot accounts"
+          feedbackCommand:
+            command: "hs feedback"
+            message: "Run {{ command }} to report a bug or leave feedback"
+          helpCommand:
+            command: "hs help"
+            message: "Run {{ command }} to see a list of available commands"
+          projectCreateCommand:
+            command: "hs project create"
+            message: "Run {{ command }} to create a new project"
+          projectDeployCommand:
+            command: "hs project deploy"
+            message: "Ready to take your project live? Run {{ command }}"
+          projectHelpCommand:
+            command: "hs project --help"
+            message: "Run {{ command }} to learn more about available project commands"
+          projectUploadCommand:
+            command: "hs project upload"
+            message: "Run {{ command }} to upload your project to HubSpot and trigger builds"
+          projectDevCommand:
+            command: "hs project dev"
+            message: "Run {{ command }} to set up your test environment and start local development"
+          sandboxSyncDevelopmentCommand:
+            command: "hs sandbox sync"
+            message: "Run {{ command }} to to update CRM object definitions in your sandbox"
+          sandboxSyncStandardCommand:
+            command: "hs sandbox sync"
+            message: "Run {{ command }} to to update all supported assets to your sandbox from production"
+          sampleProjects:
+            linkText: "HubSpot's sample projects"
+            url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
+            message: "See {{ link }}"
+      git:
+        securityIssue: "Security Issue Detected"
+        configFileTracked: "The HubSpot config file can be tracked by git."
+        fileName: "File: \"{{ configPath }}\""
+        remediate: "To remediate:"
+        moveConfig: "- Move the config file to your home directory: '{{ homeDir }}'"
+        addGitignore: "- Add gitignore pattern '{{ configPath }}' to a .gitignore file in root of your repository."
+        noRemote: "- Ensure that the config file has not already been pushed to a remote repository."
+        checkFailed: "Unable to determine if config file is properly ignored by git."
+      serverlessFunctionLogs:
+        unableToProcessLog: "Unable to process log {{ log }}"
+    commonOpts:
+      options:
+        portal:
+          describe: "HubSpot portal id or name from config"
+        config:
+          describe: "Path to a config file"
+        overwrite:
+          describe: "Overwrite existing files"
+        modes:
+          describe:
+            default: "{{ modes }}"
+            read: "Read from {{ modes }}"
+            write: "Write to {{ modes }}"
+        qa:
+          describe: "Run command in QA mode"
+        useEnv:
+          describe: "Use environment variable config"
+    prompts:
+      projectDevTargetAccountPrompt:
+        createNewSandboxOption: "<Test on a new development sandbox>"
+        createNewDeveloperTestAccountOption: "<Test on a new developer test account>"
+        chooseDefaultAccountOption: "<{{#bold}}\U00002757{{/bold}} Test on this production account {{#bold}}\U00002757{{/bold}}>"
+        promptMessage: "[--account] Choose a {{ accountType }} under {{ accountIdentifier }} to test with:"
+        sandboxLimit: "Your account reached the limit of {{ limit }} development sandboxes"
+        sandboxLimitWithSuggestion: "Your account reached the limit of {{ limit }} development sandboxes. Run {{ authCommand }} to add an existing one to the config."
+        developerTestAccountLimit: "Your account reached the limit of {{ limit }} developer test accounts."
+        confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
+        confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
+      projectLogsPrompt:
+        projectName:
+          message: "[--project] Enter the project name:"
+          error: "Project name is required"
+        logType:
+          message: "Select the type of serverless function"
+          function: "App function"
+          endpoint: "Public endpoint"
+        appName: "[--app] Select the app"
+        functionName: "[--function] Enter the app function name:"
+        endpointName: "[--endpoint] Enter the public endpoint path:"
+      setAsDefaultAccountPrompt:
+        setAsDefaultAccountMessage: "Set this account as the default?"
+        setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
+        keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
+      enterAccountNamePrompt:
+        enterAccountName: "Enter a unique name to reference this account in the CLI:"
+        errors:
+          invalidName: "You entered an invalid name. Please try again."
+          nameRequired: "The name may not be blank. Please try again."
+          spacesInName: "The name may not contain spaces. Please try again."
+          accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
+      personalAccessKeyPrompt:
+        enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
+        enterClientId: "Enter your OAuth2 client ID: "
+        enterClientSecret: "Enter your OAuth2 client secret: "
+        enterPersonalAccessKey: "Enter your personal access key: "
+        selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
+        personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
+        personalAccessKeyBrowserOpenPrep: "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key."
+        personalAccessKeyBrowserOpenPrompt: "Open hubspot.com to copy your personal access key?"
+        logs:
+          openingWebBrowser: "Opening {{ url }} in your web browser"
+        errors:
+          invalidAccountId: "You did not enter a valid account ID. Please try again."
+          invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
+          invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
+          invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
+          invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
+          invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
+          invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
+          invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
+      folderOverwritePrompt:
+        overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
+      createTemplatePrompt:
+        selectTemplate: "Select the type of template to create"
+      createModulePrompt:
+        enterLabel: "What should the module label be?"
+        selectReactType: "Is this a React module?"
+        selectContentType: "What types of content will this module be used in?"
+        confirmGlobal: "Is this a global module?"
+        errors:
+          invalidLabel: "You entered an invalid name. Please try again."
+          labelRequired: "The name may not be blank. Please try again."
+          contentTypeRequired: "Please select at least one content type for this module."
+      createFunctionPrompt:
+        enterFolder: "Name of the folder where your function will be created: "
+        enterFilename: "Name of the JavaScript file for your function: "
+        enterEndpointPath: "Path portion of the URL created for the function: "
+        selectEndpointMethod: "Select the HTTP method for the endpoint"
+        errors:
+          invalid: "You entered an invalid name. Please try again."
+          blank: "The name may not be blank. Please try again."
+          space: "The name may not contain spaces. Please try again."
+      createApiSamplePrompt:
+        selectApiSampleApp: "Please, select API sample app"
+        selectLanguage: "Please, select sample app's language"
+        errors:
+          apiSampleAppRequired: "Please select API sample app"
+          languageRequired: "Please select API sample app's language"
+      createProjectPrompt:
+        enterName: "[--name] Give your project a name: "
+        enterLocation: "[--location] Where should the project be created?"
+        selectTemplate: "[--template] Choose a project template: "
+        errors:
+          nameRequired: "A project name is required"
+          locationRequired: "A project location is required"
+          invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
+          noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
+          missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+      selectPublicAppPrompt:
+        selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
+        selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
+        errors:
+          noApps: "{{#bold}}No apps to migrate{{/bold}}"
+          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
+          errorFetchingApps: "There was an error fetching public apps."
+          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+      developerTestAccountPrompt:
+        name:
+          message: "Name your developer test account"
           errors:
             invalidName: "You entered an invalid name. Please try again."
             nameRequired: "The name may not be blank. Please try again."
-            spacesInName: "The name may not contain spaces. Please try again."
             accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
-        personalAccessKeyPrompt:
-          enterAccountId: "Enter the account ID for your account (the number under the DOMAIN column at https://app.hubspot.com/myaccounts-beta ): "
-          enterClientId: "Enter your OAuth2 client ID: "
-          enterClientSecret: "Enter your OAuth2 client secret: "
-          enterPersonalAccessKey: "Enter your personal access key: "
-          selectScopes: "Select access scopes (see https://developers.hubspot.com/docs/methods/oauth2/initiate-oauth-integration#scopes)"
-          personalAccessKeySetupTitle: "HubSpot Personal Access Key Setup"
-          personalAccessKeyBrowserOpenPrep: "A personal access key is required to authenticate the CLI to interact with your HubSpot account. We'll open a secure page in your default browser where you can view and copy your personal access key."
-          personalAccessKeyBrowserOpenPrompt: "Open hubspot.com to copy your personal access key?"
-          logs:
-            openingWebBrowser: "Opening {{ url }} in your web browser"
-          errors:
-            invalidAccountId: "You did not enter a valid account ID. Please try again."
-            invalidOauthClientId: "You entered an invalid OAuth2 client ID. Please try again."
-            invalidOauthClientIdLength: "The OAuth2 client ID must be 36 characters long. Please try again."
-            invalidOauthClientSecret: "You entered an invalid OAuth2 client secret. Please try again."
-            invalidOauthClientSecretLength: "The OAuth2 client secret must be 36 characters long. Please try again."
-            invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
-            invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
-            invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
-        folderOverwritePrompt:
-          overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
-        createTemplatePrompt:
-          selectTemplate: "Select the type of template to create"
-        createModulePrompt:
-          enterLabel: "What should the module label be?"
-          selectReactType: "Is this a React module?"
-          selectContentType: "What types of content will this module be used in?"
-          confirmGlobal: "Is this a global module?"
-          errors:
-            invalidLabel: "You entered an invalid name. Please try again."
-            labelRequired: "The name may not be blank. Please try again."
-            contentTypeRequired: "Please select at least one content type for this module."
-        createFunctionPrompt:
-          enterFolder: "Name of the folder where your function will be created: "
-          enterFilename: "Name of the JavaScript file for your function: "
-          enterEndpointPath: "Path portion of the URL created for the function: "
-          selectEndpointMethod: "Select the HTTP method for the endpoint"
-          errors:
-            invalid: "You entered an invalid name. Please try again."
-            blank: "The name may not be blank. Please try again."
-            space: "The name may not contain spaces. Please try again."
-        createApiSamplePrompt:
-          selectApiSampleApp: "Please, select API sample app"
-          selectLanguage: "Please, select sample app's language"
-          errors:
-            apiSampleAppRequired: "Please select API sample app"
-            languageRequired: "Please select API sample app's language"
-        createProjectPrompt:
-          enterName: "[--name] Give your project a name: "
-          enterLocation: "[--location] Where should the project be created?"
-          selectTemplate: "[--template] Choose a project template: "
-          errors:
-            nameRequired: "A project name is required"
-            locationRequired: "A project location is required"
-            invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
-            noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
-            missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
-        selectPublicAppPrompt:
-          selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
-          selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
-          errors:
-            noApps: "{{#bold}}No apps to migrate{{/bold}}"
-            noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
-            errorFetchingApps: "There was an error fetching public apps."
-            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
-        developerTestAccountPrompt:
-          name:
-            message: "Name your developer test account"
-            errors:
-              invalidName: "You entered an invalid name. Please try again."
-              nameRequired: "The name may not be blank. Please try again."
-              accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
-        downloadProjectPrompt:
-          selectProject: "Select a project to download:"
-          errors:
-            projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
-        projectAddPrompt:
-          selectType: "[--type] Select your component type:"
-          enterName: "[--name] Give your component a name: "
-          errors:
-            nameRequired: "A component name is required"
-            invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
-        secretPrompt:
-          enterValue: "Enter a value for your secret: "
-          errors:
-            invalidValue: "You entered an invalid value. Please try again."
-        sandboxesPrompt:
-          name:
-            message: "Name your sandbox"
-            developmentSandboxMessage: "Name your development sandbox"
-            errors:
-              invalidName: "You entered an invalid name. Please try again."
-              nameRequired: "The name may not be blank. Please try again."
-              accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
-            selectAccountName: "Select the sandbox account you want to delete"
-            selectParentAccountName: "Select the account that the sandbox belongs to"
-          type:
-            message: "What type of sandbox would you like to create?"
-            developer: "Development sandbox (Isolated environment for developers)"
-            standard: "Standard sandbox (Testing environment for all Super Admins)"
-        uploadPrompt:
-          enterDest: "[--dest] Enter the destination path: "
-          enterSrc: "[--src] Enter the source path: "
-          errors:
-            srcRequired: "You must specify a source directory."
-            destRequired: "You must specify a destination directory."
-          fieldsPrompt: "Multiple fields files located in \"{{ dir }}\". Please choose which to upload: "
-        projectNamePrompt:
-          enterName: "[--project] Enter project name:"
+      downloadProjectPrompt:
+        selectProject: "Select a project to download:"
+        errors:
+          projectNotFound: "Your project {{ projectName }} could not be found in {{ accountId }}. Please select a valid project:"
+      projectAddPrompt:
+        selectType: "[--type] Select your component type:"
+        enterName: "[--name] Give your component a name: "
+        errors:
+          nameRequired: "A component name is required"
+          invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
+      secretPrompt:
+        enterValue: "Enter a value for your secret: "
+        errors:
+          invalidValue: "You entered an invalid value. Please try again."
+      sandboxesPrompt:
+        name:
+          message: "Name your sandbox"
+          developmentSandboxMessage: "Name your development sandbox"
           errors:
             invalidName: "You entered an invalid name. Please try again."
-            projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
-        feedbackPrompt:
-          feedbackType:
-            message: "What type of feedback would you like to leave?"
-            bug: "[--bug] Report a bug"
-            general: "[--general] Tell us about your experience with HubSpot's developer tools"
-          bugPrompt: "Create an issue on Github in your browser?"
-          generalPrompt: "Open the projects feedback form in your browser?"
-        buildIdPrompt:
-          enterBuildId: "[--build] Deploy which build?"
-          errors:
-            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
-            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
-        previewPrompt:
-          enterSrc: "[--src] Enter a local theme directory to preview."
-          enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
-          themeProjectSelect: "[--theme] Select which theme to preview."
-          errors:
-            srcRequired: "You must specify a source directory."
-            destRequired: "You must specify a destination directory."
-        cleanUploadPrompt:
-          message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
-      convertFields:
-        positionals:
-          src:
-            describe: Path to JS Fields file or directory containing javascript fields files.
+            nameRequired: "The name may not be blank. Please try again."
+            accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
+          selectAccountName: "Select the sandbox account you want to delete"
+          selectParentAccountName: "Select the account that the sandbox belongs to"
+        type:
+          message: "What type of sandbox would you like to create?"
+          developer: "Development sandbox (Isolated environment for developers)"
+          standard: "Standard sandbox (Testing environment for all Super Admins)"
+      uploadPrompt:
+        enterDest: "[--dest] Enter the destination path: "
+        enterSrc: "[--src] Enter the source path: "
+        errors:
+          srcRequired: "You must specify a source directory."
+          destRequired: "You must specify a destination directory."
+        fieldsPrompt: "Multiple fields files located in \"{{ dir }}\". Please choose which to upload: "
+      projectNamePrompt:
+        enterName: "[--project] Enter project name:"
+        errors:
+          invalidName: "You entered an invalid name. Please try again."
+          projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
+      feedbackPrompt:
+        feedbackType:
+          message: "What type of feedback would you like to leave?"
+          bug: "[--bug] Report a bug"
+          general: "[--general] Tell us about your experience with HubSpot's developer tools"
+        bugPrompt: "Create an issue on Github in your browser?"
+        generalPrompt: "Create an issue on Github in your browser?"
+      buildIdPrompt:
+        enterBuildId: "[--build] Deploy which build?"
+        errors:
+          buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
+          buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+      previewPrompt:
+        enterSrc: "[--src] Enter a local theme directory to preview."
+        enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
+        themeProjectSelect: "[--theme] Select which theme to preview."
+        errors:
+          srcRequired: "You must specify a source directory."
+          destRequired: "You must specify a destination directory."
+      cleanUploadPrompt:
+        message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
+      installPublicAppPrompt:
+        explanation: "Local development requires this app to be installed in the target test account"
+        prompt: "Open hubspot.com to install this app?"
+        decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+    convertFields:
+      positionals:
+        src:
+          describe: Path to JS Fields file or directory containing javascript fields files.
+      options:
         options:
-          options:
-            describe: "Options to pass to javascript fields files"
-      developerTestAccount:
-        create:
-          loading:
-            add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
-            fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
-            succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
-          success:
-            configFileUpdated: "Account \"{{ accountName }}\" updated using \"{{ authType }}\""
-          failure:
-            invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
-            limit: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
-              \n- To connect a developer test account to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-            alreadyInConfig: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
-              \n- To use an existing developer test account, run {{#bold}}hs accounts use{{/bold}}."
-            scopes:
-              message: "The personal access key you provided doesn't include developer test account permissions."
-              instructions: "To update CLI permissions for \"{{ accountName }}\":
-                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes developer test account permissions.
-                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
-      sandbox:
-        create:
-          loading:
+          describe: "Options to pass to javascript fields files"
+    developerTestAccount:
+      create:
+        loading:
+          add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
+          fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
+          succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+        success:
+          configFileUpdated: "Account \"{{ accountName }}\" updated using \"{{ authType }}\""
+        failure:
+          invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+          limit: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+            \n- To connect a developer test account to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+          alreadyInConfig: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} developer test accounts.
+            \n- To use an existing developer test account, run {{#bold}}hs accounts use{{/bold}}."
+          scopes:
+            message: "The personal access key you provided doesn't include developer test account permissions."
+            instructions: "To update CLI permissions for \"{{ accountName }}\":
+              \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes developer test account permissions.
+              \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
+    sandbox:
+      create:
+        loading:
+          developer:
+            add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+            fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+            succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+          standard:
+            add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
+            fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
+            succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+        failure:
+          invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
+          403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
+          limit:
             developer:
-              add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-              fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-              succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+              one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
+              \n- View sandbox details at {{ link }}
+              \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes.
+              \n- View sandbox details at {{ link }}
+              \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
             standard:
-              add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-              fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-              succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
-          failure:
-            invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
-            403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
-            limit:
-              developer:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox.
-                \n- View sandbox details at {{ link }}
-                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes.
-                \n- View sandbox details at {{ link }}
-                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-              standard:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox.
-                \n- View sandbox details at {{ link }}
-                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes.
-                \n- View sandbox details at {{ link }}
-                \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
-            alreadyInConfig:
-              developer:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
-                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
-                \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-              standard:
-                one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
-                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-                other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
-                \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
-                \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
-            scopes:
-              message: "The personal access key you provided doesn't include sandbox permissions."
-              instructions: "To update CLI permissions for \"{{ accountName }}\":
-                \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
-                \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
-        sync:
-          info:
-            syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
-            earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
-          confirm:
-            createFlow:
-              standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-              developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-            syncContactRecords:
-              standard: "Include up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
-              developer: "Include up to 100 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
-          loading:
-            startSync: "Initiating sync..."
-            fail: "Failed to sync sandbox."
-            succeed: "Sandbox sync initiated to {{ accountName }}."
-            skipPolling: "Syncing CRM object definitions."
-            skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts with associated deals, tickets, and companies (up to 100 each)."
-          polling:
-            syncing: "Syncing sandbox..."
-            fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
-            succeed: "Sandbox sync complete."
-          failure:
-            invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
-            missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-            syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
-            notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
-            objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
-          types:
-            parcels:
-              label: "Account tools and features"
-            super-admins:
-              label: "Super Admins"
-            object-schemas:
-              label: "Object definitions"
-            object-records:
-              label: "Contacts and associated records"
-            cms-developer-assets:
-              label: "Themes, templates, and modules"
-            object-pipelines:
-              label: "Pipelines"
-            object-lists:
-              label: "Lists"
-            workflows:
-              label: "Workflows"
-            forms:
-              label: "Forms"
-            lead-flows:
-              label: "Lead Flows"
-            marketing-email:
-              label: "Marketing emails"
-      errorHandlers:
-        standardErrors:
-          errorOccurred: "Error: {{ error }}"
-          errorContext: "Context: {{ context }}"
-          errorCause: "Cause: {{ cause }}"
-          systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
-          genericErrorOccurred: "A {{ name }} has occurred."
-          unknownErrorOccurred: "An unknown error has occurred"
-        fileSystemErrors:
-          errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
-          errorExplanation: "This is the result of a system error: {{ errorMessage }}"
-        apiErrors:
-          messageDetail: "{{ request }} in account {{ accountId }}"
-          unableToUpload: 'Unable to upload "{{ payload }}.'
-          codes:
-            400: "The {{ messageDetail }} was bad."
-            401: "The {{ messageDetail }} was unauthorized."
-            403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-            403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
-            403: "The {{ messageDetail }} was forbidden."
-            404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
-            404: "The {{ messageDetail }} was not found."
-            429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
-            503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-            400Generic: "The {{ messageDetail }} failed due to a client error."
-            generic: "The {{ messageDetail }} failed."
-          verifyAccessKeyAndUserAccess:
-            fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
-            portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
-            userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
-            genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
-        overrideErrors:
-          platformVersionErrors:
-            header: "Platform version update required"
-            unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
-            platformVersionRetired: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are no longer supported."
-            nonExistentPlatformVersion: "Projects with {{#bold}} platformVersion {{ platformVersion }}{{/bold}} are not supported."
-            updateProject: "Please update your project to the latest version and try again."
-            docsLink: "Projects platform versioning (BETA)"
-            betaLink: "For more info, see {{ docsLink }}."
-
+              one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox.
+              \n- View sandbox details at {{ link }}
+              \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes.
+              \n- View sandbox details at {{ link }}
+              \n- To connect a sandbox to your HubSpot CLI, run {{#bold}}hs auth{{/bold}} and follow the prompts."
+          alreadyInConfig:
+            developer:
+              one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandbox per account.
+              \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+              \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} development sandboxes per account.
+              \n- To use an existing development sandbox, run {{#bold}}hs accounts use{{/bold}}.
+              \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+            standard:
+              one: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandbox per account.
+              \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+              \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+              other: "{{#bold}}{{ accountName }}{{/bold}} reached the limit of {{ limit }} standard sandboxes per account.
+              \n- To use an existing standard sandbox, run {{#bold}}hs accounts use{{/bold}}.
+              \n- To delete an existing sandbox, run {{#bold}}hs sandbox delete{{/bold}}."
+          scopes:
+            message: "The personal access key you provided doesn't include sandbox permissions."
+            instructions: "To update CLI permissions for \"{{ accountName }}\":
+              \n- Go to {{ url }}, deactivate the existing personal access key, and create a new one that includes Sandboxes permissions.
+              \n- Update the CLI config for this account by running {{#bold}}hs auth{{/bold}} and entering the new key.\n"
+      sync:
+        info:
+          syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
+          earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
+        confirm:
+          createFlow:
+            standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+            developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
+          syncContactRecords:
+            standard: "Include up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
+            developer: "Include up to 100 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
+        loading:
+          startSync: "Initiating sync..."
+          fail: "Failed to sync sandbox."
+          succeed: "Sandbox sync initiated to {{ accountName }}."
+          skipPolling: "Syncing CRM object definitions."
+          skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts with associated deals, tickets, and companies (up to 100 each)."
+        polling:
+          syncing: "Syncing sandbox..."
+          fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
+          succeed: "Sandbox sync complete."
+        failure:
+          invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
+          missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+          syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+          notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
+          objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
+        types:
+          parcels:
+            label: "Account tools and features"
+          super-admins:
+            label: "Super Admins"
+          object-schemas:
+            label: "Object definitions"
+          object-records:
+            label: "Contacts and associated records"
+          cms-developer-assets:
+            label: "Themes, templates, and modules"
+          object-pipelines:
+            label: "Pipelines"
+          object-lists:
+            label: "Lists"
+          workflows:
+            label: "Workflows"
+          forms:
+            label: "Forms"
+          lead-flows:
+            label: "Lead Flows"
+          marketing-email:
+            label: "Marketing emails"
+    errorHandlers:
+      standardErrors:
+        errorOccurred: "Error: {{ error }}"
+        errorContext: "Context: {{ context }}"
+        errorCause: "Cause: {{ cause }}"
+        systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
+        genericErrorOccurred: "A {{ name }} has occurred."
+        unknownErrorOccurred: "An unknown error has occurred"
+      fileSystemErrors:
+        errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
+        errorExplanation: "This is the result of a system error: {{ errorMessage }}"
+      apiErrors:
+        messageDetail: "{{ request }} in account {{ accountId }}"
+        unableToUpload: 'Unable to upload "{{ payload }}.'
+        codes:
+          400: "The {{ messageDetail }} was bad."
+          401: "The {{ messageDetail }} was unauthorized."
+          403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
+          403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
+          403: "The {{ messageDetail }} was forbidden."
+          404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
+          404: "The {{ messageDetail }} was not found."
+          429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
+          503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+          500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
+          400Generic: "The {{ messageDetail }} failed due to a client error."
+          generic: "The {{ messageDetail }} failed."
+        verifyAccessKeyAndUserAccess:
+          fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
+          portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
+          userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+          genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
+      overrideErrors:
+        platformVersionErrors:
+          header: "Platform version update required"
+          unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
+          platformVersionRetired: "Projects with {{#bold}}platformVersion {{ platformVersion }}{{/bold}} are no longer supported."
+          nonExistentPlatformVersion: "Projects with {{#bold}}platformVersion {{ platformVersion }}{{/bold}} are not supported."
+          updateProject: "Please update your project to the latest version and try again."
+          docsLink: "Projects platform versioning (BETA)"
+          betaLink: "For more info, see {{ docsLink }}."
 
 

@@ -13,7 +13,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.lint';
+const i18nKey = 'commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';

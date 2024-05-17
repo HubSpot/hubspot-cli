@@ -10,7 +10,6 @@ const {
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
-
 const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
@@ -24,7 +23,6 @@ const {
 const { confirmPrompt } = require('./prompts/promptUtils');
 const {
   validateSandboxUsageLimits,
-  getSandboxTypeAsString,
   getAvailableSyncTypes,
 } = require('./sandboxes');
 const { buildSandbox } = require('./sandboxCreate');
@@ -63,7 +61,7 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
 
-const i18nKey = 'cli.lib.localDev';
+const i18nKey = 'lib.localDev';
 
 // If the user passed in the --account flag, confirm they want to use that account as
 // their target account, otherwise exit
@@ -71,9 +69,7 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
   logger.log();
   const useDefaultAccount = await confirmDefaultAccountPrompt(
     accountConfig.name,
-    isDeveloperTestAccount(accountConfig)
-      ? HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-      : `${getSandboxTypeAsString(accountConfig.accountType)} sandbox`
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[accountConfig.accountType]
   );
 
   if (!useDefaultAccount) {
@@ -115,19 +111,20 @@ const suggestRecommendedNestedAccount = async (
   logger.log();
   uiLine();
   if (hasPublicApps) {
-    logger.warn(
+    logger.log(
       i18n(
         `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.warn(
+    logger.error(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+        `${i18nKey}.suggestRecommendedNestedAccount.privateAppInAppDeveloperAccountError`
       )
     );
+    process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.warn(
+    logger.log(
       i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
     );
   }
@@ -152,14 +149,14 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
   } catch (err) {
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n('cli.lib.sandbox.create.failure.scopes.message', {
+        i18n('lib.sandbox.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n('cli.lib.sandbox.create.failure.scopes.instructions', {
+        i18n('lib.sandbox.create.failure.scopes.instructions', {
           accountName: accountConfig.name || accountId,
           url,
         })
@@ -230,20 +227,17 @@ const createDeveloperTestAccountForLocalDev = async (
   } catch (err) {
     if (isMissingScopeError(err)) {
       logger.error(
-        i18n('cli.lib.developerTestAccount.create.failure.scopes.message', {
+        i18n('lib.developerTestAccount.create.failure.scopes.message', {
           accountName: accountConfig.name || accountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
       const url = `${websiteOrigin}/personal-access-key/${accountId}`;
       logger.info(
-        i18n(
-          'cli.lib.developerTestAccount.create.failure.scopes.instructions',
-          {
-            accountName: accountConfig.name || accountId,
-            url,
-          }
-        )
+        i18n('lib.developerTestAccount.create.failure.scopes.instructions', {
+          accountName: accountConfig.name || accountId,
+          url,
+        })
       );
     } else {
       logErrorInstance(err);
@@ -294,7 +288,7 @@ const useExistingDevTestAccount = async (env, account) => {
   }
   const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
   logger.success(
-    i18n(`cli.lib.developerTestAccount.create.success.configFileUpdated`, {
+    i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,
       authType: PERSONAL_ACCESS_KEY_AUTH_METHOD.name,
     })
@@ -323,7 +317,7 @@ const createNewProjectForLocalDev = async (
     );
     logger.log();
     uiLine();
-    logger.warn(explanationString);
+    logger.log(explanationString);
     uiLine();
 
     shouldCreateProject = await confirmPrompt(
@@ -343,7 +337,7 @@ const createNewProjectForLocalDev = async (
     });
 
     try {
-      await createProject(targetAccountId, projectConfig.name);
+      const project = await createProject(targetAccountId, projectConfig.name);
       SpinniesManager.succeed('createProject', {
         text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
@@ -351,6 +345,7 @@ const createNewProjectForLocalDev = async (
         }),
         succeedColor: 'white',
       });
+      return project;
     } catch (err) {
       SpinniesManager.fail('createProject');
       logger.log(
@@ -421,7 +416,7 @@ const createInitialBuildForNewProject = async (
 
     logger.log();
     failedSubTasks.forEach(failedSubTask => {
-      console.error(failedSubTask.errorMessage);
+      logger.error(failedSubTask.errorMessage);
     });
     logger.log();
 

@@ -11,7 +11,7 @@ const {
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } = require('../constants');
 
-const i18nKey = 'cli.lib.prompts.createProjectPrompt';
+const i18nKey = 'lib.prompts.createProjectPrompt';
 
 const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 

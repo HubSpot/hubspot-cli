@@ -43,7 +43,7 @@ const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
-const i18nKey = 'cli.commands.project.subcommands.migrateApp';
+const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
 exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -94,7 +94,7 @@ exports.handler = async options => {
   const projectName = options.name || name;
   const projectLocation = options.location || location;
 
-  const projectExists = await ensureProjectExists(accountId, projectName, {
+  const { projectExists } = await ensureProjectExists(accountId, projectName, {
     allowCreate: false,
     noLogs: true,
   });

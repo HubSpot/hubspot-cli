@@ -50,7 +50,7 @@ const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 
-const i18nKey = 'cli.commands.auth';
+const i18nKey = 'commands.auth';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -166,14 +166,14 @@ exports.handler = async options => {
   logger.log('');
   if (setAsDefault) {
     logger.success(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+      i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
         accountName,
       })
     );
   } else {
     const config = getConfig();
     logger.info(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+      i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
         accountName: config.defaultPortal,
       })
     );
