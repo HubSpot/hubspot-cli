@@ -70,6 +70,7 @@ class LocalDevManager {
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
+    this.cancelActivePrompt = null;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -333,7 +334,11 @@ class LocalDevManager {
         ? publicAppUploadPrompt
         : privateAppUploadPrompt;
 
-    const shouldUpload = await prompt();
+    const { cancel, promptPromise } = prompt();
+
+    this.cancelActivePrompt = cancel;
+    const shouldUpload = await promptPromise;
+    this.cancelActivePrompt = null;
 
     if (shouldUpload) {
       const { succeeded } = await handleProjectUpload(
@@ -519,6 +524,10 @@ class LocalDevManager {
   devServerFileChange(filePath, event) {
     try {
       DevServerManager.fileChange({ filePath, event });
+
+      if (this.cancelActivePrompt) {
+        this.cancelActivePrompt();
+      }
     } catch (e) {
       if (this.debug) {
         logger.error(e);
