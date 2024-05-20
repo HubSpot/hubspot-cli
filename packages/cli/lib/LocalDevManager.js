@@ -290,7 +290,7 @@ class LocalDevManager {
       : uiCommandReference('hs project upload');
   }
 
-  async warnAndPromptUpload(reason) {
+  warnAndPromptUpload(reason) {
     let warning = reason;
     if (!reason) {
       warning =
@@ -310,60 +310,71 @@ class LocalDevManager {
       ? logger.warn(i18n(`${i18nKey}.uploadWarning.githubHeader`, { warning }))
       : logger.warn(warning);
 
-    let uploadSuccess = false;
-
     if (!this.isGithubLinked) {
-      logger.log();
-      uiLine();
-      const prompt =
-        this.activeApp.type === COMPONENT_TYPES.publicApp
-          ? publicAppUploadPrompt
-          : privateAppUploadPrompt;
-
-      const shouldUpload = await prompt();
-
-      if (shouldUpload) {
-        const { succeeded } = await handleProjectUpload(
-          this.targetProjectAccountId,
-          this.projectConfig,
-          this.projectDir,
-          (...args) => pollProjectBuildAndDeploy(...args, true)
-        );
-
-        if (succeeded) {
-          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
-        } else {
-          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
+      this.projectUploadPrompt().then(succeeded => {
+        if (!succeeded) {
+          this.projectUploadMessage();
         }
-        uploadSuccess = succeeded;
+      });
+    } else {
+      this.projectUploadMessage();
+    }
+    this.mostRecentUploadWarning = warning;
+    this.uploadWarnings[warning] = true;
+  }
+
+  async projectUploadPrompt() {
+    logger.log();
+    uiLine();
+
+    let uploadSuccess = false;
+    const prompt =
+      this.activeApp.type === COMPONENT_TYPES.publicApp
+        ? publicAppUploadPrompt
+        : privateAppUploadPrompt;
+
+    const shouldUpload = await prompt();
+
+    if (shouldUpload) {
+      const { succeeded } = await handleProjectUpload(
+        this.targetProjectAccountId,
+        this.projectConfig,
+        this.projectDir,
+        (...args) => pollProjectBuildAndDeploy(...args, true)
+      );
+
+      if (succeeded) {
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
       } else {
-        logger.log('');
-        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
       }
+      uploadSuccess = succeeded;
+    } else {
+      logger.log('');
+      logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
     }
 
-    if (this.isGithubLinked || !uploadSuccess) {
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.stopDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
-      this.isGithubLinked
-        ? logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`))
-        : logger.log(
-            i18n(`${i18nKey}.uploadWarning.runUpload`, {
-              command: this.getUploadCommand(),
-            })
-          );
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.restartDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
+    return uploadSuccess;
+  }
 
-      this.mostRecentUploadWarning = warning;
-      this.uploadWarnings[warning] = true;
-    }
+  projectUploadMessage() {
+    logger.log(
+      i18n(`${i18nKey}.uploadWarning.stopDev`, {
+        command: uiCommandReference('hs project dev'),
+      })
+    );
+    this.isGithubLinked
+      ? logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`))
+      : logger.log(
+          i18n(`${i18nKey}.uploadWarning.runUpload`, {
+            command: this.getUploadCommand(),
+          })
+        );
+    logger.log(
+      i18n(`${i18nKey}.uploadWarning.restartDev`, {
+        command: uiCommandReference('hs project dev'),
+      })
+    );
   }
 
   monitorConsoleOutput() {
