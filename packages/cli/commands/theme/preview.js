@@ -188,8 +188,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.option('src', {
     describe: i18n(`${i18nKey}.options.src.describe`),

@@ -218,8 +218,8 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addTestingOptions(yargs);
 
   return yargs;
 };

@@ -87,9 +87,9 @@ exports.builder = yargs => {
   });
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

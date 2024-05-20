@@ -142,9 +142,9 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

@@ -67,9 +67,9 @@ exports.builder = yargs => {
     ['$0 open sn'],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

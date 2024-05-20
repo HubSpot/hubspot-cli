@@ -131,9 +131,9 @@ exports.builder = yargs => {
     ['$0 logs my-endpoint --follow', i18n(`${i18nKey}.examples.follow`)],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

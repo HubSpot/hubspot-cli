@@ -114,7 +114,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addUseEnvironmentOptions(yargs, true);
+  addUseEnvironmentOptions(yargs);
 
   yargs.options({
     project: {
