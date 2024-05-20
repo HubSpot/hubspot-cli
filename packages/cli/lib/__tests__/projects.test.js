@@ -1,3 +1,12 @@
+jest.mock('@hubspot/local-dev-lib/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+  },
+}));
+
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
