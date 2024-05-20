@@ -67,7 +67,7 @@ exports.handler = async options => {
         })
       );
       let { name: promptedProjectName } = await downloadProjectPrompt(options);
-      let projectName = promptedProjectName || project;
+      projectName = promptedProjectName || project;
     }
 
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
