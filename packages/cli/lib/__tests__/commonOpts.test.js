@@ -36,16 +36,17 @@ describe('@hubspot/cli/lib/commonOpts', () => {
       ...config,
       defaultMode: MODE.draft,
     };
-    afterEach(() => {
+
+    beforeEach(() => {
       getAndLoadConfigIfNeeded.mockReset();
       getAccountId.mockReset();
       getAccountConfig.mockReset();
       loadConfigFromEnvironment.mockReset();
     });
+
     describe('mode option precedence', () => {
       describe('1. --mode', () => {
         it('should return the mode specified by the command option if present.', () => {
-          getAndLoadConfigIfNeeded.mockReturnValue(configWithDefaultMode);
           getAccountConfig.mockReturnValue(devAccountConfig);
           expect(getMode({ mode: MODE.draft })).toBe(MODE.draft);
           expect(getMode({ mode: MODE.publish })).toBe(MODE.publish);
