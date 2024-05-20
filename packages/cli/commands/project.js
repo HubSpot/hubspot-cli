@@ -19,8 +19,8 @@ exports.command = 'project';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   // TODO: deploy must be updated
   yargs.command(create).demandCommand(0, '');

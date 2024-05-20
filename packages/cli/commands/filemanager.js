@@ -13,9 +13,9 @@ exports.command = 'filemanager';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addOverwriteOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addOverwriteOptions(yargs);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs
     .command(upload)

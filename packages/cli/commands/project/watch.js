@@ -179,9 +179,9 @@ exports.builder = yargs => {
     ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };
