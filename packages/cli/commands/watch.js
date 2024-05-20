@@ -76,12 +76,9 @@ exports.handler = async options => {
 
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
-  } else {
+  } else if (!initialUpload) {
     logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
-
-    if (!initialUpload) {
-      logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
-    }
+    logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
   }
 
   if (initialUpload) {
