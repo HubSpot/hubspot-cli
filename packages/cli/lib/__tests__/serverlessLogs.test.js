@@ -3,6 +3,7 @@ const { outputLogs } = require('../ui/serverlessFunctionLogs');
 const { tailLogs } = require('../serverlessLogs');
 
 jest.mock('../ui/serverlessFunctionLogs');
+jest.mock('@hubspot/local-dev-lib/logger');
 
 jest.useFakeTimers();
 
