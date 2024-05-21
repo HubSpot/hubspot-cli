@@ -325,41 +325,45 @@ class LocalDevManager {
   }
 
   async projectUploadPrompt() {
-    logger.log();
-    uiLine();
+    try {
+      logger.log();
+      uiLine();
 
-    let uploadSuccess = false;
-    const prompt =
-      this.activeApp.type === COMPONENT_TYPES.publicApp
-        ? publicAppUploadPrompt
-        : privateAppUploadPrompt;
+      let uploadSuccess = false;
+      const prompt =
+        this.activeApp.type === COMPONENT_TYPES.publicApp
+          ? publicAppUploadPrompt
+          : privateAppUploadPrompt;
 
-    const { cancel, promptPromise } = prompt();
+      const { cancel, promptPromise } = prompt();
 
-    this.cancelActivePrompt = cancel;
-    const shouldUpload = await promptPromise;
-    this.cancelActivePrompt = null;
+      this.cancelActivePrompt = cancel;
+      const shouldUpload = await promptPromise;
+      this.cancelActivePrompt = null;
 
-    if (shouldUpload) {
-      const { succeeded } = await handleProjectUpload(
-        this.targetProjectAccountId,
-        this.projectConfig,
-        this.projectDir,
-        (...args) => pollProjectBuildAndDeploy(...args, true)
-      );
+      if (shouldUpload) {
+        const { succeeded } = await handleProjectUpload(
+          this.targetProjectAccountId,
+          this.projectConfig,
+          this.projectDir,
+          (...args) => pollProjectBuildAndDeploy(...args, true)
+        );
 
-      if (succeeded) {
-        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
+        if (succeeded) {
+          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
+        } else {
+          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
+        }
+        uploadSuccess = succeeded;
       } else {
-        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
+        logger.log('');
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
       }
-      uploadSuccess = succeeded;
-    } else {
-      logger.log('');
-      logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
-    }
 
-    return uploadSuccess;
+      return uploadSuccess;
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   projectUploadMessage() {

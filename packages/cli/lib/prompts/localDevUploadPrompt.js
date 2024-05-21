@@ -1,27 +1,42 @@
-const { promptUser } = require('./promptUtils');
+const readline = require('readline');
+const chalk = require('chalk');
+// const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.localDevUploadPrompt';
 
 const makeUploadPrompt = message => {
   return () => {
-    let cancel;
-
-    const promptPromise = new Promise(resolve => {
-      cancel = () => {
-        resolve(false);
-        process.stdout.moveCursor(0, -1);
-        process.stdout.clearLine(1);
-      };
-
-      promptUser({
-        name: 'shouldUpload',
-        type: 'confirm',
-        message,
-      }).then(({ shouldUpload }) => resolve(shouldUpload));
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
     });
 
-    return { cancel, promptPromise };
+    const formattedMessage = `${chalk.green('?')} ${chalk.bold(
+      message
+    )} ${chalk.dim('(Y/n)')} `;
+
+    let promiseResolve;
+
+    const promptPromise = new Promise(resolve => {
+      promiseResolve = resolve;
+      rl.question(formattedMessage, answer => {
+        if (answer === 'y' || answer === 'Y') {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+    });
+
+    const cancel = () => {
+      process.stdout.moveCursor(0, -1);
+      process.stdout.clearLine(1);
+      promiseResolve(false);
+      rl.close();
+    };
+
+    return { promptPromise, cancel };
   };
 };
 
