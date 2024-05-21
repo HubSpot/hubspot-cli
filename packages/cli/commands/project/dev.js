@@ -25,6 +25,7 @@ const {
   uiAccountDescription,
   uiBetaTag,
   uiCommandReference,
+  uiLink,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
@@ -69,6 +70,13 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig();
 
   uiBetaTag(i18n(`${i18nKey}.logs.betaMessage`));
+
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.logs.learnMoreLocalDevServer`),
+      'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+    )
+  );
 
   if (!projectConfig) {
     logger.error(i18n(`${i18nKey}.errors.noProjectConfig`));
