@@ -699,9 +699,24 @@ const makePollTaskStatusFunc = ({
 
     return new Promise((resolve, reject) => {
       const pollInterval = setInterval(async () => {
-        const taskStatus = await statusFn(accountId, taskName, taskId).catch(
-          reject
-        );
+        let taskStatus;
+        try {
+          taskStatus = await statusFn(accountId, taskName, taskId);
+        } catch (e) {
+          return reject(e);
+        }
+
+        if (
+          !taskStatus ||
+          !taskStatus.status ||
+          !taskStatus[statusText.SUBTASK_KEY]
+        ) {
+          return reject(
+            new Error(
+              i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`)
+            )
+          );
+        }
 
         const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
 
