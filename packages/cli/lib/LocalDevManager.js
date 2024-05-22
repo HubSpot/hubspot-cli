@@ -227,6 +227,11 @@ class LocalDevManager {
         text: i18n(`${i18nKey}.exitingStart`),
       });
     }
+
+    if (this.cancelActivePrompt) {
+      this.cancelActivePrompt();
+    }
+
     await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
@@ -276,7 +281,10 @@ class LocalDevManager {
 
   updateKeypressListeners() {
     handleKeypress(async key => {
-      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      if (
+        (key.ctrl && key.name === 'c') ||
+        (!this.cancelActivePrompt && key.name === 'q')
+      ) {
         this.stop();
       }
     });
