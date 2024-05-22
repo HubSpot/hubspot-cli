@@ -71,6 +71,7 @@ class LocalDevManager {
     this.activePublicAppData = null;
     this.env = options.env;
     this.cancelActivePrompt = null;
+    this.isUploading = false;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -301,8 +302,12 @@ class LocalDevManager {
     }
 
     // Avoid logging the warning to the console if it is currently the most
-    // recently logged warning. We do not want to spam the console with the same message.
-    if (this.uploadWarnings[warning]) {
+    // recently logged warning or the user is actively being prompted or uploading
+    if (
+      this.uploadWarnings[warning] ||
+      this.cancelActivePrompt ||
+      this.isUploading
+    ) {
       return;
     }
 
@@ -325,45 +330,43 @@ class LocalDevManager {
   }
 
   async projectUploadPrompt() {
-    try {
-      logger.log();
-      uiLine();
+    logger.log();
+    uiLine();
 
-      let uploadSuccess = false;
-      const prompt =
-        this.activeApp.type === COMPONENT_TYPES.publicApp
-          ? publicAppUploadPrompt
-          : privateAppUploadPrompt;
+    let uploadSuccess = false;
+    const prompt =
+      this.activeApp.type === COMPONENT_TYPES.publicApp
+        ? publicAppUploadPrompt
+        : privateAppUploadPrompt;
 
-      const { cancel, promptPromise } = prompt();
+    const { cancel, promptPromise } = prompt();
 
-      this.cancelActivePrompt = cancel;
-      const shouldUpload = await promptPromise;
-      this.cancelActivePrompt = null;
+    this.cancelActivePrompt = cancel;
+    const shouldUpload = await promptPromise;
+    this.cancelActivePrompt = null;
 
-      if (shouldUpload) {
-        const { succeeded } = await handleProjectUpload(
-          this.targetProjectAccountId,
-          this.projectConfig,
-          this.projectDir,
-          (...args) => pollProjectBuildAndDeploy(...args, true)
-        );
+    if (shouldUpload) {
+      this.isUploading = true;
+      const { succeeded } = await handleProjectUpload(
+        this.targetProjectAccountId,
+        this.projectConfig,
+        this.projectDir,
+        (...args) => pollProjectBuildAndDeploy(...args, true)
+      );
+      this.isUploading = false;
 
-        if (succeeded) {
-          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
-        } else {
-          logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
-        }
-        uploadSuccess = succeeded;
+      if (succeeded) {
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
       } else {
-        logger.log('');
-        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
       }
-
-      return uploadSuccess;
-    } catch (e) {
-      console.log(e);
+      uploadSuccess = succeeded;
+    } else {
+      logger.log('');
+      logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
     }
+
+    return uploadSuccess;
   }
 
   projectUploadMessage() {

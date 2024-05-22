@@ -26,14 +26,15 @@ const makeUploadPrompt = message => {
         } else {
           resolve(false);
         }
+        rl.close();
       });
     });
 
     const cancel = () => {
+      rl.close();
       process.stdout.moveCursor(0, -1);
       process.stdout.clearLine(1);
       promiseResolve(false);
-      rl.close();
     };
 
     return { promptPromise, cancel };
