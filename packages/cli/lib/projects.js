@@ -33,6 +33,7 @@ const {
 const {
   isSpecifiedError,
   isSpecifiedHubSpotAuthError,
+  getAxiosErrorWithContext,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
@@ -703,7 +704,22 @@ const makePollTaskStatusFunc = ({
         try {
           taskStatus = await statusFn(accountId, taskName, taskId);
         } catch (e) {
-          return reject(e);
+          logApiErrorInstance(
+            e,
+            new ApiErrorContext({
+              request: e.request,
+              accountId,
+              projectName: taskName,
+            })
+          );
+          return reject(
+            e.isAxiosError
+              ? getAxiosErrorWithContext(e, {
+                  accountId,
+                  projectName: taskName,
+                })
+              : e
+          );
         }
 
         if (
@@ -713,7 +729,15 @@ const makePollTaskStatusFunc = ({
         ) {
           return reject(
             new Error(
-              i18n(`${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`)
+              i18n(
+                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+                {
+                  taskType:
+                    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
+                      ? 'build'
+                      : 'deploy',
+                }
+              )
             )
           );
         }
