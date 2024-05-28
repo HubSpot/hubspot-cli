@@ -1203,6 +1203,7 @@ en:
         errors:
           nameRequired: "A project name is required"
           locationRequired: "A project location is required"
+          invalidLocation: "The selected destination already exists. Please provide a new path for this project."
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
           missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
