@@ -842,7 +842,7 @@ const makePollTaskStatusFunc = ({
             resolve(taskStatus);
           }
         }
-      }, 500);
+      }, POLLING_DELAY);
     });
   };
 };
