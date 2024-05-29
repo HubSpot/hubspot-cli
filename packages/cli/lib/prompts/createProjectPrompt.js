@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
@@ -83,6 +84,9 @@ const createProjectPrompt = async (
       validate: input => {
         if (!input) {
           return i18n(`${i18nKey}.errors.locationRequired`);
+        }
+        if (fs.existsSync(input)) {
+          return i18n(`${i18nKey}.errors.invalidLocation`);
         }
         return true;
       },
