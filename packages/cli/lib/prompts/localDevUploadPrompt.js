@@ -1,10 +1,11 @@
 const readline = require('readline');
 const chalk = require('chalk');
-// const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.localDevUploadPrompt';
 
+// This prompt needs to be cancelable, which is not supported by our current version
+// of inquirer. To enable this, we build a prompt from scratch using readline
 const makeUploadPrompt = message => {
   return () => {
     const rl = readline.createInterface({
