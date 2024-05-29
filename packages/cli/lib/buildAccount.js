@@ -100,7 +100,6 @@ async function buildNewAccount({
   portalLimit, // Used only for developer test accounts
   force = false,
 }) {
-  console.log('ITS IN THE NEW ONE');
   SpinniesManager.init({
     succeedColor: 'white',
   });
