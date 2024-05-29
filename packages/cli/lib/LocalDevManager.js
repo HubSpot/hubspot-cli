@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstalls,
+  fetchPublicAppDeveloperTestAccountInstallData,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -136,7 +136,7 @@ class LocalDevManager {
 
     const {
       testPortalInstallCount,
-    } = await fetchPublicAppDeveloperTestAccountInstalls(
+    } = await fetchPublicAppDeveloperTestAccountInstallData(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
@@ -148,15 +148,24 @@ class LocalDevManager {
   }
 
   async checkActivePublicAppInstalls() {
-    // TODO: Add check for installs once we have that info
-    if (!this.activePublicAppData) {
+    if (
+      !this.activePublicAppData ||
+      !this.publicAppActiveInstalls ||
+      this.publicAppActiveInstalls < 1
+    ) {
       return;
     }
     uiLine();
-    // TODO: Replace with final copy
 
-    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
-    logger.log(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
+    logger.warn(
+      i18n(`${i18nKey}.activeInstallWarning.installCount`, {
+        appName: this.activePublicAppData.name,
+        installCount: this.publicAppActiveInstalls,
+        installText:
+          this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
+      })
+    );
+    logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
     uiLine();
   }
 
