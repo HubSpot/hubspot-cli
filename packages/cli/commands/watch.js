@@ -76,12 +76,9 @@ exports.handler = async options => {
 
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
-  } else {
+  } else if (!initialUpload) {
     logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
-
-    if (!initialUpload) {
-      logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
-    }
+    logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
   }
 
   if (initialUpload) {
@@ -144,10 +141,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addModeOptions(yargs, { write: true }, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

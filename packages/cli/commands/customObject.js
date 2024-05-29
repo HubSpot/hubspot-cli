@@ -22,8 +22,8 @@ const logBetaMessage = () => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs
     .middleware([logBetaMessage])

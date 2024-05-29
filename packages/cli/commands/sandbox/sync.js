@@ -206,10 +206,10 @@ exports.builder = yargs => {
 
   yargs.example([['$0 sandbox sync', i18n(`${i18nKey}.examples.default`)]]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addTestingOptions(yargs);
 
   return yargs;
 };

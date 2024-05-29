@@ -104,8 +104,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.example([['$0 accounts list']]);
 

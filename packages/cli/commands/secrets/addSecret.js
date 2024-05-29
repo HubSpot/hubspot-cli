@@ -58,9 +58,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',

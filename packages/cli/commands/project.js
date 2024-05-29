@@ -11,6 +11,7 @@ const download = require('./project/download');
 const open = require('./project/open');
 const dev = require('./project/dev');
 const add = require('./project/add');
+const migrateApp = require('./project/migrateApp');
 
 const i18nKey = 'commands.project';
 
@@ -18,8 +19,8 @@ exports.command = 'project';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   // TODO: deploy must be updated
   yargs.command(create).demandCommand(0, '');
@@ -32,6 +33,7 @@ exports.builder = yargs => {
   yargs.command(listBuilds).demandCommand(0, '');
   yargs.command(download).demandCommand(0, '');
   yargs.command(open).demandCommand(0, '');
+  yargs.command(migrateApp).demandCommand(0, '');
 
   return yargs;
 };

@@ -10,9 +10,7 @@ const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
-const createProjectsList = async () => {
-  const accountId = getAccountId();
-
+const createProjectsList = async accountId => {
   try {
     const projects = await fetchProjects(accountId);
     return projects.results;
@@ -23,7 +21,8 @@ const createProjectsList = async () => {
 };
 
 const downloadProjectPrompt = async (promptOptions = {}) => {
-  const projectsList = await createProjectsList();
+  const accountId = getAccountId(promptOptions.account);
+  const projectsList = await createProjectsList(accountId);
 
   return promptUser([
     {
@@ -33,7 +32,7 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
-              accountId: getAccountId(),
+              accountId,
             })
           : i18n(`${i18nKey}.selectProject`);
       },
