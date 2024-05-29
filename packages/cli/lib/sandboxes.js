@@ -7,7 +7,11 @@ const {
   fetchTypes,
   getSandboxUsageLimits,
 } = require('@hubspot/local-dev-lib/sandboxes');
-const { getConfig, getAccountId } = require('@hubspot/local-dev-lib/config');
+const {
+  getConfig,
+  getAccountId,
+  getEnv,
+} = require('@hubspot/local-dev-lib/config');
 const CliProgressMultibarManager = require('./ui/CliProgressMultibarManager');
 const { promptUser } = require('./prompts/promptUtils');
 const { isDevelopmentSandbox } = require('./accountTypes');
@@ -15,6 +19,13 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const { uiAccountDescription } = require('./ui');
+const {
+  isMissingScopeError,
+  isSpecifiedError,
+} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
@@ -198,6 +209,153 @@ const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   }
 };
 
+function handleSandboxCreateError({
+  err,
+  env,
+  accountId,
+  name,
+  accountConfig,
+}) {
+  if (isMissingScopeError(err)) {
+    logger.error(
+      i18n('lib.sandboxes.create.failure.scopes.message', {
+        accountName: uiAccountDescription(accountId),
+      })
+    );
+    const websiteOrigin = getHubSpotWebsiteOrigin(env);
+    const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+    logger.info(
+      i18n('lib.sandboxes.create.failure.scopes.instructions', {
+        accountName: uiAccountDescription(accountId),
+        url,
+      })
+    );
+  } else if (
+    isSpecifiedError(err, {
+      statusCode: 403,
+      category: 'BANNED',
+      subCategory: 'SandboxErrors.USER_ACCESS_NOT_ALLOWED',
+    })
+  ) {
+    logger.log('');
+    logger.error(
+      i18n('lib.sandboxes.create.failure.invalidUser', {
+        accountName: name,
+        parentAccountName: uiAccountDescription(accountId),
+      })
+    );
+    logger.log('');
+  } else if (
+    isSpecifiedError(err, {
+      statusCode: 403,
+      category: 'BANNED',
+      subCategory: 'SandboxErrors.DEVELOPMENT_SANDBOX_ACCESS_NOT_ALLOWED',
+    })
+  ) {
+    logger.log('');
+    logger.error(
+      i18n('lib.sandboxes.create.failure.403Gating', {
+        accountName: name,
+        parentAccountName: uiAccountDescription(accountId),
+        accountId,
+      })
+    );
+    logger.log('');
+  } else if (
+    isSpecifiedError(err, {
+      statusCode: 400,
+      category: 'VALIDATION_ERROR',
+      subCategory:
+        'SandboxErrors.NUM_DEVELOPMENT_SANDBOXES_LIMIT_EXCEEDED_ERROR',
+    }) &&
+    err.error &&
+    err.error.message
+  ) {
+    logger.log('');
+    const devSandboxLimit = getSandboxLimit(err.error);
+    const plural = devSandboxLimit !== 1;
+    const hasDevelopmentSandboxes = getHasSandboxesByType(
+      accountConfig,
+      HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+    );
+    if (hasDevelopmentSandboxes) {
+      logger.error(
+        i18n(
+          `lib.sandboxes.create.failure.alreadyInConfig.developer.${
+            plural ? 'other' : 'one'
+          }`,
+          {
+            accountName: uiAccountDescription(accountId),
+            limit: devSandboxLimit,
+          }
+        )
+      );
+    } else {
+      const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
+      logger.error(
+        i18n(
+          `lib.sandboxes.create.failure.limit.developer.${
+            plural ? 'other' : 'one'
+          }`,
+          {
+            accountName: uiAccountDescription(accountId),
+            limit: devSandboxLimit,
+            link: `${baseUrl}/sandboxes-developer/${accountId}/development`,
+          }
+        )
+      );
+    }
+    logger.log('');
+  } else if (
+    isSpecifiedError(err, {
+      statusCode: 400,
+      category: 'VALIDATION_ERROR',
+      subCategory: 'SandboxErrors.NUM_STANDARD_SANDBOXES_LIMIT_EXCEEDED_ERROR',
+    }) &&
+    err.error &&
+    err.error.message
+  ) {
+    logger.log('');
+    const standardSandboxLimit = getSandboxLimit(err.error);
+    const plural = standardSandboxLimit !== 1;
+    const hasStandardSandboxes = getHasSandboxesByType(
+      accountConfig,
+      HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX
+    );
+    if (hasStandardSandboxes) {
+      logger.error(
+        i18n(
+          `lib.sandboxes.create.failure.alreadyInConfig.standard.${
+            plural ? 'other' : 'one'
+          }`,
+          {
+            accountName: uiAccountDescription(accountId),
+            limit: standardSandboxLimit,
+          }
+        )
+      );
+    } else {
+      const baseUrl = getHubSpotWebsiteOrigin(getValidEnv(getEnv(accountId)));
+      logger.error(
+        i18n(
+          `lib.sandboxes.create.failure.limit.standard.${
+            plural ? 'other' : 'one'
+          }`,
+          {
+            accountName: uiAccountDescription(accountId),
+            limit: standardSandboxLimit,
+            link: `${baseUrl}/sandboxes-developer/${accountId}/standard`,
+          }
+        )
+      );
+    }
+    logger.log('');
+  } else {
+    logErrorInstance(err);
+  }
+  throw err;
+}
+
 const ACTIVE_TASK_POLL_INTERVAL = 1000;
 
 const isTaskComplete = task => {
@@ -346,4 +504,5 @@ module.exports = {
   getAvailableSyncTypes,
   getSyncTypesWithContactRecordsPrompt,
   pollSyncTaskStatus,
+  handleSandboxCreateError,
 };
