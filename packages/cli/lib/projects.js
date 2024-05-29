@@ -405,13 +405,19 @@ const pollProjectBuildAndDeploy = async (
   buildId,
   silenceLogs = false
 ) => {
-  const buildStatus = await pollBuildStatus(
-    accountId,
-    projectConfig.name,
-    buildId,
-    null,
-    silenceLogs
-  );
+  let buildStatus;
+  try {
+    buildStatus = await pollBuildStatus(
+      accountId,
+      projectConfig.name,
+      buildId,
+      null,
+      silenceLogs
+    );
+  } catch (e) {
+    //TODO: Figure out how we want to actually handle this
+    throw new Error(e);
+  }
 
   const {
     autoDeployId,
@@ -452,13 +458,19 @@ const pollProjectBuildAndDeploy = async (
       displayWarnLogs(accountId, projectConfig.name, buildId);
     }
 
-    const deployStatus = await pollDeployStatus(
-      accountId,
-      projectConfig.name,
-      deployStatusTaskLocator.id,
-      buildId,
-      silenceLogs
-    );
+    let deployStatus;
+    try {
+      deployStatus = await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        deployStatusTaskLocator.id,
+        buildId,
+        silenceLogs
+      );
+    } catch (e) {
+      //TODO: Figure out how we want to actually handle this
+      throw new Error(e);
+    }
     result.deployResult = deployStatus;
 
     if (deployStatus.status === 'FAILURE') {
@@ -520,7 +532,7 @@ const handleProjectUpload = async (
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  const result = new Promise(resolve =>
+  const result = new Promise((resolve, reject) =>
     output.on('close', async function() {
       let uploadResult = {};
 
@@ -541,12 +553,17 @@ const handleProjectUpload = async (
       if (error) {
         uploadResult.uploadError = error;
       } else if (callbackFunc) {
-        uploadResult = await callbackFunc(
-          accountId,
-          projectConfig,
-          tempFile,
-          buildId
-        );
+        try {
+          uploadResult = await callbackFunc(
+            accountId,
+            projectConfig,
+            tempFile,
+            buildId
+          );
+        } catch (e) {
+          // TODO: Figure out how we want to actually handle this
+          reject(e);
+        }
       }
       resolve(uploadResult);
     })
