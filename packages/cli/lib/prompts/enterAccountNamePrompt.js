@@ -2,9 +2,13 @@ const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
+const {
+  HUBSPOT_ACCOUNT_TYPES,
+} = require('@hubspot/local-dev-lib/constants/config');
 
 const i18nKey = 'lib.prompts.enterAccountNamePrompt';
 
+// Used for CLI Config account names
 const accountNamePrompt = defaultName => ({
   name: 'name',
   message: i18n(`${i18nKey}.enterAccountName`),
@@ -27,7 +31,51 @@ const enterAccountNamePrompt = defaultName => {
   return promptUser(accountNamePrompt(defaultName));
 };
 
+// Used for HubSpot portal account names
+const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
+  const isDevelopmentSandbox =
+    accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
+  const isSandbox =
+    accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
+    isDevelopmentSandbox;
+  const isDeveloperTestAccount =
+    accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
+
+  let promptMessageString;
+  let defaultName;
+  if (isSandbox) {
+    promptMessageString = isDevelopmentSandbox
+      ? i18n(`${i18nKey}.enterDevelopmentSandboxName`)
+      : i18n(`${i18nKey}.enterStandardSandboxName`);
+    defaultName = `New ${
+      isDevelopmentSandbox ? 'development' : 'standard'
+    } sandbox`;
+  } else if (isDeveloperTestAccount) {
+    promptMessageString = i18n(`${i18nKey}.enterDeveloperTestAccountName`);
+    defaultName = `Developer test account ${currentPortalCount + 1}`;
+  }
+
+  return promptUser([
+    {
+      name: 'name',
+      message: promptMessageString,
+      validate(val) {
+        if (typeof val !== 'string') {
+          return i18n(`${i18nKey}.errors.invalidName`);
+        } else if (!val.length) {
+          return i18n(`${i18nKey}.errors.nameRequired`);
+        }
+        return accountNameExistsInConfig(val)
+          ? i18n(`${i18nKey}.errors.accountNameExists`, { name: val })
+          : true;
+      },
+      default: defaultName,
+    },
+  ]);
+};
+
 module.exports = {
   accountNamePrompt,
   enterAccountNamePrompt,
+  hubspotAccountNamePrompt,
 };
