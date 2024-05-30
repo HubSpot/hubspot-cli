@@ -1146,6 +1146,8 @@ en:
         enterDeveloperTestAccountName: "Name your developer test account:"
         enterStandardSandboxName: "Name your standard sandbox:"
         enterDevelopmentSandboxName: "Name your development sandbox:"
+        sandboxDefaultName: "New {{ sandboxType }} sandbox"
+        developerTestAccountDefaultName: "Developer test account {{ count }}"
         errors:
           invalidName: "You entered an invalid name. Please try again."
           nameRequired: "The name may not be blank. Please try again."
