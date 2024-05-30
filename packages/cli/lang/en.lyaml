@@ -528,6 +528,27 @@ en:
               \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+        cloneApp:
+          describe: "Clone a public app using the projects framework"
+          examples:
+            default: "Clone a public app using the projects framework"
+          options:
+            appId:
+              describe: "The ID for the public app being cloned"
+            location:
+              describe: "Directory where project should be created"
+            name:
+              describe: "Project name (cannot be changed)"
+          cloneStatus:
+            inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            done: "Converting app configuration to public-app.json component definition ... DONE"
+            success: "Your new project was created in {{ projectLocation }}"
+            failure: "Converting app configuration to public-app.json component definition ... FAILED"
+          errors:
+            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+              \n- Run {{ useCommand }} to switch your default account to an app developer account.
+              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
