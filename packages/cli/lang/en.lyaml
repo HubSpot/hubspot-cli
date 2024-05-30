@@ -1287,6 +1287,8 @@ en:
         explanation: "Local development requires this app to be installed in the target test account"
         prompt: "Open hubspot.com to install this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      activeInstallConfirmationPrompt:
+        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:
