@@ -174,6 +174,14 @@ class LocalDevManager {
     }
 
     uiBetaTag(i18n(`${i18nKey}.betaMessage`));
+
+    logger.log(
+      uiLink(
+        i18n(`${i18nKey}.learnMoreLocalDevServer`),
+        'https://developers.hubspot.com/docs/platform/project-cli-commands#start-a-local-development-server'
+      )
+    );
+
     logger.log();
     logger.log(
       chalk.hex(UI_COLORS.SORBET)(
