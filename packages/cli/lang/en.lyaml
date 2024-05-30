@@ -1299,7 +1299,7 @@ en:
         loading:
           add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
           fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
-          succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+          succeed: "Successfully created a developer test account {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
         success:
           configFileUpdated: "Account \"{{ accountName }}\" updated using \"{{ authType }}\""
         failure:
@@ -1317,13 +1317,13 @@ en:
       create:
         loading:
           developer:
-            add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-            fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-            succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            add: "Creating development sandbox {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a development sandbox {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a development sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
           standard:
-            add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-            fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-            succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            add: "Creating standard sandbox {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a standard sandbox {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a standard sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
