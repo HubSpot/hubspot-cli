@@ -1250,6 +1250,8 @@ en:
       localDevUploadPrompt:
         privateApp: "Upload your changes now?"
         publicApp: "Proceed with uploading changes to your {{#bold}}production{{/bold}} app?"
+      activeInstallConfirmationPrompt:
+        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:

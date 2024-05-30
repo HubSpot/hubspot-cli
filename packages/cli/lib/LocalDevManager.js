@@ -43,6 +43,9 @@ const {
   publicAppUploadPrompt,
   privateAppUploadPrompt,
 } = require('./prompts/localDevUploadPrompt');
+const {
+  activeInstallConfirmationPrompt,
+} = require('./prompts/activeInstallConfirmationPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -177,6 +180,11 @@ class LocalDevManager {
     );
     logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
     uiLine();
+    const proceed = await activeInstallConfirmationPrompt();
+
+    if (!proceed) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   async start() {
