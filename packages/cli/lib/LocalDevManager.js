@@ -537,12 +537,12 @@ class LocalDevManager {
 
   devServerFileChange(filePath, event) {
     try {
-      DevServerManager.fileChange({ filePath, event });
-
       if (this.cancelActivePrompt) {
         console.log('CANCEL');
         this.cancelActivePrompt();
       }
+
+      DevServerManager.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
         logger.error(e);
