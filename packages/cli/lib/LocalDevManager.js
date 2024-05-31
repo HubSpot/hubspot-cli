@@ -338,7 +338,6 @@ class LocalDevManager {
   }
 
   async projectUploadPrompt() {
-    logger.log();
     uiLine();
 
     let uploadSuccess = false;
@@ -541,6 +540,7 @@ class LocalDevManager {
       DevServerManager.fileChange({ filePath, event });
 
       if (this.cancelActivePrompt) {
+        console.log('CANCEL');
         this.cancelActivePrompt();
       }
     } catch (e) {
