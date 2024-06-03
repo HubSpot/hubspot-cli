@@ -605,6 +605,7 @@ en:
             buildSucceeded: "Build #{{ buildId }} succeeded\n"
             readyToGoLive: "🚀 Ready to take your project live?"
             runCommand: "Run `{{ command }}`"
+            autoDeployDisabled: "Automatic deploys are disabled for this project. Run {{ deployCommand }} to deploy this build."
           errors:
             projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
           options:
