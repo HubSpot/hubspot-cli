@@ -72,6 +72,7 @@ class DevServerManager {
   }
 
   async setup({ components, onUploadRequired, accountId, setActiveApp }) {
+    console.log(components);
     this.componentsByType = this.arrangeComponentsByType(components);
     const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
@@ -119,6 +120,16 @@ class DevServerManager {
       this.iterateDevServers(async serverInterface => {
         if (serverInterface.fileChange) {
           await serverInterface.fileChange(filePath, event);
+        }
+      });
+    }
+  }
+
+  updateConfigFile({ filepath, config }) {
+    if (this.started) {
+      this.iterateDevServers(async serverInterface => {
+        if (serverInterface.updateConfigFile) {
+          await serverInterface.updateConfigFile(filepath, config);
         }
       });
     }

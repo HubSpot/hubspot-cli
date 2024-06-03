@@ -27,6 +27,7 @@ const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
+  loadConfigFile,
 } = require('./projectStructure');
 const {
   UI_COLORS,
@@ -300,7 +301,7 @@ class LocalDevManager {
       : uiCommandReference('hs project upload');
   }
 
-  warnAndPromptUpload(reason) {
+  warnAndPromptUpload(filepath, reason) {
     let warning = reason;
     if (!reason) {
       warning =
@@ -328,6 +329,8 @@ class LocalDevManager {
       this.projectUploadPrompt().then(succeeded => {
         if (!succeeded) {
           this.projectUploadMessage();
+        } else {
+          this.updateDevServerConfig(filepath);
         }
       });
     } else {
@@ -396,6 +399,11 @@ class LocalDevManager {
     );
   }
 
+  async updateDevServerConfig(filepath) {
+    const config = await loadConfigFile(filepath);
+    DevServerManager.updateConfigFile({ filepath, config });
+  }
+
   monitorConsoleOutput() {
     const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
@@ -447,6 +455,7 @@ class LocalDevManager {
 
     if (missingComponents.length) {
       this.warnAndPromptUpload(
+        null,
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
           missingComponents: missingComponents.join(', '),
         })
@@ -492,7 +501,7 @@ class LocalDevManager {
 
   handleWatchEvent(filePath, event, configPaths) {
     if (configPaths.includes(filePath)) {
-      this.warnAndPromptUpload();
+      this.warnAndPromptUpload(filePath);
     } else {
       this.devServerFileChange(filePath, event);
     }
