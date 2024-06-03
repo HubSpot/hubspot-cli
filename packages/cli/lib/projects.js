@@ -405,19 +405,13 @@ const pollProjectBuildAndDeploy = async (
   buildId,
   silenceLogs = false
 ) => {
-  let buildStatus;
-  try {
-    buildStatus = await pollBuildStatus(
-      accountId,
-      projectConfig.name,
-      buildId,
-      null,
-      silenceLogs
-    );
-  } catch (e) {
-    //TODO: Figure out how we want to actually handle this
-    throw new Error(e);
-  }
+  const buildStatus = await pollBuildStatus(
+    accountId,
+    projectConfig.name,
+    buildId,
+    null,
+    silenceLogs
+  );
 
   const {
     autoDeployId,
@@ -458,19 +452,13 @@ const pollProjectBuildAndDeploy = async (
       displayWarnLogs(accountId, projectConfig.name, buildId);
     }
 
-    let deployStatus;
-    try {
-      deployStatus = await pollDeployStatus(
-        accountId,
-        projectConfig.name,
-        deployStatusTaskLocator.id,
-        buildId,
-        silenceLogs
-      );
-    } catch (e) {
-      //TODO: Figure out how we want to actually handle this
-      throw new Error(e);
-    }
+    const deployStatus = await pollDeployStatus(
+      accountId,
+      projectConfig.name,
+      deployStatusTaskLocator.id,
+      buildId,
+      silenceLogs
+    );
     result.deployResult = deployStatus;
 
     if (deployStatus.status === 'FAILURE') {
@@ -532,7 +520,7 @@ const handleProjectUpload = async (
   const output = fs.createWriteStream(tempFile.name);
   const archive = archiver('zip');
 
-  const result = new Promise((resolve, reject) =>
+  const result = new Promise(resolve =>
     output.on('close', async function() {
       let uploadResult = {};
 
@@ -553,17 +541,12 @@ const handleProjectUpload = async (
       if (error) {
         uploadResult.uploadError = error;
       } else if (callbackFunc) {
-        try {
-          uploadResult = await callbackFunc(
-            accountId,
-            projectConfig,
-            tempFile,
-            buildId
-          );
-        } catch (e) {
-          // TODO: Figure out how we want to actually handle this
-          reject(e);
-        }
+        uploadResult = await callbackFunc(
+          accountId,
+          projectConfig,
+          tempFile,
+          buildId
+        );
       }
       resolve(uploadResult);
     })

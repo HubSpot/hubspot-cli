@@ -38,22 +38,18 @@ exports.command = 'watch [path]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
-  try {
-    const {
-      isAutoDeployEnabled,
-      deployStatusTaskLocator,
-    } = await pollBuildStatus(accountId, projectName, buildId);
+  const {
+    isAutoDeployEnabled,
+    deployStatusTaskLocator,
+  } = await pollBuildStatus(accountId, projectName, buildId);
 
-    if (isAutoDeployEnabled && deployStatusTaskLocator) {
-      await pollDeployStatus(
-        accountId,
-        projectName,
-        deployStatusTaskLocator.id,
-        buildId
-      );
-    }
-  } catch (e) {
-    // TODO: Figure out how to handle this
+  if (isAutoDeployEnabled && deployStatusTaskLocator) {
+    await pollDeployStatus(
+      accountId,
+      projectName,
+      deployStatusTaskLocator.id,
+      buildId
+    );
   }
 
   logFeedbackMessage(buildId);
