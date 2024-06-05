@@ -8,8 +8,8 @@ exports.command = 'config';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.command(set).demandCommand(1, '');
 

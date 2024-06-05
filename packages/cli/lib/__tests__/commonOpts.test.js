@@ -11,6 +11,7 @@ const {
 const { getMode } = require('../commonOpts');
 
 jest.mock('@hubspot/local-dev-lib/config');
+jest.mock('@hubspot/local-dev-lib/logger');
 
 describe('@hubspot/cli/lib/commonOpts', () => {
   describe('getMode()', () => {
@@ -35,12 +36,14 @@ describe('@hubspot/cli/lib/commonOpts', () => {
       ...config,
       defaultMode: MODE.draft,
     };
+
     afterEach(() => {
       getAndLoadConfigIfNeeded.mockReset();
       getAccountId.mockReset();
       getAccountConfig.mockReset();
       loadConfigFromEnvironment.mockReset();
     });
+
     describe('mode option precedence', () => {
       describe('1. --mode', () => {
         it('should return the mode specified by the command option if present.', () => {

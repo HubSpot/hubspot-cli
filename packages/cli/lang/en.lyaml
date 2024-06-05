@@ -475,6 +475,7 @@ en:
           logs:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
+            learnMoreLocalDevServer: "Learn more about the projects local dev server"
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
@@ -496,6 +497,37 @@ en:
               describe: "The starting template"
             templateSource:
               describe: "Path to custom GitHub repository from which to create project template"
+        migrateApp:
+          describe: "Migrate a public app to the projects framework"
+          examples:
+            default: "Migrate a public app to the projects framework"
+          options:
+            appId:
+              describe: "The ID for the public app being migrated to the projects framework"
+            location:
+              describe: "Directory where project should be created"
+            name:
+              describe: "Project name (cannot be changed)"
+          migrationStatus:
+            inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
+            done: "Converting app configuration to public-app.json component definition ... DONE"
+            failure: "Converting app configuration to public-app.json component definition ... FAILED"
+          warning:
+            title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
+            projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
+            appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
+            buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
+            existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
+            copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
+          createAppPrompt: "Proceed with migrating this app to a project component?"
+          projectDetailsLink: "View project details in your developer account"
+          errors:
+            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
+              \n- Run {{ useCommand }} to switch your default account to an app developer account.
+              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
+            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
@@ -573,6 +605,7 @@ en:
             buildSucceeded: "Build #{{ buildId }} succeeded\n"
             readyToGoLive: "🚀 Ready to take your project live?"
             runCommand: "Run `{{ command }}`"
+            autoDeployDisabled: "Automatic deploys are disabled for this project. Run {{ deployCommand }} to deploy this build."
           errors:
             projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
           options:
@@ -795,6 +828,28 @@ en:
           positionals:
             src:
               describe: "Path to the theme within the Design Manager."
+        preview:
+          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
+          errors:
+            invalidPath: "The path \"{{ path }}\" is not a path to a directory"
+            noThemeComponents: "Your project has no theme components available to preview."
+          options:
+            src:
+              describe: "Path to the local directory your theme is in, relative to your current working directory"
+            dest:
+              describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
+            notify:
+              describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
+            noSsl:
+              describe: "Disable HTTPS"
+            port:
+              describe: "The port on which to start the local server"
+          initialUploadProgressBar:
+            start: "Starting..."
+            uploading: "Uploading..."
+            finish: "Complete!"
+          logs:
+            processExited: "Stopping dev server..."
     module:
       describe: "Commands for working with modules, including marketplace validation with the marketplace-validate subcommand."
       subcommands:
@@ -880,28 +935,6 @@ en:
         disableInitial: "Passing the \"--disable-initial\" option is no longer necessary. Running \"hs watch\" no longer uploads the watched directory by default."
         initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
         notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
-    preview:
-      describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
-      errors:
-        invalidPath: "The path \"{{ path }}\" is not a path to a directory"
-        noThemeComponents: "Your project has no theme components available to preview."
-      options:
-        src:
-          describe: "Path to the local directory your theme is in, relative to your current working directory"
-        dest:
-          describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
-        notify:
-          describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
-        noSsl:
-          describe: "Disable HTTPS"
-        port:
-          describe: "The port on which to start the local server"
-      initialUploadProgressBar:
-        start: "Starting..."
-        uploading: "Uploading..."
-        finish: "Complete!"
-      logs:
-        processExited: "Stopping dev server..."
     convertFields:
       describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
       positionals:
@@ -923,6 +956,7 @@ en:
       noComponents: "There are no components in this project."
       noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
+      learnMoreLocalDevServer: "Learn more about the projects local dev server"
       running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
       quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
       viewInHubSpotLink: "View project in HubSpot"
@@ -1001,6 +1035,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
+        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
@@ -1174,9 +1209,18 @@ en:
         errors:
           nameRequired: "A project name is required"
           locationRequired: "A project location is required"
+          invalidLocation: "The selected destination already exists. Please provide a new path for this project."
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
           missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
+      selectPublicAppPrompt:
+        selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
+        selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
+        errors:
+          noApps: "{{#bold}}No apps to migrate{{/bold}}"
+          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
+          errorFetchingApps: "There was an error fetching public apps."
+          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
       developerTestAccountPrompt:
         name:
           message: "Name your developer test account"
@@ -1264,7 +1308,7 @@ en:
         loading:
           add: "Creating developer test account {{#bold}}{{ accountName }}{{/bold}}"
           fail: "Failed to create a developer test account {{#bold}}{{ accountName }}{{/bold}}."
-          succeed: "Successfully created a developer test account {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+          succeed: "Successfully created a developer test account {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
         success:
           configFileUpdated: "Account \"{{ accountName }}\" updated using \"{{ authType }}\""
         failure:
@@ -1282,13 +1326,13 @@ en:
       create:
         loading:
           developer:
-            add: "Creating development sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-            fail: "Failed to create a development sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-            succeed: "Successfully created a development sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            add: "Creating development sandbox {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a development sandbox {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a development sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
           standard:
-            add: "Creating standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}"
-            fail: "Failed to create a standard sandbox {{#bold}}{{ sandboxName }}{{/bold}}."
-            succeed: "Successfully created a standard sandbox {{#bold}}{{ name }}{{/bold}} with portalId {{#bold}}{{ sandboxHubId }}{{/bold}}."
+            add: "Creating standard sandbox {{#bold}}{{ accountName }}{{/bold}}"
+            fail: "Failed to create a standard sandbox {{#bold}}{{ accountName }}{{/bold}}."
+            succeed: "Successfully created a standard sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."

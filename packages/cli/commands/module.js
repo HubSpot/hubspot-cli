@@ -8,8 +8,8 @@ exports.command = 'module';
 exports.describe = false; //i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.command(marketplaceValidate).demandCommand(1, '');
 

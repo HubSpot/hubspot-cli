@@ -9,7 +9,6 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { buildSandbox } = require('../../lib/sandboxCreate');
 const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
 const {
   sandboxTypeMap,
@@ -38,6 +37,7 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const { buildNewAccount } = require('../../lib/buildAccount');
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
@@ -155,9 +155,9 @@ exports.handler = async options => {
   }
 
   try {
-    const { result } = await buildSandbox({
+    const { result } = await buildNewAccount({
       name: sandboxName,
-      type: sandboxType,
+      accountType: sandboxType,
       accountConfig,
       env,
       force,
@@ -238,10 +238,10 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addTestingOptions(yargs);
 
   return yargs;
 };

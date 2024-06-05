@@ -42,9 +42,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('tableId', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),

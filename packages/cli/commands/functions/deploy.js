@@ -10,7 +10,8 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const { POLLING_DELAY } = require('../../lib/constants');
+
+const { poll } = require('../../lib/polling');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   buildPackage,
@@ -21,23 +22,6 @@ const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.functions.subcommands.deploy';
-
-const pollBuildStatus = (accountId, buildId) => {
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const pollResp = await getBuildStatus(accountId, buildId);
-      const { status } = pollResp;
-
-      if (status === 'SUCCESS') {
-        clearInterval(pollInterval);
-        resolve(pollResp);
-      } else if (status === 'ERROR') {
-        clearInterval(pollInterval);
-        reject(pollResp);
-      }
-    }, POLLING_DELAY);
-  });
-};
 
 exports.command = 'deploy <path>';
 exports.describe = false;
@@ -78,7 +62,7 @@ exports.handler = async options => {
       })
     ).start();
     const buildId = await buildPackage(accountId, functionPath);
-    const successResp = await pollBuildStatus(accountId, buildId);
+    const successResp = await poll(getBuildStatus, accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
     await outputBuildLog(successResp.cdnUrl);
@@ -128,9 +112,9 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

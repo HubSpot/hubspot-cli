@@ -74,7 +74,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addTestingOptions(yargs, true);
+  addTestingOptions(yargs);
 
   yargs.positional('definition', {
     describe: i18n(`${i18nKey}.positionals.definition.describe`),

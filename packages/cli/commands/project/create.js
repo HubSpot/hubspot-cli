@@ -93,9 +93,9 @@ exports.builder = yargs => {
 
   yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

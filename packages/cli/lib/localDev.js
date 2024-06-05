@@ -25,15 +25,10 @@ const {
   validateSandboxUsageLimits,
   getAvailableSyncTypes,
 } = require('./sandboxes');
-const { buildSandbox } = require('./sandboxCreate');
 const { syncSandbox } = require('./sandboxSync');
 const {
   validateDevTestAccountUsageLimits,
 } = require('./developerTestAccounts');
-const {
-  buildDeveloperTestAccount,
-  saveDevTestAccountToConfig,
-} = require('./developerTestAccountCreate');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
 const SpinniesManager = require('./ui/SpinniesManager');
@@ -60,6 +55,7 @@ const {
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
+const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
 
 const i18nKey = 'lib.localDev';
 
@@ -177,9 +173,9 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountId
     );
 
-    const { result } = await buildSandbox({
+    const { result } = await buildNewAccount({
       name,
-      type: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
       accountConfig,
       env,
     });
@@ -253,11 +249,12 @@ const createDeveloperTestAccountForLocalDev = async (
       accountId
     );
 
-    const { result } = await buildDeveloperTestAccount({
+    const { result } = await buildNewAccount({
       name,
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
       accountConfig,
       env,
-      maxTestPortals,
+      portalLimit: maxTestPortals,
     });
 
     return result.id;
@@ -286,7 +283,11 @@ const useExistingDevTestAccount = async (env, account) => {
     logger.log('');
     process.exit(EXIT_CODES.SUCCESS);
   }
-  const devTestAcctConfigName = await saveDevTestAccountToConfig(env, account);
+  const devTestAcctConfigName = await saveAccountToConfig({
+    env,
+    accountName: account.accountName,
+    accountId: account.id,
+  });
   logger.success(
     i18n(`lib.developerTestAccount.create.success.configFileUpdated`, {
       accountName: devTestAcctConfigName,
