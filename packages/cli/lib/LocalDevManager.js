@@ -323,8 +323,13 @@ class LocalDevManager {
     let warning = reason;
     if (!reason) {
       warning =
-        this.activeApp.type === COMPONENT_TYPES.publicApp
-          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`)
+        this.activeApp.type === COMPONENT_TYPES.publicApp &&
+        this.publicAppActiveInstalls > 0
+          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`, {
+              installCount: this.publicAppActiveInstalls,
+              installText:
+                this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
+            })
           : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
     }
 
