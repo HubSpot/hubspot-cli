@@ -168,12 +168,16 @@ exports.handler = async options => {
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
-  } catch (e) {
+  } catch (error) {
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    logApiErrorInstance(e.error, new ApiErrorContext({ accountId }));
+    if (error.error) {
+      logApiErrorInstance(error.error, new ApiErrorContext({ accountId }));
+    } else {
+      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 };
