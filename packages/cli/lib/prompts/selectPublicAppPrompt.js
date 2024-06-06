@@ -14,7 +14,7 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
   try {
     const publicApps = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
-      app => !app.projectId && !app.sourceId
+      app => !app.projectId && !app.sourceId && !app.listingInfo
     );
 
     if (!filteredPublicApps.length) {
