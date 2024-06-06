@@ -520,7 +520,6 @@ en:
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
             existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
             copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
-          continuePrompt: "This app is listed in the HubSpot Marketplace. Proceed with migrating this app to a project component?"
           createAppPrompt: "Proceed with migrating this app to a project component?"
           projectDetailsLink: "View project details in your developer account"
           errors:
@@ -1211,7 +1210,7 @@ en:
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
           missingPropertiesInConfig: "Please ensure that each of the projects in your config.json file contain the following properties: [\"name\", \"label\", \"path\", \"insertPath\"]."
       selectPublicAppPrompt:
-        selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
+        selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate \n(Some apps that cannot be migrated are not shown):"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
         errors:
           noApps: "{{#bold}}No apps to migrate{{/bold}}"
