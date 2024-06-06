@@ -74,3 +74,38 @@ To merge, either create, or have a maintainer create a blank branch, and set you
 - [Technical Design](./docs/TechnicalDesign.md)
 - [Publishing Releases](./docs/PublishingReleases.md)
 - [Debugging](./docs/Debugging.md)
+
+## Debugging tips
+
+### `yarn` links
+Here are a couple of aliases that are helpful with debugging `yarn` links
+
+```shell
+alias view-installed-links="( ls -l node_modules ; ls -l node_modules/@* ) | grep ^l"
+alias view-yarn-links="tree ~/.config/yarn/link"
+```
+
+`view-installed-links` will show symbolic links in the `node_modules` directory of the cwd.  So if you ran `yarn link package-name`, 
+you can use this to make certain the linking process was successful.
+
+`view-yarn-links` will show the packages that have links setup in `yarn`.  So if you ran `yarn link` in `package-name` you 
+can use this to make certain it is setup and pointing to the correct directory.
+
+### Using the node debugger
+If you find yourself in a situation where you would like to step through the code in this project line by line in the debugger,
+you can edit `packages/cli/bin/hs` and add either `--inspect` or `--inspect-brk` to the end of the hashbang like so: 
+`#!/usr/bin/env node {all the other arguments} --inspect`.  The two function similarly, with the main difference being that `--inspect-brk` 
+waits for the debugger to attach before beginning execution.
+
+Once that is done, you should see something like this:
+
+```shell
+➜ yarn hs project dev
+yarn run v1.22.19
+$ /Users/me/src/hubspot-cli/node_modules/.bin/hs project dev
+Debugger listening on ws://127.0.0.1:9229/6ac9241f-419c-495e-9b5e-310391f7b36c
+For help, see: https://nodejs.org/en/docs/inspector
+```
+
+You can then open your [inspector of choice](https://nodejs.org/en/learn/getting-started/debugging#inspector-clients) and 
+walk through the code
