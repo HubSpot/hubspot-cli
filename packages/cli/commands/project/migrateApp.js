@@ -185,11 +185,11 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    if (error.error) {
-      logApiErrorInstance(error.error, new ApiErrorContext({ accountId }));
-    } else {
-      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
-    }
+    logApiErrorInstance(
+      error.error || error,
+      new ApiErrorContext({ accountId })
+    );
+
     process.exit(EXIT_CODES.ERROR);
   }
 };
