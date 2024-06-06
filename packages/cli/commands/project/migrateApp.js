@@ -85,17 +85,17 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
-  // if (selectedApp.listingInfo) {
-  //   const { shouldContinue } = await promptUser({
-  //     name: 'shouldContinue',
-  //     type: 'confirm',
-  //     message: i18n(`${i18nKey}.continuePrompt`),
-  //   });
-  // }
+  if (selectedApp.listingInfo) {
+    const { shouldContinue } = await promptUser({
+      name: 'shouldContinue',
+      type: 'confirm',
+      message: i18n(`${i18nKey}.continuePrompt`),
+    });
 
-  // if (!shouldContinue) {
-  //   process.exit(EXIT_CODES.SUCCESS);
-  // }
+    if (!shouldContinue) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+  }
 
   const { name, location } = await createProjectPrompt('', options, true);
 
