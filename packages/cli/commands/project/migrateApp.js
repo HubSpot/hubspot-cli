@@ -80,10 +80,22 @@ exports.handler = async options => {
         });
 
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  if (!publicApps.find(a => a.id === appId)) {
+  const selectedApp = publicApps.find(a => a.id === appId);
+  if (!selectedApp) {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
+  // if (selectedApp.listingInfo) {
+  //   const { shouldContinue } = await promptUser({
+  //     name: 'shouldContinue',
+  //     type: 'confirm',
+  //     message: i18n(`${i18nKey}.continuePrompt`),
+  //   });
+  // }
+
+  // if (!shouldContinue) {
+  //   process.exit(EXIT_CODES.SUCCESS);
+  // }
 
   const { name, location } = await createProjectPrompt('', options, true);
 
