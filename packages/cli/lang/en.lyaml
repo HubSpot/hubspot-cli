@@ -527,7 +527,7 @@ en:
               \n- Run {{ useCommand }} to switch your default account to an app developer account.
               \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
-            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+            invalidAppId: "[--appId] Could not find appId {{ appId }}, or {{ appId }} cannot be migrated at this time. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
