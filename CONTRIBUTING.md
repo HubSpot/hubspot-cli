@@ -89,7 +89,9 @@ alias view-yarn-links="tree ~/.config/yarn/link"
 you can use this to make certain the linking process was successful.
 
 `view-yarn-links` will show the packages that have links setup in `yarn`.  So if you ran `yarn link` in `package-name` you 
-can use this to make certain it is setup and pointing to the correct directory.
+can use this to make certain it is set up and pointing to the correct directory.  This relies on the `tree` command being installed.  
+
+If you don't have `tree` available an alternate command is `alias view-yarn-links="ls -R -l ~/.config/yarn/link"`
 
 ### Using the node debugger
 If you find yourself in a situation where you would like to step through the code in this project line by line in the debugger,
