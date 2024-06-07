@@ -75,7 +75,6 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          options,
           migrateApp: true,
         });
 
