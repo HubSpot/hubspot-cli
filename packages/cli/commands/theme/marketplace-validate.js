@@ -48,7 +48,7 @@ exports.handler = async options => {
     accountId,
     validationId
   );
-  processValidationErrors(validationResults);
+  processValidationErrors(i18nKey, validationResults);
   displayValidationResults(i18nKey, validationResults);
 
   process.exit();
