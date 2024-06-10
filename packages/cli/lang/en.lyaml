@@ -968,17 +968,15 @@ en:
         appLabel: "[App]"
         uiExtensionLabel: "[UI Extension]"
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
-        defaultWarning: "Changing project configuration requires a new project build."
-        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
+        defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
-        genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
-        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend creating a copy of this app to develop on instead."
+        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
       devServer:
@@ -1289,6 +1287,8 @@ en:
         explanation: "Local development requires this app to be installed in the target test account"
         prompt: "Open hubspot.com to install this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      activeInstallConfirmationPrompt:
+        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:
