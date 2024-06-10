@@ -1214,7 +1214,7 @@ en:
           noApps: "{{#bold}}No apps to migrate{{/bold}}"
           noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
-          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+          marketplaceApp: "Marketplace app"
       developerTestAccountPrompt:
         name:
           message: "Name your developer test account"
