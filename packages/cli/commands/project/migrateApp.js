@@ -80,7 +80,9 @@ exports.handler = async options => {
         });
 
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  if (!publicApps.find(a => a.id === appId)) {
+  const selectedApp = publicApps.find(a => a.id === appId);
+  const appName = selectedApp ? selectedApp.name : 'app';
+  if (!selectedApp) {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
@@ -106,7 +108,7 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`), false));
+  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
