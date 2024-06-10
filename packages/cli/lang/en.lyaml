@@ -523,9 +523,8 @@ en:
           createAppPrompt: "Proceed with migrating this app to a project component?"
           projectDetailsLink: "View project details in your developer account"
           errors:
-            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-              \n- Run {{ useCommand }} to switch your default account to an app developer account.
-              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
+            invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
