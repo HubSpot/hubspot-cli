@@ -20,6 +20,7 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
+const { getAccountHomeUrl } = require('./localDev');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
@@ -222,13 +223,23 @@ class LocalDevManager {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.viewInHubSpotLink`),
+        i18n(`${i18nKey}.viewProjectLink`),
         getProjectDetailUrl(
           this.projectConfig.name,
           this.targetProjectAccountId
         )
       )
     );
+
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      logger.log(
+        uiLink(
+          i18n(`${i18nKey}.viewTestAccountLink`),
+          getAccountHomeUrl(this.targetAccountId)
+        )
+      );
+    }
+
     logger.log();
     logger.log(i18n(`${i18nKey}.quitHelper`));
     uiLine();
