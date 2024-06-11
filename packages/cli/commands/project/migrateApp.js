@@ -150,7 +150,6 @@ exports.handler = async options => {
     const { id } = migrateResponse;
     const pollResponse = await poll(checkMigrationStatus, accountId, id);
     const { status, project } = pollResponse;
-
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), projectLocation);
       const { env } = getAccountConfig(accountId);
