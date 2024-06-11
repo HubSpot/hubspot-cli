@@ -19,11 +19,16 @@ const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { getProjectDetailUrl } = require('./projects');
+const {
+  getProjectDetailUrl,
+  handleProjectUpload,
+  pollProjectBuildAndDeploy,
+} = require('./projects');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
+  loadConfigFile,
 } = require('./projectStructure');
 const {
   UI_COLORS,
@@ -35,6 +40,10 @@ const {
 } = require('./ui');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
+const {
+  publicAppUploadPrompt,
+  privateAppUploadPrompt,
+} = require('./prompts/localDevUploadPrompt');
 const {
   activeInstallConfirmationPrompt,
 } = require('./prompts/activeInstallConfirmationPrompt');
@@ -66,6 +75,8 @@ class LocalDevManager {
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
+    this.cancelActivePrompt = null;
+    this.isUploading = false;
     this.publicAppActiveInstalls = null;
 
     this.projectSourceDir = path.join(
@@ -254,6 +265,11 @@ class LocalDevManager {
         text: i18n(`${i18nKey}.exitingStart`),
       });
     }
+
+    if (this.cancelActivePrompt) {
+      this.cancelActivePrompt();
+    }
+
     await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
@@ -303,7 +319,10 @@ class LocalDevManager {
 
   updateKeypressListeners() {
     handleKeypress(async key => {
-      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+      if (
+        (key.ctrl && key.name === 'c') ||
+        (!this.cancelActivePrompt && key.name === 'q')
+      ) {
         this.stop();
       }
     });
@@ -319,7 +338,7 @@ class LocalDevManager {
       : uiCommandReference('hs project upload');
   }
 
-  logUploadWarning(reason) {
+  warnAndPromptUpload(filepath, reason) {
     let warning = reason;
     if (!reason) {
       warning =
@@ -334,33 +353,97 @@ class LocalDevManager {
     }
 
     // Avoid logging the warning to the console if it is currently the most
-    // recently logged warning. We do not want to spam the console with the same message.
-    if (!this.uploadWarnings[warning]) {
-      logger.log();
-      logger.warn(i18n(`${i18nKey}.uploadWarning.header`, { warning }));
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.stopDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
+    // recently logged warning or the user is actively being prompted or uploading
+    if (
+      this.uploadWarnings[warning] ||
+      this.cancelActivePrompt ||
+      this.isUploading
+    ) {
+      return;
+    }
+
+    logger.log();
+    this.isGithubLinked
+      ? logger.warn(i18n(`${i18nKey}.uploadWarning.githubHeader`, { warning }))
+      : logger.warn(warning);
+
+    if (!this.isGithubLinked) {
+      this.projectUploadPrompt().then(succeeded => {
+        if (!succeeded) {
+          this.projectUploadMessage();
+        } else {
+          this.updateDevServerConfig(filepath);
+        }
+      });
+    } else {
+      this.projectUploadMessage();
+    }
+    this.mostRecentUploadWarning = warning;
+    this.uploadWarnings[warning] = true;
+  }
+
+  async projectUploadPrompt() {
+    uiLine();
+
+    let uploadSuccess = false;
+    const prompt =
+      this.activeApp.type === COMPONENT_TYPES.publicApp
+        ? publicAppUploadPrompt
+        : privateAppUploadPrompt;
+
+    const { cancel, promptPromise } = prompt();
+
+    this.cancelActivePrompt = cancel;
+    const shouldUpload = await promptPromise;
+    this.cancelActivePrompt = null;
+
+    if (shouldUpload) {
+      this.isUploading = true;
+      const { succeeded } = await handleProjectUpload(
+        this.targetProjectAccountId,
+        this.projectConfig,
+        this.projectDir,
+        (...args) => pollProjectBuildAndDeploy(...args, true)
       );
-      if (this.isGithubLinked) {
-        logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`));
+      this.isUploading = false;
+
+      if (succeeded) {
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.success`));
       } else {
-        logger.log(
+        logger.log(i18n(`${i18nKey}.uploadWarning.prompt.failure`));
+      }
+      uploadSuccess = succeeded;
+    } else {
+      logger.log('');
+      logger.log(i18n(`${i18nKey}.uploadWarning.prompt.decline`));
+    }
+
+    return uploadSuccess;
+  }
+
+  projectUploadMessage() {
+    logger.log(
+      i18n(`${i18nKey}.uploadWarning.stopDev`, {
+        command: uiCommandReference('hs project dev'),
+      })
+    );
+    this.isGithubLinked
+      ? logger.log(i18n(`${i18nKey}.uploadWarning.pushToGithub`))
+      : logger.log(
           i18n(`${i18nKey}.uploadWarning.runUpload`, {
             command: this.getUploadCommand(),
           })
         );
-      }
-      logger.log(
-        i18n(`${i18nKey}.uploadWarning.restartDev`, {
-          command: uiCommandReference('hs project dev'),
-        })
-      );
+    logger.log(
+      i18n(`${i18nKey}.uploadWarning.restartDev`, {
+        command: uiCommandReference('hs project dev'),
+      })
+    );
+  }
 
-      this.mostRecentUploadWarning = warning;
-      this.uploadWarnings[warning] = true;
-    }
+  async updateDevServerConfig(filepath) {
+    const config = await loadConfigFile(filepath);
+    DevServerManager.updateConfigFile({ filepath, config });
   }
 
   monitorConsoleOutput() {
@@ -413,7 +496,8 @@ class LocalDevManager {
     });
 
     if (missingComponents.length) {
-      this.logUploadWarning(
+      this.warnAndPromptUpload(
+        null,
         i18n(`${i18nKey}.uploadWarning.missingComponents`, {
           missingComponents: missingComponents.join(', '),
         })
@@ -459,7 +543,7 @@ class LocalDevManager {
 
   handleWatchEvent(filePath, event, configPaths) {
     if (configPaths.includes(filePath)) {
-      this.logUploadWarning();
+      this.warnAndPromptUpload(filePath);
     } else {
       this.devServerFileChange(filePath, event);
     }
@@ -469,7 +553,7 @@ class LocalDevManager {
     try {
       await DevServerManager.setup({
         components: this.runnableComponents,
-        onUploadRequired: this.logUploadWarning.bind(this),
+        onUploadRequired: this.warnAndPromptUpload.bind(this),
         accountId: this.targetAccountId,
         setActiveApp: this.setActiveApp.bind(this),
       });
@@ -504,6 +588,11 @@ class LocalDevManager {
 
   devServerFileChange(filePath, event) {
     try {
+      if (this.cancelActivePrompt) {
+        console.log('CANCEL');
+        this.cancelActivePrompt();
+      }
+
       DevServerManager.fileChange({ filePath, event });
     } catch (e) {
       if (this.debug) {
