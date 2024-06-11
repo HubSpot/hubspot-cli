@@ -96,7 +96,7 @@ class DevServerManager {
     this.initialized = true;
   }
 
-  async start({ accountId, projectConfig }) {
+  async start({ accountId, projectConfig, getPrivateAppToken }) {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.start) {
@@ -104,6 +104,7 @@ class DevServerManager {
             accountId,
             projectConfig,
             requestPorts,
+            getPrivateAppToken,
           });
         }
       });

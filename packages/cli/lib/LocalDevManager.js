@@ -15,6 +15,9 @@ const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  PrivateAppUserTokenManager,
+} = require('@hubspot/local-dev-lib/PrivateAppUserTokenManager');
 const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
@@ -68,7 +71,7 @@ class LocalDevManager {
     this.activePublicAppData = null;
     this.env = options.env;
     this.publicAppActiveInstalls = null;
-
+    this.privateAppUserTokenManager = null;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -113,6 +116,10 @@ class LocalDevManager {
     this.activeApp = this.runnableComponents.find(component => {
       return component.config.uid === appUid;
     });
+    if (this.privateAppUserTokenManager) {
+      this.privateAppUserTokenManager.cleanup();
+      this.privateAppUserTokenManager = null;
+    }
 
     if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
       try {
@@ -122,6 +129,11 @@ class LocalDevManager {
       } catch (e) {
         logErrorInstance(e);
       }
+    } else if (this.activeApp.type == COMPONENT_TYPES.privateApp) {
+      this.privateAppUserTokenManager = new PrivateAppUserTokenManager(
+        this.targetAccountId
+      );
+      this.privateAppUserTokenManager.init();
     }
   }
 
@@ -268,7 +280,9 @@ class LocalDevManager {
     await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
-
+    if (this.privateAppUserTokenManager) {
+      this.privateAppUserTokenManager.cleanup();
+    }
     if (!cleanupSucceeded) {
       if (showProgress) {
         SpinniesManager.fail('cleanupMessage', {
@@ -502,10 +516,17 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      await DevServerManager.start({
+      var args = {
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
-      });
+        ...(this.privateAppUserTokenManager && {
+          getPrivateAppToken: this.privateAppUserTokenManager.getPrivateAppToken.bind(
+            this.privateAppUserTokenManager
+          ),
+        }),
+      };
+      logger.debug('args for dev server start {{args}}', { args });
+      await DevServerManager.start(args);
     } catch (e) {
       if (this.debug) {
         logger.error(e);
