@@ -520,6 +520,7 @@ en:
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
             existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
             copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
+          migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
           createAppPrompt: "Proceed with migrating this app to a project component?"
           projectDetailsLink: "View project details in your developer account"
           errors:

@@ -32,6 +32,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { ensureProjectExists } = require('../../lib/projects');
+const { handleKeypress } = require('../../lib/process');
 const {
   migrateApp,
   checkMigrationStatus,
@@ -124,6 +125,7 @@ exports.handler = async options => {
     type: 'confirm',
     message: i18n(`${i18nKey}.createAppPrompt`),
   });
+  process.stdin.resume();
 
   if (!shouldCreateApp) {
     process.exit(EXIT_CODES.SUCCESS);
@@ -136,10 +138,19 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.inProgress`),
     });
 
+    handleKeypress(async key => {
+      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+        SpinniesManager.remove('migrateApp');
+        logger.log(i18n(`${i18nKey}.migrationInterrupted`));
+        process.exit();
+      }
+    });
+
     const migrateResponse = await migrateApp(accountId, appId, projectName);
     const { id } = migrateResponse;
     const pollResponse = await poll(checkMigrationStatus, accountId, id);
     const { status, project } = pollResponse;
+
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), projectLocation);
       const { env } = getAccountConfig(accountId);
