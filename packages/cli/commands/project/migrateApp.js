@@ -142,7 +142,7 @@ exports.handler = async options => {
       if ((key.ctrl && key.name === 'c') || key.name === 'q') {
         SpinniesManager.remove('migrateApp');
         logger.log(i18n(`${i18nKey}.migrationInterrupted`));
-        process.exit();
+        process.exit(EXIT_CODES.SUCCESS);
       }
     });
 
