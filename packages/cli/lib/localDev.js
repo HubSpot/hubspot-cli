@@ -8,8 +8,11 @@ const {
   isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
 const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
@@ -429,6 +432,13 @@ const createInitialBuildForNewProject = async (
   return initialUploadResult.buildResult;
 };
 
+const getAccountHomeUrl = accountId => {
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+  return `${baseUrl}/home?portalId=${accountId}`;
+};
+
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
@@ -439,4 +449,5 @@ module.exports = {
   useExistingDevTestAccount,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  getAccountHomeUrl,
 };

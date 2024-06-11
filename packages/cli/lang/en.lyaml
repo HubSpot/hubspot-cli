@@ -514,18 +514,18 @@ en:
             done: "Converting app configuration to public-app.json component definition ... DONE"
             failure: "Converting app configuration to public-app.json component definition ... FAILED"
           warning:
-            title: "{{#bold}}Migrate an app to the projects framework?{{/bold}}"
-            projectConversion: "{{#bold}}The selected app will be permanently converted to a project component.{{/bold}}"
+            title: "{{#bold}}Migrate {{appName}} to the projects framework?{{/bold}}"
+            projectConversion: "{{#bold}}The selected app will be converted to a project component.{{/bold}}"
             appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
             existingApps: "{{#bold}}This will not affect existing app users or installs.{{/bold}}"
             copyApp: "We strongly recommend making a copy of your app to test this process in a development app before replacing production."
-          createAppPrompt: "Proceed with migrating this app to a project component?"
+          migrationInterrupted: "\nThe command is terminated, but app migration is still in progress. Please check your account to ensure that the project and associated app have been created successfully."
+          createAppPrompt: "Proceed with migrating this app to a project component (this process can't be aborted)?"
           projectDetailsLink: "View project details in your developer account"
           errors:
-            invalidAccountType: "Public apps must be migrated within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-              \n- Run {{ useCommand }} to switch your default account to an app developer account.
-              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
+            invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
@@ -605,6 +605,7 @@ en:
             buildSucceeded: "Build #{{ buildId }} succeeded\n"
             readyToGoLive: "🚀 Ready to take your project live?"
             runCommand: "Run `{{ command }}`"
+            autoDeployDisabled: "Automatic deploys are disabled for this project. Run {{ deployCommand }} to deploy this build."
           errors:
             projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project dev`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
           options:
@@ -958,7 +959,8 @@ en:
       learnMoreLocalDevServer: "Learn more about the projects local dev server"
       running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
       quitHelper: "Press {{#bold}}'q'{{/bold}} to stop the local dev server"
-      viewInHubSpotLink: "View project in HubSpot"
+      viewProjectLink: "View project in HubSpot"
+      viewTestAccountLink: "View developer test account in HubSpot"
       exitingStart: "Stopping local dev server ..."
       exitingSucceed: "Successfully exited"
       exitingFail: "Failed to cleanup before exiting"
@@ -967,17 +969,15 @@ en:
         appLabel: "[App]"
         uiExtensionLabel: "[UI Extension]"
         missingComponents: "Couldn't find the following components in the deployed build for this project: {{#bold}}'{{ missingComponents }}'{{/bold}}. This may cause issues in local development."
-        defaultWarning: "Changing project configuration requires a new project build."
-        defaultPublicAppWarning: "Changing project configuration requires a new project build. This will affect existing users of your public app. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
+        defaultWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}"
+        defaultPublicAppWarning: "{{#bold}}Changing project configuration requires a new project build.{{/bold}}\n\nThis will affect your public app's {{#bold}}{{ installCount }} existing {{ installText }}{{/bold}}. If your app has users in production, we strongly recommend creating a copy of this app to test your changes before proceding."
         header: "{{ warning }} To reflect these changes and continue testing:"
         stopDev: "  * Stop {{ command }}"
         runUpload: "  * Run {{ command }}"
         restartDev: "  * Re-run {{ command }}"
         pushToGithub: "  * Commit and push your changes to GitHub"
       activeInstallWarning:
-        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production installs{{/bold}}"
-        genericHeader: "{{#bold}}Local development can affect existing installs of your public app.{{/bold}}"
-        genericExplanation: "Some changes made during local development may need to be synced to HubSpot, which will impact users with existing installs. You will always be asked to confirm these changes before uploading them. If your app has any production installs, we strongly recommend creating a copy of this app to develop on instead."
+        installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
       devServer:
@@ -1030,6 +1030,7 @@ en:
         componentCount: "Found {{ numComponents }} components in this project"
         successStatusText: "DONE"
         failedStatusText: "FAILED"
+        errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
@@ -1220,6 +1221,7 @@ en:
           noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
           invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+          marketplaceApp: "Marketplace app"
       downloadProjectPrompt:
         selectProject: "Select a project to download:"
         errors:
@@ -1278,6 +1280,8 @@ en:
         explanation: "Local development requires this app to be installed in the target test account"
         prompt: "Open hubspot.com to install this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      activeInstallConfirmationPrompt:
+        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:
