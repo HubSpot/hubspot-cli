@@ -32,6 +32,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { ensureProjectExists } = require('../../lib/projects');
+const { handleKeypress } = require('../../lib/process');
 const {
   migrateApp,
   checkMigrationStatus,
@@ -58,14 +59,15 @@ exports.handler = async options => {
   trackCommandUsage('migrate-app', {}, accountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidAccountType`, {
-        accountName,
-        accountType: accountConfig.accountType,
+    uiLine();
+    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+    logger.log(
+      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
     );
+    uiLine();
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -79,7 +81,9 @@ exports.handler = async options => {
         });
 
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  if (!publicApps.find(a => a.id === appId)) {
+  const selectedApp = publicApps.find(a => a.id === appId);
+  const appName = selectedApp ? selectedApp.name : 'app';
+  if (!selectedApp) {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
@@ -105,7 +109,7 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`), false));
+  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
@@ -121,6 +125,7 @@ exports.handler = async options => {
     type: 'confirm',
     message: i18n(`${i18nKey}.createAppPrompt`),
   });
+  process.stdin.resume();
 
   if (!shouldCreateApp) {
     process.exit(EXIT_CODES.SUCCESS);
@@ -131,6 +136,14 @@ exports.handler = async options => {
 
     SpinniesManager.add('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.inProgress`),
+    });
+
+    handleKeypress(async key => {
+      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+        SpinniesManager.remove('migrateApp');
+        logger.log(i18n(`${i18nKey}.migrationInterrupted`));
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     });
 
     const migrateResponse = await migrateApp(accountId, appId, projectName);
