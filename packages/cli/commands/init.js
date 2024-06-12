@@ -40,9 +40,7 @@ const {
   OAUTH_FLOW,
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
-const {
-  enterAccountNamePrompt,
-} = require('../lib/prompts/enterAccountNamePrompt');
+const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -63,7 +61,7 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
   try {
     const token = await getAccessToken(personalAccessKey, env);
     const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
-    const { name } = await enterAccountNamePrompt(defaultName);
+    const { name } = await cliAccountNamePrompt(defaultName);
 
     updatedConfig = updateConfigWithAccessToken(
       token,

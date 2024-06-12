@@ -1142,7 +1142,7 @@ en:
         setAsDefaultAccountMessage: "Set this account as the default?"
         setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
         keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
-      enterAccountNamePrompt:
+      accountNamePrompt:
         enterAccountName: "Enter a unique name to reference this account in the CLI:"
         enterDeveloperTestAccountName: "Name your developer test account:"
         enterStandardSandboxName: "Name your standard sandbox:"

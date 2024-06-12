@@ -55,9 +55,7 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
 const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
-const {
-  hubspotAccountNamePrompt,
-} = require('./prompts/enterAccountNamePrompt');
+const { hubspotAccountNamePrompt } = require('./prompts/accountNamePrompt');
 
 const i18nKey = 'lib.localDev';
 

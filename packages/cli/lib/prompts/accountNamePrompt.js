@@ -6,10 +6,9 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'lib.prompts.enterAccountNamePrompt';
+const i18nKey = 'lib.prompts.accountNamePrompt';
 
-// Used for CLI Config account names
-const accountNamePrompt = defaultName => ({
+const getCliAccountNamePromptConfig = defaultName => ({
   name: 'name',
   message: i18n(`${i18nKey}.enterAccountName`),
   default: defaultName,
@@ -27,11 +26,10 @@ const accountNamePrompt = defaultName => ({
   },
 });
 
-const enterAccountNamePrompt = defaultName => {
-  return promptUser(accountNamePrompt(defaultName));
+const cliAccountNamePrompt = defaultName => {
+  return promptUser(getCliAccountNamePromptConfig(defaultName));
 };
 
-// Used for HubSpot portal account names
 const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
   const isDevelopmentSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
@@ -77,7 +75,7 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
 };
 
 module.exports = {
-  accountNamePrompt,
-  enterAccountNamePrompt,
+  getCliAccountNamePromptConfig,
+  cliAccountNamePrompt,
   hubspotAccountNamePrompt,
 };
