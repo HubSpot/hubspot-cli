@@ -8,7 +8,6 @@ const {
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
-// Used for CLI Config account names
 const getCliAccountNamePromptConfig = defaultName => ({
   name: 'name',
   message: i18n(`${i18nKey}.enterAccountName`),
@@ -31,7 +30,6 @@ const cliAccountNamePrompt = defaultName => {
   return promptUser(getCliAccountNamePromptConfig(defaultName));
 };
 
-// Used for HubSpot portal account names
 const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
   const isDevelopmentSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
