@@ -7,7 +7,7 @@ const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { promptUser } = require('./promptUtils');
-const { accountNamePrompt } = require('./enterAccountNamePrompt');
+const { getCliAccountNamePromptConfig } = require('./accountNamePrompt');
 const { i18n } = require('../lang');
 const { uiInfoSection } = require('../ui');
 const { EXIT_CODES } = require('../enums/exitCodes');
@@ -124,7 +124,7 @@ const SCOPES = {
 };
 
 const OAUTH_FLOW = [
-  accountNamePrompt(),
+  getCliAccountNamePromptConfig(),
   ACCOUNT_ID,
   CLIENT_ID,
   CLIENT_SECRET,

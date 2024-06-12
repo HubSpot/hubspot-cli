@@ -37,7 +37,7 @@ const {
 const { buildNewAccount } = require('../../lib/buildAccount');
 const {
   hubspotAccountNamePrompt,
-} = require('../../lib/prompts/enterAccountNamePrompt');
+} = require('../../lib/prompts/accountNamePrompt');
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 

@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
-const { enterAccountNamePrompt } = require('./prompts/enterAccountNamePrompt');
+const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
 const SpinniesManager = require('./ui/SpinniesManager');
 const {
   debugErrorAndContext,
@@ -65,11 +65,11 @@ async function saveAccountToConfig({
       if (!force) {
         logger.log('');
         logger.warn(
-          i18n(`lib.prompts.enterAccountNamePrompt.errors.accountNameExists`, {
+          i18n(`lib.prompts.accountNamePrompt.errors.accountNameExists`, {
             name: nameForConfig,
           })
         );
-        const { name: promptName } = await enterAccountNamePrompt(
+        const { name: promptName } = await cliAccountNamePrompt(
           nameForConfig + `_${accountId}`
         );
         validName = promptName;

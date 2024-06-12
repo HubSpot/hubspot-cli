@@ -31,9 +31,7 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
 } = require('../lib/prompts/personalAccessKeyPrompt');
-const {
-  enterAccountNamePrompt,
-} = require('../lib/prompts/enterAccountNamePrompt');
+const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const {
   setAsDefaultAccountPrompt,
 } = require('../lib/prompts/setAsDefaultAccountPrompt');
@@ -129,7 +127,7 @@ exports.handler = async options => {
       validName = updatedConfig.name;
 
       if (!validName) {
-        const { name: namePrompt } = await enterAccountNamePrompt(defaultName);
+        const { name: namePrompt } = await cliAccountNamePrompt(defaultName);
         validName = namePrompt;
       }
 
