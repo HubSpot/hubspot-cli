@@ -1144,6 +1144,11 @@ en:
         keepingCurrentDefault: "Account \"{{ accountName }}\" will continue to be the default account"
       enterAccountNamePrompt:
         enterAccountName: "Enter a unique name to reference this account in the CLI:"
+        enterDeveloperTestAccountName: "Name your developer test account:"
+        enterStandardSandboxName: "Name your standard sandbox:"
+        enterDevelopmentSandboxName: "Name your development sandbox:"
+        sandboxDefaultName: "New {{ sandboxType }} sandbox"
+        developerTestAccountDefaultName: "Developer test account {{ count }}"
         errors:
           invalidName: "You entered an invalid name. Please try again."
           nameRequired: "The name may not be blank. Please try again."
@@ -1215,14 +1220,8 @@ en:
           noApps: "{{#bold}}No apps to migrate{{/bold}}"
           noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
+          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
           marketplaceApp: "Marketplace app"
-      developerTestAccountPrompt:
-        name:
-          message: "Name your developer test account"
-          errors:
-            invalidName: "You entered an invalid name. Please try again."
-            nameRequired: "The name may not be blank. Please try again."
-            accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
       downloadProjectPrompt:
         selectProject: "Select a project to download:"
         errors:
@@ -1238,15 +1237,8 @@ en:
         errors:
           invalidValue: "You entered an invalid value. Please try again."
       sandboxesPrompt:
-        name:
-          message: "Name your sandbox"
-          developmentSandboxMessage: "Name your development sandbox"
-          errors:
-            invalidName: "You entered an invalid name. Please try again."
-            nameRequired: "The name may not be blank. Please try again."
-            accountNameExists: "Account with name \"{{ name }}\" already exists in the CLI config, please enter a different name."
-          selectAccountName: "Select the sandbox account you want to delete"
-          selectParentAccountName: "Select the account that the sandbox belongs to"
+        selectAccountName: "Select the sandbox account you want to delete"
+        selectParentAccountName: "Select the account that the sandbox belongs to"
         type:
           message: "What type of sandbox would you like to create?"
           developer: "Development sandbox (Isolated environment for developers)"

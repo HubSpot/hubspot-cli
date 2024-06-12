@@ -19,10 +19,6 @@ const {
   selectDeveloperTestTargetAccountPrompt,
   confirmUseExistingDeveloperTestAccountPrompt,
 } = require('./prompts/projectDevTargetAccountPrompt');
-const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
-const {
-  developerTestAccountNamePrompt,
-} = require('./prompts/developerTestAccountNamePrompt');
 const { confirmPrompt } = require('./prompts/promptUtils');
 const {
   validateSandboxUsageLimits,
@@ -59,6 +55,9 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
 const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
+const {
+  hubspotAccountNamePrompt,
+} = require('./prompts/enterAccountNamePrompt');
 
 const i18nKey = 'lib.localDev';
 
@@ -166,9 +165,9 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
     process.exit(EXIT_CODES.ERROR);
   }
   try {
-    const { name } = await sandboxNamePrompt(
-      HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-    );
+    const { name } = await hubspotAccountNamePrompt({
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+    });
 
     trackCommandMetadataUsage(
       'sandbox-create',
@@ -245,7 +244,10 @@ const createDeveloperTestAccountForLocalDev = async (
   }
 
   try {
-    const { name } = await developerTestAccountNamePrompt(currentPortalCount);
+    const { name } = await hubspotAccountNamePrompt({
+      currentPortalCount,
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+    });
     trackCommandMetadataUsage(
       'developer-test-account-create',
       { step: 'project-dev' },

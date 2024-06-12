@@ -22,10 +22,7 @@ const {
   trackCommandUsage,
   trackCommandMetadataUsage,
 } = require('../../lib/usageTracking');
-const {
-  sandboxTypePrompt,
-  sandboxNamePrompt,
-} = require('../../lib/prompts/sandboxesPrompt');
+const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
@@ -38,6 +35,9 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 const { buildNewAccount } = require('../../lib/buildAccount');
+const {
+  hubspotAccountNamePrompt,
+} = require('../../lib/prompts/enterAccountNamePrompt');
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
@@ -112,7 +112,7 @@ exports.handler = async options => {
 
   if (!name) {
     if (!force) {
-      namePrompt = await sandboxNamePrompt(sandboxType);
+      namePrompt = await hubspotAccountNamePrompt({ accountType: sandboxType });
     } else {
       logger.error(i18n(`${i18nKey}.failure.optionMissing.name`));
       process.exit(EXIT_CODES.ERROR);
