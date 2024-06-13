@@ -30,7 +30,12 @@ const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 exports.command = 'deploy [--project] [--buildId]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
-const validateBuildId = (buildId, deployedBuildId, latestBuildId, projectName) => {
+const validateBuildId = (
+  buildId,
+  deployedBuildId,
+  latestBuildId,
+  projectName
+) => {
   if (Number(buildId) > latestBuildId) {
     return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
       buildId: buildId,
@@ -43,7 +48,7 @@ const validateBuildId = (buildId, deployedBuildId, latestBuildId, projectName) =
     });
   }
   return true;
-}
+};
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -85,9 +90,14 @@ exports.handler = async options => {
     }
 
     if (buildIdToDeploy) {
-      const validationResult = validateBuildId(buildIdToDeploy, latestBuild.buildId, deployedBuildId, projectName);
-      if(validationResult !== true) {
-        logger.error(validationResult)
+      const validationResult = validateBuildId(
+        buildIdToDeploy,
+        latestBuild.buildId,
+        deployedBuildId,
+        projectName
+      );
+      if (validationResult !== true) {
+        logger.error(validationResult);
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
@@ -95,8 +105,13 @@ exports.handler = async options => {
         latestBuild.buildId,
         deployedBuildId,
         projectName,
-        (buildId) =>
-          validateBuildId(buildId, latestBuild.buildId, deployedBuildId, projectName)
+        buildId =>
+          validateBuildId(
+            buildId,
+            latestBuild.buildId,
+            deployedBuildId,
+            projectName
+          )
       );
       buildIdToDeploy = buildIdPromptResponse.buildId;
     }
