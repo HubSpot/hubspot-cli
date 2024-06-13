@@ -186,7 +186,7 @@ exports.handler = async options => {
       failColor: 'white',
     });
     if (error.errors) {
-      error.errors.map(logApiErrorInstance);
+      error.errors.forEach(logApiErrorInstance);
     } else {
       logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     }
