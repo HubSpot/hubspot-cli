@@ -128,7 +128,7 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
-    if (e.response?.status === 404) {
+    if (e.response && e.response.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
@@ -136,7 +136,7 @@ exports.handler = async options => {
           command: uiCommandReference('hs project upload'),
         })
       );
-    } else if (e.response?.status === 400) {
+    } else if (e.response && e.response.status === 400) {
       logger.error(e.error.message);
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
