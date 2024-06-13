@@ -12,20 +12,29 @@ const installPublicAppPrompt = async (
   targetAccountId,
   clientId,
   scopes,
-  redirectUrls
+  redirectUrls,
+  isReinstall = false
 ) => {
   logger.log('');
-  logger.log(i18n(`${i18nKey}.explanation`));
+  if (isReinstall) {
+    logger.log(i18n(`${i18nKey}.reinstallExplanation`));
+  } else {
+    logger.log(i18n(`${i18nKey}.explanation`));
+  }
 
   const { shouldOpenBrowser } = await promptUser({
     name: 'shouldOpenBrowser',
     type: 'confirm',
-    message: i18n(`${i18nKey}.prompt`),
+    message: i18n(
+      isReinstall ? `${i18nKey}.reinstallPrompt` : `${i18nKey}.prompt`
+    ),
   });
 
-  if (!shouldOpenBrowser) {
+  if (!isReinstall && !shouldOpenBrowser) {
     logger.log(i18n(`${i18nKey}.decline`));
     process.exit(EXIT_CODES.SUCCESS);
+  } else if (!shouldOpenBrowser) {
+    return;
   }
 
   const websiteOrigin = getHubSpotWebsiteOrigin(env);
