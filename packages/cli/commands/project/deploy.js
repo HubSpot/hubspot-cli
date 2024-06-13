@@ -30,6 +30,21 @@ const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 exports.command = 'deploy [--project] [--buildId]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
+const validateBuildId = (buildId, deployedBuildId, latestBuildId, projectName) => {
+  if (Number(buildId) > latestBuildId) {
+    return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
+      buildId: buildId,
+      projectName,
+    });
+  }
+  if (Number(buildId) === deployedBuildId) {
+    return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
+      buildId: buildId,
+    });
+  }
+  return true;
+}
+
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
@@ -59,21 +74,30 @@ exports.handler = async options => {
   let buildIdToDeploy = buildIdOption;
 
   try {
-    if (!buildIdOption) {
-      const { latestBuild, deployedBuildId } = await fetchProject(
-        accountId,
-        projectName
-      );
-      if (!latestBuild || !latestBuild.buildId) {
-        logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+    const { latestBuild, deployedBuildId } = await fetchProject(
+      accountId,
+      projectName
+    );
+
+    if (!latestBuild || !latestBuild.buildId) {
+      logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (buildIdToDeploy) {
+      const validationResult = validateBuildId(buildIdToDeploy, latestBuild.buildId, deployedBuildId, projectName);
+      if(validationResult !== true) {
+        logger.error(validationResult)
         process.exit(EXIT_CODES.ERROR);
       }
+    } else {
       const buildIdPromptResponse = await buildIdPrompt(
         latestBuild.buildId,
         deployedBuildId,
-        projectName
+        projectName,
+        (buildId) =>
+          validateBuildId(buildId, latestBuild.buildId, deployedBuildId, projectName)
       );
-
       buildIdToDeploy = buildIdPromptResponse.buildId;
     }
 
@@ -94,7 +118,7 @@ exports.handler = async options => {
           details: deployResp.error.message,
         })
       );
-      return;
+      process.exit(EXIT_CODES.ERROR);
     }
 
     await pollDeployStatus(
@@ -104,7 +128,7 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
-    if (e.statusCode === 404) {
+    if (e.response?.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
@@ -112,8 +136,7 @@ exports.handler = async options => {
           command: uiCommandReference('hs project upload'),
         })
       );
-    }
-    if (e.statusCode === 400) {
+    } else if (e.response?.status === 400) {
       logger.error(e.error.message);
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
@@ -129,6 +152,7 @@ exports.builder = yargs => {
       type: 'string',
     },
     buildId: {
+      alias: ['build'],
       describe: i18n(`${i18nKey}.options.buildId.describe`),
       type: 'number',
     },

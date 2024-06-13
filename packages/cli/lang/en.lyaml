@@ -329,6 +329,8 @@ en:
             buildError: "Build error: {{ details }}"
             noPackageJson: "Unable to find package.json for function {{ functionPath }}."
             notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
+            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
+            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
           examples:
             default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
           loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
@@ -551,7 +553,7 @@ en:
             deploy: "Deploy error: {{ details }}"
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
-            projectNotFound: "{{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
+            projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
           examples:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
@@ -1272,10 +1274,7 @@ en:
         bugPrompt: "Create an issue on Github in your browser?"
         generalPrompt: "Create an issue on Github in your browser?"
       buildIdPrompt:
-        enterBuildId: "[--build] Deploy which build?"
-        errors:
-          buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
-          buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+        enterBuildId: "[--buildId] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
