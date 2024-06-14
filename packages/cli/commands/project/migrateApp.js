@@ -87,6 +87,10 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
+  if (selectedApp.listingInfo) {
+    logger.error(i18n(`${i18nKey}.errors.invalidMarketplaceApp`, { appId }));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const { name, location } = await createProjectPrompt('', options, true);
 
