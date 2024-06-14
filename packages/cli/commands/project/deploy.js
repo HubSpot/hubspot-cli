@@ -97,10 +97,12 @@ exports.handler = async options => {
         projectName
       );
       if (validationResult !== true) {
+        // TODO Test this
         logger.error(validationResult);
         process.exit(EXIT_CODES.ERROR);
       }
     } else {
+      // TODO Test this
       const buildIdPromptResponse = await buildIdPrompt(
         latestBuild.buildId,
         deployedBuildId,
@@ -127,7 +129,8 @@ exports.handler = async options => {
       buildIdToDeploy
     );
 
-    if (deployResp.error) {
+    if (!deployResp || deployResp.error) {
+      // TODO Test this
       logger.error(
         i18n(`${i18nKey}.errors.deploy`, {
           details: deployResp.error.message,
@@ -143,6 +146,7 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
+    // TODO Test this
     if (e.response && e.response.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
