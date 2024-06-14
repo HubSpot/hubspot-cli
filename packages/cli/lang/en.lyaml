@@ -528,6 +528,7 @@ en:
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+            invalidMarketplaceApp: "[--appId]: Could not migrate appId {{ appId }}. Marketplace apps cannot be migrated at this time. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
