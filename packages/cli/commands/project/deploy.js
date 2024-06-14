@@ -173,8 +173,8 @@ exports.builder = yargs => {
     },
   });
 
-  yargs.example([['$0 project deploy', i18n(`${i18nKey}.examples.default`)]]);
   yargs.example([
+    ['$0 project deploy', i18n(`${i18nKey}.examples.default`)],
     [
       '$0 project deploy --project="my-project" --buildId=5',
       i18n(`${i18nKey}.examples.withOptions`),
