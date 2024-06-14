@@ -329,8 +329,6 @@ en:
             buildError: "Build error: {{ details }}"
             noPackageJson: "Unable to find package.json for function {{ functionPath }}."
             notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
-            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
-            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
           examples:
             default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
           loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
@@ -554,6 +552,8 @@ en:
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
+            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
+            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
           examples:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"

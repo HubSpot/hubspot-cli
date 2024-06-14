@@ -86,23 +86,21 @@ exports.handler = async options => {
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`${i18nKey}.errors.noBuilds`));
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     if (buildIdToDeploy) {
       const validationResult = validateBuildId(
         buildIdToDeploy,
-        latestBuild.buildId,
         deployedBuildId,
+        latestBuild.buildId,
         projectName
       );
       if (validationResult !== true) {
-        // TODO Test this
         logger.error(validationResult);
-        process.exit(EXIT_CODES.ERROR);
+        return process.exit(EXIT_CODES.ERROR);
       }
     } else {
-      // TODO Test this
       const buildIdPromptResponse = await buildIdPrompt(
         latestBuild.buildId,
         deployedBuildId,
@@ -120,7 +118,7 @@ exports.handler = async options => {
 
     if (!buildIdToDeploy) {
       logger.error(i18n(`${i18nKey}.errors.noBuildId`));
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     const deployResp = await deployProject(
@@ -130,13 +128,12 @@ exports.handler = async options => {
     );
 
     if (!deployResp || deployResp.error) {
-      // TODO Test this
       logger.error(
         i18n(`${i18nKey}.errors.deploy`, {
           details: deployResp.error.message,
         })
       );
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     await pollDeployStatus(
@@ -146,7 +143,6 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
-    // TODO Test this
     if (e.response && e.response.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
@@ -156,11 +152,11 @@ exports.handler = async options => {
         })
       );
     } else if (e.response && e.response.status === 400) {
-      logger.error(e.error.message);
+      logger.error(e.message);
     } else {
       logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
     }
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 };
 
