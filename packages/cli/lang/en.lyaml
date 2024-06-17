@@ -1280,7 +1280,9 @@ en:
         message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
       installPublicAppPrompt:
         explanation: "Local development requires this app to be installed in the target test account"
+        reinstallExplanation: "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes."
         prompt: "Open hubspot.com to install this app?"
+        reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       activeInstallConfirmationPrompt:
         message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"

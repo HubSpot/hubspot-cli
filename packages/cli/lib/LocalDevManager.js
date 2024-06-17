@@ -298,16 +298,20 @@ class LocalDevManager {
 
   async checkPublicAppInstallation() {
     const {
-      isInstalledWithScopeGroups: isInstalled,
+      isInstalledWithScopeGroups,
+      previouslyAuthorizedScopeGroups,
     } = await this.getActiveAppInstallationData();
 
-    if (!isInstalled) {
+    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+
+    if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
         this.targetAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls
+        this.activeApp.config.auth.redirectUrls,
+        isReinstall
       );
     }
   }
