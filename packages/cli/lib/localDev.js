@@ -8,18 +8,17 @@ const {
   isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
+const {
+  ENVIRONMENTS,
+} = require('@hubspot/local-dev-lib/constants/environments');
 const {
   confirmDefaultAccountPrompt,
   selectSandboxTargetAccountPrompt,
   selectDeveloperTestTargetAccountPrompt,
   confirmUseExistingDeveloperTestAccountPrompt,
 } = require('./prompts/projectDevTargetAccountPrompt');
-const { sandboxNamePrompt } = require('./prompts/sandboxesPrompt');
-const {
-  developerTestAccountNamePrompt,
-} = require('./prompts/developerTestAccountNamePrompt');
 const { confirmPrompt } = require('./prompts/promptUtils');
 const {
   validateSandboxUsageLimits,
@@ -56,6 +55,7 @@ const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
 const { buildNewAccount, saveAccountToConfig } = require('./buildAccount');
+const { hubspotAccountNamePrompt } = require('./prompts/accountNamePrompt');
 
 const i18nKey = 'lib.localDev';
 
@@ -163,9 +163,9 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
     process.exit(EXIT_CODES.ERROR);
   }
   try {
-    const { name } = await sandboxNamePrompt(
-      HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-    );
+    const { name } = await hubspotAccountNamePrompt({
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+    });
 
     trackCommandMetadataUsage(
       'sandbox-create',
@@ -242,7 +242,10 @@ const createDeveloperTestAccountForLocalDev = async (
   }
 
   try {
-    const { name } = await developerTestAccountNamePrompt(currentPortalCount);
+    const { name } = await hubspotAccountNamePrompt({
+      currentPortalCount,
+      accountType: HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST,
+    });
     trackCommandMetadataUsage(
       'developer-test-account-create',
       { step: 'project-dev' },
@@ -427,6 +430,13 @@ const createInitialBuildForNewProject = async (
   return initialUploadResult.buildResult;
 };
 
+const getAccountHomeUrl = accountId => {
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+  return `${baseUrl}/home?portalId=${accountId}`;
+};
+
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
@@ -437,4 +447,5 @@ module.exports = {
   useExistingDevTestAccount,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
+  getAccountHomeUrl,
 };

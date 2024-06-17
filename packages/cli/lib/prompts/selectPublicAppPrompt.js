@@ -35,7 +35,6 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
 const selectPublicAppPrompt = async ({
   accountId,
   accountName,
-  promptOptions = {},
   migrateApp = false,
 }) => {
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
@@ -44,21 +43,17 @@ const selectPublicAppPrompt = async ({
   return promptUser([
     {
       name: 'appId',
-      message: () => {
-        return promptOptions.appId &&
-          !publicApps.find(a => a.id === promptOptions.appId)
-          ? i18n(`${i18nKey}.errors.invalidAppId`, {
-              appId: promptOptions.appId,
-            })
-          : i18n(`${i18nKey}.${translationKey}`, {
-              accountName,
-            });
-      },
-      when:
-        !promptOptions.appId ||
-        !publicApps.find(a => a.id === promptOptions.appId),
+      message: i18n(`${i18nKey}.${translationKey}`, {
+        accountName,
+      }),
       type: 'list',
       choices: publicApps.map(app => {
+        if (app.listingInfo) {
+          return {
+            name: `${app.name} (${app.id})`,
+            disabled: i18n(`${i18nKey}.errors.marketplaceApp`),
+          };
+        }
         return {
           name: `${app.name} (${app.id})`,
           value: app.id,
