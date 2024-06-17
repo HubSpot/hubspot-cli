@@ -33,6 +33,7 @@
     "yargs": "15.4.1"
   },
   "devDependencies": {
+    "axios": "^1.7.2",
     "mock-stdin": "^1.0.0"
   },
   "engines": {
