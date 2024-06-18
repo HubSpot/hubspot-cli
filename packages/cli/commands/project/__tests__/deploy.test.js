@@ -72,7 +72,7 @@ describe('commands/project/deploy', () => {
 
   describe('command', () => {
     it('should the correct command structure', () => {
-      expect(command).toEqual(`deploy [--${projectFlag}] [--${buildFlag}]`);
+      expect(command).toEqual('deploy');
     });
   });
 

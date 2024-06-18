@@ -31,7 +31,7 @@ const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 
-exports.command = 'deploy [--project] [--buildId]';
+exports.command = 'deploy';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const validateBuildId = (
