@@ -15,6 +15,7 @@ const {
   uiCommandReference,
   uiAccountDescription,
   uiBetaTag,
+  uiLink,
 } = require('../../../lib/ui');
 
 uiBetaTag.mockImplementation(libUi.uiBetaTag);
@@ -38,7 +39,11 @@ const {
   fetchProject,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../../lib/validation');
-const { getProjectConfig, pollDeployStatus } = require('../../../lib/projects');
+const {
+  getProjectConfig,
+  pollDeployStatus,
+  getProjectDetailUrl,
+} = require('../../../lib/projects');
 const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../../lib/prompts/buildIdPrompt');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -136,6 +141,8 @@ describe('commands/project/deploy', () => {
     const deployDetails = {
       id: 123,
     };
+    const projectDetailUrl = 'http://project-details-page-url.com';
+    const viewProjectsInHubSpot = 'View projects builds in HubSpot';
 
     beforeEach(() => {
       options = {
@@ -148,6 +155,10 @@ describe('commands/project/deploy', () => {
       };
       getProjectConfig.mockResolvedValue({ projectConfig });
       projectNamePrompt.mockResolvedValue({ projectName: 'fooo' });
+      getProjectDetailUrl.mockReturnValue(projectDetailUrl);
+      uiLink.mockImplementation(text => {
+        return text;
+      });
       getAccountId.mockReturnValue(accountId);
       getAccountConfig.mockReturnValue({ accountType });
       fetchProject.mockResolvedValue(projectDetails);
@@ -251,9 +262,14 @@ describe('commands/project/deploy', () => {
     it('should log an error and exit when buildId option is not a valid build', async () => {
       options.buildId = projectDetails.latestBuild.buildId + 1;
       await handler(options);
+      expect(uiLink).toHaveBeenCalledTimes(1);
+      expect(uiLink).toHaveBeenCalledWith(
+        viewProjectsInHubSpot,
+        projectDetailUrl
+      );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${options.buildId} does not exist for project ${options.project}.`
+        `Build ${options.buildId} does not exist for project ${options.project}. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -262,9 +278,14 @@ describe('commands/project/deploy', () => {
     it('should log an error and exit when buildId option is already deployed', async () => {
       options.buildId = projectDetails.deployedBuildId;
       await handler(options);
+      expect(uiLink).toHaveBeenCalledTimes(1);
+      expect(uiLink).toHaveBeenCalledWith(
+        viewProjectsInHubSpot,
+        projectDetailUrl
+      );
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Build ${options.buildId} is already deployed.`
+        `Build ${options.buildId} is already deployed. ${viewProjectsInHubSpot}`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

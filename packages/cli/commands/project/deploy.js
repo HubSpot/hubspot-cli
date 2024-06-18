@@ -16,11 +16,15 @@ const {
   fetchProject,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const {
+  getProjectConfig,
+  pollDeployStatus,
+  getProjectDetailUrl,
+} = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
 const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
 const { i18n } = require('../../lib/lang');
-const { uiBetaTag } = require('../../lib/ui');
+const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'commands.project.subcommands.deploy';
@@ -34,17 +38,26 @@ const validateBuildId = (
   buildId,
   deployedBuildId,
   latestBuildId,
-  projectName
+  projectName,
+  accountId
 ) => {
   if (Number(buildId) > latestBuildId) {
     return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
       buildId: buildId,
       projectName,
+      linkToProject: uiLink(
+        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        getProjectDetailUrl(projectName, accountId)
+      ),
     });
   }
   if (Number(buildId) === deployedBuildId) {
     return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
       buildId: buildId,
+      linkToProject: uiLink(
+        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        getProjectDetailUrl(projectName, accountId)
+      ),
     });
   }
   return true;
@@ -94,7 +107,8 @@ exports.handler = async options => {
         buildIdToDeploy,
         deployedBuildId,
         latestBuild.buildId,
-        projectName
+        projectName,
+        accountId
       );
       if (validationResult !== true) {
         logger.error(validationResult);
@@ -110,7 +124,8 @@ exports.handler = async options => {
             buildId,
             latestBuild.buildId,
             deployedBuildId,
-            projectName
+            projectName,
+            accountId
           )
       );
       buildIdToDeploy = buildIdPromptResponse.buildId;

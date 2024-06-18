@@ -553,8 +553,9 @@ en:
             noBuilds: "Deploy error: no builds for this project were found."
             noBuildId: "You must specify a build to deploy"
             projectNotFound: "The project {{ projectName }} does not exist in account {{ accountIdentifier }}. Run {{ command }} to upload your project files to HubSpot."
-            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}."
-            buildAlreadyDeployed: "Build {{ buildId }} is already deployed."
+            buildIdDoesNotExist: "Build {{ buildId }} does not exist for project {{ projectName }}. {{ linkToProject }}"
+            buildAlreadyDeployed: "Build {{ buildId }} is already deployed. {{ linkToProject}}"
+            viewProjectsBuilds: 'View projects builds in HubSpot'
           examples:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
