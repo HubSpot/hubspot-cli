@@ -174,17 +174,31 @@ exports.handler = async options => {
   };
 
   trackCommandUsage('preview', accountId);
-
-  preview(accountId, absoluteSrc, dest, {
-    notify,
-    filePaths,
-    skipUpload,
-    noSsl,
-    port,
-    debug,
-    uploadOptions,
-    handleUserInput,
-  });
+  const { createDevServer } = await import('@hubspot/cms-dev-server');
+  createDevServer(
+    absoluteSrc,
+    storybook=false,
+    hubspotCliConfigPathOption=false,
+    hubspotCliAccountNameOption=false,
+    sslEnabledOption=false,
+    fieldGenEnabledOption=false,
+    themePreviewOptions={
+      filePaths,
+      uploadOptions,
+      handleUserInput,
+      dest
+    }
+  )
+  //preview(accountId, absoluteSrc, dest, {
+  //  notify,
+  //  filePaths,
+  //  skipUpload,
+  //  noSsl,
+  //  port,
+  //  debug,
+  //  uploadOptions,
+  //  handleUserInput,
+  //});
 };
 
 exports.builder = yargs => {
@@ -198,12 +212,6 @@ exports.builder = yargs => {
   });
   yargs.option('dest', {
     describe: i18n(`${i18nKey}.options.dest.describe`),
-    type: 'string',
-    requiresArg: true,
-  });
-  yargs.option('notify', {
-    alias: 'n',
-    describe: i18n(`${i18nKey}.options.notify.describe`),
     type: 'string',
     requiresArg: true,
   });
