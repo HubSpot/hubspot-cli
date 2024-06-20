@@ -2,8 +2,12 @@ const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.buildIdPrompt';
-
-const buildIdPrompt = (latestBuildId, deployedBuildId, projectName) => {
+const buildIdPrompt = (
+  latestBuildId,
+  deployedBuildId,
+  projectName,
+  validate
+) => {
   return promptUser({
     name: 'buildId',
     message: i18n(`${i18nKey}.enterBuildId`),
@@ -13,20 +17,7 @@ const buildIdPrompt = (latestBuildId, deployedBuildId, projectName) => {
       }
       return latestBuildId;
     },
-    validate: val => {
-      if (Number(val) > latestBuildId) {
-        return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
-          buildId: val,
-          projectName,
-        });
-      }
-      if (Number(val) === deployedBuildId) {
-        return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
-          buildId: val,
-        });
-      }
-      return true;
-    },
+    validate,
   });
 };
 
