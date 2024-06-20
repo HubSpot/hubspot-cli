@@ -124,7 +124,7 @@ exports.handler = async options => {
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
-    if (e.statusCode === 404) {
+    if (e.response && e.response.status === 404) {
       logger.error(`Project ${projectConfig.name} not found. `);
     } else {
       logApiErrorInstance(

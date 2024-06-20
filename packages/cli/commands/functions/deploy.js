@@ -75,13 +75,13 @@ exports.handler = async options => {
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
-    if (e.statusCode === 404) {
+    if (e.response && e.response.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.noPackageJson`, {
           functionPath,
         })
       );
-    } else if (e.statusCode === 400) {
+    } else if (e.response && e.response.status === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
