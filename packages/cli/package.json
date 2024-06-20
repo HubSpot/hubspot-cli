@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HubSpot/hubspot-cli"
+    "url": "https://github.com/HubSpot/hubspot-cms-tools"
   },
   "dependencies": {
     "@hubspot/local-dev-lib": "1.6.0",
@@ -40,7 +40,8 @@
     "node": ">=16"
   },
   "bin": {
-    "hs": "./bin/hs"
+    "hs": "./bin/hs",
+    "hscms": "./bin/hscms"
   },
   "publishConfig": {
     "access": "public"
