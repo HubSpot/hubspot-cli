@@ -1,8 +1,8 @@
 {
-  "name": "hubspot-cms-tools",
+  "name": "hubspot-local-dev-tools",
   "version": "1.0.0",
-  "description": "CLI tools for working with HubSpot",
-  "repository": "https://github.com/HubSpot/hubspot-cms-tools",
+  "description": "Local development tools for working with HubSpot",
+  "repository": "https://github.com/HubSpot/hubspot-cli",
   "private": true,
   "devDependencies": {
     "depcheck": "1.3.1",
