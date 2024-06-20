@@ -142,7 +142,7 @@ describe('commands/project/deploy', () => {
       id: 123,
     };
     const projectDetailUrl = 'http://project-details-page-url.com';
-    const viewProjectsInHubSpot = 'View projects builds in HubSpot';
+    const viewProjectsInHubSpot = 'View project builds in HubSpot';
 
     beforeEach(() => {
       options = {
