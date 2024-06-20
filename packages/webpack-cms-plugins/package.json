@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+    "url": "https://github.com/HubSpot/hubspot-cli"
   },
   "engines": {
     "node": ">=10"
