@@ -49,7 +49,7 @@ const getPrivateAppsUrl = accountId => {
 // We currently cannot fetch logs directly to the CLI. See internal CLI issue #413 for more information.
 
 // const handleLogsError = (e, name, projectName) => {
-//   if (e.statusCode === 404) {
+//   if (e.response && e.response.status === 404) {
 //     logger.debug(`Log fetch error: ${e.message}`);
 //     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
 //   } else {
