@@ -22,7 +22,7 @@ const {
 const {
   createProject,
   getBuildStatus,
-  getBuildStructure,
+  getBuildDisplayStructure,
   getDeployStatus,
   getDeployStructure,
   fetchProject,
@@ -854,7 +854,7 @@ const pollBuildStatus = makePollTaskStatusFunc({
       getProjectBuildDetailUrl(taskName, taskId, accountId)
     ),
   statusFn: getBuildStatus,
-  structureFn: getBuildStructure,
+  structureFn: getBuildDisplayStructure,
   statusText: PROJECT_BUILD_TEXT,
   statusStrings: {
     INITIALIZE: (name, buildId) => `Building ${chalk.bold(name)} #${buildId}`,
