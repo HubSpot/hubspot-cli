@@ -130,10 +130,14 @@ class LocalDevManager {
         logErrorInstance(e);
       }
     } else if (this.activeApp.type == COMPONENT_TYPES.privateApp) {
-      this.privateAppUserTokenManager = new PrivateAppUserTokenManager(
-        this.targetAccountId
-      );
-      this.privateAppUserTokenManager.init();
+      try {
+        this.privateAppUserTokenManager = new PrivateAppUserTokenManager(
+          this.targetAccountId
+        );
+        await this.privateAppUserTokenManager.init();
+      } catch (e) {
+        logErrorInstance(e);
+      }
     }
   }
 
@@ -187,6 +191,21 @@ class LocalDevManager {
 
     if (!proceed) {
       process.exit(EXIT_CODES.SUCCESS);
+    }
+  }
+
+  async getPrivateAppToken(appId) {
+    try {
+      if (this.privateAppUserTokenManager) {
+        logger.debug('calling');
+        const result = await this.privateAppUserTokenManager.getPrivateAppToken(
+          appId
+        );
+        return result;
+      }
+    } catch (e) {
+      logger.debug('errored');
+      logErrorInstance(e);
     }
   }
 
@@ -516,13 +535,11 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      var args = {
+      const args = {
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
         ...(this.privateAppUserTokenManager && {
-          getPrivateAppToken: this.privateAppUserTokenManager.getPrivateAppToken.bind(
-            this.privateAppUserTokenManager
-          ),
+          getPrivateAppToken: this.getPrivateAppToken.bind(this),
         }),
       };
       logger.debug('args for dev server start {{args}}', { args });
