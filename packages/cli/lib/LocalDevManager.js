@@ -15,6 +15,9 @@ const {
   getAccountId,
   getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  PrivateAppUserTokenManager,
+} = require('@hubspot/local-dev-lib/PrivateAppUserTokenManager');
 const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
@@ -68,7 +71,7 @@ class LocalDevManager {
     this.activePublicAppData = null;
     this.env = options.env;
     this.publicAppActiveInstalls = null;
-
+    this.privateAppUserTokenManager = null;
     this.projectSourceDir = path.join(
       this.projectDir,
       this.projectConfig.srcDir
@@ -113,12 +116,25 @@ class LocalDevManager {
     this.activeApp = this.runnableComponents.find(component => {
       return component.config.uid === appUid;
     });
+    if (this.privateAppUserTokenManager) {
+      this.privateAppUserTokenManager.cleanup();
+      this.privateAppUserTokenManager = null;
+    }
 
     if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
       try {
         await this.setActivePublicAppData();
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
+      } catch (e) {
+        logErrorInstance(e);
+      }
+    } else if (this.activeApp.type == COMPONENT_TYPES.privateApp) {
+      try {
+        this.privateAppUserTokenManager = new PrivateAppUserTokenManager(
+          this.targetAccountId
+        );
+        await this.privateAppUserTokenManager.init();
       } catch (e) {
         logErrorInstance(e);
       }
@@ -175,6 +191,21 @@ class LocalDevManager {
 
     if (!proceed) {
       process.exit(EXIT_CODES.SUCCESS);
+    }
+  }
+
+  async getPrivateAppToken(appId) {
+    try {
+      if (this.privateAppUserTokenManager) {
+        logger.debug('calling');
+        const result = await this.privateAppUserTokenManager.getPrivateAppToken(
+          appId
+        );
+        return result;
+      }
+    } catch (e) {
+      logger.debug('errored');
+      logErrorInstance(e);
     }
   }
 
@@ -268,7 +299,9 @@ class LocalDevManager {
     await this.stopWatching();
 
     const cleanupSucceeded = await this.devServerCleanup();
-
+    if (this.privateAppUserTokenManager) {
+      this.privateAppUserTokenManager.cleanup();
+    }
     if (!cleanupSucceeded) {
       if (showProgress) {
         SpinniesManager.fail('cleanupMessage', {
@@ -502,10 +535,15 @@ class LocalDevManager {
 
   async devServerStart() {
     try {
-      await DevServerManager.start({
+      const args = {
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
-      });
+        ...(this.privateAppUserTokenManager && {
+          getPrivateAppToken: this.getPrivateAppToken.bind(this),
+        }),
+      };
+      logger.debug('args for dev server start {{args}}', { args });
+      await DevServerManager.start(args);
     } catch (e) {
       if (this.debug) {
         logger.error(e);
