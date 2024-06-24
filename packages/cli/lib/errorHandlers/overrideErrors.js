@@ -58,7 +58,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED,
-      err.response.data
+      err.data
     );
     return true;
   }
@@ -70,7 +70,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED,
-      err.response.data
+      err.data
     );
     return true;
   }
@@ -83,7 +83,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST,
-      err.response.data
+      err.data
     );
     return true;
   }

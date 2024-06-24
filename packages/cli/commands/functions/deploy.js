@@ -20,6 +20,9 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+const {
+  isHubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 const i18nKey = 'commands.functions.subcommands.deploy';
 
@@ -75,13 +78,13 @@ exports.handler = async options => {
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
-    if (e.response && e.response.status === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.noPackageJson`, {
           functionPath,
         })
       );
-    } else if (e.response && e.response.status === 400) {
+    } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);

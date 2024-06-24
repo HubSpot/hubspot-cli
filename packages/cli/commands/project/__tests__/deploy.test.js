@@ -55,6 +55,9 @@ const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { AxiosError, HttpStatusCode } = require('axios');
 
 const chalk = require('chalk');
+const {
+  HubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
@@ -360,13 +363,15 @@ describe('commands/project/deploy', () => {
       uiCommandReference.mockReturnValue(commandReference);
       uiAccountDescription.mockReturnValue(accountDescription);
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          'OH NO',
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.NotFound }
-        );
+        throw new HubSpotHttpError('OH NO', {
+          cause: new AxiosError(
+            'OH NO',
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.NotFound }
+          ),
+        });
       });
       await handler(options);
 
@@ -387,13 +392,15 @@ describe('commands/project/deploy', () => {
       uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          errorMessage,
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.BadRequest }
-        );
+        throw new HubSpotHttpError(errorMessage, {
+          cause: new AxiosError(
+            errorMessage,
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.BadRequest }
+          ),
+        });
       });
       await handler(options);
 
@@ -410,13 +417,15 @@ describe('commands/project/deploy', () => {
       uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          errorMessage,
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.MethodNotAllowed }
-        );
+        throw new HubSpotHttpError('OH NO', {
+          cause: new AxiosError(
+            errorMessage,
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.MethodNotAllowed }
+          ),
+        });
       });
       await handler(options);
 

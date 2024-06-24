@@ -11,6 +11,9 @@ const {
 } = require('./errorHandlers/apiErrors');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const {
+  isHubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 const TAIL_DELAY = 5000;
 
@@ -52,7 +55,7 @@ const tailLogs = async ({
     initialAfter = latestLog && base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
-    if (e.response && e.response.status !== 404) {
+    if (isHubSpotHttpError(e) && e.status !== 404) {
       await logServerlessFunctionApiErrorInstance(
         accountId,
         e,
@@ -68,7 +71,7 @@ const tailLogs = async ({
       latestLog = await tailCall(after);
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
-      if (e.response && e.response.status !== 404) {
+      if (isHubSpotHttpError(e) && e.status !== 404) {
         logApiErrorInstance(
           e,
           new ApiErrorContext({

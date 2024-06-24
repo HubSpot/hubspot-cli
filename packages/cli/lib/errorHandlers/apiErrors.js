@@ -3,7 +3,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
   isMissingScopeError,
   isApiUploadValidationError,
-  getAxiosErrorWithContext,
+  getHubSpotHttpErrorWithContext,
   parseValidationErrors,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
@@ -18,6 +18,9 @@ const {
 } = require('./standardErrors');
 const { overrideErrors } = require('./overrideErrors');
 const { i18n } = require('../lang');
+const {
+  isHubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 const i18nKey = 'lib.errorHandlers.apiErrors';
 
@@ -53,9 +56,9 @@ function logValidationErrors(error, context) {
  * @param {ApiErrorContext}          context
  */
 function logApiErrorInstance(error, context) {
-  if (error.isAxiosError) {
+  if (isHubSpotHttpError(error)) {
     if (overrideErrors(error)) return;
-    const errorWithContext = getAxiosErrorWithContext(error, context);
+    const errorWithContext = getHubSpotHttpErrorWithContext(error, context);
     logger.error(errorWithContext.message);
     return;
   }
