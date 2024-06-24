@@ -34,6 +34,9 @@ const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 // const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+// const {
+//   isHubSpotHttpError,
+// } = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 // const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.logs';
@@ -49,7 +52,7 @@ const getPrivateAppsUrl = accountId => {
 // We currently cannot fetch logs directly to the CLI. See internal CLI issue #413 for more information.
 
 // const handleLogsError = (e, name, projectName) => {
-//   if (e.response && e.response.status === 404) {
+//   if (isHubSpotHttpError(e) && e.status === 404) {
 //     logger.debug(`Log fetch error: ${e.message}`);
 //     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
 //   } else {

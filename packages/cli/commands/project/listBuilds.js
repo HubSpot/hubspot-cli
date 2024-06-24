@@ -28,6 +28,9 @@ const {
 } = require('../../lib/projects');
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const {
+  isHubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 const i18nKey = 'commands.project.subcommands.listBuilds';
 
@@ -124,7 +127,7 @@ exports.handler = async options => {
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
-    if (e.response && e.response.status === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(`Project ${projectConfig.name} not found. `);
     } else {
       logApiErrorInstance(
