@@ -15,6 +15,7 @@ const {
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription, uiLine, uiLink } = require('./ui');
+const { isDevelopmentSandbox } = require('./accountTypes');
 
 const i18nKey = 'lib.sandbox.sync';
 
@@ -33,6 +34,7 @@ const syncSandbox = async ({
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
+  const isDevSandbox = isDevelopmentSandbox(accountConfig);
   SpinniesManager.init({
     succeedColor: 'white',
   });
@@ -68,9 +70,12 @@ const syncSandbox = async ({
     );
 
     SpinniesManager.succeed('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.succeed`, {
-        accountName: uiAccountDescription(accountId),
-      }),
+      text: i18n(
+        `${i18nKey}.loading.${isDevSandbox ? 'succeedDevSb' : 'success'}`,
+        {
+          accountName: uiAccountDescription(accountId),
+        }
+      ),
     });
   } catch (err) {
     debugErrorAndContext(err);

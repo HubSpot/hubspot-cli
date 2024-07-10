@@ -1378,6 +1378,7 @@ en:
           startSync: "Initiating sync..."
           fail: "Failed to sync sandbox."
           succeed: "Initiated asset sync from production to {{ accountName }}"
+          succeedDevSb: "Initiated object definitions sync from production to {{ accountName }}"
         polling:
           syncing: "Syncing sandbox..."
           fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
