@@ -194,17 +194,15 @@ class LocalDevManager {
     }
   }
 
-  async getPrivateAppToken(appId) {
+  async getPrivateAppUserToken(appId) {
     try {
       if (this.privateAppUserTokenManager) {
-        logger.debug('calling');
-        const result = await this.privateAppUserTokenManager.getPrivateAppToken(
+        const result = await this.privateAppUserTokenManager.getPrivateAppUserToken(
           appId
         );
         return result;
       }
     } catch (e) {
-      logger.debug('errored');
       logErrorInstance(e);
     }
   }
@@ -539,7 +537,7 @@ class LocalDevManager {
         accountId: this.targetAccountId,
         projectConfig: this.projectConfig,
         ...(this.privateAppUserTokenManager && {
-          getPrivateAppToken: this.getPrivateAppToken.bind(this),
+          getPrivateAppUserToken: this.getPrivateAppUserToken.bind(this),
         }),
       };
       logger.debug('args for dev server start {{args}}', { args });
