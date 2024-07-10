@@ -1318,11 +1318,11 @@ en:
           developer:
             add: "Creating development sandbox {{#bold}}{{ accountName }}{{/bold}}"
             fail: "Failed to create a development sandbox {{#bold}}{{ accountName }}{{/bold}}."
-            succeed: "Successfully created a development sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+            succeed: "Created {{#bold}}{{ accountName }} [dev sandbox] ({{ accountId }}){{/bold}}."
           standard:
             add: "Creating standard sandbox {{#bold}}{{ accountName }}{{/bold}}"
             fail: "Failed to create a standard sandbox {{#bold}}{{ accountName }}{{/bold}}."
-            succeed: "Successfully created a standard sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+            succeed: "Created {{#bold}}{{ accountName }} [standard sandbox] ({{ accountId }}){{/bold}}."
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
@@ -1365,6 +1365,8 @@ en:
         info:
           syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
           earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
+          syncMessage: "An asset sync from production to sandbox is in progress and is running in the background. It may take some time. {{ url }}"
+          syncStatusDetailsLinkText: "View sync status details here"
         confirm:
           createFlow:
             standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
@@ -1375,9 +1377,7 @@ en:
         loading:
           startSync: "Initiating sync..."
           fail: "Failed to sync sandbox."
-          succeed: "Sandbox sync initiated to {{ accountName }}."
-          skipPolling: "Syncing CRM object definitions."
-          skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts with associated deals, tickets, and companies (up to 100 each)."
+          succeed: "Initiated asset sync from production to {{ accountName }}"
         polling:
           syncing: "Syncing sandbox..."
           fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
