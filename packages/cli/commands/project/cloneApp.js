@@ -49,14 +49,15 @@ exports.handler = async options => {
   trackCommandUsage('clone-app', {}, accountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidAccountType`, {
-        accountName,
-        accountType: accountConfig.accountType,
+    uiLine();
+    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+    logger.log(
+      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
     );
+    uiLine();
     process.exit(EXIT_CODES.ERROR);
   }
 

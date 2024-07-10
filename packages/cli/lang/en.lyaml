@@ -546,9 +546,8 @@ en:
             success: "Your new project was created in {{ projectLocation }}"
             failure: "Converting app configuration to public-app.json component definition ... FAILED"
           errors:
-            invalidAccountType: "Public apps must be cloned within an app developer account. Your current account {{#bold}}{{ accountName }}{{/bold}} is a {{ accountType }}.
-              \n- Run {{ useCommand }} to switch your default account to an app developer account.
-              \n- Run {{ authCommand }} to connect an app developer account to the HubSpot CLI.\n"
+            invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
+            invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
         add:
           describe: "Create a new component within a project"
