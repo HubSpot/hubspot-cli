@@ -137,10 +137,10 @@ class HubSpotAutoUploadPlugin {
               statusCode: error.statusCode,
             };
             if (
-              error.statusCode === 400 &&
               error.response &&
-              error.response.body &&
-              (error.response.body.message || error.response.body.errors)
+              error.response.status === 400 &&
+              error.response.data &&
+              (error.response.data.message || error.response.data.errors)
             ) {
               logValidationErrors(error, context);
             } else {

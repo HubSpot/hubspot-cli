@@ -52,7 +52,7 @@ const tailLogs = async ({
     initialAfter = latestLog && base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
-    if (e.statusCode !== 404) {
+    if (e.response && e.response.status !== 404) {
       await logServerlessFunctionApiErrorInstance(
         accountId,
         e,
@@ -68,7 +68,7 @@ const tailLogs = async ({
       latestLog = await tailCall(after);
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
-      if (e.statusCode !== 404) {
+      if (e.response && e.response.status !== 404) {
         logApiErrorInstance(
           e,
           new ApiErrorContext({

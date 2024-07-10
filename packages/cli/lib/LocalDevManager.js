@@ -9,6 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
+  fetchPublicAppDeveloperTestAccountInstallData,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -19,6 +20,7 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const DevServerManager = require('./DevServerManager');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { getProjectDetailUrl } = require('./projects');
+const { getAccountHomeUrl } = require('./localDev');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
@@ -34,6 +36,9 @@ const {
 } = require('./ui');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
+const {
+  activeInstallConfirmationPrompt,
+} = require('./prompts/activeInstallConfirmationPrompt');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -62,6 +67,7 @@ class LocalDevManager {
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
+    this.publicAppActiveInstalls = null;
 
     this.projectSourceDir = path.join(
       this.projectDir,
@@ -132,20 +138,44 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    const {
+      testPortalInstallCount,
+    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      activePublicAppData.id,
+      this.targetProjectAccountId
+    );
+
     this.activePublicAppData = activePublicAppData;
+    this.publicAppActiveInstalls =
+      activePublicAppData.publicApplicationInstallCounts
+        .uniquePortalInstallCount - testPortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {
-    // TODO: Add check for installs once we have that info
-    if (!this.activePublicAppData) {
+    if (
+      !this.activePublicAppData ||
+      !this.publicAppActiveInstalls ||
+      this.publicAppActiveInstalls < 1
+    ) {
       return;
     }
     uiLine();
-    // TODO: Replace with final copy
 
-    logger.warn(i18n(`${i18nKey}.activeInstallWarning.genericHeader`));
-    logger.log(i18n(`${i18nKey}.activeInstallWarning.genericExplanation`));
+    logger.warn(
+      i18n(`${i18nKey}.activeInstallWarning.installCount`, {
+        appName: this.activePublicAppData.name,
+        installCount: this.publicAppActiveInstalls,
+        installText:
+          this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
+      })
+    );
+    logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
     uiLine();
+    const proceed = await activeInstallConfirmationPrompt();
+
+    if (!proceed) {
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   async start() {
@@ -193,13 +223,23 @@ class LocalDevManager {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.viewInHubSpotLink`),
+        i18n(`${i18nKey}.viewProjectLink`),
         getProjectDetailUrl(
           this.projectConfig.name,
           this.targetProjectAccountId
         )
       )
     );
+
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      logger.log(
+        uiLink(
+          i18n(`${i18nKey}.viewTestAccountLink`),
+          getAccountHomeUrl(this.targetAccountId)
+        )
+      );
+    }
+
     logger.log();
     logger.log(i18n(`${i18nKey}.quitHelper`));
     uiLine();
@@ -258,16 +298,20 @@ class LocalDevManager {
 
   async checkPublicAppInstallation() {
     const {
-      isInstalledWithScopeGroups: isInstalled,
+      isInstalledWithScopeGroups,
+      previouslyAuthorizedScopeGroups,
     } = await this.getActiveAppInstallationData();
 
-    if (!isInstalled) {
+    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+
+    if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
         this.targetAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls
+        this.activeApp.config.auth.redirectUrls,
+        isReinstall
       );
     }
   }
@@ -294,8 +338,13 @@ class LocalDevManager {
     let warning = reason;
     if (!reason) {
       warning =
-        this.activeApp.type === COMPONENT_TYPES.publicApp
-          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`)
+        this.activeApp.type === COMPONENT_TYPES.publicApp &&
+        this.publicAppActiveInstalls > 0
+          ? i18n(`${i18nKey}.uploadWarning.defaultPublicAppWarning`, {
+              installCount: this.publicAppActiveInstalls,
+              installText:
+                this.publicAppActiveInstalls === 1 ? 'install' : 'installs',
+            })
           : i18n(`${i18nKey}.uploadWarning.defaultWarning`);
     }
 

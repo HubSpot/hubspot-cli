@@ -1,6 +1,5 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
-const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('../ui');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -29,42 +28,6 @@ const mapNonSandboxAccountChoices = portals =>
       };
     });
 
-const sandboxNamePrompt = (type = HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) => {
-  const isDevelopmentSandbox =
-    type === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
-  const namePromptMessage = isDevelopmentSandbox
-    ? `${i18nKey}.name.developmentSandboxMessage`
-    : `${i18nKey}.name.message`;
-  return promptUser([
-    {
-      name: 'name',
-      message: i18n(namePromptMessage),
-      validate(val) {
-        if (typeof val !== 'string') {
-          return i18n(`${i18nKey}.name.errors.invalidName`);
-        } else if (!val.length) {
-          return i18n(`${i18nKey}.name.errors.nameRequired`);
-        }
-        return accountNameExistsInConfig(val)
-          ? i18n(`${i18nKey}.name.errors.accountNameExists`, { name: val })
-          : true;
-      },
-      default: `New ${isDevelopmentSandbox ? 'development ' : ''}sandbox`,
-    },
-  ]);
-};
-
-const sandboxTypeChoices = [
-  {
-    name: i18n(`${i18nKey}.type.developer`),
-    value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
-  },
-  {
-    name: i18n(`${i18nKey}.type.standard`),
-    value: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
-  },
-];
-
 const sandboxTypePrompt = () => {
   return promptUser([
     {
@@ -72,7 +35,16 @@ const sandboxTypePrompt = () => {
       message: i18n(`${i18nKey}.type.message`),
       type: 'list',
       look: false,
-      choices: sandboxTypeChoices,
+      choices: [
+        {
+          name: i18n(`${i18nKey}.type.developer`),
+          value: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
+        },
+        {
+          name: i18n(`${i18nKey}.type.standard`),
+          value: HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX,
+        },
+      ],
       default: HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX,
     },
   ]);
@@ -90,8 +62,8 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       name: 'account',
       message: i18n(
         promptParentAccount
-          ? `${i18nKey}.name.selectParentAccountName`
-          : `${i18nKey}.name.selectAccountName`
+          ? `${i18nKey}.selectParentAccountName`
+          : `${i18nKey}.selectAccountName`
       ),
       type: 'list',
       look: false,
@@ -103,7 +75,6 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
 };
 
 module.exports = {
-  sandboxNamePrompt,
   sandboxTypePrompt,
   deleteSandboxPrompt,
 };

@@ -11,6 +11,7 @@ const poll = (callback, accountId, taskId) => {
         resolve(pollResp);
       } else if (
         status === POLLING_STATUS.ERROR ||
+        status === POLLING_STATUS.REVERTED ||
         status === POLLING_STATUS.FAILURE
       ) {
         clearInterval(pollInterval);

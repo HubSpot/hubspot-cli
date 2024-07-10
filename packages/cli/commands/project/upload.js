@@ -6,7 +6,7 @@ const {
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { uiBetaTag, uiLine } = require('../../lib/ui');
+const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -82,7 +82,6 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     if (result.succeeded && !result.buildResult.isAutoDeployEnabled) {
-      uiLine();
       logger.log(
         chalk.bold(
           i18n(`${i18nKey}.logs.buildSucceeded`, {
@@ -90,7 +89,13 @@ exports.handler = async options => {
           })
         )
       );
-      uiLine();
+      logger.log(
+        i18n(`${i18nKey}.logs.autoDeployDisabled`, {
+          deployCommand: uiCommandReference(
+            `hs project deploy --buildId=${result.buildId}`
+          ),
+        })
+      );
       logFeedbackMessage(result.buildId);
 
       await displayWarnLogs(accountId, projectConfig.name, result.buildId);
