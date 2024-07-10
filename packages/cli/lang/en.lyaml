@@ -1046,6 +1046,7 @@ en:
       betaWarning:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
+      infoTag: "{{#bold}}[INFO]{{/bold}}"
       featureHighlight:
         defaultTitle: "What's next?"
         commandKeys:

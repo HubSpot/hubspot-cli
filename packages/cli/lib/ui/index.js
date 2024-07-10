@@ -139,11 +139,29 @@ const uiBetaTag = (message, log = true) => {
   }
 };
 
+const uiInfoTag = (message, log = true) => {
+  const i18nKey = 'lib.ui';
+
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.infoTag`);
+
+  const result = `${
+    terminalUISupport.color ? chalk.cyan(tag) : tag
+  } ${message}`;
+
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
+};
+
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
   uiBetaTag,
+  uiInfoTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,

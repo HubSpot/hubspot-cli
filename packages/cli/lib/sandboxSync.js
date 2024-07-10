@@ -14,7 +14,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { uiAccountDescription, uiLine, uiLink } = require('./ui');
+const { uiAccountDescription, uiLine, uiLink, uiInfoTag } = require('./ui');
 const { isDevelopmentSandbox } = require('./accountTypes');
 
 const i18nKey = 'lib.sandbox.sync';
@@ -150,13 +150,14 @@ const syncSandbox = async ({
 
   logger.log();
   uiLine();
-  logger.info(
+  uiInfoTag(
     i18n(`${i18nKey}.info.syncMessage`, {
       url: uiLink(
         i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
         syncStatusUrl
       ),
-    })
+    }),
+    true
   );
   uiLine();
   logger.log();
