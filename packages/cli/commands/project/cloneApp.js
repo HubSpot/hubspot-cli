@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -6,14 +8,12 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  createProjectPrompt,
-} = require('../../lib/prompts/createProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const {
   fetchPublicAppOptions,
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { poll } = require('../../lib/polling');
 const {
   uiLine,
@@ -30,7 +30,9 @@ const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const {
   cloneApp,
   checkCloneStatus,
+  downloadClonedProject,
 } = require('@hubspot/local-dev-lib/api/projects');
+const { getCwd, isValidPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
@@ -72,15 +74,32 @@ exports.handler = async options => {
         });
 
   const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  if (!publicApps.find(a => a.id === appId)) {
+  const selectedApp = publicApps.find(a => a.id === appId);
+  if (!selectedApp) {
     logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name, location } = await createProjectPrompt('', options, true);
-
-  const projectName = options.name || name;
-  const projectLocation = options.location || location;
+  const { location } =
+    'location' in options
+      ? options
+      : await promptUser({
+          name: 'location',
+          message: i18n(`${i18nKey}.enterLocation`),
+          default: path.resolve(getCwd(), selectedApp.name),
+          validate: input => {
+            if (!input) {
+              return i18n(`${i18nKey}.errors.locationRequired`);
+            }
+            if (fs.existsSync(input)) {
+              return i18n(`${i18nKey}.errors.invalidLocation`);
+            }
+            if (!isValidPath(input)) {
+              return i18n(`${i18nKey}.errors.invalidCharacters`);
+            }
+            return true;
+          },
+        });
 
   try {
     SpinniesManager.init();
@@ -89,44 +108,37 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.cloneStatus.inProgress`),
     });
 
-    const cloneResponse = await cloneApp(
-      accountId,
-      appId,
-      projectName,
-      projectLocation
-    );
-    const { id } = cloneResponse;
-    const pollResponse = await poll(checkCloneStatus, accountId, id);
+    const cloneResponse = await cloneApp(accountId, appId);
+    const { exportId } = cloneResponse;
+    const pollResponse = await poll(checkCloneStatus, accountId, exportId);
     const { status } = pollResponse;
     if (status === 'SUCCESS') {
+      await downloadClonedProject(accountId, exportId, location);
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
       });
       logger.log('');
       uiLine();
-      logger.success(
-        i18n(`${i18nKey}.cloneStatus.success`, { projectLocation })
-      );
+      logger.success(i18n(`${i18nKey}.cloneStatus.success`, { location }));
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
-  } catch (e) {
+  } catch (error) {
     SpinniesManager.fail('cloneApp', {
       text: i18n(`${i18nKey}.cloneStatus.failure`),
       failColor: 'white',
     });
-    logApiErrorInstance(e.error, new ApiErrorContext({ accountId }));
-    process.exit(EXIT_CODES.ERROR);
+    if (error.errors) {
+      error.errors.forEach(logApiErrorInstance);
+    } else {
+      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    }
   }
 };
 
 exports.builder = yargs => {
   yargs.options({
-    name: {
-      describe: i18n(`${i18nKey}.options.name.describe`),
-      type: 'string',
-    },
     location: {
       describe: i18n(`${i18nKey}.options.location.describe`),
       type: 'string',

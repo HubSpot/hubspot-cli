@@ -538,17 +538,19 @@ en:
               describe: "The ID for the public app being cloned"
             location:
               describe: "Directory where project should be created"
-            name:
-              describe: "Project name (cannot be changed)"
+          enterLocation: "[--location] Where should the cloned project be created?"
           cloneStatus:
-            inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
-            done: "Converting app configuration to public-app.json component definition ... DONE"
-            success: "Your new project was created in {{ projectLocation }}"
-            failure: "Converting app configuration to public-app.json component definition ... FAILED"
+            inProgress: "Cloning app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            done: "Cloning app configuration to public-app.json component definition ... DONE"
+            success: "Your cloned project was created in {{ location }}"
+            failure: "Cloning app configuration to public-app.json component definition ... FAILED"
           errors:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
+            locationRequired: "A project location is required"
+            invalidLocation: "The selected destination already exists. Please provide a new path for this project."
+            invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
         add:
           describe: "Create a new component within a project"
           options:
