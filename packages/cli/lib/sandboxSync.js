@@ -31,6 +31,7 @@ const syncSandbox = async ({
   parentAccountConfig,
   env,
   syncTasks,
+  slimInfoMessage = false,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
@@ -68,12 +69,18 @@ const syncSandbox = async ({
       availableSyncTasks,
       accountId
     );
-
+    let spinniesText = isDevSandbox
+      ? `${i18nKey}.loading.succeedDevSb`
+      : `${i18nKey}.loading.success`;
     SpinniesManager.succeed('sandboxSync', {
       text: i18n(
-        `${i18nKey}.loading.${isDevSandbox ? 'succeedDevSb' : 'success'}`,
+        slimInfoMessage ? `${i18nKey}.loading.successDevSbInfo` : spinniesText,
         {
           accountName: uiAccountDescription(accountId),
+          url: uiLink(
+            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            syncStatusUrl
+          ),
         }
       ),
     });
@@ -148,19 +155,21 @@ const syncSandbox = async ({
     throw err;
   }
 
-  logger.log();
-  uiLine();
-  uiInfoTag(
-    i18n(`${i18nKey}.info.syncMessage`, {
-      url: uiLink(
-        i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
-        syncStatusUrl
-      ),
-    }),
-    true
-  );
-  uiLine();
-  logger.log();
+  if (!slimInfoMessage) {
+    logger.log();
+    uiLine();
+    uiInfoTag(
+      i18n(`${i18nKey}.info.syncMessage`, {
+        url: uiLink(
+          i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+          syncStatusUrl
+        ),
+      }),
+      true
+    );
+    uiLine();
+    logger.log();
+  }
 };
 
 module.exports = {

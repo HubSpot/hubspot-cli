@@ -192,6 +192,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       parentAccountConfig: accountConfig,
       env,
       syncTasks,
+      slimInfoMessage: true,
     });
     return targetAccountId;
   } catch (err) {
