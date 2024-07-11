@@ -48,7 +48,7 @@ const selectPublicAppPrompt = async ({
       }),
       type: 'list',
       choices: publicApps.map(app => {
-        if (app.listingInfo) {
+        if (app.preventProjectMigrations) {
           return {
             name: `${app.name} (${app.id})`,
             disabled: i18n(`${i18nKey}.errors.marketplaceApp`),
