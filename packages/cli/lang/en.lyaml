@@ -745,6 +745,7 @@ en:
               describe: "Account name or id to delete"
         sync:
           describe: "Sync to a sandbox account"
+          deprecation: "The command {{#bold}}hs sandbox sync{{/bold}} will be deprecated soon. See the output of {{#bold}}hs sandbox --help{{/bold}} to learn more about the deprecation."
           examples:
             default: "Initiates a sync to a sandbox account."
             force: "Skips all confirmation prompts when initiating a sync."
@@ -1047,6 +1048,7 @@ en:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
       infoTag: "{{#bold}}[INFO]{{/bold}}"
+      deprecationTag: "{{#bold}}[deprecated]{{/bold}}"
       featureHighlight:
         defaultTitle: "What's next?"
         commandKeys:
@@ -1366,7 +1368,7 @@ en:
         info:
           syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
           earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
-          syncMessage: "An asset sync from production to sandbox is in progress and is running in the background. It may take some time. {{ url }}"
+          syncMessage: "Asset sync from production to the sandbox is in progress and is running in the background. It may take some time. {{ url }}"
           syncStatusDetailsLinkText: "View sync status details here"
         confirm:
           createFlow:
@@ -1381,39 +1383,12 @@ en:
           succeed: "Initiated asset sync from production to {{ accountName }}"
           succeedDevSb: "Initiated object definitions sync from production to {{ accountName }}"
           successDevSbInfo: "Initiated object definitions sync from production to {{ accountName }}. It may take some time. {{ url }}"
-        polling:
-          syncing: "Syncing sandbox..."
-          fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
-          succeed: "Sandbox sync complete."
         failure:
           invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
           missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
           syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
-        types:
-          parcels:
-            label: "Account tools and features"
-          super-admins:
-            label: "Super Admins"
-          object-schemas:
-            label: "Object definitions"
-          object-records:
-            label: "Contacts and associated records"
-          cms-developer-assets:
-            label: "Themes, templates, and modules"
-          object-pipelines:
-            label: "Pipelines"
-          object-lists:
-            label: "Lists"
-          workflows:
-            label: "Workflows"
-          forms:
-            label: "Forms"
-          lead-flows:
-            label: "Lead Flows"
-          marketing-email:
-            label: "Marketing emails"
     errorHandlers:
       standardErrors:
         errorOccurred: "Error: {{ error }}"

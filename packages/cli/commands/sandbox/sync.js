@@ -13,7 +13,11 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const { uiLine, uiAccountDescription } = require('../../lib/ui');
+const {
+  uiLine,
+  uiAccountDescription,
+  uiDeprecationTag,
+} = require('../../lib/ui');
 const {
   isSandbox,
   isStandardSandbox,
@@ -35,10 +39,16 @@ const {
 const i18nKey = 'commands.sandbox.subcommands.sync';
 
 exports.command = 'sync';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiDeprecationTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
+
+  logger.log();
+  uiLine();
+  uiDeprecationTag(i18n(`${i18nKey}.deprecation`), true);
+  uiLine();
+  logger.log();
 
   const { force } = options; // For scripting purposes
   const accountId = getAccountId(options);
