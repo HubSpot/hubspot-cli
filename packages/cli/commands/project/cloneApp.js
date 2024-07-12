@@ -35,6 +35,7 @@ const {
 const { getCwd, isValidPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
@@ -113,7 +114,16 @@ exports.handler = async options => {
     const pollResponse = await poll(checkCloneStatus, accountId, exportId);
     const { status } = pollResponse;
     if (status === 'SUCCESS') {
-      await downloadClonedProject(accountId, exportId, location);
+      const absoluteDestPath = path.resolve(getCwd(), location);
+      const zippedProject = await downloadClonedProject(accountId, exportId);
+
+      await extractZipArchive(
+        zippedProject,
+        selectedApp.name,
+        path.resolve(absoluteDestPath),
+        { includesRootDir: true, hideLogs: true }
+      );
+
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
