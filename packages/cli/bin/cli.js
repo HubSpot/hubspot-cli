@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --no-deprecation
 
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');

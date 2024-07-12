@@ -27,7 +27,7 @@ setArgsOverrides(
       description: 'CLI Path',
     })
     .option('personalAccessKey', {
-      alias: 'a',
+      alias: 'pak',
       type: 'string',
       description: 'Personal Access Key',
     })
@@ -66,23 +66,24 @@ setArgsOverrides(
 (async () => {
   try {
     const testRunner = new Jasmine();
+    testRunner.exitOnCompletion = false;
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    testRunner.onComplete(function(passed) {
-      rimraf.sync(CONFIG_FILE_PATH);
-      process.exit(passed ? 0 : 1);
-    });
     const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
-    const cli = cmd.create(cliPath, '.');
+    const cli = cmd.create(cliPath);
     global.cli = cli;
     global.config = getTestConfig();
 
+    console.log(config.personalAccessKey)
     await cli.execute(
       ['init', `--c="${CONFIG_FILE_PATH}"`],
-      [cmd.ENTER, config.personalAccessKey, cmd.ENTER]
+      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER]
     );
+    console.log('test')
+    const result = await testRunner.execute();
 
-    testRunner.execute();
+    rimraf.sync(CONFIG_FILE_PATH);
+    process.exit(result.overallStatus === 'passed' ? 0 : 1);
   } catch (e) {
     console.log(e);
   }

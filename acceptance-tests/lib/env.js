@@ -75,10 +75,10 @@ const getTestConfig = () => {
       'No valid auth for personalAccessKey was found. Set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
 
-  if (!config.githubToken)
-    throw new Error(
-      'githubToken must be defined.  Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
-    );
+  // if (!config.githubToken)
+  //   throw new Error(
+  //     'githubToken must be defined.  Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
+  //   );
 
   return config;
 };

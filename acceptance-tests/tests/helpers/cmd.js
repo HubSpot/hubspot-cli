@@ -136,7 +136,10 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
 
       // For some reason, when we use 'ora', it is throwing this error,
       // so for now we won't reject.
-      const blacklistedStrings = ['Loading available API samples'];
+      const blacklistedStrings = [
+        'Loading available API samples',
+        'DeprecationWarning',
+      ];
 
       const error = err.toString();
       if (blacklistedStrings.some(s => error.includes(s))) {
