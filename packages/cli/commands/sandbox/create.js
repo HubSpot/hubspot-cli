@@ -122,7 +122,6 @@ exports.handler = async options => {
     const isDevelopmentSandbox =
       sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
     const syncI18nKey = 'lib.sandbox.sync';
-    const sandboxLangKey = isDevelopmentSandbox ? 'developer' : 'standard';
 
     // Prompt to sync contact records for standard sandboxes only
     if (!isDevelopmentSandbox) {
@@ -130,9 +129,7 @@ exports.handler = async options => {
         {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',
-          message: i18n(
-            `${syncI18nKey}.confirm.syncContactRecords.${sandboxLangKey}`
-          ),
+          message: i18n(`${syncI18nKey}.confirm.syncContactRecords.standard`),
         },
       ]);
       contactRecordsSyncPromptResult = contactRecordsSyncPrompt;

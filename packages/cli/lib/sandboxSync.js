@@ -159,12 +159,15 @@ const syncSandbox = async ({
     logger.log();
     uiLine();
     uiInfoTag(
-      i18n(`${i18nKey}.info.syncMessage`, {
-        url: uiLink(
-          i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
-          syncStatusUrl
-        ),
-      }),
+      i18n(
+        `${i18nKey}.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
+        {
+          url: uiLink(
+            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            syncStatusUrl
+          ),
+        }
+      ),
       true
     );
     uiLine();

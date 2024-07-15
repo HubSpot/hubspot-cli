@@ -93,21 +93,22 @@ const getSyncTypesWithContactRecordsPrompt = async (
   syncTasks,
   skipPrompt = false
 ) => {
-  // Fetches sync types based on default account. Parent account required for fetch
-
+  // TODO: remove this entire helper once hs sandbox sync is fully deprecated
+  const isDevSandbox = isDevelopmentSandbox(accountConfig);
+  if (isDevSandbox) {
+    // Disable dev sandbox from syncing contacts
+    return syncTasks.filter(t => t.type !== syncTypes.OBJECT_RECORDS);
+  }
   if (
     syncTasks &&
     syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
     !skipPrompt
   ) {
-    const langKey = isDevelopmentSandbox(accountConfig)
-      ? 'developer'
-      : 'standard';
     const { contactRecordsSyncPrompt } = await promptUser([
       {
         name: 'contactRecordsSyncPrompt',
         type: 'confirm',
-        message: i18n(`lib.sandbox.sync.confirm.syncContactRecords.${langKey}`),
+        message: i18n('lib.sandbox.sync.confirm.syncContactRecords.standard'),
       },
     ]);
     if (!contactRecordsSyncPrompt) {

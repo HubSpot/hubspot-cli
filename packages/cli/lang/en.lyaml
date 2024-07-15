@@ -1248,9 +1248,9 @@ en:
         selectAccountName: "Select the sandbox account you want to delete"
         selectParentAccountName: "Select the account that the sandbox belongs to"
         type:
-          message: "What type of sandbox would you like to create?"
-          developer: "Development sandbox (Isolated environment for developers)"
-          standard: "Standard sandbox (Testing environment for all Super Admins)"
+          message: "Choose the type of sandbox you want to create"
+          developer: "Development sandbox (Includes production's object definitions)"
+          standard: "Standard sandbox (Includes partial copy of production's assets)"
       uploadPrompt:
         enterDest: "[--dest] Enter the destination path: "
         enterSrc: "[--src] Enter the source path: "
@@ -1367,22 +1367,22 @@ en:
       sync:
         info:
           syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
-          earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
           syncMessage: "Asset sync from production to the sandbox is in progress and is running in the background. It may take some time. {{ url }}"
+          syncMessageDevSb: "Sync of object definitions from production to the sandbox is in progress and is running in the background. It may take some time. {{ url }}"
           syncStatusDetailsLinkText: "View sync status details here"
         confirm:
           createFlow:
             standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
           syncContactRecords:
-            standard: "Include up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
+            standard: "Copy up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies."
             developer: "Include up to 100 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
         loading:
           startSync: "Initiating sync..."
           fail: "Failed to sync sandbox."
           succeed: "Initiated asset sync from production to {{ accountName }}"
-          succeedDevSb: "Initiated object definitions sync from production to {{ accountName }}"
-          successDevSbInfo: "Initiated object definitions sync from production to {{ accountName }}. It may take some time. {{ url }}"
+          succeedDevSb: "Initiated sync of object definitions from production to {{ accountName }}"
+          successDevSbInfo: "Initiated sync of object definitions from production to {{ accountName }}. It may take some time. {{ url }}"
         failure:
           invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
           missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
