@@ -84,7 +84,7 @@ exports.handler = async options => {
 
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    const appName = selectedApp.name;
+    var appName = selectedApp.name;
     if (!selectedApp) {
       logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -93,11 +93,16 @@ exports.handler = async options => {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
+  } catch (error) {
+    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
+  try {
     const { name, location } = await createProjectPrompt('', options, true);
 
-    const projectName = options.name || name;
-    const projectLocation = options.location || location;
+    var projectName = options.name || name;
+    var projectLocation = options.location || location;
 
     const { projectExists } = await ensureProjectExists(
       accountId,
@@ -116,31 +121,36 @@ exports.handler = async options => {
       );
       process.exit(EXIT_CODES.ERROR);
     }
+  } catch (error) {
+    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
-    logger.log('');
-    uiLine();
-    logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
-    logger.log(i18n(`${i18nKey}.warning.projectConversion`));
-    logger.log(i18n(`${i18nKey}.warning.appConfig`));
-    logger.log('');
-    logger.log(i18n(`${i18nKey}.warning.buildAndDeploy`));
-    logger.log('');
-    logger.log(i18n(`${i18nKey}.warning.existingApps`));
-    logger.log('');
-    logger.log(i18n(`${i18nKey}.warning.copyApp`));
-    uiLine();
+  logger.log('');
+  uiLine();
+  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
+  logger.log(i18n(`${i18nKey}.warning.projectConversion`));
+  logger.log(i18n(`${i18nKey}.warning.appConfig`));
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.warning.buildAndDeploy`));
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.warning.existingApps`));
+  logger.log('');
+  logger.log(i18n(`${i18nKey}.warning.copyApp`));
+  uiLine();
 
-    const { shouldCreateApp } = await promptUser({
-      name: 'shouldCreateApp',
-      type: 'confirm',
-      message: i18n(`${i18nKey}.createAppPrompt`),
-    });
-    process.stdin.resume();
+  const { shouldCreateApp } = await promptUser({
+    name: 'shouldCreateApp',
+    type: 'confirm',
+    message: i18n(`${i18nKey}.createAppPrompt`),
+  });
+  process.stdin.resume();
 
-    if (!shouldCreateApp) {
-      process.exit(EXIT_CODES.SUCCESS);
-    }
+  if (!shouldCreateApp) {
+    process.exit(EXIT_CODES.SUCCESS);
+  }
 
+  try {
     SpinniesManager.init();
 
     SpinniesManager.add('migrateApp', {
