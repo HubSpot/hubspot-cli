@@ -9,7 +9,11 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const { uiFeatureHighlight, uiAccountDescription } = require('../../lib/ui');
+const {
+  uiFeatureHighlight,
+  uiAccountDescription,
+  uiBetaTag,
+} = require('../../lib/ui');
 const {
   sandboxTypeMap,
   getAvailableSyncTypes,
@@ -42,7 +46,7 @@ const {
 const i18nKey = 'commands.sandbox.subcommands.create';
 
 exports.command = 'create [--name] [--type]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
