@@ -17,7 +17,10 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
       app => !app.projectId && !app.sourceId
     );
 
-    if (!filteredPublicApps.length) {
+    if (
+      !filteredPublicApps.length ||
+      !filteredPublicApps.find(app => !app.preventProjectMigrations)
+    ) {
       uiLine();
       logger.error(i18n(`${i18nKey}.errors.noApps`));
       logger.log(i18n(`${i18nKey}.errors.noAppsMessage`, { accountName }));
@@ -51,7 +54,7 @@ const selectPublicAppPrompt = async ({
         if (app.preventProjectMigrations) {
           return {
             name: `${app.name} (${app.id})`,
-            disabled: i18n(`${i18nKey}.errors.marketplaceApp`),
+            disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
           };
         }
         return {

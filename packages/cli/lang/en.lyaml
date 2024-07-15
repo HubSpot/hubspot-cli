@@ -528,7 +528,7 @@ en:
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidAppId: "Could not find appId {{ appId }}. Please choose another public app."
-            invalidMarketplaceApp: "Could not migrate appId {{ appId }}. Marketplace apps cannot be migrated at this time. Please choose another public app."
+            invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
         add:
           describe: "Create a new component within a project"
           options:
@@ -1226,7 +1226,7 @@ en:
           noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
           invalidAppId: "Could not find appId {{ appId }}. Please choose another public app."
-          marketplaceApp: "Marketplace app"
+          cannotBeMigrated: "Cannot be migrated"
       downloadProjectPrompt:
         selectProject: "Select a project to download:"
         errors:

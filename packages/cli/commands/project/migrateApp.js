@@ -90,7 +90,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
     if (selectedApp.preventProjectMigrations) {
-      logger.error(i18n(`${i18nKey}.errors.invalidMarketplaceApp`, { appId }));
+      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
 
