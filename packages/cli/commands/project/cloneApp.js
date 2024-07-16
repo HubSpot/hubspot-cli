@@ -10,7 +10,6 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
@@ -35,6 +34,9 @@ const {
 const { getCwd, isValidPath } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  fetchPublicAppMetadata,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
@@ -65,7 +67,7 @@ exports.handler = async options => {
   }
 
   let appId;
-  let selectedApp;
+  let appName;
   let location;
   try {
     const appIdResponse =
@@ -79,12 +81,12 @@ exports.handler = async options => {
           });
     appId = appIdResponse.appId;
 
-    const publicApps = await fetchPublicAppOptions(accountId, accountName);
-    selectedApp = publicApps.find(a => a.id === appId);
+    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     if (!selectedApp) {
       logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
+    appName = selectedApp.name;
 
     const locationResponse =
       'location' in options
@@ -92,7 +94,7 @@ exports.handler = async options => {
         : await promptUser({
             name: 'location',
             message: i18n(`${i18nKey}.enterLocation`),
-            default: path.resolve(getCwd(), selectedApp.name),
+            default: path.resolve(getCwd(), appName),
             validate: input => {
               if (!input) {
                 return i18n(`${i18nKey}.errors.locationRequired`);
@@ -126,7 +128,7 @@ exports.handler = async options => {
 
       await extractZipArchive(
         zippedProject,
-        selectedApp.name,
+        appName,
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
       );
