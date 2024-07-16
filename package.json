@@ -25,7 +25,7 @@
     "publish-release": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] && yarn lerna publish --conventional-graduate --exact || echo 'Error: New release can only be published on main branch' >&2",
     "publish-prerelease": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] && yarn lerna publish prerelease --preid beta --dist-tag next --exact || echo 'Error: New release can only be published on main branch' >&2",
     "test": "jest",
-    "test-cli": "lerna run test-headless --stream --",
+    "test-cli": "cd acceptance-tests && yarn test-headless --stream",
     "test-docker": "docker build --tag hubspot-cli-image . && docker run -it hubspot-cli-image",
     "jest": "jest --watch",
     "circular-deps": "yarn madge --circular packages"
