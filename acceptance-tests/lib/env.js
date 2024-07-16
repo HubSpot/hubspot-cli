@@ -53,10 +53,11 @@ const getTestConfig = () => {
   // Command-line Args > Env vars
   const config = Object.assign({}, envOverrides, argsOverrides);
 
-  if (!config.portalId)
+  if (!config.portalId) {
     throw new Error(
       'accountId must be defined. Either set the ACCOUNT_ID environment variable or use the --accountId flag to pass it in.'
     );
+  }
 
   if (!config.cliPath) {
     const defaultPath = path.join(process.cwd(), DEFAULT_CLI_PATH);
@@ -70,15 +71,17 @@ const getTestConfig = () => {
     }
   }
 
-  if (!config.personalAccessKey)
+  if (!config.personalAccessKey) {
     throw new Error(
       'personalAccessKey must be defined. Either set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
+  }
 
-  // if (!config.githubToken)
-  //   throw new Error(
-  //     'githubToken must be defined.  Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
-  //   );
+  if (!config.githubToken) {
+    console.warn(
+      'githubToken is not defined. Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
+    );
+  }
 
   if (config.debug) {
     console.log('Config: ', config);
