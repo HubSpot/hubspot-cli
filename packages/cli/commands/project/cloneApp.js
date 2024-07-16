@@ -39,7 +39,7 @@ const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
-exports.command = 'clone-app';
+exports.command = 'clone-app [--appId] [--location]';
 exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
@@ -64,44 +64,53 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { appId } =
-    'appId' in options
-      ? options
-      : await selectPublicAppPrompt({
-          accountId,
-          accountName,
-          options,
-          migrateApp: false,
-        });
+  let appId;
+  let selectedApp;
+  let location;
+  try {
+    const appIdResponse =
+      'appId' in options
+        ? { appId: options.appId }
+        : await selectPublicAppPrompt({
+            accountId,
+            accountName,
+            options,
+            migrateApp: false,
+          });
+    appId = appIdResponse.appId;
 
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const selectedApp = publicApps.find(a => a.id === appId);
-  if (!selectedApp) {
-    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+    const publicApps = await fetchPublicAppOptions(accountId, accountName);
+    selectedApp = publicApps.find(a => a.id === appId);
+    if (!selectedApp) {
+      logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    const locationResponse =
+      'location' in options
+        ? { location: options.location }
+        : await promptUser({
+            name: 'location',
+            message: i18n(`${i18nKey}.enterLocation`),
+            default: path.resolve(getCwd(), selectedApp.name),
+            validate: input => {
+              if (!input) {
+                return i18n(`${i18nKey}.errors.locationRequired`);
+              }
+              if (fs.existsSync(input)) {
+                return i18n(`${i18nKey}.errors.invalidLocation`);
+              }
+              if (!isValidPath(input)) {
+                return i18n(`${i18nKey}.errors.invalidCharacters`);
+              }
+              return true;
+            },
+          });
+    location = locationResponse.location;
+  } catch (error) {
+    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const { location } =
-    'location' in options
-      ? options
-      : await promptUser({
-          name: 'location',
-          message: i18n(`${i18nKey}.enterLocation`),
-          default: path.resolve(getCwd(), selectedApp.name),
-          validate: input => {
-            if (!input) {
-              return i18n(`${i18nKey}.errors.locationRequired`);
-            }
-            if (fs.existsSync(input)) {
-              return i18n(`${i18nKey}.errors.invalidLocation`);
-            }
-            if (!isValidPath(input)) {
-              return i18n(`${i18nKey}.errors.invalidCharacters`);
-            }
-            return true;
-          },
-        });
-
   try {
     SpinniesManager.init();
 
@@ -109,10 +118,8 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.cloneStatus.inProgress`),
     });
 
-    const cloneResponse = await cloneApp(accountId, appId);
-    const { exportId } = cloneResponse;
-    const pollResponse = await poll(checkCloneStatus, accountId, exportId);
-    const { status } = pollResponse;
+    const { exportId } = await cloneApp(accountId, appId);
+    const { status } = await poll(checkCloneStatus, accountId, exportId);
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), location);
       const zippedProject = await downloadClonedProject(accountId, exportId);
@@ -139,6 +146,7 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.cloneStatus.failure`),
       failColor: 'white',
     });
+    // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
     if (error.errors) {
       error.errors.forEach(logApiErrorInstance);
     } else {

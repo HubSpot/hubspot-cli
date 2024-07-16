@@ -207,6 +207,7 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
+    // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
     if (error.errors) {
       error.errors.forEach(logApiErrorInstance);
     } else {
