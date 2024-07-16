@@ -82,9 +82,9 @@ exports.handler = async options => {
           migrateApp: true,
         });
 
+  let appName;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    var appName = selectedApp.name;
     if (!selectedApp) {
       logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -93,16 +93,19 @@ exports.handler = async options => {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
+    appName = selectedApp.name;
   } catch (error) {
     logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
+  let projectName;
+  let projectLocation;
   try {
     const { name, location } = await createProjectPrompt('', options, true);
 
-    var projectName = options.name || name;
-    var projectLocation = options.location || location;
+    projectName = options.name || name;
+    projectLocation = options.location || location;
 
     const { projectExists } = await ensureProjectExists(
       accountId,
