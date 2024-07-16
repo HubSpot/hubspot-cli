@@ -635,9 +635,9 @@ const makePollTaskStatusFunc = ({
 
     const tasksById = initialTaskStatus[statusText.SUBTASK_KEY].reduce(
       (acc, task) => {
-        const type = task[statusText.TYPE_KEY];
-        if (type !== 'APP_ID' && type !== 'SERVERLESS_PKG') {
-          acc[task.id] = task;
+        const { id, visible } = task;
+        if (visible) {
+          acc[id] = task;
         }
         return acc;
       },
