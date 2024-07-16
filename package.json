@@ -27,7 +27,6 @@
     "test": "jest",
     "test-cli": "cd acceptance-tests && yarn test-headless --stream",
     "test-docker": "docker build --tag hubspot-cli-image . && docker run -it hubspot-cli-image",
-    "jest": "jest --watch",
     "circular-deps": "yarn madge --circular packages"
   },
   "lint-staged": {
