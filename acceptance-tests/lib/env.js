@@ -1,5 +1,8 @@
 const path = require('path');
 const dotEnv = require('dotenv');
+const { existsSync } = require('fs');
+const { DEFAULT_CLI_PATH } = require('./constants');
+
 let dotEnvConfig;
 
 (() => {
@@ -19,8 +22,7 @@ const getTruthyValuesOnly = obj => {
   return truthyValuesObj;
 };
 
-let localOverrides = {};
-let localTestOverrides = {};
+let argsOverrides = {};
 
 const getEnvValue = envVariable => {
   return (
@@ -29,19 +31,15 @@ const getEnvValue = envVariable => {
   );
 };
 
-const setLocalTestOverrides = (overrides = {}) => {
-  localOverrides = { localOverrides, ...overrides };
-};
-
 const setArgsOverrides = args => {
-  args.portalId && (localOverrides.portalId = args.portalId);
-  args.cliPath && (localOverrides.cliPath = args.cliPath);
+  args.portalId && (argsOverrides.portalId = args.portalId);
+  args.cliPath && (argsOverrides.cliPath = args.cliPath);
   args.personalAccessKey &&
-    (localOverrides.personalAccessKey = args.personalAccessKey);
-  args.githubToken && (localOverrides.githubToken = args.githubToken);
-  localOverrides.qa = args.qa;
-  localOverrides.debug = args.debug;
-  localOverrides.headless = !!args.headless;
+    (argsOverrides.personalAccessKey = args.personalAccessKey);
+  args.githubToken && (argsOverrides.githubToken = args.githubToken);
+  argsOverrides.qa = args.qa;
+  argsOverrides.debug = args.debug;
+  argsOverrides.headless = !!args.headless;
 };
 
 const envOverrides = getTruthyValuesOnly({
@@ -52,27 +50,29 @@ const envOverrides = getTruthyValuesOnly({
 });
 
 const getTestConfig = () => {
-  // Test-specific Overrides > Command-line Args > Env vars
-  const config = Object.assign(
-    {},
-    envOverrides,
-    localOverrides,
-    localTestOverrides
-  );
+  // Command-line Args > Env vars
+  const config = Object.assign({}, envOverrides, argsOverrides);
 
   if (!config.portalId)
     throw new Error(
-      'accountId must be defined.  Either set the ACCOUNT_ID environment variable, or use the --accountId flag to pass it in.'
+      'accountId must be defined. Either set the ACCOUNT_ID environment variable or use the --accountId flag to pass it in.'
     );
 
-  if (!config.cliPath)
-    throw new Error(
-      'cliPath must be defined.  Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in.'
-    );
+  if (!config.cliPath) {
+    const defaultPath = path.join(process.cwd(), DEFAULT_CLI_PATH);
+
+    if (existsSync(defaultPath)) {
+      config.cliPath = defaultPath;
+    } else {
+      throw new Error(
+        'cliPath must be defined. Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in.'
+      );
+    }
+  }
 
   if (!config.personalAccessKey)
     throw new Error(
-      'No valid auth for personalAccessKey was found. Set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
+      'personalAccessKey must be defined. Either set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
 
   // if (!config.githubToken)
@@ -80,11 +80,14 @@ const getTestConfig = () => {
   //     'githubToken must be defined.  Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
   //   );
 
+  if (config.debug) {
+    console.log('Config: ', config);
+  }
+
   return config;
 };
 
 module.exports = {
   getTestConfig,
   setArgsOverrides,
-  setLocalTestOverrides,
 };

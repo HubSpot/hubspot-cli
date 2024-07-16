@@ -2,13 +2,12 @@
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { setArgsOverrides, getTestConfig } = require('./lib/env');
-const { CONFIG_FILE_PATH } = require('./lib/constants');
+const { CONFIG_FILE_NAME } = require('./lib/constants');
 const path = require('path');
 const Jasmine = require('jasmine');
 const rimraf = require('rimraf');
 const cmd = require('./tests/helpers/cmd');
 const Reporter = require('jasmine-terminal-reporter');
-const { config } = require('yargs');
 const reporter = new Reporter({
   isVerbose: true,
   includeStackTrace: true,
@@ -69,22 +68,20 @@ setArgsOverrides(
     testRunner.exitOnCompletion = false;
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
-    const cli = cmd.create(cliPath);
-    global.cli = cli;
-    global.config = getTestConfig();
 
-    console.log(config.personalAccessKey)
-    await cli.execute(
-      ['init', `--c="${CONFIG_FILE_PATH}"`],
-      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER]
+    global.config = getTestConfig();
+    global.cli = cmd.createCli(global.config.cliPath);
+
+    await global.cli.execute(
+      ['init', `--c="${CONFIG_FILE_NAME}"`],
+      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER, cmd.ENTER]
     );
-    console.log('test')
+
     const result = await testRunner.execute();
 
-    rimraf.sync(CONFIG_FILE_PATH);
+    rimraf.sync(CONFIG_FILE_NAME);
     process.exit(result.overallStatus === 'passed' ? 0 : 1);
   } catch (e) {
-    console.log(e);
+    console.log(e)
   }
 })();
