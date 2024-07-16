@@ -71,7 +71,7 @@ const syncSandbox = async ({
     );
     let spinniesText = isDevSandbox
       ? `${i18nKey}.loading.succeedDevSb`
-      : `${i18nKey}.loading.success`;
+      : `${i18nKey}.loading.succeed`;
     SpinniesManager.succeed('sandboxSync', {
       text: i18n(
         slimInfoMessage ? `${i18nKey}.loading.successDevSbInfo` : spinniesText,
