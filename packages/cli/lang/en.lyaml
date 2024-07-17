@@ -527,7 +527,6 @@ en:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
-            invalidAppId: "Could not find appId {{ appId }}. Please choose another public app."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
         cloneApp:
           describe: "Clone a public app using the projects framework"
@@ -547,7 +546,6 @@ en:
           errors:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
-            invalidAppId: "Could not find appId {{ appId }}. Please choose another public app."
             locationRequired: "A project location is required"
             invalidLocation: "The selected destination already exists. Please provide a new path for this project."
             invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
@@ -1249,7 +1247,6 @@ en:
           noAppsMigrationMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
           noAppsCloneMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be cloned to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
-          invalidAppId: "Could not find appId {{ appId }}. Please choose another public app."
           cannotBeMigrated: "Cannot be migrated"
       downloadProjectPrompt:
         selectProject: "Select a project to download:"

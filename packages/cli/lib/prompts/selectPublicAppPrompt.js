@@ -80,6 +80,5 @@ const selectPublicAppPrompt = async ({
 };
 
 module.exports = {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 };

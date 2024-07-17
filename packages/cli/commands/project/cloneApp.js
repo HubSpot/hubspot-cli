@@ -82,10 +82,6 @@ exports.handler = async options => {
     appId = appIdResponse.appId;
 
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    if (!selectedApp) {
-      logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
-      process.exit(EXIT_CODES.ERROR);
-    }
     appName = selectedApp.name;
 
     const locationResponse =
