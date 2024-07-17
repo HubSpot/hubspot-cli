@@ -26,7 +26,8 @@
     "publish-prerelease": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] && yarn lerna publish prerelease --preid beta --dist-tag next --exact || echo 'Error: New release can only be published on main branch' >&2",
     "test": "jest",
     "test-cli": "cd acceptance-tests && yarn test-headless --stream",
-    "test-docker": "docker build --tag hubspot-cli-image . && docker run -it hubspot-cli-image",
+    "test-docker": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test",
+    "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular packages"
   },
   "lint-staged": {

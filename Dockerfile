@@ -9,9 +9,3 @@ COPY . .
 
 # Install dependencies
 RUN yarn
-
-# HACK https://unix.stackexchange.com/questions/63979/shebang-line-with-usr-bin-env-command-argument-fails-on-linux
-#RUN sed -i 's/--no-deprecation//g' hubspot-cli/packages/cli/bin/hs
-
-# Execute tests
-RUN yarn test
