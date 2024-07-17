@@ -16,7 +16,8 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const {
   uiLine,
   uiAccountDescription,
-  uiDeprecationTag,
+  uiWarningTag,
+  uiLink,
 } = require('../../lib/ui');
 const {
   isSandbox,
@@ -39,14 +40,24 @@ const {
 const i18nKey = 'commands.sandbox.subcommands.sync';
 
 exports.command = 'sync';
-exports.describe = uiDeprecationTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiWarningTag(
+  i18n(`${i18nKey}.describe`, {
+    url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
+  }),
+  false
+);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
   logger.log();
   uiLine();
-  uiDeprecationTag(i18n(`${i18nKey}.deprecation`), true);
+  uiWarningTag(
+    i18n(`${i18nKey}.deprecation`, {
+      url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
+    }),
+    true
+  );
   uiLine();
   logger.log();
 

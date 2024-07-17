@@ -744,8 +744,9 @@ en:
             account:
               describe: "Account name or id to delete"
         sync:
-          describe: "Sync to a sandbox account. This command is deprecated as Hubspot will be sunsetting the ability to re-sync data from production to a sandbox."
-          deprecation: "The command {{#bold}}hs sandbox sync{{/bold}} is deprecated and may be removed soon. See the output of {{#bold}}hs sandbox --help{{/bold}} to learn more about the deprecation."
+          describe: "Sync to a sandbox account. The `{{#orange}}{{#bold}}hs sandbox sync{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+          deprecation: "The `{{#orange}}{{#bold}}hs sandbox sync{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+          deprecationUrlText: 'Learn more.'
           examples:
             default: "Initiates a sync to a sandbox account."
             force: "Skips all confirmation prompts when initiating a sync."
@@ -1048,7 +1049,7 @@ en:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
       infoTag: "{{#bold}}[INFO]{{/bold}}"
-      deprecationTag: "{{#bold}}[deprecated]{{/bold}}"
+      warningTag: "{{#bold}}[WARNING]{{/bold}}"
       featureHighlight:
         defaultTitle: "What's next?"
         commandKeys:

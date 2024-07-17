@@ -156,14 +156,14 @@ const uiInfoTag = (message, log = true) => {
   }
 };
 
-const uiDeprecationTag = (message, log = true) => {
+const uiWarningTag = (message, log = true) => {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`${i18nKey}.deprecationTag`);
+  const tag = i18n(`${i18nKey}.warningTag`);
 
   const result = `${
-    terminalUISupport.color ? chalk.hex(UI_COLORS.MARIGOLD_DARK)(tag) : tag
+    terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
   if (log) {
@@ -179,7 +179,7 @@ module.exports = {
   uiCommandReference,
   uiBetaTag,
   uiInfoTag,
-  uiDeprecationTag,
+  uiWarningTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
