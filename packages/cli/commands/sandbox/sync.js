@@ -17,7 +17,7 @@ const {
   uiLine,
   uiAccountDescription,
   uiWarningTag,
-  uiLink,
+  // uiLink,
 } = require('../../lib/ui');
 const {
   isSandbox,
@@ -42,7 +42,7 @@ const i18nKey = 'commands.sandbox.subcommands.sync';
 exports.command = 'sync';
 exports.describe = uiWarningTag(
   i18n(`${i18nKey}.describe`, {
-    url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
+    // url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
   }),
   false
 );
@@ -54,7 +54,7 @@ exports.handler = async options => {
   uiLine();
   uiWarningTag(
     i18n(`${i18nKey}.deprecation`, {
-      url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
+      // url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
     }),
     true
   );
