@@ -744,9 +744,7 @@ en:
             account:
               describe: "Account name or id to delete"
         sync:
-          describe: "Sync to a sandbox account. The `{{#orange}}{{#bold}}hs sandbox sync{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
-          deprecation: "The `{{#orange}}{{#bold}}hs sandbox sync{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
-          deprecationUrlText: 'Learn more.'
+          describe: "Sync to a sandbox account"
           examples:
             default: "Initiates a sync to a sandbox account."
             force: "Skips all confirmation prompts when initiating a sync."
@@ -1050,6 +1048,9 @@ en:
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
       infoTag: "{{#bold}}[INFO]{{/bold}}"
       warningTag: "{{#bold}}[WARNING]{{/bold}}"
+      deprecatedMessage: "The `{{#orange}}{{#bold}}{{ command }}{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedDescription: "{{ message }}. The `{{#orange}}{{#bold}}{{ command }}{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedUrlText: 'Learn more.'
       featureHighlight:
         defaultTitle: "What's next?"
         commandKeys:

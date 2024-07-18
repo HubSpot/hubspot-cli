@@ -173,6 +173,33 @@ const uiWarningTag = (message, log = true) => {
   }
 };
 
+const uiDeprecatedDescription = (message, command, url = undefined) => {
+  const i18nKey = 'lib.ui';
+
+  return i18n(`${i18nKey}.deprecatedDescription`, {
+    message,
+    command,
+    url,
+  });
+};
+
+const uiDeprecatedBanner = (command, url = undefined, message = undefined) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.deprecatedMessage`, {
+      command,
+      url: uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url),
+    });
+
+  logger.log();
+  uiLine();
+  uiWarningTag(tag, true);
+  uiLine();
+  logger.log();
+};
+
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
@@ -184,4 +211,6 @@ module.exports = {
   uiInfoSection,
   uiLine,
   uiLink,
+  uiDeprecatedBanner,
+  uiDeprecatedDescription,
 };

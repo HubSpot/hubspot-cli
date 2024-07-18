@@ -17,7 +17,8 @@ const {
   uiLine,
   uiAccountDescription,
   uiWarningTag,
-  // uiLink,
+  uiDeprecatedBanner,
+  uiDeprecatedDescription,
 } = require('../../lib/ui');
 const {
   isSandbox,
@@ -41,25 +42,14 @@ const i18nKey = 'commands.sandbox.subcommands.sync';
 
 exports.command = 'sync';
 exports.describe = uiWarningTag(
-  i18n(`${i18nKey}.describe`, {
-    // url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
-  }),
+  uiDeprecatedDescription(i18n(`${i18nKey}.describe`), 'hs sandbox sync'),
   false
 );
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  logger.log();
-  uiLine();
-  uiWarningTag(
-    i18n(`${i18nKey}.deprecation`, {
-      // url: uiLink(i18n(`${i18nKey}.deprecationUrlText`), 'www.google.com'),
-    }),
-    true
-  );
-  uiLine();
-  logger.log();
+  uiDeprecatedBanner('hs sandbox sync');
 
   const { force } = options; // For scripting purposes
   const accountId = getAccountId(options);
