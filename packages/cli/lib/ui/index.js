@@ -173,6 +173,42 @@ const uiWarningTag = (message, log = true) => {
   }
 };
 
+const uiErrorTag = (message, log = true) => {
+  const i18nKey = 'lib.ui';
+
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.errorTag`);
+
+  const result = `${terminalUISupport.color ? chalk.red(tag) : tag} ${message}`;
+
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
+};
+
+const uiCommandDisabledBanner = (
+  command,
+  url = undefined,
+  message = undefined
+) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.disabledMessage`, {
+      command,
+      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : undefined,
+    });
+
+  logger.log();
+  uiLine();
+  uiErrorTag(tag, true);
+  uiLine();
+  logger.log();
+};
+
 const uiDeprecatedDescription = (message, command, url = undefined) => {
   const i18nKey = 'lib.ui';
 
@@ -190,7 +226,7 @@ const uiDeprecatedBanner = (command, url = undefined, message = undefined) => {
     message ||
     i18n(`${i18nKey}.deprecatedMessage`, {
       command,
-      url: uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url),
+      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : undefined,
     });
 
   logger.log();
@@ -207,10 +243,12 @@ module.exports = {
   uiBetaTag,
   uiInfoTag,
   uiWarningTag,
+  uiErrorTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
   uiLink,
   uiDeprecatedBanner,
   uiDeprecatedDescription,
+  uiCommandDisabledBanner,
 };
