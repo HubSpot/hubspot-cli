@@ -159,7 +159,10 @@ const syncSandbox = async ({
         statusCode: 404,
       })
     ) {
-      uiCommandDisabledBanner('hs sandbox sync');
+      uiCommandDisabledBanner(
+        'hs sandbox sync',
+        'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
+      );
     } else {
       logErrorInstance(err);
     }
