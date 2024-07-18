@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const {
   addAccountOptions,
@@ -12,7 +11,9 @@ const { i18n } = require('../../lib/lang');
 const {
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
-const { promptUser } = require('../../lib/prompts/promptUtils');
+const {
+  cloneAppLocationPrompt,
+} = require('../../lib/prompts/cloneAppLocationPrompt');
 const { poll } = require('../../lib/polling');
 const {
   uiLine,
@@ -31,7 +32,7 @@ const {
   checkCloneStatus,
   downloadClonedProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd, isValidPath } = require('@hubspot/local-dev-lib/path');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
@@ -63,47 +64,28 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   let appId;
   let appName;
   let location;
   try {
-    const appIdResponse =
-      'appId' in options
-        ? { appId: options.appId }
-        : await selectPublicAppPrompt({
-            accountId,
-            accountName,
-            options,
-            migrateApp: false,
-          });
-    appId = appIdResponse.appId;
+    appId = options.appId;
+    if (!appId) {
+      const appIdResponse = await selectPublicAppPrompt({
+        accountId,
+        accountName,
+        options,
+        migrateApp: false,
+      });
+      appId = appIdResponse.appId;
+    }
 
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     appName = selectedApp.name;
 
-    const locationResponse =
-      'location' in options
-        ? { location: options.location }
-        : await promptUser({
-            name: 'location',
-            message: i18n(`${i18nKey}.enterLocation`),
-            default: path.resolve(getCwd(), appName),
-            validate: input => {
-              if (!input) {
-                return i18n(`${i18nKey}.errors.locationRequired`);
-              }
-              if (fs.existsSync(input)) {
-                return i18n(`${i18nKey}.errors.invalidLocation`);
-              }
-              if (!isValidPath(input)) {
-                return i18n(`${i18nKey}.errors.invalidCharacters`);
-              }
-              return true;
-            },
-          });
+    const locationResponse = await cloneAppLocationPrompt(options, appName);
     location = locationResponse.location;
   } catch (error) {
     logApiErrorInstance(error, new ApiErrorContext({ accountId }));
@@ -145,8 +127,10 @@ exports.handler = async options => {
       failColor: 'white',
     });
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
-    if (error.errors) {
-      error.errors.forEach(logApiErrorInstance);
+    if (error.errors && Array.isArray(error.errors)) {
+      error.errors.forEach(e =>
+        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+      );
     } else {
       logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     }

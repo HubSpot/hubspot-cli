@@ -70,7 +70,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const { appId } =
@@ -204,8 +204,10 @@ exports.handler = async options => {
       failColor: 'white',
     });
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
-    if (error.errors) {
-      error.errors.forEach(logApiErrorInstance);
+    if (error.errors && Array.isArray(error.errors)) {
+      error.errors.forEach(e =>
+        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+      );
     } else {
       logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     }
