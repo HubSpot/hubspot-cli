@@ -1047,12 +1047,12 @@ en:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
       infoTag: "{{#bold}}[INFO]{{/bold}}"
-      warningTag: "{{#bold}}[WARNING]{{/bold}}"
+      deprecatedTag: "{{#bold}}[DEPRECATED]{{/bold}}"
       errorTag: "{{#bold}}[ERROR]{{/bold}}"
-      deprecatedMessage: "The `{{#orange}}{{#bold}}{{ command }}{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
-      deprecatedDescription: "{{ message }}. The `{{#orange}}{{#bold}}{{ command }}{{/bold}}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedMessage: "The `{{#orange}}{{ command }}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedDescription: "{{ message }}. The `{{#orange}}{{ command }}{{/orange}}` command is deprecated and will be disabled soon. {{ url }}"
       deprecatedUrlText: 'Learn more.'
-      disabledMessage: "The `{{#orange}}{{#bold}}{{ command }}{{/bold}}{{/orange}}` command is disabled. Run `npm i -g @hubspot/cli@latest` to update to the latest HubSpot CLI version. {{ url }}"
+      disabledMessage: "The `{{#orange}}{{ command }}{{/orange}}` command is disabled. Run `{{#orange}}npm i -g @hubspot/cli@latest{{/orange}}` to update to the latest HubSpot CLI version. {{ url }}"
       disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
