@@ -36,7 +36,6 @@ const setArgsOverrides = args => {
   args.cliPath && (argsOverrides.cliPath = args.cliPath);
   args.personalAccessKey &&
     (argsOverrides.personalAccessKey = args.personalAccessKey);
-  args.githubToken && (argsOverrides.githubToken = args.githubToken);
   argsOverrides.qa = args.qa;
   argsOverrides.debug = args.debug;
   argsOverrides.headless = !!args.headless;
@@ -46,7 +45,6 @@ const envOverrides = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
-  githubToken: getEnvValue('GITHUB_TOKEN'),
 });
 
 const getTestConfig = () => {
@@ -74,12 +72,6 @@ const getTestConfig = () => {
   if (!config.personalAccessKey) {
     throw new Error(
       'personalAccessKey must be defined. Either set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
-    );
-  }
-
-  if (!config.githubToken) {
-    console.warn(
-      'githubToken is not defined. Either set the GITHUB_TOKEN environment variable, or use the --githubToken flag to pass it in.'
     );
   }
 

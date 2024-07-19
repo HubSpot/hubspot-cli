@@ -15,35 +15,20 @@ const reporter = new Reporter({
 
 setArgsOverrides(
   yargs(hideBin(process.argv))
-    .option('portalId', {
-      alias: ['p', 'accountId'],
+    .option('accountId', {
+      alias: ['p', 'portalId', 'a'],
       type: 'string',
-      description: 'Account Id',
+      description: 'Account ID',
     })
     .option('cliPath', {
       alias: 'c',
       type: 'string',
-      description: 'CLI Path',
+      description: 'CLI path',
     })
     .option('personalAccessKey', {
       alias: 'pak',
       type: 'string',
       description: 'Personal Access Key',
-    })
-    .option('clientId', {
-      type: 'string',
-      default: false,
-      description: 'ClientId for oauth',
-    })
-    .option('clientSecret', {
-      type: 'string',
-      default: false,
-      description: 'Client secret for oauth',
-    })
-    .option('refreshToken', {
-      type: 'string',
-      default: false,
-      description: 'Refresh token for oauth',
     })
     .option('qa', {
       type: 'boolean',

@@ -10,17 +10,12 @@ Note that if you are testing against a QA portal, not a PROD one, you'll need to
 
 ### Setup
 
-To setup these tests, first [create an app](https://developers.hubspot.com/docs/api/creating-an-app) in a [HubSpot developer account](https://app.hubspot.com/signup-hubspot/crm). Under the "Auth" tab, give your app at least one scope, and set the redirect URL to `localhost:3000/oauth-callback`, and save your changes. Also, take note of your Client ID, and Client Secret and click "Copy full URL". ![image](https://user-images.githubusercontent.com/48874841/175648758-b2fdb491-90f8-4573-ad9e-af7e1236548c.png)
+To setup these tests, there are two required arguments and one optional one:
 
-Next, in the navigation bar, click "Testing", and then "Create app test account". Then, paste the OAuth URL you copied earlier into your browser, choose your newly created test account, and click "Connect App".
-
-Now, navigate back to the "Testing" page, and click your test account. Take note of the Account ID in the URL (`https://app.hubspot.com/dashboard-library/ACCOUNT_ID`). Then [navigate to the following page and generate a personal access key](https://app.hubspot.com/portal-recommend/l?slug=personal-access-key) that is associated with your test account.
-
-Generate [a github token](https://github.com/settings/tokens/new) to test with. This is required for the CLI commands that interact with the github api.
-
-You now have all the information required to create a `.env` file in the [Configuration](./README.md#configuration) section.
-
-Finally, you must add an asset to your new test account. To do this, navigate to the [HubSpot marketplace](https://ecosystem.hubspot.com/marketplace/website/free-cms-accelerator-themes), log into your test account, and install an asset.
+1. The ID of a HubSpot account that you are a user in
+2. Your generated personal access key in that account (available in [personal access key ui](https://app.hubspot.com/l/personal-access-key))
+3. [Optional] A path to an instance of the CLI. The test runner will execute the commands against this provided instance
+   - The default behavior is to use `../packages/cli/bin/hs`
 
 ### Configuration
 
@@ -30,31 +25,36 @@ There are three ways to pass in necessary configuration to the script.
 
 ```bash
 ACCOUNT_ID="123456789"
-CLI_PATH="hs"
 PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-GITHUB_TOKEN="123a4b56-****-****-****-************"
+CLI_PATH="hs"
 ```
 
 2. Through environment variables.
 
 ```bash
-
 export ACCOUNT_ID="123456789"
-export CLI_PATH="hs"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-export GITHUB_TOKEN="123a4b56-****-****-****-************"
+export CLI_PATH="hs"
 ```
 
 3. Through arguments on the `run-tests` script
 
 ```bash
-run-tests --accountId=123456789 --cliPath=hs --personalAccessKey="*********" --githubToken="********"
+yarn run-tests --accountId=123456789 --personalAccessKey="*********" --cliPath=hs
+```
+
+Alternatively, we support the following aliases:
+
+```bash
+yarn run-tests --a=123456789 --pak="*********" --c=hs
 ```
 
 ### Running Locally
 
 1. Run `lerna bootstrap` to install dependencies
 2. Run `yarn test-cli` from the root of the CLI repo
+
+**NOTE:** Include the `--debug` flag for more verbose output
 
 ## Why Jasmine
 
@@ -70,6 +70,6 @@ The `.env` file does not get recognized when running [act](https://github.com/ne
 
 ## Gotchas
 
-- Currently sometimes the personal-access-key test is flakey. Run the tests again and it should pass.
+- Currently the personal-access-key test is flakey. Run the tests again and it should pass.
 
 - The tests seem to trip up on usages of the `ora` library. To get around this, we have a list of blacklisted strings. If your test is being picky about ora, add the error message to the blacklist in `cmd.js`
