@@ -82,7 +82,7 @@ Then you should have access to the `docker` CLI command (as long as Rancher Desk
 
 To execute the CLI tests in a docker container, run:
 ```bash
-yarn run-docker
+yarn test-docker
 ```
 
 This will do several things:

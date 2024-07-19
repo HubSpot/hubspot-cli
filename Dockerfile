@@ -1,5 +1,5 @@
 # Create image based on the official Node image from dockerhub
-FROM node:18
+FROM node:16
 
 # Create base directory
 WORKDIR /usr/src/hubspot-cli
