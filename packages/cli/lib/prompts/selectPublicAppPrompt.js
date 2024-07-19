@@ -10,7 +10,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
-const fetchPublicAppOptions = async (accountId, accountName) => {
+const fetchPublicAppOptions = async (accountId, accountName, migrateApp) => {
   try {
     const publicApps = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
@@ -19,11 +19,20 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
 
     if (
       !filteredPublicApps.length ||
-      !filteredPublicApps.find(app => !app.preventProjectMigrations)
+      (migrateApp &&
+        !filteredPublicApps.find(app => !app.preventProjectMigrations))
     ) {
+      const headerTranslationKey = migrateApp
+        ? 'noAppsMigration'
+        : 'noAppsClone';
+      const messageTranslationKey = migrateApp
+        ? 'noAppsMigrationMessage'
+        : 'noAppsCloneMessage';
       uiLine();
-      logger.error(i18n(`${i18nKey}.errors.noApps`));
-      logger.log(i18n(`${i18nKey}.errors.noAppsMessage`, { accountName }));
+      logger.error(i18n(`${i18nKey}.errors.${headerTranslationKey}`));
+      logger.log(
+        i18n(`${i18nKey}.errors.${messageTranslationKey}`, { accountName })
+      );
       uiLine();
       process.exit(EXIT_CODES.SUCCESS);
     }
@@ -40,7 +49,11 @@ const selectPublicAppPrompt = async ({
   accountName,
   migrateApp = false,
 }) => {
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
+  const publicApps = await fetchPublicAppOptions(
+    accountId,
+    accountName,
+    (migrateApp = false)
+  );
   const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
 
   return promptUser([
@@ -51,7 +64,7 @@ const selectPublicAppPrompt = async ({
       }),
       type: 'list',
       choices: publicApps.map(app => {
-        if (app.preventProjectMigrations) {
+        if (migrateApp && app.preventProjectMigrations) {
           return {
             name: `${app.name} (${app.id})`,
             disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
@@ -67,6 +80,5 @@ const selectPublicAppPrompt = async ({
 };
 
 module.exports = {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 };

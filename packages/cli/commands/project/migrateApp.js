@@ -70,7 +70,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const { appId } =
@@ -85,10 +85,6 @@ exports.handler = async options => {
   let appName;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    if (!selectedApp) {
-      logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
-      process.exit(EXIT_CODES.ERROR);
-    }
     if (selectedApp.preventProjectMigrations) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -207,8 +203,11 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    if (error.errors) {
-      error.errors.forEach(logApiErrorInstance);
+    // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
+    if (error.errors && Array.isArray(error.errors)) {
+      error.errors.forEach(e =>
+        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+      );
     } else {
       logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     }
