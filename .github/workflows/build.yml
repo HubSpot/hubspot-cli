@@ -40,10 +40,10 @@ jobs:
           yarn run madge --circular packages
       - name: Test
         run: |
-          yarn test --debug
+          yarn test
       - name: Test-CLI
         run: |
-          yarn test-cli
+          yarn test-cli --debug
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           CLI_PATH: ${{ secrets.ACCEPTANCE_TEST_CLI_PATH }}
