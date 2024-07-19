@@ -79,13 +79,16 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          migrateApp: true,
+          isMigratingApp: true,
         });
 
   let appName;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    if (selectedApp.preventProjectMigrations) {
+    // preventProjectMigrations returns true if we have not added app to allowlist config.
+    // listingInfo will only exist for marketplace apps
+    const { preventProjectMigrations, listingInfo } = selectedApp;
+    if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
