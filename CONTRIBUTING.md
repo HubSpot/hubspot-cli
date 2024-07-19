@@ -90,6 +90,12 @@ This will do several things:
 2. It will then run a container and execute our test scripts inside of it
 3. The container will remove itself after the run completes
 
+It is also possible to open an interactive linux shell. This lets you manually run the CLI tests and commands:
+```bash
+yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image bash
+```
+**TIP:** Type `exit` to quit
+
 ## Merging
 To merge, either create, or have a maintainer create a blank branch, and set your PRs base branch to the blank branch. Merge your PR into the blank branch, and ensure that it passes the build. Then merge the new branch into main.
 
