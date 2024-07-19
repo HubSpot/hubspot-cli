@@ -40,7 +40,7 @@ jobs:
           yarn run madge --circular packages
       - name: Test
         run: |
-          yarn test
+          yarn test --debug
       - name: Test-CLI
         run: |
           yarn test-cli
