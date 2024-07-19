@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "5.2.1-beta.10",
+  "version": "5.2.1-beta.11",
   "description": "CLI for working with HubSpot",
   "license": "Apache-2.0",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hubspot/local-dev-lib": "1.9.0",
-    "@hubspot/serverless-dev-runtime": "5.2.1-beta.10",
+    "@hubspot/serverless-dev-runtime": "5.2.1-beta.11",
     "@hubspot/theme-preview-dev-server": "0.0.7",
     "@hubspot/ui-extensions-dev-server": "0.8.20",
     "archiver": "^5.3.0",
