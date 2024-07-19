@@ -77,7 +77,7 @@ exports.handler = async options => {
         accountId,
         accountName,
         options,
-        migrateApp: false,
+        isMigratingApp: false,
       });
       appId = appIdResponse.appId;
     }

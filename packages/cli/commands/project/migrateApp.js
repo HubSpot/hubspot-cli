@@ -79,7 +79,7 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          migrateApp: true,
+          isMigratingApp: true,
         });
 
   let appName;

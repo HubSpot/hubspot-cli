@@ -13,7 +13,7 @@ const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 const fetchPublicAppOptions = async (
   accountId,
   accountName,
-  migrateApp = false
+  isMigratingApp = false
 ) => {
   try {
     const publicApps = await fetchPublicAppsForPortal(accountId);
@@ -23,15 +23,15 @@ const fetchPublicAppOptions = async (
 
     if (
       !filteredPublicApps.length ||
-      (migrateApp &&
-        !filteredPublicApps.find(
+      (isMigratingApp &&
+        !filteredPublicApps.some(
           app => !app.preventProjectMigrations || !app.listingInfo
         ))
     ) {
-      const headerTranslationKey = migrateApp
+      const headerTranslationKey = isMigratingApp
         ? 'noAppsMigration'
         : 'noAppsClone';
-      const messageTranslationKey = migrateApp
+      const messageTranslationKey = isMigratingApp
         ? 'noAppsMigrationMessage'
         : 'noAppsCloneMessage';
       uiLine();
@@ -53,14 +53,16 @@ const fetchPublicAppOptions = async (
 const selectPublicAppPrompt = async ({
   accountId,
   accountName,
-  migrateApp = false,
+  isMigratingApp = false,
 }) => {
   const publicApps = await fetchPublicAppOptions(
     accountId,
     accountName,
-    migrateApp
+    isMigratingApp
   );
-  const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
+  const translationKey = isMigratingApp
+    ? 'selectAppIdMigrate'
+    : 'selectAppIdClone';
 
   return promptUser([
     {
@@ -71,7 +73,7 @@ const selectPublicAppPrompt = async ({
       type: 'list',
       choices: publicApps.map(app => {
         const { preventProjectMigrations, listingInfo } = app;
-        if (migrateApp && preventProjectMigrations && listingInfo) {
+        if (isMigratingApp && preventProjectMigrations && listingInfo) {
           return {
             name: `${app.name} (${app.id})`,
             disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
