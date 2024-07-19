@@ -85,7 +85,8 @@ exports.handler = async options => {
   let appName;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    if (selectedApp.preventProjectMigrations) {
+    const { preventProjectMigrations, listingInfo } = selectedApp;
+    if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }

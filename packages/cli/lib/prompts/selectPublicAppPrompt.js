@@ -10,7 +10,11 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
-const fetchPublicAppOptions = async (accountId, accountName, migrateApp) => {
+const fetchPublicAppOptions = async (
+  accountId,
+  accountName,
+  migrateApp = false
+) => {
   try {
     const publicApps = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
@@ -20,7 +24,9 @@ const fetchPublicAppOptions = async (accountId, accountName, migrateApp) => {
     if (
       !filteredPublicApps.length ||
       (migrateApp &&
-        !filteredPublicApps.find(app => !app.preventProjectMigrations))
+        !filteredPublicApps.find(
+          app => !app.preventProjectMigrations || !app.listingInfo
+        ))
     ) {
       const headerTranslationKey = migrateApp
         ? 'noAppsMigration'
@@ -52,7 +58,7 @@ const selectPublicAppPrompt = async ({
   const publicApps = await fetchPublicAppOptions(
     accountId,
     accountName,
-    (migrateApp = false)
+    migrateApp
   );
   const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
 
@@ -64,7 +70,8 @@ const selectPublicAppPrompt = async ({
       }),
       type: 'list',
       choices: publicApps.map(app => {
-        if (migrateApp && app.preventProjectMigrations) {
+        const { preventProjectMigrations, listingInfo } = app;
+        if (migrateApp && preventProjectMigrations && listingInfo) {
           return {
             name: `${app.name} (${app.id})`,
             disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
