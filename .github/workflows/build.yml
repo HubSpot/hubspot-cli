@@ -41,15 +41,9 @@ jobs:
       - name: Test
         run: |
           yarn test
-      - name: Check cli path value
-        run: |
-          echo ${{secrets.ACCEPTANCE_TEST_CLI_PATH}} | sed 's/./& /g'
       - name: Test-CLI
         run: |
-          yarn test-cli --debug
+          yarn test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
-          CLIENT_ID: ${{ secrets.ACCEPTANCE_TEST_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.ACCEPTANCE_TEST_CLIENT_SECRET }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
