@@ -105,7 +105,7 @@ exports.handler = async options => {
 
       // Extract zipped app files and place them in correct directory
       const zippedApp = await downloadClonedProject(accountId, exportId);
-      await extractZipArchive(zippedApp, name, path.resolve(absoluteDestPath), {
+      await extractZipArchive(zippedApp, name, absoluteDestPath, {
         includesRootDir: true,
         hideLogs: true,
       });

@@ -46,6 +46,7 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
+const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
@@ -60,7 +61,7 @@ const writeProjectConfig = (configPath, config) => {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
-    logger.error(`Could not write project config at ${configPath}`);
+    logErrorInstance(e);
   }
 };
 
