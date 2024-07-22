@@ -139,23 +139,6 @@ const uiBetaTag = (message, log = true) => {
   }
 };
 
-const uiInfoTag = (message, log = true) => {
-  const i18nKey = 'lib.ui';
-
-  const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`${i18nKey}.infoTag`);
-
-  const result = `${
-    terminalUISupport.color ? chalk.cyan(tag) : tag
-  } ${message}`;
-
-  if (log) {
-    logger.log(result);
-  } else {
-    return result;
-  }
-};
-
 const uiDeprecatedTag = (message, log = true) => {
   const i18nKey = 'lib.ui';
 
@@ -165,21 +148,6 @@ const uiDeprecatedTag = (message, log = true) => {
   const result = `${
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
-
-  if (log) {
-    logger.log(result);
-  } else {
-    return result;
-  }
-};
-
-const uiErrorTag = (message, log = true) => {
-  const i18nKey = 'lib.ui';
-
-  const terminalUISupport = getTerminalUISupport();
-  const tag = i18n(`${i18nKey}.errorTag`);
-
-  const result = `${terminalUISupport.color ? chalk.red(tag) : tag} ${message}`;
 
   if (log) {
     logger.log(result);
@@ -205,7 +173,7 @@ const uiCommandDisabledBanner = (
 
   logger.log();
   uiLine();
-  uiErrorTag(tag, true);
+  logger.error(tag);
   uiLine();
   logger.log();
 };
@@ -246,9 +214,7 @@ module.exports = {
   uiAccountDescription,
   uiCommandReference,
   uiBetaTag,
-  uiInfoTag,
   uiDeprecatedTag,
-  uiErrorTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,

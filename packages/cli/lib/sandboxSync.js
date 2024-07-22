@@ -18,7 +18,6 @@ const {
   uiAccountDescription,
   uiLine,
   uiLink,
-  uiInfoTag,
   uiCommandDisabledBanner,
 } = require('./ui');
 const { isDevelopmentSandbox } = require('./accountTypes');
@@ -173,7 +172,7 @@ const syncSandbox = async ({
   if (!slimInfoMessage) {
     logger.log();
     uiLine();
-    uiInfoTag(
+    logger.info(
       i18n(
         `${i18nKey}.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
         {
@@ -182,8 +181,7 @@ const syncSandbox = async ({
             syncStatusUrl
           ),
         }
-      ),
-      true
+      )
     );
     uiLine();
     logger.log();
