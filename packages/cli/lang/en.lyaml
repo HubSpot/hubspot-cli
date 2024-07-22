@@ -1244,12 +1244,6 @@ en:
           noAppsCloneMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be cloned to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
           cannotBeMigrated: "Cannot be migrated"
-      cloneAppLocationPrompt:
-        enterLocation: "[--location] Where should the cloned project be created?"
-        errors:
-          locationRequired: "A project location is required"
-          invalidLocation: "The selected destination already exists. Please provide a new path for this project."
-          invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
       downloadProjectPrompt:
         selectProject: "Select a project to download:"
         errors:
