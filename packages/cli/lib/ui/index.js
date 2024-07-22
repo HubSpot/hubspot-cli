@@ -198,8 +198,9 @@ const uiCommandDisabledBanner = (
   const tag =
     message ||
     i18n(`${i18nKey}.disabledMessage`, {
-      command,
+      command: uiCommandReference(command),
       url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : undefined,
+      npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
     });
 
   logger.log();
@@ -209,14 +210,20 @@ const uiCommandDisabledBanner = (
   logger.log();
 };
 
-const uiDeprecatedDescription = (message, command, url = undefined) => {
+const uiDeprecatedDescription = (
+  message,
+  command,
+  url = undefined,
+  log = false
+) => {
   const i18nKey = 'lib.ui';
 
-  return i18n(`${i18nKey}.deprecatedDescription`, {
+  const tag = i18n(`${i18nKey}.deprecatedDescription`, {
     message,
-    command,
+    command: uiCommandReference(command),
     url,
   });
+  return uiDeprecatedTag(tag, log);
 };
 
 const uiDeprecatedMessage = (command, url = undefined, message = undefined) => {
@@ -225,7 +232,7 @@ const uiDeprecatedMessage = (command, url = undefined, message = undefined) => {
   const tag =
     message ||
     i18n(`${i18nKey}.deprecatedMessage`, {
-      command,
+      command: uiCommandReference(command),
       url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : undefined,
     });
 

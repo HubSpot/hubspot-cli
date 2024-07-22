@@ -16,7 +16,6 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const {
   uiLine,
   uiAccountDescription,
-  uiDeprecatedTag,
   uiDeprecatedMessage,
   uiDeprecatedDescription,
 } = require('../../lib/ui');
@@ -41,9 +40,9 @@ const {
 const i18nKey = 'commands.sandbox.subcommands.sync';
 
 exports.command = 'sync';
-exports.describe = uiDeprecatedTag(
-  uiDeprecatedDescription(i18n(`${i18nKey}.describe`), 'hs sandbox sync'),
-  false
+exports.describe = uiDeprecatedDescription(
+  i18n(`${i18nKey}.describe`),
+  'hs sandbox sync'
 );
 
 exports.handler = async options => {
