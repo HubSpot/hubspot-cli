@@ -119,17 +119,16 @@ exports.handler = async options => {
 
   let contactRecordsSyncPromptResult = false;
   if (!force) {
-    const isDevelopmentSandbox =
-      sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
-    const syncI18nKey = 'lib.sandbox.sync';
+    const isStandardSandbox =
+      sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX;
 
     // Prompt to sync contact records for standard sandboxes only
-    if (!isDevelopmentSandbox) {
+    if (isStandardSandbox) {
       const { contactRecordsSyncPrompt } = await promptUser([
         {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',
-          message: i18n(`${syncI18nKey}.confirm.syncContactRecords.standard`),
+          message: i18n('lib.sandbox.sync.confirm.syncContactRecords.standard'),
         },
       ]);
       contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
