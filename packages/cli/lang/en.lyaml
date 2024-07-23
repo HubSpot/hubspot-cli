@@ -545,6 +545,7 @@ en:
           errors:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
+            couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
         add:
           describe: "Create a new component within a project"
           options:

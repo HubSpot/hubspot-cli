@@ -46,7 +46,6 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
@@ -56,13 +55,16 @@ const SPINNER_STATUS = {
 };
 
 const writeProjectConfig = (configPath, config) => {
+  let success = true;
   try {
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
-    logErrorInstance(e);
+    logger.debug(e);
+    success = false;
   }
+  return success;
 };
 
 const getIsInProject = _dir => {

@@ -117,12 +117,18 @@ exports.handler = async options => {
         srcDir: 'src',
         platformVersion: '2023.2',
       };
-      writeProjectConfig(configPath, configContent);
+      const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
       });
+      if (!success) {
+        logger.error(
+          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          configPath
+        );
+      }
       logger.log('');
       uiLine();
       logger.success(i18n(`${i18nKey}.cloneStatus.success`, { location }));
