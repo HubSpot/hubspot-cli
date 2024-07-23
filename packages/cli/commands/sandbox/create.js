@@ -9,11 +9,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
-const {
-  uiFeatureHighlight,
-  uiAccountDescription,
-  uiBetaTag,
-} = require('../../lib/ui');
+const { uiFeatureHighlight, uiBetaTag } = require('../../lib/ui');
 const {
   sandboxTypeMap,
   getAvailableSyncTypes,
@@ -22,10 +18,7 @@ const {
 } = require('../../lib/sandboxes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  trackCommandUsage,
-  trackCommandMetadataUsage,
-} = require('../../lib/usageTracking');
+const { trackCommandUsage } = require('../../lib/usageTracking');
 const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandboxSync');
@@ -124,34 +117,18 @@ exports.handler = async options => {
   }
   const sandboxName = name || namePrompt.name;
 
-  let sandboxSyncPromptResult = true;
-  let contactRecordsSyncPromptResult = true;
+  let contactRecordsSyncPromptResult = false;
   if (!force) {
-    const syncI18nKey = 'lib.sandbox.sync';
-    const sandboxLangKey =
-      sandboxType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
-        ? 'developer'
-        : 'standard';
-    const { sandboxSyncPrompt } = await promptUser([
-      {
-        name: 'sandboxSyncPrompt',
-        type: 'confirm',
-        message: i18n(`${syncI18nKey}.confirm.createFlow.${sandboxLangKey}`, {
-          parentAccountName: uiAccountDescription(accountId),
-          sandboxName,
-        }),
-      },
-    ]);
-    sandboxSyncPromptResult = sandboxSyncPrompt;
-    // We can prompt for contact records before fetching types since we're starting with a fresh sandbox in create
-    if (sandboxSyncPrompt) {
+    const isStandardSandbox =
+      sandboxType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX;
+
+    // Prompt to sync contact records for standard sandboxes only
+    if (isStandardSandbox) {
       const { contactRecordsSyncPrompt } = await promptUser([
         {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',
-          message: i18n(
-            `${syncI18nKey}.confirm.syncContactRecords.${sandboxLangKey}`
-          ),
+          message: i18n('lib.sandbox.sync.confirm.syncContactRecords.standard'),
         },
       ]);
       contactRecordsSyncPromptResult = contactRecordsSyncPrompt;
@@ -167,15 +144,8 @@ exports.handler = async options => {
       force,
     });
 
-    // Prompt user to sync assets after sandbox creation
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
     const handleSyncSandbox = async syncTasks => {
-      // Send tracking event for secondary action, in this case a sandbox sync within the sandbox create flow
-      trackCommandMetadataUsage(
-        'sandbox-sync',
-        { step: 'sandbox-create' },
-        result.sandbox.sandboxHubId
-      );
       await syncSandbox({
         accountConfig: sandboxAccountConfig,
         parentAccountConfig: accountConfig,
@@ -188,18 +158,13 @@ exports.handler = async options => {
         accountConfig,
         sandboxAccountConfig
       );
+
       if (!contactRecordsSyncPromptResult) {
         availableSyncTasks = availableSyncTasks.filter(
           t => t.type !== syncTypes.OBJECT_RECORDS
         );
       }
-      if (!force) {
-        if (sandboxSyncPromptResult) {
-          await handleSyncSandbox(availableSyncTasks);
-        }
-      } else {
-        await handleSyncSandbox(availableSyncTasks);
-      }
+      await handleSyncSandbox(availableSyncTasks);
     } catch (err) {
       logErrorInstance(err);
       throw err;

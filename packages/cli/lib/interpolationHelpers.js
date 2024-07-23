@@ -20,4 +20,7 @@ module.exports = {
   cyan: function(stringValue) {
     return chalk.cyan(stringValue);
   },
+  orange: function(stringValue) {
+    return chalk.hex('#FC9900')(stringValue);
+  },
 };
