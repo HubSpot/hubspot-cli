@@ -55,16 +55,15 @@ const SPINNER_STATUS = {
 };
 
 const writeProjectConfig = (configPath, config) => {
-  let success = true;
   try {
     fs.ensureFileSync(configPath);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
     logger.debug(e);
-    success = false;
+    return false;
   }
-  return success;
+  return true;
 };
 
 const getIsInProject = _dir => {

@@ -29,6 +29,7 @@ const {
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { writeProjectConfig } = require('../../lib/projects');
+const { PROJECT_CONFIG_FILE } = require('../../lib/constants');
 const {
   cloneApp,
   checkCloneStatus,
@@ -111,7 +112,7 @@ exports.handler = async options => {
       });
 
       // Create hsproject.json file
-      const configPath = path.join(baseDestPath, 'hsproject.json');
+      const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
       const configContent = {
         name,
         srcDir: 'src',
