@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -12,8 +13,8 @@ const {
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
 const {
-  cloneAppLocationPrompt,
-} = require('../../lib/prompts/cloneAppLocationPrompt');
+  createProjectPrompt,
+} = require('../../lib/prompts/createProjectPrompt');
 const { poll } = require('../../lib/polling');
 const {
   uiLine,
@@ -27,6 +28,8 @@ const {
 } = require('../../lib/errorHandlers/apiErrors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
+const { writeProjectConfig } = require('../../lib/projects');
+const { PROJECT_CONFIG_FILE } = require('../../lib/constants');
 const {
   cloneApp,
   checkCloneStatus,
@@ -35,9 +38,6 @@ const {
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const {
-  fetchPublicAppMetadata,
-} = require('@hubspot/local-dev-lib/api/appsDev');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
@@ -68,7 +68,7 @@ exports.handler = async options => {
   }
 
   let appId;
-  let appName;
+  let name;
   let location;
   try {
     appId = options.appId;
@@ -82,11 +82,9 @@ exports.handler = async options => {
       appId = appIdResponse.appId;
     }
 
-    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    appName = selectedApp.name;
-
-    const locationResponse = await cloneAppLocationPrompt(options, appName);
-    location = locationResponse.location;
+    const projectResponse = await createProjectPrompt('', options, true);
+    name = projectResponse.name;
+    location = projectResponse.location;
   } catch (error) {
     logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
@@ -101,20 +99,37 @@ exports.handler = async options => {
     const { exportId } = await cloneApp(accountId, appId);
     const { status } = await poll(checkCloneStatus, accountId, exportId);
     if (status === 'SUCCESS') {
-      const absoluteDestPath = path.resolve(getCwd(), location);
-      const zippedProject = await downloadClonedProject(accountId, exportId);
+      // Ensure correct project folder structure exists
+      const baseDestPath = path.resolve(getCwd(), location);
+      const absoluteDestPath = path.resolve(baseDestPath, 'src', 'app');
+      fs.mkdirSync(absoluteDestPath, { recursive: true });
 
-      await extractZipArchive(
-        zippedProject,
-        appName,
-        path.resolve(absoluteDestPath),
-        { includesRootDir: true, hideLogs: true }
-      );
+      // Extract zipped app files and place them in correct directory
+      const zippedApp = await downloadClonedProject(accountId, exportId);
+      await extractZipArchive(zippedApp, name, absoluteDestPath, {
+        includesRootDir: true,
+        hideLogs: true,
+      });
+
+      // Create hsproject.json file
+      const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
+      const configContent = {
+        name,
+        srcDir: 'src',
+        platformVersion: '2023.2',
+      };
+      const success = writeProjectConfig(configPath, configContent);
 
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
       });
+      if (!success) {
+        logger.error(
+          i18n(`${i18nKey}.errors.couldNotWriteConfigPath`),
+          configPath
+        );
+      }
       logger.log('');
       uiLine();
       logger.success(i18n(`${i18nKey}.cloneStatus.success`, { location }));

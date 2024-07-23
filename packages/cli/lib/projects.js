@@ -60,8 +60,10 @@ const writeProjectConfig = (configPath, config) => {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
-    logger.error(`Could not write project config at ${configPath}`);
+    logger.debug(e);
+    return false;
   }
+  return true;
 };
 
 const getIsInProject = _dir => {
