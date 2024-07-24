@@ -15,9 +15,7 @@ const { tailLogs } = require('../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.logs';
 

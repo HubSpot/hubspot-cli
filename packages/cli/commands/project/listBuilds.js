@@ -28,9 +28,7 @@ const {
 } = require('../../lib/projects');
 const moment = require('moment');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.project.subcommands.listBuilds';
 

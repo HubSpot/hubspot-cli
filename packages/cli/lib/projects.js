@@ -30,10 +30,7 @@ const {
   fetchBuildWarnLogs,
   fetchDeployWarnLogs,
 } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
@@ -301,7 +298,7 @@ const ensureProjectExists = async (
       }
     }
     if (
-      isSpecifiedHubSpotAuthError(err, {
+      isSpecifiedError(err, {
         statusCode: 401,
       })
     ) {

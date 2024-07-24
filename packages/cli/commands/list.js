@@ -45,7 +45,8 @@ exports.handler = async options => {
   try {
     contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, directoryPath }));
+    logger.error(e.toString());
+    // logApiErrorInstance(e);
     process.exit(EXIT_CODES.SUCCESS);
   }
 

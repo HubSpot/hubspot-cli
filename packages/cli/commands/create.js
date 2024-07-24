@@ -89,7 +89,7 @@ exports.handler = async options => {
     );
     logFileSystemErrorInstance(e, {
       filepath: dest,
-      write: true,
+      operation: 'write',
     });
     return;
   }

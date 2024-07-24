@@ -23,7 +23,7 @@ const { uiAccountDescription } = require('./ui');
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 

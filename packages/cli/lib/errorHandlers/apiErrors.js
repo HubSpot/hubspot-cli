@@ -3,9 +3,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
   isMissingScopeError,
   isApiUploadValidationError,
-  getHubSpotHttpErrorWithContext,
-  parseValidationErrors,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -18,9 +16,7 @@ const {
 } = require('./standardErrors');
 const { overrideErrors } = require('./overrideErrors');
 const { i18n } = require('../lang');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'lib.errorHandlers.apiErrors';
 
@@ -42,7 +38,7 @@ class ApiErrorContext extends ErrorContext {
  */
 function logValidationErrors(error, context) {
   const { response = {} } = error;
-  const validationErrors = parseValidationErrors(response.data);
+  // const validationErrors = parseValidationErrors(response.data);
   if (validationErrors.length) {
     logger.error(validationErrors.join('\n- '));
   }
@@ -58,8 +54,7 @@ function logValidationErrors(error, context) {
 function logApiErrorInstance(error, context) {
   if (isHubSpotHttpError(error)) {
     if (overrideErrors(error)) return;
-    const errorWithContext = getHubSpotHttpErrorWithContext(error, context);
-    logger.error(errorWithContext.message);
+    logger.error(error.message);
     return;
   }
   logErrorInstance(error, context);
@@ -143,7 +138,6 @@ async function logServerlessFunctionApiErrorInstance(
 
 module.exports = {
   ApiErrorContext,
-  parseValidationErrors,
   logApiErrorInstance,
   logApiUploadErrorInstance,
   logServerlessFunctionApiErrorInstance,

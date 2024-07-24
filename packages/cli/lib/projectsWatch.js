@@ -17,7 +17,7 @@ const {
   deleteFileFromBuild,
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('./constants');
 
 const i18nKey = 'commands.project.subcommands.watch';

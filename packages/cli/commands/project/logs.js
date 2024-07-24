@@ -36,7 +36,7 @@ const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { i18n } = require('../../lib/lang');
 // const {
 //   isHubSpotHttpError,
-// } = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+// } = require('@hubspot/local-dev-lib/errors/index');
 // const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.logs';

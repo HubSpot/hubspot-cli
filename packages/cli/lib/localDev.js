@@ -6,7 +6,7 @@ const {
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');

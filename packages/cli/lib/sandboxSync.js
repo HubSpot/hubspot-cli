@@ -16,7 +16,7 @@ const {
 const {
   isSpecifiedError,
   isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('./ui');

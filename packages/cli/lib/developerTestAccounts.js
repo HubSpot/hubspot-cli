@@ -9,7 +9,7 @@ const {
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiAccountDescription } = require('./ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');

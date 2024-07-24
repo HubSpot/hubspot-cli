@@ -25,7 +25,7 @@ const {
 } = require('../../lib/sandboxes');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,

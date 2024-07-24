@@ -1,4 +1,4 @@
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');

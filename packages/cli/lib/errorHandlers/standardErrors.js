@@ -1,8 +1,6 @@
 const util = require('util');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  isSystemError,
-} = require('@hubspot/local-dev-lib/errors/standardErrors');
+const { isSystemError } = require('@hubspot/local-dev-lib/errors/index');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.errorHandlers.standardErrors';

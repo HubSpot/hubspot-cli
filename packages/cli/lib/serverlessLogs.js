@@ -11,9 +11,7 @@ const {
 } = require('./errorHandlers/apiErrors');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const TAIL_DELAY = 5000;
 

@@ -27,7 +27,7 @@ const {
   cancelStagedBuild,
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');

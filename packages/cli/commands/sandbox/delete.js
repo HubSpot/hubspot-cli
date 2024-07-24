@@ -12,10 +12,7 @@ const {
   logErrorInstance,
   debugErrorAndContext,
 } = require('../../lib/errorHandlers/standardErrors');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
@@ -168,7 +165,7 @@ exports.handler = async options => {
   } catch (err) {
     debugErrorAndContext(err);
 
-    if (isSpecifiedHubSpotAuthError(err, { statusCode: 401 })) {
+    if (isSpecifiedError(err, { statusCode: 401 })) {
       // Intercept invalid key error
       // This command uses the parent portal PAK to delete a sandbox, so we must specify which account needs a new key
       logger.log('');

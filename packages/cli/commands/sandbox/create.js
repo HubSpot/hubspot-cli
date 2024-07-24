@@ -26,9 +26,7 @@ const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
-const {
-  isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors/index');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,

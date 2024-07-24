@@ -30,9 +30,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 exports.command = 'deploy';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);

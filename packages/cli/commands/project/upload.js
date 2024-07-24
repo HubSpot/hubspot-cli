@@ -20,7 +20,7 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
   logApiErrorInstance,

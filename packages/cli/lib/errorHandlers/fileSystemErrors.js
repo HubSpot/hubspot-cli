@@ -1,6 +1,3 @@
-const {
-  getFileSystemError,
-} = require('@hubspot/local-dev-lib/errors/fileSystemErrors');
 const { debugErrorAndContext, logErrorInstance } = require('./standardErrors');
 
 /**
@@ -10,7 +7,7 @@ const { debugErrorAndContext, logErrorInstance } = require('./standardErrors');
  * @param {FileSystemErrorContext}   context
  */
 function logFileSystemErrorInstance(error, context) {
-  const fileSystemError = getFileSystemError(error, context);
+  // const fileSystemError = getFileSystemError(error, context);
   logErrorInstance(fileSystemError.message, context);
   debugErrorAndContext(error, context);
 }

@@ -20,9 +20,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
-const {
-  isHubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.functions.subcommands.deploy';
 
