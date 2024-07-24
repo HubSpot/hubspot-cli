@@ -1453,5 +1453,7 @@ en:
           updateProject: "Please update your project to the latest version and try again."
           docsLink: "Projects platform versioning (BETA)"
           betaLink: "For more info, see {{ docsLink }}."
+  gates:
+    defaultMessage: "The current target account {{ accountIdentifier }} doesn’t have access to {{ featureName }}."
 
 
