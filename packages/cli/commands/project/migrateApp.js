@@ -12,7 +12,6 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
 const { poll } = require('../../lib/polling');
@@ -40,6 +39,9 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const {
+  fetchPublicAppMetadata,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
@@ -65,7 +67,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const { appId } =
@@ -74,37 +76,52 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          migrateApp: true,
+          isMigratingApp: true,
         });
 
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const selectedApp = publicApps.find(a => a.id === appId);
-  const appName = selectedApp ? selectedApp.name : 'app';
-  if (!selectedApp) {
-    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+  let appName;
+  try {
+    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
+    // preventProjectMigrations returns true if we have not added app to allowlist config.
+    // listingInfo will only exist for marketplace apps
+    const { preventProjectMigrations, listingInfo } = selectedApp;
+    if (preventProjectMigrations && listingInfo) {
+      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+    appName = selectedApp.name;
+  } catch (error) {
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
-  if (selectedApp.listingInfo) {
-    logger.error(i18n(`${i18nKey}.errors.invalidMarketplaceApp`, { appId }));
-    process.exit(EXIT_CODES.ERROR);
-  }
 
-  const { name, location } = await createProjectPrompt('', options, true);
+  let projectName;
+  let projectLocation;
+  try {
+    const { name, location } = await createProjectPrompt('', options, true);
 
-  const projectName = options.name || name;
-  const projectLocation = options.location || location;
+    projectName = options.name || name;
+    projectLocation = options.location || location;
 
-  const { projectExists } = await ensureProjectExists(accountId, projectName, {
-    allowCreate: false,
-    noLogs: true,
-  });
-
-  if (projectExists) {
-    logger.error(
-      i18n(`${i18nKey}.errors.projectAlreadyExists`, {
-        projectName,
-      })
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
     );
+
+    if (projectExists) {
+      logger.error(
+        i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+          projectName,
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } catch (error) {
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 

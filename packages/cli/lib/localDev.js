@@ -188,8 +188,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       parentAccountConfig: accountConfig,
       env,
       syncTasks,
-      allowEarlyTermination: false, // Don't let user terminate early in this flow
-      skipPolling: true, // Skip polling, sync will run and complete in the background
+      slimInfoMessage: true,
     });
     return targetAccountId;
   } catch (err) {

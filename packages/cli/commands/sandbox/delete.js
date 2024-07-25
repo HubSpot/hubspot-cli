@@ -27,12 +27,15 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { uiAccountDescription } = require('../../lib/ui');
+const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
 exports.command = 'delete [--account]';
-exports.describe = i18n(`${i18nKey}.describe`);
+exports.describe = exports.describe = uiBetaTag(
+  i18n(`${i18nKey}.describe`),
+  false
+);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);

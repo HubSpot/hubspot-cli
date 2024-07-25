@@ -2,5 +2,5 @@
   "npmClient": "yarn",
   "useWorkspaces": true,
   "packages": ["packages/*", "acceptance-tests"],
-  "version": "5.2.1-beta.10"
+  "version": "5.2.1-beta.13"
 }

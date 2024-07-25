@@ -527,8 +527,25 @@ en:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
-            invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
-            invalidMarketplaceApp: "[--appId]: Could not migrate appId {{ appId }}. Marketplace apps cannot be migrated at this time. Please choose another public app."
+            invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
+        cloneApp:
+          describe: "Clone a public app using the projects framework"
+          examples:
+            default: "Clone a public app using the projects framework"
+          options:
+            appId:
+              describe: "The ID for the public app being cloned"
+            location:
+              describe: "Directory where project should be created"
+          cloneStatus:
+            inProgress: "Cloning app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
+            done: "Cloning app configuration to public-app.json component definition ... DONE"
+            success: "Your cloned project was created in {{ location }}"
+            failure: "Cloning app configuration to public-app.json component definition ... FAILED"
+          errors:
+            invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
+            invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
+            couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
         add:
           describe: "Create a new component within a project"
           options:
@@ -1046,6 +1063,14 @@ en:
       betaWarning:
         header: "{{#yellow}}***************************** WARNING ****************************{{/yellow}}"
         footer: "{{#yellow}}******************************************************************{{/yellow}}"
+      infoTag: "{{#bold}}[INFO]{{/bold}}"
+      deprecatedTag: "{{#bold}}[DEPRECATED]{{/bold}}"
+      errorTag: "{{#bold}}[ERROR]{{/bold}}"
+      deprecatedMessage: "The {{ command }} command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedDescription: "{{ message }}. The {{ command }} command is deprecated and will be disabled soon. {{ url }}"
+      deprecatedUrlText: 'Learn more.'
+      disabledMessage: "The {{ command }} command is disabled. Run {{ npmCommand }} to update to the latest HubSpot CLI version. {{ url }}"
+      disabledUrlText: "See all HubSpot CLI commands here."
       featureHighlight:
         defaultTitle: "What's next?"
         commandKeys:
@@ -1222,11 +1247,12 @@ en:
         selectAppIdMigrate: "[--appId] Choose an app under {{ accountName }} to migrate:"
         selectAppIdClone: "[--appId] Choose an app under {{ accountName }} to clone:"
         errors:
-          noApps: "{{#bold}}No apps to migrate{{/bold}}"
-          noAppsMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
+          noAppsMigration: "{{#bold}}No apps to migrate{{/bold}}"
+          noAppsClone: "{{#bold}}No apps to clone{{/bold}}"
+          noAppsMigrationMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be migrated to the projects framework."
+          noAppsCloneMessage: "The selected developer account {{#bold}}{{ accountName }}{{/bold}} doesn't have any apps that can be cloned to the projects framework."
           errorFetchingApps: "There was an error fetching public apps."
-          invalidAppId: "[--appId] Could not find appId {{ appId }}. Please choose another public app."
-          marketplaceApp: "Marketplace app"
+          cannotBeMigrated: "Cannot be migrated"
       downloadProjectPrompt:
         selectProject: "Select a project to download:"
         errors:
@@ -1245,9 +1271,9 @@ en:
         selectAccountName: "Select the sandbox account you want to delete"
         selectParentAccountName: "Select the account that the sandbox belongs to"
         type:
-          message: "What type of sandbox would you like to create?"
-          developer: "Development sandbox (Isolated environment for developers)"
-          standard: "Standard sandbox (Testing environment for all Super Admins)"
+          message: "Choose the type of sandbox you want to create"
+          developer: "Development sandbox (Includes production's object definitions)"
+          standard: "Standard sandbox (Includes partial copy of production's assets)"
       uploadPrompt:
         enterDest: "[--dest] Enter the destination path: "
         enterSrc: "[--src] Enter the source path: "
@@ -1318,11 +1344,11 @@ en:
           developer:
             add: "Creating development sandbox {{#bold}}{{ accountName }}{{/bold}}"
             fail: "Failed to create a development sandbox {{#bold}}{{ accountName }}{{/bold}}."
-            succeed: "Successfully created a development sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+            succeed: "Created {{#bold}}{{ accountName }} [dev sandbox] ({{ accountId }}){{/bold}}."
           standard:
             add: "Creating standard sandbox {{#bold}}{{ accountName }}{{/bold}}"
             fail: "Failed to create a standard sandbox {{#bold}}{{ accountName }}{{/bold}}."
-            succeed: "Successfully created a standard sandbox {{#bold}}{{ accountName }}{{/bold}} with portalId {{#bold}}{{ accountId }}{{/bold}}."
+            succeed: "Created {{#bold}}{{ accountName }} [standard sandbox] ({{ accountId }}){{/bold}}."
         failure:
           invalidUser: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because your account has been removed from {{#bold}}{{ parentAccountName }}{{/bold}} or your permission set doesn't allow you to create the sandbox. To update your permissions, contact a super admin in {{#bold}}{{ parentAccountName }}{{/bold}}."
           403Gating: "Couldn't create {{#bold}}{{ accountName }}{{/bold}} because {{#bold}}{{ parentAccountName }}{{/bold}} does not have access to development sandboxes. To opt in to the CRM Development Beta and use development sandboxes, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
@@ -1364,53 +1390,28 @@ en:
       sync:
         info:
           syncStatus: "View the sync status details at: {{#bold}}{{ url }}{{/bold}}"
-          earlyExit: "Syncing may take some time. Hit {{#bold}}Enter{{/bold}} or {{#bold}}Ctrl+C{{/bold}} to exit and continue the sync in the background.\n"
+          syncMessage: "Asset sync from production to the sandbox is in progress and is running in the background. It may take some time. {{ url }}"
+          syncMessageDevSb: "Sync of object definitions from production to the sandbox is in progress and is running in the background. It may take some time. {{ url }}"
+          syncStatusDetailsLinkText: "View sync status details here"
         confirm:
           createFlow:
             standard: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
             developer: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
           syncContactRecords:
-            standard: "Include up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
+            standard: "Copy up to 5000 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies."
             developer: "Include up to 100 most recently updated contacts? This includes up to 100 of each of the following: associated deals, tickets, and companies. This can be done once per sandbox."
         loading:
           startSync: "Initiating sync..."
           fail: "Failed to sync sandbox."
-          succeed: "Sandbox sync initiated to {{ accountName }}."
-          skipPolling: "Syncing CRM object definitions."
-          skipPollingWithContacts: "Syncing CRM object definitions and up to 100 most recently updated contacts with associated deals, tickets, and companies (up to 100 each)."
-        polling:
-          syncing: "Syncing sandbox..."
-          fail: "Failed to fetch sync updates. View the sync status at: {{ url }}"
-          succeed: "Sandbox sync complete."
+          succeed: "Initiated asset sync from production to {{ accountName }}"
+          succeedDevSb: "Initiated sync of object definitions from production to {{ accountName }}"
+          successDevSbInfo: "Initiated sync of object definitions from production to {{ accountName }}. It may take some time. {{ url }}"
         failure:
           invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
           missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
           syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
-        types:
-          parcels:
-            label: "Account tools and features"
-          super-admins:
-            label: "Super Admins"
-          object-schemas:
-            label: "Object definitions"
-          object-records:
-            label: "Contacts and associated records"
-          cms-developer-assets:
-            label: "Themes, templates, and modules"
-          object-pipelines:
-            label: "Pipelines"
-          object-lists:
-            label: "Lists"
-          workflows:
-            label: "Workflows"
-          forms:
-            label: "Forms"
-          lead-flows:
-            label: "Lead Flows"
-          marketing-email:
-            label: "Marketing emails"
     errorHandlers:
       index:
         errorOccurred: "Error: {{ error }}"

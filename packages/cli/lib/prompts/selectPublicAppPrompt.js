@@ -10,17 +10,35 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
-const fetchPublicAppOptions = async (accountId, accountName) => {
+const fetchPublicAppOptions = async (
+  accountId,
+  accountName,
+  isMigratingApp = false
+) => {
   try {
     const publicApps = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
       app => !app.projectId && !app.sourceId
     );
 
-    if (!filteredPublicApps.length) {
+    if (
+      !filteredPublicApps.length ||
+      (isMigratingApp &&
+        !filteredPublicApps.some(
+          app => !app.preventProjectMigrations || !app.listingInfo
+        ))
+    ) {
+      const headerTranslationKey = isMigratingApp
+        ? 'noAppsMigration'
+        : 'noAppsClone';
+      const messageTranslationKey = isMigratingApp
+        ? 'noAppsMigrationMessage'
+        : 'noAppsCloneMessage';
       uiLine();
-      logger.error(i18n(`${i18nKey}.errors.noApps`));
-      logger.log(i18n(`${i18nKey}.errors.noAppsMessage`, { accountName }));
+      logger.error(i18n(`${i18nKey}.errors.${headerTranslationKey}`));
+      logger.log(
+        i18n(`${i18nKey}.errors.${messageTranslationKey}`, { accountName })
+      );
       uiLine();
       process.exit(EXIT_CODES.SUCCESS);
     }
@@ -35,10 +53,16 @@ const fetchPublicAppOptions = async (accountId, accountName) => {
 const selectPublicAppPrompt = async ({
   accountId,
   accountName,
-  migrateApp = false,
+  isMigratingApp = false,
 }) => {
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const translationKey = migrateApp ? 'selectAppIdMigrate' : 'selectAppIdClone';
+  const publicApps = await fetchPublicAppOptions(
+    accountId,
+    accountName,
+    isMigratingApp
+  );
+  const translationKey = isMigratingApp
+    ? 'selectAppIdMigrate'
+    : 'selectAppIdClone';
 
   return promptUser([
     {
@@ -48,10 +72,11 @@ const selectPublicAppPrompt = async ({
       }),
       type: 'list',
       choices: publicApps.map(app => {
-        if (app.listingInfo) {
+        const { preventProjectMigrations, listingInfo } = app;
+        if (isMigratingApp && preventProjectMigrations && listingInfo) {
           return {
             name: `${app.name} (${app.id})`,
-            disabled: i18n(`${i18nKey}.errors.marketplaceApp`),
+            disabled: i18n(`${i18nKey}.errors.cannotBeMigrated`),
           };
         }
         return {
@@ -64,6 +89,5 @@ const selectPublicAppPrompt = async ({
 };
 
 module.exports = {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 };

@@ -46,8 +46,4 @@ jobs:
           yarn test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
-          CLI_PATH: ${{ secrets.ACCEPTANCE_TEST_CLI_PATH }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
-          CLIENT_ID: ${{ secrets.ACCEPTANCE_TEST_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.ACCEPTANCE_TEST_CLIENT_SECRET }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

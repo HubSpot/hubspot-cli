@@ -65,9 +65,39 @@ yarn test-cli
 yarn check-deps # Should output "No dependency issues found"
 ```
 
+### Testing with Docker
+We use [Rancher Desktop](https://rancherdesktop.io/) to work with Docker containers. Install via the links on their homepage or with homebrew by running `brew install --cask rancher`.
+
+When launching Rancher Desktop for the first time, you will need to:
+- DISABLE the `kubernetes` checkbox
+- Select `dockerd` as the container runtime
+- Select `Manual` for configure path
+
+Then, you will need to manually add this line to your shell's configuration file (i.e. `~/.bash_profile` or `~/.zshrc`):
+```bash
+export PATH=${PATH}:~/.rd/bin
+```
+
+Then you should have access to the `docker` CLI command (as long as Rancher Desktop is running).
+
+To execute the CLI tests in a docker container, run:
+```bash
+yarn test-docker
+```
+
+This will do several things:
+1. It will generate a new hs-cli-image docker image, copy project files into it, and install dependencies
+2. It will then run a container and execute our test scripts inside of it
+3. The container will remove itself after the run completes
+
+It is also possible to open an interactive linux shell. This lets you manually run the CLI tests and commands:
+```bash
+yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image bash
+```
+**TIP:** Type `exit` to quit
+
 ## Merging
 To merge, either create, or have a maintainer create a blank branch, and set your PRs base branch to the blank branch. Merge your PR into the blank branch, and ensure that it passes the build. Then merge the new branch into main.
-
 
 ## Documentation
 
@@ -85,18 +115,18 @@ alias view-installed-links="( ls -l node_modules ; ls -l node_modules/@* ) | gre
 alias view-yarn-links="tree ~/.config/yarn/link"
 ```
 
-`view-installed-links` will show symbolic links in the `node_modules` directory of the cwd.  So if you ran `yarn link package-name`, 
+`view-installed-links` will show symbolic links in the `node_modules` directory of the cwd.  So if you ran `yarn link package-name`,
 you can use this to make certain the linking process was successful.
 
-`view-yarn-links` will show the packages that have links setup in `yarn`.  So if you ran `yarn link` in `package-name` you 
-can use this to make certain it is set up and pointing to the correct directory.  This relies on the `tree` command being installed.  
+`view-yarn-links` will show the packages that have links setup in `yarn`.  So if you ran `yarn link` in `package-name` you
+can use this to make certain it is set up and pointing to the correct directory.  This relies on the `tree` command being installed.
 
 If you don't have `tree` available an alternate command is `alias view-yarn-links="ls -R -l ~/.config/yarn/link"`
 
 ### Using the node debugger
 If you find yourself in a situation where you would like to step through the code in this project line by line in the debugger,
-you can edit `packages/cli/bin/hs` and add either `--inspect` or `--inspect-brk` to the end of the hashbang like so: 
-`#!/usr/bin/env node {all the other arguments} --inspect`.  The two function similarly, with the main difference being that `--inspect-brk` 
+you can edit `packages/cli/bin/hs` and add either `--inspect` or `--inspect-brk` to the end of the hashbang like so:
+`#!/usr/bin/env node {all the other arguments} --inspect`.  The two function similarly, with the main difference being that `--inspect-brk`
 waits for the debugger to attach before beginning execution.
 
 Once that is done, you should see something like this:
@@ -109,5 +139,5 @@ Debugger listening on ws://127.0.0.1:9229/6ac9241f-419c-495e-9b5e-310391f7b36c
 For help, see: https://nodejs.org/en/docs/inspector
 ```
 
-You can then open your [inspector of choice](https://nodejs.org/en/learn/getting-started/debugging#inspector-clients) and 
+You can then open your [inspector of choice](https://nodejs.org/en/learn/getting-started/debugging#inspector-clients) and
 walk through the code

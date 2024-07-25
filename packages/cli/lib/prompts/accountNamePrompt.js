@@ -45,9 +45,6 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
     promptMessageString = isDevelopmentSandbox
       ? i18n(`${i18nKey}.enterDevelopmentSandboxName`)
       : i18n(`${i18nKey}.enterStandardSandboxName`);
-    defaultName = i18n(`${i18nKey}.sandboxDefaultName`, {
-      sandboxType: isDevelopmentSandbox ? 'development' : 'standard',
-    });
   } else if (isDeveloperTestAccount) {
     promptMessageString = i18n(`${i18nKey}.enterDeveloperTestAccountName`);
     defaultName = i18n(`${i18nKey}.developerTestAccountDefaultName`, {
@@ -62,7 +59,7 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
       validate(val) {
         if (typeof val !== 'string') {
           return i18n(`${i18nKey}.errors.invalidName`);
-        } else if (!val.length) {
+        } else if (!val.trim().length) {
           return i18n(`${i18nKey}.errors.nameRequired`);
         }
         return accountNameExistsInConfig(val)

@@ -2,13 +2,12 @@
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { setArgsOverrides, getTestConfig } = require('./lib/env');
-const { CONFIG_FILE_PATH } = require('./lib/constants');
+const { CONFIG_FILE_NAME } = require('./lib/constants');
 const path = require('path');
 const Jasmine = require('jasmine');
 const rimraf = require('rimraf');
 const cmd = require('./tests/helpers/cmd');
 const Reporter = require('jasmine-terminal-reporter');
-const { config } = require('yargs');
 const reporter = new Reporter({
   isVerbose: true,
   includeStackTrace: true,
@@ -16,35 +15,20 @@ const reporter = new Reporter({
 
 setArgsOverrides(
   yargs(hideBin(process.argv))
-    .option('portalId', {
-      alias: ['p', 'accountId'],
+    .option('accountId', {
+      alias: ['p', 'portalId', 'a'],
       type: 'string',
-      description: 'Account Id',
+      description: 'Account ID',
     })
     .option('cliPath', {
       alias: 'c',
       type: 'string',
-      description: 'CLI Path',
+      description: 'CLI path',
     })
     .option('personalAccessKey', {
-      alias: 'a',
+      alias: 'pak',
       type: 'string',
       description: 'Personal Access Key',
-    })
-    .option('clientId', {
-      type: 'string',
-      default: false,
-      description: 'ClientId for oauth',
-    })
-    .option('clientSecret', {
-      type: 'string',
-      default: false,
-      description: 'Client secret for oauth',
-    })
-    .option('refreshToken', {
-      type: 'string',
-      default: false,
-      description: 'Refresh token for oauth',
     })
     .option('qa', {
       type: 'boolean',
@@ -66,24 +50,23 @@ setArgsOverrides(
 (async () => {
   try {
     const testRunner = new Jasmine();
+    testRunner.exitOnCompletion = false;
     testRunner.loadConfigFile(path.join(__dirname, 'jasmine.json'));
     testRunner.addReporter(reporter);
-    testRunner.onComplete(function(passed) {
-      rimraf.sync(CONFIG_FILE_PATH);
-      process.exit(passed ? 0 : 1);
-    });
-    const cliPath = path.join(process.cwd(), '../packages/cli/bin/hs');
-    const cli = cmd.create(cliPath, '.');
-    global.cli = cli;
-    global.config = getTestConfig();
 
-    await cli.execute(
-      ['init', `--c="${CONFIG_FILE_PATH}"`],
-      [cmd.ENTER, config.personalAccessKey, cmd.ENTER]
+    global.config = getTestConfig();
+    global.cli = cmd.createCli(global.config.cliPath);
+
+    await global.cli.execute(
+      ['init', `--c="${CONFIG_FILE_NAME}"`],
+      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER, cmd.ENTER]
     );
 
-    testRunner.execute();
+    const result = await testRunner.execute();
+
+    rimraf.sync(CONFIG_FILE_NAME);
+    process.exit(result.overallStatus === 'passed' ? 0 : 1);
   } catch (e) {
-    console.log(e);
+    console.log(e)
   }
 })();
