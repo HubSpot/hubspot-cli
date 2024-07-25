@@ -9,10 +9,7 @@ const {
   syncTypes,
 } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
+const { debugError, logError } = require('./errorHandlers/index');
 const {
   isSpecifiedError,
   isMissingScopeError,
@@ -94,7 +91,7 @@ const syncSandbox = async ({
       logger.log('');
     }
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
@@ -158,7 +155,7 @@ const syncSandbox = async ({
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     logger.log('');
     throw err;
@@ -191,7 +188,7 @@ const syncSandbox = async ({
       );
     } catch (err) {
       // If polling fails at this point, we do not track a failed sync since it is running in the background.
-      logErrorInstance(err);
+      logError(err);
 
       SpinniesManager.add('syncComplete', {
         text: i18n(`${i18nKey}.polling.syncing`),

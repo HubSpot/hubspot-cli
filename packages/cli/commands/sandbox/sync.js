@@ -26,7 +26,7 @@ const {
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
   HUBSPOT_ACCOUNT_TYPES,
@@ -100,7 +100,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logErrorInstance(error);
+      logError(error);
     }
     process.exit(EXIT_CODES.ERROR);
   }

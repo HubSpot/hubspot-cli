@@ -13,7 +13,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiAccountDescription } = require('./ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const config = getConfig();
@@ -94,7 +94,7 @@ function handleDeveloperTestAccountCreateError({
     );
     logger.log('');
   } else {
-    logErrorInstance(err);
+    logError(err);
   }
   throw err;
 }

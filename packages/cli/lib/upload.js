@@ -6,7 +6,7 @@ const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const {
   isConvertableFieldJs,
 } = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 /*
  * Walks the src folder for files, filters them based on ignore filter.
@@ -17,7 +17,7 @@ const getUploadableFileList = async (src, convertFields) => {
   try {
     filePaths = await walk(src);
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
   }
   const allowedFiles = filePaths
     .filter(file => {

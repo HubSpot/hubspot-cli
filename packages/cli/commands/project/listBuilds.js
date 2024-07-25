@@ -8,10 +8,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchProject,
@@ -128,7 +125,7 @@ exports.handler = async options => {
     if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(`Project ${projectConfig.name} not found. `);
     } else {
-      logApiErrorInstance(
+      logError(
         e,
         new ApiErrorContext({ accountId, projectName: projectConfig.name })
       );

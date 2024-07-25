@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 const COMPONENT_TYPES = Object.freeze({
   privateApp: 'private-app',
@@ -94,7 +94,7 @@ async function findProjectComponents(projectSourceDir) {
   try {
     projectFiles = await walk(projectSourceDir);
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
   }
 
   projectFiles.forEach(projectFile => {

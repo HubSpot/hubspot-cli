@@ -6,10 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 
 const { poll } = require('../../lib/polling');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -92,10 +89,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, request: functionPath })
-      );
+      logError(e, new ApiErrorContext({ accountId, request: functionPath }));
     }
   }
 };

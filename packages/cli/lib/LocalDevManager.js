@@ -34,7 +34,7 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 const {
   activeInstallConfirmationPrompt,
@@ -120,7 +120,7 @@ class LocalDevManager {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
     }
   }

@@ -6,10 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   deployProject,
@@ -170,7 +167,7 @@ exports.handler = async options => {
     } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.message);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+      logError(e, new ApiErrorContext({ accountId, projectName }));
     }
     return process.exit(EXIT_CODES.ERROR);
   }

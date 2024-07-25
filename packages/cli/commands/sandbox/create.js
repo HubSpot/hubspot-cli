@@ -25,7 +25,7 @@ const {
 const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandboxSync');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors/index');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
@@ -103,7 +103,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -195,7 +195,7 @@ exports.handler = async options => {
         await handleSyncSandbox(availableSyncTasks);
       }
     } catch (err) {
-      logErrorInstance(err);
+      logError(err);
       throw err;
     }
 

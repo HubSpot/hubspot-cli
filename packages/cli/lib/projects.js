@@ -39,10 +39,7 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
@@ -280,10 +277,7 @@ const ensureProjectExists = async (
           );
           return { projectExists: true, project };
         } catch (err) {
-          return logApiErrorInstance(
-            err,
-            new ApiErrorContext({ accountId, projectName })
-          );
+          return logError(err, new ApiErrorContext({ accountId, projectName }));
         }
       } else {
         if (!noLogs) {
@@ -305,7 +299,7 @@ const ensureProjectExists = async (
       logger.error(err.message);
       process.exit(EXIT_CODES.ERROR);
     }
-    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logError(err, new ApiErrorContext({ accountId, projectName }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -700,7 +694,7 @@ const makePollTaskStatusFunc = ({
         try {
           taskStatus = await statusFn(accountId, taskName, taskId);
         } catch (e) {
-          logApiErrorInstance(
+          logError(
             e,
             new ApiErrorContext({
               accountId,
@@ -938,13 +932,13 @@ const displayWarnLogs = async (
     try {
       result = await fetchDeployWarnLogs(accountId, projectName, taskId);
     } catch (e) {
-      logApiErrorInstance(e);
+      logError(e);
     }
   } else {
     try {
       result = await fetchBuildWarnLogs(accountId, projectName, taskId);
     } catch (e) {
-      logApiErrorInstance(e);
+      logError(e);
     }
   }
 

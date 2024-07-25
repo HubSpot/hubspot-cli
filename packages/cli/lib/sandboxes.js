@@ -25,7 +25,7 @@ const {
   isSpecifiedError,
 } = require('@hubspot/local-dev-lib/errors/index');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
@@ -351,7 +351,7 @@ function handleSandboxCreateError({
     }
     logger.log('');
   } else {
-    logErrorInstance(err);
+    logError(err);
   }
   throw err;
 }

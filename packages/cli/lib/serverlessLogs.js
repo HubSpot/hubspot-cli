@@ -4,14 +4,24 @@ const { handleExit, handleKeypress } = require('./process');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { outputLogs } = require('./ui/serverlessFunctionLogs');
-const {
-  logServerlessFunctionApiErrorInstance,
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+const {
+  isMissingScopeError,
+} = require('../../../../hubspot-local-dev-lib/dist/errors');
+const {
+  SCOPE_GROUPS,
+  PERSONAL_ACCESS_KEY_AUTH_METHOD,
+} = require('../../../../hubspot-local-dev-lib/dist/constants/auth');
+const {
+  getAccountConfig,
+} = require('../../../../hubspot-local-dev-lib/dist/config');
+const {
+  fetchScopeData,
+} = require('../../../../hubspot-local-dev-lib/dist/api/localDevAuth');
+const { i18n } = require('./lang');
 
 const TAIL_DELAY = 5000;
 
@@ -39,6 +49,47 @@ const handleUserInput = () => {
   });
 };
 
+async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
+  const accountConfig = getAccountConfig(accountId);
+  // TODO[JOE]: Update this i18n key
+  const i18nKey = 'lib.serverless';
+  const { authType } = accountConfig;
+  if (authType !== PERSONAL_ACCESS_KEY_AUTH_METHOD.value) {
+    return;
+  }
+
+  let scopesData;
+  try {
+    scopesData = await fetchScopeData(accountId, scopeGroup);
+  } catch (e) {
+    logger.debug(
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {
+        scopeGroup,
+        error: e,
+      })
+    );
+    return;
+  }
+  const { portalScopesInGroup, userScopesInGroup } = scopesData;
+
+  if (!portalScopesInGroup.length) {
+    logger.error(
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.portalMissingScope`)
+    );
+    return;
+  }
+
+  if (!portalScopesInGroup.every(s => userScopesInGroup.includes(s))) {
+    logger.error(
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.userMissingScope`)
+    );
+  } else {
+    logger.error(
+      i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.genericMissingScope`)
+    );
+  }
+}
+
 const tailLogs = async ({
   accountId,
   compact,
@@ -54,11 +105,14 @@ const tailLogs = async ({
   } catch (e) {
     // A 404 means no latest log exists(never executed)
     if (isHubSpotHttpError(e) && e.status !== 404) {
-      await logServerlessFunctionApiErrorInstance(
-        accountId,
-        e,
-        new ApiErrorContext({ accountId })
-      );
+      if (isMissingScopeError(e)) {
+        await verifyAccessKeyAndUserAccess(
+          accountId,
+          SCOPE_GROUPS.CMS_FUNCTIONS
+        );
+      } else {
+        await logError(accountId, e, new ApiErrorContext({ accountId }));
+      }
     }
   }
 
@@ -70,7 +124,7 @@ const tailLogs = async ({
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
       if (isHubSpotHttpError(e) && e.status !== 404) {
-        logApiErrorInstance(
+        logError(
           e,
           new ApiErrorContext({
             accountId,

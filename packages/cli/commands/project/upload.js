@@ -22,10 +22,7 @@ const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.upload';
@@ -71,7 +68,7 @@ exports.handler = async options => {
         logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
         logger.log();
       } else {
-        logApiErrorInstance(
+        logError(
           result.uploadError,
           new ApiErrorContext({
             accountId,
@@ -103,7 +100,7 @@ exports.handler = async options => {
     }
   } catch (e) {
     const projectName = projectConfig.name;
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    logError(e, new ApiErrorContext({ accountId, projectName }));
     process.exit(EXIT_CODES.ERROR);
   }
 };

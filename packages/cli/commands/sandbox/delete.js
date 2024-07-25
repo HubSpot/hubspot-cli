@@ -8,10 +8,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const {
-  logErrorInstance,
-  debugErrorAndContext,
-} = require('../../lib/errorHandlers/standardErrors');
+const { logError, debugError } = require('../../lib/errorHandlers/index');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
 const { i18n } = require('../../lib/lang');
@@ -163,7 +160,7 @@ exports.handler = async options => {
     }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     if (isSpecifiedError(err, { statusCode: 401 })) {
       // Intercept invalid key error
@@ -215,7 +212,7 @@ exports.handler = async options => {
       }
       process.exit(EXIT_CODES.SUCCESS);
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }

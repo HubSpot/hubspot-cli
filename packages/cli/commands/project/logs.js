@@ -18,9 +18,9 @@ const {
 } = require('@hubspot/local-dev-lib/api/projects');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 // const {
-//   logApiErrorInstance,
+//   logError,
 //   ApiErrorContext,
-// } = require('../../lib/errorHandlers/apiErrors');
+// } = require('../../lib/errorHandlers/index');
 // const {
 //   getFunctionLogs,
 //   getLatestFunctionLog,
@@ -56,7 +56,7 @@ const getPrivateAppsUrl = accountId => {
 //     logger.debug(`Log fetch error: ${e.message}`);
 //     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
 //   } else {
-//     logApiErrorInstance(
+//   logError(
 //       e,
 //       new ApiErrorContext({ accountId: getAccountId(), projectName })
 //     );

@@ -24,10 +24,7 @@ const {
   uiAccountDescription,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
@@ -190,9 +187,9 @@ exports.handler = async options => {
       failColor: 'white',
     });
     if (error.errors) {
-      error.errors.forEach(logApiErrorInstance);
+      error.errors.forEach(logError);
     } else {
-      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId }));
     }
 
     process.exit(EXIT_CODES.ERROR);
