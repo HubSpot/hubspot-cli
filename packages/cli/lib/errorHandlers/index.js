@@ -7,6 +7,7 @@ const {
 const { shouldSuppressError } = require('./suppressError');
 const { i18n } = require('../lang');
 const util = require('node:util');
+const { isAxiosError } = require('axios');
 
 const i18nKey = 'lib.errorHandlers.index';
 
@@ -53,7 +54,9 @@ function debugError(error, context = {}) {
   if (error.cause) {
     logger.debug(
       i18n(`${i18nKey}.errorCause`, {
-        cause: util.inspect(error.cause, false, null, true),
+        cause: isAxiosError(error.cause)
+          ? error.cause
+          : util.inspect(error.cause, false, null, true),
       })
     );
   }
