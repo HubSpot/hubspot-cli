@@ -22,10 +22,7 @@ const {
   uiAccountDescription,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { writeProjectConfig } = require('../../lib/projects');
@@ -86,7 +83,7 @@ exports.handler = async options => {
     name = projectResponse.name;
     location = projectResponse.location;
   } catch (error) {
-    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
   try {
@@ -144,10 +141,10 @@ exports.handler = async options => {
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
     if (error.errors && Array.isArray(error.errors)) {
       error.errors.forEach(e =>
-        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+        logError(e, new ApiErrorContext({ accountId }))
       );
     } else {
-      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId }));
     }
   }
 };

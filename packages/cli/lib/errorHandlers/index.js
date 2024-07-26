@@ -18,7 +18,7 @@ function logError(error, context = {}) {
   }
 
   if (isHubSpotHttpError(error) || isFileSystemError(error)) {
-    logger.error(error.toString());
+    logger.error(error.message);
   } else if (isSystemError(error)) {
     logger.error(error.message);
   } else if (error instanceof Error || error.message || error.reason) {
