@@ -43,7 +43,8 @@ exports.handler = async options => {
   );
 
   try {
-    contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
+    const { data } = await getDirectoryContentsByPath(accountId, directoryPath);
+    contentsResp = data;
   } catch (e) {
     logApiErrorInstance(e, new ApiErrorContext({ accountId, directoryPath }));
     process.exit(EXIT_CODES.SUCCESS);

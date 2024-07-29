@@ -61,14 +61,16 @@ const endpointLog = async (accountId, options) => {
     });
   } else if (latest) {
     try {
-      logsResp = await getLatestFunctionLog(accountId, functionPath);
+      const { data } = await getLatestFunctionLog(accountId, functionPath);
+      logsResp = data;
     } catch (e) {
       handleLogsError(e, accountId, functionPath);
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
     try {
-      logsResp = await getFunctionLogs(accountId, functionPath, options);
+      const { data } = await getFunctionLogs(accountId, functionPath, options);
+      logsResp = data;
     } catch (e) {
       handleLogsError(e, accountId, functionPath);
       process.exit(EXIT_CODES.ERROR);
