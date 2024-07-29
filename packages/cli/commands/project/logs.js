@@ -162,16 +162,17 @@ exports.handler = async options => {
       allowCreate: false,
     });
 
-    // const { deployedBuild, id: projectId } = await fetchProject(
+    // const { data: { deployedBuild, id: projectId } } = await fetchProject(
     //   accountId,
     //   projectName
     // );
-    const { id: projectId } = await fetchProject(accountId, projectName);
+    const {
+      data: { id: projectId },
+    } = await fetchProject(accountId, projectName);
 
-    const { results: deployComponents } = await fetchDeployComponentsMetadata(
-      accountId,
-      projectId
-    );
+    const {
+      data: { results: deployComponents },
+    } = await fetchDeployComponentsMetadata(accountId, projectId);
 
     const appComponent = deployComponents.find(
       c => c.componentName === appName

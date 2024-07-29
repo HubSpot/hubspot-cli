@@ -161,8 +161,8 @@ describe('commands/project/deploy', () => {
       });
       getAccountId.mockReturnValue(accountId);
       getAccountConfig.mockReturnValue({ accountType });
-      fetchProject.mockResolvedValue(projectDetails);
-      deployProject.mockResolvedValue(deployDetails);
+      fetchProject.mockResolvedValue({ data: projectDetails });
+      deployProject.mockResolvedValue({ data: deployDetails });
       buildIdPrompt.mockResolvedValue({
         buildId: projectDetails.latestBuild.buildId,
       });
@@ -249,7 +249,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
-      fetchProject.mockResolvedValue({});
+      fetchProject.mockResolvedValue({ data: {} });
       await handler(options);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
