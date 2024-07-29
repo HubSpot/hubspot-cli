@@ -75,9 +75,10 @@ exports.handler = async options => {
     let buildNumberToDownload = buildNumber;
 
     if (!buildNumberToDownload) {
-      let projectBuildsResult;
-
-      projectBuildsResult = await fetchProjectBuilds(accountId, projectName);
+      const { data: projectBuildsResult } = await fetchProjectBuilds(
+        accountId,
+        projectName
+      );
 
       const { results: projectBuilds } = projectBuildsResult;
 
@@ -87,7 +88,7 @@ exports.handler = async options => {
       }
     }
 
-    const zippedProject = await downloadProject(
+    const { data: zippedProject } = await downloadProject(
       accountId,
       projectName,
       buildNumberToDownload

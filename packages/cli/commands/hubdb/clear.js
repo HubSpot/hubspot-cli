@@ -37,7 +37,9 @@ exports.handler = async options => {
           tableId,
         })
       );
-      const { rowCount } = await publishTable(accountId, tableId);
+      const {
+        data: { rowCount },
+      } = await publishTable(accountId, tableId);
       logger.log(
         i18n(`${i18nKey}.logs.rowCount`, {
           rowCount,

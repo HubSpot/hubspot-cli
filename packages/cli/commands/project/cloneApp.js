@@ -96,8 +96,12 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.cloneStatus.inProgress`),
     });
 
-    const { exportId } = await cloneApp(accountId, appId);
-    const { status } = await poll(checkCloneStatus, accountId, exportId);
+    const {
+      data: { exportId },
+    } = await cloneApp(accountId, appId);
+    const {
+      data: { status },
+    } = await poll(checkCloneStatus, accountId, exportId);
     if (status === 'SUCCESS') {
       // Ensure correct project folder structure exists
       const baseDestPath = path.resolve(getCwd(), location);
@@ -105,7 +109,10 @@ exports.handler = async options => {
       fs.mkdirSync(absoluteDestPath, { recursive: true });
 
       // Extract zipped app files and place them in correct directory
-      const zippedApp = await downloadClonedProject(accountId, exportId);
+      const { data: zippedApp } = await downloadClonedProject(
+        accountId,
+        exportId
+      );
       await extractZipArchive(zippedApp, name, absoluteDestPath, {
         includesRootDir: true,
         hideLogs: true,

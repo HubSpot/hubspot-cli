@@ -92,10 +92,9 @@ exports.handler = async options => {
   let buildIdToDeploy = buildIdOption;
 
   try {
-    const { latestBuild, deployedBuildId } = await fetchProject(
-      accountId,
-      projectName
-    );
+    const {
+      data: { latestBuild, deployedBuildId },
+    } = await fetchProject(accountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`${i18nKey}.errors.noBuilds`));
@@ -136,7 +135,7 @@ exports.handler = async options => {
       return process.exit(EXIT_CODES.ERROR);
     }
 
-    const deployResp = await deployProject(
+    const { data: deployResp } = await deployProject(
       accountId,
       projectName,
       buildIdToDeploy
