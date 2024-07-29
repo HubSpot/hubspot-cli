@@ -85,7 +85,8 @@ async function verifyAccessKeyAndUserAccess(accountId, scopeGroup) {
 
   let scopesData;
   try {
-    scopesData = await fetchScopeData(accountId, scopeGroup);
+    const { data } = await fetchScopeData(accountId, scopeGroup);
+    scopesData = data;
   } catch (e) {
     logger.debug(
       i18n(`${i18nKey}.verifyAccessKeyAndUserAccess.fetchScopeDataError`, {

@@ -68,7 +68,9 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
           await ensureProjectExists(accountId, name, {
             allowCreate: false,
           });
-          const { deployedBuild } = await fetchProject(accountId, name);
+          const {
+            data: { deployedBuild },
+          } = await fetchProject(accountId, name);
 
           if (deployedBuild && deployedBuild.subbuildStatuses) {
             return deployedBuild.subbuildStatuses
