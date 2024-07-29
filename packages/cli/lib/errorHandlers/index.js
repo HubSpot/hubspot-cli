@@ -3,6 +3,7 @@ const {
   isHubSpotHttpError,
   isSystemError,
   isFileSystemError,
+  isValidationError,
 } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldSuppressError } = require('./suppressError');
 const { i18n } = require('../lang');
@@ -20,6 +21,10 @@ function logError(error, context = {}) {
 
   if (isHubSpotHttpError(error) || isFileSystemError(error)) {
     logger.error(error.message);
+
+    if (isValidationError(error)) {
+      logger.error(error.formattedValidationErrors());
+    }
   } else if (isSystemError(error)) {
     logger.error(error.message);
   } else if (error instanceof Error || error.message || error.reason) {
