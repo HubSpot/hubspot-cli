@@ -130,7 +130,7 @@ class LocalDevManager {
       return;
     }
 
-    const portalPublicApps = await fetchPublicAppsForPortal(
+    const { data: portalPublicApps } = await fetchPublicAppsForPortal(
       this.targetProjectAccountId
     );
 
@@ -139,7 +139,7 @@ class LocalDevManager {
     );
 
     const {
-      testPortalInstallCount,
+      data: { testPortalInstallCount },
     } = await fetchPublicAppDeveloperTestAccountInstallData(
       activePublicAppData.id,
       this.targetProjectAccountId
@@ -286,14 +286,16 @@ class LocalDevManager {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  getActiveAppInstallationData() {
-    return fetchAppInstallationData(
+  async getActiveAppInstallationData() {
+    const { data } = await fetchAppInstallationData(
       this.targetAccountId,
       this.projectId,
       this.activeApp.config.uid,
       this.activeApp.config.auth.requiredScopes,
       this.activeApp.config.auth.optionalScopes
     );
+
+    return data;
   }
 
   async checkPublicAppInstallation() {

@@ -151,11 +151,9 @@ const queueFileOrFolder = async (
 const createNewBuild = async (accountId, projectName, platformVersion) => {
   try {
     logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
-    const { buildId } = await provisionBuild(
-      accountId,
-      projectName,
-      platformVersion
-    );
+    const {
+      data: { buildId },
+    } = await provisionBuild(accountId, projectName, platformVersion);
     return buildId;
   } catch (err) {
     logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
