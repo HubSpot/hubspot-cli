@@ -331,7 +331,9 @@ describe('commands/project/deploy', () => {
     it('should log an error and exit when the deploy fails', async () => {
       const errorMessage = `Just wasn't feeling it`;
       deployProject.mockResolvedValue({
-        error: { message: errorMessage },
+        data: {
+          error: { message: errorMessage },
+        },
       });
 
       await handler(options);
