@@ -85,57 +85,64 @@ exports.handler = async options => {
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 
-  const initialUploadProgressBar = new cliProgress.SingleBar(
-    {
-      gracefulExit: true,
-      format: '[{bar}] {percentage}% | {value}/{total} | {label}',
-      hideCursor: true,
-    },
-    cliProgress.Presets.rect
-  );
-  initialUploadProgressBar.start(filePaths.length, 0, {
-    label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
-  });
-  let uploadsHaveStarted = false;
-  const uploadOptions = {
-    onAttemptCallback: () => {
-      /* Intentionally blank */
-    },
-    onSuccessCallback: () => {
-      initialUploadProgressBar.increment();
-      if (!uploadsHaveStarted) {
-        uploadsHaveStarted = true;
-        initialUploadProgressBar.update(0, {
-          label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
-        });
-      }
-    },
-    onFirstErrorCallback: () => {
-      /* Intentionally blank */
-    },
-    onRetryCallback: () => {
-      /* Intentionally blank */
-    },
-    onFinalErrorCallback: () => initialUploadProgressBar.increment(),
-    onFinishCallback: results => {
-      initialUploadProgressBar.update(filePaths.length, {
-        label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
-      });
-      initialUploadProgressBar.stop();
-      results.forEach(result => {
-        if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
-          logger.error('Uploading file "%s" to "%s" failed', result.file, dest);
-          logApiUploadErrorInstance(
-            result.error,
-            new ApiErrorContext({
-              accountId,
-              request: dest,
-              payload: result.file,
-            })
-          );
+  const startProgressBar = numFiles => {
+    const initialUploadProgressBar = new cliProgress.SingleBar(
+      {
+        gracefulExit: true,
+        format: '[{bar}] {percentage}% | {value}/{total} | {label}',
+        hideCursor: true,
+      },
+      cliProgress.Presets.rect
+    );
+    initialUploadProgressBar.start(numFiles, 0, {
+      label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
+    });
+    let uploadsHaveStarted = false;
+    const uploadOptions = {
+      onAttemptCallback: () => {
+        /* Intentionally blank */
+      },
+      onSuccessCallback: () => {
+        initialUploadProgressBar.increment();
+        if (!uploadsHaveStarted) {
+          uploadsHaveStarted = true;
+          initialUploadProgressBar.update(0, {
+            label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
+          });
         }
-      });
-    },
+      },
+      onFirstErrorCallback: () => {
+        /* Intentionally blank */
+      },
+      onRetryCallback: () => {
+        /* Intentionally blank */
+      },
+      onFinalErrorCallback: () => initialUploadProgressBar.increment(),
+      onFinishCallback: results => {
+        initialUploadProgressBar.update(numFiles, {
+          label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
+        });
+        initialUploadProgressBar.stop();
+        results.forEach(result => {
+          if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
+            logger.error(
+              'Uploading file "%s" to "%s" failed',
+              result.file,
+              dest
+            );
+            logApiUploadErrorInstance(
+              result.error,
+              new ApiErrorContext({
+                accountId,
+                request: dest,
+                payload: result.file,
+              })
+            );
+          }
+        });
+      },
+    };
+    return uploadOptions;
   };
 
   trackCommandUsage('preview', accountId);
@@ -147,7 +154,7 @@ exports.handler = async options => {
     noSsl,
     port,
     debug,
-    uploadOptions,
+    startProgressBar,
     handleUserInput,
   });
 };
