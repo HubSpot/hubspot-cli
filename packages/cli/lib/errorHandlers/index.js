@@ -4,6 +4,7 @@ const {
   isSystemError,
   isFileSystemError,
   isValidationError,
+  isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldSuppressError } = require('./suppressError');
 const { i18n } = require('../lang');
@@ -20,10 +21,10 @@ function logError(error, context = {}) {
   }
 
   if (isHubSpotHttpError(error) || isFileSystemError(error)) {
-    logger.error(error.message);
-
-    if (isValidationError(error)) {
+    if (isValidationError(error) || isMissingScopeError(error)) {
       logger.error(error.formattedValidationErrors());
+    } else {
+      logger.error(error.message);
     }
   } else if (isSystemError(error)) {
     logger.error(error.message);
