@@ -1,10 +1,10 @@
-const path = require('path');
 const fs = require('fs-extra');
 const {
   getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  loadConfig,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -31,7 +31,6 @@ const {
   getAccessToken,
   updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
@@ -105,10 +104,14 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 exports.handler = async options => {
   const {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    c,
     account: optionalAccount,
   } = options;
-  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
+  const { useNewConfig } = await promptUser({
+    name: 'useNewConfig',
+    type: 'confirm',
+    message: i18n(`${i18nKey}.useNewConfig`),
+  });
+  const configPath = getConfigPath(useNewConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -127,7 +130,8 @@ exports.handler = async options => {
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: configPath });
+  createEmptyConfigFile({ path: configPath }, useNewConfig);
+  loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 
   try {

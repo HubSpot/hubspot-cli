@@ -415,6 +415,7 @@ en:
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
       logs:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
+      useNewConfig: "Would you like to use the new version of the HubSpot config file? It will be located in the root directory"
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
     lint:
