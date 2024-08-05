@@ -51,6 +51,7 @@ function debugErrorAndContext(error, context) {
       context: util.inspect(context, false, null, true),
     })
   );
+  logger.debug(error.stack);
 }
 
 /**

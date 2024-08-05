@@ -76,14 +76,14 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
 
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion(getConfigPath());
+
   if (!getConfigPath()) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath);
-  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
