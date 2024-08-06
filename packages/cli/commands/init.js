@@ -1,3 +1,4 @@
+const path = require('path');
 const fs = require('fs-extra');
 const {
   getConfigPath,
@@ -32,6 +33,7 @@ const {
   getAccessToken,
   updateConfigWithAccessToken,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
+const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
@@ -105,14 +107,12 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 exports.handler = async options => {
   const {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+    c,
     account: optionalAccount,
+    useRootConfig,
   } = options;
-  const { useNewConfig } = await promptUser({
-    name: 'useNewConfig',
-    type: 'confirm',
-    message: i18n(`${i18nKey}.useNewConfig`),
-  });
-  const configPath = getConfigPath(useNewConfig);
+  const configPath =
+    (c && path.join(getCwd(), c)) || getConfigPath(useRootConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -129,13 +129,13 @@ exports.handler = async options => {
     logger.info(i18n(`${i18nKey}.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
-  if (bothConfigFilesExist(useNewConfig)) {
+  if (bothConfigFilesExist(useRootConfig)) {
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: configPath }, useNewConfig);
+  createEmptyConfigFile({ path: configPath }, useRootConfig);
   loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 
@@ -197,6 +197,10 @@ exports.builder = yargs => {
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+    },
+    useRootConfig: {
+      describe: i18n(`${i18nKey}.options.account.useRootConfig`),
+      type: 'boolean',
     },
   });
 
