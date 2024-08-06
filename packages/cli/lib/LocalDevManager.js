@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstallData,
+  fetchPublicAppProductionInstallCounts,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -138,17 +138,16 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    // TODO: Update to account for new API with { data }
     const {
-      testPortalInstallCount,
-    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      uniquePortalInstallCount,
+    } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls =
-      activePublicAppData.publicApplicationInstallCounts
-        .uniquePortalInstallCount - testPortalInstallCount;
+    this.publicAppActiveInstalls = uniquePortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {
