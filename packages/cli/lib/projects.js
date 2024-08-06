@@ -30,10 +30,7 @@ const {
   fetchBuildWarnLogs,
   fetchDeployWarnLogs,
 } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
@@ -42,10 +39,7 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
@@ -285,10 +279,7 @@ const ensureProjectExists = async (
           );
           return { projectExists: true, project };
         } catch (err) {
-          return logApiErrorInstance(
-            err,
-            new ApiErrorContext({ accountId, projectName })
-          );
+          return logError(err, new ApiErrorContext({ accountId, projectName }));
         }
       } else {
         if (!noLogs) {
@@ -303,14 +294,14 @@ const ensureProjectExists = async (
       }
     }
     if (
-      isSpecifiedHubSpotAuthError(err, {
+      isSpecifiedError(err, {
         statusCode: 401,
       })
     ) {
       logger.error(err.message);
       process.exit(EXIT_CODES.ERROR);
     }
-    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logError(err, new ApiErrorContext({ accountId, projectName }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -708,7 +699,7 @@ const makePollTaskStatusFunc = ({
           const { data } = await statusFn(accountId, taskName, taskId);
           taskStatus = data;
         } catch (e) {
-          logApiErrorInstance(
+          logError(
             e,
             new ApiErrorContext({
               accountId,
@@ -951,14 +942,14 @@ const displayWarnLogs = async (
       );
       result = data;
     } catch (e) {
-      logApiErrorInstance(e);
+      logError(e);
     }
   } else {
     try {
       const { data } = await fetchBuildWarnLogs(accountId, projectName, taskId);
       result = data;
     } catch (e) {
-      logApiErrorInstance(e);
+      logError(e);
     }
   }
 

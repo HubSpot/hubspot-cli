@@ -6,7 +6,7 @@ const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
   trackHelpUsage,
@@ -71,7 +71,7 @@ const handleFailure = (msg, err, yargs) => {
   if (msg) {
     logger.error(msg);
   } else if (err) {
-    logErrorInstance(err);
+    logError(err);
   }
 
   if (msg === null) {

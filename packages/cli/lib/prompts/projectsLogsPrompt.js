@@ -3,10 +3,7 @@ const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('../commonOpts');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../enums/exitCodes');
 
@@ -87,7 +84,7 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
           const { projectConfig } = await getProjectConfig();
           const projectName = projectConfig.name;
 
-          logApiErrorInstance(
+          logError(
             e,
             new ApiErrorContext({ accountId: getAccountId(), projectName })
           );

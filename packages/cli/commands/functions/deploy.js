@@ -6,10 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 
 const { poll } = require('../../lib/polling');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -20,6 +17,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.functions.subcommands.deploy';
 
@@ -75,13 +73,13 @@ exports.handler = async options => {
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
-    if (e.response && e.response.status === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.noPackageJson`, {
           functionPath,
         })
       );
-    } else if (e.response && e.response.status === 400) {
+    } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
@@ -91,10 +89,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, request: functionPath })
-      );
+      logError(e, new ApiErrorContext({ accountId, request: functionPath }));
     }
   }
 };

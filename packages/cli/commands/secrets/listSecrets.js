@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { fetchSecrets } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -40,7 +37,7 @@ exports.handler = async options => {
     logger.groupEnd(groupLabel);
   } catch (err) {
     logger.error(i18n(`${i18nKey}.errors.list`));
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'add secret',

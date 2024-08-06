@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -40,7 +40,7 @@ exports.handler = async options => {
         tableId,
       })
     );
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 

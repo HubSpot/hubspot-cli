@@ -1,7 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logErrorInstance,
-} = require('../../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../../lib/errorHandlers/index');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
@@ -24,7 +22,7 @@ exports.handler = async options => {
   try {
     await listSchemas(accountId);
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
     logger.error(i18n(`${i18nKey}.errors.list`));
   }
 };

@@ -28,7 +28,7 @@ const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
 const { logDebugInfo } = require('./debugInfo');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { checkAndWarnGitInclusion } = require('./ui/git');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {
   setLogLevel(options);
@@ -156,7 +156,7 @@ async function validateAccount(options) {
         return false;
       }
     } catch (e) {
-      logErrorInstance(e);
+      logError(e);
       return false;
     }
   } else if (!apiKey) {

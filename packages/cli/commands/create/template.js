@@ -1,6 +1,6 @@
 const { createTemplate } = require('@hubspot/local-dev-lib/cms/templates');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const {
   createTemplatePrompt,
 } = require('../../lib/prompts/createTemplatePrompt');
@@ -24,7 +24,7 @@ module.exports = {
     try {
       await createTemplate(name, dest, templateType);
     } catch (e) {
-      logErrorInstance(e);
+      logError(e);
       process.exit(EXIT_CODES.ERROR);
     }
     return { templateType };

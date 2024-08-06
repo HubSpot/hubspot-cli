@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstallData,
+  fetchPublicAppProductionInstallCounts,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -34,7 +34,7 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 const {
   activeInstallConfirmationPrompt,
@@ -120,7 +120,7 @@ class LocalDevManager {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
     }
   }
@@ -138,17 +138,16 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    // TODO: Update to account for new API with { data }
     const {
-      data: { testPortalInstallCount },
-    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      data: { uniquePortalInstallCount },
+    } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls =
-      activePublicAppData.publicApplicationInstallCounts
-        .uniquePortalInstallCount - testPortalInstallCount;
+    this.publicAppActiveInstalls = uniquePortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {
