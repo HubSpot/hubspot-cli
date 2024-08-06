@@ -48,11 +48,9 @@ exports.handler = async options => {
   logger.debug(`Fetching builds for project at path: ${projectPath}`);
 
   const fetchAndDisplayBuilds = async (project, options) => {
-    const { results, paging } = await fetchProjectBuilds(
-      accountId,
-      project.name,
-      options
-    );
+    const {
+      data: { results, paging },
+    } = await fetchProjectBuilds(accountId, project.name, options);
     const currentDeploy = project.deployedBuildId;
     if (options && options.after) {
       logger.log(
@@ -118,7 +116,7 @@ exports.handler = async options => {
   };
 
   try {
-    const project = await fetchProject(accountId, projectConfig.name);
+    const { data: project } = await fetchProject(accountId, projectConfig.name);
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {

@@ -103,11 +103,9 @@ exports.handler = async options => {
   await ensureProjectExists(accountId, projectConfig.name);
 
   try {
-    const { results: builds } = await fetchProjectBuilds(
-      accountId,
-      projectConfig.name,
-      options
-    );
+    const {
+      data: { results: builds },
+    } = await fetchProjectBuilds(accountId, projectConfig.name, options);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {

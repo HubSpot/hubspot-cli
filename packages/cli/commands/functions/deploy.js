@@ -59,7 +59,7 @@ exports.handler = async options => {
         functionPath,
       })
     ).start();
-    const buildId = await buildPackage(accountId, functionPath);
+    const { data: buildId } = await buildPackage(accountId, functionPath);
     const successResp = await poll(getBuildStatus, accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();

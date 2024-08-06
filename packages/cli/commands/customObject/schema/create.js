@@ -54,12 +54,12 @@ exports.handler = async options => {
         })
       );
     } else {
-      const res = await createObjectSchema(accountId, schemaJson);
+      const { data } = await createObjectSchema(accountId, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.schemaViewable`, {
           url: `${getHubSpotWebsiteOrigin(
             getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${accountId}/objects/${res.objectTypeId}`,
+          )}/contacts/${accountId}/objects/${data.objectTypeId}`,
         })
       );
     }

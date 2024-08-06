@@ -26,7 +26,9 @@ exports.handler = async options => {
   trackCommandUsage('secrets-list', null, accountId);
 
   try {
-    const { results } = await fetchSecrets(accountId);
+    const {
+      data: { results },
+    } = await fetchSecrets(accountId);
     const groupLabel = i18n(`${i18nKey}.groupLabel`, {
       accountIdentifier: uiAccountDescription(accountId),
     });

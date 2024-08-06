@@ -4,7 +4,7 @@ const poll = (callback, accountId, taskId) => {
   return new Promise((resolve, reject) => {
     const pollInterval = setInterval(async () => {
       try {
-        const pollResp = await callback(accountId, taskId);
+        const { data: pollResp } = await callback(accountId, taskId);
         const { status } = pollResp;
 
         if (status === POLLING_STATUS.SUCCESS) {

@@ -9,7 +9,7 @@ const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
 const createProjectsList = async accountId => {
   try {
-    const projects = await fetchProjects(accountId);
+    const { data: projects } = await fetchProjects(accountId);
     return projects.results;
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId }));

@@ -207,11 +207,11 @@ const pollFetchProject = async (accountId, projectName) => {
     });
     const pollInterval = setInterval(async () => {
       try {
-        const project = await fetchProject(accountId, projectName);
-        if (project) {
+        const response = await fetchProject(accountId, projectName);
+        if (response && response.data) {
           SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
-          resolve(project);
+          resolve(response);
         }
       } catch (err) {
         if (
@@ -246,7 +246,7 @@ const ensureProjectExists = async (
 ) => {
   const accountIdentifier = uiAccountDescription(accountId);
   try {
-    const project = withPolling
+    const { data: project } = withPolling
       ? await pollFetchProject(accountId, projectName)
       : await fetchProject(accountId, projectName);
     return { projectExists: !!project, project };
@@ -270,7 +270,7 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          const project = await createProject(accountId, projectName);
+          const { data: project } = await createProject(accountId, projectName);
           logger.success(
             i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
               projectName,
@@ -354,7 +354,7 @@ const uploadProjectFiles = async (
   let error;
 
   try {
-    const upload = await uploadProject(
+    const { data: upload } = await uploadProject(
       accountId,
       projectName,
       filePath,
@@ -619,8 +619,10 @@ const makePollTaskStatusFunc = ({
     });
 
     const [
-      initialTaskStatus,
-      { topLevelComponentsWithChildren: taskStructure },
+      { data: initialTaskStatus },
+      {
+        data: { topLevelComponentsWithChildren: taskStructure },
+      },
     ] = await Promise.all([
       statusFn(accountId, taskName, taskId),
       structureFn(accountId, taskName, taskId),
@@ -694,7 +696,8 @@ const makePollTaskStatusFunc = ({
       const pollInterval = setInterval(async () => {
         let taskStatus;
         try {
-          taskStatus = await statusFn(accountId, taskName, taskId);
+          const { data } = await statusFn(accountId, taskName, taskId);
+          taskStatus = data;
         } catch (e) {
           logError(
             e,
@@ -932,13 +935,19 @@ const displayWarnLogs = async (
 
   if (isDeploy) {
     try {
-      result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+      const { data } = await fetchDeployWarnLogs(
+        accountId,
+        projectName,
+        taskId
+      );
+      result = data;
     } catch (e) {
       logError(e);
     }
   } else {
     try {
-      result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+      const { data } = await fetchBuildWarnLogs(accountId, projectName, taskId);
+      result = data;
     } catch (e) {
       logError(e);
     }

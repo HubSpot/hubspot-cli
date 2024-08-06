@@ -81,7 +81,10 @@ exports.handler = async options => {
 
   let appName;
   try {
-    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
+    const { data: selectedApp } = await fetchPublicAppMetadata(
+      appId,
+      accountId
+    );
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
     const { preventProjectMigrations, listingInfo } = selectedApp;
@@ -164,7 +167,11 @@ exports.handler = async options => {
       }
     });
 
-    const migrateResponse = await migrateApp(accountId, appId, projectName);
+    const { data: migrateResponse } = await migrateApp(
+      accountId,
+      appId,
+      projectName
+    );
     const { id } = migrateResponse;
     const pollResponse = await poll(checkMigrationStatus, accountId, id);
     const { status, project } = pollResponse;
@@ -173,7 +180,11 @@ exports.handler = async options => {
       const { env } = getAccountConfig(accountId);
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
-      const zippedProject = await downloadProject(accountId, projectName, 1);
+      const { data: zippedProject } = await downloadProject(
+        accountId,
+        projectName,
+        1
+      );
 
       await extractZipArchive(
         zippedProject,

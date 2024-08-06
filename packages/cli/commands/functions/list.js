@@ -28,7 +28,7 @@ exports.handler = async options => {
 
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
-  const routesResp = await getRoutes(accountId).catch(async e => {
+  const { data: routesResp } = await getRoutes(accountId).catch(async e => {
     logError(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.SUCCESS);
   });

@@ -40,7 +40,8 @@ exports.handler = async options => {
   );
 
   try {
-    contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
+    const { data } = await getDirectoryContentsByPath(accountId, directoryPath);
+    contentsResp = data;
   } catch (e) {
     logError(e);
     process.exit(EXIT_CODES.SUCCESS);

@@ -100,7 +100,7 @@ const tailLogs = async ({
   let initialAfter;
 
   try {
-    const latestLog = await fetchLatest();
+    const { data: latestLog } = await fetchLatest();
     initialAfter = latestLog && base64EncodeString(latestLog.id);
   } catch (e) {
     // A 404 means no latest log exists(never executed)
@@ -120,7 +120,8 @@ const tailLogs = async ({
     let latestLog;
     let nextAfter;
     try {
-      latestLog = await tailCall(after);
+      const { data } = await tailCall(after);
+      latestLog = data;
       nextAfter = latestLog.paging.next.after;
     } catch (e) {
       if (isHubSpotHttpError(e) && e.status !== 404) {

@@ -16,7 +16,7 @@ const fetchPublicAppOptions = async (
   isMigratingApp = false
 ) => {
   try {
-    const publicApps = await fetchPublicAppsForPortal(accountId);
+    const { data: publicApps } = await fetchPublicAppsForPortal(accountId);
     const filteredPublicApps = publicApps.filter(
       app => !app.projectId && !app.sourceId
     );
