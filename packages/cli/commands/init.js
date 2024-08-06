@@ -5,6 +5,7 @@ const {
   deleteEmptyConfigFile,
   updateDefaultAccount,
   loadConfig,
+  bothConfigFilesExist,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -126,6 +127,10 @@ exports.handler = async options => {
       })
     );
     logger.info(i18n(`${i18nKey}.logs.updateConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+  if (bothConfigFilesExist(useNewConfig)) {
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
     process.exit(EXIT_CODES.ERROR);
   }
 
