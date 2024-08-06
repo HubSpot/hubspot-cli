@@ -46,7 +46,7 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
 const i18nKey = 'commands.auth';
 
@@ -117,7 +117,7 @@ exports.handler = async options => {
           env
         );
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
 
       if (!updatedConfig) {

@@ -6,7 +6,7 @@ const {
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
@@ -28,7 +28,6 @@ const { syncSandbox } = require('./sandboxSync');
 const {
   validateDevTestAccountUsageLimits,
 } = require('./developerTestAccounts');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { i18n } = require('./lang');
@@ -47,10 +46,7 @@ const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
 } = require('./constants');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
@@ -158,7 +154,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -196,7 +192,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
     });
     return targetAccountId;
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -235,7 +231,7 @@ const createDeveloperTestAccountForLocalDev = async (
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -261,7 +257,7 @@ const createDeveloperTestAccountForLocalDev = async (
 
     return result.id;
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -393,7 +389,7 @@ const createInitialBuildForNewProject = async (
       );
       logger.log();
     } else {
-      logApiErrorInstance(
+      logError(
         initialUploadResult.uploadError,
         new ApiErrorContext({
           accountId: targetAccountId,

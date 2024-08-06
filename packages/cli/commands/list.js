@@ -9,10 +9,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { logError } = require('../lib/errorHandlers/index');
 const {
   getDirectoryContentsByPath,
 } = require('@hubspot/local-dev-lib/api/fileMapper');
@@ -45,7 +42,7 @@ exports.handler = async options => {
   try {
     contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, directoryPath }));
+    logError(e);
     process.exit(EXIT_CODES.SUCCESS);
   }
 

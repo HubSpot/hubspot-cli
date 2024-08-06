@@ -15,11 +15,12 @@ const { tailLogs } = require('../lib/serverlessLogs');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.logs';
 
 const handleLogsError = (e, accountId, functionPath) => {
-  if (e.response.status === 404 || e.response.status == 400) {
+  if (isHubSpotHttpError(e) && (e.status === 404 || e.status == 400)) {
     logger.error(
       i18n(`${i18nKey}.errors.noLogsFound`, {
         accountId,

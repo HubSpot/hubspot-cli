@@ -6,10 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   deployProject,
@@ -30,6 +27,7 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 exports.command = 'deploy';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -158,7 +156,7 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
-    if (e.response && e.response.status === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
@@ -166,10 +164,10 @@ exports.handler = async options => {
           command: uiCommandReference('hs project upload'),
         })
       );
-    } else if (e.response && e.response.status === 400) {
+    } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.message);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+      logError(e, new ApiErrorContext({ accountId, projectName }));
     }
     return process.exit(EXIT_CODES.ERROR);
   }

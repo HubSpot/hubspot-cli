@@ -1,10 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 
@@ -15,7 +12,7 @@ const createProjectsList = async accountId => {
     const projects = await fetchProjects(accountId);
     return projects.results;
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+    logError(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
