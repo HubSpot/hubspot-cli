@@ -1,9 +1,6 @@
 const path = require('path');
 const { isConfigFlagEnabled } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logErrorInstance,
-} = require('../../../lib/errorHandlers/standardErrors');
 const { CONFIG_FLAGS } = require('../../../lib/constants');
 const {
   downloadSchema,
@@ -16,6 +13,7 @@ const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
 const { i18n } = require('../../../lib/lang');
+const { logError } = require('../../../lib/errorHandlers');
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetch';
 
@@ -50,7 +48,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
     logger.error(
       i18n(`${i18nKey}.errors.fetch`, {
         name,

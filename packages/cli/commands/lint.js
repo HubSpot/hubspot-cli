@@ -1,7 +1,7 @@
 const { lint } = require('@hubspot/local-dev-lib/cms/validate');
 const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
 const {
   addConfigOptions,
@@ -41,7 +41,7 @@ exports.handler = async options => {
     });
   } catch (err) {
     logger.groupEnd(groupName);
-    logErrorInstance(err, { accountId });
+    logError(err, { accountId });
     process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);

@@ -23,10 +23,7 @@ const {
   uiAccountDescription,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
@@ -84,7 +81,10 @@ exports.handler = async options => {
 
   let appName;
   try {
-    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
+    const { data: selectedApp } = await fetchPublicAppMetadata(
+      appId,
+      accountId
+    );
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
     const { preventProjectMigrations, listingInfo } = selectedApp;
@@ -94,7 +94,7 @@ exports.handler = async options => {
     }
     appName = selectedApp.name;
   } catch (error) {
-    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -124,7 +124,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
-    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -167,7 +167,11 @@ exports.handler = async options => {
       }
     });
 
-    const migrateResponse = await migrateApp(accountId, appId, projectName);
+    const { data: migrateResponse } = await migrateApp(
+      accountId,
+      appId,
+      projectName
+    );
     const { id } = migrateResponse;
     const pollResponse = await poll(checkMigrationStatus, accountId, id);
     const { status, project } = pollResponse;
@@ -176,7 +180,11 @@ exports.handler = async options => {
       const { env } = getAccountConfig(accountId);
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
-      const zippedProject = await downloadProject(accountId, projectName, 1);
+      const { data: zippedProject } = await downloadProject(
+        accountId,
+        projectName,
+        1
+      );
 
       await extractZipArchive(
         zippedProject,
@@ -206,13 +214,10 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
-    if (error.errors && Array.isArray(error.errors)) {
-      error.errors.forEach(e =>
-        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
-      );
+    if (error.errors) {
+      error.errors.forEach(logError);
     } else {
-      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId }));
     }
 
     process.exit(EXIT_CODES.ERROR);

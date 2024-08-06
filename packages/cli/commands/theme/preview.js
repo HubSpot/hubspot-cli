@@ -21,10 +21,7 @@ const {
   FILE_UPLOAD_RESULT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/files');
 const cliProgress = require('cli-progress');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { handleExit, handleKeypress } = require('../../lib/process');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
 const { getProjectConfig } = require('../../lib/projects');
@@ -160,7 +157,7 @@ exports.handler = async options => {
       results.forEach(result => {
         if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
           logger.error('Uploading file "%s" to "%s" failed', result.file, dest);
-          logApiUploadErrorInstance(
+          logError(
             result.error,
             new ApiErrorContext({
               accountId,

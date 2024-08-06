@@ -1,11 +1,11 @@
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
 const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');
 const { i18n } = require('../lang');
 const { uiLine, uiLink } = require('../ui');
 
-const i18nKey = 'lib.errorHandlers.overrideErrors';
+const i18nKey = 'lib.errorHandlers.suppressErrors';
 
 function createPlatformVersionError(subCategory, errData) {
   const docsLink = uiLink(
@@ -50,7 +50,7 @@ function createPlatformVersionError(subCategory, errData) {
   uiLine();
 }
 
-function overrideErrors(err) {
+function shouldSuppressError(err) {
   if (
     isSpecifiedError(err, {
       subCategory: PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED,
@@ -58,7 +58,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED,
-      err.response.data
+      err.data
     );
     return true;
   }
@@ -70,7 +70,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED,
-      err.response.data
+      err.data
     );
     return true;
   }
@@ -83,7 +83,7 @@ function overrideErrors(err) {
   ) {
     createPlatformVersionError(
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST,
-      err.response.data
+      err.data
     );
     return true;
   }
@@ -91,5 +91,5 @@ function overrideErrors(err) {
 }
 
 module.exports = {
-  overrideErrors,
+  shouldSuppressError,
 };

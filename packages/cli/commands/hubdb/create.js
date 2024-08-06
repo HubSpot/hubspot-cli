@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { createHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
 
@@ -56,7 +56,7 @@ exports.handler = async options => {
         src,
       })
     );
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 

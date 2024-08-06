@@ -4,14 +4,11 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { getAvailableSyncTypes } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
+const { debugError, logError } = require('./errorHandlers/index');
 const {
   isSpecifiedError,
   isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const {
@@ -90,7 +87,7 @@ const syncSandbox = async ({
       ),
     });
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
@@ -163,7 +160,7 @@ const syncSandbox = async ({
         'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     logger.log('');
     throw err;

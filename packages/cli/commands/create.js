@@ -23,9 +23,7 @@
  */
 
 const fs = require('fs-extra');
-const {
-  logFileSystemErrorInstance,
-} = require('../lib/errorHandlers/fileSystemErrors');
+const { logError } = require('../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -87,9 +85,9 @@ exports.handler = async options => {
         path: dest,
       })
     );
-    logFileSystemErrorInstance(e, {
+    logError(e, {
       filepath: dest,
-      write: true,
+      operation: 'write',
     });
     return;
   }

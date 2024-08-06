@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
 const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
 
@@ -37,7 +37,9 @@ exports.handler = async options => {
           tableId,
         })
       );
-      const { rowCount } = await publishTable(accountId, tableId);
+      const {
+        data: { rowCount },
+      } = await publishTable(accountId, tableId);
       logger.log(
         i18n(`${i18nKey}.logs.rowCount`, {
           rowCount,
@@ -52,7 +54,7 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 

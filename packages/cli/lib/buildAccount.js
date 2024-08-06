@@ -15,10 +15,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
 const SpinniesManager = require('./ui/SpinniesManager');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
+const { debugError, logError } = require('./errorHandlers/index');
 const {
   createDeveloperTestAccount,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
@@ -148,7 +145,7 @@ async function buildNewAccount({
       }),
     });
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('buildNewAccount', {
       text: i18n(`${spinniesI18nKey}.fail`, {
@@ -181,7 +178,7 @@ async function buildNewAccount({
       force,
     });
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     throw err;
   }
 

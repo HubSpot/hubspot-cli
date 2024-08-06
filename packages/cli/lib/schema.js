@@ -24,8 +24,8 @@ const logSchemas = schemas => {
 };
 
 const listSchemas = async accountId => {
-  const response = await fetchObjectSchemas(accountId);
-  logSchemas(response.results);
+  const { data } = await fetchObjectSchemas(accountId);
+  logSchemas(data.results);
 };
 
 module.exports = {

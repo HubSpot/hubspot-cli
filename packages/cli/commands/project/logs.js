@@ -18,9 +18,9 @@ const {
 } = require('@hubspot/local-dev-lib/api/projects');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 // const {
-//   logApiErrorInstance,
+//   logError,
 //   ApiErrorContext,
-// } = require('../../lib/errorHandlers/apiErrors');
+// } = require('../../lib/errorHandlers/index');
 // const {
 //   getFunctionLogs,
 //   getLatestFunctionLog,
@@ -34,6 +34,9 @@ const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 // const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+// const {
+//   isHubSpotHttpError,
+// } = require('@hubspot/local-dev-lib/errors/index');
 // const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.logs';
@@ -49,11 +52,11 @@ const getPrivateAppsUrl = accountId => {
 // We currently cannot fetch logs directly to the CLI. See internal CLI issue #413 for more information.
 
 // const handleLogsError = (e, name, projectName) => {
-//   if (e.response && e.response.status === 404) {
+//   if (isHubSpotHttpError(e) && e.status === 404) {
 //     logger.debug(`Log fetch error: ${e.message}`);
 //     logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
 //   } else {
-//     logApiErrorInstance(
+//   logError(
 //       e,
 //       new ApiErrorContext({ accountId: getAccountId(), projectName })
 //     );
@@ -162,16 +165,17 @@ exports.handler = async options => {
       allowCreate: false,
     });
 
-    // const { deployedBuild, id: projectId } = await fetchProject(
+    // const { data: { deployedBuild, id: projectId } } = await fetchProject(
     //   accountId,
     //   projectName
     // );
-    const { id: projectId } = await fetchProject(accountId, projectName);
+    const {
+      data: { id: projectId },
+    } = await fetchProject(accountId, projectName);
 
-    const { results: deployComponents } = await fetchDeployComponentsMetadata(
-      accountId,
-      projectId
-    );
+    const {
+      data: { results: deployComponents },
+    } = await fetchDeployComponentsMetadata(accountId, projectId);
 
     const appComponent = deployComponents.find(
       c => c.componentName === appName
