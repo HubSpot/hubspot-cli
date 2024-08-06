@@ -19,19 +19,23 @@ const {
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
 const {
-  getFunctionLogs,
-  getLatestFunctionLog,
-  getAppFunctionLogs,
-  getLatestAppFunctionLogs,
+  getAppLogs,
+  getPublicFunctionLogs,
+  getLatestPublicFunctionLogs,
+  getAppFunctions,
 } = require('@hubspot/local-dev-lib/api/functions');
 
-const { ensureProjectExists } = require('../../lib/projects');
+const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
 const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { SERVERLESS_FUNCTION_TYPES } = require('../../lib/constants');
+const {
+  fetchPrivateAppsForPortal,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.logs';
 
@@ -65,22 +69,26 @@ const handleFunctionLog = async (accountId, options) => {
     appPath,
     functionName,
     projectName,
+    appId,
   } = options;
 
   let logsResp;
 
   const tailCall = async after => {
     return appPath
-      ? getAppFunctionLogs(accountId, functionName, projectName, appPath, {
-          after,
-        })
-      : getFunctionLogs(accountId, functionName, { after });
+      ? getAppLogs(accountId, appId)
+      : getPublicFunctionLogs(accountId, functionName, { after });
   };
 
   const fetchLatest = async () => {
     return appPath
-      ? getLatestAppFunctionLogs(accountId, functionName, projectName, appPath)
-      : getLatestFunctionLog(accountId, functionName);
+      ? getAppLogs(accountId, appId)
+      : getLatestPublicFunctionLogs(
+          accountId,
+          functionName,
+          projectName,
+          appPath
+        );
   };
 
   if (follow) {
@@ -114,23 +122,102 @@ const handleFunctionLog = async (accountId, options) => {
   return false;
 };
 
+async function generateAppsChoicesForProject(accountId, projectName) {
+  try {
+    const { deployedBuild } = await fetchProject(accountId, projectName);
+
+    if (!(deployedBuild && deployedBuild.subbuildStatuses)) {
+      logger.debug('Failed to fetch project');
+      return process.exit(EXIT_CODES.ERROR);
+    }
+    return deployedBuild.subbuildStatuses
+      .filter(subBuild => subBuild.buildType === 'PRIVATE_APP')
+      .map(subBuild => {
+        console.log(subBuild);
+        return {
+          name: subBuild.buildName,
+          value: { appName: subBuild.buildName, appId: subBuild.id },
+        };
+      });
+  } catch (e) {
+    logger.debug(e);
+    logApiErrorInstance(
+      e,
+      new ApiErrorContext({ accountId: getAccountId(), projectName })
+    );
+    return process.exit(EXIT_CODES.ERROR);
+  }
+}
+
+function generateFunctionTypeChoices() {
+  const i18nKey = 'lib.prompts.projectLogsPrompt';
+  return [
+    {
+      name: i18n(`${i18nKey}.logType.function`),
+      value: SERVERLESS_FUNCTION_TYPES.APP_FUNCTION,
+    },
+    {
+      name: i18n(`${i18nKey}.logType.endpoint`),
+      value: SERVERLESS_FUNCTION_TYPES.PUBLIC_ENDPOINT,
+    },
+  ];
+}
+
+async function generateFunctionNameChoices(accountId, appName) {
+  try {
+    const privateApps = await fetchPrivateAppsForPortal(accountId);
+  } catch (e) {
+    console.error(e.response.data);
+  }
+  console.log(privateApps);
+  const result = await getAppFunctions(accountId, appId);
+  console.log(result);
+  return [];
+}
+
 exports.command = 'logs';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
+  /* New flow design:
+   * Automatically determine the project.
+   * If we are not in a project, log an error
+   * If no apps log an error
+   * If more than one app, prompt for app, otherwise use the only app in the project
+   * Lookup the functions for that app
+   * If no functions log an error
+   * If more than one function prompt for function
+   * */
+  const accountId = getAccountId(options);
+  trackCommandUsage('project-logs', null, accountId);
+
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { projectConfig } = await getProjectConfig();
+
+  if (!projectConfig || !projectConfig.name) {
+    //TODO Proper error message
+    logger.error('Project config missing');
+    return process.exit(EXIT_CODES.ERROR);
+  }
+  const { name: projectName } = projectConfig;
 
   const {
-    projectName: promptProjectName,
     appName: promptAppName,
     functionName: promptFunctionName,
     endpointName: promptEndpointName,
-  } = await projectLogsPrompt(accountId, options);
+  } = await projectLogsPrompt({
+    generateAppChoices: () =>
+      generateAppsChoicesForProject(accountId, projectName),
+    // generateFunctionTypeChoices: () => generateFunctionTypeChoices(),
+    // generateFunctionNameChoices: appId =>
+    //   generateFunctionNameChoices(accountId, appId),
+    options,
+  });
 
-  const projectName = options.project || promptProjectName;
   const appName = options.app || promptAppName;
+  await generateFunctionNameChoices(accountId, appName);
+
   const functionName =
     options.function || promptFunctionName || options.endpoint;
   const endpointName = options.endpoint || promptEndpointName;
@@ -169,8 +256,6 @@ exports.handler = async options => {
     }
   }
 
-  trackCommandUsage('project-logs', null, accountId);
-
   const logsInfo = [accountId, `"${projectName}"`];
   let tableHeader;
 
@@ -197,24 +282,32 @@ exports.handler = async options => {
     getTableContents([tableHeader, logsInfo], { border: { bodyLeft: '  ' } })
   );
 
-  logger.log(
-    appId
-      ? uiLink(
-          i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
-          `${getPrivateAppsUrl(accountId)}/${appId}/logs/extensions`
-        )
-      : uiLink(
-          i18n(`${i18nKey}.logs.hubspotLogsLink`),
-          getPrivateAppsUrl(accountId)
-        )
-  );
+  if (endpointName) {
+    logger.log(
+      uiLink(
+        i18n(`${i18nKey}.logs.hubspotLogsLink`),
+        `${getPrivateAppsUrl(
+          accountId
+        )}/logs/serverlessGatewayExecution?path=${endpointName}`
+      )
+    );
+  } else if (appId) {
+    logger.log(
+      uiLink(
+        i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
+        `${getPrivateAppsUrl(
+          accountId
+        )}/${appId}/logs/extensions?serverlessFunction=${functionName}`
+      )
+    );
+  }
   logger.log();
   uiLine();
 
   const showFinalMessage = await handleFunctionLog(accountId, {
     ...options,
     projectName,
-    appPath: relativeAppPath,
+    appId,
     functionName: functionName || endpointName,
   });
 
@@ -240,11 +333,6 @@ exports.builder = yargs => {
       },
       app: {
         describe: i18n(`${i18nKey}.options.app.describe`),
-        requiresArg: true,
-        type: 'string',
-      },
-      project: {
-        describe: i18n(`${i18nKey}.options.project.describe`),
         requiresArg: true,
         type: 'string',
       },
