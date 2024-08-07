@@ -133,4 +133,5 @@ module.exports = {
   findProjectComponents,
   getAppCardConfigs,
   getProjectComponentTypes,
+  loadConfigFile,
 };
