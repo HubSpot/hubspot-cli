@@ -72,7 +72,6 @@ class DevServerManager {
   }
 
   async setup({ components, onUploadRequired, accountId, setActiveApp }) {
-    console.log(components);
     this.componentsByType = this.arrangeComponentsByType(components);
     const { env } = getAccountConfig(accountId);
     await startPortManagerServer();
