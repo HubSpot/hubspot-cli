@@ -12,7 +12,6 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
 const { poll } = require('../../lib/polling');
@@ -32,6 +31,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { ensureProjectExists } = require('../../lib/projects');
+const { handleKeypress } = require('../../lib/process');
 const {
   migrateApp,
   checkMigrationStatus,
@@ -42,6 +42,9 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const {
+  fetchPublicAppMetadata,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
@@ -58,15 +61,16 @@ exports.handler = async options => {
   trackCommandUsage('migrate-app', {}, accountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(`${i18nKey}.errors.invalidAccountType`, {
-        accountName,
-        accountType: accountConfig.accountType,
+    uiLine();
+    logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
+    logger.log(
+      i18n(`${i18nKey}.errors.invalidAccountTypeDescription`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    uiLine();
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const { appId } =
@@ -75,37 +79,58 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          migrateApp: true,
+          isMigratingApp: true,
         });
 
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  if (!publicApps.find(a => a.id === appId)) {
-    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+  let appName;
+  try {
+    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
+    // preventProjectMigrations returns true if we have not added app to allowlist config.
+    // listingInfo will only exist for marketplace apps
+    const { preventProjectMigrations, listingInfo } = selectedApp;
+    if (preventProjectMigrations && listingInfo) {
+      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+    appName = selectedApp.name;
+  } catch (error) {
+    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name, location } = await createProjectPrompt('', options, true);
+  let projectName;
+  let projectLocation;
+  try {
+    const { name, location } = await createProjectPrompt('', options, true);
 
-  const projectName = options.name || name;
-  const projectLocation = options.location || location;
+    projectName = options.name || name;
+    projectLocation = options.location || location;
 
-  const { projectExists } = await ensureProjectExists(accountId, projectName, {
-    allowCreate: false,
-    noLogs: true,
-  });
-
-  if (projectExists) {
-    logger.error(
-      i18n(`${i18nKey}.errors.projectAlreadyExists`, {
-        projectName,
-      })
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
     );
+
+    if (projectExists) {
+      logger.error(
+        i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+          projectName,
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } catch (error) {
+    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`), false));
+  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
@@ -121,6 +146,7 @@ exports.handler = async options => {
     type: 'confirm',
     message: i18n(`${i18nKey}.createAppPrompt`),
   });
+  process.stdin.resume();
 
   if (!shouldCreateApp) {
     process.exit(EXIT_CODES.SUCCESS);
@@ -131,6 +157,14 @@ exports.handler = async options => {
 
     SpinniesManager.add('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.inProgress`),
+    });
+
+    handleKeypress(async key => {
+      if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+        SpinniesManager.remove('migrateApp');
+        logger.log(i18n(`${i18nKey}.migrationInterrupted`));
+        process.exit(EXIT_CODES.SUCCESS);
+      }
     });
 
     const migrateResponse = await migrateApp(accountId, appId, projectName);
@@ -172,10 +206,14 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    logApiErrorInstance(
-      error.error || error,
-      new ApiErrorContext({ accountId })
-    );
+    // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
+    if (error.errors && Array.isArray(error.errors)) {
+      error.errors.forEach(e =>
+        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+      );
+    } else {
+      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    }
 
     process.exit(EXIT_CODES.ERROR);
   }

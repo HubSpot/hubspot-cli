@@ -1,8 +1,8 @@
 {
-  "name": "hubspot-cms-tools",
+  "name": "hubspot-local-dev-tools",
   "version": "1.0.0",
-  "description": "CLI tools for working with HubSpot",
-  "repository": "https://github.com/HubSpot/hubspot-cms-tools",
+  "description": "Local development tools for working with HubSpot",
+  "repository": "https://github.com/HubSpot/hubspot-cli",
   "private": true,
   "devDependencies": {
     "depcheck": "1.3.1",
@@ -25,8 +25,9 @@
     "publish-release": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] && yarn lerna publish --conventional-graduate --exact || echo 'Error: New release can only be published on main branch' >&2",
     "publish-prerelease": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] && yarn lerna publish prerelease --preid beta --dist-tag next --exact || echo 'Error: New release can only be published on main branch' >&2",
     "test": "jest",
-    "test-cli": "lerna run test-headless --stream",
-    "jest": "jest --watch",
+    "test-cli": "cd acceptance-tests && yarn test-headless --stream",
+    "test-docker": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test",
+    "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular packages"
   },
   "lint-staged": {

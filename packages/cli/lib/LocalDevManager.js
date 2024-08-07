@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstallData,
+  fetchPublicAppProductionInstallCounts,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -24,6 +24,7 @@ const {
   handleProjectUpload,
   pollProjectBuildAndDeploy,
 } = require('./projects');
+const { getAccountHomeUrl } = require('./localDev');
 const {
   CONFIG_FILES,
   COMPONENT_TYPES,
@@ -148,17 +149,16 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    // TODO: Update to account for new API with { data }
     const {
-      testPortalInstallCount,
-    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      uniquePortalInstallCount,
+    } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls =
-      activePublicAppData.publicApplicationInstallCounts
-        .uniquePortalInstallCount - testPortalInstallCount;
+    this.publicAppActiveInstalls = uniquePortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {
@@ -233,13 +233,23 @@ class LocalDevManager {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.viewInHubSpotLink`),
+        i18n(`${i18nKey}.viewProjectLink`),
         getProjectDetailUrl(
           this.projectConfig.name,
           this.targetProjectAccountId
         )
       )
     );
+
+    if (this.activeApp.type === COMPONENT_TYPES.publicApp) {
+      logger.log(
+        uiLink(
+          i18n(`${i18nKey}.viewTestAccountLink`),
+          getAccountHomeUrl(this.targetAccountId)
+        )
+      );
+    }
+
     logger.log();
     logger.log(i18n(`${i18nKey}.quitHelper`));
     uiLine();
@@ -303,16 +313,20 @@ class LocalDevManager {
 
   async checkPublicAppInstallation() {
     const {
-      isInstalledWithScopeGroups: isInstalled,
+      isInstalledWithScopeGroups,
+      previouslyAuthorizedScopeGroups,
     } = await this.getActiveAppInstallationData();
 
-    if (!isInstalled) {
+    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+
+    if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
         this.targetAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls
+        this.activeApp.config.auth.redirectUrls,
+        isReinstall
       );
     }
   }

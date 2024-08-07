@@ -1,11 +1,11 @@
 {
   "name": "@hubspot/webpack-cms-plugins",
-  "version": "5.2.1-beta.7",
+  "version": "5.2.1-beta.11",
   "description": "Webpack plugins for using with the HubSpot CMS",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HubSpot/hubspot-cms-tools"
+    "url": "https://github.com/HubSpot/hubspot-cli"
   },
   "engines": {
     "node": ">=10"
@@ -17,7 +17,7 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@hubspot/local-dev-lib": "1.5.0"
+    "@hubspot/local-dev-lib": "1.9.1"
   },
   "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
 }

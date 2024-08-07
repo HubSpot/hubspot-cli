@@ -139,13 +139,87 @@ const uiBetaTag = (message, log = true) => {
   }
 };
 
+const uiDeprecatedTag = (message, log = true) => {
+  const i18nKey = 'lib.ui';
+
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.deprecatedTag`);
+
+  const result = `${
+    terminalUISupport.color ? chalk.yellow(tag) : tag
+  } ${message}`;
+
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
+};
+
+const uiCommandDisabledBanner = (
+  command,
+  url = undefined,
+  message = undefined
+) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.disabledMessage`, {
+      command: uiCommandReference(command),
+      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : undefined,
+      npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
+    });
+
+  logger.log();
+  uiLine();
+  logger.error(tag);
+  uiLine();
+  logger.log();
+};
+
+const uiDeprecatedDescription = (
+  message,
+  command,
+  url = undefined,
+  log = false
+) => {
+  const i18nKey = 'lib.ui';
+
+  const tag = i18n(`${i18nKey}.deprecatedDescription`, {
+    message,
+    command: uiCommandReference(command),
+    url,
+  });
+  return uiDeprecatedTag(tag, log);
+};
+
+const uiDeprecatedMessage = (command, url = undefined, message = undefined) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.deprecatedMessage`, {
+      command: uiCommandReference(command),
+      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : undefined,
+    });
+
+  logger.log();
+  uiDeprecatedTag(tag, true);
+  logger.log();
+};
+
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
   uiBetaTag,
+  uiDeprecatedTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
   uiLink,
+  uiDeprecatedMessage,
+  uiDeprecatedDescription,
+  uiCommandDisabledBanner,
 };

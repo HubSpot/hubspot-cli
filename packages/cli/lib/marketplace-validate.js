@@ -57,12 +57,20 @@ const fetchValidationResults = async (accountId, validationId) => {
   }
 };
 
-const processValidationErrors = validationResults => {
+const processValidationErrors = (i18nKey, validationResults) => {
   if (validationResults.errors.length) {
-    const { errors } = validationResults;
+    const { assetPath, errors } = validationResults;
 
     errors.forEach(err => {
-      logger.error(`${err.context}`);
+      if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
+        logger.error(
+          i18n(`${i18nKey}.errors.invalidPath`, {
+            path: assetPath,
+          })
+        );
+      } else {
+        logger.error(`${err.context}`);
+      }
     });
     process.exit(EXIT_CODES.ERROR);
   }
