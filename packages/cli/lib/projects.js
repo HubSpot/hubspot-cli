@@ -849,7 +849,7 @@ const makePollTaskStatusFunc = ({
 
 const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
   return new Promise((resolve, reject) => {
-    let maxIntervals = (60 * 1000) / POLLING_DELAY; // Num of intervals in ~1 min
+    let maxIntervals = (30 * 1000) / POLLING_DELAY; // Num of intervals in ~30s
 
     const pollInterval = setInterval(async () => {
       let taskStatus;
