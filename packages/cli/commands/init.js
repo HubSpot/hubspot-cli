@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const {
-  getConfigPath,
+  getRootOrDeprecatedConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
@@ -112,7 +112,8 @@ exports.handler = async options => {
     useRootConfig,
   } = options;
   const configPath =
-    (c && path.join(getCwd(), c)) || getConfigPath(useRootConfig);
+    (c && path.join(getCwd(), c)) ||
+    getRootOrDeprecatedConfigPath(useRootConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -144,7 +145,7 @@ exports.handler = async options => {
       env,
       optionalAccount
     );
-    const configPath = getConfigPath();
+    const configPath = getRootOrDeprecatedConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
