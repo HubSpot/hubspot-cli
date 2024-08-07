@@ -1,10 +1,12 @@
 const path = require('path');
 const fs = require('fs-extra');
 const {
-  getConfigPath,
+  getRootOrDeprecatedConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  loadConfig,
+  bothConfigFilesExist,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -107,8 +109,11 @@ exports.handler = async options => {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
     account: optionalAccount,
+    useRootConfig,
   } = options;
-  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
+  const configPath =
+    (c && path.join(getCwd(), c)) ||
+    getRootOrDeprecatedConfigPath(useRootConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -125,9 +130,14 @@ exports.handler = async options => {
     logger.info(i18n(`${i18nKey}.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
+  if (bothConfigFilesExist(useRootConfig)) {
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: configPath });
+  createEmptyConfigFile({ path: configPath }, useRootConfig);
+  loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 
   try {
@@ -135,7 +145,7 @@ exports.handler = async options => {
       env,
       optionalAccount
     );
-    const configPath = getConfigPath();
+    const configPath = getRootOrDeprecatedConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
@@ -188,6 +198,10 @@ exports.builder = yargs => {
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+    },
+    useRootConfig: {
+      describe: i18n(`${i18nKey}.options.account.useRootConfig`),
+      type: 'boolean',
     },
   });
 

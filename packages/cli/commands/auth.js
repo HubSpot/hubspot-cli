@@ -21,6 +21,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
+  bothConfigFilesExist,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -76,14 +77,19 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
 
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  loadConfig(configPath);
+  checkAndWarnGitInclusion(getConfigPath());
+
   if (!getConfigPath()) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath);
-  checkAndWarnGitInclusion(getConfigPath());
+  if (bothConfigFilesExist()) {
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
