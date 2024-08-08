@@ -1056,7 +1056,8 @@ en:
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
-        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped."
+        viewDeploys: "View all deploys for this project in HubSpot"
+        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"

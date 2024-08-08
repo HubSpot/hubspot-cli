@@ -328,17 +328,19 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 };
 
+const getProjectActivityUrl = (projectName, accountId) => {
+  if (!projectName) return;
+  return `${getProjectDetailUrl(projectName, accountId)}/activity`;
+};
+
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   if (!projectName || !buildId || !accountId) return;
-  return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
 };
 
 const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
   if (!projectName || !deployId || !accountId) return;
-  return `${getProjectDetailUrl(
-    projectName,
-    accountId
-  )}/activity/deploy/${deployId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
 };
 
 const uploadProjectFiles = async (
@@ -474,7 +476,13 @@ const pollProjectBuildAndDeploy = async (
       logger.log(
         i18n(
           `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
-          { buildId }
+          {
+            buildId,
+            viewDeploysLink: uiLink(
+              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
+              getProjectActivityUrl(projectConfig.name, accountId)
+            ),
+          }
         )
       );
     }
