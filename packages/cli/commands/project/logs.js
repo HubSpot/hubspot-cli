@@ -232,10 +232,10 @@ exports.builder = yargs => {
         describe: i18n(`${i18nKey}.options.latest.describe`),
         type: 'boolean',
       },
-      compact: {
-        describe: i18n(`${i18nKey}.options.compact.describe`),
-        type: 'boolean',
-      },
+      // compact: {
+      //   describe: i18n(`${i18nKey}.options.compact.describe`),
+      //   type: 'boolean',
+      // },
       tail: {
         alias: ['t', 'follow'],
         describe: i18n(`${i18nKey}.options.tail.describe`),
@@ -244,7 +244,7 @@ exports.builder = yargs => {
       limit: {
         describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
-        default: 10,
+        // default: 10, // Having a default was causing the conflicts below to always trigger when tail was added
       },
     })
     .conflicts('tail', 'limit')
