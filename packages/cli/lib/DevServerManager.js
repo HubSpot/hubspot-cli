@@ -114,6 +114,21 @@ class DevServerManager {
     this.started = true;
   }
 
+  async restart(components, projectConfig) {
+    if (this.initialized) {
+      await this.iterateDevServers(async serverInterface => {
+        if (serverInterface.restart) {
+          await serverInterface.restart({
+            components,
+            projectConfig,
+          });
+        }
+      });
+    } else {
+      throw new Error(i18n(`${i18nKey}.notInitialized`));
+    }
+  }
+
   fileChange({ filePath, event }) {
     if (this.started) {
       this.iterateDevServers(async serverInterface => {
