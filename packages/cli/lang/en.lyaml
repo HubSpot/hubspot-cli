@@ -411,7 +411,8 @@ en:
           defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
-        useRootConfig: "Use the new HubSpot configuration file located in a hidden file in the root directory"
+        useHiddenConfig:
+          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory (~)"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
