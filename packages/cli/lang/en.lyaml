@@ -422,6 +422,7 @@ en:
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
         bothConfigFilesNotAllowed: "Two config files are not allowed. Please delete one if necessary and try again."
+        noSpecifiedPathWithHiddenConfig: "It's not possible to specify a config path when creating a config file hidden in the user's working directory"
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"

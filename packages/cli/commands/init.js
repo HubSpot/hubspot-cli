@@ -134,6 +134,10 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
     process.exit(EXIT_CODES.ERROR);
   }
+  if (c && useHiddenConfig) {
+    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   createEmptyConfigFile({ path: configPath }, useHiddenConfig);
@@ -145,7 +149,6 @@ exports.handler = async options => {
       env,
       optionalAccount
     );
-    const configPath = getHiddenOrDeprecatedConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
