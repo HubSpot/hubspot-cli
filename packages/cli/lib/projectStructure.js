@@ -113,6 +113,7 @@ async function findProjectComponents(projectSourceDir) {
           config: parsedAppConfig,
           runnable: !isLegacy && !isHublTheme,
           path: dir,
+          configPath: projectFile,
         });
       }
     }

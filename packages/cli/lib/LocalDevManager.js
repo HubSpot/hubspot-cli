@@ -29,6 +29,7 @@ const {
   CONFIG_FILES,
   COMPONENT_TYPES,
   getAppCardConfigs,
+  loadConfigFile,
 } = require('./projectStructure');
 const {
   UI_COLORS,
@@ -385,7 +386,7 @@ class LocalDevManager {
         if (!succeeded) {
           this.projectUploadMessage();
         } else {
-          this.restartDevServer(filepath);
+          this.handleConfigFileChange(filepath);
         }
       });
     } else {
@@ -454,12 +455,26 @@ class LocalDevManager {
     );
   }
 
-  async restartDevServe(filepath) {
-    // do we need to do something with this
-    console.log(filepath);
+  updateComponentAtPath(filepath) {
+    const componentIndex = this.runnableComponents.findIndex(
+      component => component.configPathath === filepath
+    );
+
+    if (componentIndex > 0) {
+      const config = loadConfigFile(filepath);
+      this.runnableComponents[componentIndex] = {
+        ...this.runnableComponents[componentIndex],
+        config,
+      };
+    }
+  }
+
+  async handleConfigFileChange(filepath) {
+    this.updateComponentAtPath(filepath);
     DevServerManager.restart({
       components: this.runnableComponents,
       projectConfig: this.projectConfig,
+      accountId: this.targetAccountId,
     });
   }
 

@@ -114,13 +114,15 @@ class DevServerManager {
     this.started = true;
   }
 
-  async restart(components, projectConfig) {
+  async restart({ components, projectConfig, accountId }) {
     if (this.initialized) {
       await this.iterateDevServers(async serverInterface => {
         if (serverInterface.restart) {
           await serverInterface.restart({
             components,
             projectConfig,
+            requestPorts,
+            accountId,
           });
         }
       });
