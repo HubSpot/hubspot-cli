@@ -11,7 +11,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchDeveloperTestAccounts,
-} = require('@hubspot/local-dev-lib/developerTestAccounts');
+} = require('@hubspot/local-dev-lib/api/developerTestAccounts');
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
@@ -102,9 +102,8 @@ const selectDeveloperTestTargetAccountPrompt = async (
   let choices = [];
   let devTestAccountsResponse = undefined;
   try {
-    devTestAccountsResponse = await fetchDeveloperTestAccounts(
-      defaultAccountId
-    );
+    const { data } = await fetchDeveloperTestAccounts(defaultAccountId);
+    devTestAccountsResponse = data;
   } catch (err) {
     logger.debug('Unable to fetch developer test account usage limits: ', err);
   }

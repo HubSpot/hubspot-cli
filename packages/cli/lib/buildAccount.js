@@ -18,7 +18,7 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const { debugError, logError } = require('./errorHandlers/index');
 const {
   createDeveloperTestAccount,
-} = require('@hubspot/local-dev-lib/developerTestAccounts');
+} = require('@hubspot/local-dev-lib/api/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
@@ -134,8 +134,8 @@ async function buildNewAccount({
       result = await createSandbox(accountId, name, sandboxApiType);
       resultAccountId = result.sandbox.sandboxHubId;
     } else if (isDeveloperTestAccount) {
-      result = await createDeveloperTestAccount(accountId, name);
-      resultAccountId = result.id;
+      const { data } = await createDeveloperTestAccount(accountId, name);
+      resultAccountId = data.id;
     }
 
     SpinniesManager.succeed('buildNewAccount', {
