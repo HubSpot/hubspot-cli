@@ -111,7 +111,7 @@ const tailLogs = async ({
           SCOPE_GROUPS.CMS_FUNCTIONS
         );
       } else {
-        await logError(accountId, e, new ApiErrorContext({ accountId }));
+        await logError(e, new ApiErrorContext({ accountId }));
       }
     }
   }

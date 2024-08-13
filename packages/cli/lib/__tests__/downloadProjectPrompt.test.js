@@ -1,6 +1,6 @@
 jest.mock('@hubspot/local-dev-lib/api/projects', () => ({
   fetchProjects: jest.fn().mockResolvedValue({
-    results: [],
+    data: { results: [] },
   }),
 }));
 
