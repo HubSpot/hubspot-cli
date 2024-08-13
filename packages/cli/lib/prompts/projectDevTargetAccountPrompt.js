@@ -3,7 +3,9 @@ const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
 const { isSandbox, isDeveloperTestAccount } = require('../accountTypes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
+const {
+  getSandboxUsageLimits,
+} = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
@@ -38,7 +40,8 @@ const selectSandboxTargetAccountPrompt = async (
   let choices = [];
   let sandboxUsage = {};
   try {
-    sandboxUsage = await getSandboxUsageLimits(defaultAccountId);
+    const { data } = await getSandboxUsageLimits(defaultAccountId);
+    sandboxUsage = data.usage;
   } catch (err) {
     logger.debug('Unable to fetch sandbox usage limits: ', err);
   }

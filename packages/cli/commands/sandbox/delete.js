@@ -10,7 +10,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { logError, debugError } = require('../../lib/errorHandlers/index');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
-const { deleteSandbox } = require('@hubspot/local-dev-lib/sandboxes');
+const { deleteSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
