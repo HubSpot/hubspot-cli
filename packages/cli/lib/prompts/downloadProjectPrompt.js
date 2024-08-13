@@ -13,7 +13,7 @@ const createProjectsList = async accountId => {
     return projects.results;
   } catch (e) {
     logError(e, new ApiErrorContext({ accountId }));
-    return process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -26,7 +26,6 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
       name: 'project',
       message: () => {
         return promptOptions.project &&
-          projectsList &&
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
@@ -36,8 +35,7 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
       },
       when:
         !promptOptions.project ||
-        (projectsList &&
-          !projectsList.find(p => p.name === promptOptions.project)),
+        !projectsList.find(p => p.name === promptOptions.project),
       type: 'list',
       choices: projectsList.map(project => {
         return {
