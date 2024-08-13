@@ -20,6 +20,10 @@ function logError(error, context = {}) {
     return;
   }
 
+  if (isHubSpotHttpError(error) && context) {
+    error.updateContext(context);
+  }
+
   if (isHubSpotHttpError(error) || isFileSystemError(error)) {
     if (isValidationError(error) || isMissingScopeError(error)) {
       logger.error(error.formattedValidationErrors());
