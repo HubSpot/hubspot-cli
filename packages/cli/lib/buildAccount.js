@@ -135,7 +135,8 @@ async function buildNewAccount({
       resultAccountId = result.sandbox.sandboxHubId;
     } else if (isDeveloperTestAccount) {
       const { data } = await createDeveloperTestAccount(accountId, name);
-      resultAccountId = data.id;
+      result = data;
+      resultAccountId = result.id;
     }
 
     SpinniesManager.succeed('buildNewAccount', {
