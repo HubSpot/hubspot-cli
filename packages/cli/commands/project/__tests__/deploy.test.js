@@ -407,7 +407,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(errorMessage);
+      expect(logger.error).toHaveBeenCalledWith('The request was bad.');
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
