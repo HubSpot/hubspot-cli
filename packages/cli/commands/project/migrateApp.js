@@ -5,7 +5,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const { trackCommandMetadataUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
@@ -58,8 +58,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const accountName = uiAccountDescription(accountId);
 
-  trackCommandUsage('migrate-app', {}, accountId);
-
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
     logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
@@ -81,6 +79,8 @@ exports.handler = async options => {
           accountName,
           isMigratingApp: true,
         });
+
+  trackCommandMetadataUsage('migrate-app', { appId }, accountId);
 
   let appName;
   try {
@@ -185,6 +185,12 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
+      trackCommandMetadataUsage(
+        'migrate-app',
+        { projectName, appId, status },
+        accountId
+      );
+
       SpinniesManager.succeed('migrateApp', {
         text: i18n(`${i18nKey}.migrationStatus.done`),
         succeedColor: 'white',
@@ -202,6 +208,11 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'migrate-app',
+      { projectName, appId, status: 'FAILURE', error },
+      accountId
+    );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',

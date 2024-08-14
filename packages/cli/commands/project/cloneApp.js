@@ -6,7 +6,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const { trackCommandMetadataUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const {
@@ -52,8 +52,6 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const accountName = uiAccountDescription(accountId);
 
-  trackCommandUsage('clone-app', {}, accountId);
-
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
     logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
@@ -81,6 +79,7 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
+    trackCommandMetadataUsage('clone-app', { appId }, accountId);
 
     const projectResponse = await createProjectPrompt('', options, true);
     name = projectResponse.name;
@@ -120,6 +119,12 @@ exports.handler = async options => {
       };
       const success = writeProjectConfig(configPath, configContent);
 
+      trackCommandMetadataUsage(
+        'clone-app',
+        { projectName: name, appId, status },
+        accountId
+      );
+
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
@@ -137,6 +142,12 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'clone-app',
+      { projectName: name, appId, status: 'FAILURE', error },
+      accountId
+    );
+
     SpinniesManager.fail('cloneApp', {
       text: i18n(`${i18nKey}.cloneStatus.failure`),
       failColor: 'white',
