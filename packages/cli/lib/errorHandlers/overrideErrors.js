@@ -15,35 +15,32 @@ const {
 const i18nKey = 'lib.errorHandlers.overrideErrors';
 
 function createPlatformVersionError(err, subCategory) {
-  let platformVersion =
-    subCategory === PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
-      ? 'unspecified platformVersion'
-      : '';
+  let translationKey = 'unspecifiedPlatformVersion';
+  let platformVersion = '';
+  const errorContext =
+    err.response && err.response.data && err.response.data.context;
 
-  if (err && err.response && err.response.data && err.response.data.context) {
-    const errorContext = err.response.data.context;
-
-    if (subCategory === PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED) {
-      platformVersion = errorContext.RETIRED_PLATFORM_VERSION || '';
-    } else if (
-      subCategory ===
-      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
-    ) {
-      platformVersion =
-        errorContext.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST || '';
-    }
+  switch (subCategory) {
+    case [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
+      platformVersion = 'unspecified platformVersion';
+      break;
+    case [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
+      translationKey = 'platformVersionRetired';
+      if (errorContext && errorContext[subCategory]) {
+        platformVersion = errorContext[subCategory];
+      }
+      break;
+    case [
+      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST,
+    ]:
+      translationKey = 'nonExistentPlatformVersion';
+      if (errorContext && errorContext[subCategory]) {
+        platformVersion = errorContext[subCategory];
+      }
+      break;
+    default:
+      break;
   }
-
-  const errorTypeToTranslationKey = {
-    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
-      'unspecifiedPlatformVersion',
-    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
-      'platformVersionRetired',
-    [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST]:
-      'nonExistentPlatformVersion',
-  };
-
-  const translationKey = errorTypeToTranslationKey[subCategory];
 
   uiLine();
   logger.error(i18n(`${i18nKey}.platformVersionErrors.header`));
