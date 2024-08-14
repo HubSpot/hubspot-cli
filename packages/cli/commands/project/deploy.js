@@ -169,7 +169,10 @@ exports.handler = async options => {
     } else if (e.response && e.response.status === 400) {
       logger.error(e.message);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+      logApiErrorInstance(
+        e,
+        new ApiErrorContext({ accountId, request: 'project deploy' })
+      );
     }
     return process.exit(EXIT_CODES.ERROR);
   }

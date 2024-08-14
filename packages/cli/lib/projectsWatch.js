@@ -85,10 +85,7 @@ const debounceQueueBuild = (accountId, projectName, platformVersion) => {
         logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
         process.exit(0);
       } else {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName })
-        );
+        logApiErrorInstance(err, new ApiErrorContext({ accountId }));
       }
 
       return;
@@ -158,7 +155,7 @@ const createNewBuild = async (accountId, projectName, platformVersion) => {
     );
     return buildId;
   } catch (err) {
-    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logApiErrorInstance(err, new ApiErrorContext({ accountId }));
     if (
       isSpecifiedError(err, { subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED })
     ) {

@@ -82,12 +82,9 @@ const projectLogsPrompt = (accountId, promptOptions = {}) => {
             process.exit(EXIT_CODES.ERROR);
           }
         } catch (e) {
-          const { projectConfig } = await getProjectConfig();
-          const projectName = projectConfig.name;
-
           logApiErrorInstance(
             e,
-            new ApiErrorContext({ accountId: getAccountId(), projectName })
+            new ApiErrorContext({ accountId: getAccountId() })
           );
           process.exit(EXIT_CODES.ERROR);
         }

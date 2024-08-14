@@ -1411,8 +1411,7 @@ en:
           successDevSbInfo: "Initiated sync of object definitions from production to {{ accountName }}. It may take some time. {{ url }}"
         failure:
           invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
-          missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-          syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+          syncInProgress: "Couldn't run the sync because there's another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
     errorHandlers:
@@ -1427,21 +1426,6 @@ en:
         errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
         errorExplanation: "This is the result of a system error: {{ errorMessage }}"
       apiErrors:
-        messageDetail: "{{ request }} in account {{ accountId }}"
-        unableToUpload: 'Unable to upload "{{ payload }}.'
-        codes:
-          400: "The {{ messageDetail }} was bad."
-          401: "The {{ messageDetail }} was unauthorized."
-          403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-          403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
-          403: "The {{ messageDetail }} was forbidden."
-          404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
-          404: "The {{ messageDetail }} was not found."
-          429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
-          503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-          500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-          400Generic: "The {{ messageDetail }} failed due to a client error."
-          generic: "The {{ messageDetail }} failed."
         verifyAccessKeyAndUserAccess:
           fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
           portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
@@ -1456,5 +1440,4 @@ en:
           updateProject: "Please update your project to the latest version and try again."
           docsLink: "Projects platform versioning (BETA)"
           betaLink: "For more info, see {{ docsLink }}."
-
-
+        missingScopeError: "Couldn't execute the {{ request }} because the access key for {{ accountName }} is missing required scopes. To update scopes, run {{ authCommand }}. Then deactivate the existing key and generate a new one that includes the missing scopes."

@@ -28,8 +28,6 @@ class ApiErrorContext extends ErrorContext {
     this.request = props.request || '';
     /** @type {string} */
     this.payload = props.payload || '';
-    /** @type {string} */
-    this.projectName = props.projectName || '';
   }
 }
 
@@ -54,7 +52,7 @@ function logValidationErrors(error, context) {
  */
 function logApiErrorInstance(error, context) {
   if (error.isAxiosError) {
-    if (overrideErrors(error)) return;
+    if (overrideErrors(error, context)) return;
     const errorWithContext = getAxiosErrorWithContext(error, context);
     logger.error(errorWithContext.message);
     return;
