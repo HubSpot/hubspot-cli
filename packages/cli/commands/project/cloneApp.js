@@ -6,7 +6,10 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandMetadataUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const {
@@ -55,6 +58,8 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const accountName = uiAccountDescription(accountId);
 
+  trackCommandUsage('clone-app', {}, accountId);
+
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
     logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
@@ -71,6 +76,8 @@ exports.handler = async options => {
   let appId;
   let name;
   let location;
+  let preventProjectMigrations;
+  let listingInfo;
   try {
     appId = options.appId;
     if (!appId) {
@@ -85,12 +92,8 @@ exports.handler = async options => {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    const { preventProjectMigrations, listingInfo } = selectedApp;
-    trackCommandMetadataUsage(
-      'clone-app',
-      { appId, preventProjectMigrations, listingInfo },
-      accountId
-    );
+    preventProjectMigrations = selectedApp.preventProjectMigrations;
+    listingInfo = selectedApp.listingInfo;
 
     const projectResponse = await createProjectPrompt('', options, true);
     name = projectResponse.name;
@@ -132,7 +135,13 @@ exports.handler = async options => {
 
       trackCommandMetadataUsage(
         'clone-app',
-        { projectName: name, appId, status },
+        {
+          projectName: name,
+          appId,
+          status,
+          preventProjectMigrations,
+          listingInfo,
+        },
         accountId
       );
 

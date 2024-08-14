@@ -5,7 +5,10 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandMetadataUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
@@ -58,6 +61,8 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const accountName = uiAccountDescription(accountId);
 
+  trackCommandUsage('migrate-app', {}, accountId);
+
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
     logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
@@ -81,16 +86,14 @@ exports.handler = async options => {
         });
 
   let appName;
+  let preventProjectMigrations;
+  let listingInfo;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    const { preventProjectMigrations, listingInfo } = selectedApp;
-    trackCommandMetadataUsage(
-      'migrate-app',
-      { appId, preventProjectMigrations, listingInfo },
-      accountId
-    );
+    preventProjectMigrations = selectedApp.preventProjectMigrations;
+    listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -190,7 +193,7 @@ exports.handler = async options => {
 
       trackCommandMetadataUsage(
         'migrate-app',
-        { projectName, appId, status },
+        { projectName, appId, status, preventProjectMigrations, listingInfo },
         accountId
       );
 
