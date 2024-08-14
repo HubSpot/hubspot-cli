@@ -471,11 +471,26 @@ class LocalDevManager {
 
   async handleConfigFileChange(filepath) {
     this.updateComponentAtPath(filepath);
-    DevServerManager.restart({
-      components: this.runnableComponents,
-      projectConfig: this.projectConfig,
-      accountId: this.targetAccountId,
-    });
+    logger.log();
+    try {
+      await DevServerManager.restart({
+        components: this.runnableComponents,
+        projectConfig: this.projectConfig,
+        accountId: this.targetAccountId,
+      });
+      logger.log();
+      logger.success(i18n(`${i18nKey}.uploadWarning.devServerReset.success`));
+      logger.log();
+    } catch (e) {
+      if (this.debug) {
+        logger.error(e);
+      }
+      logger.error(
+        i18n(`${i18nKey}.uploadWarning.devServerReset.failure`, {
+          message: e.message,
+        })
+      );
+    }
   }
 
   monitorConsoleOutput() {

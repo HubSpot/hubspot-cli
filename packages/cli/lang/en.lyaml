@@ -998,9 +998,12 @@ en:
         pushToGithub: "  * Commit and push your changes to GitHub"
         runUpload: "  * Run {{ command }}"
         prompt:
-          success: "Project upload successful. Resuming local development."
+          success: "Project upload successful. Restarting local dev server..."
           failure: "Project upload failed."
           decline: "To see your latest config changes reflected:"
+        devServerReset:
+          success: "Local dev server successfully restarted. {{#bold}}You may need to refresh your browser to see changes reflected.{{/bold}}"
+          failure: "Error restarting local dev server: "
       activeInstallWarning:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
