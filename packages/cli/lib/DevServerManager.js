@@ -123,6 +123,7 @@ class DevServerManager {
             projectConfig,
             requestPorts,
             accountId,
+            promptUser,
           });
         }
       });
