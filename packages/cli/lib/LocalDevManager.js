@@ -457,10 +457,10 @@ class LocalDevManager {
 
   updateComponentAtPath(filepath) {
     const componentIndex = this.runnableComponents.findIndex(
-      component => component.configPathath === filepath
+      component => component.configPath === filepath
     );
 
-    if (componentIndex > 0) {
+    if (componentIndex > -1) {
       const config = loadConfigFile(filepath);
       this.runnableComponents[componentIndex] = {
         ...this.runnableComponents[componentIndex],
@@ -490,6 +490,7 @@ class LocalDevManager {
           message: e.message,
         })
       );
+      process.exit(EXIT_CODES.ERROR);
     }
   }
 
@@ -635,8 +636,7 @@ class LocalDevManager {
 
   devServerFileChange(filePath, event) {
     try {
-      if (this.cancelActivePrompt) {
-        console.log('CANCEL');
+      if (this.cancelActivePrompt && event === WATCH_EVENTS.change) {
         this.cancelActivePrompt();
       }
 
