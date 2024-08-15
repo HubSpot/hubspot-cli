@@ -5,7 +5,10 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
@@ -83,11 +86,14 @@ exports.handler = async options => {
         });
 
   let appName;
+  let preventProjectMigrations;
+  let listingInfo;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    const { preventProjectMigrations, listingInfo } = selectedApp;
+    preventProjectMigrations = selectedApp.preventProjectMigrations;
+    listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -185,6 +191,13 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
+      const isListed = Boolean(listingInfo);
+      trackCommandMetadataUsage(
+        'migrate-app',
+        { projectName, appId, status, preventProjectMigrations, isListed },
+        accountId
+      );
+
       SpinniesManager.succeed('migrateApp', {
         text: i18n(`${i18nKey}.migrationStatus.done`),
         succeedColor: 'white',
@@ -202,6 +215,11 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'migrate-app',
+      { projectName, appId, status: 'FAILURE', error },
+      accountId
+    );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
