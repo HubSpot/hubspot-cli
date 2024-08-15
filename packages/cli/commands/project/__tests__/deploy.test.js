@@ -300,7 +300,6 @@ describe('commands/project/deploy', () => {
       expect(deployBuildIdPrompt).toHaveBeenCalledWith(
         projectDetails.latestBuild.buildId,
         projectDetails.deployedBuildId,
-        options.project,
         expect.any(Function)
       );
     });
