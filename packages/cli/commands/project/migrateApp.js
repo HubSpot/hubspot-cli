@@ -191,9 +191,10 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
+      const isListed = Boolean(listingInfo);
       trackCommandMetadataUsage(
         'migrate-app',
-        { projectName, appId, status, preventProjectMigrations, listingInfo },
+        { projectName, appId, status, preventProjectMigrations, isListed },
         accountId
       );
 

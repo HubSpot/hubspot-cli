@@ -133,6 +133,7 @@ exports.handler = async options => {
       };
       const success = writeProjectConfig(configPath, configContent);
 
+      const isListed = Boolean(listingInfo);
       trackCommandMetadataUsage(
         'clone-app',
         {
@@ -140,7 +141,7 @@ exports.handler = async options => {
           appId,
           status,
           preventProjectMigrations,
-          listingInfo,
+          isListed,
         },
         accountId
       );
