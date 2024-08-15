@@ -16,14 +16,11 @@ const i18nKey = 'lib.errorHandlers.overrideErrors';
 
 function createPlatformVersionError(err, subCategory) {
   let translationKey = 'unspecifiedPlatformVersion';
-  let platformVersion = '';
+  let platformVersion = 'unspecified platformVersion';
   const errorContext =
     err.response && err.response.data && err.response.data.context;
 
   switch (subCategory) {
-    case [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED]:
-      platformVersion = 'unspecified platformVersion';
-      break;
     case [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
       translationKey = 'platformVersionRetired';
       if (errorContext && errorContext[subCategory]) {

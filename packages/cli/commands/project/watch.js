@@ -143,7 +143,7 @@ exports.handler = async options => {
             result.uploadError,
             new ApiErrorContext({
               accountId,
-              action: 'project upload',
+              request: 'project upload',
             })
           );
         }

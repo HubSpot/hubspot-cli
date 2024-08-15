@@ -110,7 +110,7 @@ exports.handler = async options => {
   } catch (e) {
     logApiErrorInstance(
       e,
-      new ApiErrorContext({ accountId, action: 'project download' })
+      new ApiErrorContext({ accountId, request: 'project download' })
     );
     process.exit(EXIT_CODES.ERROR);
   }
