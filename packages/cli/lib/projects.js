@@ -688,7 +688,7 @@ const makePollTaskStatusFunc = ({
         const formattedTaskType = PROJECT_TASK_TYPES[taskType]
           ? `[${PROJECT_TASK_TYPES[taskType]}]`
           : '';
-        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+        const text = `${indent <= 2 ? statusText.STATUS_TEXT : ''} ${chalk.bold(
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
