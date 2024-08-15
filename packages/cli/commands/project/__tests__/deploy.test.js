@@ -5,7 +5,7 @@ jest.mock('@hubspot/local-dev-lib/api/projects');
 jest.mock('../../../lib/validation');
 jest.mock('../../../lib/projects');
 jest.mock('../../../lib/prompts/projectNamePrompt');
-jest.mock('../../../lib/prompts/buildIdPrompt');
+jest.mock('../../../lib/prompts/deployBuildIdPrompt');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/ui');
@@ -45,7 +45,9 @@ const {
   getProjectDetailUrl,
 } = require('../../../lib/projects');
 const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
-const { buildIdPrompt } = require('../../../lib/prompts/buildIdPrompt');
+const {
+  deployBuildIdPrompt,
+} = require('../../../lib/prompts/deployBuildIdPrompt');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const yargs = require('yargs');
@@ -163,7 +165,7 @@ describe('commands/project/deploy', () => {
       getAccountConfig.mockReturnValue({ accountType });
       fetchProject.mockResolvedValue(projectDetails);
       deployProject.mockResolvedValue(deployDetails);
-      buildIdPrompt.mockResolvedValue({
+      deployBuildIdPrompt.mockResolvedValue({
         buildId: projectDetails.latestBuild.buildId,
       });
 
@@ -294,8 +296,8 @@ describe('commands/project/deploy', () => {
     it('should prompt for build id if no option is provided', async () => {
       delete options.buildId;
       await handler(options);
-      expect(buildIdPrompt).toHaveBeenCalledTimes(1);
-      expect(buildIdPrompt).toHaveBeenCalledWith(
+      expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
+      expect(deployBuildIdPrompt).toHaveBeenCalledWith(
         projectDetails.latestBuild.buildId,
         projectDetails.deployedBuildId,
         options.project,
@@ -305,11 +307,11 @@ describe('commands/project/deploy', () => {
 
     it('should log an error and exit if the prompted value is invalid', async () => {
       delete options.buildId;
-      buildIdPrompt.mockReturnValue({});
+      deployBuildIdPrompt.mockReturnValue({});
 
       await handler(options);
 
-      expect(buildIdPrompt).toHaveBeenCalledTimes(1);
+      expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'You must specify a build to deploy'
