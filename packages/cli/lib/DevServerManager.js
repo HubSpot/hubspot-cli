@@ -142,16 +142,6 @@ class DevServerManager {
     }
   }
 
-  updateConfigFile({ filepath, config }) {
-    if (this.started) {
-      this.iterateDevServers(async serverInterface => {
-        if (serverInterface.updateConfigFile) {
-          await serverInterface.updateConfigFile(filepath, config);
-        }
-      });
-    }
-  }
-
   async cleanup() {
     if (this.started) {
       await this.iterateDevServers(async serverInterface => {
