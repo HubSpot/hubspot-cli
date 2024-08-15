@@ -577,7 +577,7 @@ en:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
           options:
-            buildId:
+            build:
               describe: "Project build ID to be deployed"
             project:
               describe: "Project name"
@@ -1296,8 +1296,8 @@ en:
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
         generalPrompt: "Create an issue on Github in your browser?"
-      buildIdPrompt:
-        enterBuildId: "[--buildId] Deploy which build?"
+      deployBuildIdPrompt:
+        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
