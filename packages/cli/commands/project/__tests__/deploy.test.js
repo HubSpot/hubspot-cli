@@ -60,8 +60,8 @@ const chalk = require('chalk');
 
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
-  const buildFlag = 'buildId';
-  const buildAliases = ['build'];
+  const buildFlag = 'build';
+  const buildAliases = ['buildId'];
 
   describe('describe', () => {
     it('should contain the beta tag', () => {
