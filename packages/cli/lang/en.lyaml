@@ -577,7 +577,7 @@ en:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
           options:
-            buildId:
+            build:
               describe: "Project build ID to be deployed"
             project:
               describe: "Project name"
@@ -1052,9 +1052,12 @@ en:
         successStatusText: "DONE"
         failedStatusText: "FAILED"
         errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+      pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+        viewDeploys: "View all deploys for this project in HubSpot"
+        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
@@ -1293,8 +1296,8 @@ en:
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
         generalPrompt: "Create an issue on Github in your browser?"
-      buildIdPrompt:
-        enterBuildId: "[--buildId] Deploy which build?"
+      deployBuildIdPrompt:
+        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."

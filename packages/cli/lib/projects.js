@@ -319,17 +319,19 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 };
 
+const getProjectActivityUrl = (projectName, accountId) => {
+  if (!projectName) return;
+  return `${getProjectDetailUrl(projectName, accountId)}/activity`;
+};
+
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   if (!projectName || !buildId || !accountId) return;
-  return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
 };
 
 const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
   if (!projectName || !deployId || !accountId) return;
-  return `${getProjectDetailUrl(
-    projectName,
-    accountId
-  )}/activity/deploy/${deployId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
 };
 
 const uploadProjectFiles = async (
@@ -398,23 +400,13 @@ const pollProjectBuildAndDeploy = async (
   buildId,
   silenceLogs = false
 ) => {
-  const buildStatus = await pollBuildStatus(
+  let buildStatus = await pollBuildStatus(
     accountId,
     projectConfig.name,
     buildId,
     null,
     silenceLogs
   );
-
-  const {
-    autoDeployId,
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-  } = buildStatus;
-
-  // autoDeployId of 0 indicates a skipped deploy
-  const isDeploying =
-    isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
 
   if (!silenceLogs) {
     uiLine();
@@ -430,7 +422,7 @@ const pollProjectBuildAndDeploy = async (
   if (buildStatus.status === 'FAILURE') {
     result.succeeded = false;
     return result;
-  } else if (isDeploying) {
+  } else if (buildStatus.isAutoDeployEnabled) {
     if (!silenceLogs) {
       logger.log(
         i18n(
@@ -445,17 +437,45 @@ const pollProjectBuildAndDeploy = async (
       displayWarnLogs(accountId, projectConfig.name, buildId);
     }
 
-    const deployStatus = await pollDeployStatus(
-      accountId,
-      projectConfig.name,
-      deployStatusTaskLocator.id,
-      buildId,
-      silenceLogs
-    );
-    result.deployResult = deployStatus;
+    // autoDeployId of 0 indicates a skipped deploy
+    const getIsDeploying = () =>
+      buildStatus.autoDeployId > 0 && buildStatus.deployStatusTaskLocator;
 
-    if (deployStatus.status === 'FAILURE') {
-      result.succeeded = false;
+    // Sometimes the deploys do not immediately initiate, give them a chance to kick off
+    if (!getIsDeploying()) {
+      buildStatus = await pollBuildAutodeployStatus(
+        accountId,
+        projectConfig.name,
+        buildId
+      );
+    }
+
+    if (getIsDeploying()) {
+      const deployStatus = await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        buildStatus.deployStatusTaskLocator.id,
+        buildId,
+        silenceLogs
+      );
+      result.deployResult = deployStatus;
+
+      if (deployStatus.status === 'FAILURE') {
+        result.succeeded = false;
+      }
+    } else if (!silenceLogs) {
+      logger.log(
+        i18n(
+          `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
+          {
+            buildId,
+            viewDeploysLink: uiLink(
+              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
+              getProjectActivityUrl(projectConfig.name, accountId)
+            ),
+          }
+        )
+      );
     }
   }
 
@@ -581,17 +601,6 @@ const makePollTaskStatusFunc = ({
   statusStrings,
   linkToHubSpot,
 }) => {
-  const isTaskComplete = task => {
-    if (
-      !task[statusText.SUBTASK_KEY].length ||
-      task.status === statusText.STATES.FAILURE
-    ) {
-      return true;
-    } else if (task.status === statusText.STATES.SUCCESS) {
-      return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
-    }
-  };
-
   return async (
     accountId,
     taskName,
@@ -672,7 +681,7 @@ const makePollTaskStatusFunc = ({
         const formattedTaskType = PROJECT_TASK_TYPES[taskType]
           ? `[${PROJECT_TASK_TYPES[taskType]}]`
           : '';
-        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+        const text = `${indent <= 2 ? statusText.STATUS_TEXT : ''} ${chalk.bold(
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
@@ -699,6 +708,7 @@ const makePollTaskStatusFunc = ({
           const { data } = await statusFn(accountId, taskName, taskId);
           taskStatus = data;
         } catch (e) {
+          logger.debug(e);
           logError(
             e,
             new ApiErrorContext({
@@ -781,59 +791,62 @@ const makePollTaskStatusFunc = ({
             }
           });
 
-          if (isTaskComplete(taskStatus)) {
-            if (status === statusText.STATES.SUCCESS) {
-              SpinniesManager.succeed(overallTaskSpinniesKey, {
-                text: statusStrings.SUCCESS(taskName, displayId),
-              });
-            } else if (status === statusText.STATES.FAILURE) {
-              SpinniesManager.fail(overallTaskSpinniesKey, {
-                text: statusStrings.FAIL(taskName, displayId),
-              });
+          if (status === statusText.STATES.SUCCESS) {
+            SpinniesManager.succeed(overallTaskSpinniesKey, {
+              text: statusStrings.SUCCESS(taskName, displayId),
+            });
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          } else if (status === statusText.STATES.FAILURE) {
+            SpinniesManager.fail(overallTaskSpinniesKey, {
+              text: statusStrings.FAIL(taskName, displayId),
+            });
 
-              if (!silenceLogs) {
-                const failedSubtasks = subTaskStatus.filter(
-                  subtask => subtask.status === 'FAILURE'
-                );
+            if (!silenceLogs) {
+              const failedSubtasks = subTaskStatus.filter(
+                subtask => subtask.status === 'FAILURE'
+              );
 
-                uiLine();
+              uiLine();
+              logger.log(
+                `${statusStrings.SUBTASK_FAIL(
+                  displayId,
+                  failedSubtasks.length === 1
+                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtasks.length + ' components'
+                )}\n`
+              );
+              logger.log('See below for a summary of errors.');
+              uiLine();
+
+              const displayErrors = failedSubtasks.filter(
+                subtask =>
+                  subtask.standardError.subCategory !==
+                    PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
+                  subtask.standardError.subCategory !==
+                    PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
+              );
+
+              displayErrors.forEach(subTask => {
                 logger.log(
-                  `${statusStrings.SUBTASK_FAIL(
-                    displayId,
-                    failedSubtasks.length === 1
-                      ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
-                      : failedSubtasks.length + ' components'
-                  )}\n`
+                  `\n--- ${chalk.bold(
+                    subTask[statusText.SUBTASK_NAME_KEY]
+                  )} failed with the following error ---`
                 );
-                logger.log('See below for a summary of errors.');
-                uiLine();
+                logger.error(subTask.errorMessage);
 
-                const displayErrors = failedSubtasks.filter(
-                  subtask =>
-                    subtask.standardError.subCategory !==
-                      PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
-                    subtask.standardError.subCategory !==
-                      PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
-                );
-
-                displayErrors.forEach(subTask => {
-                  logger.log(
-                    `\n--- ${chalk.bold(
-                      subTask[statusText.SUBTASK_NAME_KEY]
-                    )} failed with the following error ---`
-                  );
-                  logger.error(subTask.errorMessage);
-
-                  // Log nested errors
-                  if (subTask.standardError && subTask.standardError.errors) {
-                    logger.log();
-                    subTask.standardError.errors.forEach(error => {
-                      logger.log(error.message);
-                    });
-                  }
-                });
-              }
+                // Log nested errors
+                if (subTask.standardError && subTask.standardError.errors) {
+                  logger.log();
+                  subTask.standardError.errors.forEach(error => {
+                    logger.log(error.message);
+                  });
+                }
+              });
             }
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          } else if (!subTaskStatus.length) {
             clearInterval(pollInterval);
             resolve(taskStatus);
           }
@@ -841,6 +854,41 @@ const makePollTaskStatusFunc = ({
       }, POLLING_DELAY);
     });
   };
+};
+
+const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
+  return new Promise((resolve, reject) => {
+    let maxIntervals = (30 * 1000) / POLLING_DELAY; // Num of intervals in ~30s
+
+    const pollInterval = setInterval(async () => {
+      let taskStatus;
+      try {
+        taskStatus = await getBuildStatus(accountId, taskName, buildId);
+      } catch (e) {
+        logger.debug(e);
+        return reject(
+          new Error(
+            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+          )
+        );
+      }
+
+      if (!taskStatus || !taskStatus.status) {
+        return reject(
+          new Error(
+            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+          )
+        );
+      }
+
+      if (taskStatus.deployStatusTaskLocator || maxIntervals <= 0) {
+        clearInterval(pollInterval);
+        resolve(taskStatus);
+      } else {
+        maxIntervals -= 1;
+      }
+    }, POLLING_DELAY);
+  });
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({

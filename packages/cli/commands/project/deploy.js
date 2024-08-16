@@ -19,7 +19,9 @@ const {
   getProjectDetailUrl,
 } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
+const {
+  deployBuildIdPrompt,
+} = require('../../lib/prompts/deployBuildIdPrompt');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -112,20 +114,19 @@ exports.handler = async options => {
         return process.exit(EXIT_CODES.ERROR);
       }
     } else {
-      const buildIdPromptResponse = await buildIdPrompt(
+      const deployBuildIdPromptResponse = await deployBuildIdPrompt(
         latestBuild.buildId,
         deployedBuildId,
-        projectName,
         buildId =>
           validateBuildId(
             buildId,
-            latestBuild.buildId,
             deployedBuildId,
+            latestBuild.buildId,
             projectName,
             accountId
           )
       );
-      buildIdToDeploy = buildIdPromptResponse.buildId;
+      buildIdToDeploy = deployBuildIdPromptResponse.buildId;
     }
 
     if (!buildIdToDeploy) {
@@ -178,9 +179,9 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.project.describe`),
       type: 'string',
     },
-    buildId: {
-      alias: ['build'],
-      describe: i18n(`${i18nKey}.options.buildId.describe`),
+    build: {
+      alias: ['buildId'],
+      describe: i18n(`${i18nKey}.options.build.describe`),
       type: 'number',
     },
   });
@@ -188,7 +189,7 @@ exports.builder = yargs => {
   yargs.example([
     ['$0 project deploy', i18n(`${i18nKey}.examples.default`)],
     [
-      '$0 project deploy --project="my-project" --buildId=5',
+      '$0 project deploy --project="my-project" --build=5',
       i18n(`${i18nKey}.examples.withOptions`),
     ],
   ]);
