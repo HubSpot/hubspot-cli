@@ -12,15 +12,14 @@ exports.handler = async () => {
     projectConfig: { srcDir },
   } = await getProjectConfig();
   const projectSrcDir = path.join(projectDir, srcDir);
-  const files = await walk(projectSrcDir);
-  const filtered = files.filter(
+  const packageJsonFiles = (await walk(projectSrcDir)).filter(
     file =>
       file.includes('package.json') &&
       !file.includes('node_modules') &&
       !file.includes('.vite')
   );
 
-  filtered.forEach(file => {
+  packageJsonFiles.forEach(file => {
     const directory = path.dirname(file);
     logger.info(`Installing dependencies for ${directory}`);
     execSync(`npm --prefix=${directory} install`, { stdio: 'inherit' });
