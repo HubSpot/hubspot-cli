@@ -5,6 +5,7 @@ const { walk } = require('@hubspot/local-dev-lib/fs');
 const { execSync } = require('child_process');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const chalk = require('chalk');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 exports.command = 'install';
 exports.describe = 'Install your deps';
 
@@ -33,7 +34,7 @@ exports.handler = async () => {
   const projectConfig = await getProjectConfig();
   if (!projectConfig.projectDir || !projectConfig.projectConfig) {
     logger.error('Must be ran within a project');
-    process.exit(1);
+    process.exit(EXIT_CODES.ERROR);
   }
   const {
     projectDir,
@@ -66,6 +67,15 @@ exports.handler = async () => {
         packageManagersInstalled.add(packageManager);
       }
     }
+  }
+
+  if (packageManagersInstalled.size === 0) {
+    logger.error(
+      `Could not find of the supported package managers installed, please install on of the following: ${Object.keys(
+        packageManagers
+      ).join(', ')}`
+    );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const { packageManager } = await promptUser([
