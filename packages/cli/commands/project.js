@@ -13,6 +13,7 @@ const dev = require('./project/dev');
 const add = require('./project/add');
 const migrateApp = require('./project/migrateApp');
 const cloneApp = require('./project/cloneApp');
+const installDeps = require('./project/install');
 
 const i18nKey = 'commands.project';
 
@@ -36,6 +37,7 @@ exports.builder = yargs => {
     .command(open)
     .command(migrateApp)
     .command(cloneApp)
+    .command(installDeps)
     .demandCommand(1, '');
 
   return yargs;
