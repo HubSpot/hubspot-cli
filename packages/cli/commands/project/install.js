@@ -6,12 +6,6 @@ const { execSync } = require('child_process');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const chalk = require('chalk');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-exports.command = 'install';
-exports.describe = 'Install your deps';
-
-// async function lockFileExists(directory, lockfile) {
-//   return await fs.pathExists(path.resolve(directory, lockfile));
-// }
 
 function isGloballyInstalled(command) {
   try {
@@ -22,20 +16,80 @@ function isGloballyInstalled(command) {
   }
 }
 
+const YARN = 'yarn';
+const NPM = 'npm';
+const PNPM = 'pnpm';
+
 const packageManagers = {
-  npm: 'package-lock.json',
-  pnpm: 'pnpm-lock.yaml',
-  yarn: 'yarn.lock',
-  // bun: 'bun.lockb',
+  [NPM]: 'package-lock.json',
+  [PNPM]: 'pnpm-lock.yaml',
+  [YARN]: 'yarn.lock',
 };
 
-exports.handler = async () => {
-  const packageManagersInstalled = new Set();
+const supportedPackageManagers = Object.keys(packageManagers);
+
+function install({
+  packageManager,
+  packageManagerFlags,
+  installDirs,
+  packages,
+}) {
+  installDirs.forEach(directory => {
+    logger.info(
+      `Installing dependencies ${
+        packages ? `[${packages.join(', ')}] ` : ''
+      }in ${directory}`
+    );
+    let installCommand = `${packageManager} --prefix=${directory} install`;
+    if (packageManager === YARN) {
+      installCommand = `${packageManager} --cwd=${directory} ${
+        packages ? 'add' : 'install'
+      }`;
+    }
+
+    if (packages) {
+      installCommand = `${installCommand} ${packages.join(' ')}`;
+    }
+
+    if (packageManagerFlags) {
+      installCommand = `${installCommand} ${packageManagerFlags}`;
+    }
+
+    logger.debug(`Running ${installCommand}`);
+    try {
+      execSync(installCommand, {
+        stdio: 'inherit',
+      });
+    } catch (e) {
+      logger.error(`Installing dependencies for ${directory} failed`);
+    }
+  });
+}
+
+exports.command = 'install [packages..]';
+exports.describe = 'Install your deps';
+exports.builder = yargs =>
+  yargs
+    .option('package-manager', {
+      alias: 'pm',
+      describe: 'The package manager to use for the installation',
+      choices: supportedPackageManagers,
+    })
+    .option('package-manager-flags', {
+      alias: 'pm-flags',
+      describe: 'Command flags to pass down to the underlying package manager',
+      type: 'string',
+    });
+
+exports.handler = async ({ packages, pm, packageManagerFlags }) => {
+  const availablePackageManagers = new Set();
   const projectConfig = await getProjectConfig();
+
   if (!projectConfig.projectDir || !projectConfig.projectConfig) {
     logger.error('Must be ran within a project');
     process.exit(EXIT_CODES.ERROR);
   }
+
   const {
     projectDir,
     projectConfig: { srcDir },
@@ -45,7 +99,8 @@ exports.handler = async () => {
     file =>
       file.includes('package.json') &&
       !file.includes('node_modules') &&
-      !file.includes('.vite')
+      !file.includes('.vite') &&
+      !file.includes('dist')
   );
 
   if (packageJsonFiles.length === 0) {
@@ -53,57 +108,68 @@ exports.handler = async () => {
   }
 
   const packageParentDirs = [];
-  for (const packageJsonFile of packageJsonFiles) {
+  packageJsonFiles.forEach(packageJsonFile => {
     const parentDir = path.dirname(packageJsonFile);
     packageParentDirs.push(parentDir);
-    for (const entry of Object.entries(packageManagers)) {
-      // const [packageManager, lockfile] = entry;
-      const [packageManager] = entry;
+    Object.entries(packageManagers).forEach(([packageManager]) => {
       if (
-        !packageManagersInstalled.has(packageManager) &&
-        //(await lockFileExists(parentDir, lockfile)) || // I'm not certain I want to go this route.  They could have a lockfile, but not the package manager installed
+        !availablePackageManagers.has(packageManager) &&
         isGloballyInstalled(packageManager)
       ) {
-        packageManagersInstalled.add(packageManager);
+        availablePackageManagers.add(packageManager);
       }
-    }
-  }
+    });
+  });
 
-  if (packageManagersInstalled.size === 0) {
+  if (availablePackageManagers.size === 0) {
     logger.error(
-      `Could not find of the supported package managers installed, please install on of the following: ${Object.keys(
-        packageManagers
-      ).join(', ')}`
+      `Could not find of the supported package managers installed, please install one of the following: ${chalk.cyan(
+        supportedPackageManagers.join(', ')
+      )}`
     );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { packageManager } = await promptUser([
+  const { packageManager = pm, installLocations } = await promptUser([
     {
       name: 'packageManager',
       type: 'list',
+      when: () => !pm,
       message: `We detected the following package managers? Which package manager would you like to use? \n${chalk.yellow(
         'We strongly recommend using `npm` because it is what is used at build time.\nYou may encounter differing behavior between your local and deployed code if you opt for a different package manager'
       )}`,
-      choices: Array.from(packageManagersInstalled).map(packageManager => ({
-        key: packageManager,
-        value: packageManager,
+      choices: supportedPackageManagers,
+    },
+    {
+      name: 'installLocations',
+      type: 'checkbox',
+      when: () => packages && packages.length > 0,
+      message: `Which location would you like to add the dependencies to?`,
+      choices: packageParentDirs.map(dir => ({
+        name: path.relative(projectDir, dir),
+        value: dir,
       })),
+      validate: choices => {
+        if (choices === undefined || choices.length === 0) {
+          return 'You must choose at least one location';
+        }
+        return true;
+      },
     },
   ]);
 
-  packageParentDirs.forEach(directory => {
-    logger.info(`Installing dependencies for ${directory}`);
-    let installCommand = `${packageManager} --prefix=${directory} install`;
-    if (packageManager === 'yarn') {
-      installCommand = `${packageManager} --cwd=${directory} install`;
-    }
-    execSync(installCommand, {
-      stdio: 'inherit',
+  if (installLocations) {
+    install({
+      packageManager,
+      packageManagerFlags,
+      installDirs: installLocations,
+      packages,
     });
-  });
-};
-
-exports.builder = yargs => {
-  return yargs;
+  } else {
+    install({
+      packageManager,
+      packageManagerFlags,
+      installDirs: packageParentDirs,
+    });
+  }
 };
