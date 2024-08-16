@@ -3,7 +3,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { getAvailableSyncTypes } = require('./sandboxes');
-const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
+const { initiateSync } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const { debugError, logError } = require('./errorHandlers/index');
 const {
   isSpecifiedError,

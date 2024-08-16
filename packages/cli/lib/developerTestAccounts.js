@@ -5,7 +5,7 @@ const { getAccountId, getConfig } = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const {
   fetchDeveloperTestAccounts,
-} = require('@hubspot/local-dev-lib/developerTestAccounts');
+} = require('@hubspot/local-dev-lib/api/developerTestAccounts');
 const {
   isMissingScopeError,
   isSpecifiedError,
@@ -32,31 +32,31 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
 
 const validateDevTestAccountUsageLimits = async accountConfig => {
   const accountId = getAccountId(accountConfig.portalId);
-  const response = await fetchDeveloperTestAccounts(accountId);
-  if (response) {
-    const limit = response.maxTestPortals;
-    const count = response.results.length;
-    if (count >= limit) {
-      const hasDevTestAccounts = getHasDevTestAccounts(accountConfig);
-      if (hasDevTestAccounts) {
-        throw new Error(
-          i18n('lib.developerTestAccount.create.failure.alreadyInConfig', {
-            accountName: accountConfig.name || accountId,
-            limit,
-          })
-        );
-      } else {
-        throw new Error(
-          i18n('lib.developerTestAccount.create.failure.limit', {
-            accountName: accountConfig.name || accountId,
-            limit,
-          })
-        );
-      }
-    }
-    return response;
+  const { data } = await fetchDeveloperTestAccounts(accountId);
+  if (!data) {
+    return null;
   }
-  return null;
+  const limit = data.maxTestPortals;
+  const count = data.results.length;
+  if (count >= limit) {
+    const hasDevTestAccounts = getHasDevTestAccounts(accountConfig);
+    if (hasDevTestAccounts) {
+      throw new Error(
+        i18n('lib.developerTestAccount.create.failure.alreadyInConfig', {
+          accountName: accountConfig.name || accountId,
+          limit,
+        })
+      );
+    } else {
+      throw new Error(
+        i18n('lib.developerTestAccount.create.failure.limit', {
+          accountName: accountConfig.name || accountId,
+          limit,
+        })
+      );
+    }
+  }
+  return data;
 };
 
 function handleDeveloperTestAccountCreateError({
