@@ -1,20 +1,15 @@
 const { getProjectConfig, ensureProjectExists } = require('./projects');
-const { logger } = require('../../../../hubspot-local-dev-lib/dist/lib/logger');
 const {
   fetchProjectComponentsMetadata,
 } = require('../../../../hubspot-local-dev-lib/dist/api/projects');
+const { getAppLogs } = require('@hubspot/local-dev-lib/api/functions');
 
 class ProjectLogsManager {
-  static isPublicFunction = false;
-  static isAppFunction = false;
-  static functions = [];
-  static selectedFunction = [];
-
-  static async init(accountId) {
+  async init(accountId) {
     const { projectConfig } = await getProjectConfig();
 
     if (!projectConfig || !projectConfig.name) {
-      //TODO[JOE] Proper error message
+      //TODO Proper error message
       throw new Error('Project config missing');
     }
 
@@ -32,7 +27,7 @@ class ProjectLogsManager {
     );
 
     if (!(project.deployedBuild && project.deployedBuild.subbuildStatuses)) {
-      logger.debug('Failed to fetch project');
+      //TODO Proper error message
       throw new Error('Failed to fetch project');
     }
 
@@ -40,8 +35,9 @@ class ProjectLogsManager {
     await this.fetchFunctionDetails();
   }
 
-  static async fetchFunctionDetails() {
+  async fetchFunctionDetails() {
     if (!this.projectId) {
+      //TODO Proper error message
       throw new Error('Project not initialized');
     }
 
@@ -65,12 +61,12 @@ class ProjectLogsManager {
     });
 
     if (!this.appId) {
-      logger.error(`App id missing, we won't be able to fetch the logs`);
+      //TODO Proper error message
       throw new Error('App id missing');
     }
   }
 
-  static getFunctionNames() {
+  getFunctionNames() {
     if (!this.functions) {
       return [];
     }
@@ -79,19 +75,35 @@ class ProjectLogsManager {
     );
   }
 
-  static setFunction(functionName) {
+  setFunction(functionName) {
     this.functionName = functionName;
-    const functions = this.functions.filter(
+    this.selectedFunction = this.functions.find(
       serverlessFunction => serverlessFunction.componentName === functionName
     );
-    this.selectedFunction = functions[0];
-    if (this.selectedFunction.deployOutput.endpoint) {
+    if (!this.selectedFunction) {
+      throw new Error(`No function with name ${functionName}`);
+    }
+    if (
+      this.selectedFunction.deployOutput &&
+      this.selectedFunction.deployOutput.endpoint
+    ) {
       this.endpointName = this.selectedFunction.deployOutput.endpoint.path;
+      this.method = this.selectedFunction.deployOutput.endpoint.method;
       this.isPublicFunction = true;
     } else {
-      this.isAppFunction = true;
+      this.isPublicFunction = false;
     }
+  }
+
+  async tailCall() {
+    // TODO: Wire this up, it will always return no logs currently
+    return getAppLogs(this.accountId, this.appId);
+  }
+
+  async fetchLatest() {
+    // TODO: Wire this up, it will always return no logs currently
+    return getAppLogs(this.accountId, this.appId);
   }
 }
 
-module.exports = ProjectLogsManager;
+module.exports = new ProjectLogsManager();

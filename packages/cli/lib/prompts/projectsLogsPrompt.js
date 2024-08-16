@@ -8,12 +8,12 @@ const projectLogsPrompt = async ({ functionChoices, promptOptions = {} }) => {
     return { functionName: functionChoices[0] };
   }
 
-  return await promptUser([
+  return promptUser([
     {
       name: 'functionName',
       type: 'list',
       message: i18n(`${i18nKey}.functionName`),
-      when: async () => !promptOptions.function,
+      when: () => !promptOptions.function,
       choices: functionChoices,
     },
   ]);

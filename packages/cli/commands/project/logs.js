@@ -4,30 +4,18 @@ const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
 const {
-  addAccountOptions,
-  addConfigOptions,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
-const {
-  fetchProjectComponentsMetadata,
-} = require('@hubspot/local-dev-lib/api/projects');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('../../lib/errorHandlers/apiErrors');
-const {
-  getAppLogs,
-  getPublicFunctionLogs,
-  getLatestPublicFunctionLogs,
-  getAppFunctions,
-} = require('@hubspot/local-dev-lib/api/functions');
 
-const { ensureProjectExists, getProjectConfig } = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
@@ -40,7 +28,7 @@ const i18nKey = 'commands.project.subcommands.logs';
 
 const getPrivateAppsUrl = accountId => {
   const baseUrl = getHubSpotWebsiteOrigin(
-    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+    getEnv(accountId) === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
   return `${baseUrl}/private-apps/${accountId}`;
@@ -60,74 +48,28 @@ const handleLogsError = (e, name, projectName) => {
 };
 
 const handleFunctionLog = async (accountId, options) => {
-  const {
-    latest,
-    follow,
-    compact,
-    appPath,
-    functionName,
-    projectName,
-    appId,
-  } = options;
+  const { latest, follow, compact, functionName } = options;
 
   let logsResp;
-
-  const tailCall = async after => {
-    try {
-      // return appId
-      //   ?
-      return getAppLogs(accountId, appId);
-      // : getPublicFunctionLogs(accountId, functionName, { after });
-    } catch (e) {
-      console.error(e.response.data);
-    }
-  };
-
-  const fetchLatest = async () => {
-    try {
-      return getAppLogs(accountId, appId);
-      // return appId
-      // ? getAppLogs(accountId, appId)
-      // : getLatestPublicFunctionLogs(
-      //     accountId,
-      //     functionName,
-      //     projectName,
-      //     appPath
-      //   );
-    } catch (e) {
-      console.error(e.response.data);
-    }
-  };
 
   if (follow) {
     await tailLogs({
       accountId,
       compact,
-      tailCall,
-      fetchLatest,
+      tailCall: ProjectLogsManager.tailCall,
+      fetchLatest: ProjectLogsManager.fetchLatest,
       name: functionName,
     });
   } else if (latest) {
-    try {
-      logsResp = await fetchLatest();
-    } catch (e) {
-      handleLogsError(e, functionName, projectName);
-      return true;
-    }
+    logsResp = await ProjectLogsManager.fetchLatest();
   } else {
-    try {
-      logsResp = await tailCall();
-    } catch (e) {
-      handleLogsError(e, functionName, projectName);
-      return true;
-    }
+    logsResp = await ProjectLogsManager.tailCall();
   }
 
   if (logsResp) {
     outputLogs(logsResp, options);
-    return true;
   }
-  return false;
+  return !!logsResp;
 };
 
 function logTable(tableHeader, logsInfo) {
@@ -137,45 +79,44 @@ function logTable(tableHeader, logsInfo) {
   );
 }
 
-function logPreamble(accountId, projectLogsManager) {
-  const logsInfo = [accountId]; //, `"${ProjectLogsManager.projectName}"`];
-  let tableHeader;
-
-  if (projectLogsManager.isPublicFunction) {
-    logsInfo.push(projectLogsManager.functionName);
-    // logsInfo.push(`"${endpointName}"`);
-    tableHeader = getTableHeader([
-      i18n(`${i18nKey}.table.accountHeader`),
-      // i18n(`${i18nKey}.table.projectHeader`),
-      i18n(`${i18nKey}.table.endpointHeader`),
-    ]);
-    logTable(tableHeader, logsInfo);
+function logPreamble() {
+  if (ProjectLogsManager.isPublicFunction) {
+    logTable(
+      getTableHeader([
+        i18n(`${i18nKey}.table.accountHeader`),
+        i18n(`${i18nKey}.table.functionHeader`),
+        i18n(`${i18nKey}.table.endpointHeader`),
+      ]),
+      [
+        ProjectLogsManager.accountId,
+        ProjectLogsManager.functionName,
+        ProjectLogsManager.endpointName,
+      ]
+    );
     logger.log(
       uiLink(
         i18n(`${i18nKey}.logs.hubspotLogsLink`),
-        `${getPrivateAppsUrl(accountId)}/${
-          projectLogsManager.appId
+        `${getPrivateAppsUrl(ProjectLogsManager.accountId)}/${
+          ProjectLogsManager.appId
         }/logs/serverlessGatewayExecution?path=${
-          projectLogsManager.endpointName
+          ProjectLogsManager.endpointName
         }`
       )
     );
   } else {
-    // logsInfo.push(`"${ProjectLogsManager.appName}"`);
-    logsInfo.push(projectLogsManager.functionName);
-    tableHeader = getTableHeader([
-      i18n(`${i18nKey}.table.accountHeader`),
-      // i18n(`${i18nKey}.table.projectHeader`),
-      // i18n(`${i18nKey}.table.appHeader`),
-      i18n(`${i18nKey}.table.functionHeader`),
-    ]);
-    logTable(tableHeader, logsInfo);
+    logTable(
+      getTableHeader([
+        i18n(`${i18nKey}.table.accountHeader`),
+        i18n(`${i18nKey}.table.functionHeader`),
+      ]),
+      [ProjectLogsManager.accountId, ProjectLogsManager.functionName]
+    );
     logger.log(
       uiLink(
         i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
-        `${getPrivateAppsUrl(accountId)}/${
-          projectLogsManager.appId
-        }/logs/crm?serverlessFunction=${projectLogsManager.functionName}`
+        `${getPrivateAppsUrl(ProjectLogsManager.accountId)}/${
+          ProjectLogsManager.appId
+        }/logs/crm?serverlessFunction=${ProjectLogsManager.functionName}`
       )
     );
   }
@@ -187,6 +128,8 @@ exports.command = 'logs';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
+  logger.error('OH NO');
+  process.exit(1);
   const accountId = getAccountId(options);
   trackCommandUsage('project-logs', null, accountId);
 
@@ -200,20 +143,24 @@ exports.handler = async options => {
     });
 
     ProjectLogsManager.setFunction(functionName);
-    logPreamble(accountId, ProjectLogsManager);
 
-    const showFinalMessage = await handleFunctionLog(accountId, {
+    logPreamble();
+
+    const logsFound = await handleFunctionLog(accountId, {
       ...options,
       projectName: ProjectLogsManager.projectName,
-      appId: ProjectLogsManager.appId,
       functionName: ProjectLogsManager.functionName, //|| endpointName,
     });
 
-    if (showFinalMessage) {
+    if (logsFound) {
       uiLine();
     }
   } catch (e) {
-    logger.error(e);
+    handleLogsError(
+      e,
+      ProjectLogsManager.functionName,
+      ProjectLogsManager.projectName
+    );
     return process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -232,10 +179,10 @@ exports.builder = yargs => {
         describe: i18n(`${i18nKey}.options.latest.describe`),
         type: 'boolean',
       },
-      // compact: {
-      //   describe: i18n(`${i18nKey}.options.compact.describe`),
-      //   type: 'boolean',
-      // },
+      compact: {
+        describe: i18n(`${i18nKey}.options.compact.describe`),
+        type: 'boolean',
+      },
       tail: {
         alias: ['t', 'follow'],
         describe: i18n(`${i18nKey}.options.tail.describe`),
@@ -244,7 +191,6 @@ exports.builder = yargs => {
       limit: {
         describe: i18n(`${i18nKey}.options.limit.describe`),
         type: 'number',
-        // default: 10, // Having a default was causing the conflicts below to always trigger when tail was added
       },
     })
     .conflicts('tail', 'limit')
@@ -256,8 +202,6 @@ exports.builder = yargs => {
       ],
     ]);
 
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   return yargs;
