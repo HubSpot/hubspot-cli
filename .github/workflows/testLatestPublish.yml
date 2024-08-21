@@ -1,12 +1,19 @@
 on:
+  push:
+    tags:
+      - '*'
+  # Scheduled jobs will only run on the default branch
   schedule:
-    - cron: '* */1 * * *' #Runs every hour
+    - cron: '* */5 * * *' # Run every 5 hours
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Sleep when triggered by new tag to wait for npm publish
+      - name: Sleep For 3 Mins
+        run: sleep 180s
+        shell: bash
       - name: Scheduled Test Slack Report
-        if: ${{ github.ref == 'refs/heads/br/scheduled-cli-tests' }}
         uses: ravsamhq/notify-slack-action@master
         with:
           status: ${{ job.status }}
