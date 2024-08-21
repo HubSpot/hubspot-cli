@@ -1,0 +1,25 @@
+on:
+  schedule:
+    - cron: '* */1 * * *' #Runs every hour
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scheduled Test Slack Report
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: ravsamhq/notify-slack-action@master
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: '{workflow} has {status_message}'
+          message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      - name: Test Latest CLI Release
+        run: |
+          npx --yes --package=@hubspot/cli@latest --call='hs --help'
+        shell: bash
