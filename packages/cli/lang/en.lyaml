@@ -1,6 +1,10 @@
 en:
   commands:
     generalErrors:
+      updateNotify:
+        notifyTitle: "Update available"
+        cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
+        cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
     accounts:
