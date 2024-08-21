@@ -93,7 +93,7 @@ exports.builder = yargs => {
   yargs.option('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
-    demandOption: true,
+    demandOption: i18n(`${i18nKey}.errors.missingSrc`),
   });
   yargs.option('fieldOptions', {
     describe: i18n(`${i18nKey}.options.options.describe`),
