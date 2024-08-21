@@ -53,6 +53,7 @@ const {
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
 } = require('../../lib/localDev');
+const { installDeps } = require('../../lib/dependencyManagement');
 
 const i18nKey = 'commands.project.subcommands.dev';
 
@@ -234,6 +235,8 @@ exports.handler = async options => {
     env,
   });
 
+  // TODO: Add prompt if we decide to go that route
+  await installDeps({ silent: true });
   await LocalDev.start();
 
   handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
