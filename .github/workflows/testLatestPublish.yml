@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Scheduled Test Slack Report
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/br/scheduled-cli-tests' }}
         uses: ravsamhq/notify-slack-action@master
         with:
           status: ${{ job.status }}
