@@ -2,7 +2,6 @@ const { getProjectConfig, ensureProjectExists } = require('./projects');
 const {
   fetchProjectComponentsMetadata,
 } = require('../../../../hubspot-local-dev-lib/dist/api/projects');
-const { getAppLogs } = require('@hubspot/local-dev-lib/api/functions');
 
 class ProjectLogsManager {
   async init(accountId) {
@@ -17,6 +16,7 @@ class ProjectLogsManager {
 
     this.projectName = projectName;
     this.accountId = accountId;
+    this.functions = [];
 
     const { project } = await ensureProjectExists(
       this.accountId,
@@ -96,13 +96,13 @@ class ProjectLogsManager {
   }
 
   async tailCall() {
-    // TODO: Wire this up, it will always return no logs currently
-    return getAppLogs(this.accountId, this.appId);
+    // TODO: Wire this up when the backend is ready
+    return {};
   }
 
   async fetchLatest() {
-    // TODO: Wire this up, it will always return no logs currently
-    return getAppLogs(this.accountId, this.appId);
+    // TODO: Wire this up when the backend is ready
+    return {};
   }
 }
 

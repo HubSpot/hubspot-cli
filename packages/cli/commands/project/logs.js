@@ -9,7 +9,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
+// const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
   logApiErrorInstance,
@@ -19,7 +19,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
 const { projectLogsPrompt } = require('../../lib/prompts/projectsLogsPrompt');
-const { tailLogs } = require('../../lib/serverlessLogs');
+// const { tailLogs } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const ProjectLogsManager = require('../../lib/projectLogsManager');
@@ -48,28 +48,30 @@ const handleLogsError = (e, name, projectName) => {
 };
 
 const handleFunctionLog = async (accountId, options) => {
-  const { latest, follow, compact, functionName } = options;
+  const { functionName } = options;
 
-  let logsResp;
+  // const { latest, follow, compact, functionName } = options;
+  // let logsResp;
 
-  if (follow) {
-    await tailLogs({
-      accountId,
-      compact,
-      tailCall: ProjectLogsManager.tailCall,
-      fetchLatest: ProjectLogsManager.fetchLatest,
-      name: functionName,
-    });
-  } else if (latest) {
-    logsResp = await ProjectLogsManager.fetchLatest();
-  } else {
-    logsResp = await ProjectLogsManager.tailCall();
-  }
-
-  if (logsResp) {
-    outputLogs(logsResp, options);
-  }
-  return !!logsResp;
+  // if (follow) {
+  //   await tailLogs({
+  //     accountId,
+  //     compact,
+  //     tailCall: ProjectLogsManager.tailCall,
+  //     fetchLatest: ProjectLogsManager.fetchLatest,
+  //     name: functionName,
+  //   });
+  // } else if (latest) {
+  //   logsResp = await ProjectLogsManager.fetchLatest();
+  // } else {
+  //   logsResp = await ProjectLogsManager.tailCall();
+  // }
+  //
+  // if (logsResp) {
+  //   outputLogs(logsResp, options);
+  // }
+  // return !!logsResp;
+  logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name: functionName }));
 };
 
 function logTable(tableHeader, logsInfo) {
@@ -128,8 +130,6 @@ exports.command = 'logs';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  logger.error('OH NO');
-  process.exit(1);
   const accountId = getAccountId(options);
   trackCommandUsage('project-logs', null, accountId);
 
