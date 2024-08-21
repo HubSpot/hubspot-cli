@@ -1422,7 +1422,7 @@ en:
         errorCause: "Cause: {{ cause }}"
         systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
         genericErrorOccurred: "A {{ name }} has occurred."
-        unknownErrorOccurred: "An unknown error has occurred"
+        unknownErrorOccurred: "An unknown error has occurred."
       suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"
