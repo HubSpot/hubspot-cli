@@ -968,6 +968,8 @@ en:
       options:
         options:
           describe: "Options to pass to javascript fields files"
+      errors:
+        invalidPath: "The path \"{{ path }}\" specified in the \"--src\" flag is not a path to a file or folder"
   lib:
     process:
       exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
