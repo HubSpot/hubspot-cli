@@ -28,5 +28,8 @@ jobs:
           node-version: 16.x
       - name: Test Latest CLI Release
         run: |
-          npx --yes --package=@hubspot/cli@latest --call='hs --help'
+          npx --yes --package=@hubspot/cli@latest --call='hs --help --use-env'
         shell: bash
+        env:
+          PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
+          PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
