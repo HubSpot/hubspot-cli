@@ -1420,8 +1420,6 @@ en:
         errorOccurred: "Error: {{ error }}"
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
-        systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
-        genericErrorOccurred: "A {{ name }} has occurred."
         unknownErrorOccurred: "An unknown error has occurred."
       suppressErrors:
         platformVersionErrors:
