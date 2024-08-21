@@ -16,7 +16,7 @@ const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { uiCommandReference } = require('../lib/ui');
+const { UI_COLORS, uiCommandReference } = require('../lib/ui');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -54,31 +54,27 @@ const i18nKey = 'commands.generalErrors';
 
 const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
 
-const CMS_CLI_UPGRADE_MESSAGE =
-  chalk.bold('The CMS CLI is now the HubSpot CLI') +
-  `\n\nTo upgrade, uninstall ${chalk.bold(
-    CMS_CLI_PACKAGE_NAME
-  )} \nand then run ${uiCommandReference('{updateCommand}')}`;
-
-const CLI_UPGRADE_MESSAGE = `HubSpot CLI version ${chalk.cyan(
-  chalk.bold('{currentVersion}')
-)} is outdated. \nRun ${uiCommandReference(
-  '{updateCommand}'
-)} to upgrade to version ${chalk.cyan(chalk.bold('{latestVersion}'))}`;
-
 notifier.notify({
   message:
     pkg.name === CMS_CLI_PACKAGE_NAME
-      ? CMS_CLI_UPGRADE_MESSAGE
-      : CLI_UPGRADE_MESSAGE,
+      ? i18n(`${i18nKey}.updateNotify.cmsUpdateNotification`, {
+          packageName: CMS_CLI_PACKAGE_NAME,
+          updateCommand: uiCommandReference('{updateCommand}'),
+        })
+      : i18n(`${i18nKey}.updateNotify.cliUpdateNotification`, {
+          updateCommand: uiCommandReference('{updateCommand}'),
+        }),
   defer: false,
   boxenOptions: {
-    borderColor: '#FC9900',
+    borderColor: UI_COLORS.MARIGOLD_DARK,
     margin: 1,
     padding: 1,
     textAlignment: 'center',
     borderStyle: 'round',
-    title: pkg.name === CMS_CLI_PACKAGE_NAME ? null : 'Update available',
+    title:
+      pkg.name === CMS_CLI_PACKAGE_NAME
+        ? null
+        : chalk.bold(i18n(`${i18nKey}.updateNotify.notifyTitle`)),
   },
 });
 
