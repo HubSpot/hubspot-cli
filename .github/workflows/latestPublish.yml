@@ -21,7 +21,7 @@ jobs:
         run: npm install
       - name: Test Latest CLI Release
         run: |
-          npm run test-cli --cliVersion="5.0.2"
+          npm run test-cli --cliVersion="latest"
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
