@@ -75,6 +75,12 @@ exports.builder = yargs => {
   });
 
   yargs.example([['$0 project add', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project add --name="my-component" --type="components/example-app"',
+      i18n(`${i18nKey}.examples.withFlags`),
+    ],
+  ]);
 
   return yargs;
 };

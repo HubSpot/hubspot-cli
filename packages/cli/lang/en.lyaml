@@ -554,9 +554,9 @@ en:
           describe: "Create a new component within a project"
           options:
             name:
-              describe: "Component name"
+              describe: "The name for your newly created component"
             type:
-              describe: "The type of component"
+              describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
           creatingComponent:
             message: "Adding a new component to your project"
           success:
@@ -565,6 +565,7 @@ en:
             locationInProject: "The component location must be within a project folder"
           examples:
             default: "Create a component within your project"
+            withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
           debug:
