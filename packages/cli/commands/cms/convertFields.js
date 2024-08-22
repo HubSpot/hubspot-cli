@@ -13,6 +13,7 @@ const {
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
 const { logError } = require('../../lib/errorHandlers/index');
+const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const i18nKey = 'commands.convertFields';
 
 exports.command = 'convert-fields';
@@ -24,23 +25,27 @@ const invalidPath = src => {
       path: src,
     })
   );
+  process.exit(EXIT_CODES.ERROR);
 };
 
 exports.handler = async options => {
-  const src = path.resolve(getCwd(), options.src);
-  const themeJSONPath = getThemeJSONPath(src);
-  const projectRoot = themeJSONPath
-    ? path.dirname(themeJSONPath)
-    : path.dirname(getCwd());
   let stats;
+  let projectRoot;
+  let src;
+
   try {
+    src = path.resolve(getCwd(), options.src);
+    const themeJSONPath = getThemeJSONPath(options.src);
+    projectRoot = themeJSONPath
+      ? path.dirname(themeJSONPath)
+      : path.dirname(getCwd());
     stats = fs.statSync(src);
     if (!stats.isFile() && !stats.isDirectory()) {
-      invalidPath(src);
+      invalidPath(options.src);
       return;
     }
   } catch (e) {
-    invalidPath(src);
+    invalidPath(options.src);
   }
 
   trackConvertFieldsUsage('process');
@@ -88,6 +93,7 @@ exports.builder = yargs => {
   yargs.option('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
+    demandOption: i18n(`${i18nKey}.errors.missingSrc`),
   });
   yargs.option('fieldOptions', {
     describe: i18n(`${i18nKey}.options.options.describe`),

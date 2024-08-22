@@ -1,0 +1,38 @@
+on:
+  push:
+    tags:
+      - '*'
+  # Scheduled jobs will only run on the default branch
+  schedule:
+    - cron: '0 */5 * * *' # Run every 5 hours
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Sleep when triggered by new tag to wait for npm publish
+      - name: Sleep For 3 Mins
+        run: sleep 180s
+        shell: bash
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      - name: Install Deps
+        run: npm install
+      - name: Test Latest CLI Release
+        run: |
+          npm run test-cli --cliVersion="latest"
+        env:
+          PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
+          PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+      - name: Release Failure Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ always() && github.ref_name == 'main' }}
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: 'CLI latest release failure'
+          message_format: '{emoji} *Release* {status_message}'
+          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

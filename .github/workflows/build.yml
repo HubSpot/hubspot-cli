@@ -1,18 +1,8 @@
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Build Failure Slack Report
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: ravsamhq/notify-slack-action@master
-        with:
-          status: ${{ job.status }}
-          notify_when: 'failure'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
       - uses: actions/checkout@v2
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -47,3 +37,14 @@ jobs:
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+      - name: Build Failure Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ always() && github.ref_name == 'main' }}
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: 'CLI build failure'
+          message_format: '{emoji} *Build* {status_message} in <{repo_url}|{repo}> on <{commit_url}|{commit_sha}>'
+          footer: '<{run_url}|View Run>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

@@ -6,7 +6,10 @@ const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { projectAddPrompt } = require('../../lib/prompts/projectAddPrompt');
-const { createProjectComponent } = require('../../lib/projects');
+const {
+  createProjectComponent,
+  getProjectComponentsByVersion,
+} = require('../../lib/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag } = require('../../lib/ui');
 const {
@@ -21,34 +24,37 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
   logger.log('');
   logger.log(i18n(`${i18nKey}.creatingComponent.message`));
   logger.log('');
+
+  const accountId = getAccountId(options);
 
   const releaseData = await fetchReleaseData(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
   );
   const projectComponentsVersion = releaseData.tag_name;
 
-  const { type, name } = await projectAddPrompt(
-    projectComponentsVersion,
-    options
+  const components = await getProjectComponentsByVersion(
+    projectComponentsVersion
   );
+
+  let { component, name } = await projectAddPrompt(components, options);
+
+  name = name || options.name;
+
+  if (!component) {
+    component = components.find(t => t.path === options.type);
+  }
 
   trackCommandUsage('project-add', null, accountId);
 
   try {
-    await createProjectComponent(
-      options.type || type,
-      options.name || name,
-      projectComponentsVersion
-    );
+    await createProjectComponent(component, name, projectComponentsVersion);
     logger.log('');
     logger.log(
       i18n(`${i18nKey}.success.message`, {
-        componentName: options.name || name,
+        componentName: name,
       })
     );
   } catch (error) {
@@ -69,6 +75,12 @@ exports.builder = yargs => {
   });
 
   yargs.example([['$0 project add', i18n(`${i18nKey}.examples.default`)]]);
+  yargs.example([
+    [
+      '$0 project add --name="my-component" --type="components/example-app"',
+      i18n(`${i18nKey}.examples.withFlags`),
+    ],
+  ]);
 
   return yargs;
 };

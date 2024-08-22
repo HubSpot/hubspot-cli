@@ -7,6 +7,7 @@ const findup = require('findup-sync');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
@@ -18,6 +19,8 @@ const {
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
   PROJECT_ERROR_TYPES,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_COMPONENT_TYPES,
 } = require('./constants');
 const {
   createProject,
@@ -40,7 +43,6 @@ const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { logError, ApiErrorContext } = require('./errorHandlers/index');
-const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
 
@@ -1009,6 +1011,16 @@ const displayWarnLogs = async (
   }
 };
 
+const getProjectComponentsByVersion = async projectComponentsVersion => {
+  const config = await fetchFileFromRepository(
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    'config.json',
+    projectComponentsVersion
+  );
+
+  return config[PROJECT_COMPONENT_TYPES.COMPONENTS];
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -1026,4 +1038,5 @@ module.exports = {
   logFeedbackMessage,
   createProjectComponent,
   displayWarnLogs,
+  getProjectComponentsByVersion,
 };

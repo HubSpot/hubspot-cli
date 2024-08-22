@@ -1,6 +1,10 @@
 en:
   commands:
     generalErrors:
+      updateNotify:
+        notifyTitle: "Update available"
+        cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
+        cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
     accounts:
@@ -550,9 +554,9 @@ en:
           describe: "Create a new component within a project"
           options:
             name:
-              describe: "Component name"
+              describe: "The name for your newly created component"
             type:
-              describe: "The type of component"
+              describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
           creatingComponent:
             message: "Adding a new component to your project"
           success:
@@ -561,6 +565,7 @@ en:
             locationInProject: "The component location must be within a project folder"
           examples:
             default: "Create a component within your project"
+            withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
           debug:
@@ -964,6 +969,10 @@ en:
       options:
         options:
           describe: "Options to pass to javascript fields files"
+      errors:
+        invalidPath: "The path \"{{ path }}\" specified in the \"--src\" flag is not a path to a file or directory"
+        missingSrc: "Please specify the path to your javascript fields file or directory with the --src flag."
+
   lib:
     process:
       exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
