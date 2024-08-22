@@ -25,10 +25,9 @@ setArgsOverrides(
       type: 'string',
       description: 'The path to the CLI',
     })
-    .option('cliNPMVersion', {
-      alias: 'npm',
+    .option('cliVersion', {
       type: "string",
-      description: "The npm version of the CLI to download and run"
+      description: "The npm version to use. The test will use npx to download and run the CLI."
     })
     .option('personalAccessKey', {
       alias: 'pak',
@@ -60,7 +59,7 @@ setArgsOverrides(
     testRunner.addReporter(reporter);
 
     global.config = getTestConfig();
-    global.cli = cmd.createCli(global.config.cliPath, global.config.cliNPMVersion);
+    global.cli = cmd.createCli(global.config.cliPath, global.config.cliVersion);
 
     await global.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],

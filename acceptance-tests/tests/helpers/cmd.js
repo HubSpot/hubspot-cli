@@ -13,16 +13,16 @@ const PATH = process.env.PATH;
 /**
  * Creates a child process with script path
  * @param {string} cliPath Path of the CLI process to execute
- * @param {string} cliNPMVersion NPM Version number
+ * @param {string} cliVersion NPM Version number
  * @param {Array} args Arguments to the command
  * @param {Object} env (optional) Environment variables
  */
-function createProcess(cliPath, cliNPMVersion, args = [], env = null) {
+function createProcess(cliPath, cliVersion, args = [], env = null) {
   let processCommand;
 
-  if (cliNPMVersion) {
+  if (cliVersion) {
     processCommand = 'npx';
-    args = ['--yes', '--package', `@hubspot/cli@${cliNPMVersion}`, 'hs'].concat(
+    args = ['--yes', '--package', `@hubspot/cli@${cliVersion}`, 'hs'].concat(
       args
     );
   } else {
@@ -60,7 +60,7 @@ function createProcess(cliPath, cliNPMVersion, args = [], env = null) {
  */
 function executeWithInput(
   cliPath,
-  cliNPMVersion,
+  cliVersion,
   args = [],
   inputs = [],
   opts = {}
@@ -75,7 +75,7 @@ function executeWithInput(
   }
 
   const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
-  const childProcess = createProcess(cliPath, cliNPMVersion, args, env);
+  const childProcess = createProcess(cliPath, cliVersion, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
   let currentInputTimeout, killIOTimeout;
@@ -187,8 +187,8 @@ function executeWithInput(
 
 module.exports = {
   createProcess,
-  createCli: (cliPath, cliNPMVersion) => ({
-    execute: (...args) => executeWithInput(cliPath, cliNPMVersion, ...args),
+  createCli: (cliPath, cliVersion) => ({
+    execute: (...args) => executeWithInput(cliPath, cliVersion, ...args),
   }),
   DOWN: '\x1B\x5B\x42',
   UP: '\x1B\x5B\x41',

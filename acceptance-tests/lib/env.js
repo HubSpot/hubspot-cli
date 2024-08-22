@@ -34,7 +34,7 @@ const getEnvValue = envVariable => {
 const setArgsOverrides = args => {
   args.portalId && (argsOverrides.portalId = args.portalId);
   args.cliPath && (argsOverrides.cliPath = args.cliPath);
-  args.cliNPMVersion && (argsOverrides.cliNPMVersion = args.cliNPMVersion);
+  args.cliVersion && (argsOverrides.cliVersion = args.cliVersion);
   args.personalAccessKey &&
     (argsOverrides.personalAccessKey = args.personalAccessKey);
   argsOverrides.qa = args.qa;
@@ -46,7 +46,7 @@ const envOverrides = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
-  cliNPMVersion: getEnvValue('CLI_NPM_VERSION'),
+  cliVersion: getEnvValue('CLI_VERSION'),
 });
 
 const getTestConfig = () => {
@@ -59,13 +59,13 @@ const getTestConfig = () => {
     );
   }
 
-  if (config.cliPath && config.cliNPMVersion) {
+  if (config.cliPath && config.cliVersion) {
     throw new Error(
-      'You cannot specify both a cliPath and a cliNPMVersion. Remove one and try again.'
+      'You cannot specify both a cliPath and a cliVersion. Remove one and try again.'
     );
   }
 
-  if (!config.cliPath && !config.cliNPMVersion) {
+  if (!config.cliPath && !config.cliVersion) {
     const defaultPath = path.join(process.cwd(), DEFAULT_CLI_PATH);
 
     if (existsSync(defaultPath)) {
