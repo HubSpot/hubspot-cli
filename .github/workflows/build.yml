@@ -5,14 +5,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Build Failure Slack Report
-        uses: ravsamhq/notify-slack-action@v2
-        if: ${{ always() && github.ref_name == 'main' }}
-        with:
-          status: ${{ job.status }}
-          notify_when: 'failure'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
       - uses: actions/checkout@v2
       - name: Use Node.js
         uses: actions/setup-node@v2
@@ -47,3 +39,11 @@ jobs:
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+      - name: Build Failure Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ always() && github.ref_name == 'main' }}
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
