@@ -26,10 +26,11 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16.x
+      - name: Install Deps
+        run: npm install
       - name: Test Latest CLI Release
         run: |
-          npx --yes --package=@hubspot/cli@latest --call='hs --help --use-env'
-        shell: bash
+          npm run test-cli --cliNPMVersion="latest"
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}

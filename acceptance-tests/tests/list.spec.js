@@ -5,7 +5,6 @@ describe('hs list', () => {
 
   it('should print the correct output', async () => {
     let val = await cli.execute(['list', `--c="${CONFIG_FILE_NAME}"`]);
-    console.log(val);
     expect(val).toContain('@marketplace');
   }, 20000);
 });
