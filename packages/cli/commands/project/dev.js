@@ -53,7 +53,7 @@ const {
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
 } = require('../../lib/localDev');
-const { installDeps } = require('../../lib/dependencyManagement');
+const { installPackages } = require('../../lib/dependencyManagement');
 
 const i18nKey = 'commands.project.subcommands.dev';
 
@@ -235,8 +235,21 @@ exports.handler = async options => {
     env,
   });
 
-  // TODO: Add prompt if we decide to go that route
-  await installDeps({ silent: true });
+  try {
+    SpinniesManager.add('installingDeps', {
+      text: 'Installing dependencies for the project',
+    });
+
+    await installPackages({ silent: true });
+
+    SpinniesManager.succeed('installingDeps', {
+      text: 'Dependency installation successful',
+    });
+  } catch (e) {
+    SpinniesManager.fail('installingDeps', {
+      text: 'Dependency installation failed',
+    });
+  }
   await LocalDev.start();
 
   handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));

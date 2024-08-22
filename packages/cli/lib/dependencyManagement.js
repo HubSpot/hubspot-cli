@@ -1,34 +1,40 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('./projects');
-const DEFAULT_PACKAGE_MANAGER = 'npm';
-const { execSync } = require('child_process');
-const { EXIT_CODES } = require('./enums/exitCodes');
+const { exec: execAsync } = require('child_process');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('node:path');
 const { uiLink } = require('./ui');
+const util = require('node:util');
 
-function isGloballyInstalled(command) {
+const exec = util.promisify(execAsync);
+const DEFAULT_PACKAGE_MANAGER = 'npm';
+
+async function isGloballyInstalled(command) {
   try {
-    execSync(`${command} --version`);
+    await exec(`${command} --version`);
     return true;
   } catch (e) {
     return false;
   }
 }
 
-async function installDeps({ packages, installLocations, silent = false }) {
+async function installPackages({ packages, installLocations, silent = false }) {
   const installDirs = installLocations || (await getProjectPackageJsonFiles());
-  installDirs.forEach(directory => {
-    installInDirectory(packages, directory, silent);
-  });
+  await Promise.all(
+    installDirs.map(async dir => {
+      await installPackagesInDirectory(packages, dir, silent);
+    })
+  );
 }
 
-function installInDirectory(packages, directory, silent) {
-  logger.info(
-    `Installing dependencies ${
-      packages ? `[${packages.join(', ')}] ` : ''
-    }in ${directory}`
-  );
+async function installPackagesInDirectory(packages, directory, silent) {
+  if (!silent) {
+    logger.info(
+      `Installing dependencies ${
+        packages ? `[${packages.join(', ')}] ` : ''
+      }in ${directory}`
+    );
+  }
   let installCommand = `${DEFAULT_PACKAGE_MANAGER} --prefix=${directory} install`;
 
   if (packages) {
@@ -37,12 +43,11 @@ function installInDirectory(packages, directory, silent) {
 
   logger.debug(`Running ${installCommand}`);
   try {
-    execSync(installCommand, {
-      stdio: silent ? 'ignore' : 'inherit',
-    });
+    await exec(installCommand);
   } catch (e) {
-    logger.error(`Installing dependencies for ${directory} failed`);
-    process.exit(EXIT_CODES.ERROR);
+    throw new Error(`Installing dependencies for ${directory} failed`, {
+      cause: e,
+    });
   }
 }
 
@@ -62,7 +67,7 @@ async function getProjectPackageJsonFiles() {
     projectConfig: { srcDir },
   } = projectConfig;
 
-  if (!isGloballyInstalled(DEFAULT_PACKAGE_MANAGER)) {
+  if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
     throw new Error(
       `This command depends on ${DEFAULT_PACKAGE_MANAGER}, install ${uiLink(
         DEFAULT_PACKAGE_MANAGER,
@@ -93,7 +98,8 @@ async function getProjectPackageJsonFiles() {
 }
 
 module.exports = {
-  installDeps,
+  installPackages,
+  installPackagesInDirectory,
   DEFAULT_PACKAGE_MANAGER,
   getProjectPackageJsonFiles,
 };
