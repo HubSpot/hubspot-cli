@@ -45,5 +45,8 @@ jobs:
         with:
           status: ${{ job.status }}
           notify_when: 'failure'
+          notification_title: 'CLI Build failed'
+          message_format: '{emoji} *Build* {status_message} in <{repo_url}|{repo}> on <{commit_url}|{commit_sha}>"'
+          footer: '<{run_url}|View Run>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
