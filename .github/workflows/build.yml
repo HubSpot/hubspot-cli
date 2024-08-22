@@ -1,9 +1,7 @@
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
@@ -46,7 +44,7 @@ jobs:
           status: ${{ job.status }}
           notify_when: 'failure'
           notification_title: 'CLI build failure'
-          message_format: '{emoji} *Build* {status_message} in <{repo_url}|{repo}> on <{commit_url}|{commit_sha}>"'
+          message_format: '{emoji} *Build* {status_message} in <{repo_url}|{repo}> on <{commit_url}|{commit_sha}>'
           footer: '<{run_url}|View Run>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
