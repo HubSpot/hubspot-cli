@@ -13,15 +13,6 @@ jobs:
       - name: Sleep For 3 Mins
         run: sleep 180s
         shell: bash
-      - name: Scheduled Test Slack Report
-        uses: ravsamhq/notify-slack-action@master
-        with:
-          status: ${{ job.status }}
-          notify_when: 'failure'
-          notification_title: '{workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
@@ -34,3 +25,14 @@ jobs:
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+      - name: Build Failure Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ always() && github.ref_name == 'main' }}
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: 'CLI latest release failure'
+          message_format: '{emoji} *Release* {status_message}'
+          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in npm>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
