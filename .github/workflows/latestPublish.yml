@@ -4,7 +4,7 @@ on:
       - '*'
   # Scheduled jobs will only run on the default branch
   schedule:
-    - cron: '* */5 * * *' # Run every 5 hours
+    - cron: '0 */5 * * *' # Run every 5 hours
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,7 +21,7 @@ jobs:
         run: npm install
       - name: Test Latest CLI Release
         run: |
-          npm run test-cli --cliVersion="5.0.2"
+          npm run test-cli --cliVersion="latest"
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
