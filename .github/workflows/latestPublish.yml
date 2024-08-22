@@ -4,7 +4,7 @@ on:
       - '*'
   # Scheduled jobs will only run on the default branch
   schedule:
-    - cron: '* */5 * * *' # Run every 5 hours
+    - cron: '0 */5 * * *' # Run every 5 hours
 jobs:
   build:
     runs-on: ubuntu-latest
