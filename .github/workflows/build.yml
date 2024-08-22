@@ -6,7 +6,7 @@ jobs:
 
     steps:
       - name: Build Failure Slack Report
-        uses: ravsamhq/notify-slack-action@master
+        uses: ravsamhq/notify-slack-action@v2
         if: ${{ always() && github.ref_name == 'main' }}
         with:
           status: ${{ job.status }}
