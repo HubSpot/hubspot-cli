@@ -1,6 +1,10 @@
 en:
   commands:
     generalErrors:
+      updateNotify:
+        notifyTitle: "Update available"
+        cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
+        cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
     accounts:
@@ -964,6 +968,10 @@ en:
       options:
         options:
           describe: "Options to pass to javascript fields files"
+      errors:
+        invalidPath: "The path \"{{ path }}\" specified in the \"--src\" flag is not a path to a file or directory"
+        missingSrc: "Please specify the path to your javascript fields file or directory with the --src flag."
+
   lib:
     process:
       exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
