@@ -32,10 +32,9 @@ function logError(error, context = {}) {
     }
   } else if (isSystemError(error)) {
     logger.error(error.message);
-  } else if (error instanceof Error || error.message || error.reason) {
-    // Error or Error subclass
-    const name = error.name || 'Error';
-    const message = [i18n(`${i18nKey}.genericErrorOccurred`, { name })];
+  } else if (error.message || error.reason) {
+    const message = [];
+
     [error.message, error.reason].forEach(msg => {
       if (msg) {
         message.push(msg);
