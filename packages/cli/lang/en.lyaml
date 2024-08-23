@@ -765,30 +765,6 @@ en:
           options:
             account:
               describe: "Account name or id to delete"
-        sync:
-          describe: "Sync to a sandbox account"
-          examples:
-            default: "Initiates a sync to a sandbox account."
-            force: "Skips all confirmation prompts when initiating a sync."
-          info:
-            developmentSandbox: "This will sync CRM object definitions."
-            standardSandbox: "This will sync all supported assets.
-              \nTo sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
-            sync: "\nSync direction:
-              \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
-              \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
-              \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
-          warning:
-            developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
-            standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
-          confirm:
-            developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-            standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-          failure:
-            invalidAccountType: "Sync must be run in a sandbox account. Your default account is a {{ accountType }}. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
-            missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
-              \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
-              \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
     secrets:
       describe: "Manage HubSpot secrets."
       subcommands:
@@ -1119,12 +1095,6 @@ en:
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
-          sandboxSyncDevelopmentCommand:
-            command: "hs sandbox sync"
-            message: "Run {{ command }} to to update CRM object definitions in your sandbox"
-          sandboxSyncStandardCommand:
-            command: "hs sandbox sync"
-            message: "Run {{ command }} to to update all supported assets to your sandbox from production"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
