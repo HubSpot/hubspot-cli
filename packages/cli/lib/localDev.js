@@ -91,9 +91,16 @@ const checkIfAppDeveloperAccount = accountConfig => {
 };
 
 // Confirm the default account is a developer account if developing public apps
-const checkIfDeveloperTestAccount = accountConfig => {
-  if (!isDeveloperTestAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfDeveloperTestAccount`));
+const validateAccountOption = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`)
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`)
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -439,7 +446,7 @@ const getAccountHomeUrl = accountId => {
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
+  validateAccountOption,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
