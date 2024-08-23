@@ -9,6 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       # Sleep when triggered by new tag to wait for npm publish
       - name: Sleep For 3 Mins
         run: sleep 180s
