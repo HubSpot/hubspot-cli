@@ -33,7 +33,7 @@ jobs:
           status: ${{ job.status }}
           notify_when: 'failure'
           notification_title: 'CLI latest release failure'
-          message_format: '{emoji} *Release* {status_message}'
+          message_format: '{emoji} *NPM Release* {status_message}'
           footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
