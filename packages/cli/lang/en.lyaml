@@ -1017,10 +1017,10 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
+      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
       validateAccountOption:
-        invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
-        invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{#bold}}`hs accounts use`{{/bold}}."
+        invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
+        invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
         privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"

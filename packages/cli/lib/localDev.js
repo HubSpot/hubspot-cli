@@ -85,7 +85,12 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
 // Confirm the default account is a developer account if developing public apps
 const checkIfAppDeveloperAccount = accountConfig => {
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfAppDevloperAccount`));
+    logger.error(
+      i18n(`${i18nKey}.checkIfAppDevloperAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -94,12 +99,17 @@ const checkIfAppDeveloperAccount = accountConfig => {
 const validateAccountOption = (accountConfig, hasPublicApps) => {
   if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`)
+      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        devCommand: uiCommandReference('hs project dev'),
+      })
     );
     process.exit(EXIT_CODES.SUCCESS);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`)
+      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+      })
     );
     process.exit(EXIT_CODES.SUCCESS);
   }
