@@ -209,7 +209,9 @@ exports.handler = async options => {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.projectDetailsLink`),
-          `${baseUrl}/developer-projects/${accountId}/project/${project.name}`
+          `${baseUrl}/developer-projects/${accountId}/project/${encodeURIComponent(
+            project.name
+          )}`
         )
       );
       process.exit(EXIT_CODES.SUCCESS);
