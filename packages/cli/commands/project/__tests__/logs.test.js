@@ -131,7 +131,7 @@ describe('commands/project/logs', () => {
   });
 
   describe('handler', () => {
-    const accountId = 888888;
+    const accountId = 12345678;
 
     beforeEach(() => {
       getAccountId.mockReturnValue(accountId);

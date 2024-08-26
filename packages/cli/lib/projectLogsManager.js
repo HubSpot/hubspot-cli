@@ -4,6 +4,14 @@ const {
 } = require('../../../../hubspot-local-dev-lib/dist/api/projects');
 
 class ProjectLogsManager {
+  reset() {
+    Object.keys(this).forEach(key => {
+      if (Object.hasOwn(this, key)) {
+        this[key] = undefined;
+      }
+    });
+  }
+
   async init(accountId) {
     const { projectConfig } = await getProjectConfig();
 
@@ -26,7 +34,11 @@ class ProjectLogsManager {
       }
     );
 
-    if (!(project.deployedBuild && project.deployedBuild.subbuildStatuses)) {
+    if (
+      !project ||
+      !project.deployedBuild ||
+      !project.deployedBuild.subbuildStatuses
+    ) {
       //TODO Proper error message
       throw new Error('Failed to fetch project');
     }
@@ -51,7 +63,12 @@ class ProjectLogsManager {
       return type && type.name === 'PRIVATE_APP';
     });
 
+    if (!this.functions) {
+      this.functions = [];
+    }
+
     apps.forEach(app => {
+      // TODO[JOE] This won't work for multi-app, fix it to be set on selection
       this.appId = app.deployOutput.appId;
       this.functions.push(
         ...app.featureComponents.filter(
@@ -76,13 +93,20 @@ class ProjectLogsManager {
   }
 
   setFunction(functionName) {
-    this.functionName = functionName;
+    if (!this.functions) {
+      throw new Error('Unable to set function, no functions to choose from');
+    }
+
     this.selectedFunction = this.functions.find(
       serverlessFunction => serverlessFunction.componentName === functionName
     );
+
     if (!this.selectedFunction) {
       throw new Error(`No function with name ${functionName}`);
     }
+
+    this.functionName = functionName;
+
     if (
       this.selectedFunction.deployOutput &&
       this.selectedFunction.deployOutput.endpoint
