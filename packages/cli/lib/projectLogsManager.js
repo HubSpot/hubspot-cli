@@ -2,6 +2,9 @@ const { getProjectConfig, ensureProjectExists } = require('./projects');
 const {
   fetchProjectComponentsMetadata,
 } = require('../../../../hubspot-local-dev-lib/dist/api/projects');
+const { i18n } = require('./lang');
+
+const i18nKey = 'commands.project.subcommands.logs';
 
 class ProjectLogsManager {
   reset() {
@@ -16,8 +19,7 @@ class ProjectLogsManager {
     const { projectConfig } = await getProjectConfig();
 
     if (!projectConfig || !projectConfig.name) {
-      //TODO Proper error message
-      throw new Error('Project config missing');
+      throw new Error(i18n(`${i18nKey}.errors.noProjectConfig`));
     }
 
     const { name: projectName } = projectConfig;
@@ -39,8 +41,7 @@ class ProjectLogsManager {
       !project.deployedBuild ||
       !project.deployedBuild.subbuildStatuses
     ) {
-      //TODO Proper error message
-      throw new Error('Failed to fetch project');
+      throw new Error(i18n(`${i18nKey}.errors.failedToFetchProjectDetails`));
     }
 
     this.projectId = project.id;
@@ -49,8 +50,7 @@ class ProjectLogsManager {
 
   async fetchFunctionDetails() {
     if (!this.projectId) {
-      //TODO Proper error message
-      throw new Error('Project not initialized');
+      throw new Error(i18n(`${i18nKey}.errors.unableToDetermineProject`));
     }
 
     const { topLevelComponentMetadata } = await fetchProjectComponentsMetadata(
@@ -87,7 +87,7 @@ class ProjectLogsManager {
 
   setFunction(functionName) {
     if (!this.functions) {
-      throw new Error('Unable to set function, no functions to choose from');
+      throw new Error(i18n(`${i18nKey}.errors.unableToSetFunction`));
     }
 
     this.selectedFunction = this.functions.find(
@@ -95,14 +95,17 @@ class ProjectLogsManager {
     );
 
     if (!this.selectedFunction) {
-      throw new Error(`No function with name ${functionName}`);
+      throw new Error(
+        i18n(`${i18nKey}.errors.noFunctionWithName`, { name: functionName })
+      );
     }
 
     this.functionName = functionName;
 
     if (!this.selectedFunction.deployOutput) {
-      // TODO[JOE] Error message
-      throw new Error(`No function with name ${functionName}`);
+      throw new Error(
+        i18n(`${i18nKey}.errors.noFunctionWithName`, { name: functionName })
+      );
     }
     this.appId = this.selectedFunction.deployOutput.appId;
 

@@ -81,7 +81,9 @@ describe('cli/lib/projectLogsManager', () => {
       getProjectConfig.mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
-      ).rejects.toThrow(/Project config missing/);
+      ).rejects.toThrow(
+        'No project detected. Please run this command again from a project directory.'
+      );
       expect(getProjectConfig).toHaveBeenCalledTimes(1);
     });
 
@@ -113,7 +115,7 @@ describe('cli/lib/projectLogsManager', () => {
     it('should throw an error if the projectId is null when the method is called', async () => {
       await expect(async () =>
         ProjectLogsManager.fetchFunctionDetails()
-      ).rejects.toThrow(/Project not initialized/);
+      ).rejects.toThrow('Unable to determine which project to use');
     });
 
     it('should fetch the component metadata', async () => {
@@ -162,7 +164,7 @@ describe('cli/lib/projectLogsManager', () => {
       ProjectLogsManager.functions = functions;
       const badName = 'foo';
       expect(() => ProjectLogsManager.setFunction(badName)).toThrow(
-        `No function with name ${badName}`
+        `No function with name "${badName}"`
       );
     });
 

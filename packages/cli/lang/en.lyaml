@@ -586,15 +586,18 @@ en:
         logs:
           describe: "Get execution logs for a serverless function within a project"
           errors:
-            invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            noProjectConfig: "No project detected. Please run this command again from a project directory."
+            failedToFetchProjectDetails: "Failed to fetch project details"
+            unableToDetermineProject: "Unable to determine which project to use"
+            unableToSetFunction: "Unable to set function, no functions to choose from"
+            noFunctionWithName: "No function with name \"{{ name }}\""
+            unableToDetermineFunction: "Unable to determine which function was selected"
           logs:
             showingLogs: "Showing logs for:"
             hubspotLogsDirectLink: "View logs in HubSpot"
             noLogsFound: "No logs were found for \"{{ name }}\""
           table:
             accountHeader: "Account"
-            projectHeader: "Project"
-            appHeader: "App"
             functionHeader: "Function"
             endpointHeader: "Endpoint"
           examples:
@@ -611,12 +614,8 @@ en:
               describe: "Retrieve most recent log only"
             limit:
               describe: "Limit the number of logs to output"
-            project:
-              describe: "Project name"
             function:
               describe: "App function name"
-            endpoint:
-              describe: "Public endpoint path"
         upload:
           describe: "Upload your project files and create a new build"
           examples:

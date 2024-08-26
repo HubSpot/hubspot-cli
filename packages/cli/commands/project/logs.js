@@ -128,8 +128,7 @@ exports.handler = async options => {
     });
 
     if (!functionName) {
-      // TODO[JOE] Proper error messaging
-      logger.error('TODO: Fill this out');
+      logger.error(i18n(`${i18nKey}.errors.unableToDetermineFunction`));
       return process.exit(EXIT_CODES.ERROR);
     }
 

@@ -190,7 +190,9 @@ describe('commands/project/logs', () => {
 
       await handler({});
       expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith('TODO: Fill this out');
+      expect(logger.error).toHaveBeenCalledWith(
+        'Unable to determine which function was selected'
+      );
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
