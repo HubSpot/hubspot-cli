@@ -39,7 +39,7 @@ const {
   migrateApp,
   checkMigrationStatus,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
@@ -186,7 +186,7 @@ exports.handler = async options => {
 
       await extractZipArchive(
         zippedProject,
-        projectName,
+        sanitizeFileName(projectName),
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
       );
