@@ -38,7 +38,7 @@ const {
   checkCloneStatus,
   downloadClonedProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
@@ -119,10 +119,15 @@ exports.handler = async options => {
 
       // Extract zipped app files and place them in correct directory
       const zippedApp = await downloadClonedProject(accountId, exportId);
-      await extractZipArchive(zippedApp, name, absoluteDestPath, {
-        includesRootDir: true,
-        hideLogs: true,
-      });
+      await extractZipArchive(
+        zippedApp,
+        sanitizeFileName(name),
+        absoluteDestPath,
+        {
+          includesRootDir: true,
+          hideLogs: true,
+        }
+      );
 
       // Create hsproject.json file
       const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
