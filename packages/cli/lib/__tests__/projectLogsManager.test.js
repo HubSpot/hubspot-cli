@@ -22,17 +22,24 @@ describe('cli/lib/projectLogsManager', () => {
     },
   };
 
-  const functions = [
-    {
-      componentName: 'function1',
-      type: {
-        name: 'APP_FUNCTION',
-      },
+  const function1 = {
+    componentName: 'function1',
+    type: {
+      name: 'APP_FUNCTION',
     },
+    deployOutput: {
+      appId,
+    },
+  };
+  const functions = [
+    function1,
     {
       componentName: 'function2',
       type: {
         name: 'APP_FUNCTION',
+      },
+      deployOutput: {
+        appId,
       },
     },
   ];
@@ -160,20 +167,20 @@ describe('cli/lib/projectLogsManager', () => {
     });
 
     it('should set the data correctly for public functions', async () => {
-      ProjectLogsManager.functions = [
-        {
-          componentName: 'function1',
-          type: {
-            name: 'APP_FUNCTION',
-          },
-          deployOutput: {
-            endpoint: { path: 'yooooooo', method: ['GET'] },
-          },
+      const functionToChoose = {
+        componentName: 'function1',
+        type: {
+          name: 'APP_FUNCTION',
         },
-      ];
+        deployOutput: {
+          endpoint: { path: 'yooooooo', method: ['GET'] },
+        },
+      };
+      ProjectLogsManager.functions = [functionToChoose];
       ProjectLogsManager.setFunction('function1');
       expect(ProjectLogsManager.functionName).toEqual('function1');
       expect(ProjectLogsManager.endpointName).toEqual('yooooooo');
+      expect(ProjectLogsManager.selectedFunction).toEqual(functionToChoose);
       expect(ProjectLogsManager.method).toEqual(['GET']);
       expect(ProjectLogsManager.isPublicFunction).toEqual(true);
     });
@@ -181,6 +188,7 @@ describe('cli/lib/projectLogsManager', () => {
     it('should set the data correctly for public functions', async () => {
       ProjectLogsManager.functions = functions;
       ProjectLogsManager.setFunction('function1');
+      expect(ProjectLogsManager.selectedFunction).toEqual(function1);
       expect(ProjectLogsManager.functionName).toEqual('function1');
       expect(ProjectLogsManager.isPublicFunction).toEqual(false);
     });

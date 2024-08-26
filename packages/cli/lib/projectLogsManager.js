@@ -68,19 +68,12 @@ class ProjectLogsManager {
     }
 
     apps.forEach(app => {
-      // TODO[JOE] This won't work for multi-app, fix it to be set on selection
-      this.appId = app.deployOutput.appId;
       this.functions.push(
         ...app.featureComponents.filter(
           component => component.type.name === 'APP_FUNCTION'
         )
       );
     });
-
-    if (!this.appId) {
-      //TODO Proper error message
-      throw new Error('App id missing');
-    }
   }
 
   getFunctionNames() {
@@ -107,10 +100,13 @@ class ProjectLogsManager {
 
     this.functionName = functionName;
 
-    if (
-      this.selectedFunction.deployOutput &&
-      this.selectedFunction.deployOutput.endpoint
-    ) {
+    if (!this.selectedFunction.deployOutput) {
+      // TODO[JOE] Error message
+      throw new Error(`No function with name ${functionName}`);
+    }
+    this.appId = this.selectedFunction.deployOutput.appId;
+
+    if (this.selectedFunction.deployOutput.endpoint) {
       this.endpointName = this.selectedFunction.deployOutput.endpoint.path;
       this.method = this.selectedFunction.deployOutput.endpoint.method;
       this.isPublicFunction = true;
