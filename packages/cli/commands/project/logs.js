@@ -11,10 +11,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 // const { outputLogs } = require('../../lib/ui/serverlessFunctionLogs');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
@@ -32,19 +29,6 @@ const getPrivateAppsUrl = accountId => {
   );
 
   return `${baseUrl}/private-apps/${accountId}`;
-};
-
-const handleLogsError = (e, name, projectName) => {
-  if (e.response && e.response.status === 404) {
-    logger.debug(`Log fetch error: ${e.message}`);
-    logger.log(i18n(`${i18nKey}.logs.noLogsFound`, { name }));
-  } else {
-    logApiErrorInstance(
-      e,
-      new ApiErrorContext({ accountId: getAccountId(), projectName })
-    );
-    return process.exit(EXIT_CODES.ERROR);
-  }
 };
 
 const handleFunctionLog = async (accountId, options) => {
@@ -97,7 +81,7 @@ function logPreamble() {
     );
     logger.log(
       uiLink(
-        i18n(`${i18nKey}.logs.hubspotLogsLink`),
+        i18n(`${i18nKey}.logs.hubspotLogsDirectLink`),
         `${getPrivateAppsUrl(ProjectLogsManager.accountId)}/${
           ProjectLogsManager.appId
         }/logs/serverlessGatewayExecution?path=${
@@ -140,7 +124,14 @@ exports.handler = async options => {
 
     const { functionName } = await projectLogsPrompt({
       functionChoices: ProjectLogsManager.getFunctionNames(),
+      promptOptions: options,
     });
+
+    if (!functionName) {
+      // TODO[JOE] Proper error messaging
+      logger.error('TODO: Fill this out');
+      return process.exit(EXIT_CODES.ERROR);
+    }
 
     ProjectLogsManager.setFunction(functionName);
 
@@ -156,11 +147,10 @@ exports.handler = async options => {
       uiLine();
     }
   } catch (e) {
-    handleLogsError(
-      e,
-      ProjectLogsManager.functionName,
-      ProjectLogsManager.projectName
-    );
+    logApiErrorInstance(e, {
+      accountId: getAccountId(),
+      projectName: ProjectLogsManager.projectName,
+    });
     return process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -194,10 +184,10 @@ exports.builder = yargs => {
       },
     })
     .conflicts('tail', 'limit')
-    .example([['$0 project logs', i18n(`${i18nKey}.examples.default`)]])
     .example([
+      ['$0 project logs', i18n(`${i18nKey}.examples.default`)],
       [
-        '$0 project logs --project=my-project --app=app --function=my-function',
+        '$0 project logs --function=my-function',
         i18n(`${i18nKey}.examples.withOptions`),
       ],
     ]);

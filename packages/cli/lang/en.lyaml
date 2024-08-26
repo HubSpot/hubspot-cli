@@ -589,7 +589,6 @@ en:
             invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
           logs:
             showingLogs: "Showing logs for:"
-            hubspotLogsLink: "View private apps in HubSpot"
             hubspotLogsDirectLink: "View logs in HubSpot"
             noLogsFound: "No logs were found for \"{{ name }}\""
           table:

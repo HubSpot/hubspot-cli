@@ -4,7 +4,10 @@ const { promptUser } = require('./promptUtils');
 const i18nKey = 'lib.prompts.projectLogsPrompt';
 
 const projectLogsPrompt = async ({ functionChoices, promptOptions = {} }) => {
-  if (functionChoices.length === 1) {
+  if (!functionChoices) {
+    return {};
+  }
+  if (functionChoices && functionChoices.length === 1) {
     return { functionName: functionChoices[0] };
   }
 
@@ -13,7 +16,7 @@ const projectLogsPrompt = async ({ functionChoices, promptOptions = {} }) => {
       name: 'functionName',
       type: 'list',
       message: i18n(`${i18nKey}.functionName`),
-      when: () => !promptOptions.function,
+      when: () => !promptOptions || !promptOptions.function,
       choices: functionChoices,
     },
   ]);
