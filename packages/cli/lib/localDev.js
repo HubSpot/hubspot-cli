@@ -126,20 +126,18 @@ const suggestRecommendedNestedAccount = async (
   if (hasPublicApps) {
     logger.log(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+        `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.privateAppInAppDeveloperAccountError`
+        `${i18nKey}.validateAccountOption.privateAppInAppDeveloperAccountError`
       )
     );
     process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.log(
-      i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
-    );
+    logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
   uiLine();
   logger.log();
