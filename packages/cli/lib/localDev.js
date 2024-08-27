@@ -81,15 +81,32 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
 // Confirm the default account is a developer account if developing public apps
 const checkIfAppDeveloperAccount = accountConfig => {
   if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfAppDevloperAccount`));
+    logger.error(
+      i18n(`${i18nKey}.checkIfAppDevloperAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
 
 // Confirm the default account is a developer account if developing public apps
-const checkIfDeveloperTestAccount = accountConfig => {
-  if (!isDeveloperTestAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfDeveloperTestAccount`));
+const validateAccountOption = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        devCommand: uiCommandReference('hs project dev'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -105,20 +122,18 @@ const suggestRecommendedNestedAccount = async (
   if (hasPublicApps) {
     logger.log(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+        `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.privateAppInAppDeveloperAccountError`
+        `${i18nKey}.validateAccountOption.privateAppInAppDeveloperAccountError`
       )
     );
     process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.log(
-      i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
-    );
+    logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
   uiLine();
   logger.log();
@@ -438,7 +453,7 @@ const getAccountHomeUrl = accountId => {
 module.exports = {
   confirmDefaultAccountIsTarget,
   checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
+  validateAccountOption,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,

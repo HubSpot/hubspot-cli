@@ -563,7 +563,7 @@ const handleProjectUpload = async (
           buildId
         );
       }
-      resolve(uploadResult);
+      resolve(uploadResult || {});
     })
   );
 
