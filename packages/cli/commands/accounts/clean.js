@@ -54,7 +54,7 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(account.portalId);
+      await accessTokenForPersonalAccessKey(account.portalId, true);
     } catch (error) {
       if (
         isSpecifiedHubSpotAuthError(error, {
