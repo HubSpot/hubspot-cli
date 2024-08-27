@@ -132,7 +132,7 @@ exports.handler = async options => {
         startWatching
       );
 
-      if (result.uploadError) {
+      if (result && result.uploadError) {
         if (
           isSpecifiedError(result.uploadError, {
             subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED,
