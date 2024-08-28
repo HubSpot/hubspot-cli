@@ -483,7 +483,7 @@ en:
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
-            noSupportedComponents: "This project does not contain any components that support local development. Currently, local development is only supported for private and public apps."
+            noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
@@ -985,7 +985,6 @@ en:
       failedToInitialize: "Missing required arguments to initialize Local Dev"
       noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
       noComponents: "There are no components in this project."
-      noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
       learnMoreLocalDevServer: "Learn more about the projects local dev server"
       running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
