@@ -2,7 +2,7 @@ const { createFunction } = require('@hubspot/local-dev-lib/cms/functions');
 const {
   createFunctionPrompt,
 } = require('../../lib/prompts/createFunctionPrompt');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 module.exports = {
@@ -12,7 +12,7 @@ module.exports = {
     try {
       await createFunction(functionDefinition, dest);
     } catch (e) {
-      logErrorInstance(e);
+      logError(e);
       process.exit(EXIT_CODES.ERROR);
     }
   },

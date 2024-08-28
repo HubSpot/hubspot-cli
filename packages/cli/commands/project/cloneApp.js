@@ -25,10 +25,7 @@ const {
   uiAccountDescription,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { writeProjectConfig } = require('../../lib/projects');
@@ -38,7 +35,7 @@ const {
   checkCloneStatus,
   downloadClonedProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
@@ -99,7 +96,7 @@ exports.handler = async options => {
     name = projectResponse.name;
     location = projectResponse.location;
   } catch (error) {
-    logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
   try {
@@ -109,8 +106,12 @@ exports.handler = async options => {
       text: i18n(`${i18nKey}.cloneStatus.inProgress`),
     });
 
-    const { exportId } = await cloneApp(accountId, appId);
-    const { status } = await poll(checkCloneStatus, accountId, exportId);
+    const {
+      data: { exportId },
+    } = await cloneApp(accountId, appId);
+    const {
+      data: { status },
+    } = await poll(checkCloneStatus, accountId, exportId);
     if (status === 'SUCCESS') {
       // Ensure correct project folder structure exists
       const baseDestPath = path.resolve(getCwd(), location);
@@ -118,11 +119,19 @@ exports.handler = async options => {
       fs.mkdirSync(absoluteDestPath, { recursive: true });
 
       // Extract zipped app files and place them in correct directory
-      const zippedApp = await downloadClonedProject(accountId, exportId);
-      await extractZipArchive(zippedApp, name, absoluteDestPath, {
-        includesRootDir: true,
-        hideLogs: true,
-      });
+      const { data: zippedApp } = await downloadClonedProject(
+        accountId,
+        exportId
+      );
+      await extractZipArchive(
+        zippedApp,
+        sanitizeFileName(name),
+        absoluteDestPath,
+        {
+          includesRootDir: true,
+          hideLogs: true,
+        }
+      );
 
       // Create hsproject.json file
       const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
@@ -176,10 +185,10 @@ exports.handler = async options => {
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
     if (error.errors && Array.isArray(error.errors)) {
       error.errors.forEach(e =>
-        logApiErrorInstance(e, new ApiErrorContext({ accountId }))
+        logError(e, new ApiErrorContext({ accountId }))
       );
     } else {
-      logApiErrorInstance(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId }));
     }
   }
 };

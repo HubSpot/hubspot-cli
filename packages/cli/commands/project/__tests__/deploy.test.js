@@ -57,6 +57,9 @@ const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { AxiosError, HttpStatusCode } = require('axios');
 
 const chalk = require('chalk');
+const {
+  HubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
 
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
@@ -163,8 +166,8 @@ describe('commands/project/deploy', () => {
       });
       getAccountId.mockReturnValue(accountId);
       getAccountConfig.mockReturnValue({ accountType });
-      fetchProject.mockResolvedValue(projectDetails);
-      deployProject.mockResolvedValue(deployDetails);
+      fetchProject.mockResolvedValue({ data: projectDetails });
+      deployProject.mockResolvedValue({ data: deployDetails });
       deployBuildIdPrompt.mockResolvedValue({
         buildId: projectDetails.latestBuild.buildId,
       });
@@ -251,7 +254,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
-      fetchProject.mockResolvedValue({});
+      fetchProject.mockResolvedValue({ data: {} });
       await handler(options);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -332,7 +335,9 @@ describe('commands/project/deploy', () => {
     it('should log an error and exit when the deploy fails', async () => {
       const errorMessage = `Just wasn't feeling it`;
       deployProject.mockResolvedValue({
-        error: { message: errorMessage },
+        data: {
+          error: { message: errorMessage },
+        },
       });
 
       await handler(options);
@@ -361,13 +366,15 @@ describe('commands/project/deploy', () => {
       uiCommandReference.mockReturnValue(commandReference);
       uiAccountDescription.mockReturnValue(accountDescription);
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          'OH NO',
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.NotFound }
-        );
+        throw new HubSpotHttpError('OH NO', {
+          cause: new AxiosError(
+            'OH NO',
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.NotFound }
+          ),
+        });
       });
       await handler(options);
 
@@ -388,18 +395,20 @@ describe('commands/project/deploy', () => {
       uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          errorMessage,
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.BadRequest }
-        );
+        throw new HubSpotHttpError(errorMessage, {
+          cause: new AxiosError(
+            errorMessage,
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.BadRequest }
+          ),
+        });
       });
       await handler(options);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(errorMessage);
+      expect(logger.error).toHaveBeenCalledWith('The request was bad.');
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
     });
@@ -411,13 +420,15 @@ describe('commands/project/deploy', () => {
       uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
-        throw new AxiosError(
-          errorMessage,
-          '',
-          {},
-          {},
-          { status: HttpStatusCode.MethodNotAllowed }
-        );
+        throw new HubSpotHttpError('OH NO', {
+          cause: new AxiosError(
+            errorMessage,
+            '',
+            {},
+            {},
+            { status: HttpStatusCode.MethodNotAllowed }
+          ),
+        });
       });
       await handler(options);
 

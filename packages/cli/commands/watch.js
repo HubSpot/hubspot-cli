@@ -18,11 +18,7 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
-const {
-  logApiUploadErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
 const i18nKey = 'commands.watch';
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -99,7 +95,7 @@ exports.handler = async options => {
         accountId,
       })
     );
-    logErrorInstance(error, {
+    logError(error, {
       accountId,
     });
   };
@@ -112,7 +108,7 @@ exports.handler = async options => {
         accountId,
       })
     );
-    logApiUploadErrorInstance(
+    logError(
       error,
       new ApiErrorContext({
         accountId,

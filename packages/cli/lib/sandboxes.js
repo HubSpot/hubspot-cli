@@ -1,9 +1,9 @@
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  fetchTypes,
   getSandboxUsageLimits,
-} = require('@hubspot/local-dev-lib/sandboxes');
+} = require('@hubspot/local-dev-lib/api/sandboxHubs');
+const { fetchTypes } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const {
   getConfig,
   getAccountId,
@@ -19,9 +19,9 @@ const { uiAccountDescription } = require('./ui');
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
@@ -73,7 +73,9 @@ function getSandboxLimit(error) {
 async function getAvailableSyncTypes(parentAccountConfig, config) {
   const parentPortalId = getAccountId(parentAccountConfig.portalId);
   const portalId = getAccountId(config.portalId);
-  const syncTypes = await fetchTypes(parentPortalId, portalId);
+  const {
+    data: { results: syncTypes },
+  } = await fetchTypes(parentPortalId, portalId);
   if (!syncTypes) {
     throw new Error(
       'Unable to fetch available sandbox sync types. Please try again.'
@@ -126,7 +128,9 @@ const getSyncTypesWithContactRecordsPrompt = async (
  */
 const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
   const accountId = getAccountId(accountConfig.portalId);
-  const usage = await getSandboxUsageLimits(accountId);
+  const {
+    data: { usage },
+  } = await getSandboxUsageLimits(accountId);
   if (!usage) {
     throw new Error('Unable to fetch sandbox usage limits. Please try again.');
   }
@@ -348,7 +352,7 @@ function handleSandboxCreateError({
     }
     logger.log('');
   } else {
-    logErrorInstance(err);
+    logError(err);
   }
   throw err;
 }

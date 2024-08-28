@@ -12,7 +12,7 @@ const {
 } = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
 const { trackConvertFieldsUsage } = require('../../lib/usageTracking');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const i18nKey = 'commands.convertFields';
 
@@ -64,7 +64,7 @@ exports.handler = async options => {
     try {
       filePaths = await walk(src);
     } catch (e) {
-      logErrorInstance(e);
+      logError(e);
     }
     const allowedFilePaths = filePaths
       .filter(file => {
