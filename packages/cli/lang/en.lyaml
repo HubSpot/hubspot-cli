@@ -1,6 +1,10 @@
 en:
   commands:
     generalErrors:
+      updateNotify:
+        notifyTitle: "Update available"
+        cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
+        cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
     accounts:
@@ -550,9 +554,9 @@ en:
           describe: "Create a new component within a project"
           options:
             name:
-              describe: "Component name"
+              describe: "The name for your newly created component"
             type:
-              describe: "The type of component"
+              describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
           creatingComponent:
             message: "Adding a new component to your project"
           success:
@@ -561,6 +565,7 @@ en:
             locationInProject: "The component location must be within a project folder"
           examples:
             default: "Create a component within your project"
+            withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
           debug:
@@ -577,7 +582,7 @@ en:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
           options:
-            buildId:
+            build:
               describe: "Project build ID to be deployed"
             project:
               describe: "Project name"
@@ -962,6 +967,10 @@ en:
       options:
         options:
           describe: "Options to pass to javascript fields files"
+      errors:
+        invalidPath: "The path \"{{ path }}\" specified in the \"--src\" flag is not a path to a file or directory"
+        missingSrc: "Please specify the path to your javascript fields file or directory with the --src flag."
+
   lib:
     process:
       exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
@@ -1007,9 +1016,10 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
-      checkIfDeveloperTestAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
-      suggestRecommendedNestedAccount:
+      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+      validateAccountOption:
+        invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
+        invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
         privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
@@ -1050,9 +1060,12 @@ en:
         successStatusText: "DONE"
         failedStatusText: "FAILED"
         errorFetchingTaskStatus: "Error fetching {{ taskType }} status"
+      pollBuildAutodeployStatusError: "Error fetching autodeploy status for build #{{ buildId }}"
       pollProjectBuildAndDeploy:
         buildSucceededAutomaticallyDeploying: "Build #{{ buildId }} succeeded. {{#bold}}Automatically deploying{{/bold}} to {{ accountIdentifier }}\n"
         cleanedUpTempFile: "Cleaned up temporary file {{ path }}"
+        viewDeploys: "View all deploys for this project in HubSpot"
+        unableToFindAutodeployStatus: "Unable to find the auto deploy for build #{{ buildId }}. This deploy may have been skipped. {{ viewDeploysLink }}."
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
@@ -1291,8 +1304,8 @@ en:
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
         generalPrompt: "Create an issue on Github in your browser?"
-      buildIdPrompt:
-        enterBuildId: "[--buildId] Deploy which build?"
+      deployBuildIdPrompt:
+        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."

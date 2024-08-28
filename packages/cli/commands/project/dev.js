@@ -46,12 +46,12 @@ const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
   checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
+  validateAccountOption,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -106,10 +106,12 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId = options.account ? accountId : null;
 
-  if (options.account && hasPublicApps) {
-    checkIfDeveloperTestAccount(accountConfig);
-    targetProjectAccountId = accountConfig.parentAccountId;
-    targetTestingAccountId = accountId;
+  if (options.account) {
+    validateAccountOption(accountConfig, hasPublicApps);
+
+    if (hasPublicApps) {
+      targetProjectAccountId = accountConfig.parentAccountId;
+    }
   }
 
   let createNewSandbox = false;

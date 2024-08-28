@@ -12,21 +12,31 @@ const PATH = process.env.PATH;
 
 /**
  * Creates a child process with script path
- * @param {string} processPath Path of the process to execute
+ * @param {string} cliPath Path of the CLI process to execute
+ * @param {string} cliVersion NPM Version number
  * @param {Array} args Arguments to the command
  * @param {Object} env (optional) Environment variables
  */
-function createProcess(processPath, args = [], env = null) {
-  // Ensure that path exists
-  if (!processPath || !existsSync(processPath)) {
-    throw new Error('Invalid process path');
-  }
+function createProcess(cliPath, cliVersion, args = [], env = null) {
+  let processCommand;
 
-  args = [processPath].concat(args);
+  if (cliVersion) {
+    processCommand = 'npx';
+    args = ['--yes', '--package', `@hubspot/cli@${cliVersion}`, 'hs'].concat(
+      args
+    );
+  } else {
+    // Ensure that path exists
+    if (!cliPath || !existsSync(cliPath)) {
+      throw new Error(`Invalid process path ${cliPath}`);
+    }
+    processCommand = 'node';
+    args = [cliPath].concat(args);
+  }
 
   // This works for node based CLIs, but can easily be adjusted to
   // any other process installed in the system
-  return spawn('node', args, {
+  return spawn(processCommand, args, {
     env: Object.assign(
       {
         NODE_ENV: 'test',
@@ -48,7 +58,13 @@ function createProcess(processPath, args = [], env = null) {
  * @param {Array} inputs (Optional) Array of inputs (user responses)
  * @param {Object} opts (optional) Environment variables
  */
-function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
+function executeWithInput(
+  cliPath,
+  cliVersion,
+  args = [],
+  inputs = [],
+  opts = {}
+) {
   if (!Array.isArray(inputs)) {
     opts = inputs;
     inputs = [];
@@ -59,7 +75,7 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
   }
 
   const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
-  const childProcess = createProcess(processPath, args, env);
+  const childProcess = createProcess(cliPath, cliVersion, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
   let currentInputTimeout, killIOTimeout;
@@ -171,8 +187,8 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
 
 module.exports = {
   createProcess,
-  createCli: processPath => ({
-    execute: (...args) => executeWithInput(processPath, ...args),
+  createCli: (cliPath, cliVersion) => ({
+    execute: (...args) => executeWithInput(cliPath, cliVersion, ...args),
   }),
   DOWN: '\x1B\x5B\x42',
   UP: '\x1B\x5B\x41',
