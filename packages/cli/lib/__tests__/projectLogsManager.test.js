@@ -82,7 +82,7 @@ describe('cli/lib/projectLogsManager', () => {
       await expect(async () =>
         ProjectLogsManager.init(accountId)
       ).rejects.toThrow(
-        'No project detected. Please run this command again from a project directory.'
+        'No project detected. Run this command again from a project directory.'
       );
       expect(getProjectConfig).toHaveBeenCalledTimes(1);
     });
@@ -99,7 +99,7 @@ describe('cli/lib/projectLogsManager', () => {
       ensureProjectExists.mockResolvedValue({});
       await expect(async () =>
         ProjectLogsManager.init(accountId)
-      ).rejects.toThrow(/Failed to fetch project/);
+      ).rejects.toThrow(/There was an error fetching project details/);
     });
 
     it('should set all of the expected fields correctly', async () => {
@@ -115,7 +115,9 @@ describe('cli/lib/projectLogsManager', () => {
     it('should throw an error if the projectId is null when the method is called', async () => {
       await expect(async () =>
         ProjectLogsManager.fetchFunctionDetails()
-      ).rejects.toThrow('Unable to determine which project to use');
+      ).rejects.toThrow(
+        'No project detected. Run this command again from a project directory.'
+      );
     });
 
     it('should fetch the component metadata', async () => {
@@ -156,7 +158,7 @@ describe('cli/lib/projectLogsManager', () => {
     it('should throw an error when functions is nullable', async () => {
       ProjectLogsManager.functions = undefined;
       expect(() => ProjectLogsManager.setFunction('foo')).toThrow(
-        /Unable to set function, no functions to choose from/
+        `There aren't any functions in this project`
       );
     });
 

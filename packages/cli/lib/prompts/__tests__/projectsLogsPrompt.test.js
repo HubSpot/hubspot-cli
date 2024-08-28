@@ -2,6 +2,7 @@ const { projectLogsPrompt } = require('../projectsLogsPrompt');
 
 jest.mock('../promptUtils');
 const { promptUser } = require('../promptUtils');
+const chalk = require('chalk');
 
 describe('prompts/projectsLogsPrompt', () => {
   it('should return undefined functionName when functionChoices is nullable', async () => {
@@ -21,8 +22,10 @@ describe('prompts/projectsLogsPrompt', () => {
 
   it('should prompt the user if there is more than one choice', async () => {
     const functionChoices = ['choice 1', 'choice 2'];
+    const projectName = 'my cool project';
     await projectLogsPrompt({
       functionChoices,
+      projectName,
     });
 
     expect(promptUser).toHaveBeenCalledTimes(1);
@@ -31,7 +34,9 @@ describe('prompts/projectsLogsPrompt', () => {
         expect.objectContaining({
           name: 'functionName',
           type: 'list',
-          message: '[--function] Enter the app function name:',
+          message: `[--function] Select function in ${chalk.bold(
+            projectName
+          )} project`,
           when: expect.any(Function),
           choices: functionChoices,
         }),

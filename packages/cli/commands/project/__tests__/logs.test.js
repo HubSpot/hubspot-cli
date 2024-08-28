@@ -24,7 +24,6 @@ const ProjectLogsManager = require('../../../lib/projectLogsManager');
 const {
   projectLogsPrompt,
 } = require('../../../lib/prompts/projectsLogsPrompt');
-const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../../lib/ui/table');
 
 const { trackCommandUsage } = require('../../../lib/usageTracking');
@@ -183,21 +182,6 @@ describe('commands/project/logs', () => {
       });
     });
 
-    it('should log an error and exit if there is a problem with the function choice', async () => {
-      const functionNames = ['function1', 'function2'];
-      ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
-      projectLogsPrompt.mockReturnValue({});
-
-      await handler({});
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Unable to determine which function was selected'
-      );
-
-      expect(processExitSpy).toHaveBeenCalledTimes(1);
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
     it('should set the function', async () => {
       const selectedFunction = 'function1';
       ProjectLogsManager.getFunctionNames.mockReturnValue([
@@ -254,7 +238,7 @@ describe('commands/project/logs', () => {
       );
       expect(uiLink).toHaveBeenCalledTimes(1);
       expect(uiLink).toHaveBeenCalledWith(
-        'View logs in HubSpot',
+        'View function logs in HubSpot',
         `https://app.hubspot.com/private-apps/${accountId}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
       );
       expect(uiLine).toHaveBeenCalledTimes(1);
@@ -291,7 +275,7 @@ describe('commands/project/logs', () => {
       );
 
       expect(uiLink).toHaveBeenCalledWith(
-        'View logs in HubSpot',
+        'View function logs in HubSpot',
         `https://app.hubspot.com/private-apps/${accountId}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
       );
 

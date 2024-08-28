@@ -3,6 +3,7 @@ const {
   fetchProjectComponentsMetadata,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { i18n } = require('./lang');
+const { uiLink } = require('./ui');
 
 const i18nKey = 'commands.project.subcommands.logs';
 
@@ -50,7 +51,7 @@ class ProjectLogsManager {
 
   async fetchFunctionDetails() {
     if (!this.projectId) {
-      throw new Error(i18n(`${i18nKey}.errors.unableToDetermineProject`));
+      throw new Error(i18n(`${i18nKey}.errors.noProjectConfig`));
     }
 
     const { topLevelComponentMetadata } = await fetchProjectComponentsMetadata(
@@ -74,6 +75,17 @@ class ProjectLogsManager {
         )
       );
     });
+
+    if (this.functions.length === 0) {
+      throw new Error(
+        i18n(`${i18nKey}.errors.noFunctionsInProject`, {
+          link: uiLink(
+            i18n(`${i18nKey}.errors.noFunctionsLinkText`),
+            'https://developers.hubspot.com/docs/platform/serverless-functions'
+          ),
+        })
+      );
+    }
   }
 
   getFunctionNames() {
@@ -87,7 +99,17 @@ class ProjectLogsManager {
 
   setFunction(functionName) {
     if (!this.functions) {
-      throw new Error(i18n(`${i18nKey}.errors.unableToSetFunction`));
+      throw new Error(
+        i18n(`${i18nKey}.errors.noFunctionsInProject`, {
+          link: uiLink(
+            i18n(`${i18nKey}.errors.noFunctionsLinkText`),
+            'https://developers.hubspot.com/docs/platform/serverless-functions'
+          ),
+        }),
+        {
+          projectName: this.projectName,
+        }
+      );
     }
 
     this.selectedFunction = this.functions.find(
@@ -104,7 +126,7 @@ class ProjectLogsManager {
 
     if (!this.selectedFunction.deployOutput) {
       throw new Error(
-        i18n(`${i18nKey}.errors.noFunctionWithName`, { name: functionName })
+        i18n(`${i18nKey}.errors.functionNotDeployed`, { name: functionName })
       );
     }
     this.appId = this.selectedFunction.deployOutput.appId;

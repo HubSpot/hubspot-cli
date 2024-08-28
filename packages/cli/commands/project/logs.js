@@ -96,12 +96,8 @@ exports.handler = async options => {
     const { functionName } = await projectLogsPrompt({
       functionChoices: ProjectLogsManager.getFunctionNames(),
       promptOptions: options,
+      projectName: ProjectLogsManager.projectName,
     });
-
-    if (!functionName) {
-      logger.error(i18n(`${i18nKey}.errors.unableToDetermineFunction`));
-      return process.exit(EXIT_CODES.ERROR);
-    }
 
     ProjectLogsManager.setFunction(functionName);
 
