@@ -17,7 +17,7 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "@hubspot/local-dev-lib": "1.10.0"
+    "@hubspot/local-dev-lib": "1.11.0"
   },
   "gitHead": "0659fd19cabc3645af431b177c11d0c1b089e0f8"
 }
