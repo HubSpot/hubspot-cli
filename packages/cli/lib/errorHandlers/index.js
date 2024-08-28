@@ -8,7 +8,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldSuppressError } = require('./suppressError');
 const { i18n } = require('../lang');
-const util = require('node:util');
+const util = require('util');
 const { isAxiosError } = require('axios');
 
 const i18nKey = 'lib.errorHandlers.index';
