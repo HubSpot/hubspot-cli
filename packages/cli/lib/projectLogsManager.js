@@ -1,7 +1,7 @@
 const { getProjectConfig, ensureProjectExists } = require('./projects');
 const {
   fetchProjectComponentsMetadata,
-} = require('../../../../hubspot-local-dev-lib/dist/api/projects');
+} = require('@hubspot/local-dev-lib/api/projects');
 const { i18n } = require('./lang');
 
 const i18nKey = 'commands.project.subcommands.logs';
@@ -116,16 +116,6 @@ class ProjectLogsManager {
     } else {
       this.isPublicFunction = false;
     }
-  }
-
-  async tailCall() {
-    // TODO: Wire this up when the backend is ready
-    return {};
-  }
-
-  async fetchLatest() {
-    // TODO: Wire this up when the backend is ready
-    return {};
   }
 }
 

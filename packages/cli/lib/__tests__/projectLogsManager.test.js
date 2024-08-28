@@ -1,11 +1,11 @@
 jest.mock('../projects');
-jest.mock('../../../../../hubspot-local-dev-lib/dist/api/projects');
+jest.mock('@hubspot/local-dev-lib/api/projects');
 
 const ProjectLogsManager = require('../projectLogsManager');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
 const {
   fetchProjectComponentsMetadata,
-} = require('../../../../../hubspot-local-dev-lib/dist/api/projects');
+} = require('@hubspot/local-dev-lib/api/projects');
 
 describe('cli/lib/projectLogsManager', () => {
   const accountId = 12345678;
@@ -193,20 +193,6 @@ describe('cli/lib/projectLogsManager', () => {
       expect(ProjectLogsManager.selectedFunction).toEqual(function1);
       expect(ProjectLogsManager.functionName).toEqual('function1');
       expect(ProjectLogsManager.isPublicFunction).toEqual(false);
-    });
-  });
-
-  describe('tailCall', () => {
-    it('should return an empty object', async () => {
-      const actual = await ProjectLogsManager.tailCall();
-      expect(actual).toEqual({});
-    });
-  });
-
-  describe('fetchLatest', () => {
-    it('should return an empty object', async () => {
-      const actual = await ProjectLogsManager.fetchLatest();
-      expect(actual).toEqual({});
     });
   });
 
