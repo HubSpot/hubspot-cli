@@ -11,7 +11,7 @@
     "@hubspot/local-dev-lib": "1.11.0",
     "@hubspot/serverless-dev-runtime": "5.3.0",
     "@hubspot/theme-preview-dev-server": "0.0.7",
-    "@hubspot/ui-extensions-dev-server": "0.8.30",
+    "@hubspot/ui-extensions-dev-server": "0.8.31",
     "archiver": "^5.3.0",
     "chalk": "^4.1.2",
     "chokidar": "^3.0.1",
