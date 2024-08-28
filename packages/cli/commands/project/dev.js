@@ -93,6 +93,9 @@ exports.handler = async options => {
   if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
     process.exit(EXIT_CODES.SUCCESS);
+  } else if (!hasPrivateApps && !hasPublicApps) {
+    logger.error(i18n(`${i18nKey}.errors.noSupportedComponents`));
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const accounts = getConfigAccounts();

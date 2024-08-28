@@ -483,6 +483,7 @@ en:
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+            noSupportedComponents: "This project does not contain any components that support local development. Currently, local development is only supported for private and public apps."
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
