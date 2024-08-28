@@ -86,11 +86,20 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   const components = await findProjectComponents(projectDir);
-  const componentTypes = getProjectComponentTypes(components);
+  const runnableComponents = components.filter(component => component.runnable);
+  const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
   const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
 
-  if (hasPrivateApps && hasPublicApps) {
+  if (runnableComponents.length === 0) {
+    logger.error(
+      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+        projectDir,
+        command: uiCommandReference('hs project add'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -224,7 +233,7 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
-    components,
+    runnableComponents,
     debug: options.debug,
     deployedBuild,
     isGithubLinked,
