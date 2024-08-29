@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
-const { isSandbox, isDeveloperTestAccount } = require('../accountTypes');
+const { isSandbox } = require('../accountTypes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { getSandboxUsageLimits } = require('@hubspot/local-dev-lib/sandboxes');
 const {
@@ -99,7 +99,6 @@ const selectDeveloperTestTargetAccountPrompt = async (
   defaultAccountConfig
 ) => {
   const defaultAccountId = getAccountId(defaultAccountConfig.name);
-  let choices = [];
   let devTestAccountsResponse = undefined;
   try {
     devTestAccountsResponse = await fetchDeveloperTestAccounts(
@@ -109,13 +108,8 @@ const selectDeveloperTestTargetAccountPrompt = async (
     logger.debug('Unable to fetch developer test account usage limits: ', err);
   }
 
-  const devTestAccounts = accounts
-    .reverse()
-    .filter(
-      config =>
-        isDeveloperTestAccount(config) &&
-        config.parentAccountId === defaultAccountId
-    );
+  const accountIds = accounts.map(account => account.portalId);
+
   let disabledMessage = false;
   if (
     devTestAccountsResponse &&
@@ -128,27 +122,24 @@ const selectDeveloperTestTargetAccountPrompt = async (
     });
   }
 
-  let devTestAccountsNotInConfig = [];
+  const devTestAccounts = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
-    const inConfigIds = devTestAccounts.map(d => d.portalId);
     devTestAccountsResponse.results.forEach(acct => {
-      if (inConfigIds.indexOf(acct.id) < 0) {
-        devTestAccountsNotInConfig.push({
-          name: getNonConfigDeveloperTestAccountName(acct),
-          value: {
-            targetAccountId: acct.id,
-            createdNestedAccount: false,
-            parentAccountId: defaultAccountId,
-            notInConfigAccount: acct,
-          },
-        });
-      }
+      const inConfig = accountIds.includes(acct.id);
+      devTestAccounts.push({
+        name: getNonConfigDeveloperTestAccountName(acct),
+        value: {
+          targetAccountId: acct.id,
+          createdNestedAccount: false,
+          parentAccountId: defaultAccountId,
+          notInConfigAccount: inConfig ? null : acct,
+        },
+      });
     });
   }
 
-  choices = [
-    ...devTestAccounts.map(mapNestedAccount),
-    ...devTestAccountsNotInConfig,
+  const choices = [
+    ...devTestAccounts,
     {
       name: i18n(`${i18nKey}.createNewDeveloperTestAccountOption`),
       value: {
