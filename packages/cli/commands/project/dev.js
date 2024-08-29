@@ -123,9 +123,6 @@ exports.handler = async options => {
     }
   }
 
-  let createNewSandbox = false;
-  let createNewDeveloperTestAccount = false;
-
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
     targetTestingAccountId = accountId;
@@ -153,6 +150,9 @@ exports.handler = async options => {
   } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
+
+  let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
 
   if (!targetProjectAccountId) {
     const {
