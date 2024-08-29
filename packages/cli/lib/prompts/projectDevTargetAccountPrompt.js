@@ -108,8 +108,6 @@ const selectDeveloperTestTargetAccountPrompt = async (
     logger.debug('Unable to fetch developer test account usage limits: ', err);
   }
 
-  const accountIds = accounts.map(account => account.portalId);
-
   let disabledMessage = false;
   if (
     devTestAccountsResponse &&
@@ -124,6 +122,8 @@ const selectDeveloperTestTargetAccountPrompt = async (
 
   const devTestAccounts = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
+    const accountIds = accounts.map(account => account.portalId);
+
     devTestAccountsResponse.results.forEach(acct => {
       const inConfig = accountIds.includes(acct.id);
       devTestAccounts.push({
