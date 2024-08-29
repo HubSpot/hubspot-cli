@@ -129,13 +129,6 @@ const suggestRecommendedNestedAccount = async (
         `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.validateAccountOption.privateAppInAppDeveloperAccountError`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
   } else {
     logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
