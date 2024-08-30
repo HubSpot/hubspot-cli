@@ -59,14 +59,20 @@ const createProjectPrompt = async (
   skipTemplatePrompt = false
 ) => {
   let projectTemplates = [];
+  let selectedTemplate;
+
   if (!skipTemplatePrompt) {
     projectTemplates = await createTemplateOptions(
       promptOptions.templateSource,
       githubRef
     );
+
+    selectedTemplate =
+      promptOptions.template &&
+      projectTemplates.find(t => t.name === promptOptions.template);
   }
 
-  return promptUser([
+  const result = await promptUser([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -111,10 +117,7 @@ const createProjectPrompt = async (
             })
           : i18n(`${i18nKey}.selectTemplate`);
       },
-      when:
-        !skipTemplatePrompt &&
-        (!promptOptions.template ||
-          !projectTemplates.find(t => t.name === promptOptions.template)),
+      when: !skipTemplatePrompt && !selectedTemplate,
       type: 'list',
       choices: projectTemplates.map(template => {
         return {
@@ -124,6 +127,12 @@ const createProjectPrompt = async (
       }),
     },
   ]);
+
+  if (selectedTemplate) {
+    result.template = selectedTemplate;
+  }
+
+  return result;
 };
 
 module.exports = {

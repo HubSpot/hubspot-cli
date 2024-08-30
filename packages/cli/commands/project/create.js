@@ -47,16 +47,12 @@ exports.handler = async options => {
     options
   );
 
-  trackCommandUsage(
-    'project-create',
-    { type: options.template || template },
-    accountId
-  );
+  trackCommandUsage('project-create', { type: template.name }, accountId);
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    template || { path: options.template },
+    template,
     options.templateSource,
     githubRef
   );

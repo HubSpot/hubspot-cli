@@ -1,6 +1,7 @@
 const { ENTER } = require('./helpers/cmd');
 const rimraf = require('rimraf');
 const { existsSync } = require('fs');
+const { withAuth } = require('./helpers/auth');
 
 const FOLDERS = {
   module: {
@@ -43,10 +44,13 @@ const cleanup = () => {
 };
 
 describe('hs create', () => {
-  beforeAll(cleanup);
-  afterAll(cleanup);
-
   const { cli } = global;
+
+  beforeAll(() => {
+    withAuth();
+    cleanup();
+  });
+  afterAll(cleanup);
 
   it('should require an argument', async () => {
     try {
