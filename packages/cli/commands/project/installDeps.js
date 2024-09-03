@@ -7,9 +7,12 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getProjectConfig } = require('../../lib/projects');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const path = require('node:path');
+const { i18n } = require('../../lib/lang');
+
+const i18nKey = `commands.project.subcommands.install-deps`;
 
 exports.command = 'install-deps [packages..]';
-exports.describe = 'Install your deps';
+exports.describe = i18n(`${i18nKey}.describe`);
 exports.builder = yargs => yargs;
 
 exports.handler = async ({ packages }) => {
@@ -17,7 +20,7 @@ exports.handler = async ({ packages }) => {
     const projectConfig = await getProjectConfig();
 
     if (!projectConfig || !projectConfig.projectDir) {
-      logger.error('Must be ran within a project');
+      logger.error(i18n(`${i18nKey}.noProjectConfig`));
       process.exit(EXIT_CODES.ERROR);
     }
 
@@ -30,14 +33,14 @@ exports.handler = async ({ packages }) => {
           name: 'selectedInstallLocations',
           type: 'checkbox',
           when: () => packages && packages.length > 0,
-          message: `Which location would you like to add the dependencies to?`,
+          message: i18n(`${i18nKey}.installLocationPrompt`),
           choices: installLocations.map(dir => ({
             name: path.relative(projectDir, dir),
             value: dir,
           })),
           validate: choices => {
             if (choices === undefined || choices.length === 0) {
-              return 'You must choose at least one location';
+              return i18n(`${i18nKey}.installLocationPromptRequired`);
             }
             return true;
           },
@@ -53,7 +56,7 @@ exports.handler = async ({ packages }) => {
       installLocations,
     });
 
-    logger.success('Dependencies installed successfully');
+    logger.success(i18n(`${i18nKey}.installationSuccessful`));
   } catch (e) {
     logger.debug(e);
     logger.error(e.message);

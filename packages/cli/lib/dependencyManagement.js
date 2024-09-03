@@ -5,9 +5,12 @@ const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('node:path');
 const { uiLink } = require('./ui');
 const util = require('node:util');
+const { i18n } = require('./lang');
 
 const exec = util.promisify(execAsync);
 const DEFAULT_PACKAGE_MANAGER = 'npm';
+
+const i18nKey = `commands.project.subcommands.install-deps`;
 
 async function isGloballyInstalled(command) {
   try {
@@ -30,9 +33,14 @@ async function installPackages({ packages, installLocations, silent = false }) {
 async function installPackagesInDirectory(packages, directory, silent) {
   if (!silent) {
     logger.info(
-      `Installing dependencies ${
-        packages ? `[${packages.join(', ')}] ` : ''
-      }in ${directory}`
+      packages && packages.length
+        ? i18n(`${i18nKey}.addingDependenciesToLocation`, {
+            dependencies: `[${packages.join(', ')}]`,
+            location: directory,
+          })
+        : i18n(`${i18nKey}.installingDependencies`, {
+            location: directory,
+          })
     );
   }
   let installCommand = `${DEFAULT_PACKAGE_MANAGER} --prefix=${directory} install`;
@@ -45,9 +53,12 @@ async function installPackagesInDirectory(packages, directory, silent) {
   try {
     await exec(installCommand);
   } catch (e) {
-    throw new Error(`Installing dependencies for ${directory} failed`, {
-      cause: e,
-    });
+    throw new Error(
+      i18n(`${i18nKey}.installingDependenciesFailed`, { directory }),
+      {
+        cause: e,
+      }
+    );
   }
 }
 
@@ -59,7 +70,7 @@ async function getProjectPackageJsonFiles() {
     !projectConfig.projectDir ||
     !projectConfig.projectConfig
   ) {
-    throw new Error('Must be ran within a project');
+    throw new Error(i18n(`${i18nKey}.noProjectConfig`));
   }
 
   const {
@@ -69,10 +80,13 @@ async function getProjectPackageJsonFiles() {
 
   if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
     throw new Error(
-      `This command depends on ${DEFAULT_PACKAGE_MANAGER}, install ${uiLink(
-        DEFAULT_PACKAGE_MANAGER,
-        'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'
-      )}`
+      i18n(`${i18nKey}.npmNotInstalled`, {
+        packageManager: DEFAULT_PACKAGE_MANAGER,
+        link: uiLink(
+          DEFAULT_PACKAGE_MANAGER,
+          'https://docs.npmjs.com/downloading-and-installing-node-js-and-npm'
+        ),
+      })
     );
   }
 
@@ -85,7 +99,7 @@ async function getProjectPackageJsonFiles() {
   );
 
   if (packageJsonFiles.length === 0) {
-    throw new Error('Could not find any package.json files in the project');
+    throw new Error(i18n(`${i18nKey}.noPackageJsonInProject`));
   }
 
   const packageParentDirs = [];

@@ -248,17 +248,17 @@ exports.handler = async options => {
 
   try {
     SpinniesManager.add('installingDeps', {
-      text: 'Installing dependencies for the project',
+      text: i18n(`${i18nKey}.installingForProject`),
     });
 
     await installPackages({ silent: true });
 
     SpinniesManager.succeed('installingDeps', {
-      text: 'Dependency installation successful',
+      text: i18n(`${i18nKey}.installingForProjectSuccessful`),
     });
   } catch (e) {
     SpinniesManager.fail('installingDeps', {
-      text: 'Dependency installation failed',
+      text: i18n(`${i18nKey}.installingForProjectFailed`),
     });
   }
   await LocalDev.start();
