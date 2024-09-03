@@ -592,16 +592,18 @@ en:
         logs:
           describe: "Get execution logs for a serverless function within a project"
           errors:
-            invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            noProjectConfig: "No project detected. Run this command again from a project directory."
+            failedToFetchProjectDetails: "There was an error fetching project details"
+            noFunctionsLinkText: "Visit developer docs"
+            noFunctionsInProject: "There aren't any functions in this project\n\t- Run `{{#orange}}hs project logs --help{{/orange}}` to learn more about logs\n\t- {{link}} to learn more about serverless functions"
+            noFunctionWithName: "No function with name \"{{ name }}\""
+            functionNotDeployed: "The function with name \"{{ name }}\" is not deployed"
           logs:
             showingLogs: "Showing logs for:"
-            hubspotLogsLink: "View private apps in HubSpot"
-            hubspotLogsDirectLink: "View logs in HubSpot"
+            hubspotLogsDirectLink: "View function logs in HubSpot"
             noLogsFound: "No logs were found for \"{{ name }}\""
           table:
             accountHeader: "Account"
-            projectHeader: "Project"
-            appHeader: "App"
             functionHeader: "Function"
             endpointHeader: "Endpoint"
           examples:
@@ -618,12 +620,8 @@ en:
               describe: "Retrieve most recent log only"
             limit:
               describe: "Limit the number of logs to output"
-            project:
-              describe: "Project name"
             function:
               describe: "App function name"
-            endpoint:
-              describe: "Public endpoint path"
         upload:
           describe: "Upload your project files and create a new build"
           examples:
@@ -1169,16 +1167,7 @@ en:
         confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
       projectLogsPrompt:
-        projectName:
-          message: "[--project] Enter the project name:"
-          error: "Project name is required"
-        logType:
-          message: "Select the type of serverless function"
-          function: "App function"
-          endpoint: "Public endpoint"
-        appName: "[--app] Select the app"
-        functionName: "[--function] Enter the app function name:"
-        endpointName: "[--endpoint] Enter the public endpoint path:"
+        functionName: "[--function] Select function in {{#bold}}{{projectName}}{{/bold}} project"
       setAsDefaultAccountPrompt:
         setAsDefaultAccountMessage: "Set this account as the default?"
         setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
