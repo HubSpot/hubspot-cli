@@ -6,7 +6,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getProjectConfig } = require('../../lib/projects');
 const { promptUser } = require('../../lib/prompts/promptUtils');
-const path = require('node:path');
+const path = require('path');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = `commands.project.subcommands.install-deps`;

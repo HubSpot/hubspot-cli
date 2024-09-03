@@ -2,9 +2,9 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('./projects');
 const { exec: execAsync } = require('child_process');
 const { walk } = require('@hubspot/local-dev-lib/fs');
-const path = require('node:path');
+const path = require('path');
 const { uiLink } = require('./ui');
-const util = require('node:util');
+const util = require('util');
 const { i18n } = require('./lang');
 
 const exec = util.promisify(execAsync);
