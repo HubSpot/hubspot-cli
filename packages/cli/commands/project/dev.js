@@ -53,7 +53,6 @@ const {
   useExistingDevTestAccount,
   validateAccountOption,
 } = require('../../lib/localDev');
-const { installPackages } = require('../../lib/dependencyManagement');
 
 const i18nKey = 'commands.project.subcommands.dev';
 
@@ -246,21 +245,6 @@ exports.handler = async options => {
     env,
   });
 
-  try {
-    SpinniesManager.add('installingDeps', {
-      text: i18n(`${i18nKey}.installingForProject`),
-    });
-
-    await installPackages({ silent: true });
-
-    SpinniesManager.succeed('installingDeps', {
-      text: i18n(`${i18nKey}.installingForProjectSuccessful`),
-    });
-  } catch (e) {
-    SpinniesManager.fail('installingDeps', {
-      text: i18n(`${i18nKey}.installingForProjectFailed`),
-    });
-  }
   await LocalDev.start();
 
   handleExit(({ isSIGHUP }) => LocalDev.stop(!isSIGHUP));
