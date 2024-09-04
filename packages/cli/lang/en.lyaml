@@ -487,7 +487,7 @@ en:
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
-          install-deps:
+          installDeps:
             installingForProject: "Installing dependencies for the project"
             installingForProjectSuccessful: "Dependency installation successful"
             installingForProjectFailed: "Dependency installation failed"
@@ -711,14 +711,14 @@ en:
               describe: "Open Github issues in your browser to report a bug."
             general:
               describe: "Open Github issues in your browser to give feedback."
-        install-deps:
+        installDeps:
+          describe: "Install your deps"
           installLocationPrompt: "Choose where to add the dependencies:"
           installLocationPromptRequired: "You must choose at least one location"
           installationSuccessful: "Dependencies installed successfully"
           installingDependencies: "Installing dependencies in {{location}}"
           addingDependenciesToLocation: "Installing {{dependencies}} in {{location}}"
           installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
-          describe: "Install your deps"
           noProjectConfig: "No project detected. Run this command again from a project directory."
           noPackageJsonInProject: "Could not find any package.json files in the project"
           npmNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"

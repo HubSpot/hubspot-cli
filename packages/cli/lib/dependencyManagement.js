@@ -10,7 +10,7 @@ const { i18n } = require('./lang');
 const exec = util.promisify(execAsync);
 const DEFAULT_PACKAGE_MANAGER = 'npm';
 
-const i18nKey = `commands.project.subcommands.install-deps`;
+const i18nKey = `commands.project.subcommands.installDeps`;
 
 async function isGloballyInstalled(command) {
   try {

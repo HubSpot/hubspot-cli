@@ -9,11 +9,19 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = `commands.project.subcommands.install-deps`;
+const i18nKey = `commands.project.subcommands.installDeps`;
 
 exports.command = 'install-deps [packages..]';
 exports.describe = i18n(`${i18nKey}.describe`);
-exports.builder = yargs => yargs;
+exports.builder = yargs => {
+  yargs.example([
+    ['$0 project install-deps', 'Install the dependencies for the project'],
+    [
+      '$0 project install-deps dependency1 dependency2',
+      'Add the dependencies to one or more project component',
+    ],
+  ]);
+};
 
 exports.handler = async ({ packages }) => {
   try {
@@ -21,7 +29,7 @@ exports.handler = async ({ packages }) => {
 
     if (!projectConfig || !projectConfig.projectDir) {
       logger.error(i18n(`${i18nKey}.noProjectConfig`));
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     const { projectDir } = projectConfig;
@@ -60,6 +68,6 @@ exports.handler = async ({ packages }) => {
   } catch (e) {
     logger.debug(e);
     logger.error(e.message);
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 };
