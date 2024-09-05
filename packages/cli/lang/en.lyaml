@@ -487,10 +487,6 @@ en:
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
-          installDeps:
-            installingForProject: "Installing dependencies for the project"
-            installingForProjectSuccessful: "Dependency installation successful"
-            installingForProjectFailed: "Dependency installation failed"
         create:
           describe: "Create a new project"
           logs:
