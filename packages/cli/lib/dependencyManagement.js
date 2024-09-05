@@ -7,12 +7,12 @@ const { uiLink } = require('./ui');
 const util = require('util');
 const { i18n } = require('./lang');
 
-const exec = util.promisify(execAsync);
 const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 const i18nKey = `commands.project.subcommands.installDeps`;
 
 async function isGloballyInstalled(command) {
+  const exec = util.promisify(execAsync);
   try {
     await exec(`${command} --version`);
     return true;
@@ -22,7 +22,8 @@ async function isGloballyInstalled(command) {
 }
 
 async function installPackages({ packages, installLocations, silent = false }) {
-  const installDirs = installLocations || (await getProjectPackageJsonFiles());
+  const installDirs =
+    installLocations || (await getProjectPackageJsonLocations());
   await Promise.all(
     installDirs.map(async dir => {
       await installPackagesInDirectory(packages, dir, silent);
@@ -51,6 +52,7 @@ async function installPackagesInDirectory(packages, directory, silent) {
 
   logger.debug(`Running ${installCommand}`);
   try {
+    const exec = util.promisify(execAsync);
     await exec(installCommand);
   } catch (e) {
     throw new Error(
@@ -62,7 +64,7 @@ async function installPackagesInDirectory(packages, directory, silent) {
   }
 }
 
-async function getProjectPackageJsonFiles() {
+async function getProjectPackageJsonLocations() {
   const projectConfig = await getProjectConfig();
 
   if (
@@ -94,8 +96,7 @@ async function getProjectPackageJsonFiles() {
     file =>
       file.includes('package.json') &&
       !file.includes('node_modules') &&
-      !file.includes('.vite') &&
-      !file.includes('dist')
+      !file.includes('.vite')
   );
 
   if (packageJsonFiles.length === 0) {
@@ -112,8 +113,8 @@ async function getProjectPackageJsonFiles() {
 }
 
 module.exports = {
+  isGloballyInstalled,
   installPackages,
-  installPackagesInDirectory,
   DEFAULT_PACKAGE_MANAGER,
-  getProjectPackageJsonFiles,
+  getProjectPackageJsonLocations,
 };

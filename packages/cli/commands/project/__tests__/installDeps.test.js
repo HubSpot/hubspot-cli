@@ -8,7 +8,7 @@ const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   installPackages,
-  getProjectPackageJsonFiles,
+  getProjectPackageJsonLocations,
 } = require('../../../lib/dependencyManagement');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
 const {
@@ -120,9 +120,9 @@ describe('commands/project/installDeps', () => {
       getProjectConfig.mockResolvedValue({ projectDir });
       const packageJsonLocation = path.join(projectDir, 'directory1');
       promptUser.mockResolvedValueOnce(packageJsonLocation);
-      getProjectPackageJsonFiles.mockResolvedValue([packageJsonLocation]);
+      getProjectPackageJsonLocations.mockResolvedValue([packageJsonLocation]);
       await handler({ packages: ['@hubspot/local-dev-lib'] });
-      expect(getProjectPackageJsonFiles).toHaveBeenCalledTimes(1);
+      expect(getProjectPackageJsonLocations).toHaveBeenCalledTimes(1);
       expect(promptUser).toHaveBeenCalledTimes(1);
       expect(promptUser).toHaveBeenCalledWith([
         {
@@ -149,7 +149,7 @@ describe('commands/project/installDeps', () => {
 
       getProjectConfig.mockResolvedValue({ projectDir });
       promptUser.mockResolvedValueOnce(packageJsonLocation);
-      getProjectPackageJsonFiles.mockResolvedValue(installLocations);
+      getProjectPackageJsonLocations.mockResolvedValue(installLocations);
       await handler({ packages });
 
       expect(installPackages).toHaveBeenCalledTimes(1);

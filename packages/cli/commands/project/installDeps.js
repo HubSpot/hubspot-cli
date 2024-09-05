@@ -1,6 +1,6 @@
 const {
   installPackages,
-  getProjectPackageJsonFiles,
+  getProjectPackageJsonLocations,
 } = require('../../lib/dependencyManagement');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -36,7 +36,7 @@ exports.handler = async ({ packages }) => {
 
     const { projectDir } = projectConfig;
 
-    let installLocations = await getProjectPackageJsonFiles();
+    let installLocations = await getProjectPackageJsonLocations();
     if (packages) {
       const { selectedInstallLocations } = await promptUser([
         {
