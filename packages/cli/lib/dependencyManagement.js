@@ -80,7 +80,7 @@ async function getProjectPackageJsonFiles() {
 
   if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
     throw new Error(
-      i18n(`${i18nKey}.npmNotInstalled`, {
+      i18n(`${i18nKey}.packageManagerNotInstalled`, {
         packageManager: DEFAULT_PACKAGE_MANAGER,
         link: uiLink(
           DEFAULT_PACKAGE_MANAGER,

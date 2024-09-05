@@ -712,7 +712,7 @@ en:
             general:
               describe: "Open Github issues in your browser to give feedback."
         installDeps:
-          describe: "Install your deps"
+          describe: "Install the dependencies for your project, or add a dependency to a component of a project"
           installLocationPrompt: "Choose where to add the dependencies:"
           installLocationPromptRequired: "You must choose at least one location"
           installationSuccessful: "Dependencies installed successfully"
@@ -721,7 +721,7 @@ en:
           installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
           noProjectConfig: "No project detected. Run this command again from a project directory."
           noPackageJsonInProject: "Could not find any package.json files in the project"
-          npmNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
+          packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
     remove:
       describe: "Delete a file or folder from HubSpot."
       deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
