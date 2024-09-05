@@ -1,6 +1,10 @@
 en:
   commands:
     generalErrors:
+      updateNotify:
+        notifyTitle: "Update available"
+        cmsUpdateNotification: "{{#bold}}The CMS CLI is now the HubSpot CLI{{/bold}}\n\nTo upgrade, uninstall {{#bold}}{{ packageName }}{{/bold}}\nand then run {{ updateCommand }}"
+        cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
     accounts:
@@ -479,6 +483,7 @@ en:
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+            noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
@@ -550,9 +555,9 @@ en:
           describe: "Create a new component within a project"
           options:
             name:
-              describe: "Component name"
+              describe: "The name for your newly created component"
             type:
-              describe: "The type of component"
+              describe: "The path to the component type's location within the hubspot-project-components Github repo: https://github.com/HubSpot/hubspot-project-components"
           creatingComponent:
             message: "Adding a new component to your project"
           success:
@@ -561,6 +566,7 @@ en:
             locationInProject: "The component location must be within a project folder"
           examples:
             default: "Create a component within your project"
+            withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
           debug:
@@ -577,7 +583,7 @@ en:
             default: "Deploy the latest build of the current project"
             withOptions: "Deploy build 5 of the project my-project"
           options:
-            buildId:
+            build:
               describe: "Project build ID to be deployed"
             project:
               describe: "Project name"
@@ -586,16 +592,18 @@ en:
         logs:
           describe: "Get execution logs for a serverless function within a project"
           errors:
-            invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            noProjectConfig: "No project detected. Run this command again from a project directory."
+            failedToFetchProjectDetails: "There was an error fetching project details"
+            noFunctionsLinkText: "Visit developer docs"
+            noFunctionsInProject: "There aren't any functions in this project\n\t- Run `{{#orange}}hs project logs --help{{/orange}}` to learn more about logs\n\t- {{link}} to learn more about serverless functions"
+            noFunctionWithName: "No function with name \"{{ name }}\""
+            functionNotDeployed: "The function with name \"{{ name }}\" is not deployed"
           logs:
             showingLogs: "Showing logs for:"
-            hubspotLogsLink: "View private apps in HubSpot"
-            hubspotLogsDirectLink: "View logs in HubSpot"
+            hubspotLogsDirectLink: "View function logs in HubSpot"
             noLogsFound: "No logs were found for \"{{ name }}\""
           table:
             accountHeader: "Account"
-            projectHeader: "Project"
-            appHeader: "App"
             functionHeader: "Function"
             endpointHeader: "Endpoint"
           examples:
@@ -612,12 +620,8 @@ en:
               describe: "Retrieve most recent log only"
             limit:
               describe: "Limit the number of logs to output"
-            project:
-              describe: "Project name"
             function:
               describe: "App function name"
-            endpoint:
-              describe: "Public endpoint path"
         upload:
           describe: "Upload your project files and create a new build"
           examples:
@@ -964,6 +968,10 @@ en:
       options:
         options:
           describe: "Options to pass to javascript fields files"
+      errors:
+        invalidPath: "The path \"{{ path }}\" specified in the \"--src\" flag is not a path to a file or directory"
+        missingSrc: "Please specify the path to your javascript fields file or directory with the --src flag."
+
   lib:
     process:
       exitDebug: "Attempting to gracefully exit. Triggered by {{ signal }}"
@@ -975,7 +983,6 @@ en:
       failedToInitialize: "Missing required arguments to initialize Local Dev"
       noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
       noComponents: "There are no components in this project."
-      noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
       learnMoreLocalDevServer: "Learn more about the projects local dev server"
       running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
@@ -1009,12 +1016,12 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{#bold}}`hs accounts use`{{/bold}}, or link a new account with {{#bold}}`hs auth`{{/bold}}."
-      checkIfDeveloperTestAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{#bold}}`hs accounts use`{{/bold}} and run {{#bold}}`hs project dev`{{/bold}} to set up a new Developer Test Account."
-      suggestRecommendedNestedAccount:
+      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+      validateAccountOption:
+        invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
+        invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
-        privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
       createNewProjectForLocalDev:
         projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
         publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
@@ -1160,16 +1167,7 @@ en:
         confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
       projectLogsPrompt:
-        projectName:
-          message: "[--project] Enter the project name:"
-          error: "Project name is required"
-        logType:
-          message: "Select the type of serverless function"
-          function: "App function"
-          endpoint: "Public endpoint"
-        appName: "[--app] Select the app"
-        functionName: "[--function] Enter the app function name:"
-        endpointName: "[--endpoint] Enter the public endpoint path:"
+        functionName: "[--function] Select function in {{#bold}}{{projectName}}{{/bold}} project"
       setAsDefaultAccountPrompt:
         setAsDefaultAccountMessage: "Set this account as the default?"
         setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
@@ -1296,8 +1294,8 @@ en:
           general: "[--general] Tell us about your experience with HubSpot's developer tools"
         bugPrompt: "Create an issue on Github in your browser?"
         generalPrompt: "Create an issue on Github in your browser?"
-      buildIdPrompt:
-        enterBuildId: "[--buildId] Deploy which build?"
+      deployBuildIdPrompt:
+        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."

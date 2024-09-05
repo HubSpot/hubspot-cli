@@ -18,12 +18,16 @@ setArgsOverrides(
     .option('accountId', {
       alias: ['p', 'portalId', 'a'],
       type: 'string',
-      description: 'Account ID',
+      description: 'The account ID to use',
     })
     .option('cliPath', {
       alias: 'c',
       type: 'string',
-      description: 'CLI path',
+      description: 'The path to the CLI',
+    })
+    .option('cliVersion', {
+      type: "string",
+      description: "The npm version to use. The test will use npx to download and run the CLI."
     })
     .option('personalAccessKey', {
       alias: 'pak',
@@ -33,7 +37,7 @@ setArgsOverrides(
     .option('qa', {
       type: 'boolean',
       default: false,
-      description: 'Set this if you are using a app.hubspotqa.com site',
+      description: 'Set this if you are using an app.hubspotqa.com account',
     })
     .option('headless', {
       type: 'boolean',
@@ -55,7 +59,7 @@ setArgsOverrides(
     testRunner.addReporter(reporter);
 
     global.config = getTestConfig();
-    global.cli = cmd.createCli(global.config.cliPath);
+    global.cli = cmd.createCli(global.config.cliPath, global.config.cliVersion);
 
     await global.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],

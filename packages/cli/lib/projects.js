@@ -7,6 +7,7 @@ const findup = require('findup-sync');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
@@ -18,6 +19,8 @@ const {
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
   PROJECT_ERROR_TYPES,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_COMPONENT_TYPES,
 } = require('./constants');
 const {
   createProject,
@@ -46,7 +49,6 @@ const {
   logApiErrorInstance,
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
-const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
 
 const i18nKey = 'lib.projects';
 
@@ -567,7 +569,7 @@ const handleProjectUpload = async (
           buildId
         );
       }
-      resolve(uploadResult);
+      resolve(uploadResult || {});
     })
   );
 
@@ -685,7 +687,7 @@ const makePollTaskStatusFunc = ({
         const formattedTaskType = PROJECT_TASK_TYPES[taskType]
           ? `[${PROJECT_TASK_TYPES[taskType]}]`
           : '';
-        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+        const text = `${indent <= 2 ? statusText.STATUS_TEXT : ''} ${chalk.bold(
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
@@ -999,6 +1001,16 @@ const displayWarnLogs = async (
   }
 };
 
+const getProjectComponentsByVersion = async projectComponentsVersion => {
+  const config = await fetchFileFromRepository(
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    'config.json',
+    projectComponentsVersion
+  );
+
+  return config[PROJECT_COMPONENT_TYPES.COMPONENTS];
+};
+
 module.exports = {
   writeProjectConfig,
   getProjectConfig,
@@ -1016,4 +1028,5 @@ module.exports = {
   logFeedbackMessage,
   createProjectComponent,
   displayWarnLogs,
+  getProjectComponentsByVersion,
 };

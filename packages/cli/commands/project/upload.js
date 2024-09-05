@@ -92,7 +92,7 @@ exports.handler = async options => {
       logger.log(
         i18n(`${i18nKey}.logs.autoDeployDisabled`, {
           deployCommand: uiCommandReference(
-            `hs project deploy --buildId=${result.buildId}`
+            `hs project deploy --build=${result.buildId}`
           ),
         })
       );

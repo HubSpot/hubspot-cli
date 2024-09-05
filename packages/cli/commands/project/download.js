@@ -6,7 +6,7 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const {
   logApiErrorInstance,
   ApiErrorContext,
@@ -95,7 +95,7 @@ exports.handler = async options => {
 
     await extractZipArchive(
       zippedProject,
-      projectName,
+      sanitizeFileName(projectName),
       path.resolve(absoluteDestPath),
       { includesRootDir: false }
     );
