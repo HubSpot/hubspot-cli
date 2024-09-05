@@ -28,9 +28,7 @@ describe('commands/project/installDeps', () => {
 
   describe('describe', () => {
     it('should have the correct description', () => {
-      expect(installDepsDescribe).toEqual(
-        'Install the dependencies for your project, or add a dependency to a component of a project'
-      );
+      expect(installDepsDescribe).toEqual(null);
     });
   });
 

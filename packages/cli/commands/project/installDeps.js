@@ -12,7 +12,9 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = `commands.project.subcommands.installDeps`;
 
 exports.command = 'install-deps [packages..]';
-exports.describe = i18n(`${i18nKey}.describe`);
+// Intentionally making this null to hide command
+exports.describe = null;
+// exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.builder = yargs => {
   yargs.example([
     ['$0 project install-deps', 'Install the dependencies for the project'],
