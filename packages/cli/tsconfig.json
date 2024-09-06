@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "esnext",
+    "module": "commonjs",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": true
+  },
+  "include": [
+    "commands",
+    "lib",
+    "bin",
+    "lang"
+  ],
+  "exclude": [
+    "../../node_modules/*","**/node_modules/*", "**/__tests__/*", "**/__mocks__/*", "**/dist/*"]
+}
