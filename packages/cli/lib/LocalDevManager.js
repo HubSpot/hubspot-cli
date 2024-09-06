@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstallData,
+  fetchPublicAppProductionInstallCounts,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -63,7 +63,7 @@ class LocalDevManager {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
-    this.runnableComponents = this.getRunnableComponents(options.components);
+    this.runnableComponents = options.runnableComponents;
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
@@ -78,27 +78,6 @@ class LocalDevManager {
       logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
-
-    // The project is empty, there is nothing to run locally
-    if (!options.components.length) {
-      logger.error(i18n(`${i18nKey}.noComponents`));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-
-    // The project does not contain any components that support local development
-    if (!this.runnableComponents.length) {
-      logger.error(
-        i18n(`${i18nKey}.noRunnableComponents`, {
-          projectSourceDir: this.projectSourceDir,
-          command: uiCommandReference('hs project add'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-  }
-
-  getRunnableComponents(components) {
-    return components.filter(component => component.runnable);
   }
 
   async setActiveApp(appUid) {
@@ -138,17 +117,16 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    // TODO: Update to account for new API with { data }
     const {
-      testPortalInstallCount,
-    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      uniquePortalInstallCount,
+    } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls =
-      activePublicAppData.publicApplicationInstallCounts
-        .uniquePortalInstallCount - testPortalInstallCount;
+    this.publicAppActiveInstalls = uniquePortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {

@@ -4,6 +4,7 @@ const {
   getCwd,
   sanitizeFileName,
   isValidPath,
+  untildify,
 } = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
 const { promptUser } = require('./promptUtils');
@@ -99,6 +100,9 @@ const createProjectPrompt = async (
           return i18n(`${i18nKey}.errors.invalidCharacters`);
         }
         return true;
+      },
+      filter: input => {
+        return untildify(input);
       },
     },
     {

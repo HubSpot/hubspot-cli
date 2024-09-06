@@ -5,7 +5,10 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
@@ -36,7 +39,7 @@ const {
   migrateApp,
   checkMigrationStatus,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
@@ -83,11 +86,14 @@ exports.handler = async options => {
         });
 
   let appName;
+  let preventProjectMigrations;
+  let listingInfo;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    const { preventProjectMigrations, listingInfo } = selectedApp;
+    preventProjectMigrations = selectedApp.preventProjectMigrations;
+    listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -180,9 +186,16 @@ exports.handler = async options => {
 
       await extractZipArchive(
         zippedProject,
-        projectName,
+        sanitizeFileName(projectName),
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
+      );
+
+      const isListed = Boolean(listingInfo);
+      trackCommandMetadataUsage(
+        'migrate-app',
+        { projectName, appId, status, preventProjectMigrations, isListed },
+        accountId
       );
 
       SpinniesManager.succeed('migrateApp', {
@@ -196,12 +209,19 @@ exports.handler = async options => {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.projectDetailsLink`),
-          `${baseUrl}/developer-projects/${accountId}/project/${project.name}`
+          `${baseUrl}/developer-projects/${accountId}/project/${encodeURIComponent(
+            project.name
+          )}`
         )
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'migrate-app',
+      { projectName, appId, status: 'FAILURE', error },
+      accountId
+    );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',

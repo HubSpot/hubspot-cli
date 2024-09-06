@@ -6,7 +6,10 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const {
@@ -35,10 +38,13 @@ const {
   checkCloneStatus,
   downloadClonedProject,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
+const {
+  fetchPublicAppMetadata,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
@@ -70,6 +76,8 @@ exports.handler = async options => {
   let appId;
   let name;
   let location;
+  let preventProjectMigrations;
+  let listingInfo;
   try {
     appId = options.appId;
     if (!appId) {
@@ -81,6 +89,11 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
+    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
+    // preventProjectMigrations returns true if we have not added app to allowlist config.
+    // listingInfo will only exist for marketplace apps
+    preventProjectMigrations = selectedApp.preventProjectMigrations;
+    listingInfo = selectedApp.listingInfo;
 
     const projectResponse = await createProjectPrompt('', options, true);
     name = projectResponse.name;
@@ -106,10 +119,15 @@ exports.handler = async options => {
 
       // Extract zipped app files and place them in correct directory
       const zippedApp = await downloadClonedProject(accountId, exportId);
-      await extractZipArchive(zippedApp, name, absoluteDestPath, {
-        includesRootDir: true,
-        hideLogs: true,
-      });
+      await extractZipArchive(
+        zippedApp,
+        sanitizeFileName(name),
+        absoluteDestPath,
+        {
+          includesRootDir: true,
+          hideLogs: true,
+        }
+      );
 
       // Create hsproject.json file
       const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
@@ -119,6 +137,19 @@ exports.handler = async options => {
         platformVersion: '2023.2',
       };
       const success = writeProjectConfig(configPath, configContent);
+
+      const isListed = Boolean(listingInfo);
+      trackCommandMetadataUsage(
+        'clone-app',
+        {
+          projectName: name,
+          appId,
+          status,
+          preventProjectMigrations,
+          isListed,
+        },
+        accountId
+      );
 
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
@@ -137,6 +168,12 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'clone-app',
+      { projectName: name, appId, status: 'FAILURE', error },
+      accountId
+    );
+
     SpinniesManager.fail('cloneApp', {
       text: i18n(`${i18nKey}.cloneStatus.failure`),
       failColor: 'white',

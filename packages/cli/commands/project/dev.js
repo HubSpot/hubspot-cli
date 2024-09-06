@@ -46,12 +46,12 @@ const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
   checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
+  validateAccountOption,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -86,11 +86,20 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   const components = await findProjectComponents(projectDir);
-  const componentTypes = getProjectComponentTypes(components);
+  const runnableComponents = components.filter(component => component.runnable);
+  const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
   const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
 
-  if (hasPrivateApps && hasPublicApps) {
+  if (runnableComponents.length === 0) {
+    logger.error(
+      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+        projectDir,
+        command: uiCommandReference('hs project add'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -106,14 +115,13 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId = options.account ? accountId : null;
 
-  if (options.account && hasPublicApps) {
-    checkIfDeveloperTestAccount(accountConfig);
-    targetProjectAccountId = accountConfig.parentAccountId;
-    targetTestingAccountId = accountId;
-  }
+  if (options.account) {
+    validateAccountOption(accountConfig, hasPublicApps);
 
-  let createNewSandbox = false;
-  let createNewDeveloperTestAccount = false;
+    if (hasPublicApps) {
+      targetProjectAccountId = accountConfig.parentAccountId;
+    }
+  }
 
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
@@ -142,6 +150,9 @@ exports.handler = async options => {
   } else if (!targetProjectAccountId && hasPublicApps) {
     checkIfAppDeveloperAccount(accountConfig);
   }
+
+  let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
 
   if (!targetProjectAccountId) {
     const {
@@ -222,7 +233,7 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
-    components,
+    runnableComponents,
     debug: options.debug,
     deployedBuild,
     isGithubLinked,
