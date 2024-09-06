@@ -14,13 +14,13 @@ const i18nKey = `commands.project.subcommands.installDeps`;
 exports.command = 'install-deps [packages..]';
 // Intentionally making this null to hide command
 exports.describe = null;
-// exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+// exports.describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
 exports.builder = yargs => {
   yargs.example([
-    ['$0 project install-deps', 'Install the dependencies for the project'],
+    ['$0 project install-deps', i18n(`${i18nKey}.help.installAppDepsExample`)],
     [
       '$0 project install-deps dependency1 dependency2',
-      'Add the dependencies to one or more project component',
+      i18n(`${i18nKey}.help.addDepToSubComponentExample`),
     ],
   ]);
 };
@@ -65,8 +65,6 @@ exports.handler = async ({ packages }) => {
       packages,
       installLocations,
     });
-
-    logger.success(i18n(`${i18nKey}.installationSuccessful`));
   } catch (e) {
     logger.debug(e);
     logger.error(e.message);

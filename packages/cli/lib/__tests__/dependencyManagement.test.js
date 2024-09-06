@@ -1,6 +1,7 @@
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/fs');
+jest.mock('../ui/SpinniesManager');
 
 const util = require('util');
 const {
@@ -11,6 +12,7 @@ const {
 const fs = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
 const { getProjectConfig } = require('../projects');
+const SpinniesManager = require('../ui/SpinniesManager');
 
 describe('cli/lib/dependencyManagement', () => {
   let execMock;
@@ -53,17 +55,51 @@ describe('cli/lib/dependencyManagement', () => {
   });
 
   describe('installPackages', () => {
+    it('should setup a loading spinner', async () => {
+      const packages = ['package1', 'package2'];
+      const installLocations = ['src/app/app.functions', 'src/app/extensions'];
+      await installPackages({ packages, installLocations });
+      expect(SpinniesManager.init).toHaveBeenCalledTimes(
+        installLocations.length
+      );
+      expect(SpinniesManager.add).toHaveBeenCalledTimes(
+        installLocations.length
+      );
+      expect(SpinniesManager.succeed).toHaveBeenCalledTimes(
+        installLocations.length
+      );
+    });
+
     it('should install the provided packages in all the provided install locations', async () => {
       const packages = ['package1', 'package2'];
       const installLocations = ['src/app/app.functions', 'src/app/extensions'];
       await installPackages({ packages, installLocations });
+
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${installLocations[0]} install package1 package2`
+      expect(SpinniesManager.add).toHaveBeenCalledTimes(
+        installLocations.length
       );
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${installLocations[1]} install package1 package2`
+      expect(SpinniesManager.succeed).toHaveBeenCalledTimes(
+        installLocations.length
       );
+
+      for (const location of installLocations) {
+        expect(execMock).toHaveBeenCalledWith(
+          `npm --prefix=${location} install package1 package2`
+        );
+        expect(SpinniesManager.add).toHaveBeenCalledWith(
+          `installingDependencies-${location}`,
+          {
+            text: `Installing [package1, package2] in ${location}`,
+          }
+        );
+        expect(SpinniesManager.succeed).toHaveBeenCalledWith(
+          `installingDependencies-${location}`,
+          {
+            text: `Installed dependencies in ${location}`,
+          }
+        );
+      }
     });
 
     it('should use the provided install locations', async () => {
@@ -130,6 +166,23 @@ describe('cli/lib/dependencyManagement', () => {
       await expect(() => installPackages({})).rejects.toThrowError(
         `Installing dependencies for ${appFunctionsDir} failed`
       );
+
+      expect(SpinniesManager.fail).toHaveBeenCalledTimes(
+        installLocations.length
+      );
+
+      expect(SpinniesManager.fail).toHaveBeenCalledWith(
+        `installingDependencies-${appFunctionsDir}`,
+        {
+          text: `Installing dependencies for ${appFunctionsDir} failed`,
+        }
+      );
+      expect(SpinniesManager.fail).toHaveBeenCalledWith(
+        `installingDependencies-${extensionsDir}`,
+        {
+          text: `Installing dependencies for ${extensionsDir} failed`,
+        }
+      );
     });
   });
 
@@ -137,7 +190,7 @@ describe('cli/lib/dependencyManagement', () => {
     it('should throw an error when ran outside the boundary of a project', async () => {
       getProjectConfig.mockResolvedValue({});
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        'No project detected. Run this command again from a project directory.'
+        'No project detected. Run this command from a project directory.'
       );
     });
 

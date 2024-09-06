@@ -6,6 +6,7 @@ const path = require('path');
 const { uiLink } = require('./ui');
 const util = require('util');
 const { i18n } = require('./lang');
+const SpinniesManager = require('./ui/SpinniesManager');
 
 const DEFAULT_PACKAGE_MANAGER = 'npm';
 
@@ -21,29 +22,31 @@ async function isGloballyInstalled(command) {
   }
 }
 
-async function installPackages({ packages, installLocations, silent = false }) {
+async function installPackages({ packages, installLocations }) {
   const installDirs =
     installLocations || (await getProjectPackageJsonLocations());
   await Promise.all(
     installDirs.map(async dir => {
-      await installPackagesInDirectory(packages, dir, silent);
+      await installPackagesInDirectory(packages, dir);
     })
   );
 }
 
-async function installPackagesInDirectory(packages, directory, silent) {
-  if (!silent) {
-    logger.info(
+async function installPackagesInDirectory(packages, directory) {
+  const spinner = `installingDependencies-${directory}`;
+  const relativeDir = path.relative(process.cwd(), directory);
+  SpinniesManager.init();
+  SpinniesManager.add(spinner, {
+    text:
       packages && packages.length
         ? i18n(`${i18nKey}.addingDependenciesToLocation`, {
             dependencies: `[${packages.join(', ')}]`,
-            location: directory,
+            directory: relativeDir,
           })
         : i18n(`${i18nKey}.installingDependencies`, {
-            location: directory,
-          })
-    );
-  }
+            directory: relativeDir,
+          }),
+  });
   let installCommand = `${DEFAULT_PACKAGE_MANAGER} --prefix=${directory} install`;
 
   if (packages) {
@@ -54,9 +57,21 @@ async function installPackagesInDirectory(packages, directory, silent) {
   try {
     const exec = util.promisify(execAsync);
     await exec(installCommand);
+    SpinniesManager.succeed(spinner, {
+      text: i18n(`${i18nKey}.installationSuccessful`, {
+        directory: relativeDir,
+      }),
+    });
   } catch (e) {
+    SpinniesManager.fail(spinner, {
+      text: i18n(`${i18nKey}.installingDependenciesFailed`, {
+        directory: relativeDir,
+      }),
+    });
     throw new Error(
-      i18n(`${i18nKey}.installingDependenciesFailed`, { directory }),
+      i18n(`${i18nKey}.installingDependenciesFailed`, {
+        directory: relativeDir,
+      }),
       {
         cause: e,
       }

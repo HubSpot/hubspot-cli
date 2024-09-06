@@ -708,14 +708,17 @@ en:
             general:
               describe: "Open Github issues in your browser to give feedback."
         installDeps:
-          describe: "Install the dependencies for your project, or add a dependency to a component of a project"
-          installLocationPrompt: "Choose where to add the dependencies:"
-          installLocationPromptRequired: "You must choose at least one location"
-          installationSuccessful: "Dependencies installed successfully"
-          installingDependencies: "Installing dependencies in {{location}}"
-          addingDependenciesToLocation: "Installing {{dependencies}} in {{location}}"
+          help:
+            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project"
+            installAppDepsExample: "Install the dependencies for the project"
+            addDepToSubComponentExample: "Install the dependencies to one or more project subcomponents"
+          installLocationPrompt: "Choose the project components to install the dependencies:"
+          installLocationPromptRequired: "You must choose at least one subcomponent"
+          installingDependencies: "Installing dependencies in {{directory}}"
+          installationSuccessful: "Installed dependencies in {{directory}}"
+          addingDependenciesToLocation: "Installing {{dependencies}} in {{directory}}"
           installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
-          noProjectConfig: "No project detected. Run this command again from a project directory."
+          noProjectConfig: "No project detected. Run this command from a project directory."
           noPackageJsonInProject: "Could not find any package.json files in the project"
           packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
     remove:

@@ -47,7 +47,7 @@ describe('commands/project/installDeps', () => {
         ['$0 project install-deps', 'Install the dependencies for the project'],
         [
           '$0 project install-deps dependency1 dependency2',
-          'Add the dependencies to one or more project component',
+          'Install the dependencies to one or more project subcomponents',
         ],
       ]);
     });
@@ -85,7 +85,7 @@ describe('commands/project/installDeps', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command again from a project directory.'
+        'No project detected. Run this command from a project directory.'
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -97,19 +97,7 @@ describe('commands/project/installDeps', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command again from a project directory.'
-      );
-      expect(processExitSpy).toHaveBeenCalledTimes(1);
-      expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-    });
-
-    it('should log an error and exit when the project config has no projectDir', async () => {
-      getProjectConfig.mockResolvedValueOnce({ projectDir: null });
-      await handler({});
-
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith(
-        'No project detected. Run this command again from a project directory.'
+        'No project detected. Run this command from a project directory.'
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
@@ -135,7 +123,7 @@ describe('commands/project/installDeps', () => {
               value: packageJsonLocation,
             },
           ],
-          message: 'Choose where to add the dependencies:',
+          message: 'Choose the project components to install the dependencies:',
           validate: expect.any(Function),
         },
       ]);
