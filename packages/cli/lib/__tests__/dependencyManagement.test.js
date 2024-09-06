@@ -27,6 +27,7 @@ describe('cli/lib/dependencyManagement', () => {
   const appDir = path.join(projectDir, srcDir, 'app');
   const appFunctionsDir = path.join(appDir, 'app.functions');
   const extensionsDir = path.join(appDir, 'exensions');
+  const projectName = 'super cool test project';
 
   beforeEach(() => {
     execMock = jest.fn();
@@ -35,6 +36,7 @@ describe('cli/lib/dependencyManagement', () => {
       projectDir,
       projectConfig: {
         srcDir,
+        name: projectName,
       },
     });
   });
@@ -212,7 +214,7 @@ describe('cli/lib/dependencyManagement', () => {
     it('should throw an error if the project directory does not exist', async () => {
       existsSync.mockReturnValueOnce(false);
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        'No dependencies to install. The project  folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project'
+        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
       );
     });
 
@@ -236,7 +238,7 @@ describe('cli/lib/dependencyManagement', () => {
       walk.mockResolvedValue([]);
 
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        'No dependencies to install. The project  folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project'
+        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
       );
     });
   });
