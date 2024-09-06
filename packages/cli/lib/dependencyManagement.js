@@ -7,10 +7,25 @@ const { uiLink } = require('./ui');
 const util = require('util');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
+const fs = require('fs');
 
 const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 const i18nKey = `commands.project.subcommands.installDeps`;
+
+class NoPackageJsonFilesError extends Error {
+  constructor(projectName) {
+    super(
+      i18n(`${i18nKey}.noPackageJsonInProject`, {
+        projectName,
+        link: uiLink(
+          'Learn how to create a project from scratch.',
+          'https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project'
+        ),
+      })
+    );
+  }
+}
 
 async function isGloballyInstalled(command) {
   const exec = util.promisify(execAsync);
@@ -92,7 +107,7 @@ async function getProjectPackageJsonLocations() {
 
   const {
     projectDir,
-    projectConfig: { srcDir },
+    projectConfig: { srcDir, name },
   } = projectConfig;
 
   if (!(await isGloballyInstalled(DEFAULT_PACKAGE_MANAGER))) {
@@ -107,6 +122,13 @@ async function getProjectPackageJsonLocations() {
     );
   }
 
+  if (
+    !fs.existsSync(projectConfig.projectDir) ||
+    !fs.existsSync(path.join(projectDir, srcDir))
+  ) {
+    throw new NoPackageJsonFilesError(name);
+  }
+
   const packageJsonFiles = (await walk(path.join(projectDir, srcDir))).filter(
     file =>
       file.includes('package.json') &&
@@ -115,7 +137,7 @@ async function getProjectPackageJsonLocations() {
   );
 
   if (packageJsonFiles.length === 0) {
-    throw new Error(i18n(`${i18nKey}.noPackageJsonInProject`));
+    throw new NoPackageJsonFilesError(name);
   }
 
   const packageParentDirs = [];

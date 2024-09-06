@@ -2,6 +2,10 @@ jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/fs');
 jest.mock('../ui/SpinniesManager');
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn().mockReturnValue(true),
+}));
 
 const util = require('util');
 const {
@@ -9,10 +13,11 @@ const {
   installPackages,
   getProjectPackageJsonLocations,
 } = require('../dependencyManagement');
-const fs = require('@hubspot/local-dev-lib/fs');
+const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
 const { getProjectConfig } = require('../projects');
 const SpinniesManager = require('../ui/SpinniesManager');
+const { existsSync } = require('fs');
 
 describe('cli/lib/dependencyManagement', () => {
   let execMock;
@@ -120,7 +125,7 @@ describe('cli/lib/dependencyManagement', () => {
         path.join(extensionsDir, 'package.json'),
       ];
 
-      fs.walk.mockResolvedValue(installLocations);
+      walk.mockResolvedValue(installLocations);
 
       getProjectConfig.mockResolvedValue({
         projectDir,
@@ -154,7 +159,7 @@ describe('cli/lib/dependencyManagement', () => {
         path.join(extensionsDir, 'package.json'),
       ];
 
-      fs.walk.mockResolvedValue(installLocations);
+      walk.mockResolvedValue(installLocations);
 
       getProjectConfig.mockResolvedValue({
         projectDir,
@@ -204,6 +209,13 @@ describe('cli/lib/dependencyManagement', () => {
       );
     });
 
+    it('should throw an error if the project directory does not exist', async () => {
+      existsSync.mockReturnValueOnce(false);
+      await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
+        'No dependencies to install. The project  folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project'
+      );
+    });
+
     it('should ignore package.json files in certain directories', async () => {
       const nodeModulesDir = path.join(appDir, 'node_modules');
       const viteDir = path.join(appDir, '.vite');
@@ -214,17 +226,17 @@ describe('cli/lib/dependencyManagement', () => {
         path.join(nodeModulesDir, 'package.json'),
       ];
 
-      fs.walk.mockResolvedValue(installLocations);
+      walk.mockResolvedValue(installLocations);
 
       const actual = await getProjectPackageJsonLocations();
       expect(actual).toEqual([appFunctionsDir, extensionsDir]);
     });
 
     it('should throw an error if no package.json files are found', async () => {
-      fs.walk.mockResolvedValue([]);
+      walk.mockResolvedValue([]);
 
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        'Could not find any package.json files in the project'
+        'No dependencies to install. The project  folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project'
       );
     });
   });

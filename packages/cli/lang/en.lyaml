@@ -719,7 +719,7 @@ en:
           addingDependenciesToLocation: "Installing {{dependencies}} in {{directory}}"
           installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
           noProjectConfig: "No project detected. Run this command from a project directory."
-          noPackageJsonInProject: "Could not find any package.json files in the project"
+          noPackageJsonInProject: "No dependencies to install. The project {{ projectName }} folder might be missing component or subcomponent files. {{ link }}"
           packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
     remove:
       describe: "Delete a file or folder from HubSpot."
