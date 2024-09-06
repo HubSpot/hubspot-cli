@@ -17,5 +17,5 @@
     "lang"
   ],
   "exclude": [
-    "../../node_modules/*","**/node_modules/*", "**/__tests__/*", "**/__mocks__/*", "**/dist/*"]
+    "**/node_modules/*", "**/__tests__/*", "**/__mocks__/*", "**/dist/*"]
 }
