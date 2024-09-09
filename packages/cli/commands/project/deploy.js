@@ -167,7 +167,10 @@ exports.handler = async options => {
     } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.message);
     } else {
-      logError(e, new ApiErrorContext({ accountId, projectName }));
+      logError(
+        e,
+        new ApiErrorContext({ accountId, request: 'project deploy' })
+      );
     }
     return process.exit(EXIT_CODES.ERROR);
   }
