@@ -483,6 +483,7 @@ en:
           errors:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
+            noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
             parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
@@ -591,16 +592,18 @@ en:
         logs:
           describe: "Get execution logs for a serverless function within a project"
           errors:
-            invalidAppName: "Could not find app with name \"{{ appName }}\" in project \"{{ projectName }}\""
+            noProjectConfig: "No project detected. Run this command again from a project directory."
+            failedToFetchProjectDetails: "There was an error fetching project details"
+            noFunctionsLinkText: "Visit developer docs"
+            noFunctionsInProject: "There aren't any functions in this project\n\t- Run `{{#orange}}hs project logs --help{{/orange}}` to learn more about logs\n\t- {{link}} to learn more about serverless functions"
+            noFunctionWithName: "No function with name \"{{ name }}\""
+            functionNotDeployed: "The function with name \"{{ name }}\" is not deployed"
           logs:
             showingLogs: "Showing logs for:"
-            hubspotLogsLink: "View private apps in HubSpot"
-            hubspotLogsDirectLink: "View logs in HubSpot"
+            hubspotLogsDirectLink: "View function logs in HubSpot"
             noLogsFound: "No logs were found for \"{{ name }}\""
           table:
             accountHeader: "Account"
-            projectHeader: "Project"
-            appHeader: "App"
             functionHeader: "Function"
             endpointHeader: "Endpoint"
           examples:
@@ -617,12 +620,8 @@ en:
               describe: "Retrieve most recent log only"
             limit:
               describe: "Limit the number of logs to output"
-            project:
-              describe: "Project name"
             function:
               describe: "App function name"
-            endpoint:
-              describe: "Public endpoint path"
         upload:
           describe: "Upload your project files and create a new build"
           examples:
@@ -960,7 +959,6 @@ en:
       failedToInitialize: "Missing required arguments to initialize Local Dev"
       noDeployedBuild: "Your project {{#bold}}{{ projectName }}{{/bold}} exists in {{ accountIdentifier }}, but has no deployed build. Projects must be successfully deployed to be developed locally. Address any build and deploy errors your project may have, then run {{ uploadCommand }} to upload and deploy your project."
       noComponents: "There are no components in this project."
-      noRunnableComponents: "No supported components were found under {{#bold}}{{ projectSourceDir }}{{/bold}}. Run {{ command }} to see a list of available components."
       betaMessage: "HubSpot projects local development"
       learnMoreLocalDevServer: "Learn more about the projects local dev server"
       running: "Running {{#bold}}{{ projectName }}{{/bold}} locally on {{ accountIdentifier }}, waiting for changes ..."
@@ -1000,7 +998,6 @@ en:
         invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
         nonSandboxWarning: "Testing in a sandbox is strongly recommended. To switch the target account, select an option below or run {{#bold}}`hs accounts use`{{/bold}} before running the command again."
         publicAppNonDeveloperTestAccountWarning: "Local development of public apps is only supported in {{#bold}}developer test accounts{{/bold}}."
-        privateAppInAppDeveloperAccountError: "Local development of private apps is not supported in {{#bold}}app developer accounts{{/bold}}"
       createNewProjectForLocalDev:
         projectMustExistExplanation: "The project {{ projectName }} does not exist in the target account {{ accountIdentifier}}. This command requires the project to exist in the target account."
         publicAppProjectMustExistExplanation: "The project {{ projectName }} does not exist in {{ accountIdentifier}}, the app developer account associated with your target account. This command requires the project to exist in this app developer account."
@@ -1140,16 +1137,7 @@ en:
         confirmDefaultAccount: "Continue testing on {{#bold}}{{ accountName }} ({{ accountType }}){{/bold}}? (Y/n)"
         confirmUseExistingDeveloperTestAccount: "Continue with {{ accountName }}? This account isn't currently connected to the HubSpot CLI. By continuing, you'll be prompted to generate a personal access key and connect it."
       projectLogsPrompt:
-        projectName:
-          message: "[--project] Enter the project name:"
-          error: "Project name is required"
-        logType:
-          message: "Select the type of serverless function"
-          function: "App function"
-          endpoint: "Public endpoint"
-        appName: "[--app] Select the app"
-        functionName: "[--function] Enter the app function name:"
-        endpointName: "[--endpoint] Enter the public endpoint path:"
+        functionName: "[--function] Select function in {{#bold}}{{projectName}}{{/bold}} project"
       setAsDefaultAccountPrompt:
         setAsDefaultAccountMessage: "Set this account as the default?"
         setAsDefaultAccount: "Account \"{{ accountName }}\" set as the default account"
