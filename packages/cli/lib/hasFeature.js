@@ -2,7 +2,7 @@ const {
   fetchEnabledFeatures,
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 
-const hasEnabledFeature = async (accountId, feature) => {
+const hasFeature = async (accountId, feature) => {
   const {
     data: { enabledFeatures },
   } = await fetchEnabledFeatures(accountId);
@@ -11,5 +11,5 @@ const hasEnabledFeature = async (accountId, feature) => {
 };
 
 module.exports = {
-  hasEnabledFeature,
+  hasFeature,
 };
