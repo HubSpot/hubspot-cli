@@ -281,7 +281,7 @@ const ensureProjectExists = async (
           );
           return { projectExists: true, project };
         } catch (err) {
-          return logError(err, new ApiErrorContext({ accountId, projectName }));
+          return logError(err, new ApiErrorContext({ accountId }));
         }
       } else {
         if (!noLogs) {
@@ -303,7 +303,7 @@ const ensureProjectExists = async (
       logger.error(err.message);
       process.exit(EXIT_CODES.ERROR);
     }
-    logError(err, new ApiErrorContext({ accountId, projectName }));
+    logError(err, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 };

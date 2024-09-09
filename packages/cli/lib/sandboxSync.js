@@ -4,11 +4,12 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { getAvailableSyncTypes } = require('./sandboxes');
 const { initiateSync } = require('@hubspot/local-dev-lib/api/sandboxSync');
-const { debugError, logError } = require('./errorHandlers/index');
 const {
-  isSpecifiedError,
-  isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/index');
+  debugError,
+  logError,
+  ApiErrorContext,
+} = require('./errorHandlers/index');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const {
@@ -94,13 +95,7 @@ const syncSandbox = async ({
     });
 
     logger.log('');
-    if (isMissingScopeError(err)) {
-      logger.error(
-        i18n(`${i18nKey}.failure.missingScopes`, {
-          accountName: uiAccountDescription(parentAccountId),
-        })
-      );
-    } else if (
+    if (
       isSpecifiedError(err, {
         statusCode: 403,
         category: 'BANNED',
@@ -160,7 +155,13 @@ const syncSandbox = async ({
         'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
       );
     } else {
-      logError(err);
+      logError(
+        err,
+        new ApiErrorContext({
+          accountId: parentAccountId,
+          request: 'sandbox sync',
+        })
+      );
     }
     logger.log('');
     throw err;

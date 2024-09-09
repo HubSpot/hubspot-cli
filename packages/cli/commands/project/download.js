@@ -106,7 +106,10 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId, projectName }));
+    logError(
+      e,
+      new ApiErrorContext({ accountId, request: 'project download' })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 };

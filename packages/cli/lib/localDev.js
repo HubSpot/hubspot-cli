@@ -125,13 +125,6 @@ const suggestRecommendedNestedAccount = async (
         `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.validateAccountOption.privateAppInAppDeveloperAccountError`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
   } else {
     logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
@@ -198,6 +191,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountConfig,
       sandboxAccountConfig
     );
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     await syncSandbox({
       accountConfig: sandboxAccountConfig,
       parentAccountConfig: accountConfig,

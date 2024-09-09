@@ -72,7 +72,7 @@ exports.handler = async options => {
           result.uploadError,
           new ApiErrorContext({
             accountId,
-            projectName: projectConfig.name,
+            request: 'project upload',
           })
         );
       }
@@ -99,8 +99,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
-    const projectName = projectConfig.name;
-    logError(e, new ApiErrorContext({ accountId, projectName }));
+    logError(e, new ApiErrorContext({ accountId, request: 'project upload' }));
     process.exit(EXIT_CODES.ERROR);
   }
 };

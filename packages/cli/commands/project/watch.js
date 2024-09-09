@@ -68,10 +68,7 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
         ) {
           process.exit(EXIT_CODES.SUCCESS);
         } else {
-          logError(
-            err,
-            new ApiErrorContext({ accountId, projectName: projectName })
-          );
+          logError(err, new ApiErrorContext({ accountId }));
           process.exit(EXIT_CODES.ERROR);
         }
       }
@@ -141,7 +138,7 @@ exports.handler = async options => {
             result.uploadError,
             new ApiErrorContext({
               accountId,
-              projectName: projectConfig.name,
+              request: 'project upload',
             })
           );
         }
@@ -151,10 +148,7 @@ exports.handler = async options => {
       await startWatching();
     }
   } catch (e) {
-    logError(
-      e,
-      new ApiErrorContext({ accountId, projectName: projectConfig.name })
-    );
+    logError(e, new ApiErrorContext({ accountId }));
   }
 };
 
