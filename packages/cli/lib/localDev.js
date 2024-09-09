@@ -195,6 +195,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountConfig,
       sandboxAccountConfig
     );
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     await syncSandbox({
       accountConfig: sandboxAccountConfig,
       parentAccountConfig: accountConfig,
