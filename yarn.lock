@@ -498,10 +498,10 @@
     express "^4.18.2"
     node-fetch "2.7.0"
 
-"@hubspot/ui-extensions-dev-server@0.8.31":
-  version "0.8.31"
-  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.31.tgz#be45cbc432dc312f5c61c7f622411ad60426488b"
-  integrity sha512-vWqLdDgaOcoNpAT56Yb0cmsi6DEX7AZme9BKF31AlubWgNKApvYysW/GfnyJD2am9BwjsaWlRmHE0v5hcARh0A==
+"@hubspot/ui-extensions-dev-server@0.8.33":
+  version "0.8.33"
+  resolved "https://registry.yarnpkg.com/@hubspot/ui-extensions-dev-server/-/ui-extensions-dev-server-0.8.33.tgz#f1b7e09ff69b5fcc099768ecee22b6a6d5d11dfe"
+  integrity sha512-2jzTzrYy5v5SBLPsEm0RkrBm0CKn6S3wTvILirYGh2FW2WPOnl1GzOyOLP2MtQzmKFa5cmbgyPHZWWvXgit37w==
   dependencies:
     "@hubspot/app-functions-dev-server" "0.8.31"
     cors "^2.8.5"
