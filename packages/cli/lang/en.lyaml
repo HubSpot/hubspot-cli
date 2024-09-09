@@ -707,6 +707,20 @@ en:
               describe: "Open Github issues in your browser to report a bug."
             general:
               describe: "Open Github issues in your browser to give feedback."
+        installDeps:
+          help:
+            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project"
+            installAppDepsExample: "Install the dependencies for the project"
+            addDepToSubComponentExample: "Install the dependencies to one or more project subcomponents"
+          installLocationPrompt: "Choose the project components to install the dependencies:"
+          installLocationPromptRequired: "You must choose at least one subcomponent"
+          installingDependencies: "Installing dependencies in {{directory}}"
+          installationSuccessful: "Installed dependencies in {{directory}}"
+          addingDependenciesToLocation: "Installing {{dependencies}} in {{directory}}"
+          installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
+          noProjectConfig: "No project detected. Run this command from a project directory."
+          noPackageJsonInProject: "No dependencies to install. The project {{ projectName }} folder might be missing component or subcomponent files. {{ link }}"
+          packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
     remove:
       describe: "Delete a file or folder from HubSpot."
       deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
