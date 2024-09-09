@@ -86,14 +86,12 @@ exports.handler = async options => {
         });
 
   let appName;
-  let preventProjectMigrations;
-  let listingInfo;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    preventProjectMigrations = selectedApp.preventProjectMigrations;
-    listingInfo = selectedApp.listingInfo;
+    const preventProjectMigrations = selectedApp.preventProjectMigrations;
+    const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
@@ -191,10 +189,9 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
-      const isListed = Boolean(listingInfo);
       trackCommandMetadataUsage(
         'migrate-app',
-        { projectName, appId, status, preventProjectMigrations, isListed },
+        { type: projectName, assetType: appId, successful: status },
         accountId
       );
 
