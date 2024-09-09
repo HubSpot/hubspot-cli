@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const {
-  getHiddenOrDeprecatedConfigPath,
+  getConfigPath,
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
@@ -112,8 +112,7 @@ exports.handler = async options => {
     useHiddenConfig,
   } = options;
   const configPath =
-    (c && path.join(getCwd(), c)) ||
-    getHiddenOrDeprecatedConfigPath(useHiddenConfig);
+    (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
