@@ -21,7 +21,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
-  bothConfigFilesExist,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -86,7 +86,9 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  if (bothConfigFilesExist()) {
+  const bothConfigFilesExist =
+    configFileExists(true) && configFileExists(false);
+  if (bothConfigFilesExist) {
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`));
     process.exit(EXIT_CODES.ERROR);
   }
