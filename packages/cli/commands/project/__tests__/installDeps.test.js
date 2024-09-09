@@ -2,10 +2,14 @@ jest.mock('../../../lib/projects');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('../../../lib/dependencyManagement');
 jest.mock('../../../lib/prompts/promptUtils');
+jest.mock('../../../lib/usageTracking');
+jest.mock('../../../lib/commonOpts');
 
 const { getProjectConfig } = require('../../../lib/projects');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const { trackCommandUsage } = require('../../../lib/usageTracking');
+const { getAccountId } = require('../../../lib/commonOpts');
 const {
   installPackages,
   getProjectPackageJsonLocations,
@@ -58,6 +62,20 @@ describe('commands/project/installDeps', () => {
 
     beforeEach(() => {
       processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    });
+
+    it('should track the command usage', async () => {
+      const accountId = 999999;
+      getAccountId.mockReturnValue(accountId);
+      await handler({});
+
+      expect(getAccountId).toHaveBeenCalledTimes(1);
+      expect(trackCommandUsage).toHaveBeenCalledTimes(1);
+      expect(trackCommandUsage).toHaveBeenCalledWith(
+        'project-install-deps',
+        null,
+        accountId
+      );
     });
 
     it('should handle exceptions', async () => {
