@@ -8,10 +8,21 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const execSync = require('child_process').execSync;
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 
 // const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
 exports.describe = 'The doctor is in';
+
+function getNpmVersion() {
+  try {
+    return execSync('npm --version')
+      .toString()
+      .trim();
+  } catch (e) {
+    return null;
+  }
+}
 
 exports.handler = async () => {
   const accountId = getAccountId();
@@ -23,14 +34,14 @@ exports.handler = async () => {
   try {
     trackCommandUsage('doctor', null, accountId);
   } catch (e) {
-    // eslint-disable-next-line no-empty
+    logger.debug(e);
   }
 
   let accessToken = {};
   try {
     accessToken = await getAccessToken(personalAccessKey, env, accountId);
   } catch (e) {
-    // eslint-disable-next-line no-empty
+    logger.debug(e);
   }
 
   const files = (await walk(projectConfig.projectDir)).filter(file => {
@@ -57,9 +68,7 @@ exports.handler = async () => {
     versions: {
       '@hubspot/cli': pkg.version,
       node,
-      npm: execSync('npm --version')
-        .toString()
-        .trim(),
+      npm: getNpmVersion(),
     },
     projectConfig,
     account: {
