@@ -1,4 +1,3 @@
-const { logger } = require('@hubspot/local-dev-lib/logger');
 const pkg = require('../package.json');
 const util = require('util');
 const { getProjectConfig } = require('../lib/projects');
@@ -8,8 +7,9 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const execSync = require('child_process').execSync;
 const { walk } = require('@hubspot/local-dev-lib/fs');
+const path = require('path');
 
-const i18nKey = 'commands.doctor';
+// const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
 exports.describe = 'The doctor is in';
 
@@ -22,29 +22,38 @@ exports.handler = async () => {
 
   try {
     trackCommandUsage('doctor', null, accountId);
-  } catch (e) {}
+  } catch (e) {
+    // eslint-disable-next-line no-empty
+  }
 
   let accessToken = {};
   try {
     accessToken = await getAccessToken(personalAccessKey, env, accountId);
-  } catch (e) {}
+  } catch (e) {
+    // eslint-disable-next-line no-empty
+  }
 
-  console.log(
-    (await walk(projectConfig.projectDir)).filter(file => {
-      !file.includes('node_modules');
-    })
-  );
+  const files = (await walk(projectConfig.projectDir)).filter(file => {
+    const { dir } = path.parse(file);
+    return (
+      !dir.includes('node_modules') &&
+      !dir.includes('.husky') &&
+      !dir.includes('.idea') &&
+      !dir.includes('dist')
+    );
+  });
+
   const {
     platform,
     arch,
     versions: { node },
-    mainModule: { path },
+    mainModule: { path: modulePath },
   } = process;
 
   const output = {
     platform,
     arch,
-    path,
+    path: modulePath,
     versions: {
       '@hubspot/cli': pkg.version,
       node,
@@ -54,12 +63,16 @@ exports.handler = async () => {
     },
     projectConfig,
     account: {
-      accountId: getAccountId(),
+      accountId,
+      accountType,
+      authType,
       name: accessToken.hubName,
       scopeGroups: accessToken.scopeGroups,
       enabledFeatures: accessToken.enabledFeatures,
     },
+    files,
   };
+
   console.log(util.inspect(output, false, 5, true));
 };
 
