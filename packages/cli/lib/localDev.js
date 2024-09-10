@@ -106,7 +106,7 @@ const checkIfParentAccountIsAuthed = accountConfig => {
         ),
       })
     );
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 };
 
