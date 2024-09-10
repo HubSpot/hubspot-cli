@@ -120,6 +120,7 @@ const validateAccountOption = (accountConfig, hasPublicApps) => {
           devCommand: uiCommandReference('hs project dev'),
         })
       );
+      process.exit(EXIT_CODES.SUCCESS);
     }
     checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
