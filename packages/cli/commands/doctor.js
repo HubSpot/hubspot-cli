@@ -9,6 +9,7 @@ const execSync = require('child_process').execSync;
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const fs = require('fs');
 
 // const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
@@ -22,6 +23,20 @@ function getNpmVersion() {
   } catch (e) {
     return null;
   }
+}
+
+function shouldIncludeFile(file) {
+  try {
+    const ignoredDirs = ['node_modules'];
+    for (const ignoredDir of ignoredDirs) {
+      if (path.dirname(file).includes(path.join(path.sep, ignoredDir))) {
+        return false;
+      }
+    }
+  } catch (e) {
+    logger.debug(e);
+  }
+  return true;
 }
 
 exports.handler = async () => {
@@ -44,15 +59,16 @@ exports.handler = async () => {
     logger.debug(e);
   }
 
-  const files = (await walk(projectConfig.projectDir)).filter(file => {
-    const { dir } = path.parse(file);
-    return (
-      !dir.includes('node_modules') &&
-      !dir.includes('.husky') &&
-      !dir.includes('.idea') &&
-      !dir.includes('dist')
-    );
-  });
+  const files = [
+    ...(await fs.readdirSync(projectConfig.projectDir)),
+    ...(
+      await walk(
+        path.join(projectConfig.projectDir, projectConfig.projectConfig.srcDir)
+      )
+    )
+      .filter(shouldIncludeFile)
+      .map(filename => path.relative(projectConfig.projectDir, filename)),
+  ];
 
   const {
     platform,
@@ -75,10 +91,18 @@ exports.handler = async () => {
       accountId,
       accountType,
       authType,
-      name: accessToken.hubName,
-      scopeGroups: accessToken.scopeGroups,
-      enabledFeatures: accessToken.enabledFeatures,
+      name: accessToken && accessToken.hubName,
+      scopeGroups: accessToken && accessToken.scopeGroups,
+      enabledFeatures: accessToken && accessToken.enabledFeatures,
     },
+    packageFiles: files.filter(file => {
+      return path.parse(file).base === 'package.json';
+    }),
+    packageLockFiles: files.filter(file => {
+      return path.parse(file).base === 'package-lock.json';
+    }),
+    envFiles: files.filter(file => file.endsWith('.env')),
+    jsonFiles: files.filter(file => path.extname(file) === '.json'),
     files,
   };
 
