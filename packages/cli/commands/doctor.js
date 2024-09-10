@@ -9,7 +9,6 @@ const execSync = require('child_process').execSync;
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const fs = require('fs');
 
 // const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
@@ -59,16 +58,9 @@ exports.handler = async () => {
     logger.debug(e);
   }
 
-  const files = [
-    ...(await fs.readdirSync(projectConfig.projectDir)),
-    ...(
-      await walk(
-        path.join(projectConfig.projectDir, projectConfig.projectConfig.srcDir)
-      )
-    )
-      .filter(shouldIncludeFile)
-      .map(filename => path.relative(projectConfig.projectDir, filename)),
-  ];
+  const files = (await walk(projectConfig.projectDir))
+    .filter(shouldIncludeFile)
+    .map(filename => path.relative(projectConfig.projectDir, filename));
 
   const {
     platform,
