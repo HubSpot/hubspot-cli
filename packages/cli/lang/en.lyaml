@@ -484,7 +484,6 @@ en:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
-            parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
         create:
@@ -1023,6 +1022,8 @@ en:
       createInitialBuildForNewProject:
         initialUploadMessage: "HubSpot Local Dev Server Startup"
         projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+      checkIfParentAccountIsAuthed:
+        notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
       config:
         srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
