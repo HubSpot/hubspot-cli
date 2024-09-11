@@ -8,7 +8,7 @@ module.exports = {
     es6: true,
   },
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 2021,
   },
   rules: {
     'no-console': 'off',
