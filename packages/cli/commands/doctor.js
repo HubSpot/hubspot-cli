@@ -1,12 +1,5 @@
-const pkg = require('../package.json');
-const { getProjectConfig } = require('../lib/projects');
-const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
 const { trackCommandUsage } = require('../lib/usageTracking');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const SpinniesManager = require('../lib/ui/SpinniesManager');
 const fs = require('fs');
 const Doctor = require('../lib/doctor');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');

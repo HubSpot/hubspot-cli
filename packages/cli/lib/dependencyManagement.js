@@ -149,9 +149,18 @@ async function getProjectPackageJsonLocations() {
   return packageParentDirs;
 }
 
+async function packagesNeedInstalled(directory) {
+  const exec = util.promisify(execAsync);
+  const { stdout } = await exec(
+    `npm install --ignore-scripts --dry-run --verbose --prefix=${directory}`
+  );
+  return !stdout?.includes('up to date in');
+}
+
 module.exports = {
   isGloballyInstalled,
   installPackages,
   DEFAULT_PACKAGE_MANAGER,
   getProjectPackageJsonLocations,
+  packagesNeedInstalled,
 };

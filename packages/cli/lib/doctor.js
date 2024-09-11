@@ -1,5 +1,5 @@
 const { exec: execAsync } = require('child_process');
-const { dirname, extname, relative, parse, join, sep } = require('path');
+const { dirname, extname, relative, parse, join } = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const { getAccountId } = require('./commonOpts');
@@ -9,13 +9,16 @@ const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
 const pkg = require('../package.json');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const SpinniesManager = require('./ui/SpinniesManager');
-const { isGloballyInstalled } = require('./dependencyManagement');
+const {
+  isGloballyInstalled,
+  packagesNeedInstalled,
+} = require('./dependencyManagement');
 const util = require('util');
+const fs = require('node:fs');
 
 class Doctor {
-  ignoredDirs = ['node_modules'];
-
   constructor() {
+    SpinniesManager.init();
     this.accountId = getAccountId();
     const accountConfig = getAccountConfig(this.accountId);
     this.env = accountConfig?.env;
@@ -25,8 +28,6 @@ class Doctor {
   }
 
   async diagnose() {
-    SpinniesManager.init();
-
     SpinniesManager.add('loadingProjectDetails', {
       text: 'Loading project details',
     });
@@ -50,10 +51,10 @@ class Doctor {
     await Promise.all([
       this.checkIfNodeIsInstalled(),
       this.checkIfNpmIsInstalled(),
-      this.checkIfNpmInstallRequired(),
+      ...this.checkIfNpmInstallRequired(),
     ]);
 
-    return await this.generateOutput();
+    return this.generateOutput();
   }
 
   async checkIfNodeIsInstalled() {
@@ -64,7 +65,7 @@ class Doctor {
       const isNodeInstalled = await isGloballyInstalled('node');
       if (isNodeInstalled) {
         SpinniesManager.succeed('checkingNodeInstalled', {
-          text: '`node` is installed',
+          text: 'node is installed',
         });
         return;
       }
@@ -72,7 +73,7 @@ class Doctor {
       logger.debug(e);
     }
     SpinniesManager.fail('checkingNodeInstalled', {
-      text: '`node` may not be installed',
+      text: 'node may not be installed',
     });
   }
 
@@ -81,10 +82,10 @@ class Doctor {
       SpinniesManager.add('checkingNpmInstalled', {
         text: 'Checking if node is installed',
       });
-      const isNodeInstalled = await isGloballyInstalled('npm');
-      if (isNodeInstalled) {
+      const isNpmInstalled = await isGloballyInstalled('npm');
+      if (isNpmInstalled) {
         SpinniesManager.succeed('checkingNpmInstalled', {
-          text: '`npm` is installed',
+          text: 'npm is installed',
         });
         return;
       }
@@ -92,38 +93,51 @@ class Doctor {
       logger.debug(e);
     }
     SpinniesManager.fail('checkingNpmInstalled', {
-      text: '`npm` may not be installed',
+      text: 'npm may not be installed',
     });
   }
 
-  async checkIfNpmInstallRequired() {
+  checkIfNpmInstallRequired() {
     const checks = [];
-    const exec = util.promisify(execAsync);
-    console.log(this.output.packageFiles);
-    for (const packageFile of this.output?.packageFiles) {
-      SpinniesManager.add(`checkingIfNpmInstallRequired-${packageFile}`, {
+    for (const packageFile of this.output?.packageFiles || []) {
+      const packageDirName = dirname(packageFile);
+      SpinniesManager.add(`checkingIfNpmInstallRequired-${packageDirName}`, {
         text: `Checking if npm is required in ${packageFile}`,
       });
       checks.push(
         (async () => {
           try {
-            // TODO: Fix the prefix
-            const result = await exec(
-              `npm install --dry-run --prefix=${dirname(packageFile)}`
+            const needsInstall = await packagesNeedInstalled(
+              join(this.projectConfig.projectDir, packageDirName)
             );
-            console.log(result);
+            if (needsInstall) {
+              SpinniesManager.fail(
+                `checkingIfNpmInstallRequired-${packageDirName}`,
+                {
+                  text: `You need to run npm install in ${packageDirName}`,
+                }
+              );
+              return;
+            }
             SpinniesManager.succeed(
-              `checkingIfNpmInstallRequired-${packageFile}`,
+              `checkingIfNpmInstallRequired-${packageDirName}`,
               {
-                text: `npm installed in directory ${dirname(packageFile)}`,
+                text: `Dependencies are up to date in ${packageDirName}`,
               }
             );
           } catch (e) {
-            logger.error(e);
+            if (!(await this.isValidJsonFile(packageFile))) {
+              return SpinniesManager.fail(
+                `checkingIfNpmInstallRequired-${packageDirName}`,
+                {
+                  text: `The following is not a valid json file: ${packageFile}`,
+                }
+              );
+            }
             SpinniesManager.fail(
-              `checkingIfNpmInstallRequired-${packageFile}`,
+              `checkingIfNpmInstallRequired-${packageDirName}`,
               {
-                text: `Node may not be installed, ${e.message}`,
+                text: `Unable to determine if dependencies are installed in ${packageDirName}`,
               }
             );
             logger.debug(e);
@@ -131,6 +145,7 @@ class Doctor {
         })()
       );
     }
+    return checks;
   }
 
   async getNpmVersion() {
@@ -141,19 +156,6 @@ class Doctor {
       logger.debug(e);
       return null;
     }
-  }
-
-  shouldIncludeFile(file) {
-    try {
-      for (const ignoredDir of this.ignoredDirs) {
-        if (dirname(file).includes(join(sep, ignoredDir))) {
-          return false;
-        }
-      }
-    } catch (e) {
-      logger.debug(e);
-    }
-    return true;
   }
 
   async fetchProjectDetails() {
@@ -185,7 +187,7 @@ class Doctor {
   async loadProjectFiles() {
     try {
       this.files = (await walk(this.projectConfig?.projectDir))
-        .filter(this.shouldIncludeFile)
+        .filter(file => !dirname(file).includes('node_modules'))
         .map(filename => relative(this.projectConfig?.projectDir, filename));
     } catch (e) {
       logger.debug(e);
@@ -237,6 +239,17 @@ class Doctor {
       files: this.files || [],
     };
     return this.output;
+  }
+
+  async isValidJsonFile(filename) {
+    const readFile = util.promisify(fs.readFile);
+    try {
+      const fileContents = await readFile(filename);
+      JSON.parse(fileContents.toString());
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 }
 
