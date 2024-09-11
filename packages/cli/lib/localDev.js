@@ -95,16 +95,34 @@ const checkIfAppDeveloperAccount = accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const validateAccountOption = (accountConfig, hasPublicApps) => {
-  if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
+const checkIfParentAccountIsAuthed = accountConfig => {
+  if (!getAccountConfig(accountConfig.parentAccountId)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
-        useCommand: uiCommandReference('hs accounts use'),
-        devCommand: uiCommandReference('hs project dev'),
+      i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
+        accountId: accountConfig.parentAccountId,
+        accountIdentifier: uiAccountDescription(accountConfig.portalId),
+        authCommand: uiCommandReference(
+          `hs auth --account=${accountConfig.parentAccountId}`
+        ),
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account is a developer account if developing public apps
+const validateAccountOption = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps) {
+    if (!isDeveloperTestAccount) {
+      logger.error(
+        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+    checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
@@ -456,4 +474,5 @@ module.exports = {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   getAccountHomeUrl,
+  checkIfParentAccountIsAuthed,
 };

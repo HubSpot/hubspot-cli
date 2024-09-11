@@ -21,12 +21,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  uiAccountDescription,
-  uiBetaTag,
-  uiCommandReference,
-  uiLink,
-} = require('../../lib/ui');
+const { uiBetaTag, uiCommandReference, uiLink } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -52,6 +47,7 @@ const {
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
   validateAccountOption,
+  checkIfParentAccountIsAuthed,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -130,19 +126,7 @@ exports.handler = async options => {
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
-      // Exit if the user has not authed the parent account in the config
-      if (!getAccountConfig(accountConfig.parentAccountId)) {
-        logger.error(
-          i18n(`${i18nKey}.errors.parentAccountNotConfigured`, {
-            accountId: accountConfig.parentAccountId,
-            accountIdentifier: uiAccountDescription(targetTestingAccountId),
-            authCommand: uiCommandReference(
-              `hs auth --account=${accountConfig.parentAccountId}`
-            ),
-          })
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      checkIfParentAccountIsAuthed(accountConfig);
       targetProjectAccountId = accountConfig.parentAccountId;
     } else {
       targetProjectAccountId = accountId;
