@@ -8,7 +8,7 @@ const { EXIT_CODES } = require('../lib/enums/exitCodes');
 exports.command = 'doctor';
 exports.describe = 'The doctor is in';
 
-exports.handler = async ({ file, verbose }) => {
+exports.handler = async ({ file }) => {
   const doctor = new Doctor();
 
   try {
@@ -16,24 +16,17 @@ exports.handler = async ({ file, verbose }) => {
   } catch (e) {
     logger.debug(e);
   }
-
-  const diagnosis = await doctor.diagnose();
-
-  const stringifiedOutput = JSON.stringify(diagnosis, null, 4);
-
-  if (verbose) {
-    console.log(stringifiedOutput);
-  }
-
   if (file) {
     try {
-      fs.writeFileSync(file, stringifiedOutput);
-      logger.success(`Output written to ${file}`);
+      fs.writeFileSync(file, JSON.stringify(doctor.generateOutput(), null, 4));
+      logger.info(`Output written to ${file}`);
     } catch (e) {
       logger.error(`Unable to write output to ${file}, ${e.message}`);
       process.exit(EXIT_CODES.ERROR);
     }
   }
+
+  await doctor.diagnose();
 };
 
 exports.builder = yargs =>
@@ -41,9 +34,5 @@ exports.builder = yargs =>
     file: {
       describe: 'Where to write the output',
       type: 'string',
-    },
-    verbose: {
-      describe: 'Chatty?',
-      type: 'boolean',
     },
   });

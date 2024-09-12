@@ -54,8 +54,6 @@ class Doctor {
       ...this.checkIfNpmInstallRequired(),
       ...this.validateProjectJsonFiles(),
     ]);
-
-    return this.generateOutput();
   }
 
   async checkIfNodeIsInstalled() {
@@ -152,7 +150,8 @@ class Doctor {
   async getNpmVersion() {
     const exec = util.promisify(execAsync);
     try {
-      return (await exec('npm --version')).toString().trim();
+      const { stdout } = await exec('npm --version');
+      return stdout.toString().trim();
     } catch (e) {
       logger.debug(e);
       return null;
