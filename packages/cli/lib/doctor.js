@@ -1,5 +1,4 @@
 const { exec: execAsync } = require('child_process');
-const { dirname, extname, relative, parse, join } = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
 const { getAccountId } = require('./commonOpts');
@@ -14,7 +13,8 @@ const {
   packagesNeedInstalled,
 } = require('./dependencyManagement');
 const util = require('util');
-const fs = require('node:fs');
+const fs = require('fs');
+const path = require('path');
 
 class Doctor {
   constructor() {
@@ -52,6 +52,7 @@ class Doctor {
       this.checkIfNodeIsInstalled(),
       this.checkIfNpmIsInstalled(),
       ...this.checkIfNpmInstallRequired(),
+      ...this.validateProjectJsonFiles(),
     ]);
 
     return this.generateOutput();
@@ -100,7 +101,7 @@ class Doctor {
   checkIfNpmInstallRequired() {
     const checks = [];
     for (const packageFile of this.output?.packageFiles || []) {
-      const packageDirName = dirname(packageFile);
+      const packageDirName = path.dirname(packageFile);
       SpinniesManager.add(`checkingIfNpmInstallRequired-${packageDirName}`, {
         text: `Checking if npm is required in ${packageFile}`,
       });
@@ -108,7 +109,7 @@ class Doctor {
         (async () => {
           try {
             const needsInstall = await packagesNeedInstalled(
-              join(this.projectConfig.projectDir, packageDirName)
+              path.join(this.projectConfig.projectDir, packageDirName)
             );
             if (needsInstall) {
               SpinniesManager.fail(
@@ -187,8 +188,10 @@ class Doctor {
   async loadProjectFiles() {
     try {
       this.files = (await walk(this.projectConfig?.projectDir))
-        .filter(file => !dirname(file).includes('node_modules'))
-        .map(filename => relative(this.projectConfig?.projectDir, filename));
+        .filter(file => !path.dirname(file).includes('node_modules'))
+        .map(filename =>
+          path.relative(this.projectConfig?.projectDir, filename)
+        );
     } catch (e) {
       logger.debug(e);
     }
@@ -228,14 +231,24 @@ class Doctor {
       },
       packageFiles:
         this.files?.filter(file => {
-          return parse(file).base === 'package.json';
+          return path.parse(file).base === 'package.json';
+        }) || [],
+      configFiles:
+        this.files?.filter(file => {
+          return [
+            'serverless.json',
+            'hsproject.json',
+            'app.json',
+            'public-app.json',
+          ].includes(path.parse(file).base);
         }) || [],
       packageLockFiles:
         this.files?.filter(file => {
-          return parse(file).base === 'package-lock.json';
+          return path.parse(file).base === 'package-lock.json';
         }) || [],
       envFiles: this.files?.filter(file => file.endsWith('.env')) || [],
-      jsonFiles: this.files?.filter(file => extname(file) === '.json') || [],
+      jsonFiles:
+        this.files?.filter(file => path.extname(file) === '.json') || [],
       files: this.files || [],
     };
     return this.output;
@@ -250,6 +263,41 @@ class Doctor {
       return false;
     }
     return true;
+  }
+
+  validateProjectJsonFiles() {
+    const checks = [];
+    for (const jsonFile of this.output?.configFiles || []) {
+      checks.push(
+        (async () => {
+          try {
+            SpinniesManager.add(`checkingJsonValid-${jsonFile}`, {
+              text: `Checking if ${jsonFile} is valid JSON`,
+            });
+
+            if (
+              !(await this.isValidJsonFile(
+                path.join(this.projectConfig.projectDir, jsonFile)
+              ))
+            ) {
+              return SpinniesManager.fail(`checkingJsonValid-${jsonFile}`, {
+                text: `${jsonFile} is not a valid JSON file`,
+              });
+            }
+
+            SpinniesManager.succeed(`checkingJsonValid-${jsonFile}`, {
+              text: `${jsonFile} is a valid JSON file`,
+            });
+          } catch (e) {
+            logger.debug(e);
+            return SpinniesManager.fail(`checkingJsonValid-${jsonFile}`, {
+              text: `${jsonFile} is not a valid JSON file`,
+            });
+          }
+        })()
+      );
+    }
+    return checks;
   }
 }
 
