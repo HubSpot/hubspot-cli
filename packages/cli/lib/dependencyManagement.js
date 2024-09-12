@@ -151,9 +151,9 @@ async function getProjectPackageJsonLocations() {
 
 async function packagesNeedInstalled(directory) {
   const exec = util.promisify(execAsync);
-  const { stdout } = await exec(
-    `npm install --ignore-scripts --dry-run --verbose --prefix=${directory}`
-  );
+  const { stdout } = await exec(`npm install --ignore-scripts --dry-run`, {
+    cwd: directory,
+  });
   return !stdout?.includes('up to date in');
 }
 
