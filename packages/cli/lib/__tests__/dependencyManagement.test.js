@@ -28,6 +28,7 @@ describe('cli/lib/dependencyManagement', () => {
   const appFunctionsDir = path.join(appDir, 'app.functions');
   const extensionsDir = path.join(appDir, 'exensions');
   const projectName = 'super cool test project';
+  const installLocations = [appFunctionsDir, extensionsDir];
 
   beforeEach(() => {
     execMock = jest.fn();
@@ -64,7 +65,6 @@ describe('cli/lib/dependencyManagement', () => {
   describe('installPackages', () => {
     it('should setup a loading spinner', async () => {
       const packages = ['package1', 'package2'];
-      const installLocations = ['src/app/app.functions', 'src/app/extensions'];
       await installPackages({ packages, installLocations });
       expect(SpinniesManager.init).toHaveBeenCalledTimes(
         installLocations.length
@@ -79,7 +79,6 @@ describe('cli/lib/dependencyManagement', () => {
 
     it('should install the provided packages in all the provided install locations', async () => {
       const packages = ['package1', 'package2'];
-      const installLocations = ['src/app/app.functions', 'src/app/extensions'];
       await installPackages({ packages, installLocations });
 
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
@@ -91,9 +90,9 @@ describe('cli/lib/dependencyManagement', () => {
       );
 
       for (const location of installLocations) {
-        expect(execMock).toHaveBeenCalledWith(
-          `npm --prefix=${location} install package1 package2`
-        );
+        expect(execMock).toHaveBeenCalledWith(`npm install package1 package2`, {
+          cwd: location,
+        });
         expect(SpinniesManager.add).toHaveBeenCalledWith(
           `installingDependencies-${location}`,
           {
@@ -110,15 +109,14 @@ describe('cli/lib/dependencyManagement', () => {
     });
 
     it('should use the provided install locations', async () => {
-      const installLocations = ['src/app/app.functions', 'src/app/extensions'];
       await installPackages({ installLocations });
       expect(execMock).toHaveBeenCalledTimes(installLocations.length);
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${installLocations[0]} install`
-      );
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${installLocations[1]} install`
-      );
+      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+        cwd: appFunctionsDir,
+      });
+      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+        cwd: extensionsDir,
+      });
     });
 
     it('should locate the projects package.json files when install locations is not provided', async () => {
@@ -137,14 +135,14 @@ describe('cli/lib/dependencyManagement', () => {
       });
 
       await installPackages({});
-      // Its called once per each install location, plus once to check if npm installed
+      // It's called once per each install location, plus once to check if npm installed
       expect(execMock).toHaveBeenCalledTimes(installLocations.length + 1);
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${appFunctionsDir} install`
-      );
-      expect(execMock).toHaveBeenCalledWith(
-        `npm --prefix=${extensionsDir} install`
-      );
+      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+        cwd: appFunctionsDir,
+      });
+      expect(execMock).toHaveBeenCalledWith(`npm install`, {
+        cwd: extensionsDir,
+      });
     });
 
     it('should throw an error when installing the dependencies fails', async () => {
