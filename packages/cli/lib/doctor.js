@@ -54,6 +54,8 @@ class Doctor {
       ...this.checkIfNpmInstallRequired(),
       ...this.validateProjectJsonFiles(),
     ]);
+
+    return this.output;
   }
 
   async checkIfNodeIsInstalled() {

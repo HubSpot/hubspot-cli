@@ -16,17 +16,17 @@ exports.handler = async ({ file }) => {
   } catch (e) {
     logger.debug(e);
   }
+  const diagnosis = await doctor.diagnose();
+
   if (file) {
     try {
-      fs.writeFileSync(file, JSON.stringify(doctor.generateOutput(), null, 4));
+      fs.writeFileSync(file, JSON.stringify(diagnosis, null, 4));
       logger.info(`Output written to ${file}`);
     } catch (e) {
       logger.error(`Unable to write output to ${file}, ${e.message}`);
       process.exit(EXIT_CODES.ERROR);
     }
   }
-
-  await doctor.diagnose();
 };
 
 exports.builder = yargs =>
