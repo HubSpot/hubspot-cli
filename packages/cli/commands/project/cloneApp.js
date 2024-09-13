@@ -20,6 +20,7 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { poll } = require('../../lib/polling');
 const {
+  uiBetaTag,
   uiLine,
   uiCommandReference,
   uiAccountDescription,
@@ -46,7 +47,7 @@ const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
 exports.command = 'clone-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
