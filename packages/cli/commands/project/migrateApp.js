@@ -52,7 +52,7 @@ const {
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
