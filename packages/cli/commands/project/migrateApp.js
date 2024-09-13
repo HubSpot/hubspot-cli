@@ -63,6 +63,16 @@ exports.handler = async options => {
 
   trackCommandUsage('migrate-app', {}, accountId);
 
+  logger.log('');
+  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.header.link`),
+      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
+    )
+  );
+  logger.log('');
+
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
     logger.error(i18n(`${i18nKey}.errors.invalidAccountTypeTitle`));
@@ -85,7 +95,6 @@ exports.handler = async options => {
           isMigratingApp: true,
         });
 
-  let appName;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
@@ -96,7 +105,6 @@ exports.handler = async options => {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
-    appName = selectedApp.name;
   } catch (error) {
     logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
@@ -134,7 +142,8 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
+  logger.warn(i18n(`${i18nKey}.warning.title`));
+  logger.log('');
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
