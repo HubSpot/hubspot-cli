@@ -79,7 +79,7 @@ const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
   const message = `${account.name} [${
     HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
-  }] (${account.portalId})`;
+  }] (${account.portalId || account.accountId})`;
   return bold ? chalk.bold(message) : message;
 };
 

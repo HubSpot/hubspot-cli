@@ -125,7 +125,9 @@ const selectDeveloperTestTargetAccountPrompt = async (
 
   const devTestAccounts = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
-    const accountIds = accounts.map(account => account.portalId);
+    const accountIds = accounts.map(
+      account => account.portalId || account.accountId
+    );
 
     devTestAccountsResponse.results.forEach(acct => {
       const inConfig = accountIds.includes(acct.id);

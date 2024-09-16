@@ -55,7 +55,10 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(account.portalId, true);
+      await accessTokenForPersonalAccessKey(
+        account.portalId || account.accountId,
+        true
+      );
     } catch (error) {
       if (
         isSpecifiedHubSpotAuthError(error, {
@@ -88,7 +91,9 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p.portalId)]),
+        accountsToRemove.map(p => [
+          uiAccountDescription(p.portalId || p.accountId),
+        ]),
         { border: { bodyLeft: '  ' } }
       )
     );
