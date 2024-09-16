@@ -17,8 +17,11 @@ const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const config = getConfig();
-  const parentPortalId = getAccountId(appDeveloperAccountConfig.portalId);
-  for (const portal of config.portals) {
+  const id =
+    appDeveloperAccountConfig.accountId || appDeveloperAccountConfig.portalId;
+  const parentPortalId = getAccountId(id);
+  const accountsList = config.accounts || config.portals;
+  for (const portal of accountsList) {
     if (
       Boolean(portal.parentAccountId) &&
       portal.parentAccountId === parentPortalId &&
@@ -31,7 +34,8 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
 };
 
 const validateDevTestAccountUsageLimits = async accountConfig => {
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = accountConfig.accountId || accountConfig.portalId;
+  const accountId = getAccountId(id);
   const response = await fetchDeveloperTestAccounts(accountId);
   if (response) {
     const limit = response.maxTestPortals;

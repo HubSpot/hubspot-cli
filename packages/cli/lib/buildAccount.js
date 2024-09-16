@@ -103,7 +103,8 @@ async function buildNewAccount({
   SpinniesManager.init({
     succeedColor: 'white',
   });
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = accountConfig.accountId || accountConfig.portalId;
+  const accountId = getAccountId(id);
   const isSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;

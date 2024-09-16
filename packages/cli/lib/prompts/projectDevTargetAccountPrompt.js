@@ -16,7 +16,10 @@ const {
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
 const mapNestedAccount = accountConfig => ({
-  name: uiAccountDescription(accountConfig.portalId, false),
+  name: uiAccountDescription(
+    accountConfig.portalId || accountConfig.accountId,
+    false
+  ),
   value: {
     targetAccountId: getAccountId(accountConfig.name),
     createNestedAccount: false,

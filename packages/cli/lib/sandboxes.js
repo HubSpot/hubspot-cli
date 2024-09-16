@@ -48,8 +48,10 @@ const getSandboxTypeAsString = accountType => {
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
-  const parentPortalId = getAccountId(parentAccountConfig.portalId);
-  for (const portal of config.portals) {
+  const id = parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const parentPortalId = getAccountId(id);
+  const accountsList = config.accounts || config.portals;
+  for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||
         portal.parentAccountId !== undefined) &&
@@ -71,8 +73,11 @@ function getSandboxLimit(error) {
 
 // Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
-  const parentPortalId = getAccountId(parentAccountConfig.portalId);
-  const portalId = getAccountId(config.portalId);
+  const parentId =
+    parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const parentPortalId = getAccountId(parentId);
+  const id = config.accountId || config.portalId;
+  const portalId = getAccountId(id);
   const syncTypes = await fetchTypes(parentPortalId, portalId);
   if (!syncTypes) {
     throw new Error(
@@ -125,7 +130,8 @@ const getSyncTypesWithContactRecordsPrompt = async (
  * @returns {null}
  */
 const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = accountConfig.accountId || accountConfig.portalId;
+  const accountId = getAccountId(id);
   const usage = await getSandboxUsageLimits(accountId);
   if (!usage) {
     throw new Error('Unable to fetch sandbox usage limits. Please try again.');

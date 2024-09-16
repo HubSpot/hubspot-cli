@@ -38,8 +38,11 @@ const syncSandbox = async ({
   syncTasks,
   slimInfoMessage = false,
 }) => {
-  const accountId = getAccountId(accountConfig.portalId);
-  const parentAccountId = getAccountId(parentAccountConfig.portalId);
+  const id = accountConfig.accountId || accountConfig.portalId;
+  const accountId = getAccountId(id);
+  const parentId =
+    parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const parentAccountId = getAccountId(parentId);
   const isDevSandbox = isDevelopmentSandbox(accountConfig);
   SpinniesManager.init({
     succeedColor: 'white',
