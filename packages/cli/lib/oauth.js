@@ -86,7 +86,8 @@ const authorize = async oauthManager => {
 };
 
 const setupOauth = accountConfig => {
-  const accountId = parseInt(accountConfig.portalId, 10);
+  const id = accountConfig.accountId || accountConfig.portalId;
+  const accountId = parseInt(id, 10);
   const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager({
     ...accountConfig,

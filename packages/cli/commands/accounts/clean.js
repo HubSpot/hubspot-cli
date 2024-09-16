@@ -35,7 +35,8 @@ exports.handler = async options => {
 
   trackCommandUsage('accounts-clean', null);
 
-  const filteredTestAccounts = config.portals.filter(p =>
+  const accountsList = config.accounts || config.portals;
+  const filteredTestAccounts = accountsList.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );
 
