@@ -47,6 +47,8 @@ exports.handler = async options => {
     options
   );
 
+  const isHubSpotAsset = template.path.startsWith('@hubspot');
+
   trackCommandUsage(
     'project-create',
     { type: options.template || template },
@@ -58,7 +60,8 @@ exports.handler = async options => {
     options.name || name,
     template || { path: options.template },
     options.templateSource,
-    githubRef
+    githubRef,
+    accountId
   );
 
   logger.log('');
@@ -67,6 +70,7 @@ exports.handler = async options => {
     'projectDevCommand',
     'projectHelpCommand',
     'feedbackCommand',
+    isHubSpotAsset && 'projectUploadCommand',
     'sampleProjects',
   ]);
 };
