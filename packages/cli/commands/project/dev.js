@@ -40,13 +40,13 @@ const {
 const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
-  checkIfAppDeveloperAccount,
+  checkIfDefaultAccountIsSupported,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
-  validateAccountOption,
+  checkIfAccountFlagIsSupported,
   checkIfParentAccountIsAuthed,
 } = require('../../lib/localDev');
 
@@ -111,12 +111,15 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId = options.account ? accountId : null;
 
+  // Check that the default account or flag option is valid for the type of app in this project
   if (options.account) {
-    validateAccountOption(accountConfig, hasPublicApps);
+    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
       targetProjectAccountId = accountConfig.parentAccountId;
     }
+  } else {
+    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
   }
 
   // The user is targeting an account type that we recommend developing on
@@ -131,8 +134,6 @@ exports.handler = async options => {
     } else {
       targetProjectAccountId = accountId;
     }
-  } else if (!targetProjectAccountId && hasPublicApps) {
-    checkIfAppDeveloperAccount(accountConfig);
   }
 
   let createNewSandbox = false;

@@ -82,11 +82,19 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const checkIfAppDeveloperAccount = accountConfig => {
-  if (!isAppDeveloperAccount(accountConfig)) {
+// Confirm the default account is supported for the type of apps being developed
+const checkIfDefaultAccountIsSupported = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.checkIfAppDevloperAccount`, {
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.publicApp`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.privateApp`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -111,7 +119,7 @@ const checkIfParentAccountIsAuthed = accountConfig => {
 };
 
 // Confirm the default account is a developer account if developing public apps
-const validateAccountOption = (accountConfig, hasPublicApps) => {
+const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
   if (hasPublicApps) {
     if (!isDeveloperTestAccount) {
       logger.error(
@@ -465,8 +473,8 @@ const getAccountHomeUrl = accountId => {
 
 module.exports = {
   confirmDefaultAccountIsTarget,
-  checkIfAppDeveloperAccount,
-  validateAccountOption,
+  checkIfDefaultAccountIsSupported,
+  checkIfAccountFlagIsSupported,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
