@@ -5,6 +5,8 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  loadConfig,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -107,8 +109,10 @@ exports.handler = async options => {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
     account: optionalAccount,
+    useHiddenConfig,
   } = options;
-  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
+  const configPath =
+    (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
   setLogLevel(options);
   logDebugInfo(options);
   trackCommandUsage('init', {
@@ -126,8 +130,21 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
+  if (doesOtherConfigFileExist) {
+    const path =
+      (c && path.join(getCwd(), c)) || getConfigPath('', !useHiddenConfig);
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
+    process.exit(EXIT_CODES.ERROR);
+  }
+  if (c && useHiddenConfig) {
+    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
-  createEmptyConfigFile({ path: configPath });
+  createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 
   try {
@@ -135,7 +152,6 @@ exports.handler = async options => {
       env,
       optionalAccount
     );
-    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
@@ -188,6 +204,10 @@ exports.builder = yargs => {
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+    },
+    useHiddenConfig: {
+      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+      type: 'boolean',
     },
   });
 

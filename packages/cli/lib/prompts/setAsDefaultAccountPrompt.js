@@ -9,12 +9,14 @@ const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
 
 const setAsDefaultAccountPrompt = async accountName => {
   const config = getConfig();
+  // Accounts for deprecated and new config
+  const defaultAccount = config.defaultPortal || config.defaultAccount;
 
   const { setAsDefault } = await promptUser([
     {
       name: 'setAsDefault',
       type: 'confirm',
-      when: config.defaultPortal !== accountName,
+      when: defaultAccount !== accountName,
       message: i18n(`${i18nKey}.setAsDefaultAccountMessage`),
     },
   ]);
