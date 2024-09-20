@@ -107,11 +107,15 @@ async function findProjectComponents(projectSourceDir) {
       if (parsedAppConfig) {
         const isLegacy = getIsLegacyApp(parsedAppConfig, dir);
         const isHublTheme = base === CONFIG_FILES[COMPONENT_TYPES.hublTheme];
+        // Better way to identify a react project?
+        const isCmsReactProject =
+          isHublTheme && fs.readdirSync(dir).includes('components');
 
         components.push({
           type: getTypeFromConfigFile(base),
           config: parsedAppConfig,
           runnable: !isLegacy && !isHublTheme,
+          isCmsReactProject, // will there be issues having this on every project component?
           path: dir,
         });
       }

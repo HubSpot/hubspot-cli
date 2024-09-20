@@ -4,6 +4,7 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
   addTestingOptions,
+  addCmsDevServerArgsSupport,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -31,7 +32,10 @@ const {
   isAppDeveloperAccount,
 } = require('../../lib/accountTypes');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-
+const {
+  cmsLocalDevServer,
+  getCmsReactProject,
+} = require('../../lib/cmsReactLocalDev');
 const {
   findProjectComponents,
   getProjectComponentTypes,
@@ -86,6 +90,12 @@ exports.handler = async options => {
   const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
   const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
+  const cmsReactProject = await getCmsReactProject(projectDir);
+
+  if (cmsReactProject.length > 0) {
+    cmsLocalDevServer(cmsReactProject[0], options);
+    return;
+  }
 
   if (runnableComponents.length === 0) {
     logger.error(
@@ -239,6 +249,8 @@ exports.builder = yargs => {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
+  // allows us to pass through args to cms-dev-server
+  addCmsDevServerArgsSupport(yargs);
 
   yargs.example([['$0 project dev', i18n(`${i18nKey}.examples.default`)]]);
 

@@ -76,6 +76,19 @@ const setLogLevel = (options = {}) => {
   }
 };
 
+const addCmsDevServerArgsSupport = yargs => {
+  yargs.parserConfiguration({
+    'unknown-options-as-args': true,
+    'halt-at-non-option': true,
+  });
+
+  yargs.positional('unknown', {
+    type: 'string',
+    array: true,
+    describe: i18n(`${i18nKey}.options.unknown.describe`),
+  });
+};
+
 /**
  * Get command name from Yargs `argv`
  * @param {object} argv
@@ -118,6 +131,7 @@ const getMode = (command = {}) => {
 module.exports = {
   addAccountOptions,
   addConfigOptions,
+  addCmsDevServerArgsSupport,
   addOverwriteOptions,
   addModeOptions,
   addTestingOptions,
