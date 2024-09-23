@@ -24,7 +24,7 @@ describe('hs project create', () => {
       'create',
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
-      '--template="getting-started"',
+      '--template="getting-started-private-app"',
       `--c="${CONFIG_FILE_NAME}"`,
     ]);
     expect(existsSync(PROJECT_FOLDER)).toBe(true);
