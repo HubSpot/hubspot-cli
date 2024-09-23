@@ -33,10 +33,16 @@ function cmsLocalDevServer(project) {
   const additionalArgs = process.argv.slice(4);
   const validArgs = validateArgs(additionalArgs);
   const devServerArgs = [cmsReactProjectPath, ...validArgs];
-  const devServerProcess = spawn('hs-cms-dev-server', devServerArgs, {
-    stdio: 'inherit',
-    shell: true,
-  });
+
+  // Alternative approach to having an explicit dep
+  const devServerProcess = spawn(
+    'npx',
+    ['hs-cms-dev-server', ...devServerArgs],
+    {
+      stdio: 'inherit',
+      shell: true,
+    }
+  );
 
   devServerProcess.on('close', code => {
     console.log(`projects dev server exited with code ${code}`);
