@@ -1,7 +1,9 @@
 const { getParsedConfig, withAuth } = require('../helpers/auth');
 const { CONFIG_FILE_NAME } = require('../../lib/constants');
+import { describe, beforeAll, it, expect } from 'vitest';
 
 describe('hs accounts list', () => {
+  // @ts-expect-error custom prop on global
   const { cli } = global;
 
   beforeAll(withAuth);

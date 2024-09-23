@@ -4,7 +4,7 @@ This project tests our CLI's `hs <*>` commands as if they were being used by an 
 
 ## Getting Started
 
-The main test execution is kicked off by running `yarn test-cli` from the root of `hubspot-cli`. This will run the `run-tests` script which itself is a CLI, so to see the available options, you can `run-tests --help`. This was done so that the tests can be installed against any given version of the CLI and tested against it. In addition, it was done to keep the test logic separated from the CLI library.
+The main test execution is kicked off by running `yarn test-cli` from the root of `hubspot-cli`. This will run the `setup.ts` script which itself is a CLI, so to see the available options, you can `setup.ts --help`. This was done so that the tests can be installed against any given version of the CLI and tested against it. In addition, it was done to keep the test logic separated from the CLI library.
 
 Note that if you are testing against a QA portal, not a PROD one, you'll need to add the `--qa` flag when running the script. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
 
@@ -37,16 +37,16 @@ export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 export CLI_PATH="hs"
 ```
 
-3. Through arguments on the `run-tests` script
+3. Through arguments on the `setup.ts` script
 
 ```bash
-yarn run-tests --accountId=123456789 --personalAccessKey="*********" --cliPath=hs
+yarn setup.ts --accountId=123456789 --personalAccessKey="*********" --cliPath=hs
 ```
 
 Alternatively, we support the following aliases:
 
 ```bash
-yarn run-tests --a=123456789 --pak="*********" --c=hs
+yarn setup.ts --a=123456789 --pak="*********" --c=hs
 ```
 
 ### Running Locally
@@ -72,4 +72,4 @@ The `.env` file does not get recognized when running [act](https://github.com/ne
 
 - Currently the personal-access-key test is flakey. Run the tests again and it should pass.
 
-- The tests seem to trip up on usages of the `ora` library. To get around this, we have a list of blacklisted strings. If your test is being picky about ora, add the error message to the blacklist in `cmd.js`
+- The tests seem to trip up on usages of the `ora` library. To get around this, we have a list of blacklisted strings. If your test is being picky about ora, add the error message to the blacklist in `cmd.ts`

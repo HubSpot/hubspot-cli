@@ -5,7 +5,8 @@
   "private": true,
   "homepage": "https://github.com/HubSpot/hubspot-cli#readme",
   "license": "ISC",
-  "main": "run-tests",
+  "main": "tests/setup.ts",
+  "type": "module",
   "directories": {
     "lib": "lib"
   },
@@ -17,8 +18,9 @@
     "url": "git+https://github.com/HubSpot/hubspot-cli.git"
   },
   "scripts": {
-    "test": "./run-tests",
-    "test-headless": "./run-tests --headless"
+    "test": "vitest run",
+    "test-watch": "vitest",
+    "test-headless": "vitest run"
   },
   "bugs": {
     "url": "https://github.com/HubSpot/hubspot-cli/issues"
@@ -27,10 +29,9 @@
     "concat-stream": "^2.0.0",
     "cross-spawn": "^7.0.3",
     "dotenv": "^8.2.0",
-    "jasmine": "^3.7.0",
-    "jasmine-terminal-reporter": "^1.0.3",
     "js-yaml": "^4.0.0",
     "rimraf": "^3.0.2",
+    "vitest": "^2.1.1",
     "yargs": "^16.2.0"
   }
 }

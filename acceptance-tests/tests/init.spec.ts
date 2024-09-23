@@ -1,10 +1,12 @@
-const cmd = require('./helpers/cmd');
-const { CONFIG_FILE_NAME } = require('../lib/constants');
-const rimraf = require('rimraf');
-const { existsSync, readFileSync } = require('fs');
-const yaml = require('js-yaml');
+import * as cmd from './helpers/cmd';
+import { describe, beforeAll, it, expect } from 'vitest';
+import { CONFIG_FILE_NAME } from '../lib/constants';
+import rimraf from 'rimraf';
+import { existsSync, readFileSync } from 'fs';
+import yaml from 'js-yaml';
 
 describe('hs init', () => {
+  // @ts-expect-error custom props on global
   const { cli, config } = global;
 
   beforeAll(() => {

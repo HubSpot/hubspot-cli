@@ -1,12 +1,16 @@
-const yaml = require('js-yaml');
-const rimraf = require('rimraf');
-const { existsSync, readFileSync, writeFileSync } = require('fs');
-const cmd = require('./cmd');
-const { CONFIG_FILE_NAME } = require('../../lib/constants');
+import yaml from 'js-yaml';
+
+import rimraf from 'rimraf';
+
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+
+import * as cmd from './cmd';
+
+import { CONFIG_FILE_NAME } from '../../lib/constants';
 
 let PARSED_CONFIG_YAML;
 
-async function initializeAuth() {
+export async function initializeAuth() {
   try {
     await global.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],
@@ -21,7 +25,7 @@ async function initializeAuth() {
   }
 }
 
-function withAuth() {
+export function withAuth() {
   if (existsSync(CONFIG_FILE_NAME)) {
     rimraf.sync(CONFIG_FILE_NAME);
   }
@@ -36,13 +40,7 @@ function withAuth() {
   }
 }
 
-function getParsedConfig() {
+export function getParsedConfig() {
   const temp = yaml.load(readFileSync(CONFIG_FILE_NAME, 'utf8'));
   return JSON.parse(JSON.stringify(temp, null, 2));
 }
-
-module.exports = {
-  getParsedConfig,
-  initializeAuth,
-  withAuth,
-};

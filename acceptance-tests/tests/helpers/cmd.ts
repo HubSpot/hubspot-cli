@@ -1,3 +1,4 @@
+// @ts-nocheck fix errors
 /**
  * Integration test helper
  * Author: Andrés Zorro <zorrodg@gmail.com>
@@ -17,7 +18,7 @@ const PATH = process.env.PATH;
  * @param {Array} args Arguments to the command
  * @param {Object} env (optional) Environment variables
  */
-function createProcess(cliPath, cliVersion, args = [], env = null) {
+export function createProcess(cliPath, cliVersion, args = [], env = null) {
   let processCommand;
 
   if (cliVersion) {
@@ -184,14 +185,10 @@ function executeWithInput(
 
   return promise;
 }
-
-module.exports = {
-  createProcess,
-  createCli: (cliPath, cliVersion) => ({
-    execute: (...args) => executeWithInput(cliPath, cliVersion, ...args),
-  }),
-  DOWN: '\x1B\x5B\x42',
-  UP: '\x1B\x5B\x41',
-  ENTER: '\x0D',
-  SPACE: '\x20',
-};
+export const DOWN = '\x1B\x5B\x42';
+export const UP = '\x1B\x5B\x41';
+export const ENTER = '\x0D';
+export const SPACE = '\x20';
+export const createCli = (cliPath, cliVersion) => ({
+  execute: (...args) => executeWithInput(cliPath, cliVersion, ...args),
+});

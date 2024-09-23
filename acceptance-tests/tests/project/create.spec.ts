@@ -1,7 +1,8 @@
-const rimraf = require('rimraf');
-const { existsSync } = require('fs');
-const { CONFIG_FILE_NAME } = require('../../lib/constants');
-const { withAuth } = require('../helpers/auth');
+import { CONFIG_FILE_NAME } from '../../lib/constants.js';
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import rimraf from 'rimraf';
+import { existsSync } from 'fs';
+import { withAuth } from '../helpers/auth';
 
 const PROJECT_FOLDER = 'my-project';
 
@@ -16,6 +17,7 @@ describe('hs project create', () => {
   });
   afterAll(cleanup);
 
+  // @ts-expect-error custom props on global
   const { cli } = global;
 
   it('should create a project containing a private app', async () => {

@@ -1,9 +1,15 @@
-const { existsSync } = require('fs');
-const cmd = require('./helpers/cmd');
-const { CONFIG_FILE_NAME } = require('../lib/constants');
-const { withAuth } = require('./helpers/auth');
+import { existsSync } from 'fs';
+
+import { describe, beforeAll, it, expect } from 'vitest';
+
+import * as cmd from './helpers/cmd';
+
+import { CONFIG_FILE_NAME } from '../lib/constants';
+
+import { withAuth } from './helpers/auth';
 
 describe('hs auth', () => {
+  // @ts-expect-error custom props on global
   const { cli, config } = global;
 
   beforeAll(withAuth);

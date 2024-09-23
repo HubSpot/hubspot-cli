@@ -1,7 +1,11 @@
-const { withAuth } = require('./helpers/auth');
-const { CONFIG_FILE_NAME } = require('../lib/constants');
+import { CONFIG_FILE_NAME } from '../lib/constants';
+
+import { describe, beforeAll, it, expect } from 'vitest';
+
+import { withAuth } from './helpers/auth';
 
 describe('hs list', () => {
+  // @ts-expect-error custom props on global
   const { cli } = global;
 
   beforeAll(withAuth);

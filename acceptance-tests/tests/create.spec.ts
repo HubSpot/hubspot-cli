@@ -1,7 +1,9 @@
-const { ENTER } = require('./helpers/cmd');
-const rimraf = require('rimraf');
-const { existsSync } = require('fs');
-const { withAuth } = require('./helpers/auth');
+import { ENTER } from './helpers/cmd';
+
+import { existsSync } from 'fs';
+import { withAuth } from './helpers/auth';
+import { describe, beforeAll, afterAll, it, expect } from 'vitest';
+import rimraf from 'rimraf';
 
 const FOLDERS = {
   module: {
@@ -44,6 +46,7 @@ const cleanup = () => {
 };
 
 describe('hs create', () => {
+  // @ts-expect-error custom props on global
   const { cli } = global;
 
   beforeAll(() => {

@@ -1,7 +1,8 @@
-const path = require('path');
-const dotEnv = require('dotenv');
-const { existsSync } = require('fs');
-const { DEFAULT_CLI_PATH } = require('./constants');
+// @ts-nocheck Fix the issues
+import path from 'path';
+import dotEnv from 'dotenv';
+import { existsSync } from 'fs';
+import { DEFAULT_CLI_PATH } from './constants.js';
 
 let dotEnvConfig;
 
@@ -31,7 +32,7 @@ const getEnvValue = envVariable => {
   );
 };
 
-const setArgsOverrides = args => {
+export const setArgsOverrides = args => {
   args.portalId && (argsOverrides.portalId = args.portalId);
   args.cliPath && (argsOverrides.cliPath = args.cliPath);
   args.cliVersion && (argsOverrides.cliVersion = args.cliVersion);
@@ -49,7 +50,7 @@ const envOverrides = getTruthyValuesOnly({
   cliVersion: getEnvValue('CLI_VERSION'),
 });
 
-const getTestConfig = () => {
+export const getTestConfig = () => {
   // Command-line Args > Env vars
   const config = Object.assign({}, envOverrides, argsOverrides);
 
@@ -88,9 +89,4 @@ const getTestConfig = () => {
   }
 
   return config;
-};
-
-module.exports = {
-  getTestConfig,
-  setArgsOverrides,
 };
