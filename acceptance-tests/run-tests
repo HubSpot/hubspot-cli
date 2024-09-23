@@ -6,6 +6,7 @@ const { CONFIG_FILE_NAME } = require('./lib/constants');
 const path = require('path');
 const Jasmine = require('jasmine');
 const rimraf = require('rimraf');
+const { initializeAuth } = require('./tests/helpers/auth');
 const cmd = require('./tests/helpers/cmd');
 const Reporter = require('jasmine-terminal-reporter');
 const reporter = new Reporter({
@@ -61,10 +62,8 @@ setArgsOverrides(
     global.config = getTestConfig();
     global.cli = cmd.createCli(global.config.cliPath, global.config.cliVersion);
 
-    await global.cli.execute(
-      ['init', `--c="${CONFIG_FILE_NAME}"`],
-      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER, cmd.ENTER]
-    );
+    // Fetch access token for target account and save parsed config for use in tests
+    await initializeAuth();
 
     const result = await testRunner.execute();
 
