@@ -95,16 +95,34 @@ const checkIfAppDeveloperAccount = accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const validateAccountOption = (accountConfig, hasPublicApps) => {
-  if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
+const checkIfParentAccountIsAuthed = accountConfig => {
+  if (!getAccountConfig(accountConfig.parentAccountId)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
-        useCommand: uiCommandReference('hs accounts use'),
-        devCommand: uiCommandReference('hs project dev'),
+      i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
+        accountId: accountConfig.parentAccountId,
+        accountIdentifier: uiAccountDescription(accountConfig.portalId),
+        authCommand: uiCommandReference(
+          `hs auth --account=${accountConfig.parentAccountId}`
+        ),
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account is a developer account if developing public apps
+const validateAccountOption = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps) {
+    if (!isDeveloperTestAccount) {
+      logger.error(
+        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+    checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
@@ -129,13 +147,6 @@ const suggestRecommendedNestedAccount = async (
         `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.validateAccountOption.privateAppInAppDeveloperAccountError`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
   } else {
     logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
@@ -202,6 +213,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountConfig,
       sandboxAccountConfig
     );
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     await syncSandbox({
       accountConfig: sandboxAccountConfig,
       parentAccountConfig: accountConfig,
@@ -462,4 +474,5 @@ module.exports = {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   getAccountHomeUrl,
+  checkIfParentAccountIsAuthed,
 };

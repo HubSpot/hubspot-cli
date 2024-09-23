@@ -52,7 +52,7 @@ const {
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -62,6 +62,16 @@ exports.handler = async options => {
   const accountName = uiAccountDescription(accountId);
 
   trackCommandUsage('migrate-app', {}, accountId);
+
+  logger.log('');
+  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.header.link`),
+      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
+    )
+  );
+  logger.log('');
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
@@ -85,20 +95,16 @@ exports.handler = async options => {
           isMigratingApp: true,
         });
 
-  let appName;
-  let preventProjectMigrations;
-  let listingInfo;
   try {
     const selectedApp = await fetchPublicAppMetadata(appId, accountId);
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
-    preventProjectMigrations = selectedApp.preventProjectMigrations;
-    listingInfo = selectedApp.listingInfo;
+    const preventProjectMigrations = selectedApp.preventProjectMigrations;
+    const listingInfo = selectedApp.listingInfo;
     if (preventProjectMigrations && listingInfo) {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
-    appName = selectedApp.name;
   } catch (error) {
     logApiErrorInstance(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
@@ -136,7 +142,8 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
+  logger.warn(i18n(`${i18nKey}.warning.title`));
+  logger.log('');
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
@@ -191,10 +198,9 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
-      const isListed = Boolean(listingInfo);
       trackCommandMetadataUsage(
         'migrate-app',
-        { projectName, appId, status, preventProjectMigrations, isListed },
+        { type: projectName, assetType: appId, successful: status },
         accountId
       );
 

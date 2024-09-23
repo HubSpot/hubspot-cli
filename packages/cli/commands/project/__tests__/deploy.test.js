@@ -423,7 +423,7 @@ describe('commands/project/deploy', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `The request in account ${accountId} failed due to a client error.`
+        `The request for 'project deploy' in account ${accountId} failed due to a client error.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);
