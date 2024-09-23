@@ -484,7 +484,6 @@ en:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
-            parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
         create:
@@ -513,13 +512,16 @@ en:
               describe: "Directory where project should be created"
             name:
               describe: "Project name (cannot be changed)"
+          header:
+            text: "Migrate an app to the projects framework"
+            link: "Learn more about migrating apps to the projects framework"
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
             done: "Converting app configuration to public-app.json component definition ... DONE"
             failure: "Converting app configuration to public-app.json component definition ... FAILED"
           warning:
-            title: "{{#bold}}Migrate {{appName}} to the projects framework?{{/bold}}"
+            title: "{{#bold}}You are about to migrate an app to the projects framework{{/bold}}"
             projectConversion: "{{#bold}}The selected app will be converted to a project component.{{/bold}}"
             appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
@@ -1006,7 +1008,9 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+      checkIfDefaultAccountIsSupported:
+        publicApp: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+        privateApp: "This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
       validateAccountOption:
         invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
         invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
@@ -1023,6 +1027,8 @@ en:
       createInitialBuildForNewProject:
         initialUploadMessage: "HubSpot Local Dev Server Startup"
         projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+      checkIfParentAccountIsAuthed:
+        notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
       config:
         srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
@@ -1218,7 +1224,7 @@ en:
           languageRequired: "Please select API sample app's language"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
-        enterLocation: "[--location] Where should the project be created?"
+        enterLocation: "[--location] Enter the folder to create the project in:"
         selectTemplate: "[--template] Choose a project template: "
         errors:
           nameRequired: "A project name is required"

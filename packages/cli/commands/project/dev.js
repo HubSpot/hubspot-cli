@@ -21,12 +21,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  uiAccountDescription,
-  uiBetaTag,
-  uiCommandReference,
-  uiLink,
-} = require('../../lib/ui');
+const { uiBetaTag, uiCommandReference, uiLink } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -45,13 +40,14 @@ const {
 const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
-  checkIfAppDeveloperAccount,
+  checkIfDefaultAccountIsSupported,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
-  validateAccountOption,
+  checkIfAccountFlagIsSupported,
+  checkIfParentAccountIsAuthed,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -115,12 +111,15 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId = options.account ? accountId : null;
 
+  // Check that the default account or flag option is valid for the type of app in this project
   if (options.account) {
-    validateAccountOption(accountConfig, hasPublicApps);
+    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
       targetProjectAccountId = accountConfig.parentAccountId;
     }
+  } else {
+    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
   }
 
   // The user is targeting an account type that we recommend developing on
@@ -130,25 +129,11 @@ exports.handler = async options => {
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
-      // Exit if the user has not authed the parent account in the config
-      if (!getAccountConfig(accountConfig.parentAccountId)) {
-        logger.error(
-          i18n(`${i18nKey}.errors.parentAccountNotConfigured`, {
-            accountId: accountConfig.parentAccountId,
-            accountIdentifier: uiAccountDescription(targetTestingAccountId),
-            authCommand: uiCommandReference(
-              `hs auth --account=${accountConfig.parentAccountId}`
-            ),
-          })
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      checkIfParentAccountIsAuthed(accountConfig);
       targetProjectAccountId = accountConfig.parentAccountId;
     } else {
       targetProjectAccountId = accountId;
     }
-  } else if (!targetProjectAccountId && hasPublicApps) {
-    checkIfAppDeveloperAccount(accountConfig);
   }
 
   let createNewSandbox = false;

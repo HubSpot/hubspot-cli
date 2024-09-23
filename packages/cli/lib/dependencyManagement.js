@@ -62,7 +62,7 @@ async function installPackagesInDirectory(packages, directory) {
             directory: relativeDir,
           }),
   });
-  let installCommand = `${DEFAULT_PACKAGE_MANAGER} --prefix=${directory} install`;
+  let installCommand = `${DEFAULT_PACKAGE_MANAGER} install`;
 
   if (packages) {
     installCommand = `${installCommand} ${packages.join(' ')}`;
@@ -71,7 +71,7 @@ async function installPackagesInDirectory(packages, directory) {
   logger.debug(`Running ${installCommand}`);
   try {
     const exec = util.promisify(execAsync);
-    await exec(installCommand);
+    await exec(installCommand, { cwd: directory });
     SpinniesManager.succeed(spinner, {
       text: i18n(`${i18nKey}.installationSuccessful`, {
         directory: relativeDir,
