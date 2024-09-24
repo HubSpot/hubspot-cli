@@ -54,10 +54,9 @@ class ProjectLogsManager {
       throw new Error(i18n(`${i18nKey}.errors.noProjectConfig`));
     }
 
-    const { topLevelComponentMetadata } = await fetchProjectComponentsMetadata(
-      this.accountId,
-      this.projectId
-    );
+    const {
+      data: { topLevelComponentMetadata },
+    } = await fetchProjectComponentsMetadata(this.accountId, this.projectId);
 
     const apps = topLevelComponentMetadata.filter(componentMetadata => {
       const { type } = componentMetadata;
