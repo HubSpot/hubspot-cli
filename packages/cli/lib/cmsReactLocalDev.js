@@ -1,7 +1,5 @@
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 const { findProjectComponents } = require('./projectStructure');
-const path = require('path');
-const fs = require('fs');
 // cms-dev-server allowed flags
 // https://git.hubteam.com/HubSpot/cms-js-platform/blob/master/cms-dev-server/src/lib/cli.ts#L4
 const allowedFlags = [
@@ -13,8 +11,6 @@ const allowedFlags = [
   '--storybook',
   '--generateFieldsTypes',
 ];
-
-const packageName = '@hubspot/cms-dev-server';
 
 async function getCmsReactProject(projectDir) {
   const allComponents = await findProjectComponents(projectDir);
@@ -32,52 +28,26 @@ function validateArgs(args) {
   });
 }
 
-function isCmsDevServerPackageInstalled() {
-  try {
-    const localPath = path.resolve('node_modules', packageName);
-    if (fs.existsSync(localPath)) {
-      return true;
-    }
-
-    execSync(`npm list -g ${packageName}`);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 function cmsLocalDevServer(project) {
   const { path: cmsReactProjectPath } = project;
-  const additionalArgs = process.argv.slice(4);
-  const validArgs = validateArgs(additionalArgs);
+  const devServerFlags = process.argv.slice(4);
+  const validArgs = validateArgs(devServerFlags);
 
-  if (!isCmsDevServerPackageInstalled(packageName)) {
-    console.error(
-      `The ${packageName} package was not found. Please install it locally or globally before proceeding.`
-    );
-    process.exit(1);
-  }
+  const devServerArgs = [cmsReactProjectPath, ...validArgs];
 
-  let devServerBinary;
-  const localBinaryPath = path.resolve(
-    'node_modules',
-    '.bin',
-    'hs-cms-dev-server'
-  );
-
-  if (fs.existsSync(localBinaryPath)) {
-    devServerBinary = localBinaryPath;
-  } else {
-    devServerBinary = 'hs-cms-dev-server';
-  }
-
-  // Using the resolved binary path
+  // Adding -p to specify the package and the explicit binary name
   const devServerProcess = spawn(
-    devServerBinary,
-    [cmsReactProjectPath, ...validArgs],
+    'npx',
+    [
+      '-p',
+      '@hubspot/cms-dev-server',
+      '-y',
+      'hs-cms-dev-server',
+      ...devServerArgs,
+    ],
     {
       stdio: 'inherit',
-      shell: true, // Required if using the global binary name
+      shell: true,
     }
   );
 
