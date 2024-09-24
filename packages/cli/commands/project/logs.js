@@ -10,7 +10,7 @@ const {
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/');
+const { logError } = require('../../lib/errorHandlers/');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { uiBetaTag, uiLine, uiLink } = require('../../lib/ui');
@@ -103,13 +103,10 @@ exports.handler = async options => {
 
     logPreamble();
   } catch (e) {
-    logError(
-      e,
-      new ApiErrorContext({
-        accountId: getAccountId(),
-        projectName: ProjectLogsManager.projectName,
-      })
-    );
+    logError(e, {
+      accountId: getAccountId(),
+      projectName: ProjectLogsManager.projectName,
+    });
     return process.exit(EXIT_CODES.ERROR);
   }
 };

@@ -58,7 +58,7 @@ function createPlatformVersionError(err, subCategory) {
   uiLine();
 }
 
-function shouldSuppressError(err, context) {
+function shouldSuppressError(err, context = {}) {
   if (isMissingScopeError(err)) {
     logger.error(
       i18n(`${i18nKey}.missingScopeError`, {

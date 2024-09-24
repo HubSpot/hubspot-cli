@@ -50,24 +50,26 @@ describe('cli/lib/projectLogsManager', () => {
     getProjectConfig.mockResolvedValue(projectConfig);
     ensureProjectExists.mockResolvedValue(projectDetails);
     fetchProjectComponentsMetadata.mockResolvedValue({
-      topLevelComponentMetadata: [
-        {
-          type: {
-            name: 'PRIVATE_APP',
-          },
-          deployOutput: {
-            appId,
-          },
-          featureComponents: [
-            ...functions,
-            {
-              type: {
-                name: 'NOT_AN_APP_FUNCTION',
-              },
+      data: {
+        topLevelComponentMetadata: [
+          {
+            type: {
+              name: 'PRIVATE_APP',
             },
-          ],
-        },
-      ],
+            deployOutput: {
+              appId,
+            },
+            featureComponents: [
+              ...functions,
+              {
+                type: {
+                  name: 'NOT_AN_APP_FUNCTION',
+                },
+              },
+            ],
+          },
+        ],
+      },
     });
   });
 
