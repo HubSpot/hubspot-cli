@@ -13,15 +13,12 @@ const cleanup = () => {
 describe('hs project create', () => {
   beforeAll(() => {
     withAuth();
-    cleanup();
+    // cleanup();
   });
-  afterAll(cleanup);
-
-  // @ts-expect-error custom props on global
-  const { cli } = global;
+  // afterAll(cleanup);
 
   it('should create a project containing a private app', async () => {
-    await cli.execute([
+    await global.cli.execute([
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,

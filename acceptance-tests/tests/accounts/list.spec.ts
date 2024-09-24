@@ -1,15 +1,12 @@
-const { getParsedConfig, withAuth } = require('../helpers/auth');
-const { CONFIG_FILE_NAME } = require('../../lib/constants');
+import { getParsedConfig, withAuth } from '../helpers/auth';
 import { describe, beforeAll, it, expect } from 'vitest';
+import { CONFIG_FILE_NAME } from '../../lib/constants';
 
 describe('hs accounts list', () => {
-  // @ts-expect-error custom prop on global
-  const { cli } = global;
-
   beforeAll(withAuth);
 
   it('should update the default account', async () => {
-    const val = await cli.execute([
+    const val = await global.cli.execute([
       'accounts',
       'list',
       `--c="${CONFIG_FILE_NAME}"`,

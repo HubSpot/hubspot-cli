@@ -8,15 +8,6 @@ export default defineConfig({
     setupFiles: ['./setup'],
     include: ['./**/*.spec.ts'],
     exclude: ['./helpers/**/*'],
-    env: {
-      ACCOUNT_ID: '123456',
-      PERSONAL_ACCESS_KEY: 'asdfsadfasdf',
-      CLI_VERSION: 'latest',
-    },
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
+    fileParallelism: false,
   },
 });

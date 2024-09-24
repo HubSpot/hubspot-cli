@@ -1,11 +1,7 @@
 import yaml from 'js-yaml';
-
 import rimraf from 'rimraf';
-
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-
-import * as cmd from './cmd';
-
+import { ENTER } from './cmd';
 import { CONFIG_FILE_NAME } from '../../lib/constants';
 
 let PARSED_CONFIG_YAML;
@@ -14,14 +10,14 @@ export async function initializeAuth() {
   try {
     await global.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],
-      [cmd.ENTER, global.config.personalAccessKey, cmd.ENTER, cmd.ENTER]
+      [ENTER, global.config.personalAccessKey, ENTER, ENTER]
     );
 
     PARSED_CONFIG_YAML = yaml.load(readFileSync(CONFIG_FILE_NAME, 'utf8'));
 
     rimraf.sync(CONFIG_FILE_NAME);
   } catch (e) {
-    throw new Error('Failed to initalize CLI config & authentication');
+    throw new Error('Failed to initialize CLI config & authentication');
   }
 }
 

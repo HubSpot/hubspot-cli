@@ -1,26 +1,18 @@
-import * as cmd from './helpers/cmd';
-import { describe, beforeAll, it, expect } from 'vitest';
+import { ENTER } from './helpers/cmd';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CONFIG_FILE_NAME } from '../lib/constants';
-import rimraf from 'rimraf';
 import { existsSync, readFileSync } from 'fs';
 import yaml from 'js-yaml';
 
 describe('hs init', () => {
-  // @ts-expect-error custom props on global
-  const { cli, config } = global;
-
-  beforeAll(() => {
-    rimraf.sync(CONFIG_FILE_NAME);
-  });
-
   it('should begin with no config file present', async () => {
     expect(existsSync(CONFIG_FILE_NAME)).toBe(false);
   });
 
   it('should create a new config file', async () => {
-    await cli.execute(
+    await global.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],
-      [config.personalAccessKey, cmd.ENTER, 'QA', cmd.ENTER]
+      [global.config.personalAccessKey, ENTER, 'QA', ENTER]
     );
 
     expect(existsSync(CONFIG_FILE_NAME)).toBe(true);
@@ -30,7 +22,7 @@ describe('hs init', () => {
     expect(
       yaml.load(readFileSync(CONFIG_FILE_NAME, 'utf8')).portals[0]
         .personalAccessKey
-    ).toEqual(config.personalAccessKey);
+    ).toEqual(global.config.personalAccessKey);
   });
 
   it('should populate the config file with the correct defaultPortal', async () => {
