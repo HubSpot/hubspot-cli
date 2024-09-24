@@ -5,7 +5,7 @@
   "private": true,
   "homepage": "https://github.com/HubSpot/hubspot-cli#readme",
   "license": "ISC",
-  "main": "tests/setup.ts",
+  "main": "setup.ts",
   "type": "module",
   "directories": {
     "lib": "lib"
@@ -19,8 +19,9 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test-watch": "vitest",
-    "test-headless": "vitest run"
+    "test-debug": "DEBUG=true vitest run",
+    "test-headless": "HEADLESS=true vitest run",
+    "test-qa": "qa=true vitest run"
   },
   "bugs": {
     "url": "https://github.com/HubSpot/hubspot-cli/issues"

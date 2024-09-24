@@ -1,9 +1,10 @@
-import { ENTER } from './helpers/cmd';
+import { ENTER } from '../lib/cmd';
 
 import { existsSync } from 'fs';
-import { withAuth } from './helpers/auth';
+import { withAuth } from '../lib/auth';
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import rimraf from 'rimraf';
+import TestState from '../lib/testState';
 
 const FOLDERS = {
   module: {
@@ -54,14 +55,14 @@ describe('hs create', () => {
 
   it('should require an argument', async () => {
     try {
-      await global.cli.execute(['create']);
+      await TestState.cli.execute(['create']);
     } catch (out) {
       expect(out).toContain('Not enough non-option arguments');
     }
   });
 
   it('creates a module', async () => {
-    await global.cli.execute(
+    await TestState.cli.execute(
       ['create', 'module', FOLDERS.module.name],
       ['label', ENTER, ENTER, ENTER, 'y', ENTER]
     );
@@ -70,7 +71,7 @@ describe('hs create', () => {
   });
 
   it('creates a template', async () => {
-    await global.cli.execute(
+    await TestState.cli.execute(
       ['create', 'template', FOLDERS.template.name],
       [ENTER]
     );
@@ -78,20 +79,20 @@ describe('hs create', () => {
   });
 
   it('website-theme', async () => {
-    await global.cli.execute(['create', 'website-theme']);
+    await TestState.cli.execute(['create', 'website-theme']);
     expect(existsSync(FOLDERS.websiteTheme.folder)).toBe(true);
   });
 
   it('react-app', async () => {
-    await global.cli.execute(['create', 'react-app']);
+    await TestState.cli.execute(['create', 'react-app']);
     expect(existsSync(FOLDERS.reactApp.folder)).toBe(true);
   });
   it('vue-app', async () => {
-    await global.cli.execute(['create', 'vue-app']);
+    await TestState.cli.execute(['create', 'vue-app']);
     expect(existsSync(FOLDERS.vueApp.folder)).toBe(true);
   });
   it('webpack-serverless', async () => {
-    await global.cli.execute(['create', 'webpack-serverless']);
+    await TestState.cli.execute(['create', 'webpack-serverless']);
     expect(existsSync(FOLDERS.webpackServerless.folder)).toBe(true);
   });
 
@@ -99,7 +100,7 @@ describe('hs create', () => {
   // I verified it's just the test though, not the code, so
   // instead we just check for some output to make sure the command runs
   it('api-sample', async () => {
-    const out = await global.cli.execute(
+    const out = await TestState.cli.execute(
       ['create', 'api-sample', 'api-sample'],
       [ENTER, ENTER]
     );
@@ -107,12 +108,12 @@ describe('hs create', () => {
   });
 
   it('app', async () => {
-    await global.cli.execute(['create', 'app']);
+    await TestState.cli.execute(['create', 'app']);
     expect(existsSync(FOLDERS.app.folder)).toBe(true);
   });
 
   it('function', async () => {
-    await global.cli.execute(
+    await TestState.cli.execute(
       ['create', 'function'],
       [
         FOLDERS.function.name,

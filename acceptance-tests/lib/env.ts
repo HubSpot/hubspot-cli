@@ -1,14 +1,10 @@
-// @ts-nocheck Fix the issues
-import path from 'path';
-import dotEnv from 'dotenv';
+import * as path from 'path';
+import * as dotEnv from 'dotenv';
 import { existsSync } from 'fs';
 import { DEFAULT_CLI_PATH } from './constants.js';
+import { TestConfig } from './types';
 
-let dotEnvConfig;
-
-(() => {
-  dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
-})();
+let dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
 
 const getTruthyValuesOnly = obj => {
   const truthyValuesObj = {};
@@ -23,36 +19,26 @@ const getTruthyValuesOnly = obj => {
   return truthyValuesObj;
 };
 
-let argsOverrides = {};
-
-const getEnvValue = envVariable => {
+const getEnvValue = (envVariable: string) => {
   return (
     (dotEnvConfig.parsed && dotEnvConfig.parsed[envVariable]) ||
     process.env[envVariable]
   );
 };
 
-export const setArgsOverrides = args => {
-  args.portalId && (argsOverrides.portalId = args.portalId);
-  args.cliPath && (argsOverrides.cliPath = args.cliPath);
-  args.cliVersion && (argsOverrides.cliVersion = args.cliVersion);
-  args.personalAccessKey &&
-    (argsOverrides.personalAccessKey = args.personalAccessKey);
-  argsOverrides.qa = args.qa;
-  argsOverrides.debug = args.debug;
-  argsOverrides.headless = !!args.headless;
-};
-
-const envOverrides = getTruthyValuesOnly({
+const envOverrides: TestConfig = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
   cliVersion: getEnvValue('CLI_VERSION'),
-});
+  debug: getEnvValue('DEBUG'),
+  headless: getEnvValue('HEADLESS'),
+  qa: getEnvValue('QA'),
+}) as TestConfig;
 
-export const getTestConfig = () => {
+export const getTestConfig = (): TestConfig => {
   // Command-line Args > Env vars
-  const config = Object.assign({}, envOverrides, argsOverrides);
+  const config: TestConfig = { ...envOverrides };
 
   if (!config.portalId) {
     throw new Error(

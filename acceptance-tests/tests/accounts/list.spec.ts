@@ -1,12 +1,13 @@
-import { getParsedConfig, withAuth } from '../helpers/auth';
+import { getParsedConfig, withAuth } from '../../lib/auth';
 import { describe, beforeAll, it, expect } from 'vitest';
 import { CONFIG_FILE_NAME } from '../../lib/constants';
+import TestState from '../../lib/testState';
 
 describe('hs accounts list', () => {
   beforeAll(withAuth);
 
   it('should update the default account', async () => {
-    const val = await global.cli.execute([
+    const val = await TestState.cli.execute([
       'accounts',
       'list',
       `--c="${CONFIG_FILE_NAME}"`,

@@ -1,9 +1,10 @@
 import { existsSync } from 'fs';
 import { describe, beforeAll, it, expect } from 'vitest';
-import { ENTER } from './helpers/cmd';
+import { ENTER } from '../lib/cmd';
 
 import { CONFIG_FILE_NAME } from '../lib/constants';
-import { withAuth } from './helpers/auth';
+import { withAuth } from '../lib/auth';
+import TestState from '../lib/testState';
 
 describe('hs auth', () => {
   beforeAll(withAuth);
@@ -13,9 +14,9 @@ describe('hs auth', () => {
   });
 
   it('should update the tokens for the existing configured account', async () => {
-    await global.cli.execute(
+    await TestState.cli.execute(
       ['auth', `--c="${CONFIG_FILE_NAME}"`],
-      [ENTER, global.config.personalAccessKey, ENTER]
+      [ENTER, TestState.getPAK(), ENTER]
     );
 
     expect(existsSync(CONFIG_FILE_NAME)).toBe(true);

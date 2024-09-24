@@ -1,18 +1,22 @@
-import { ENTER } from './helpers/cmd';
-import { describe, it, expect, beforeEach } from 'vitest';
+vi.mock('open');
+
+import { getInitPromptSequence } from '../lib/prompt';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CONFIG_FILE_NAME } from '../lib/constants';
 import { existsSync, readFileSync } from 'fs';
 import yaml from 'js-yaml';
+import TestState from '../lib/testState';
 
 describe('hs init', () => {
+  const accountName = 'QA';
   it('should begin with no config file present', async () => {
     expect(existsSync(CONFIG_FILE_NAME)).toBe(false);
   });
 
   it('should create a new config file', async () => {
-    await global.cli.execute(
+    await TestState.cli.execute(
       ['init', `--c="${CONFIG_FILE_NAME}"`],
-      [global.config.personalAccessKey, ENTER, 'QA', ENTER]
+      getInitPromptSequence(TestState.getPAK(), accountName)
     );
 
     expect(existsSync(CONFIG_FILE_NAME)).toBe(true);
@@ -22,11 +26,11 @@ describe('hs init', () => {
     expect(
       yaml.load(readFileSync(CONFIG_FILE_NAME, 'utf8')).portals[0]
         .personalAccessKey
-    ).toEqual(global.config.personalAccessKey);
+    ).toEqual(TestState.getPAK());
   });
 
   it('should populate the config file with the correct defaultPortal', async () => {
     const config = yaml.load(readFileSync(CONFIG_FILE_NAME, 'utf8'));
-    expect(config.defaultPortal).toEqual('QA');
+    expect(config.defaultPortal).toEqual(accountName);
   });
 });
