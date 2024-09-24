@@ -57,9 +57,8 @@ function executeWithInput(
     inputs = [];
   }
 
-  if (config.headless) {
-    opts.env = { BROWSER: 'none' };
-  }
+  // Prevent the browser from opening when `open` is called
+  opts.env = { BROWSER: 'none' };
 
   const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
   const childProcess = createProcess(

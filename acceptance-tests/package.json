@@ -20,7 +20,6 @@
   "scripts": {
     "test": "vitest run",
     "test-debug": "DEBUG=true vitest run",
-    "test-headless": "HEADLESS=true vitest run",
     "test-qa": "qa=true vitest run"
   },
   "bugs": {

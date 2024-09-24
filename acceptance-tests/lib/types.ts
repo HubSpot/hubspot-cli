@@ -4,7 +4,6 @@ export interface TestConfig {
   cliPath: string;
   personalAccessKey: string;
   portalId: string;
-  headless: boolean;
   qa: boolean;
 }
 

@@ -32,7 +32,6 @@ const envOverrides: TestConfig = getTruthyValuesOnly({
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
   cliVersion: getEnvValue('CLI_VERSION'),
   debug: getEnvValue('DEBUG'),
-  headless: getEnvValue('HEADLESS'),
   qa: getEnvValue('QA'),
 }) as TestConfig;
 
