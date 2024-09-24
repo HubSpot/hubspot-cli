@@ -1,5 +1,7 @@
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const { findProjectComponents } = require('./projectStructure');
+const path = require('path');
+const fs = require('fs');
 // cms-dev-server allowed flags
 // https://git.hubteam.com/HubSpot/cms-js-platform/blob/master/cms-dev-server/src/lib/cli.ts#L4
 const allowedFlags = [
@@ -11,6 +13,9 @@ const allowedFlags = [
   '--storybook',
   '--generateFieldsTypes',
 ];
+
+const packageName = '@hubspot/cms-dev-server';
+
 async function getCmsReactProject(projectDir) {
   const allComponents = await findProjectComponents(projectDir);
   return allComponents.filter(component => component.isCmsReactProject);
@@ -27,25 +32,57 @@ function validateArgs(args) {
   });
 }
 
+function isCmsDevServerPackageInstalled() {
+  try {
+    const localPath = path.resolve('node_modules', packageName);
+    if (fs.existsSync(localPath)) {
+      return true;
+    }
+
+    execSync(`npm list -g ${packageName}`);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function cmsLocalDevServer(project) {
   const { path: cmsReactProjectPath } = project;
-  // Grab all args after 'project dev' to pass through to the cms-dev-server
   const additionalArgs = process.argv.slice(4);
   const validArgs = validateArgs(additionalArgs);
-  const devServerArgs = [cmsReactProjectPath, ...validArgs];
 
-  // Alternative approach to having an explicit dep
+  if (!isCmsDevServerPackageInstalled(packageName)) {
+    console.error(
+      `The ${packageName} package was not found. Please install it locally or globally before proceeding.`
+    );
+    process.exit(1);
+  }
+
+  let devServerBinary;
+  const localBinaryPath = path.resolve(
+    'node_modules',
+    '.bin',
+    'hs-cms-dev-server'
+  );
+
+  if (fs.existsSync(localBinaryPath)) {
+    devServerBinary = localBinaryPath;
+  } else {
+    devServerBinary = 'hs-cms-dev-server';
+  }
+
+  // Using the resolved binary path
   const devServerProcess = spawn(
-    'npx',
-    ['hs-cms-dev-server', ...devServerArgs],
+    devServerBinary,
+    [cmsReactProjectPath, ...validArgs],
     {
       stdio: 'inherit',
-      shell: true,
+      shell: true, // Required if using the global binary name
     }
   );
 
   devServerProcess.on('close', code => {
-    console.log(`projects dev server exited with code ${code}`);
+    console.log(`Project dev server exited with code ${code}`);
     process.exit(code);
   });
 }
