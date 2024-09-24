@@ -20,7 +20,8 @@
   "scripts": {
     "test": "vitest run",
     "test-debug": "DEBUG=true vitest run",
-    "test-qa": "qa=true vitest run"
+    "test-ci": "CI=true vitest run",
+    "test-qa": "QA=true vitest run"
   },
   "bugs": {
     "url": "https://github.com/HubSpot/hubspot-cli/issues"
