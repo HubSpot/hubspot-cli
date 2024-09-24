@@ -1,6 +1,0 @@
-{
-  "npmClient": "yarn",
-  "useWorkspaces": true,
-  "packages": ["packages/*", "acceptance-tests"],
-  "version": "5.4.1-beta.0"
-}

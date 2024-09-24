@@ -21,7 +21,7 @@ jobs:
           yarn lint
       - name: Circular dependency check
         run: |
-          yarn run madge --circular packages
+          yarn run madge --circular .
       - name: Test
         run: |
           yarn test

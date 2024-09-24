@@ -4,8 +4,6 @@
 Publishing Releases
 ===================
 
-We're using [lerna][lerna] to make managing multiple packages in the same repos easier.
-
 Before releasing a new version, it is a good idea to release a prerelease so that folks can test out the changes.
 
 ## Publishing a new version

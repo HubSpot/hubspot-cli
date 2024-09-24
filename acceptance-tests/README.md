@@ -15,7 +15,7 @@ To setup these tests, there are two required arguments and one optional one:
 1. The ID of a HubSpot account that you are a user in
 2. Your generated personal access key in that account (available in [personal access key ui](https://app.hubspot.com/l/personal-access-key))
 3. [Optional] A path to an instance of the CLI. The test runner will execute the commands against this provided instance
-   - The default behavior is to use `../packages/cli/bin/hs`
+   - The default behavior is to use `../bin/hs`
 
 ### Configuration
 
