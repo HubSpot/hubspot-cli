@@ -1,6 +1,6 @@
 # @hubspot/cli
 
-[![Official Release](https://img.shields.io/npm/v/@hubspot/cli/latest?label=Official%20Release)](https://www.npmjs.com/package/@hubspot/cli) [![Latest Version](https://img.shields.io/github/lerna-json/v/HubSpot/hubspot-cms-tools?label=Latest%20Version)](https://www.npmjs.com/package/@hubspot/cli?activeTab=versions)
+[![Official Release](https://img.shields.io/npm/v/@hubspot/cli/latest?label=Official%20Release)](https://www.npmjs.com/package/@hubspot/cli) [![Latest Version](https://img.shields.io/github/v/tag/hubspot/hubspot-cli?label=Latest%20Version)](https://www.npmjs.com/package/@hubspot/cli?activeTab=versions)
 
 A CLI for HubSpot developers to enable local development and automation. [Learn more about building on HubSpot](https://developers.hubspot.com).
 

@@ -9,14 +9,6 @@ To contribute, fork this repository and create a new branch. Then create a PR. F
 yarn
 ```
 
-* Bootstrap `lerna`
-
-In order to manage multiple npm packages in the same Github repos, we use [lerna](https://lerna.js.org/).
-
-```bash
-yarn lerna bootstrap
-````
-
 * To test a command
 
 First, you will need to create a config for the accounts that you want to be able to test using.

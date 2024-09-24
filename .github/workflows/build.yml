@@ -13,12 +13,6 @@ jobs:
       - name: Install deps
         run: |
           yarn install
-      - name: Bootstrap packages
-        run: |
-          yarn lerna bootstrap
-      - name: Force local package symlinks
-        run: |
-          yarn lerna link --force-local
       - name: Verify package dependencies
         run: |
           yarn check-deps

@@ -51,7 +51,7 @@ yarn run-tests --a=123456789 --pak="*********" --c=hs
 
 ### Running Locally
 
-1. Run `lerna bootstrap` to install dependencies
+1. Run `yarn` to install dependencies
 2. Run `yarn test-cli` from the root of the CLI repo
 
 **NOTE:** Include the `--debug` flag for more verbose output

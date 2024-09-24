@@ -5,7 +5,6 @@ coverage
 hubspot.config.yml
 hubspot.config.yaml
 hs-acceptance-test.config.yml
-lerna-debug.log
 npm-debug.log
 npm-debug.log.*
 *.log
