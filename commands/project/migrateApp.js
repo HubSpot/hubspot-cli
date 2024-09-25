@@ -49,7 +49,7 @@ const {
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -59,6 +59,16 @@ exports.handler = async options => {
   const accountName = uiAccountDescription(accountId);
 
   trackCommandUsage('migrate-app', {}, accountId);
+
+  logger.log('');
+  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.header.link`),
+      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
+    )
+  );
+  logger.log('');
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
@@ -82,7 +92,6 @@ exports.handler = async options => {
           isMigratingApp: true,
         });
 
-  let appName;
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(
       appId,
@@ -96,7 +105,6 @@ exports.handler = async options => {
       logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
       process.exit(EXIT_CODES.ERROR);
     }
-    appName = selectedApp.name;
   } catch (error) {
     logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
@@ -134,7 +142,8 @@ exports.handler = async options => {
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
+  logger.warn(i18n(`${i18nKey}.warning.title`));
+  logger.log('');
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');

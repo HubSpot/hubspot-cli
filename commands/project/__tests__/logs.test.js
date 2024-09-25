@@ -4,10 +4,9 @@ jest.mock('../../../lib/validation');
 jest.mock('../../../lib/projectLogsManager');
 jest.mock('../../../lib/prompts/projectsLogsPrompt');
 jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/errorHandlers/apiErrors');
 jest.mock('../../../lib/ui/table');
 jest.mock('../../../lib/ui');
-jest.mock('../../../lib/errorHandlers/apiErrors');
+jest.mock('../../../lib/errorHandlers');
 
 // Deps where we don't want mocks
 const libUi = jest.requireActual('../../../lib/ui');
@@ -27,7 +26,6 @@ const {
 const { getTableContents, getTableHeader } = require('../../../lib/ui/table');
 
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
 
 const {
   handler,
@@ -36,6 +34,7 @@ const {
   builder,
 } = require('../logs');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
+const { logError } = require('../../../lib/errorHandlers');
 
 describe('commands/project/logs', () => {
   let processExitSpy;
@@ -292,8 +291,8 @@ describe('commands/project/logs', () => {
 
       await handler({});
 
-      expect(logApiErrorInstance).toHaveBeenCalledTimes(1);
-      expect(logApiErrorInstance).toHaveBeenCalledWith(error, {
+      expect(logError).toHaveBeenCalledTimes(1);
+      expect(logError).toHaveBeenCalledWith(error, {
         accountId: accountId,
         projectName: ProjectLogsManager.projectName,
       });
