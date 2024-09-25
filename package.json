@@ -33,16 +33,13 @@
   "devDependencies": {
     "axios": "^1.7.2",
     "mock-stdin": "^1.0.0",
-    "depcheck": "1.3.1",
     "eslint": "7.32.0",
     "husky": "^1.3.1",
     "lint-staged": "^10.5.4",
     "madge": "^6.1.0",
-    "prettier": "^1.19.1",
-    "sass": "~1.29.0"
+    "prettier": "^1.19.1"
   },
   "scripts": {
-    "check-deps": "node bin/depcheck.js",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",
     "test": "jest",
@@ -70,9 +67,6 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "resolutions": {
-    "depcheck/sass": "~1.29.0"
   },
   "engines": {
     "node": ">=18"

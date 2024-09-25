@@ -15,7 +15,7 @@ jobs:
           yarn install
       - name: Verify package dependencies
         run: |
-          yarn check-deps
+          npx depcheck
       - name: Lint
         run: |
           yarn lint
