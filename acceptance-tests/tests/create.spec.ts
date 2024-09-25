@@ -1,10 +1,9 @@
-import { ENTER } from '../lib/cmd';
+import { ENTER } from '../lib/prompt';
 
 import { existsSync } from 'fs';
-import { withAuth } from '../lib/auth';
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import rimraf from 'rimraf';
-import TestState from '../lib/testState';
+import { TestState } from '../lib/testState';
 
 const FOLDERS = {
   module: {
@@ -47,22 +46,29 @@ const cleanup = () => {
 };
 
 describe('hs create', () => {
-  beforeAll(() => {
-    withAuth();
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
     cleanup();
   });
-  afterAll(cleanup);
+
+  afterAll(() => {
+    testState.cleanup();
+    cleanup();
+  });
 
   it('should require an argument', async () => {
     try {
-      await TestState.cli.execute(['create']);
+      await testState.cli.execute(['create']);
     } catch (out) {
       expect(out).toContain('Not enough non-option arguments');
     }
   });
 
   it('creates a module', async () => {
-    await TestState.cli.execute(
+    await testState.cli.execute(
       ['create', 'module', FOLDERS.module.name],
       ['label', ENTER, ENTER, ENTER, 'y', ENTER]
     );
@@ -71,7 +77,7 @@ describe('hs create', () => {
   });
 
   it('creates a template', async () => {
-    await TestState.cli.execute(
+    await testState.cli.execute(
       ['create', 'template', FOLDERS.template.name],
       [ENTER]
     );
@@ -79,20 +85,20 @@ describe('hs create', () => {
   });
 
   it('website-theme', async () => {
-    await TestState.cli.execute(['create', 'website-theme']);
+    await testState.cli.execute(['create', 'website-theme']);
     expect(existsSync(FOLDERS.websiteTheme.folder)).toBe(true);
   });
 
   it('react-app', async () => {
-    await TestState.cli.execute(['create', 'react-app']);
+    await testState.cli.execute(['create', 'react-app']);
     expect(existsSync(FOLDERS.reactApp.folder)).toBe(true);
   });
   it('vue-app', async () => {
-    await TestState.cli.execute(['create', 'vue-app']);
+    await testState.cli.execute(['create', 'vue-app']);
     expect(existsSync(FOLDERS.vueApp.folder)).toBe(true);
   });
   it('webpack-serverless', async () => {
-    await TestState.cli.execute(['create', 'webpack-serverless']);
+    await testState.cli.execute(['create', 'webpack-serverless']);
     expect(existsSync(FOLDERS.webpackServerless.folder)).toBe(true);
   });
 
@@ -100,7 +106,7 @@ describe('hs create', () => {
   // I verified it's just the test though, not the code, so
   // instead we just check for some output to make sure the command runs
   it('api-sample', async () => {
-    const out = await TestState.cli.execute(
+    const out = await testState.cli.execute(
       ['create', 'api-sample', 'api-sample'],
       [ENTER, ENTER]
     );
@@ -108,12 +114,12 @@ describe('hs create', () => {
   });
 
   it('app', async () => {
-    await TestState.cli.execute(['create', 'app']);
+    await testState.cli.execute(['create', 'app']);
     expect(existsSync(FOLDERS.app.folder)).toBe(true);
   });
 
   it('function', async () => {
-    await TestState.cli.execute(
+    await testState.cli.execute(
       ['create', 'function'],
       [
         FOLDERS.function.name,

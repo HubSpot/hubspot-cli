@@ -1,18 +1,24 @@
-import { CONFIG_FILE_NAME } from '../lib/constants';
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 
-import { describe, beforeAll, it, expect } from 'vitest';
-
-import { withAuth } from '../lib/auth';
-import TestState from '../lib/testState';
+import { TestState } from '../lib/testState';
 
 describe('hs list', () => {
-  beforeAll(withAuth);
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
+  });
+
+  afterAll(() => {
+    testState.cleanup();
+  });
 
   it('should print the correct output', async () => {
-    let val = await TestState.cli.execute([
+    let val = await testState.cli.execute([
       'list',
-      `--c="${CONFIG_FILE_NAME}"`,
+      `--c="${testState.getTestConfigFileName()}"`,
     ]);
     expect(val).toContain('CLI_TEST_TEMPLATE.html');
-  }, 20000);
+  });
 });

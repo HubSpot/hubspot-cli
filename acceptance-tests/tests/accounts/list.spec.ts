@@ -1,20 +1,27 @@
-import { getParsedConfig, withAuth } from '../../lib/auth';
-import { describe, beforeAll, it, expect } from 'vitest';
-import { CONFIG_FILE_NAME } from '../../lib/constants';
-import TestState from '../../lib/testState';
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import { TestState } from '../../lib/testState';
 
 describe('hs accounts list', () => {
-  beforeAll(withAuth);
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
+  });
+
+  afterAll(() => {
+    testState.cleanup();
+  });
 
   it('should update the default account', async () => {
-    const val = await TestState.cli.execute([
+    const val = await testState.cli.execute([
       'accounts',
       'list',
-      `--c="${CONFIG_FILE_NAME}"`,
+      `--c="${testState.getTestConfigFileName()}"`,
     ]);
 
-    const { defaultPortal } = getParsedConfig();
+    const { defaultPortal } = testState.getParsedConfig();
 
     expect(val).toContain(defaultPortal);
-  }, 20000);
+  });
 });

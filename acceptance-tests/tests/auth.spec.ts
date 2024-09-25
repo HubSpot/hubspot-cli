@@ -1,24 +1,31 @@
 import { existsSync } from 'fs';
-import { describe, beforeAll, it, expect } from 'vitest';
-import { ENTER } from '../lib/cmd';
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import { ENTER } from '../lib/prompt';
 
-import { CONFIG_FILE_NAME } from '../lib/constants';
-import { withAuth } from '../lib/auth';
-import TestState from '../lib/testState';
+import { TestState } from '../lib/testState';
 
 describe('hs auth', () => {
-  beforeAll(withAuth);
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
+  });
+
+  afterAll(() => {
+    testState.cleanup();
+  });
 
   it('should begin with a config file present', async () => {
-    expect(existsSync(CONFIG_FILE_NAME)).toBe(true);
+    expect(existsSync(testState.getTestConfigFileName())).toBe(true);
   });
 
   it('should update the tokens for the existing configured account', async () => {
-    await TestState.cli.execute(
-      ['auth', `--c="${CONFIG_FILE_NAME}"`],
-      [ENTER, TestState.getPAK(), ENTER]
+    await testState.cli.execute(
+      ['auth', `--c="${testState.getTestConfigFileName()}"`],
+      [ENTER, testState.getPAK(), ENTER]
     );
 
-    expect(existsSync(CONFIG_FILE_NAME)).toBe(true);
+    expect(existsSync(testState.getTestConfigFileName())).toBe(true);
   });
 });

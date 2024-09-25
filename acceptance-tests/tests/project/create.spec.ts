@@ -1,9 +1,7 @@
-import { CONFIG_FILE_NAME } from '../../lib/constants.js';
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
 import { existsSync } from 'fs';
-import { withAuth } from '../../lib/auth';
-import TestState from '../../lib/testState';
+import { TestState } from '../../lib/testState';
 
 const PROJECT_FOLDER = 'my-project';
 
@@ -12,20 +10,27 @@ const cleanup = () => {
 };
 
 describe('hs project create', () => {
-  beforeAll(() => {
-    withAuth();
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
     cleanup();
   });
-  afterAll(cleanup);
+
+  afterAll(() => {
+    cleanup();
+    testState.cleanup();
+  });
 
   it('should create a project containing a private app', async () => {
-    await TestState.cli.execute([
+    await testState.cli.execute([
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
-      `--c="${CONFIG_FILE_NAME}"`,
+      `--c="${testState.getTestConfigFileName()}"`,
     ]);
     expect(existsSync(PROJECT_FOLDER)).toBe(true);
   });

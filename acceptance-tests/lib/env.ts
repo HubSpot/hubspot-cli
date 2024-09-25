@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as dotEnv from 'dotenv';
 import { existsSync } from 'fs';
-import { DEFAULT_CLI_PATH } from './constants.js';
 import { TestConfig } from './types';
 
 let dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
@@ -52,7 +51,7 @@ export const getTestConfig = (): TestConfig => {
   }
 
   if (!config.cliPath && !config.cliVersion) {
-    const defaultPath = path.join(process.cwd(), DEFAULT_CLI_PATH);
+    const defaultPath = path.join(process.cwd(), '../packages/cli/bin/hs');
 
     if (existsSync(defaultPath)) {
       config.cliPath = defaultPath;
