@@ -16,11 +16,8 @@ describe('hs auth', () => {
     testState.cleanup();
   });
 
-  it('should begin with a config file present', async () => {
-    expect(existsSync(testState.getTestConfigFileName())).toBe(true);
-  });
-
   it('should update the tokens for the existing configured account', async () => {
+    expect(existsSync(testState.getTestConfigFileName())).toBe(true);
     await testState.cli.execute(
       ['auth', `--c="${testState.getTestConfigFileName()}"`],
       [ENTER, testState.getPAK(), ENTER]

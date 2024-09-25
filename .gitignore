@@ -13,10 +13,6 @@ npm-debug.log.*
 coverage
 .env
 
-# HubSpot config file
-hubspot.config.yml
-
-
 # Acceptance Tests
 acceptance-tests/my-project
 acceptance-tests/*.yml
