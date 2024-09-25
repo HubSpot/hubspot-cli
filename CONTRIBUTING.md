@@ -94,7 +94,6 @@ To merge, either create, or have a maintainer create a blank branch, and set you
 ## Documentation
 
 - [Technical Design](./docs/TechnicalDesign.md)
-- [Publishing Releases](./docs/PublishingReleases.md)
 - [Debugging](./docs/Debugging.md)
 
 ## Debugging tips
