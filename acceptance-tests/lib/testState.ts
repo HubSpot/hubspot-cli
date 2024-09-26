@@ -19,7 +19,7 @@ export class TestState {
     this.testConfigFileName = `hs-acceptance-test.config-${uuidv4()}.yml`;
   }
 
-  getPAK(): string | undefined {
+  getPAK() {
     return this.config?.personalAccessKey;
   }
 
