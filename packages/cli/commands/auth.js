@@ -47,6 +47,9 @@ const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const {
+  getDefaultAccount,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.auth';
 
@@ -172,7 +175,7 @@ exports.handler = async options => {
     const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
+        accountName: getDefaultAccount(config),
       })
     );
   }

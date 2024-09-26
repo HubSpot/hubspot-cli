@@ -19,6 +19,7 @@ const {
 const {
   getAccounts,
   getAccountIdentifier,
+  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.list';
@@ -103,7 +104,7 @@ exports.handler = async options => {
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
-      account: config.defaultPortal || config.defaultAccount,
+      account: getDefaultAccount(config),
     })
   );
   logger.log(i18n(`${i18nKey}.accounts`));

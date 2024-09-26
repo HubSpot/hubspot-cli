@@ -37,6 +37,7 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   getAccounts,
   getAccountIdentifier,
+  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
@@ -76,7 +77,7 @@ exports.handler = async options => {
     account: account || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(config.defaultPortal);
+    sandboxAccountId === getAccountId(getDefaultAccount(config));
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
