@@ -14,13 +14,16 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { uiAccountDescription } = require('./ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const {
+  getAccounts,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const config = getConfig();
   const id =
     appDeveloperAccountConfig.accountId || appDeveloperAccountConfig.portalId;
   const parentPortalId = getAccountId(id);
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   for (const portal of accountsList) {
     if (
       Boolean(portal.parentAccountId) &&

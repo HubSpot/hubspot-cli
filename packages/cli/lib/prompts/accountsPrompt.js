@@ -2,6 +2,9 @@ const { updateDefaultAccount } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
+const {
+  getAccounts,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const mapAccountChoices = portals =>
   portals.map(p => ({
@@ -12,7 +15,7 @@ const mapAccountChoices = portals =>
 const i18nKey = 'commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   const defaultAccount = config.defaultAccount || config.defaultPortal;
 
   const { default: selectedDefault } = await promptUser([
@@ -31,7 +34,7 @@ const selectAccountFromConfig = async (config, prompt) => {
 };
 
 const selectAndSetAsDefaultAccountPrompt = async config => {
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   const defaultAccount = config.defaultAccount || config.defaultPortal;
 
   const { default: selectedDefault } = await promptUser([

@@ -16,6 +16,9 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccounts,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.list';
 
@@ -89,7 +92,7 @@ exports.handler = async options => {
 
   const config = getConfig();
   const configPath = getConfigPath();
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
   portalData.unshift(

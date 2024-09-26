@@ -30,10 +30,13 @@ const {
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
+const {
+  getAccounts,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
@@ -79,7 +82,7 @@ exports.handler = async options => {
   );
 
   let parentAccountId;
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   for (const portal of accountsList) {
     if (
       portal.portalId === sandboxAccountId ||

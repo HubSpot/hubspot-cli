@@ -22,6 +22,9 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const {
+  getAccounts,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',
@@ -50,7 +53,7 @@ function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
   const id = parentAccountConfig.accountId || parentAccountConfig.portalId;
   const parentPortalId = getAccountId(id);
-  const accountsList = config.accounts || config.portals;
+  const accountsList = getAccounts(config);
   for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||
