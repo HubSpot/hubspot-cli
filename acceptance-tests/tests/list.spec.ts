@@ -15,7 +15,7 @@ describe('hs list', () => {
   });
 
   it('should print the correct output', async () => {
-    let val = await testState.cli.execute([
+    const val = await testState.cli.execute([
       'list',
       `--c="${testState.getTestConfigFileName()}"`,
     ]);

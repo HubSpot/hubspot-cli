@@ -3,7 +3,7 @@ import * as dotEnv from 'dotenv';
 import { existsSync } from 'fs';
 import { TestConfig } from './types';
 
-let dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
+const dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
 
 const getTruthyValuesOnly = obj => {
   const truthyValuesObj = {};
