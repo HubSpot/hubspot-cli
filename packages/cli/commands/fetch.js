@@ -17,6 +17,11 @@ const { i18n } = require('../lib/lang');
 const i18nKey = 'commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { getIsInProject } = require('../lib/projects');
+const {
+  fetchProjectAssetPrompt,
+} = require('../lib/prompts/fetchProjectAssetPrompt');
+const { uiFeatureHighlight } = require('../lib/ui');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -33,6 +38,23 @@ exports.handler = async options => {
   if (typeof src !== 'string') {
     logger.error(i18n(`${i18nKey}.errors.sourceRequired`));
     process.exit(EXIT_CODES.ERROR);
+  }
+
+  // If fetching the Elevate theme, check if the destination is in a project.
+  if ('@hubspot/elevate' === src) {
+    const inProject = getIsInProject(resolveLocalPath(dest));
+    // If not in a project, alert the user. Otherwise proceed with the fetch.
+    if (!inProject) {
+      const fetchAnyway = await fetchProjectAssetPrompt(src);
+      if (!fetchAnyway.continue) {
+        logger.log('');
+        uiFeatureHighlight(
+          ['projectCreateCommand'],
+          i18n(`${i18nKey}.info.createElevateProjectTitle`)
+        );
+        process.exit(EXIT_CODES.SUCCESS);
+      }
+    }
   }
 
   const accountId = getAccountId(options);

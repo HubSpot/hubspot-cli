@@ -47,6 +47,8 @@ exports.handler = async options => {
     options
   );
 
+  const { isHubSpotAsset } = template;
+
   trackCommandUsage('project-create', { type: template.name }, accountId);
 
   await createProjectConfig(
@@ -54,7 +56,8 @@ exports.handler = async options => {
     options.name || name,
     template,
     options.templateSource,
-    githubRef
+    githubRef,
+    accountId
   );
 
   logger.log('');
@@ -63,6 +66,7 @@ exports.handler = async options => {
     'projectDevCommand',
     'projectHelpCommand',
     'feedbackCommand',
+    isHubSpotAsset && 'projectUploadCommand',
     'sampleProjects',
   ]);
 };

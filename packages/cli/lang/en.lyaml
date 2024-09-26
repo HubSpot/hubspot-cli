@@ -280,6 +280,8 @@ en:
       describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
       errors:
         sourceRequired: "A source to fetch is required."
+      info:
+        createElevateProjectTitle: "Create a project and select the \"Elevate\" theme"
       options:
         staging:
           describe: "Retrieve staged changes for project"
@@ -1064,6 +1066,8 @@ en:
       logFeedbackMessage:
         feedbackHeader: "We'd love to hear your feedback!"
         feedbackMessage: "How are you liking the new projects and developer tools? \n > Run `{{#yellow}}hs feedback{{/yellow}}` to let us know what you think!\n"
+      errors:
+        downloadFileOrFolder: "Not all files in folder \"{{ src }}\" were successfully fetched. Run `{{#yellow}}{{ command }}{{/yellow}}` again to finish download"
     ui:
       betaTag: "{{#bold}}[BETA]{{/bold}}"
       betaWarning:
@@ -1196,6 +1200,8 @@ en:
           invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
       folderOverwritePrompt:
         overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
+      fetchProjectAssetPrompt:
+        fetchConfirm: "\"{{ assetPath }}\" requires a HubSpot project to work. Would you like to continue fetching without creating a project?"
       createTemplatePrompt:
         selectTemplate: "Select the type of template to create"
       createModulePrompt:
