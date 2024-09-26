@@ -23,10 +23,11 @@ jobs:
         run: npm install
       - name: Test Latest CLI Release
         run: |
-          npm run test-cli --cliVersion="latest"
+          npm run test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+          CLI_VERSION: "latest"
       - name: Release Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ always() && github.ref_name == 'main' }}
