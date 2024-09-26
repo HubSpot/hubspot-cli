@@ -47,7 +47,7 @@ exports.handler = async options => {
     options
   );
 
-  const isHubSpotAsset = template.path.startsWith('@hubspot');
+  const { isHubSpotAsset } = template;
 
   trackCommandUsage(
     'project-create',

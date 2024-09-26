@@ -50,7 +50,6 @@ const {
   ApiErrorContext,
 } = require('./errorHandlers/apiErrors');
 const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { DEFAULT_MODE } = require('@hubspot/local-dev-lib/constants/files');
 
 const i18nKey = 'lib.projects';
@@ -150,9 +149,9 @@ const createProjectConfig = async (
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
-  const isHubSpotAsset = template.path.startsWith('@hubspot');
+  const { isHubSpotAsset } = template;
 
-  // if template path starts with @hubspot download no-template project to add the @hubspot asset to.
+  // if template config is marked `isHubSpotAsset` download no-template project to fetch the @hubspot asset into it.
   if (isHubSpotAsset) {
     await downloadGithubRepoContents(
       HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
@@ -180,18 +179,29 @@ const createProjectConfig = async (
   }
 
   if (isHubSpotAsset) {
+    const assetPath = template.path;
+    const destinationPath = path.join(
+      projectPath,
+      template.insertPath,
+      template.name
+    );
     // fetch the @hubspot asset and place it in the new project folder
     try {
       // Fetch and write file/folder.
       await downloadFileOrFolder(
         accountId,
-        template.path,
-        path.join(projectPath, template.insertPath, template.name),
+        assetPath,
+        destinationPath,
         DEFAULT_MODE,
         false
       );
     } catch (err) {
-      logErrorInstance(err);
+      logger.error(
+        i18n(`${i18nKey}.errors.downloadFileOrFolder`, {
+          src: template.path,
+          command: `hs fetch ${assetPath} ${destinationPath}`,
+        })
+      );
       process.exit(EXIT_CODES.ERROR);
     }
   }
