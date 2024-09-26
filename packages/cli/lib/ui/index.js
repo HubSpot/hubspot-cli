@@ -8,6 +8,9 @@ const { i18n } = require('../lang');
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const UI_COLORS = {
   SORBET: '#FF8F59',
@@ -79,7 +82,7 @@ const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
   const message = `${account.name} [${
     HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
-  }] (${account.portalId || account.accountId})`;
+  }] (${getAccountIdentifier(account)})`;
   return bold ? chalk.bold(message) : message;
 };
 

@@ -23,6 +23,7 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.clean';
@@ -59,7 +60,7 @@ exports.handler = async options => {
   for (const account of filteredTestAccounts) {
     try {
       await accessTokenForPersonalAccessKey(
-        account.portalId || account.accountId,
+        getAccountIdentifier(account),
         true
       );
     } catch (error) {
@@ -95,7 +96,7 @@ exports.handler = async options => {
     logger.log(
       getTableContents(
         accountsToRemove.map(p => [
-          uiAccountDescription(p.portalId || p.accountId),
+          uiAccountDescription(getAccountIdentifier(p)),
         ]),
         { border: { bodyLeft: '  ' } }
       )

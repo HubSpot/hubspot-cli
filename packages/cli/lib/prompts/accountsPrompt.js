@@ -4,11 +4,12 @@ const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const mapAccountChoices = portals =>
   portals.map(p => ({
-    name: uiAccountDescription(p.portalId || p.accountId, false),
+    name: uiAccountDescription(getAccountIdentifier(p), false),
     value: p.name || p.portalId || p.accountId,
   }));
 

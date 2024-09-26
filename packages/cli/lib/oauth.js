@@ -11,6 +11,9 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;
@@ -86,7 +89,7 @@ const authorize = async oauthManager => {
 };
 
 const setupOauth = accountConfig => {
-  const id = accountConfig.accountId || accountConfig.portalId;
+  const id = getAccountIdentifier(accountConfig);
   const accountId = parseInt(id, 10);
   const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager({

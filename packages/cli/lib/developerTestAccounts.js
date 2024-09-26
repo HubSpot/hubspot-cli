@@ -16,12 +16,12 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
   const config = getConfig();
-  const id =
-    appDeveloperAccountConfig.accountId || appDeveloperAccountConfig.portalId;
+  const id = getAccountIdentifier(appDeveloperAccountConfig);
   const parentPortalId = getAccountId(id);
   const accountsList = getAccounts(config);
   for (const portal of accountsList) {

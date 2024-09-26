@@ -19,6 +19,9 @@ const {
   uiCommandDisabledBanner,
 } = require('./ui');
 const { isDevelopmentSandbox } = require('./accountTypes');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.sandbox.sync';
 
@@ -36,10 +39,9 @@ const syncSandbox = async ({
   syncTasks,
   slimInfoMessage = false,
 }) => {
-  const id = accountConfig.accountId || accountConfig.portalId;
+  const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
-  const parentId =
-    parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const parentId = getAccountIdentifier(parentAccountConfig);
   const parentAccountId = getAccountId(parentId);
   const isDevSandbox = isDevelopmentSandbox(accountConfig);
   SpinniesManager.init({

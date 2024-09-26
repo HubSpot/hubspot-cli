@@ -7,6 +7,7 @@ const {
 const { isSandbox } = require('../accountTypes');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
@@ -16,7 +17,7 @@ const mapSandboxAccountChoices = portals =>
     .filter(p => isSandbox(p))
     .map(p => {
       return {
-        name: uiAccountDescription(p.portalId || p.accountId, false),
+        name: uiAccountDescription(getAccountIdentifier(p), false),
         value: p.name || p.portalId || p.accountId,
       };
     });
@@ -26,7 +27,7 @@ const mapNonSandboxAccountChoices = portals =>
     .filter(p => !isSandbox(p))
     .map(p => {
       return {
-        name: `${p.name} (${p.portalId || p.accountId})`,
+        name: `${p.name} (${getAccountIdentifier(p)})`,
         value: p.name || p.portalId || p.accountId,
       };
     });

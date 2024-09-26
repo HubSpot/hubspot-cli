@@ -30,6 +30,9 @@ const { sandboxApiTypeMap, handleSandboxCreateError } = require('./sandboxes');
 const {
   handleDeveloperTestAccountCreateError,
 } = require('./developerTestAccounts');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 async function saveAccountToConfig({
   env,
@@ -103,7 +106,7 @@ async function buildNewAccount({
   SpinniesManager.init({
     succeedColor: 'white',
   });
-  const id = accountConfig.accountId || accountConfig.portalId;
+  const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
   const isSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||

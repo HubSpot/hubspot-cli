@@ -36,6 +36,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
@@ -84,10 +85,7 @@ exports.handler = async options => {
   let parentAccountId;
   const accountsList = getAccounts(config);
   for (const portal of accountsList) {
-    if (
-      portal.portalId === sandboxAccountId ||
-      portal.accountId === sandboxAccountId
-    ) {
+    if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {

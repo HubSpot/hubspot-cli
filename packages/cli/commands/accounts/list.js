@@ -18,6 +18,7 @@ const {
 } = require('@hubspot/local-dev-lib/constants/config');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.list';
@@ -36,7 +37,7 @@ const sortAndMapPortals = portals => {
           p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
     .forEach(portal => {
-      mappedPortalData[portal.portalId || portal.accountId] = [portal];
+      mappedPortalData[getAccountIdentifier(portal)] = [portal];
     });
   // Non-standard portals (sandbox, developer test account)
   portals
@@ -48,7 +49,7 @@ const sortAndMapPortals = portals => {
           p,
         ];
       } else {
-        mappedPortalData[p.portalId || p.accountId] = [p];
+        mappedPortalData[getAccountIdentifier(p)] = [p];
       }
     });
   return mappedPortalData;
@@ -58,7 +59,7 @@ const getPortalData = mappedPortalData => {
   const portalData = [];
   Object.entries(mappedPortalData).forEach(([key, set]) => {
     const hasParentPortal = set.filter(
-      p => p.portalId || p.accountId === parseInt(key, 10)
+      p => getAccountIdentifier(p) === parseInt(key, 10)
     )[0];
     set.forEach(portal => {
       let name = `${portal.name} [${
@@ -73,11 +74,7 @@ const getPortalData = mappedPortalData => {
           name = `↳ ${name}`;
         }
       }
-      portalData.push([
-        name,
-        portal.portalId || portal.accountId,
-        portal.authType,
-      ]);
+      portalData.push([name, getAccountIdentifier(portal), portal.authType]);
     });
   });
   return portalData;

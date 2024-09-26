@@ -12,14 +12,14 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchDeveloperTestAccounts,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
 const mapNestedAccount = accountConfig => ({
-  name: uiAccountDescription(
-    accountConfig.portalId || accountConfig.accountId,
-    false
-  ),
+  name: uiAccountDescription(getAccountIdentifier(accountConfig), false),
   value: {
     targetAccountId: getAccountId(accountConfig.name),
     createNestedAccount: false,
@@ -125,9 +125,7 @@ const selectDeveloperTestTargetAccountPrompt = async (
 
   const devTestAccounts = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
-    const accountIds = accounts.map(
-      account => account.portalId || account.accountId
-    );
+    const accountIds = accounts.map(account => getAccountIdentifier(account));
 
     devTestAccountsResponse.results.forEach(acct => {
       const inConfig = accountIds.includes(acct.id);

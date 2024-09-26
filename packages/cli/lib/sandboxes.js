@@ -24,6 +24,7 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
   getAccounts,
+  getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const syncTypes = {
@@ -51,7 +52,7 @@ const getSandboxTypeAsString = accountType => {
 
 function getHasSandboxesByType(parentAccountConfig, type) {
   const config = getConfig();
-  const id = parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const id = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(id);
   const accountsList = getAccounts(config);
   for (const portal of accountsList) {
@@ -76,10 +77,9 @@ function getSandboxLimit(error) {
 
 // Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
-  const parentId =
-    parentAccountConfig.accountId || parentAccountConfig.portalId;
+  const parentId = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(parentId);
-  const id = config.accountId || config.portalId;
+  const id = getAccountIdentifier(config);
   const portalId = getAccountId(id);
   const syncTypes = await fetchTypes(parentPortalId, portalId);
   if (!syncTypes) {
@@ -133,7 +133,7 @@ const getSyncTypesWithContactRecordsPrompt = async (
  * @returns {null}
  */
 const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
-  const id = accountConfig.accountId || accountConfig.portalId;
+  const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
   const usage = await getSandboxUsageLimits(accountId);
   if (!usage) {
