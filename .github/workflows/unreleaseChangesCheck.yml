@@ -32,17 +32,14 @@ jobs:
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-      - name: View unreleased changes
-        run: |
-          echo ${{env.MOST_RECENT_TAG}}
-          echo ${{env.LOG}}
-#      - name: Unreleased changes Slack Report
-#        uses: ravsamhq/notify-slack-action@v2
-#        with:
-#          status: ${{ job.status }}
-#          notify_when: 'success'
-#          notification_title: 'Unreleased changes in the CLI'
-#          message_format: '${{ env.LOG }}'
-#          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.MOST_RECENT_TAG}}...main|View in GitHub>'
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+      - name: Unreleased changes Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ env.LOG != '' }} # Only post if there is a log
+        with:
+          status: ${{ job.status }}
+          notify_when: 'success'
+          notification_title: 'Unreleased Changes in the CLI'
+          message_format: '${{ env.LOG }}'
+          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.MOST_RECENT_TAG}}...main|View in GitHub>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
