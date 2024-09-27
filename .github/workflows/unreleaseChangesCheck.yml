@@ -17,13 +17,11 @@ jobs:
           # Fetch all the release tags
           fetch-tags: true
       - name: Check for unreleased changes
-        run: |
-          export LOG=`git log $(git describe --tags --abbrev=0)..main --pretty=format:'- %s – @%al.' --no-merges`
-#          echo "$LOG"
-          
+        id: get-diff-log
+        run: echo "LOG=$(git log $(git describe --tags --abbrev=0)..main --pretty=format:'- %s – @%al.' --no-merges)" >> $GITHUB_OUTPUT
       - name: View Log
         run: |
-          echo "$LOG"
+          echo ${{ steps.vars.outputs.LOG }}
 #      - name: Unreleased changes Slack Report
 #        uses: ravsamhq/notify-slack-action@v2
 #        if: ${{ always() && github.ref_name == 'main' }}
