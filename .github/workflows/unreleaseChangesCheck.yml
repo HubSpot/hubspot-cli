@@ -1,0 +1,21 @@
+on:
+  schedule:
+    - cron: '0 9 * * *' # Run day at 9am
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check for unreleased changes
+        run: export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
+      - name: Unreleased changes Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+#        if: ${{ always() && github.ref_name == 'main' }}
+#        with:
+#          status: ${{ job.status }}
+#          notify_when: 'success'
+#          notification_title: 'CLI latest release failure'
+#          message_format: '*Unreleased CLI Changes*'
+#          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
