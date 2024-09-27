@@ -25,12 +25,10 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
       - name: Unreleased changes Slack Report
         uses: ravsamhq/notify-slack-action@v2
-        if: ${{ env.log }}
         with:
           status: ${{ job.status }}
           notify_when: 'success'
-          notification_title: 'CLI latest release failure'
+          notification_title: 'Unreleased changes in the CLI'
           message_format: '*Unreleased CLI Changes* \n  ${{ env.LOG }}'
-          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
