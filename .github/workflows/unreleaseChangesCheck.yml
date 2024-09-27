@@ -1,0 +1,42 @@
+on:
+  schedule:
+    - cron: '0 9 * * 1-5' # Run Monday through Friday at 9am
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Always checkout the main branch
+          ref: main
+          # Do a deep checkout
+          fetch-depth: 0
+          # Fetch all the release tags
+          fetch-tags: true
+      - name: Check for unreleased changes
+        id: get-diff-log
+        run: |
+          export MOST_RECENT_TAG=$(git describe --tags --abbrev=0);
+          echo $MOST_RECENT_TAG
+          
+          export LOG=`git log $MOST_RECENT_TAG..main --pretty=format:'- %s – @%al.' --no-merges`
+          echo $LOG
+          
+          echo "MOST_RECENT_TAG<<EOF" >> $GITHUB_ENV
+          echo $MOST_RECENT_TAG >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
+          echo "LOG<<EOF" >> $GITHUB_ENV
+          echo "$LOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Unreleased changes Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ env.LOG != '' }} # Only post if there is a log
+        with:
+          status: ${{ job.status }}
+          notify_when: 'success'
+          notification_title: 'Unreleased Changes in the CLI'
+          message_format: '${{ env.LOG }}'
+          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.MOST_RECENT_TAG}}...main|View in GitHub>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
