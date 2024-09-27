@@ -25,8 +25,7 @@ jobs:
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-      - name: Check for unreleased changes
-        id: get-diff-log
+      - name: View unreleased changes
         run: |
           echo ${{env.MOST_RECENT_TAG}}
           echo ${{env.LOG}}
