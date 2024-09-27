@@ -8,19 +8,13 @@ const { logError, ApiErrorContext } = require('./errorHandlers/index');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
-const {
-  isMissingScopeError,
-} = require('../../../../hubspot-local-dev-lib/dist/errors');
+const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors');
 const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
-} = require('../../../../hubspot-local-dev-lib/dist/constants/auth');
-const {
-  getAccountConfig,
-} = require('../../../../hubspot-local-dev-lib/dist/config');
-const {
-  fetchScopeData,
-} = require('../../../../hubspot-local-dev-lib/dist/api/localDevAuth');
+} = require('@hubspot/local-dev-lib/constants/auth');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { fetchScopeData } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const { i18n } = require('./lang');
 
 const TAIL_DELAY = 5000;
