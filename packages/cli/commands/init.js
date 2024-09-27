@@ -159,10 +159,15 @@ exports.handler = async options => {
       debugErrorAndContext(e);
     }
 
+    let newConfigPath = configPath;
+    if (!newConfigPath && !useHiddenConfig) {
+      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
+    }
+
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath,
+        configPath: newConfigPath,
       })
     );
     logger.success(
