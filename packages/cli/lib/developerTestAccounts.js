@@ -37,7 +37,7 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
 };
 
 const validateDevTestAccountUsageLimits = async accountConfig => {
-  const id = accountConfig.accountId || accountConfig.portalId;
+  const id = getAccountIdentifier(accountConfig);
   const accountId = getAccountId(id);
   const response = await fetchDeveloperTestAccounts(accountId);
   if (response) {
