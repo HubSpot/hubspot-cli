@@ -1,5 +1,9 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
+const {
+  getConfig,
+  getConfigPath,
+  getDefaultAccount,
+} = require('@hubspot/local-dev-lib/config');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
 const {
@@ -19,7 +23,6 @@ const {
 const {
   getAccounts,
   getAccountIdentifier,
-  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.list';

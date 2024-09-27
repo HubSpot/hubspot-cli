@@ -1,12 +1,10 @@
 const {
   getConfig,
   updateDefaultAccount,
+  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
-const {
-  getDefaultAccount,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
 

@@ -24,6 +24,7 @@ const {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
+  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
@@ -37,7 +38,6 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
   getAccounts,
   getAccountIdentifier,
-  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';

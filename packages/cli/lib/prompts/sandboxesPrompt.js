@@ -8,8 +8,8 @@ const { isSandbox } = require('../accountTypes');
 const {
   getAccounts,
   getAccountIdentifier,
-  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
+const { getDefaultAccount } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
 
