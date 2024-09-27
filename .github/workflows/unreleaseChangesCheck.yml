@@ -20,6 +20,7 @@ jobs:
         id: get-diff-log
         run: |
           export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
+          echo "LOG<<EOF" >> $GITHUB_ENV
           echo "LOG=$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: View Log
