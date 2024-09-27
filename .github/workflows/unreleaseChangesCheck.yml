@@ -19,21 +19,18 @@ jobs:
       - name: Check for unreleased changes
         id: get-diff-log
         run: |
-          export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
+          export LOG=`git log $(git describe --tags --abbrev=0)..main --pretty=format:'- %s – @%al.' --no-merges`
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-      - name: View Log
-        run: |
-          echo ${{ env.LOG }}
-#      - name: Unreleased changes Slack Report
-#        uses: ravsamhq/notify-slack-action@v2
-#        if: ${{ always() && github.ref_name == 'main' }}
-#        with:
-#          status: ${{ job.status }}
-#          notify_when: 'success'
-#          notification_title: 'CLI latest release failure'
-#          message_format: '*Unreleased CLI Changes*'
-#          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+      - name: Unreleased changes Slack Report
+        uses: ravsamhq/notify-slack-action@v2
+        if: ${{ always() && github.ref_name == 'main' }}
+        with:
+          status: ${{ job.status }}
+          notify_when: 'success'
+          notification_title: 'CLI latest release failure'
+          message_format: '*Unreleased CLI Changes* \n  ${{ env.LOG }}'
+          footer: '<{run_url}|View Run> | <https://www.npmjs.com/package/@hubspot/cli?activeTab=versions|View in NPM>'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
