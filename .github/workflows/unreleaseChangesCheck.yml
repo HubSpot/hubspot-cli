@@ -21,11 +21,11 @@ jobs:
         run: |
           export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
           echo "LOG<<EOF" >> $GITHUB_ENV
-          echo "LOG=$LOG" >> $GITHUB_ENV
+          echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: View Log
         run: |
-          echo ${{ steps.vars.outputs.LOG }}
+          echo ${{ env.LOG }}
 #      - name: Unreleased changes Slack Report
 #        uses: ravsamhq/notify-slack-action@v2
 #        if: ${{ always() && github.ref_name == 'main' }}
