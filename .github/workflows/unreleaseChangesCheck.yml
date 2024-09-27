@@ -19,7 +19,9 @@ jobs:
       - name: Check for unreleased changes
         id: get-diff-log
         run: |
-          export LOG=`git log $(git describe --tags --abbrev=0)..main --pretty=format:'- %s – @%al.' --no-merges`
+          export MOST_RECENT_TAG=$(git describe --tags --abbrev=0);
+          export LOG=`git log $(MOST_RECENT_TAG)..main --pretty=format:'- %s – @%al.' --no-merges`
+          echo "MOST_RECENT_TAG=$MOST_RECENT_TAG"
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
@@ -29,6 +31,8 @@ jobs:
           status: ${{ job.status }}
           notify_when: 'success'
           notification_title: 'Unreleased changes in the CLI'
-          message_format: '*Unreleased CLI Changes* \n  ${{ env.LOG }}'
+          message_format: '${{ env.LOG }}'
+          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.MOST_RECENT_TAG}}...main|View in GitHub>'
+
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
