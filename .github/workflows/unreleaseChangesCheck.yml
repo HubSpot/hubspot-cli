@@ -18,7 +18,9 @@ jobs:
           fetch-tags: true
       - name: Check for unreleased changes
         id: get-diff-log
-        run: echo "LOG=\"$(git log $(git describe --tags --abbrev=0)..main --pretty=format:'- %s – @%al.' --no-merges)\"" >> $GITHUB_ENV
+        run: |
+          export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
+          echo "LOG=$LOG" >> $GITHUB_ENV
       - name: View Log
         run: |
           echo ${{ steps.vars.outputs.LOG }}
