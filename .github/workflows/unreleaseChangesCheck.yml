@@ -21,7 +21,7 @@ jobs:
         run: |
           export MOST_RECENT_TAG=$(git describe --tags --abbrev=0);
           export LOG=`git log $(MOST_RECENT_TAG)..main --pretty=format:'- %s – @%al.' --no-merges`
-          echo "MOST_RECENT_TAG=$MOST_RECENT_TAG"
+          echo "MOST_RECENT_TAG=$MOST_RECENT_TAG" >> $GITHUB_ENV
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
