@@ -3,14 +3,18 @@ on:
     branches:
       - jy/add-release-check-action
   schedule:
-    - cron: '0 9 * * *' # Run day at 9am
+    - cron: '0 9 * * *' # Run daily at 9am
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          # Always checkout the main branch
+          ref: main
+          # Do a deep checkout
           fetch-depth: 0
+          # Fetch all the release tags
           fetch-tags: true
       - name: Check for unreleased changes
         run: |
