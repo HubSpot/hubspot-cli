@@ -3,6 +3,7 @@ const {
   getConfig,
   getConfigPath,
   getDefaultAccount,
+  getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
@@ -21,7 +22,6 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 

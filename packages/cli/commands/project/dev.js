@@ -11,7 +11,7 @@ const { handleExit } = require('../../lib/process');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfigAccounts,
+  getAccounts,
   getAccountConfig,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
@@ -100,7 +100,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  const accounts = getConfigAccounts();
+  const accounts = getAccounts();
 
   const defaultAccountIsRecommendedType =
     isDeveloperTestAccount(accountConfig) ||

@@ -17,12 +17,15 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { uiAccountDescription } = require('../../lib/ui');
-const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
+const {
+  getConfig,
+  deleteAccount,
+  getAccounts,
+} = require('@hubspot/local-dev-lib/config');
 const {
   isSpecifiedHubSpotAuthError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 

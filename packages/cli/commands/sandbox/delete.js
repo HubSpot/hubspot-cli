@@ -25,6 +25,7 @@ const {
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
   getDefaultAccount,
+  getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
   selectAndSetAsDefaultAccountPrompt,
@@ -36,7 +37,6 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 

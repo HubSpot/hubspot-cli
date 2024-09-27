@@ -8,6 +8,7 @@ const {
   getConfig,
   getAccountId,
   getEnv,
+  getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./prompts/promptUtils');
 const { isDevelopmentSandbox } = require('./accountTypes');
@@ -23,7 +24,6 @@ const {
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 

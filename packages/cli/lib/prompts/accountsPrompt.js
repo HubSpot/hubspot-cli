@@ -1,12 +1,12 @@
 const {
   updateDefaultAccount,
   getDefaultAccount,
+  getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 

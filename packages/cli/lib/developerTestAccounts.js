@@ -1,7 +1,11 @@
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { getAccountId, getConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountId,
+  getConfig,
+  getAccounts,
+} = require('@hubspot/local-dev-lib/config');
 const { i18n } = require('./lang');
 const {
   fetchDeveloperTestAccounts,
@@ -15,7 +19,6 @@ const { uiAccountDescription } = require('./ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const {
-  getAccounts,
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
