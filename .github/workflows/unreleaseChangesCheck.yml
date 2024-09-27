@@ -20,8 +20,15 @@ jobs:
         id: get-diff-log
         run: |
           export MOST_RECENT_TAG=$(git describe --tags --abbrev=0);
+          echo $MOST_RECENT_TAG
+          
           export LOG=`git log $(MOST_RECENT_TAG)..main --pretty=format:'- %s – @%al.' --no-merges`
-          echo "MOST_RECENT_TAG=$MOST_RECENT_TAG" >> $GITHUB_ENV
+          echo $LOG
+          
+          echo "MOST_RECENT_TAG<<EOF" >> $GITHUB_ENV
+          echo $MOST_RECENT_TAG >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          
           echo "LOG<<EOF" >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
