@@ -1,9 +1,6 @@
 on:
-  push:
-    branches:
-      - jy/add-release-check-action
   schedule:
-    - cron: '0 9 * * *' # Run daily at 9am
+    - cron: '0 9 * * 1-5' # Run Monday through Friday at 9am
 jobs:
   build:
     runs-on: ubuntu-latest
