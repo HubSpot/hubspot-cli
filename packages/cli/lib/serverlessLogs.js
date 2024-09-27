@@ -7,8 +7,10 @@ const { outputLogs } = require('./ui/serverlessFunctionLogs');
 const { logError, ApiErrorContext } = require('./errorHandlers/index');
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
-const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors');
+const {
+  isHubSpotHttpError,
+  isMissingScopeError,
+} = require('@hubspot/local-dev-lib/errors/index');
 const {
   SCOPE_GROUPS,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
