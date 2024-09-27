@@ -1,4 +1,7 @@
 on:
+  push:
+    branches:
+      - jy/add-release-check-action
   schedule:
     - cron: '0 9 * * *' # Run day at 9am
 jobs:
@@ -8,6 +11,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Check for unreleased changes
         run: export LOG=`git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s – @%al.' --no-merges`
+      - name: View Log
+        run: echo $LOG
       - name: Unreleased changes Slack Report
         uses: ravsamhq/notify-slack-action@v2
 #        if: ${{ always() && github.ref_name == 'main' }}
