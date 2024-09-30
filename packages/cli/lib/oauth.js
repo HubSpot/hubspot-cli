@@ -6,7 +6,7 @@ const {
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/configUtils');
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');

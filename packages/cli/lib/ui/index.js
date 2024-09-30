@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/configUtils');
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');

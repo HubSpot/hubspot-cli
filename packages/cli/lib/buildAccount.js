@@ -13,7 +13,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/configUtils');
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');

@@ -29,7 +29,7 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/configUtils');
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');

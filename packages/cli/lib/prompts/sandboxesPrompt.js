@@ -6,7 +6,7 @@ const {
 } = require('@hubspot/local-dev-lib/constants/config');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/configUtils');
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSandbox } = require('../accountTypes');
 const {
   getDefaultAccount,
