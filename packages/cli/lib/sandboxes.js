@@ -16,6 +16,9 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { uiAccountDescription } = require('./ui');
 const {
   isMissingScopeError,
@@ -23,9 +26,6 @@ const {
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const syncTypes = {
   OBJECT_RECORDS: 'object-records',

@@ -28,6 +28,9 @@ const {
   getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
+const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -36,9 +39,6 @@ const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 

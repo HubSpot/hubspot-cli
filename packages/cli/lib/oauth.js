@@ -4,6 +4,9 @@ const {
   default: OAuth2Manager,
 } = require('@hubspot/local-dev-lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
@@ -11,9 +14,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const PORT = 3000;
 const redirectUri = `http://localhost:${PORT}/oauth-callback`;

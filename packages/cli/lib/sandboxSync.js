@@ -13,15 +13,15 @@ const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
+const {
   uiAccountDescription,
   uiLine,
   uiLink,
   uiCommandDisabledBanner,
 } = require('./ui');
 const { isDevelopmentSandbox } = require('./accountTypes');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.sandbox.sync';
 

@@ -1,5 +1,8 @@
 const chalk = require('chalk');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
@@ -8,9 +11,6 @@ const { i18n } = require('../lang');
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const UI_COLORS = {
   SORBET: '#FF8F59',

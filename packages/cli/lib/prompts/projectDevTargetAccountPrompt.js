@@ -8,13 +8,13 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchDeveloperTestAccounts,
 } = require('@hubspot/local-dev-lib/developerTestAccounts');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 

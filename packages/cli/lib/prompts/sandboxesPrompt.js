@@ -4,10 +4,10 @@ const { uiAccountDescription } = require('../ui');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { isSandbox } = require('../accountTypes');
 const {
   getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
+} = require('@hubspot/local-dev-lib/config/configUtils');
+const { isSandbox } = require('../accountTypes');
 const {
   getDefaultAccount,
   getAccounts,

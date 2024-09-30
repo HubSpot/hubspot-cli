@@ -23,11 +23,11 @@ const {
   getAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
+const {
   isSpecifiedHubSpotAuthError,
 } = require('@hubspot/local-dev-lib/errors/apiErrors');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const i18nKey = 'commands.accounts.subcommands.clean';
 

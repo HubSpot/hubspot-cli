@@ -11,6 +11,9 @@ const {
   writeConfig,
   getAccountId,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
@@ -30,9 +33,6 @@ const { sandboxApiTypeMap, handleSandboxCreateError } = require('./sandboxes');
 const {
   handleDeveloperTestAccountCreateError,
 } = require('./developerTestAccounts');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 async function saveAccountToConfig({
   env,

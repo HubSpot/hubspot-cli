@@ -3,12 +3,12 @@ const {
   getDefaultAccount,
   getAccounts,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/configUtils');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/utils/getAccountIdentifier');
 
 const mapAccountChoices = portals =>
   portals.map(p => ({
