@@ -1,6 +1,6 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -58,7 +58,7 @@ exports.handler = async options => {
       })
     );
   } catch (error) {
-    logErrorInstance(error);
+    logError(error);
   }
 };
 

@@ -34,7 +34,7 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 const {
   activeInstallConfirmationPrompt,
@@ -99,7 +99,7 @@ class LocalDevManager {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
     }
   }
@@ -109,7 +109,7 @@ class LocalDevManager {
       return;
     }
 
-    const portalPublicApps = await fetchPublicAppsForPortal(
+    const { data: portalPublicApps } = await fetchPublicAppsForPortal(
       this.targetProjectAccountId
     );
 
@@ -119,7 +119,7 @@ class LocalDevManager {
 
     // TODO: Update to account for new API with { data }
     const {
-      uniquePortalInstallCount,
+      data: { uniquePortalInstallCount },
     } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
@@ -264,14 +264,16 @@ class LocalDevManager {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  getActiveAppInstallationData() {
-    return fetchAppInstallationData(
+  async getActiveAppInstallationData() {
+    const { data } = await fetchAppInstallationData(
       this.targetAccountId,
       this.projectId,
       this.activeApp.config.uid,
       this.activeApp.config.auth.requiredScopes,
       this.activeApp.config.auth.optionalScopes
     );
+
+    return data;
   }
 
   async checkPublicAppInstallation() {

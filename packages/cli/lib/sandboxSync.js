@@ -3,13 +3,13 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { getAvailableSyncTypes } = require('./sandboxes');
-const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
-const { debugErrorAndContext } = require('./errorHandlers/standardErrors');
+const { initiateSync } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const {
-  logApiErrorInstance,
+  debugError,
+  logError,
   ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('./errorHandlers/index');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const {
@@ -88,7 +88,7 @@ const syncSandbox = async ({
       ),
     });
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
@@ -155,7 +155,7 @@ const syncSandbox = async ({
         'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
       );
     } else {
-      logApiErrorInstance(
+      logError(
         err,
         new ApiErrorContext({
           accountId: parentAccountId,

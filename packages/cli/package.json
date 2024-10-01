@@ -8,7 +8,7 @@
     "url": "https://github.com/HubSpot/hubspot-cli"
   },
   "dependencies": {
-    "@hubspot/local-dev-lib": "1.13.1",
+    "@hubspot/local-dev-lib": "^2.0.0",
     "@hubspot/serverless-dev-runtime": "6.1.1",
     "@hubspot/theme-preview-dev-server": "0.0.7",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
