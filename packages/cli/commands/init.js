@@ -132,8 +132,7 @@ exports.handler = async options => {
 
   const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
   if (doesOtherConfigFileExist) {
-    const path =
-      (c && path.join(getCwd(), c)) || getConfigPath('', !useHiddenConfig);
+    const path = getConfigPath('', !useHiddenConfig);
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
     process.exit(EXIT_CODES.ERROR);
   }
