@@ -21,7 +21,7 @@ const mapSandboxAccountChoices = portals =>
     .map(p => {
       return {
         name: uiAccountDescription(getAccountIdentifier(p), false),
-        value: p.name || p.portalId || p.accountId,
+        value: p.name || getAccountIdentifier(p),
       };
     });
 
@@ -31,7 +31,7 @@ const mapNonSandboxAccountChoices = portals =>
     .map(p => {
       return {
         name: `${p.name} (${getAccountIdentifier(p)})`,
-        value: p.name || p.portalId || p.accountId,
+        value: p.name || getAccountIdentifier(p),
       };
     });
 

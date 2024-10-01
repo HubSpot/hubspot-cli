@@ -13,7 +13,7 @@ const { uiAccountDescription } = require('../ui');
 const mapAccountChoices = portals =>
   portals.map(p => ({
     name: uiAccountDescription(getAccountIdentifier(p), false),
-    value: p.name || p.portalId || p.accountId,
+    value: p.name || getAccountIdentifier(p),
   }));
 
 const i18nKey = 'commands.accounts.subcommands.use';
