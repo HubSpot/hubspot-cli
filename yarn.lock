@@ -473,7 +473,7 @@
     express "^4.18.2"
     uuid "^9.0.1"
 
-"@hubspot/local-dev-lib@^2.0.0":
+"@hubspot/local-dev-lib@2.0.0", "@hubspot/local-dev-lib@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-2.0.0.tgz#63384238164de40da7cc6747c7d27637a0009b7b"
   integrity sha512-2q5WmnByqBU1JZD+iYBkYwNRf+w1I8ae/+WAhNtq99lqv+kBSUJtLegGgZENlGs+lzHnmg95sokjhPdTZE5E4w==
