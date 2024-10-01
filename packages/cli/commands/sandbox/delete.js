@@ -84,7 +84,7 @@ exports.handler = async options => {
   );
 
   let parentAccountId;
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   for (const portal of accountsList) {
     if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {

@@ -1,11 +1,7 @@
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const {
-  getAccountId,
-  getConfig,
-  getAccounts,
-} = require('@hubspot/local-dev-lib/config');
+const { getAccountId, getAccounts } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
@@ -23,10 +19,9 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
-  const config = getConfig();
   const id = getAccountIdentifier(appDeveloperAccountConfig);
   const parentPortalId = getAccountId(id);
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   for (const portal of accountsList) {
     if (
       Boolean(portal.parentAccountId) &&

@@ -5,7 +5,6 @@ const {
   getSandboxUsageLimits,
 } = require('@hubspot/local-dev-lib/sandboxes');
 const {
-  getConfig,
   getAccountId,
   getEnv,
   getAccounts,
@@ -51,10 +50,9 @@ const getSandboxTypeAsString = accountType => {
 };
 
 function getHasSandboxesByType(parentAccountConfig, type) {
-  const config = getConfig();
   const id = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(id);
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||

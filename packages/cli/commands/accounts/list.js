@@ -93,7 +93,7 @@ exports.handler = async options => {
 
   const config = getConfig();
   const configPath = getConfigPath();
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
   portalData.unshift(

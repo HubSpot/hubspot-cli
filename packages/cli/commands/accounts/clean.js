@@ -17,11 +17,7 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { uiAccountDescription } = require('../../lib/ui');
-const {
-  getConfig,
-  deleteAccount,
-  getAccounts,
-} = require('@hubspot/local-dev-lib/config');
+const { deleteAccount, getAccounts } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
@@ -38,11 +34,9 @@ exports.handler = async options => {
   const { qa } = options;
   await loadAndValidateOptions(options, false);
 
-  const config = getConfig();
-
   trackCommandUsage('accounts-clean', null);
 
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   const filteredTestAccounts = accountsList.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );

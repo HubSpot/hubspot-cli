@@ -58,7 +58,7 @@ const sandboxTypePrompt = () => {
 };
 
 const deleteSandboxPrompt = (config, promptParentAccount = false) => {
-  const accountsList = getAccounts(config);
+  const accountsList = getAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
