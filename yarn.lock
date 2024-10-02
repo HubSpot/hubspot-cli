@@ -497,10 +497,10 @@
     semver "^6.3.0"
     unixify "^1.0.0"
 
-"@hubspot/theme-preview-dev-server@0.0.7":
-  version "0.0.7"
-  resolved "https://registry.npmjs.org/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.7.tgz"
-  integrity sha512-po0SvzWaiijRDso7APr5NnUm0YGUd3txUJj/ftjFaI/FmhylQ5tgETTQj2H8emoG+8Nt/Y4rD0ogL+jMETWafA==
+"@hubspot/theme-preview-dev-server@0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.8.tgz#ee9c339a3c493b9fb40c2a29fe8c2c29068917e7"
+  integrity sha512-1hsms3qE8I++ZLQJ8IpY0rB3Pk7+7KRtBB3xX6c0PmN1+1e8oIzBnQPx2jVFyfX4Ny/SuOCkHtuMYS3K1qIOzw==
   dependencies:
     "@types/node-fetch" "^2.6.11"
     chokidar "^3.6.0"
