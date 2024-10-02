@@ -36,11 +36,6 @@
       "eslint"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "dependencies": {
     "jest": "^29.5.0"
   },
