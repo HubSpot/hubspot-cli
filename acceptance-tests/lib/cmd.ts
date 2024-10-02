@@ -40,6 +40,7 @@ export function createProcess(
       NODE_ENV: 'test',
       preventAutoStart: false,
       PATH, // This is needed in order to get all the binaries in your current terminal
+      npm_config_loglevel: 'error', // suppress warnings
       ...env,
     },
     stdio: [null, null, null, 'ipc'], // This enables interprocess communication (IPC)
