@@ -39,7 +39,10 @@ export class TestState {
       );
     } catch (e) {
       console.error(e);
-      throw new Error('Failed to initialize CLI config & authentication');
+      // @ts-expect-error TypeScript thinks the cause doesn't exist
+      throw new Error('Failed to initialize CLI config & authentication', {
+        cause: e,
+      });
     }
   }
 
