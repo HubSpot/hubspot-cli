@@ -2,10 +2,7 @@ const chokidar = require('chokidar');
 const path = require('path');
 const chalk = require('chalk');
 const { default: PQueue } = require('p-queue');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
@@ -17,10 +14,10 @@ const {
   deleteFileFromBuild,
   queueBuild,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('./constants');
 
-const i18nKey = 'cli.commands.project.subcommands.watch';
+const i18nKey = 'commands.project.subcommands.watch';
 
 const queue = new PQueue({
   concurrency: 10,
@@ -85,10 +82,7 @@ const debounceQueueBuild = (accountId, projectName, platformVersion) => {
         logger.log(i18n(`${i18nKey}.logs.watchCancelledFromUi`));
         process.exit(0);
       } else {
-        logApiErrorInstance(
-          err,
-          new ApiErrorContext({ accountId, projectName })
-        );
+        logError(err, new ApiErrorContext({ accountId }));
       }
 
       return;
@@ -151,14 +145,12 @@ const queueFileOrFolder = async (
 const createNewBuild = async (accountId, projectName, platformVersion) => {
   try {
     logger.debug(i18n(`${i18nKey}.debug.attemptNewBuild`));
-    const { buildId } = await provisionBuild(
-      accountId,
-      projectName,
-      platformVersion
-    );
+    const {
+      data: { buildId },
+    } = await provisionBuild(accountId, projectName, platformVersion);
     return buildId;
   } catch (err) {
-    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logError(err, new ApiErrorContext({ accountId }));
     if (
       isSpecifiedError(err, { subCategory: PROJECT_ERROR_TYPES.PROJECT_LOCKED })
     ) {

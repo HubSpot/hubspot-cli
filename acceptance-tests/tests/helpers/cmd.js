@@ -12,21 +12,31 @@ const PATH = process.env.PATH;
 
 /**
  * Creates a child process with script path
- * @param {string} processPath Path of the process to execute
+ * @param {string} cliPath Path of the CLI process to execute
+ * @param {string} cliVersion NPM Version number
  * @param {Array} args Arguments to the command
  * @param {Object} env (optional) Environment variables
  */
-function createProcess(processPath, args = [], env = null) {
-  // Ensure that path exists
-  if (!processPath || !existsSync(processPath)) {
-    throw new Error('Invalid process path');
-  }
+function createProcess(cliPath, cliVersion, args = [], env = null) {
+  let processCommand;
 
-  args = [processPath].concat(args);
+  if (cliVersion) {
+    processCommand = 'npx';
+    args = ['--yes', '--package', `@hubspot/cli@${cliVersion}`, 'hs'].concat(
+      args
+    );
+  } else {
+    // Ensure that path exists
+    if (!cliPath || !existsSync(cliPath)) {
+      throw new Error(`Invalid process path ${cliPath}`);
+    }
+    processCommand = 'node';
+    args = [cliPath].concat(args);
+  }
 
   // This works for node based CLIs, but can easily be adjusted to
   // any other process installed in the system
-  return spawn('node', args, {
+  return spawn(processCommand, args, {
     env: Object.assign(
       {
         NODE_ENV: 'test',
@@ -48,39 +58,37 @@ function createProcess(processPath, args = [], env = null) {
  * @param {Array} inputs (Optional) Array of inputs (user responses)
  * @param {Object} opts (optional) Environment variables
  */
-function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
+function executeWithInput(
+  cliPath,
+  cliVersion,
+  args = [],
+  inputs = [],
+  opts = {}
+) {
   if (!Array.isArray(inputs)) {
     opts = inputs;
     inputs = [];
   }
-
-  // There is still an outstanding issue with this because we
-  // attempt to add the --qa flag to all hs commands, however it is not available for all commands.
-  // if (global.config.qa) {
-  //   args.push('--qa');
-  // }
 
   if (global.config.headless) {
     opts.env = { BROWSER: 'none' };
   }
 
   const { env = opts.env, timeout = 500, maxTimeout = 10000 } = opts;
-  const childProcess = createProcess(processPath, args, env);
+  const childProcess = createProcess(cliPath, cliVersion, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
   let currentInputTimeout, killIOTimeout;
 
   // Creates a loop to feed user inputs to the child process in order to get results from the tool
-  // This code is heavily inspired (if not blantantly copied) from inquirer-test:
+  // This code is heavily inspired from inquirer-test:
   // https://github.com/ewnd9/inquirer-test/blob/6e2c40bbd39a061d3e52a8b1ee52cdac88f8d7f7/index.js#L14
-  const loop = inputs => {
-    const currentInput = inputs[0];
-
+  const loopInputs = inputs => {
     if (killIOTimeout) {
       clearTimeout(killIOTimeout);
     }
 
-    if (!currentInput) {
+    if (!inputs.length) {
       childProcess.stdin.end();
 
       // Set a timeout to wait for CLI response. If CLI takes longer than
@@ -94,39 +102,55 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
     }
 
     currentInputTimeout = setTimeout(async () => {
-      if (typeof currentInput === 'function') {
-        await currentInput();
+      if (typeof inputs[0] === 'function') {
+        await inputs[0]();
       } else {
-        childProcess.stdin.write(currentInput);
+        childProcess.stdin.write(inputs[0]);
       }
 
-      // Log debug I/O statements on tests
       if (global.config.debug) {
-        console.log('input:', currentInput);
+        console.log('input:', inputs[0]);
       }
 
-      loop(inputs.slice(1));
+      loopInputs(inputs.slice(1));
     }, timeout);
   };
 
+  // Get errors from CLI for debugging
+  childProcess.stderr.on('data', err => {
+    if (global.config.debug) {
+      console.log('error:', err.toString());
+    }
+  });
+
+  // Get output from CLI for debugging
+  childProcess.stdout.on('data', data => {
+    if (global.config.debug) {
+      console.log('output:', data.toString());
+    }
+  });
+
   const promise = new Promise((resolve, reject) => {
-    // Get errors from CLI
-    childProcess.stderr.on('data', data => {
-      // Log debug I/O statements on tests
-      if (global.config.debug) {
-        console.log('error:', data.toString());
-      }
-    });
+    const handleStderr = err => {
+      // Ignore any allowed errors so tests can continue
+      const allowedErrors = [
+        'Loading available API samples', // When we use 'ora' it is throwing the loading error
+        'DeprecationWarning', // Ignore package deprecation warnings.
+        '[WARNING]', // Ignore our own CLI warning messages
+      ];
 
-    // Get output from CLI
-    childProcess.stdout.on('data', data => {
-      // Log debug I/O statements on tests
-      if (global.config.debug) {
-        console.log('output:', data.toString());
-      }
-    });
+      const error = err.toString();
+      if (allowedErrors.some(s => error.includes(s))) {
+        if (global.config.debug) {
+          console.log('suppressed error:', error);
+        }
 
-    childProcess.stderr.once('data', err => {
+        // Resubscribe if we ignored this error
+        childProcess.stderr.once('data', handleStderr);
+        return;
+      }
+
+      // If the childProcess errors out, stop all the pending inputs
       childProcess.stdin.end();
 
       if (currentInputTimeout) {
@@ -134,26 +158,11 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
         inputs = [];
       }
 
-      // For some reason, when we use 'ora', it is throwing this error,
-      // so for now we won't reject.
-      const blacklistedStrings = ['Loading available API samples'];
-
-      const error = err.toString();
-      if (blacklistedStrings.some(s => error.includes(s))) {
-        if (global.config.debug) {
-          console.log('suppressed error:', error);
-        }
-
-        return;
-      }
-
       reject(error);
-    });
+    };
 
+    childProcess.stderr.once('data', handleStderr);
     childProcess.on('error', reject);
-
-    // Kick off the process
-    loop(inputs);
 
     childProcess.stdout.pipe(
       concat(result => {
@@ -166,6 +175,9 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
     );
   });
 
+  // Kick off the input process
+  loopInputs(inputs);
+
   // Appending the process to the promise, in order to
   // add additional parameters or behavior (such as IPC communication)
   promise.attachedProcess = childProcess;
@@ -175,8 +187,8 @@ function executeWithInput(processPath, args = [], inputs = [], opts = {}) {
 
 module.exports = {
   createProcess,
-  create: processPath => ({
-    execute: (...args) => executeWithInput(processPath, ...args),
+  createCli: (cliPath, cliVersion) => ({
+    execute: (...args) => executeWithInput(cliPath, cliVersion, ...args),
   }),
   DOWN: '\x1B\x5B\x42',
   UP: '\x1B\x5B\x41',

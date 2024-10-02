@@ -17,12 +17,10 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
-const {
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { uiAccountDescription } = require('../../lib/ui');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'cli.commands.accounts.subcommands.clean';
+const i18nKey = 'commands.accounts.subcommands.clean';
 
 exports.command = 'clean';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -54,16 +52,16 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(account.portalId);
+      await accessTokenForPersonalAccessKey(account.portalId, true);
     } catch (error) {
       if (
-        isSpecifiedHubSpotAuthError(error, {
-          status: 401,
+        isSpecifiedError(error, {
+          statusCode: 401,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
         }) ||
-        isSpecifiedHubSpotAuthError(error, {
-          status: 404,
+        isSpecifiedError(error, {
+          statusCode: 404,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
         })
@@ -87,7 +85,7 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p)]),
+        accountsToRemove.map(p => [uiAccountDescription(p.portalId)]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -111,7 +109,7 @@ exports.handler = async options => {
         await deleteAccount(accountToRemove.name);
         logger.log(
           i18n(`${i18nKey}.removeSuccess`, {
-            accountName: uiAccountDescription(accountToRemove),
+            accountName: accountToRemove.name,
           })
         );
       }
@@ -127,10 +125,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addTestingOptions(yargs);
 
   yargs.example([['$0 accounts clean']]);
 

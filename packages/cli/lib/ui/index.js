@@ -3,16 +3,10 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
-const { isSandbox, getSandboxName } = require('../sandboxes');
-const {
-  isDeveloperTestAccount,
-  isAppDeveloperAccount,
-} = require('../developerTestAccounts');
 const { i18n } = require('../lang');
 
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
-  HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
 
 const UI_COLORS = {
@@ -83,19 +77,9 @@ const uiLink = (linkText, url) => {
  */
 const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
-  let accountTypeString = '';
-  if (isSandbox(account)) {
-    accountTypeString = getSandboxName(account);
-  } else if (isDeveloperTestAccount(account)) {
-    accountTypeString = `[${
-      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST]
-    }] `;
-  } else if (isAppDeveloperAccount(account)) {
-    accountTypeString = `[${
-      HUBSPOT_ACCOUNT_TYPE_STRINGS[HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER]
-    }] `;
-  }
-  const message = `${account.name} ${accountTypeString}(${account.portalId})`;
+  const message = `${account.name} [${
+    HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
+  }] (${account.portalId})`;
   return bold ? chalk.bold(message) : message;
 };
 
@@ -121,7 +105,7 @@ const uiCommandReference = command => {
 };
 
 const uiFeatureHighlight = (commands, title) => {
-  const i18nKey = 'cli.lib.ui.featureHighlight';
+  const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
     commands.forEach((c, i) => {
@@ -139,7 +123,7 @@ const uiFeatureHighlight = (commands, title) => {
 };
 
 const uiBetaTag = (message, log = true) => {
-  const i18nKey = 'cli.lib.ui';
+  const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
   const tag = i18n(`${i18nKey}.betaTag`);
@@ -155,13 +139,87 @@ const uiBetaTag = (message, log = true) => {
   }
 };
 
+const uiDeprecatedTag = (message, log = true) => {
+  const i18nKey = 'lib.ui';
+
+  const terminalUISupport = getTerminalUISupport();
+  const tag = i18n(`${i18nKey}.deprecatedTag`);
+
+  const result = `${
+    terminalUISupport.color ? chalk.yellow(tag) : tag
+  } ${message}`;
+
+  if (log) {
+    logger.log(result);
+  } else {
+    return result;
+  }
+};
+
+const uiCommandDisabledBanner = (
+  command,
+  url = undefined,
+  message = undefined
+) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.disabledMessage`, {
+      command: uiCommandReference(command),
+      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : undefined,
+      npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
+    });
+
+  logger.log();
+  uiLine();
+  logger.error(tag);
+  uiLine();
+  logger.log();
+};
+
+const uiDeprecatedDescription = (
+  message,
+  command,
+  url = undefined,
+  log = false
+) => {
+  const i18nKey = 'lib.ui';
+
+  const tag = i18n(`${i18nKey}.deprecatedDescription`, {
+    message,
+    command: uiCommandReference(command),
+    url,
+  });
+  return uiDeprecatedTag(tag, log);
+};
+
+const uiDeprecatedMessage = (command, url = undefined, message = undefined) => {
+  const i18nKey = 'lib.ui';
+
+  const tag =
+    message ||
+    i18n(`${i18nKey}.deprecatedMessage`, {
+      command: uiCommandReference(command),
+      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : undefined,
+    });
+
+  logger.log();
+  uiDeprecatedTag(tag, true);
+  logger.log();
+};
+
 module.exports = {
   UI_COLORS,
   uiAccountDescription,
   uiCommandReference,
   uiBetaTag,
+  uiDeprecatedTag,
   uiFeatureHighlight,
   uiInfoSection,
   uiLine,
   uiLink,
+  uiDeprecatedMessage,
+  uiDeprecatedDescription,
+  uiCommandDisabledBanner,
 };

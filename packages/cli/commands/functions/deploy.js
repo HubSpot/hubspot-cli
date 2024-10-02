@@ -6,11 +6,9 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
-const { POLLING_DELAY } = require('../../lib/constants');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
+
+const { poll } = require('../../lib/polling');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   buildPackage,
@@ -19,25 +17,9 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'cli.commands.functions.subcommands.deploy';
-
-const pollBuildStatus = (accountId, buildId) => {
-  return new Promise((resolve, reject) => {
-    const pollInterval = setInterval(async () => {
-      const pollResp = await getBuildStatus(accountId, buildId);
-      const { status } = pollResp;
-
-      if (status === 'SUCCESS') {
-        clearInterval(pollInterval);
-        resolve(pollResp);
-      } else if (status === 'ERROR') {
-        clearInterval(pollInterval);
-        reject(pollResp);
-      }
-    }, POLLING_DELAY);
-  });
-};
+const i18nKey = 'commands.functions.subcommands.deploy';
 
 exports.command = 'deploy <path>';
 exports.describe = false;
@@ -77,8 +59,8 @@ exports.handler = async options => {
         functionPath,
       })
     ).start();
-    const buildId = await buildPackage(accountId, functionPath);
-    const successResp = await pollBuildStatus(accountId, buildId);
+    const { data: buildId } = await buildPackage(accountId, functionPath);
+    const successResp = await poll(getBuildStatus, accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
     spinner.stop();
     await outputBuildLog(successResp.cdnUrl);
@@ -91,13 +73,13 @@ exports.handler = async options => {
     );
   } catch (e) {
     spinner && spinner.stop && spinner.stop();
-    if (e.statusCode === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.noPackageJson`, {
           functionPath,
         })
       );
-    } else if (e.statusCode === 400) {
+    } else if (isHubSpotHttpError(e) && e.status === 400) {
       logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
@@ -107,10 +89,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, request: functionPath })
-      );
+      logError(e, new ApiErrorContext({ accountId, request: functionPath }));
     }
   }
 };
@@ -128,9 +107,9 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

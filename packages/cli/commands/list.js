@@ -9,10 +9,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { logError } = require('../lib/errorHandlers/index');
 const {
   getDirectoryContentsByPath,
 } = require('@hubspot/local-dev-lib/api/fileMapper');
@@ -20,7 +17,7 @@ const { HUBSPOT_FOLDER, MARKETPLACE_FOLDER } = require('../lib/constants');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.list';
+const i18nKey = 'commands.list';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'list [path]';
@@ -43,9 +40,10 @@ exports.handler = async options => {
   );
 
   try {
-    contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
+    const { data } = await getDirectoryContentsByPath(accountId, directoryPath);
+    contentsResp = data;
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, directoryPath }));
+    logError(e);
     process.exit(EXIT_CODES.SUCCESS);
   }
 
@@ -87,9 +85,9 @@ exports.builder = yargs => {
   });
   yargs.example([['$0 list'], ['$0 list /'], ['$0 list serverless']]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

@@ -11,10 +11,7 @@ const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
 } = require('@hubspot/local-dev-lib/gitignore');
-const {
-  logErrorInstance,
-  debugErrorAndContext,
-} = require('../lib/errorHandlers/standardErrors');
+const { debugError, logError } = require('../lib/errorHandlers/index');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -40,15 +37,13 @@ const {
   OAUTH_FLOW,
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
-const {
-  enterAccountNamePrompt,
-} = require('../lib/prompts/enterAccountNamePrompt');
+const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
 
-const i18nKey = 'cli.commands.init';
+const i18nKey = 'commands.init';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -62,8 +57,8 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
 
   try {
     const token = await getAccessToken(personalAccessKey, env);
-    const defaultName = toKebabCase(token.hubName);
-    const { name } = await enterAccountNamePrompt(defaultName);
+    const defaultName = token.hubName ? toKebabCase(token.hubName) : null;
+    const { name } = await cliAccountNamePrompt(defaultName);
 
     updatedConfig = updateConfigWithAccessToken(
       token,
@@ -73,7 +68,7 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
       true
     );
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
   }
   return updatedConfig;
 };
@@ -142,7 +137,7 @@ exports.handler = async options => {
     try {
       checkAndAddConfigToGitignore(configPath);
     } catch (e) {
-      debugErrorAndContext(e);
+      debugError(e);
     }
 
     logger.log('');
@@ -167,7 +162,7 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
     process.exit(EXIT_CODES.ERROR);
   }
@@ -193,8 +188,8 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addTestingOptions(yargs);
 
   return yargs;
 };

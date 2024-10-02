@@ -4,7 +4,7 @@ const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey = 'cli.commands.config.subcommands.set.options.httpTimeout';
+const i18nKey = 'commands.config.subcommands.set.options.httpTimeout';
 
 const enterTimeout = async () => {
   const { timeout } = await promptUser([

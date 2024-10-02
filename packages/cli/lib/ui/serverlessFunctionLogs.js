@@ -3,7 +3,7 @@ const chalk = require('chalk');
 const { logger, Styles } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.ui.serverlessFunctionLogs';
+const i18nKey = 'lib.ui.serverlessFunctionLogs';
 
 const SEPARATOR = ' - ';
 const LOG_STATUS_COLORS = {

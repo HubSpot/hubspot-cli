@@ -16,7 +16,7 @@ const {
 } = require('../../lib/marketplace-validate');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.theme.subcommands.marketplaceValidate';
+const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
 
 exports.command = 'marketplace-validate <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -48,16 +48,16 @@ exports.handler = async options => {
     accountId,
     validationId
   );
-  processValidationErrors(validationResults);
+  processValidationErrors(i18nKey, validationResults);
   displayValidationResults(i18nKey, validationResults);
 
   process.exit();
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

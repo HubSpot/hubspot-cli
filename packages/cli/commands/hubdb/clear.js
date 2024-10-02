@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
 const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
 
@@ -14,7 +14,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.clear';
+const i18nKey = 'commands.hubdb.subcommands.clear';
 
 exports.command = 'clear <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -37,7 +37,9 @@ exports.handler = async options => {
           tableId,
         })
       );
-      const { rowCount } = await publishTable(accountId, tableId);
+      const {
+        data: { rowCount },
+      } = await publishTable(accountId, tableId);
       logger.log(
         i18n(`${i18nKey}.logs.rowCount`, {
           rowCount,
@@ -52,14 +54,14 @@ exports.handler = async options => {
       );
     }
   } catch (e) {
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('tableId', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),

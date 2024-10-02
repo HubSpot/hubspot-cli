@@ -3,6 +3,7 @@ const { outputLogs } = require('../ui/serverlessFunctionLogs');
 const { tailLogs } = require('../serverlessLogs');
 
 jest.mock('../ui/serverlessFunctionLogs');
+jest.mock('@hubspot/local-dev-lib/logger');
 
 jest.useFakeTimers();
 
@@ -70,14 +71,16 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
 
       const fetchLatest = jest.fn(() => {
         return Promise.resolve({
-          id: '1234',
-          executionTime: 510,
-          log: 'Log message',
-          error: null,
-          status: 'SUCCESS',
-          createdAt: 1620232011451,
-          memory: '70/128 MB',
-          duration: '53.40 ms',
+          data: {
+            id: '1234',
+            executionTime: 510,
+            log: 'Log message',
+            error: null,
+            status: 'SUCCESS',
+            createdAt: 1620232011451,
+            memory: '70/128 MB',
+            duration: '53.40 ms',
+          },
         });
       });
       const latestLogResponse = {
@@ -109,7 +112,9 @@ describe('@hubspot/cli/lib/serverlessLogs', () => {
           },
         },
       };
-      const tailCall = jest.fn(() => Promise.resolve(latestLogResponse));
+      const tailCall = jest.fn(() =>
+        Promise.resolve({ data: latestLogResponse })
+      );
 
       await tailLogs({
         accountId: ACCOUNT_ID,

@@ -1,9 +1,6 @@
 const { deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
 
 const {
   addConfigOptions,
@@ -15,7 +12,7 @@ const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.remove';
+const i18nKey = 'commands.remove';
 
 exports.command = 'remove <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -36,7 +33,7 @@ exports.handler = async options => {
     logger.error(
       i18n(`${i18nKey}.errors.deleteFailed`, { accountId, path: hsPath })
     );
-    logApiErrorInstance(
+    logError(
       error,
       new ApiErrorContext({
         accountId,
@@ -47,9 +44,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

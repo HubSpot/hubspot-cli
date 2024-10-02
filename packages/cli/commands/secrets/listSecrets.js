@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { fetchSecrets } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -17,7 +14,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.list';
+const i18nKey = 'commands.secrets.subcommands.list';
 
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -29,7 +26,9 @@ exports.handler = async options => {
   trackCommandUsage('secrets-list', null, accountId);
 
   try {
-    const { results } = await fetchSecrets(accountId);
+    const {
+      data: { results },
+    } = await fetchSecrets(accountId);
     const groupLabel = i18n(`${i18nKey}.groupLabel`, {
       accountIdentifier: uiAccountDescription(accountId),
     });
@@ -38,7 +37,7 @@ exports.handler = async options => {
     logger.groupEnd(groupLabel);
   } catch (err) {
     logger.error(i18n(`${i18nKey}.errors.list`));
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'add secret',
@@ -49,8 +48,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   return yargs;
 };

@@ -3,7 +3,7 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.previewPrompt';
+const i18nKey = 'lib.prompts.previewPrompt';
 
 const previewPrompt = (promptOptions = {}) => {
   return promptUser([
@@ -34,6 +34,24 @@ const previewPrompt = (promptOptions = {}) => {
   ]);
 };
 
+const previewProjectPrompt = async themeComponents => {
+  return promptUser([
+    {
+      name: 'themeComponentPath',
+      message: i18n(`${i18nKey}.themeProjectSelect`),
+      type: 'list',
+      choices: themeComponents.map(t => {
+        const themeName = path.basename(t.path);
+        return {
+          name: themeName,
+          value: t.path,
+        };
+      }),
+    },
+  ]);
+};
+
 module.exports = {
   previewPrompt,
+  previewProjectPrompt,
 };

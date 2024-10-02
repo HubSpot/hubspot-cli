@@ -12,21 +12,28 @@ const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { previewPrompt } = require('../../lib/prompts/previewPrompt');
+const {
+  previewPrompt,
+  previewProjectPrompt,
+} = require('../../lib/prompts/previewPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
   FILE_UPLOAD_RESULT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/files');
-const i18nKey = 'cli.commands.preview';
 const cliProgress = require('cli-progress');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { handleExit, handleKeypress } = require('../../lib/process');
+const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
+const { getProjectConfig } = require('../../lib/projects');
+const {
+  findProjectComponents,
+  COMPONENT_TYPES,
+} = require('../../lib/projectStructure');
+
+const i18nKey = 'commands.theme.subcommands.preview';
 
 exports.command = 'preview [--src] [--dest]';
-exports.describe = false; // i18n(`${i18nKey}.describe`) - Hiding command
+exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
   const logInvalidPath = () => {
@@ -63,6 +70,42 @@ const handleUserInput = () => {
   });
 };
 
+const determineSrcAndDest = async options => {
+  let absoluteSrc;
+  let dest;
+  const { projectDir, projectConfig } = await getProjectConfig();
+  if (!(projectDir && projectConfig)) {
+    // Not in a project, prompt for src and dest of traditional theme
+    const previewPromptAnswers = await previewPrompt(options);
+    const src = options.src || previewPromptAnswers.src;
+    dest = options.dest || previewPromptAnswers.dest;
+    absoluteSrc = path.resolve(getCwd(), src);
+    if (!dest || !validateSrcPath(absoluteSrc)) {
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } else {
+    // In a project
+    let themeJsonPath = getThemeJSONPath();
+    if (!themeJsonPath) {
+      const projectComponents = await findProjectComponents(projectDir);
+      const themeComponents = projectComponents.filter(
+        c => c.type === COMPONENT_TYPES.hublTheme
+      );
+      if (themeComponents.length === 0) {
+        logger.error(i18n(`${i18nKey}.errors.noThemeComponents`));
+        process.exit(EXIT_CODES.ERROR);
+      }
+      const answer = await previewProjectPrompt(themeComponents);
+      themeJsonPath = `${answer.themeComponentPath}/theme.json`;
+    }
+    const { dir: themeDir } = path.parse(themeJsonPath);
+    absoluteSrc = themeDir;
+    const { base: themeName } = path.parse(themeDir);
+    dest = `@projects/${projectConfig.name}/${themeName}`;
+  }
+  return { absoluteSrc, dest };
+};
+
 exports.handler = async options => {
   const { notify, skipUpload, noSsl, port, debug } = options;
 
@@ -70,18 +113,7 @@ exports.handler = async options => {
 
   const accountId = getAccountId(options);
 
-  const previewPromptAnswers = await previewPrompt(options);
-  const src = options.src || previewPromptAnswers.src;
-  let dest = options.dest || previewPromptAnswers.dest;
-  if (!dest) {
-    logger.error(i18n(`${i18nKey}.errors.destinationRequired`));
-    return;
-  }
-
-  const absoluteSrc = path.resolve(getCwd(), src);
-  if (!validateSrcPath(absoluteSrc)) {
-    process.exit(EXIT_CODES.ERROR);
-  }
+  const { absoluteSrc, dest } = await determineSrcAndDest(options);
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 
@@ -130,7 +162,7 @@ exports.handler = async options => {
               result.file,
               dest
             );
-            logApiUploadErrorInstance(
+            logError(
               result.error,
               new ApiErrorContext({
                 accountId,
@@ -160,8 +192,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.option('src', {
     describe: i18n(`${i18nKey}.options.src.describe`),

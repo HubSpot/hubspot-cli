@@ -1,22 +1,23 @@
+jest.mock('@hubspot/local-dev-lib/logger');
+
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const projects = require('../projects');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 
 describe('@hubspot/cli/lib/projects', () => {
   describe('validateProjectConfig()', () => {
     let realProcess;
     let projectDir;
     let exitMock;
-    let errorSpy;
 
     beforeAll(() => {
       projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'projects-'));
       fs.mkdirSync(path.join(projectDir, 'src'));
 
       realProcess = process;
-      errorSpy = jest.spyOn(console, 'error');
     });
 
     beforeEach(() => {
@@ -24,20 +25,15 @@ describe('@hubspot/cli/lib/projects', () => {
       global.process = { ...realProcess, exit: exitMock };
     });
 
-    afterEach(() => {
-      errorSpy.mockClear();
-    });
-
     afterAll(() => {
       global.process = realProcess;
-      errorSpy.mockRestore();
     });
 
     it('rejects undefined configuration', () => {
       projects.validateProjectConfig(null, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(errorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*config not found.*/)
       );
     });
@@ -46,7 +42,7 @@ describe('@hubspot/cli/lib/projects', () => {
       projects.validateProjectConfig({ srcDir: '.' }, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(errorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields*/)
       );
     });
@@ -55,7 +51,7 @@ describe('@hubspot/cli/lib/projects', () => {
       projects.validateProjectConfig({ name: 'hello' }, projectDir);
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(errorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*missing required fields.*/)
       );
     });
@@ -68,7 +64,7 @@ describe('@hubspot/cli/lib/projects', () => {
         );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(errorSpy).toHaveBeenCalledWith(
+        expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: ".."')
         );
       });
@@ -80,7 +76,7 @@ describe('@hubspot/cli/lib/projects', () => {
         );
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(errorSpy).toHaveBeenCalledWith(
+        expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining('srcDir: "/"')
         );
       });
@@ -91,7 +87,7 @@ describe('@hubspot/cli/lib/projects', () => {
         projects.validateProjectConfig({ name: 'hello', srcDir }, projectDir);
 
         expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-        expect(errorSpy).toHaveBeenCalledWith(
+        expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining(`srcDir: "${srcDir}"`)
         );
       });
@@ -104,7 +100,7 @@ describe('@hubspot/cli/lib/projects', () => {
       );
 
       expect(exitMock).toHaveBeenCalledWith(EXIT_CODES.ERROR);
-      expect(errorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(/.*could not be found in.*/)
       );
     });
@@ -117,7 +113,7 @@ describe('@hubspot/cli/lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(logger.error).not.toHaveBeenCalled();
       });
 
       it('for relative directory', () => {
@@ -127,7 +123,7 @@ describe('@hubspot/cli/lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(logger.error).not.toHaveBeenCalled();
       });
 
       it('for implied relative directory', () => {
@@ -137,7 +133,7 @@ describe('@hubspot/cli/lib/projects', () => {
         );
 
         expect(exitMock).not.toHaveBeenCalled();
-        expect(errorSpy).not.toHaveBeenCalled();
+        expect(logger.error).not.toHaveBeenCalled();
       });
     });
   });

@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { addSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -18,7 +15,7 @@ const { uiAccountDescription } = require('../../lib/ui');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.add';
+const i18nKey = 'commands.secrets.subcommands.add';
 
 exports.command = 'add <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -47,7 +44,7 @@ exports.handler = async options => {
         secretName,
       })
     );
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'add secret',
@@ -58,9 +55,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',

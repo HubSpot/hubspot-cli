@@ -14,9 +14,9 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.fetch';
+const i18nKey = 'commands.fetch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
 exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -50,17 +50,17 @@ exports.handler = async options => {
       options
     );
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addOverwriteOptions(yargs, true);
-  addModeOptions(yargs, { read: true }, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
+  addModeOptions(yargs, { read: true });
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

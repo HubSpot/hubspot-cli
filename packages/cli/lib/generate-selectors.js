@@ -8,7 +8,7 @@ const CSS_PSEUDO_CLASS_REGEX = new RegExp(
   /:active|:checked|:disabled|:empty|:enabled|:first-of-type|:focus|:hover|:in-range|:invalid|:link|:optional|:out-of-range|:read-only|:read-write|:required|:target|:valid|:visited/,
   'g'
 );
-const i18nKey = 'cli.commands.theme.subcommands.generateSelectors';
+const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
 let maxFieldsDepth = 0;
 

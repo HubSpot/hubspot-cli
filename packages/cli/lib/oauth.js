@@ -1,7 +1,7 @@
 const express = require('express');
 const open = require('open');
 const {
-  default: OAuth2Manager,
+  OAuth2Manager,
 } = require('@hubspot/local-dev-lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');

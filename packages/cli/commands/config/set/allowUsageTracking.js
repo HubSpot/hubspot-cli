@@ -4,8 +4,7 @@ const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey =
-  'cli.commands.config.subcommands.set.options.allowUsageTracking';
+const i18nKey = 'commands.config.subcommands.set.options.allowUsageTracking';
 
 const enableOrDisableUsageTracking = async () => {
   const { isEnabled } = await promptUser([

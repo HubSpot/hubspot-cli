@@ -18,8 +18,9 @@ const { validateMode, loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
+const i18nKey = 'commands.watch';
 
-const i18nKey = 'cli.commands.watch';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'watch [--src] [--dest]';
@@ -71,12 +72,9 @@ exports.handler = async options => {
 
   if (disableInitial) {
     logger.info(i18n(`${i18nKey}.warnings.disableInitial`));
-  } else {
+  } else if (!initialUpload) {
     logger.info(i18n(`${i18nKey}.warnings.notUploaded`, { path: src }));
-
-    if (!initialUpload) {
-      logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
-    }
+    logger.info(i18n(`${i18nKey}.warnings.initialUpload`));
   }
 
   if (initialUpload) {
@@ -87,21 +85,62 @@ exports.handler = async options => {
   }
 
   trackCommandUsage('watch', { mode }, accountId);
-  watch(accountId, absoluteSrcPath, dest, {
-    mode,
-    remove,
-    disableInitial: initialUpload ? false : true,
-    notify,
-    commandOptions: options,
-    filePaths: filesToUpload,
-  });
+
+  const postInitialUploadCallback = null;
+  const onUploadFolderError = error => {
+    logger.error(
+      i18n(`${i18nKey}.errors.folderFailed`, {
+        src,
+        dest,
+        accountId,
+      })
+    );
+    logError(error, {
+      accountId,
+    });
+  };
+  const onQueueAddError = null;
+  const onUploadFileError = (file, dest, accountId) => error => {
+    logger.error(
+      i18n(`${i18nKey}.errors.fileFailed`, {
+        file,
+        dest,
+        accountId,
+      })
+    );
+    logError(
+      error,
+      new ApiErrorContext({
+        accountId,
+        request: dest,
+        payload: file,
+      })
+    );
+  };
+  watch(
+    accountId,
+    absoluteSrcPath,
+    dest,
+    {
+      mode,
+      remove,
+      disableInitial: initialUpload ? false : true,
+      notify,
+      commandOptions: options,
+      filePaths: filesToUpload,
+    },
+    postInitialUploadCallback,
+    onUploadFolderError,
+    onQueueAddError,
+    onUploadFileError
+  );
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addModeOptions(yargs, { write: true }, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

@@ -1,10 +1,7 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -17,7 +14,7 @@ const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 const { uiBetaTag } = require('../lib/ui');
 
-const i18nKey = 'cli.commands.mv';
+const i18nKey = 'commands.mv';
 
 const getCorrectedDestPath = (srcPath, destPath) => {
   if (!isPathFolder(srcPath)) {
@@ -64,7 +61,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
+      logError(
         error,
         new ApiErrorContext({
           accountId,
@@ -77,9 +74,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',
     type: 'string',

@@ -6,11 +6,8 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const {
@@ -25,7 +22,7 @@ const {
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag } = require('../../lib/ui');
 
-const i18nKey = 'cli.commands.project.subcommands.download';
+const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'download [--project]';
@@ -50,10 +47,14 @@ exports.handler = async options => {
   trackCommandUsage('project-download', null, accountId);
 
   try {
-    const projectExists = await ensureProjectExists(accountId, projectName, {
-      allowCreate: false,
-      noLogs: true,
-    });
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
+    );
 
     if (!projectExists) {
       logger.error(
@@ -63,7 +64,7 @@ exports.handler = async options => {
         })
       );
       let { name: promptedProjectName } = await downloadProjectPrompt(options);
-      let projectName = promptedProjectName || project;
+      projectName = promptedProjectName || project;
     }
 
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
@@ -71,9 +72,10 @@ exports.handler = async options => {
     let buildNumberToDownload = buildNumber;
 
     if (!buildNumberToDownload) {
-      let projectBuildsResult;
-
-      projectBuildsResult = await fetchProjectBuilds(accountId, projectName);
+      const { data: projectBuildsResult } = await fetchProjectBuilds(
+        accountId,
+        projectName
+      );
 
       const { results: projectBuilds } = projectBuildsResult;
 
@@ -83,7 +85,7 @@ exports.handler = async options => {
       }
     }
 
-    const zippedProject = await downloadProject(
+    const { data: zippedProject } = await downloadProject(
       accountId,
       projectName,
       buildNumberToDownload
@@ -91,7 +93,7 @@ exports.handler = async options => {
 
     await extractZipArchive(
       zippedProject,
-      projectName,
+      sanitizeFileName(projectName),
       path.resolve(absoluteDestPath),
       { includesRootDir: false }
     );
@@ -104,13 +106,16 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    logError(
+      e,
+      new ApiErrorContext({ accountId, request: 'project download' })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs => {
-  addUseEnvironmentOptions(yargs, true);
+  addUseEnvironmentOptions(yargs);
 
   yargs.options({
     project: {

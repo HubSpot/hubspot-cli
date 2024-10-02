@@ -10,7 +10,7 @@ const { start: startTestServer } = require('@hubspot/serverless-dev-runtime');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.functions.subcommands.server';
+const i18nKey = 'commands.functions.subcommands.server';
 
 exports.command = 'server <path>';
 exports.describe = false;
@@ -68,9 +68,9 @@ exports.builder = yargs => {
     ],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

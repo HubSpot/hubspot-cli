@@ -10,7 +10,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.accounts.subcommands.rename';
+const i18nKey = 'commands.accounts.subcommands.rename';
 
 exports.command = 'rename <accountName> <newName>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -34,8 +34,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs.positional('accountName', {
     describe: i18n(`${i18nKey}.positionals.accountName.describe`),

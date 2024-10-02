@@ -2,7 +2,7 @@ const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { FEEDBACK_OPTIONS } = require('../constants');
 
-const i18nKey = 'cli.lib.prompts.feedbackPrompt';
+const i18nKey = 'lib.prompts.feedbackPrompt';
 
 const feedbackTypePrompt = bypassPrompt => {
   return promptUser([

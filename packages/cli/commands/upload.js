@@ -14,11 +14,7 @@ const {
   isAllowedExtension,
 } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../lib/errorHandlers/apiErrors');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { ApiErrorContext, logError } = require('../lib/errorHandlers/index');
 const {
   validateSrcAndDestPaths,
 } = require('@hubspot/local-dev-lib/cms/modules');
@@ -43,7 +39,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
 const { i18n } = require('../lib/lang');
-const i18nKey = 'cli.commands.upload';
+const i18nKey = 'commands.upload';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const {
   FieldsJs,
@@ -182,7 +178,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logApiUploadErrorInstance(
+        logError(
           error,
           new ApiErrorContext({
             accountId,
@@ -270,7 +266,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logErrorInstance(error, {
+        logError(error, {
           accountId,
         });
         process.exit(EXIT_CODES.WARNING);
@@ -279,10 +275,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addModeOptions(yargs, { write: true }, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

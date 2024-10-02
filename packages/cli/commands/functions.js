@@ -4,14 +4,14 @@ const deploy = require('./functions/deploy');
 const server = require('./functions/server');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.functions';
+const i18nKey = 'commands.functions';
 
 exports.command = 'functions';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
 
   yargs
     .command({

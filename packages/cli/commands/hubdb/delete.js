@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -12,7 +12,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.delete';
+const i18nKey = 'commands.hubdb.subcommands.delete';
 
 exports.command = 'delete <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -40,14 +40,14 @@ exports.handler = async options => {
         tableId,
       })
     );
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('tableId', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),

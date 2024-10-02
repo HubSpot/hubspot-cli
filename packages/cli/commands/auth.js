@@ -31,9 +31,7 @@ const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
 } = require('../lib/prompts/personalAccessKeyPrompt');
-const {
-  enterAccountNamePrompt,
-} = require('../lib/prompts/enterAccountNamePrompt');
+const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
 const {
   setAsDefaultAccountPrompt,
 } = require('../lib/prompts/setAsDefaultAccountPrompt');
@@ -48,9 +46,9 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
-const i18nKey = 'cli.commands.auth';
+const i18nKey = 'commands.auth';
 
 const TRACKING_STATUS = {
   STARTED: 'started',
@@ -72,19 +70,19 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
-  const { type, config: configPath, qa, account } = options;
+  const { type, config: c, qa, account } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
   logDebugInfo(options);
 
-  if (!getConfigPath()) {
+  if (!getConfigPath(c)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath);
+  loadConfig(c);
   checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
@@ -119,7 +117,7 @@ exports.handler = async options => {
           env
         );
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
 
       if (!updatedConfig) {
@@ -129,7 +127,7 @@ exports.handler = async options => {
       validName = updatedConfig.name;
 
       if (!validName) {
-        const { name: namePrompt } = await enterAccountNamePrompt(defaultName);
+        const { name: namePrompt } = await cliAccountNamePrompt(defaultName);
         validName = namePrompt;
       }
 
@@ -166,14 +164,14 @@ exports.handler = async options => {
   logger.log('');
   if (setAsDefault) {
     logger.success(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
+      i18n(`lib.prompts.setAsDefaultAccountPrompt.setAsDefaultAccount`, {
         accountName,
       })
     );
   } else {
     const config = getConfig();
     logger.info(
-      i18n(`cli.lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
+      i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
         accountName: config.defaultPortal,
       })
     );
@@ -218,8 +216,8 @@ exports.builder = yargs => {
     },
   });
 
-  addConfigOptions(yargs, true);
-  addTestingOptions(yargs, true);
+  addConfigOptions(yargs);
+  addTestingOptions(yargs);
 
   return yargs;
 };

@@ -5,7 +5,8 @@ const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const { logError } = require('../lib/errorHandlers/index');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
   trackHelpUsage,
@@ -14,6 +15,8 @@ const {
 const { getIsInProject } = require('../lib/projects');
 const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
+const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { UI_COLORS, uiCommandReference } = require('../lib/ui');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -40,7 +43,6 @@ const accountsCommand = require('../commands/accounts');
 const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -48,14 +50,32 @@ const notifier = updateNotifier({
   shouldNotifyInNpmScript: true,
 });
 
-const i18nKey = 'cli.commands.generalErrors';
+const i18nKey = 'commands.generalErrors';
 
-const CLI_UPGRADE_MESSAGE =
-  chalk.bold('The CMS CLI is now the HubSpot CLI') +
-  '\n\nTo upgrade, run:\n\nnpm uninstall -g @hubspot/cms-cli\nand npm install -g @hubspot/cli';
+const CMS_CLI_PACKAGE_NAME = '@hubspot/cms-cli';
 
 notifier.notify({
-  message: pkg.name === '@hubspot/cms-cli' ? CLI_UPGRADE_MESSAGE : null,
+  message:
+    pkg.name === CMS_CLI_PACKAGE_NAME
+      ? i18n(`${i18nKey}.updateNotify.cmsUpdateNotification`, {
+          packageName: CMS_CLI_PACKAGE_NAME,
+          updateCommand: uiCommandReference('{updateCommand}'),
+        })
+      : i18n(`${i18nKey}.updateNotify.cliUpdateNotification`, {
+          updateCommand: uiCommandReference('{updateCommand}'),
+        }),
+  defer: false,
+  boxenOptions: {
+    borderColor: UI_COLORS.MARIGOLD_DARK,
+    margin: 1,
+    padding: 1,
+    textAlignment: 'center',
+    borderStyle: 'round',
+    title:
+      pkg.name === CMS_CLI_PACKAGE_NAME
+        ? null
+        : chalk.bold(i18n(`${i18nKey}.updateNotify.notifyTitle`)),
+  },
 });
 
 const getTerminalWidth = () => {
@@ -70,7 +90,7 @@ const handleFailure = (msg, err, yargs) => {
   if (msg) {
     logger.error(msg);
   } else if (err) {
-    logErrorInstance(err);
+    logError(err);
   }
 
   if (msg === null) {
@@ -110,9 +130,13 @@ const performChecks = argv => {
   }
 };
 
+const setRequestHeaders = () => {
+  addUserAgentHeader('HubSpot CLI', pkg.version);
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel])
+  .middleware([setLogLevel, setRequestHeaders])
   .exitProcess(false)
   .fail(handleFailure)
   .option('debug', {

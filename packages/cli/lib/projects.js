@@ -7,6 +7,7 @@ const findup = require('findup-sync');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
@@ -17,6 +18,9 @@ const {
   PROJECT_DEPLOY_TEXT,
   PROJECT_CONFIG_FILE,
   PROJECT_TASK_TYPES,
+  PROJECT_ERROR_TYPES,
+  HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+  PROJECT_COMPONENT_TYPES,
 } = require('./constants');
 const {
   createProject,
@@ -29,10 +33,7 @@ const {
   fetchBuildWarnLogs,
   fetchDeployWarnLogs,
 } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  isSpecifiedError,
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
@@ -41,13 +42,9 @@ const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
-const { HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH } = require('./constants');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 
-const i18nKey = 'cli.lib.projects';
+const i18nKey = 'lib.projects';
 
 const SPINNER_STATUS = {
   SPINNING: 'spinning',
@@ -59,8 +56,10 @@ const writeProjectConfig = (configPath, config) => {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     logger.debug(`Wrote project config at ${configPath}`);
   } catch (e) {
-    logger.error(`Could not write project config at ${configPath}`);
+    logger.debug(e);
+    return false;
   }
+  return true;
 };
 
 const getIsInProject = _dir => {
@@ -210,11 +209,11 @@ const pollFetchProject = async (accountId, projectName) => {
     });
     const pollInterval = setInterval(async () => {
       try {
-        const project = await fetchProject(accountId, projectName);
-        if (project) {
+        const response = await fetchProject(accountId, projectName);
+        if (response && response.data) {
           SpinniesManager.remove('pollFetchProject');
           clearInterval(pollInterval);
-          resolve(project);
+          resolve(response);
         }
       } catch (err) {
         if (
@@ -249,10 +248,10 @@ const ensureProjectExists = async (
 ) => {
   const accountIdentifier = uiAccountDescription(accountId);
   try {
-    const project = withPolling
+    const { data: project } = withPolling
       ? await pollFetchProject(accountId, projectName)
       : await fetchProject(accountId, projectName);
-    return !!project;
+    return { projectExists: !!project, project };
   } catch (err) {
     if (isSpecifiedError(err, { statusCode: 404 })) {
       let shouldCreateProject = forceCreate;
@@ -273,19 +272,16 @@ const ensureProjectExists = async (
 
       if (shouldCreateProject) {
         try {
-          await createProject(accountId, projectName);
+          const { data: project } = await createProject(accountId, projectName);
           logger.success(
             i18n(`${i18nKey}.ensureProjectExists.createSuccess`, {
               projectName,
               accountIdentifier,
             })
           );
-          return true;
+          return { projectExists: true, project };
         } catch (err) {
-          return logApiErrorInstance(
-            err,
-            new ApiErrorContext({ accountId, projectName })
-          );
+          return logError(err, new ApiErrorContext({ accountId }));
         }
       } else {
         if (!noLogs) {
@@ -296,18 +292,18 @@ const ensureProjectExists = async (
             })
           );
         }
-        return false;
+        return { projectExists: false };
       }
     }
     if (
-      isSpecifiedHubSpotAuthError(err, {
+      isSpecifiedError(err, {
         statusCode: 401,
       })
     ) {
       logger.error(err.message);
       process.exit(EXIT_CODES.ERROR);
     }
-    logApiErrorInstance(err, new ApiErrorContext({ accountId, projectName }));
+    logError(err, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -325,17 +321,19 @@ const getProjectDetailUrl = (projectName, accountId) => {
   return `${getProjectHomeUrl(accountId)}/project/${projectName}`;
 };
 
+const getProjectActivityUrl = (projectName, accountId) => {
+  if (!projectName) return;
+  return `${getProjectDetailUrl(projectName, accountId)}/activity`;
+};
+
 const getProjectBuildDetailUrl = (projectName, buildId, accountId) => {
   if (!projectName || !buildId || !accountId) return;
-  return `${getProjectDetailUrl(projectName, accountId)}/build/${buildId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/build/${buildId}`;
 };
 
 const getProjectDeployDetailUrl = (projectName, deployId, accountId) => {
   if (!projectName || !deployId || !accountId) return;
-  return `${getProjectDetailUrl(
-    projectName,
-    accountId
-  )}/activity/deploy/${deployId}`;
+  return `${getProjectActivityUrl(projectName, accountId)}/deploy/${deployId}`;
 };
 
 const uploadProjectFiles = async (
@@ -360,7 +358,7 @@ const uploadProjectFiles = async (
   let error;
 
   try {
-    const upload = await uploadProject(
+    const { data: upload } = await uploadProject(
       accountId,
       projectName,
       filePath,
@@ -404,23 +402,13 @@ const pollProjectBuildAndDeploy = async (
   buildId,
   silenceLogs = false
 ) => {
-  const buildStatus = await pollBuildStatus(
+  let buildStatus = await pollBuildStatus(
     accountId,
     projectConfig.name,
     buildId,
     null,
     silenceLogs
   );
-
-  const {
-    autoDeployId,
-    isAutoDeployEnabled,
-    deployStatusTaskLocator,
-  } = buildStatus;
-
-  // autoDeployId of 0 indicates a skipped deploy
-  const isDeploying =
-    isAutoDeployEnabled && autoDeployId > 0 && deployStatusTaskLocator;
 
   if (!silenceLogs) {
     uiLine();
@@ -436,7 +424,7 @@ const pollProjectBuildAndDeploy = async (
   if (buildStatus.status === 'FAILURE') {
     result.succeeded = false;
     return result;
-  } else if (isDeploying) {
+  } else if (buildStatus.isAutoDeployEnabled) {
     if (!silenceLogs) {
       logger.log(
         i18n(
@@ -451,17 +439,45 @@ const pollProjectBuildAndDeploy = async (
       displayWarnLogs(accountId, projectConfig.name, buildId);
     }
 
-    const deployStatus = await pollDeployStatus(
-      accountId,
-      projectConfig.name,
-      deployStatusTaskLocator.id,
-      buildId,
-      silenceLogs
-    );
-    result.deployResult = deployStatus;
+    // autoDeployId of 0 indicates a skipped deploy
+    const getIsDeploying = () =>
+      buildStatus.autoDeployId > 0 && buildStatus.deployStatusTaskLocator;
 
-    if (deployStatus.status === 'FAILURE') {
-      result.succeeded = false;
+    // Sometimes the deploys do not immediately initiate, give them a chance to kick off
+    if (!getIsDeploying()) {
+      buildStatus = await pollBuildAutodeployStatus(
+        accountId,
+        projectConfig.name,
+        buildId
+      );
+    }
+
+    if (getIsDeploying()) {
+      const deployStatus = await pollDeployStatus(
+        accountId,
+        projectConfig.name,
+        buildStatus.deployStatusTaskLocator.id,
+        buildId,
+        silenceLogs
+      );
+      result.deployResult = deployStatus;
+
+      if (deployStatus.status === 'FAILURE') {
+        result.succeeded = false;
+      }
+    } else if (!silenceLogs) {
+      logger.log(
+        i18n(
+          `${i18nKey}.pollProjectBuildAndDeploy.unableToFindAutodeployStatus`,
+          {
+            buildId,
+            viewDeploysLink: uiLink(
+              i18n(`${i18nKey}.pollProjectBuildAndDeploy.viewDeploys`),
+              getProjectActivityUrl(projectConfig.name, accountId)
+            ),
+          }
+        )
+      );
     }
   }
 
@@ -547,7 +563,7 @@ const handleProjectUpload = async (
           buildId
         );
       }
-      resolve(uploadResult);
+      resolve(uploadResult || {});
     })
   );
 
@@ -587,17 +603,6 @@ const makePollTaskStatusFunc = ({
   statusStrings,
   linkToHubSpot,
 }) => {
-  const isTaskComplete = task => {
-    if (
-      !task[statusText.SUBTASK_KEY].length ||
-      task.status === statusText.STATES.FAILURE
-    ) {
-      return true;
-    } else if (task.status === statusText.STATES.SUCCESS) {
-      return task.isAutoDeployEnabled ? !!task.deployStatusTaskLocator : true;
-    }
-  };
-
   return async (
     accountId,
     taskName,
@@ -625,8 +630,10 @@ const makePollTaskStatusFunc = ({
     });
 
     const [
-      initialTaskStatus,
-      { topLevelComponentsWithChildren: taskStructure },
+      { data: initialTaskStatus },
+      {
+        data: { topLevelComponentsWithChildren: taskStructure },
+      },
     ] = await Promise.all([
       statusFn(accountId, taskName, taskId),
       structureFn(accountId, taskName, taskId),
@@ -634,9 +641,9 @@ const makePollTaskStatusFunc = ({
 
     const tasksById = initialTaskStatus[statusText.SUBTASK_KEY].reduce(
       (acc, task) => {
-        const type = task[statusText.TYPE_KEY];
-        if (type !== 'APP_ID' && type !== 'SERVERLESS_PKG') {
-          acc[task.id] = task;
+        const { id, visible } = task;
+        if (visible) {
+          acc[id] = task;
         }
         return acc;
       },
@@ -676,7 +683,7 @@ const makePollTaskStatusFunc = ({
         const formattedTaskType = PROJECT_TASK_TYPES[taskType]
           ? `[${PROJECT_TASK_TYPES[taskType]}]`
           : '';
-        const text = `${statusText.STATUS_TEXT} ${chalk.bold(
+        const text = `${indent <= 2 ? statusText.STATUS_TEXT : ''} ${chalk.bold(
           taskName
         )} ${formattedTaskType} ...${newline ? '\n' : ''}`;
 
@@ -698,9 +705,53 @@ const makePollTaskStatusFunc = ({
 
     return new Promise((resolve, reject) => {
       const pollInterval = setInterval(async () => {
-        const taskStatus = await statusFn(accountId, taskName, taskId).catch(
-          reject
-        );
+        let taskStatus;
+        try {
+          const { data } = await statusFn(accountId, taskName, taskId);
+          taskStatus = data;
+        } catch (e) {
+          logger.debug(e);
+          logError(
+            e,
+            new ApiErrorContext({
+              accountId,
+              projectName: taskName,
+            })
+          );
+          return reject(
+            new Error(
+              i18n(
+                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+                {
+                  taskType:
+                    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
+                      ? 'build'
+                      : 'deploy',
+                }
+              )
+            )
+          );
+        }
+
+        if (
+          !taskStatus ||
+          !taskStatus.status ||
+          !taskStatus[statusText.SUBTASK_KEY]
+        ) {
+          return reject(
+            new Error(
+              i18n(
+                `${i18nKey}.makePollTaskStatusFunc.errorFetchingTaskStatus`,
+                {
+                  taskType:
+                    statusText.TYPE_KEY === PROJECT_BUILD_TEXT.TYPE_KEY
+                      ? 'build'
+                      : 'deploy',
+                }
+              )
+            )
+          );
+        }
 
         const { status, [statusText.SUBTASK_KEY]: subTaskStatus } = taskStatus;
 
@@ -742,57 +793,62 @@ const makePollTaskStatusFunc = ({
             }
           });
 
-          if (isTaskComplete(taskStatus)) {
-            if (status === statusText.STATES.SUCCESS) {
-              SpinniesManager.succeed(overallTaskSpinniesKey, {
-                text: statusStrings.SUCCESS(taskName, displayId),
-              });
-            } else if (status === statusText.STATES.FAILURE) {
-              SpinniesManager.fail(overallTaskSpinniesKey, {
-                text: statusStrings.FAIL(taskName, displayId),
-              });
+          if (status === statusText.STATES.SUCCESS) {
+            SpinniesManager.succeed(overallTaskSpinniesKey, {
+              text: statusStrings.SUCCESS(taskName, displayId),
+            });
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          } else if (status === statusText.STATES.FAILURE) {
+            SpinniesManager.fail(overallTaskSpinniesKey, {
+              text: statusStrings.FAIL(taskName, displayId),
+            });
 
-              if (!silenceLogs) {
-                const failedSubtasks = subTaskStatus.filter(
-                  subtask => subtask.status === 'FAILURE'
-                );
+            if (!silenceLogs) {
+              const failedSubtasks = subTaskStatus.filter(
+                subtask => subtask.status === 'FAILURE'
+              );
 
-                uiLine();
+              uiLine();
+              logger.log(
+                `${statusStrings.SUBTASK_FAIL(
+                  displayId,
+                  failedSubtasks.length === 1
+                    ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
+                    : failedSubtasks.length + ' components'
+                )}\n`
+              );
+              logger.log('See below for a summary of errors.');
+              uiLine();
+
+              const displayErrors = failedSubtasks.filter(
+                subtask =>
+                  subtask.standardError.subCategory !==
+                    PROJECT_ERROR_TYPES.SUBBUILD_FAILED &&
+                  subtask.standardError.subCategory !==
+                    PROJECT_ERROR_TYPES.SUBDEPLOY_FAILED
+              );
+
+              displayErrors.forEach(subTask => {
                 logger.log(
-                  `${statusStrings.SUBTASK_FAIL(
-                    displayId,
-                    failedSubtasks.length === 1
-                      ? failedSubtasks[0][statusText.SUBTASK_NAME_KEY]
-                      : failedSubtasks.length + ' components'
-                  )}\n`
+                  `\n--- ${chalk.bold(
+                    subTask[statusText.SUBTASK_NAME_KEY]
+                  )} failed with the following error ---`
                 );
-                logger.log('See below for a summary of errors.');
-                uiLine();
+                logger.error(subTask.errorMessage);
 
-                const displayErrors = failedSubtasks.filter(
-                  subtask =>
-                    subtask.standardError.subCategory !==
-                    'BuildPipelineErrorType.DEPENDENT_SUBBUILD_FAILED'
-                );
-
-                displayErrors.forEach(subTask => {
-                  logger.log(
-                    `\n--- ${chalk.bold(
-                      subTask[statusText.SUBTASK_NAME_KEY]
-                    )} failed with the following error ---`
-                  );
-                  logger.error(subTask.errorMessage);
-
-                  // Log nested errors
-                  if (subTask.standardError && subTask.standardError.errors) {
-                    logger.log();
-                    subTask.standardError.errors.forEach(error => {
-                      logger.log(error.message);
-                    });
-                  }
-                });
-              }
+                // Log nested errors
+                if (subTask.standardError && subTask.standardError.errors) {
+                  logger.log();
+                  subTask.standardError.errors.forEach(error => {
+                    logger.log(error.message);
+                  });
+                }
+              });
             }
+            clearInterval(pollInterval);
+            resolve(taskStatus);
+          } else if (!subTaskStatus.length) {
             clearInterval(pollInterval);
             resolve(taskStatus);
           }
@@ -800,6 +856,41 @@ const makePollTaskStatusFunc = ({
       }, POLLING_DELAY);
     });
   };
+};
+
+const pollBuildAutodeployStatus = (accountId, taskName, buildId) => {
+  return new Promise((resolve, reject) => {
+    let maxIntervals = (30 * 1000) / POLLING_DELAY; // Num of intervals in ~30s
+
+    const pollInterval = setInterval(async () => {
+      let taskStatus;
+      try {
+        taskStatus = await getBuildStatus(accountId, taskName, buildId);
+      } catch (e) {
+        logger.debug(e);
+        return reject(
+          new Error(
+            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+          )
+        );
+      }
+
+      if (!taskStatus || !taskStatus.status) {
+        return reject(
+          new Error(
+            i18n(`${i18nKey}.pollBuildAutodeployStatusError`, { buildId })
+          )
+        );
+      }
+
+      if (taskStatus.deployStatusTaskLocator || maxIntervals <= 0) {
+        clearInterval(pollInterval);
+        resolve(taskStatus);
+      } else {
+        maxIntervals -= 1;
+      }
+    }, POLLING_DELAY);
+  });
 };
 
 const pollBuildStatus = makePollTaskStatusFunc({
@@ -859,7 +950,7 @@ const createProjectComponent = async (
   name,
   projectComponentsVersion
 ) => {
-  const i18nKey = 'cli.commands.project.subcommands.add';
+  const i18nKey = 'commands.project.subcommands.add';
   let componentName = name;
 
   const configInfo = await getProjectConfig();
@@ -893,9 +984,23 @@ const displayWarnLogs = async (
   let result;
 
   if (isDeploy) {
-    result = await fetchDeployWarnLogs(accountId, projectName, taskId);
+    try {
+      const { data } = await fetchDeployWarnLogs(
+        accountId,
+        projectName,
+        taskId
+      );
+      result = data;
+    } catch (e) {
+      logError(e);
+    }
   } else {
-    result = await fetchBuildWarnLogs(accountId, projectName, taskId);
+    try {
+      const { data } = await fetchBuildWarnLogs(accountId, projectName, taskId);
+      result = data;
+    } catch (e) {
+      logError(e);
+    }
   }
 
   if (result && result.logs.length) {
@@ -904,6 +1009,16 @@ const displayWarnLogs = async (
       logger.log('');
     });
   }
+};
+
+const getProjectComponentsByVersion = async projectComponentsVersion => {
+  const config = await fetchFileFromRepository(
+    HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+    'config.json',
+    projectComponentsVersion
+  );
+
+  return config[PROJECT_COMPONENT_TYPES.COMPONENTS];
 };
 
 module.exports = {
@@ -923,4 +1038,5 @@ module.exports = {
   logFeedbackMessage,
   createProjectComponent,
   displayWarnLogs,
+  getProjectComponentsByVersion,
 };

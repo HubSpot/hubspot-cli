@@ -23,9 +23,7 @@
  */
 
 const fs = require('fs-extra');
-const {
-  logFileSystemErrorInstance,
-} = require('../lib/errorHandlers/fileSystemErrors');
+const { logError } = require('../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { setLogLevel, getAccountId } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
@@ -34,7 +32,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.create';
+const i18nKey = 'commands.create';
 
 const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
@@ -87,9 +85,9 @@ exports.handler = async options => {
         path: dest,
       })
     );
-    logFileSystemErrorInstance(e, {
+    logError(e, {
       filepath: dest,
-      write: true,
+      operation: 'write',
     });
     return;
   }

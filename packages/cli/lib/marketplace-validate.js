@@ -14,7 +14,7 @@ const SLEEP_TIME = 2000;
 const kickOffValidation = async (accountId, assetType, src) => {
   const requestGroup = 'EXTERNAL_DEVELOPER';
   try {
-    const requestResult = await requestValidation(accountId, {
+    const { data: requestResult } = await requestValidation(accountId, {
       path: src,
       assetType,
       requestGroup,
@@ -29,7 +29,7 @@ const kickOffValidation = async (accountId, assetType, src) => {
 const pollForValidationFinish = async (accountId, validationId) => {
   try {
     const checkValidationStatus = async () => {
-      const validationStatus = await getValidationStatus(accountId, {
+      const { data: validationStatus } = await getValidationStatus(accountId, {
         validationId,
       });
 
@@ -47,7 +47,7 @@ const pollForValidationFinish = async (accountId, validationId) => {
 
 const fetchValidationResults = async (accountId, validationId) => {
   try {
-    const validationResults = await getValidationResults(accountId, {
+    const { data: validationResults } = await getValidationResults(accountId, {
       validationId,
     });
     return validationResults;
@@ -57,12 +57,20 @@ const fetchValidationResults = async (accountId, validationId) => {
   }
 };
 
-const processValidationErrors = validationResults => {
+const processValidationErrors = (i18nKey, validationResults) => {
   if (validationResults.errors.length) {
-    const { errors } = validationResults;
+    const { assetPath, errors } = validationResults;
 
     errors.forEach(err => {
-      logger.error(`${err.context}`);
+      if (err.failureReasonType === 'DOWNLOAD_EMPTY') {
+        logger.error(
+          i18n(`${i18nKey}.errors.invalidPath`, {
+            path: assetPath,
+          })
+        );
+      } else {
+        logger.error(`${err.context}`);
+      }
     });
     process.exit(EXIT_CODES.ERROR);
   }

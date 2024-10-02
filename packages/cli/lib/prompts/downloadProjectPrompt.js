@@ -1,29 +1,25 @@
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.downloadProjectPrompt';
+const i18nKey = 'lib.prompts.downloadProjectPrompt';
 
-const createProjectsList = async () => {
-  const accountId = getAccountId();
-
+const createProjectsList = async accountId => {
   try {
-    const projects = await fetchProjects(accountId);
+    const { data: projects } = await fetchProjects(accountId);
     return projects.results;
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+    logError(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
 
 const downloadProjectPrompt = async (promptOptions = {}) => {
-  const projectsList = await createProjectsList();
+  const accountId = getAccountId(promptOptions.account);
+  const projectsList = await createProjectsList(accountId);
 
   return promptUser([
     {
@@ -33,7 +29,7 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
           !projectsList.find(p => p.name === promptOptions.name)
           ? i18n(`${i18nKey}.errors.projectNotFound`, {
               projectName: promptOptions.project,
-              accountId: getAccountId(),
+              accountId,
             })
           : i18n(`${i18nKey}.selectProject`);
       },

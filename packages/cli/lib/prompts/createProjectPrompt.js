@@ -1,5 +1,11 @@
+const fs = require('fs');
 const path = require('path');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const {
+  getCwd,
+  sanitizeFileName,
+  isValidPath,
+  untildify,
+} = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
 const { promptUser } = require('./promptUtils');
 const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
@@ -11,7 +17,7 @@ const {
   DEFAULT_PROJECT_TEMPLATE_BRANCH,
 } = require('../constants');
 
-const i18nKey = 'cli.lib.prompts.createProjectPrompt';
+const i18nKey = 'lib.prompts.createProjectPrompt';
 
 const PROJECT_PROPERTIES = ['name', 'label', 'path', 'insertPath'];
 
@@ -48,13 +54,26 @@ const createTemplateOptions = async (templateSource, githubRef) => {
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };
 
-const createProjectPrompt = async (githubRef, promptOptions = {}) => {
-  const projectTemplates = await createTemplateOptions(
-    promptOptions.templateSource,
-    githubRef
-  );
+const createProjectPrompt = async (
+  githubRef,
+  promptOptions = {},
+  skipTemplatePrompt = false
+) => {
+  let projectTemplates = [];
+  let selectedTemplate;
 
-  return promptUser([
+  if (!skipTemplatePrompt) {
+    projectTemplates = await createTemplateOptions(
+      promptOptions.templateSource,
+      githubRef
+    );
+
+    selectedTemplate =
+      promptOptions.template &&
+      projectTemplates.find(t => t.name === promptOptions.template);
+  }
+
+  const result = await promptUser([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -71,13 +90,25 @@ const createProjectPrompt = async (githubRef, promptOptions = {}) => {
       message: i18n(`${i18nKey}.enterLocation`),
       when: !promptOptions.location,
       default: answers => {
-        return path.resolve(getCwd(), answers.name || promptOptions.name);
+        const projectName = sanitizeFileName(
+          answers.name || promptOptions.name
+        );
+        return path.resolve(getCwd(), projectName);
       },
       validate: input => {
         if (!input) {
           return i18n(`${i18nKey}.errors.locationRequired`);
         }
+        if (fs.existsSync(input)) {
+          return i18n(`${i18nKey}.errors.invalidLocation`);
+        }
+        if (!isValidPath(input)) {
+          return i18n(`${i18nKey}.errors.invalidCharacters`);
+        }
         return true;
+      },
+      filter: input => {
+        return untildify(input);
       },
     },
     {
@@ -90,9 +121,7 @@ const createProjectPrompt = async (githubRef, promptOptions = {}) => {
             })
           : i18n(`${i18nKey}.selectTemplate`);
       },
-      when:
-        !promptOptions.template ||
-        !projectTemplates.find(t => t.name === promptOptions.template),
+      when: !skipTemplatePrompt && !selectedTemplate,
       type: 'list',
       choices: projectTemplates.map(template => {
         return {
@@ -102,6 +131,12 @@ const createProjectPrompt = async (githubRef, promptOptions = {}) => {
       }),
     },
   ]);
+
+  if (selectedTemplate) {
+    result.template = selectedTemplate;
+  }
+
+  return result;
 };
 
 module.exports = {

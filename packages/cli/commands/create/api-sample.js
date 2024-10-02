@@ -14,7 +14,7 @@ const {
 } = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.create.subcommands.apiSample';
+const i18nKey = 'commands.create.subcommands.apiSample';
 
 module.exports = {
   hidden: true,

@@ -3,7 +3,7 @@ const fs = require('fs');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const escapeRegExp = require('@hubspot/local-dev-lib/escapeRegExp');
-const i18nKey = 'cli.lib.prompts.uploadPrompt';
+const i18nKey = 'lib.prompts.uploadPrompt';
 const FIELDS_FILES = ['fields.json', 'fields.js', 'fields.cjs', 'fields.mjs'];
 
 const fieldsJsPrompt = async (filePath, projectDir, skipFiles = []) => {

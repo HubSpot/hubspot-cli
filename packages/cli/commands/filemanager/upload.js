@@ -10,11 +10,7 @@ const {
 } = require('@hubspot/local-dev-lib/cms/modules');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -25,7 +21,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.filemanager.subcommands.upload';
+const i18nKey = 'commands.filemanager.subcommands.upload';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'upload <src> <dest>';
@@ -106,7 +102,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logApiUploadErrorInstance(
+        logError(
           error,
           new ApiErrorContext({
             accountId,
@@ -133,7 +129,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
-        logErrorInstance(error, {
+        logError(error, {
           accountId,
         });
       });
@@ -141,9 +137,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

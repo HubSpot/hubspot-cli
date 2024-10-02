@@ -6,7 +6,7 @@ const {
 } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 
-const i18nKey = 'cli.lib.process';
+const i18nKey = 'lib.process';
 
 const handleExit = callback => {
   const terminationSignals = [

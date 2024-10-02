@@ -1,7 +1,7 @@
 const { lint } = require('@hubspot/local-dev-lib/cms/validate');
 const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
 const {
   addConfigOptions,
@@ -13,7 +13,7 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'cli.commands.lint';
+const i18nKey = 'commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
 exports.command = 'lint <path>';
@@ -41,7 +41,7 @@ exports.handler = async options => {
     });
   } catch (err) {
     logger.groupEnd(groupName);
-    logErrorInstance(err, { accountId });
+    logError(err, { accountId });
     process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);
@@ -53,8 +53,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

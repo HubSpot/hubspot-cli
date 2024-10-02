@@ -2,34 +2,31 @@ const SpinniesManager = require('./ui/SpinniesManager');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
+const { getAvailableSyncTypes } = require('./sandboxes');
+const { initiateSync } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const {
-  getAvailableSyncTypes,
-  pollSyncTaskStatus,
-  syncTypes,
-  isDevelopmentSandbox,
-} = require('./sandboxes');
-const { initiateSync } = require('@hubspot/local-dev-lib/sandboxes');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
-const {
-  isSpecifiedError,
-  isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+  debugError,
+  logError,
+  ApiErrorContext,
+} = require('./errorHandlers/index');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { getSandboxTypeAsString } = require('./sandboxes');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { uiAccountDescription } = require('./ui');
+const {
+  uiAccountDescription,
+  uiLine,
+  uiLink,
+  uiCommandDisabledBanner,
+} = require('./ui');
+const { isDevelopmentSandbox } = require('./accountTypes');
 
-const i18nKey = 'cli.lib.sandbox.sync';
+const i18nKey = 'lib.sandbox.sync';
 
 /**
  * @param {Object} accountConfig - Account config of sandbox portal
  * @param {Object} parentAccountConfig - Account config of parent portal
  * @param {String} env - Environment (QA/Prod)
  * @param {Array} syncTasks - Array of available sync tasks
- * @param {Boolean} allowEarlyTermination - Option to allow a keypress to terminate early
- * @param {Boolean} skipPolling - Option to skip progress bars for polling and let sync run in background
  * @returns
  */
 const syncSandbox = async ({
@@ -37,15 +34,14 @@ const syncSandbox = async ({
   parentAccountConfig,
   env,
   syncTasks,
-  allowEarlyTermination = true,
-  skipPolling = false,
+  slimInfoMessage = false,
 }) => {
   const accountId = getAccountId(accountConfig.portalId);
   const parentAccountId = getAccountId(parentAccountConfig.portalId);
+  const isDevSandbox = isDevelopmentSandbox(accountConfig);
   SpinniesManager.init({
     succeedColor: 'white',
   });
-  let initiateSyncResponse;
   let availableSyncTasks = syncTasks;
 
   const baseUrl = getHubSpotWebsiteOrigin(env);
@@ -70,44 +66,36 @@ const syncSandbox = async ({
       text: i18n(`${i18nKey}.loading.startSync`),
     });
 
-    initiateSyncResponse = await initiateSync(
+    await initiateSync(
       parentAccountId,
       accountId,
       availableSyncTasks,
       accountId
     );
-
-    if (allowEarlyTermination) {
-      logger.log(i18n(`${i18nKey}.info.earlyExit`));
-    }
+    let spinniesText = isDevSandbox
+      ? `${i18nKey}.loading.succeedDevSb`
+      : `${i18nKey}.loading.succeed`;
     SpinniesManager.succeed('sandboxSync', {
-      text: i18n(`${i18nKey}.loading.succeed`, {
-        accountName: uiAccountDescription(accountId),
-      }),
+      text: i18n(
+        slimInfoMessage ? `${i18nKey}.loading.successDevSbInfo` : spinniesText,
+        {
+          accountName: uiAccountDescription(accountId),
+          url: uiLink(
+            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            syncStatusUrl
+          ),
+        }
+      ),
     });
-    if (skipPolling && isDevelopmentSandbox(accountConfig)) {
-      if (syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS)) {
-        logger.log(i18n(`${i18nKey}.loading.skipPollingWithContacts`));
-      } else {
-        logger.log(i18n(`${i18nKey}.loading.skipPolling`));
-      }
-      logger.log('');
-    }
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('sandboxSync', {
       text: i18n(`${i18nKey}.loading.fail`),
     });
 
     logger.log('');
-    if (isMissingScopeError(err)) {
-      logger.error(
-        i18n(`${i18nKey}.failure.missingScopes`, {
-          accountName: uiAccountDescription(parentAccountId),
-        })
-      );
-    } else if (
+    if (
       isSpecifiedError(err, {
         statusCode: 403,
         category: 'BANNED',
@@ -157,53 +145,44 @@ const syncSandbox = async ({
           account: uiAccountDescription(accountId),
         })
       );
+    } else if (
+      isSpecifiedError(err, {
+        statusCode: 404,
+      })
+    ) {
+      uiCommandDisabledBanner(
+        'hs sandbox sync',
+        'https://app.hubspot.com/l/docs/guides/crm/project-cli-commands#developer-projects-cli-commands-beta'
+      );
     } else {
-      logErrorInstance(err);
+      logError(
+        err,
+        new ApiErrorContext({
+          accountId: parentAccountId,
+          request: 'sandbox sync',
+        })
+      );
     }
     logger.log('');
     throw err;
   }
 
-  if (!skipPolling) {
-    try {
-      logger.log('');
-      logger.log('Sync progress:');
-      // Poll sync task status to show progress bars
-      await pollSyncTaskStatus(
-        parentAccountId,
-        initiateSyncResponse.id,
-        syncStatusUrl,
-        allowEarlyTermination
-      );
-
-      logger.log('');
-      SpinniesManager.add('syncComplete', {
-        text: i18n(`${i18nKey}.polling.syncing`),
-      });
-      SpinniesManager.succeed('syncComplete', {
-        text: i18n(`${i18nKey}.polling.succeed`),
-      });
-      logger.log('');
-      logger.log(
-        i18n(`${i18nKey}.info.syncStatus`, {
-          url: syncStatusUrl,
-        })
-      );
-    } catch (err) {
-      // If polling fails at this point, we do not track a failed sync since it is running in the background.
-      logErrorInstance(err);
-
-      SpinniesManager.add('syncComplete', {
-        text: i18n(`${i18nKey}.polling.syncing`),
-      });
-      SpinniesManager.fail('syncComplete', {
-        text: i18n(`${i18nKey}.polling.fail`, {
-          url: syncStatusUrl,
-        }),
-      });
-
-      throw err;
-    }
+  if (!slimInfoMessage) {
+    logger.log();
+    uiLine();
+    logger.info(
+      i18n(
+        `${i18nKey}.info.${isDevSandbox ? 'syncMessageDevSb' : 'syncMessage'}`,
+        {
+          url: uiLink(
+            i18n(`${i18nKey}.info.syncStatusDetailsLinkText`),
+            syncStatusUrl
+          ),
+        }
+      )
+    );
+    uiLine();
+    logger.log();
   }
 };
 

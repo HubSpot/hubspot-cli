@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { downloadHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -13,7 +13,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.fetch';
+const i18nKey = 'commands.hubdb.subcommands.fetch';
 
 exports.command = 'fetch <tableId> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -37,14 +37,14 @@ exports.handler = async options => {
       })
     );
   } catch (e) {
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('tableId', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),

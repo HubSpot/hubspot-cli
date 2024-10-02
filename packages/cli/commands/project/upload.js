@@ -6,7 +6,7 @@ const {
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { uiBetaTag, uiLine } = require('../../lib/ui');
+const { uiBetaTag, uiCommandReference } = require('../../lib/ui');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -20,15 +20,12 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-const i18nKey = 'cli.commands.project.subcommands.upload';
+const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload [path] [--forceCreate] [--message]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -71,18 +68,17 @@ exports.handler = async options => {
         logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
         logger.log();
       } else {
-        logApiErrorInstance(
+        logError(
           result.uploadError,
           new ApiErrorContext({
             accountId,
-            projectName: projectConfig.name,
+            request: 'project upload',
           })
         );
       }
       process.exit(EXIT_CODES.ERROR);
     }
     if (result.succeeded && !result.buildResult.isAutoDeployEnabled) {
-      uiLine();
       logger.log(
         chalk.bold(
           i18n(`${i18nKey}.logs.buildSucceeded`, {
@@ -90,15 +86,20 @@ exports.handler = async options => {
           })
         )
       );
-      uiLine();
+      logger.log(
+        i18n(`${i18nKey}.logs.autoDeployDisabled`, {
+          deployCommand: uiCommandReference(
+            `hs project deploy --build=${result.buildId}`
+          ),
+        })
+      );
       logFeedbackMessage(result.buildId);
 
-      displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
-    const projectName = projectConfig.name;
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    logError(e, new ApiErrorContext({ accountId, request: 'project upload' }));
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -126,9 +127,9 @@ exports.builder = yargs => {
     ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

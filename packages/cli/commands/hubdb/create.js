@@ -1,7 +1,7 @@
 const path = require('path');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { createHubDbTable } = require('@hubspot/local-dev-lib/hubdb');
 
@@ -18,7 +18,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.hubdb.subcommands.create';
+const i18nKey = 'commands.hubdb.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <src>';
@@ -56,14 +56,14 @@ exports.handler = async options => {
         src,
       })
     );
-    logApiErrorInstance(e);
+    logError(e);
   }
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs, true);
-  addConfigOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),

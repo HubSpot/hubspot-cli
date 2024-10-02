@@ -9,7 +9,7 @@ const mapAccountChoices = portals =>
     value: p.name || p.portalId,
   }));
 
-const i18nKey = 'cli.commands.accounts.subcommands.use';
+const i18nKey = 'commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
   const { default: selectedDefault } = await promptUser([

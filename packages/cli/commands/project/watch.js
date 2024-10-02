@@ -1,9 +1,6 @@
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projectsWatch');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const {
@@ -27,12 +24,12 @@ const {
   cancelStagedBuild,
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { handleKeypress, handleExit } = require('../../lib/process');
 
-const i18nKey = 'cli.commands.project.subcommands.watch';
+const i18nKey = 'commands.project.subcommands.watch';
 
 exports.command = 'watch [path]';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -71,10 +68,7 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
         ) {
           process.exit(EXIT_CODES.SUCCESS);
         } else {
-          logApiErrorInstance(
-            err,
-            new ApiErrorContext({ accountId, projectName: projectName })
-          );
+          logError(err, new ApiErrorContext({ accountId }));
           process.exit(EXIT_CODES.ERROR);
         }
       }
@@ -106,11 +100,9 @@ exports.handler = async options => {
   await ensureProjectExists(accountId, projectConfig.name);
 
   try {
-    const { results: builds } = await fetchProjectBuilds(
-      accountId,
-      projectConfig.name,
-      options
-    );
+    const {
+      data: { results: builds },
+    } = await fetchProjectBuilds(accountId, projectConfig.name, options);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
@@ -142,11 +134,11 @@ exports.handler = async options => {
           logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
           logger.log();
         } else {
-          logApiErrorInstance(
+          logError(
             result.uploadError,
             new ApiErrorContext({
               accountId,
-              projectName: projectConfig.name,
+              request: 'project upload',
             })
           );
         }
@@ -156,10 +148,7 @@ exports.handler = async options => {
       await startWatching();
     }
   } catch (e) {
-    logApiErrorInstance(
-      e,
-      new ApiErrorContext({ accountId, projectName: projectConfig.name })
-    );
+    logError(e, new ApiErrorContext({ accountId }));
   }
 };
 
@@ -179,9 +168,9 @@ exports.builder = yargs => {
     ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

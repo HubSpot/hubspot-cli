@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  ApiErrorContext,
-  logApiErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { deleteSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -17,7 +14,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.delete';
+const i18nKey = 'commands.secrets.subcommands.delete';
 
 exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -44,7 +41,7 @@ exports.handler = async options => {
         secretName,
       })
     );
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'delete a secret',
@@ -55,9 +52,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',

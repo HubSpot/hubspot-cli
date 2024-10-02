@@ -1,7 +1,7 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const i18nKey = 'cli.lib.prompts.createModulePrompt';
+const i18nKey = 'lib.prompts.createModulePrompt';
 
 const MODULE_LABEL_PROMPT = {
   name: 'moduleLabel',

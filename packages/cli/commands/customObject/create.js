@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   checkAndConvertToJson,
@@ -12,7 +12,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.customObject.subcommands.create';
+const i18nKey = 'commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 exports.command = 'create <name> <definition>';
@@ -38,7 +38,7 @@ exports.handler = async options => {
     await batchCreateObjects(accountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
-    logApiErrorInstance(e, { accountId });
+    logError(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

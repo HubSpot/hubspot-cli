@@ -3,7 +3,7 @@ const { i18n } = require('../lang');
 
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 
-const i18nKey = 'cli.lib.prompts.createFunctionPrompt';
+const i18nKey = 'lib.prompts.createFunctionPrompt';
 
 const FUNCTIONS_FOLDER_PROMPT = {
   name: 'functionsFolder',

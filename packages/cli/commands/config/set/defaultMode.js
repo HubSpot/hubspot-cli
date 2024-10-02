@@ -6,7 +6,7 @@ const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { i18n } = require('../../../lib/lang');
 
-const i18nKey = 'cli.commands.config.subcommands.set.options.defaultMode';
+const i18nKey = 'commands.config.subcommands.set.options.defaultMode';
 
 const ALL_MODES = Object.values(MODE);
 

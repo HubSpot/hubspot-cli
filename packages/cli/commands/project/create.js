@@ -21,7 +21,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
-const i18nKey = 'cli.commands.project.subcommands.create';
+const i18nKey = 'commands.project.subcommands.create';
 
 exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -47,16 +47,12 @@ exports.handler = async options => {
     options
   );
 
-  trackCommandUsage(
-    'project-create',
-    { type: options.template || template },
-    accountId
-  );
+  trackCommandUsage('project-create', { type: template.name }, accountId);
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),
     options.name || name,
-    template || { path: options.template },
+    template,
     options.templateSource,
     githubRef
   );
@@ -93,9 +89,9 @@ exports.builder = yargs => {
 
   yargs.example([['$0 project create', i18n(`${i18nKey}.examples.default`)]]);
 
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
 
   return yargs;
 };

@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  ApiErrorContext,
-  logApiErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { updateSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -18,7 +15,7 @@ const {
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'cli.commands.secrets.subcommands.update';
+const i18nKey = 'commands.secrets.subcommands.update';
 
 exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
@@ -48,7 +45,7 @@ exports.handler = async options => {
         secretName,
       })
     );
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'update secret',
@@ -59,9 +56,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs, true);
-  addAccountOptions(yargs, true);
-  addUseEnvironmentOptions(yargs, true);
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
   yargs.positional('name', {
     describe: i18n(`${i18nKey}.positionals.name.describe`),
     type: 'string',
