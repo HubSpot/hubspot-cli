@@ -1,6 +1,4 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
-
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
@@ -8,6 +6,7 @@ const {
   deleteObjectSchema,
 } = require('@hubspot/local-dev-lib/api/customObjects');
 const { i18n } = require('../../../lib/lang');
+const { logError } = require('../../../lib/errorHandlers');
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.delete';
 
@@ -31,7 +30,7 @@ exports.handler = async options => {
       })
     );
   } catch (e) {
-    logApiErrorInstance(e);
+    logError(e);
     logger.error(
       i18n(`${i18nKey}.errors.delete`, {
         name,

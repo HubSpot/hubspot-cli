@@ -2,7 +2,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { createModule } = require('@hubspot/local-dev-lib/cms/modules');
 const { i18n } = require('../../lib/lang');
 const { createModulePrompt } = require('../../lib/prompts/createModulePrompt');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { logError } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.create.subcommands.module';
@@ -21,7 +21,7 @@ module.exports = {
     try {
       await createModule(moduleDefinition, name, dest, getInternalVersion);
     } catch (e) {
-      logErrorInstance(e);
+      logError(e);
       process.exit(EXIT_CODES.ERROR);
     }
   },

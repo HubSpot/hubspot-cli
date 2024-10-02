@@ -1,8 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { addSecret } = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -47,7 +44,7 @@ exports.handler = async options => {
         secretName,
       })
     );
-    logApiErrorInstance(
+    logError(
       err,
       new ApiErrorContext({
         request: 'add secret',

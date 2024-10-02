@@ -10,11 +10,7 @@ const {
 } = require('@hubspot/local-dev-lib/cms/modules');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
-const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -106,7 +102,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logApiUploadErrorInstance(
+        logError(
           error,
           new ApiErrorContext({
             accountId,
@@ -133,7 +129,7 @@ exports.handler = async options => {
       })
       .catch(error => {
         logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
-        logErrorInstance(error, {
+        logError(error, {
           accountId,
         });
       });

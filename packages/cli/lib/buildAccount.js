@@ -15,17 +15,14 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
 const SpinniesManager = require('./ui/SpinniesManager');
-const {
-  debugErrorAndContext,
-  logErrorInstance,
-} = require('./errorHandlers/standardErrors');
+const { debugError, logError } = require('./errorHandlers/index');
 const {
   createDeveloperTestAccount,
-} = require('@hubspot/local-dev-lib/developerTestAccounts');
+} = require('@hubspot/local-dev-lib/api/developerTestAccounts');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { createSandbox } = require('@hubspot/local-dev-lib/sandboxes');
+const { createSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const { sandboxApiTypeMap, handleSandboxCreateError } = require('./sandboxes');
 const {
   handleDeveloperTestAccountCreateError,
@@ -134,10 +131,13 @@ async function buildNewAccount({
   try {
     if (isSandbox) {
       const sandboxApiType = sandboxApiTypeMap[accountType]; // API expects sandbox type as 1 or 2.
-      result = await createSandbox(accountId, name, sandboxApiType);
+
+      const { data } = await createSandbox(accountId, name, sandboxApiType);
+      result = { name, ...data };
       resultAccountId = result.sandbox.sandboxHubId;
     } else if (isDeveloperTestAccount) {
-      result = await createDeveloperTestAccount(accountId, name);
+      const { data } = await createDeveloperTestAccount(accountId, name);
+      result = data;
       resultAccountId = result.id;
     }
 
@@ -148,7 +148,7 @@ async function buildNewAccount({
       }),
     });
   } catch (err) {
-    debugErrorAndContext(err);
+    debugError(err);
 
     SpinniesManager.fail('buildNewAccount', {
       text: i18n(`${spinniesI18nKey}.fail`, {
@@ -181,7 +181,7 @@ async function buildNewAccount({
       force,
     });
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     throw err;
   }
 
