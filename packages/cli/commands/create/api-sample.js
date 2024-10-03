@@ -7,7 +7,6 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const path = require('path');
 const fs = require('fs-extra');
-const ora = require('ora');
 const {
   fetchFileFromRepository,
   cloneGithubRepo,
@@ -37,14 +36,13 @@ module.exports = {
         return;
       }
     }
-    const downloadSpinner = ora(i18n(`${i18nKey}.loading.apiSamples`));
-    downloadSpinner.start();
+
     const samplesConfig = await fetchFileFromRepository(
       'HubSpot/sample-apps-list',
       'samples.json',
       'main'
     );
-    downloadSpinner.stop();
+
     if (!samplesConfig) {
       logger.error(i18n(`${i18nKey}.errors.noSamples`));
       return;

@@ -52,9 +52,3 @@ A couple of accounts have been set up specifically for testing. They are QA Acco
 ## Issues
 
 The `.env` file does not get recognized when running [act](https://github.com/nektos/act) locally to run the tests within the github action. To bypass this, you can comment out the `.env` line in the `.gitignore` file and run `act again`. See https://github.com/nektos/act/issues/193 for more info.
-
-## Gotchas
-
-- Currently the personal-access-key test is flakey. Run the tests again and it should pass.
-
-- The tests seem to trip up on usages of the `ora` library. To get around this, we have a list of blacklisted strings. If your test is being picky about ora, add the error message to the blacklist in `cmd.js`
