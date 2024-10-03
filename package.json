@@ -32,18 +32,21 @@
   },
   "devDependencies": {
     "axios": "^1.7.2",
-    "mock-stdin": "^1.0.0",
     "eslint": "^8.56.0",
     "husky": "^1.3.1",
     "lint-staged": "^10.5.4",
     "madge": "^6.1.0",
-    "prettier": "^1.19.1"
+    "mock-stdin": "^1.0.0",
+    "prettier": "^1.19.1",
+    "typescript": "^5.6.2"
   },
   "scripts": {
+    "build": "rm -rf ./dist/ && tsc --rootDir . --outdir dist && yarn copy-files",
+    "copy-files": "cp -r lang dist/lang",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",
     "test": "jest",
-    "test-cli": "cd acceptance-tests && yarn test-headless --stream",
+    "test-cli": "cd acceptance-tests && yarn && yarn test-headless --stream",
     "test-docker": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test",
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
@@ -57,8 +60,7 @@
     "prerelease:minor": "yarn check-main && yarn version --preminor --preeid=beta && yarn pub && yarn push",
     "prerelease:patch": "yarn check-main && yarn version --prepatch --preeid=beta && yarn pub && yarn push",
     "hs": "./bin/hs",
-    "hscms": "./bin/hscms",
-    "postinstall": "cd acceptance-tests && yarn install"
+    "hscms": "./bin/hscms"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
