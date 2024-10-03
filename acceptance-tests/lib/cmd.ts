@@ -12,12 +12,12 @@ import concat from 'concat-stream';
 const PATH = process.env.PATH;
 
 export function createProcess(
-  cliPath: string,
-  cliVersion: string,
+  config: TestConfig,
   args: string[] = [],
   env = null
 ) {
   let processCommand: string;
+  const { cliVersion, cliPath, debug } = config;
 
   if (cliVersion) {
     processCommand = 'npx';
@@ -31,6 +31,10 @@ export function createProcess(
     }
     processCommand = 'node';
     args = [cliPath].concat(args);
+  }
+
+  if (debug) {
+    args.push('--debug');
   }
 
   // This works for node based CLIs, but can easily be adjusted to
@@ -62,12 +66,7 @@ function executeWithInput(
   opts.env = { BROWSER: 'none' };
 
   const { env = opts.env, timeout = 500, maxTimeout = 30000 } = opts;
-  const childProcess = createProcess(
-    config.cliPath,
-    config.cliVersion,
-    args,
-    env
-  );
+  const childProcess = createProcess(config, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
   let currentInputTimeout: NodeJS.Timeout;
