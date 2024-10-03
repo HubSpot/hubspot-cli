@@ -59,8 +59,7 @@
     "prerelease:major": "yarn check-main && yarn version --premajor --preeid=beta && yarn pub && yarn push",
     "prerelease:minor": "yarn check-main && yarn version --preminor --preeid=beta && yarn pub && yarn push",
     "prerelease:patch": "yarn check-main && yarn version --prepatch --preeid=beta && yarn pub && yarn push",
-    "hs": "./bin/hs",
-    "hscms": "./bin/hscms"
+    "hs": "yarn build && node ./dist/bin/cli.js"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
