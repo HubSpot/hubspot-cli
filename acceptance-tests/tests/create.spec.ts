@@ -60,11 +60,9 @@ describe('hs create', () => {
   });
 
   it('should require an argument', async () => {
-    try {
-      await testState.cli.execute(['create']);
-    } catch (out) {
-      expect(out).toContain('Not enough non-option arguments');
-    }
+    expect(async () => testState.cli.execute(['create'])).rejects.toThrowError(
+      /Not enough non-option arguments/
+    );
   });
 
   it('creates a module', async () => {
@@ -93,10 +91,12 @@ describe('hs create', () => {
     await testState.cli.execute(['create', 'react-app']);
     expect(existsSync(FOLDERS.reactApp.folder)).toBe(true);
   });
+
   it('vue-app', async () => {
     await testState.cli.execute(['create', 'vue-app']);
     expect(existsSync(FOLDERS.vueApp.folder)).toBe(true);
   });
+
   it('webpack-serverless', async () => {
     await testState.cli.execute(['create', 'webpack-serverless']);
     expect(existsSync(FOLDERS.webpackServerless.folder)).toBe(true);

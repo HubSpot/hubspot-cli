@@ -30,12 +30,12 @@ export class TestState {
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.testConfigFileName}"`],
+        ['init', `--c="${this.getTestConfigFileName()}"`],
         getInitPromptSequence(this.getPAK())
       );
 
       this.parsedYaml = yaml.load(
-        readFileSync(this.testConfigFileName, 'utf8')
+        readFileSync(this.getTestConfigFileName(), 'utf8')
       );
     } catch (e) {
       console.error(e);
@@ -51,14 +51,14 @@ export class TestState {
       await this.initializeAuth();
     } else {
       writeFileSync(
-        this.testConfigFileName,
+        this.getTestConfigFileName(),
         yaml.dump(JSON.parse(JSON.stringify(this.parsedYaml, null, 2)))
       );
     }
   }
 
   getParsedConfig() {
-    const temp = yaml.load(readFileSync(this.testConfigFileName, 'utf8'));
+    const temp = yaml.load(readFileSync(this.getTestConfigFileName(), 'utf8'));
     return JSON.parse(JSON.stringify(temp, null, 2));
   }
 
