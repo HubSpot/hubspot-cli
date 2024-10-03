@@ -134,7 +134,6 @@ function executeWithInput(
     const handleStderr = err => {
       // Ignore any allowed errors so tests can continue
       const allowedErrors = [
-        'Loading available API samples', // When we use 'ora' it is throwing the loading error
         'DeprecationWarning', // Ignore package deprecation warnings.
         '[WARNING]', // Ignore our own CLI warning messages
       ];

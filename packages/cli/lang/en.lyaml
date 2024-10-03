@@ -183,8 +183,6 @@ en:
             noSamples: "Currently there are no samples available, please, try again later."
           info:
             sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
-          loading:
-            apiSamples: "Loading available API samples"
           success:
             sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
         module:
@@ -335,7 +333,8 @@ en:
             notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
           examples:
             default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
-          loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+          loading: "Building and deploying bundle for \"{{ functionPath }}\" on {{ account }}"
+          loadingFailed: "Failed to build and deploy bundle for \"{{ functionPath }}\" on {{ account }}"
           positionals:
             path:
               describe: "Path to .functions folder"
