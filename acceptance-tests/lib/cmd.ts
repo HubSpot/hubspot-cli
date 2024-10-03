@@ -46,6 +46,7 @@ export function createProcess(
       PATH, // This is needed in order to get all the binaries in your current terminal
       npm_config_loglevel: 'silent', // suppress warnings
       ...env,
+      GITHUB_TOKEN: config.githubToken,
     },
     stdio: [null, null, null, 'ipc'], // This enables interprocess communication (IPC)
   });

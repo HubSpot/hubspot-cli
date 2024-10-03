@@ -32,6 +32,7 @@ const envOverrides: TestConfig = getTruthyValuesOnly({
   cliVersion: getEnvValue('CLI_VERSION'),
   debug: getEnvValue('DEBUG'),
   qa: getEnvValue('QA'),
+  githubToken: getEnvValue('GITHUB_TOKEN'),
 }) as TestConfig;
 
 export const getTestConfig = (): TestConfig => {
@@ -66,10 +67,6 @@ export const getTestConfig = (): TestConfig => {
     throw new Error(
       'personalAccessKey must be defined. Either set the PERSONAL_ACCESS_KEY environment variable or use the --personalAccessKey flag to pass it in.'
     );
-  }
-
-  if (config.debug) {
-    console.log('Config: ', config);
   }
 
   return config;

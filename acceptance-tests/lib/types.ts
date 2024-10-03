@@ -5,6 +5,7 @@ export interface TestConfig {
   personalAccessKey: string;
   portalId: string;
   qa: boolean;
+  githubToken: string;
 }
 
 export interface CLI {
