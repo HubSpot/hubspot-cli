@@ -107,7 +107,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug } = options;
+  const { notify, skipUpload, noSsl, port, debug, resetSession } = options;
 
   await loadAndValidateOptions(options);
 
@@ -186,6 +186,7 @@ exports.handler = async options => {
     noSsl,
     port,
     debug,
+    resetSession,
     startProgressBar,
     handleUserInput,
   });
@@ -225,6 +226,10 @@ exports.builder = yargs => {
   });
   yargs.option('skipUpload', {
     alias: 'skip',
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('resetSession', {
     describe: false,
     type: 'boolean',
   });
