@@ -13,21 +13,15 @@ jobs:
       - name: Install deps
         run: |
           yarn install
-      - name: Bootstrap packages
-        run: |
-          yarn lerna bootstrap
-      - name: Force local package symlinks
-        run: |
-          yarn lerna link --force-local
       - name: Verify package dependencies
         run: |
-          yarn check-deps
+          npx depcheck
       - name: Lint
         run: |
           yarn lint
       - name: Circular dependency check
         run: |
-          yarn run madge --circular packages
+          yarn run madge --circular .
       - name: Test
         run: |
           yarn test
