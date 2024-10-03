@@ -57,7 +57,8 @@
     "prerelease:minor": "yarn check-main && yarn version --preminor --preeid=beta && yarn pub && yarn push",
     "prerelease:patch": "yarn check-main && yarn version --prepatch --preeid=beta && yarn pub && yarn push",
     "hs": "./bin/hs",
-    "hscms": "./bin/hscms"
+    "hscms": "./bin/hscms",
+    "postinstall": "cd acceptance-tests && yarn install"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
