@@ -42,7 +42,12 @@ const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
+const {
+  uiLine,
+  uiLink,
+  uiAccountDescription,
+  uiCommandReference,
+} = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
 const {
@@ -199,7 +204,9 @@ const createProjectConfig = async (
       logger.error(
         i18n(`${i18nKey}.errors.downloadFileOrFolder`, {
           src: template.path,
-          command: `hs fetch ${assetPath} ${destinationPath}`,
+          command: uiCommandReference(
+            `hs fetch ${assetPath} ${destinationPath}`
+          ),
         })
       );
       process.exit(EXIT_CODES.ERROR);
