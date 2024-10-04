@@ -51,14 +51,14 @@
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
     "check-main": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] || (echo 'Error: New release can only be published on main branch' && exit 1)",
-    "pub": "npm publish --tag latest",
+    "pub": "yarn build && cd dist && npm publish --tag latest",
     "push": "git push --atomic origin main v$npm_package_version",
     "release:major": "yarn check-main && yarn version --major && yarn pub && yarn push",
     "release:minor": "yarn check-main && yarn version --minor && yarn pub && yarn push",
     "release:patch": "yarn check-main && yarn version --patch && yarn pub && yarn push",
-    "prerelease:major": "yarn check-main && yarn version --premajor --preeid=beta && yarn pub && yarn push",
-    "prerelease:minor": "yarn check-main && yarn version --preminor --preeid=beta && yarn pub && yarn push",
-    "prerelease:patch": "yarn check-main && yarn version --prepatch --preeid=beta && yarn pub && yarn push",
+    "prerelease:major": "yarn check-main && yarn version --premajor --preid=beta && yarn pub && yarn push",
+    "prerelease:minor": "yarn check-main && yarn version --preminor --preid=beta && yarn pub && yarn push",
+    "prerelease:patch": "yarn check-main && yarn version --prepatch --preid=beta && yarn pub && yarn push",
     "hs": "yarn build && node ./dist/bin/cli.js"
   },
   "lint-staged": {
