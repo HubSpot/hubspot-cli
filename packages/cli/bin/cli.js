@@ -3,6 +3,8 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
+const { exec: execAsync } = require('child_process');
+const util = require('util');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
@@ -17,6 +19,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const SpinniesManager = require('../lib/ui/SpinniesManager');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -134,9 +137,36 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const updateCLIVersion = async () => {
+  if (
+    !process.env.BYPASS_HUBSPOT_CLI_AUTO_UPDATES &&
+    notifier &&
+    notifier.shouldNotifyInNpmScript
+  ) {
+    const updateInfo = await notifier.fetchInfo();
+    SpinniesManager.init({
+      succeedColor: 'white',
+    });
+    SpinniesManager.add('cliAutoUpdate', {
+      text: `New HubSpot CLI version available. Updating to version ${updateInfo.latest}`,
+    });
+    const exec = util.promisify(execAsync);
+    try {
+      await exec(`npm install -g @hubspot/cli@latest`);
+      SpinniesManager.succeed('cliAutoUpdate', {
+        text: `Successfully updated HubSpot CLI to version ${updateInfo.latest}`,
+      });
+    } catch (e) {
+      SpinniesManager.fail('cliAutoUpdate', {
+        text: `Failed to update HubSpot CLI to version ${updateInfo.latest}`,
+      });
+    }
+  }
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel, setRequestHeaders])
+  .middleware([setLogLevel, setRequestHeaders, updateCLIVersion])
   .exitProcess(false)
   .fail(handleFailure)
   .option('debug', {
