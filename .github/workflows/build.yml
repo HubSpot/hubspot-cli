@@ -22,6 +22,9 @@ jobs:
       - name: Circular dependency check
         run: |
           yarn run madge --circular .
+      - name: TS Build
+        run: |
+          yarn build
       - name: Test
         run: |
           yarn test
