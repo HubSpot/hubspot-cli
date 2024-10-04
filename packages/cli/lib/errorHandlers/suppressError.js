@@ -1,7 +1,7 @@
 const {
   isSpecifiedError,
   isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');
 const { i18n } = require('../lang');
@@ -12,7 +12,7 @@ const {
   uiCommandReference,
 } = require('../ui');
 
-const i18nKey = 'lib.errorHandlers.overrideErrors';
+const i18nKey = 'lib.errorHandlers.suppressErrors';
 
 function createPlatformVersionError(err, subCategory) {
   let translationKey = 'unspecifiedPlatformVersion';
@@ -58,7 +58,7 @@ function createPlatformVersionError(err, subCategory) {
   uiLine();
 }
 
-function overrideErrors(err, context) {
+function shouldSuppressError(err, context = {}) {
   if (isMissingScopeError(err)) {
     logger.error(
       i18n(`${i18nKey}.missingScopeError`, {
@@ -78,7 +78,7 @@ function overrideErrors(err, context) {
     })
   ) {
     createPlatformVersionError(
-      err,
+      err.data,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
     );
     return true;
@@ -90,7 +90,7 @@ function overrideErrors(err, context) {
     })
   ) {
     createPlatformVersionError(
-      err,
+      err.data,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED
     );
     return true;
@@ -103,7 +103,7 @@ function overrideErrors(err, context) {
     })
   ) {
     createPlatformVersionError(
-      err,
+      err.data,
       PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
     );
     return true;
@@ -112,5 +112,5 @@ function overrideErrors(err, context) {
 }
 
 module.exports = {
-  overrideErrors,
+  shouldSuppressError,
 };

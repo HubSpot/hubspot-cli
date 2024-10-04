@@ -183,8 +183,6 @@ en:
             noSamples: "Currently there are no samples available, please, try again later."
           info:
             sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
-          loading:
-            apiSamples: "Loading available API samples"
           success:
             sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
         module:
@@ -337,7 +335,8 @@ en:
             notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
           examples:
             default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
-          loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+          loading: "Building and deploying bundle for \"{{ functionPath }}\" on {{ account }}"
+          loadingFailed: "Failed to build and deploy bundle for \"{{ functionPath }}\" on {{ account }}"
           positionals:
             path:
               describe: "Path to .functions folder"
@@ -1409,23 +1408,12 @@ en:
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
     errorHandlers:
-      standardErrors:
+      index:
         errorOccurred: "Error: {{ error }}"
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
-        systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
-        genericErrorOccurred: "A {{ name }} has occurred."
-        unknownErrorOccurred: "An unknown error has occurred"
-      fileSystemErrors:
-        errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
-        errorExplanation: "This is the result of a system error: {{ errorMessage }}"
-      apiErrors:
-        verifyAccessKeyAndUserAccess:
-          fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
-          portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
-          userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
-          genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
-      overrideErrors:
+        unknownErrorOccurred: "An unknown error has occurred."
+      suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"
           unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
@@ -1435,3 +1423,9 @@ en:
           docsLink: "Projects platform versioning (BETA)"
           betaLink: "For more info, see {{ docsLink }}."
         missingScopeError: "Couldn't execute the {{ request }} because the access key for {{ accountName }} is missing required scopes. To update scopes, run {{ authCommand }}. Then deactivate the existing key and generate a new one that includes the missing scopes."
+    serverless:
+      verifyAccessKeyAndUserAccess:
+        fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
+        portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
+        userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+        genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."

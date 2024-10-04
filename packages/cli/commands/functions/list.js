@@ -1,9 +1,6 @@
 const { getRoutes } = require('@hubspot/local-dev-lib/api/functions');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { getFunctionArrays } = require('../../lib/getFunctionArrays');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
@@ -31,8 +28,8 @@ exports.handler = async options => {
 
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
-  const routesResp = await getRoutes(accountId).catch(async e => {
-    await logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+  const { data: routesResp } = await getRoutes(accountId).catch(async e => {
+    logError(e, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.SUCCESS);
   });
 

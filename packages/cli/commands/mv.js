@@ -1,10 +1,7 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
@@ -64,7 +61,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
+      logError(
         error,
         new ApiErrorContext({
           accountId,

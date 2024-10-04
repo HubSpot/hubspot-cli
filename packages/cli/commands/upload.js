@@ -14,11 +14,7 @@ const {
   isAllowedExtension,
 } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../lib/errorHandlers/apiErrors');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { ApiErrorContext, logError } = require('../lib/errorHandlers/index');
 const {
   validateSrcAndDestPaths,
 } = require('@hubspot/local-dev-lib/cms/modules');
@@ -182,7 +178,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logApiUploadErrorInstance(
+        logError(
           error,
           new ApiErrorContext({
             accountId,
@@ -270,7 +266,7 @@ exports.handler = async options => {
             src,
           })
         );
-        logErrorInstance(error, {
+        logError(error, {
           accountId,
         });
         process.exit(EXIT_CODES.WARNING);

@@ -1,5 +1,5 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { logApiErrorInstance } = require('../../../lib/errorHandlers/apiErrors');
+const { logError } = require('../../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const {
   ENVIRONMENTS,
@@ -54,17 +54,17 @@ exports.handler = async options => {
         })
       );
     } else {
-      const res = await updateObjectSchema(accountId, name, schemaJson);
+      const { data } = await updateObjectSchema(accountId, name, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.viewAtUrl`, {
           url: `${getHubSpotWebsiteOrigin(
             getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${accountId}/objects/${res.objectTypeId}`,
+          )}/contacts/${accountId}/objects/${data.objectTypeId}`,
         })
       );
     }
   } catch (e) {
-    logApiErrorInstance(e, { accountId });
+    logError(e, { accountId });
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
         definition,

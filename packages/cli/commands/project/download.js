@@ -7,10 +7,7 @@ const {
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const {
@@ -75,9 +72,10 @@ exports.handler = async options => {
     let buildNumberToDownload = buildNumber;
 
     if (!buildNumberToDownload) {
-      let projectBuildsResult;
-
-      projectBuildsResult = await fetchProjectBuilds(accountId, projectName);
+      const { data: projectBuildsResult } = await fetchProjectBuilds(
+        accountId,
+        projectName
+      );
 
       const { results: projectBuilds } = projectBuildsResult;
 
@@ -87,7 +85,7 @@ exports.handler = async options => {
       }
     }
 
-    const zippedProject = await downloadProject(
+    const { data: zippedProject } = await downloadProject(
       accountId,
       projectName,
       buildNumberToDownload
@@ -108,7 +106,7 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (e) {
-    logApiErrorInstance(
+    logError(
       e,
       new ApiErrorContext({ accountId, request: 'project download' })
     );
