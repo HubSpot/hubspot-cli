@@ -39,8 +39,6 @@ export function createProcess(
     args.push('--debug');
   }
 
-  const testOutputDir = path.join(process.cwd(), config.testDir);
-
   // This works for node based CLIs, but can easily be adjusted to
   // any other process installed in the system
   return spawn(processCommand, args, {
@@ -53,7 +51,7 @@ export function createProcess(
       GITHUB_TOKEN: config.githubToken,
     },
     stdio: [null, null, null, 'ipc'], // This enables interprocess communication (IPC)
-    cwd: testOutputDir,
+    cwd: path.join(process.cwd(), config.testDir),
   });
 }
 
