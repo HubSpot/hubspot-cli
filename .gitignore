@@ -16,3 +16,4 @@ coverage
 # Acceptance Tests
 acceptance-tests/my-project
 acceptance-tests/*.yml
+acceptance-tests/*.html
