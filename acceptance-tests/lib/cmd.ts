@@ -43,7 +43,6 @@ export function createProcess(
 
   if (!existsSync(testOutputDir)) {
     mkdirSync(testOutputDir);
-  } else {
   }
 
   // This works for node based CLIs, but can easily be adjusted to

@@ -8,6 +8,8 @@ import rimraf from 'rimraf';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'node:path';
 
+export const testOutputDir = 'test-output';
+
 export class TestState {
   public config: TestConfig;
   public cli: CLI;
@@ -45,7 +47,7 @@ export class TestState {
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.testConfigFileName}"`],
+        ['init', `--c="${this.getTestConfigFileRelative()}"`],
         getInitPromptSequence(this.getPAK())
       );
 
@@ -78,6 +80,6 @@ export class TestState {
   }
 
   cleanup() {
-    rimraf.sync(this.testConfigFileName);
+    rimraf.sync(this.getTestConfigFileName());
   }
 }
