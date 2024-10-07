@@ -4,9 +4,9 @@ This project tests our CLI's `hs <*>` commands as if they were being used by an 
 
 ## Getting Started
 
-The main test execution is kicked off by running `yarn test-cli` from the root of `hubspot-cli`. This will run the `run-tests` script which itself is a CLI, so to see the available options, you can `run-tests --help`. This was done so that the tests can be installed against any given version of the CLI and tested against it. In addition, it was done to keep the test logic separated from the CLI library.
+The main test execution is kicked off by running `yarn test-cli` from the root of `hubspot-cli`. This will run the test suites defined in the `tests` directory.
 
-Note that if you are testing against a QA portal, not a PROD one, you'll need to add the `--qa` flag when running the script. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
+Note that if you are testing against a QA portal, not a PROD one, you'll need to run `yarn test-qa`. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
 
 ### Setup
 
@@ -19,7 +19,7 @@ To setup these tests, there are two required arguments and one optional one:
 
 ### Configuration
 
-There are three ways to pass in necessary configuration to the script.
+There are 2 ways to pass in necessary configuration to the script.
 
 1. Creating a `.env` file in `acceptance-tests` folder.
 
@@ -37,18 +37,6 @@ export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
 export CLI_PATH="hs"
 ```
 
-3. Through arguments on the `run-tests` script
-
-```bash
-yarn run-tests --accountId=123456789 --personalAccessKey="*********" --cliPath=hs
-```
-
-Alternatively, we support the following aliases:
-
-```bash
-yarn run-tests --a=123456789 --pak="*********" --c=hs
-```
-
 ### Running Locally
 
 1. Run `lerna bootstrap` to install dependencies
@@ -56,9 +44,6 @@ yarn run-tests --a=123456789 --pak="*********" --c=hs
 
 **NOTE:** Include the `--debug` flag for more verbose output
 
-## Why Jasmine
-
-You may be wondering why we are using Jasmine, and not Jest. The reason is because Jest does not provide an API for executing the tests within code. We need to do this since we are wrapping the tests within a CLI.
 
 ## Accounts
 

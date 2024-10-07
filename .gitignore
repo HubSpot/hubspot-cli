@@ -12,3 +12,8 @@ npm-debug.log.*
 .DS_Store
 coverage
 .env
+
+# Acceptance Tests
+acceptance-tests/my-project
+acceptance-tests/*.yml
+acceptance-tests/*.html

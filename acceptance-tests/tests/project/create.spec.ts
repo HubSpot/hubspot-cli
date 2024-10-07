@@ -1,7 +1,7 @@
-const rimraf = require('rimraf');
-const { existsSync } = require('fs');
-const { CONFIG_FILE_NAME } = require('../../lib/constants');
-const { withAuth } = require('../helpers/auth');
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import rimraf from 'rimraf';
+import { existsSync } from 'fs';
+import { TestState } from '../../lib/testState';
 
 const PROJECT_FOLDER = 'my-project';
 
@@ -10,22 +10,27 @@ const cleanup = () => {
 };
 
 describe('hs project create', () => {
-  beforeAll(() => {
-    withAuth();
+  let testState: TestState;
+
+  beforeAll(async () => {
+    testState = new TestState();
+    await testState.withAuth();
     cleanup();
   });
-  afterAll(cleanup);
 
-  const { cli } = global;
+  afterAll(() => {
+    cleanup();
+    testState.cleanup();
+  });
 
   it('should create a project containing a private app', async () => {
-    await cli.execute([
+    await testState.cli.execute([
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
-      `--c="${CONFIG_FILE_NAME}"`,
+      `--c="${testState.getTestConfigFileName()}"`,
     ]);
     expect(existsSync(PROJECT_FOLDER)).toBe(true);
   });

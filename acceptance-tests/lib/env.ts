@@ -1,13 +1,9 @@
-const path = require('path');
-const dotEnv = require('dotenv');
-const { existsSync } = require('fs');
-const { DEFAULT_CLI_PATH } = require('./constants');
+import * as path from 'path';
+import * as dotEnv from 'dotenv';
+import { existsSync } from 'fs';
+import { TestConfig } from './types';
 
-let dotEnvConfig;
-
-(() => {
-  dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
-})();
+const dotEnvConfig = dotEnv.config({ path: path.join(__dirname, '../.env') });
 
 const getTruthyValuesOnly = obj => {
   const truthyValuesObj = {};
@@ -22,36 +18,26 @@ const getTruthyValuesOnly = obj => {
   return truthyValuesObj;
 };
 
-let argsOverrides = {};
-
-const getEnvValue = envVariable => {
+const getEnvValue = (envVariable: string) => {
   return (
     (dotEnvConfig.parsed && dotEnvConfig.parsed[envVariable]) ||
     process.env[envVariable]
   );
 };
 
-const setArgsOverrides = args => {
-  args.portalId && (argsOverrides.portalId = args.portalId);
-  args.cliPath && (argsOverrides.cliPath = args.cliPath);
-  args.cliVersion && (argsOverrides.cliVersion = args.cliVersion);
-  args.personalAccessKey &&
-    (argsOverrides.personalAccessKey = args.personalAccessKey);
-  argsOverrides.qa = args.qa;
-  argsOverrides.debug = args.debug;
-  argsOverrides.headless = !!args.headless;
-};
-
-const envOverrides = getTruthyValuesOnly({
+const envOverrides: TestConfig = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
   cliVersion: getEnvValue('CLI_VERSION'),
-});
+  debug: getEnvValue('DEBUG'),
+  qa: getEnvValue('QA'),
+  githubToken: getEnvValue('GITHUB_TOKEN'),
+}) as TestConfig;
 
-const getTestConfig = () => {
+export const getTestConfig = (): TestConfig => {
   // Command-line Args > Env vars
-  const config = Object.assign({}, envOverrides, argsOverrides);
+  const config: TestConfig = { ...envOverrides };
 
   if (!config.portalId) {
     throw new Error(
@@ -66,7 +52,7 @@ const getTestConfig = () => {
   }
 
   if (!config.cliPath && !config.cliVersion) {
-    const defaultPath = path.join(process.cwd(), DEFAULT_CLI_PATH);
+    const defaultPath = path.join(process.cwd(), '../packages/cli/bin/hs');
 
     if (existsSync(defaultPath)) {
       config.cliPath = defaultPath;
@@ -83,14 +69,5 @@ const getTestConfig = () => {
     );
   }
 
-  if (config.debug) {
-    console.log('Config: ', config);
-  }
-
   return config;
-};
-
-module.exports = {
-  getTestConfig,
-  setArgsOverrides,
 };

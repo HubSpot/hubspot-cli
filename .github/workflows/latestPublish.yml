@@ -6,6 +6,10 @@ on:
   # Scheduled jobs will only run on the default branch
   schedule:
     - cron: '0 */5 * * *' # Run every 5 hours
+
+env:
+  version: "latest"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,15 +22,20 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
+          node-version: 18.x
       - name: Install Deps
         run: npm install
+      - name: Add package to npx cache
+        run: |
+          npx --yes --package @hubspot/cli@${{ env.version }} hs
       - name: Test Latest CLI Release
         run: |
-          npm run test-cli --cliVersion="latest"
+          npm run test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+          CLI_VERSION: ${{ env.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ always() && github.ref_name == 'main' }}
