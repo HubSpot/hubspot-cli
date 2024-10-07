@@ -5,7 +5,6 @@
   "private": true,
   "homepage": "https://github.com/HubSpot/hubspot-cli#readme",
   "license": "ISC",
-  "main": "setup.ts",
   "type": "module",
   "directories": {
     "lib": "lib"
