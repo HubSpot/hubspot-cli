@@ -66,7 +66,7 @@ function executeWithInput(
   // Prevent the browser from opening when `open` is called
   opts.env = { BROWSER: 'none' };
 
-  const { env = opts.env, timeout = 500, maxTimeout = 30000 } = opts;
+  const { env = opts.env, timeout = 1000, maxTimeout = 30000 } = opts;
   const childProcess = createProcess(config, args, env);
   childProcess.stdin.setEncoding('utf-8');
 
