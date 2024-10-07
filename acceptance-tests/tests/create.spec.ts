@@ -39,9 +39,9 @@ const FOLDERS = {
   },
 };
 
-const cleanup = () => {
+const cleanup = (testState: TestState) => {
   Object.keys(FOLDERS).forEach(k => {
-    rimraf.sync(FOLDERS[k].folder);
+    rimraf.sync(testState.getPathWithTestDirectory(FOLDERS[k].folder));
   });
 };
 
@@ -51,12 +51,12 @@ describe('hs create', () => {
   beforeAll(async () => {
     testState = new TestState();
     await testState.withAuth();
-    cleanup();
+    cleanup(testState);
   });
 
   afterAll(() => {
     testState.cleanup();
-    cleanup();
+    cleanup(testState);
   });
 
   it('should require an argument', async () => {
@@ -71,7 +71,7 @@ describe('hs create', () => {
       ['label', ENTER, ENTER, ENTER, 'y', ENTER]
     );
 
-    expect(existsSync(FOLDERS.module.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.module.folder)).toBe(true);
   });
 
   it('creates a template', async () => {
@@ -79,27 +79,31 @@ describe('hs create', () => {
       ['create', 'template', FOLDERS.template.name],
       [ENTER]
     );
-    expect(existsSync(FOLDERS.template.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.template.folder)).toBe(true);
   });
 
   it('website-theme', async () => {
     await testState.cli.execute(['create', 'website-theme']);
-    expect(existsSync(FOLDERS.websiteTheme.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.websiteTheme.folder)).toBe(
+      true
+    );
   });
 
   it('react-app', async () => {
     await testState.cli.execute(['create', 'react-app']);
-    expect(existsSync(FOLDERS.reactApp.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.reactApp.folder)).toBe(true);
   });
 
   it('vue-app', async () => {
     await testState.cli.execute(['create', 'vue-app']);
-    expect(existsSync(FOLDERS.vueApp.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.vueApp.folder)).toBe(true);
   });
 
   it('webpack-serverless', async () => {
     await testState.cli.execute(['create', 'webpack-serverless']);
-    expect(existsSync(FOLDERS.webpackServerless.folder)).toBe(true);
+    expect(
+      testState.existsInProjectFolder(FOLDERS.webpackServerless.folder)
+    ).toBe(true);
   });
 
   // For some reason, this test is getting tripped up on the creation.
@@ -115,7 +119,7 @@ describe('hs create', () => {
 
   it('app', async () => {
     await testState.cli.execute(['create', 'app']);
-    expect(existsSync(FOLDERS.app.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.app.folder)).toBe(true);
   });
 
   it('function', async () => {
@@ -131,6 +135,6 @@ describe('hs create', () => {
         ENTER,
       ]
     );
-    expect(existsSync(FOLDERS.function.folder)).toBe(true);
+    expect(testState.existsInProjectFolder(FOLDERS.function.folder)).toBe(true);
   });
 });

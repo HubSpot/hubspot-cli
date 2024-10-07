@@ -1,12 +1,11 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
-import { existsSync } from 'fs';
 import { TestState } from '../../lib/testState';
 
 const PROJECT_FOLDER = 'my-project';
 
-const cleanup = () => {
-  rimraf.sync(PROJECT_FOLDER);
+const cleanup = (testState: TestState) => {
+  rimraf.sync(testState.getPathWithTestDirectory(PROJECT_FOLDER));
 };
 
 describe('hs project create', () => {
@@ -15,11 +14,11 @@ describe('hs project create', () => {
   beforeAll(async () => {
     testState = new TestState();
     await testState.withAuth();
-    cleanup();
+    cleanup(testState);
   });
 
   afterAll(() => {
-    cleanup();
+    cleanup(testState);
     testState.cleanup();
   });
 
@@ -32,6 +31,6 @@ describe('hs project create', () => {
       '--template="getting-started-private-app"',
       `--c="${testState.getTestConfigFileName()}"`,
     ]);
-    expect(existsSync(PROJECT_FOLDER)).toBe(true);
+    expect(testState.existsInProjectFolder(PROJECT_FOLDER)).toBe(true);
   });
 });

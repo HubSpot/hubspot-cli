@@ -22,7 +22,7 @@ describe('hs init', () => {
 
   it('should create a new config file', async () => {
     await testState.cli.execute(
-      ['init', `--c="${testState.getTestConfigFileName()}"`],
+      ['init', `--c="${testState.getTestConfigFileRelative()}"`],
       getInitPromptSequence(testState.getPAK(), accountName)
     );
 

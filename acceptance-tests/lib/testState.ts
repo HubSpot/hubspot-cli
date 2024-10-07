@@ -6,15 +6,18 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import yaml from 'js-yaml';
 import rimraf from 'rimraf';
 import { v4 as uuidv4 } from 'uuid';
+import * as path from 'node:path';
 
 export class TestState {
   public config: TestConfig;
   public cli: CLI;
   private testConfigFileName: string;
   private parsedYaml: ReturnType<yaml.load>;
+  private testOutputDir = 'test-output';
 
   constructor() {
     this.config = getTestConfig();
+    this.config.testDir = this.testOutputDir;
     this.cli = createCli(this.config);
     this.testConfigFileName = `hs-acceptance-test.config-${uuidv4()}.yml`;
   }
@@ -23,14 +26,26 @@ export class TestState {
     return this.config?.personalAccessKey;
   }
 
-  getTestConfigFileName() {
+  getTestConfigFileRelative() {
     return this.testConfigFileName;
+  }
+
+  getTestConfigFileName() {
+    return this.getPathWithTestDirectory(this.testConfigFileName);
+  }
+
+  getPathWithTestDirectory(filepath: string) {
+    return path.join(this.testOutputDir, filepath);
+  }
+
+  existsInProjectFolder(filepath: string) {
+    return existsSync(this.getPathWithTestDirectory(filepath));
   }
 
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.getTestConfigFileName()}"`],
+        ['init', `--c="${this.testConfigFileName}"`],
         getInitPromptSequence(this.getPAK())
       );
 

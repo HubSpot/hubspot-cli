@@ -4,10 +4,12 @@
  * Taken from https://gist.github.com/zorrodg/c349cf54a3f6d0a9ba62e0f4066f31cb
  */
 import { CLI, TestConfig } from './types';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { constants } from 'os';
 import spawn from 'cross-spawn';
 import concat from 'concat-stream';
+import * as process from 'node:process';
+import * as path from 'node:path';
 
 const PATH = process.env.PATH;
 
@@ -37,6 +39,13 @@ export function createProcess(
     args.push('--debug');
   }
 
+  const testOutputDir = path.join(process.cwd(), config.testDir);
+
+  if (!existsSync(testOutputDir)) {
+    mkdirSync(testOutputDir);
+  } else {
+  }
+
   // This works for node based CLIs, but can easily be adjusted to
   // any other process installed in the system
   return spawn(processCommand, args, {
@@ -49,6 +58,7 @@ export function createProcess(
       GITHUB_TOKEN: config.githubToken,
     },
     stdio: [null, null, null, 'ipc'], // This enables interprocess communication (IPC)
+    cwd: testOutputDir,
   });
 }
 
