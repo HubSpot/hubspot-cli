@@ -17,7 +17,7 @@ describe('hs accounts list', () => {
     const val = await testState.cli.execute([
       'accounts',
       'list',
-      `--c="${testState.getTestConfigFileNameRelative()}"`,
+      `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
     ]);
 
     const { defaultPortal } = testState.getParsedConfig();

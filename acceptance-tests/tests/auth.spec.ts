@@ -18,16 +18,20 @@ describe('hs auth', () => {
 
   it('should update the tokens for the existing configured account', async () => {
     expect(
-      testState.existsInProjectFolder(testState.getTestConfigFileNameRelative())
+      testState.existsInProjectFolder(
+        testState.getTestConfigFileNameRelativeToOutputDir()
+      )
     ).toBe(true);
 
     await testState.cli.execute(
-      ['auth', `--c="${testState.getTestConfigFileNameRelative()}"`],
+      ['auth', `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`],
       [ENTER, testState.getPAK(), ENTER]
     );
 
     expect(
-      testState.existsInProjectFolder(testState.getTestConfigFileNameRelative())
+      testState.existsInProjectFolder(
+        testState.getTestConfigFileNameRelativeToOutputDir()
+      )
     ).toBe(true);
   });
 });

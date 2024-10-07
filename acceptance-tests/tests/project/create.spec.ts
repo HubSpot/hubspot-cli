@@ -29,7 +29,7 @@ describe('hs project create', () => {
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
-      `--c="${testState.getTestConfigFileNameRelative()}"`,
+      `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
     ]);
     expect(testState.existsInProjectFolder(PROJECT_FOLDER)).toBe(true);
   });

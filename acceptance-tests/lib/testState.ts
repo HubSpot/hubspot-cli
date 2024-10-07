@@ -28,7 +28,7 @@ export class TestState {
     return this.config?.personalAccessKey;
   }
 
-  getTestConfigFileNameRelative() {
+  getTestConfigFileNameRelativeToOutputDir() {
     return this.testConfigFileName;
   }
 
@@ -47,7 +47,7 @@ export class TestState {
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.getTestConfigFileNameRelative()}"`],
+        ['init', `--c="${this.getTestConfigFileNameRelativeToOutputDir()}"`],
         getInitPromptSequence(this.getPAK())
       );
 
