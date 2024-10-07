@@ -20,7 +20,7 @@ export function setup({ provide }: GlobalSetupContext) {
 export function teardown() {
     try {
         if (existsSync(testOutputDir)) {
-            console.log(`cleaning up ${testOutputDir} directory\n`);
+            console.log(`Cleaning up ${testOutputDir} directory\n`);
             rmSync(testOutputDir, { recursive: true, force: true });
         }
     } catch (e) {

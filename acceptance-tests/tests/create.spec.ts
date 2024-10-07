@@ -41,7 +41,7 @@ const FOLDERS = {
 
 const cleanup = (testState: TestState) => {
   Object.keys(FOLDERS).forEach(k => {
-    rimraf.sync(testState.getPathWithTestDirectory(FOLDERS[k].folder));
+    rimraf.sync(testState.getPathWithinTestDirectory(FOLDERS[k].folder));
   });
 };
 

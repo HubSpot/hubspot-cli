@@ -28,26 +28,26 @@ export class TestState {
     return this.config?.personalAccessKey;
   }
 
-  getTestConfigFileRelative() {
+  getTestConfigFileNameRelative() {
     return this.testConfigFileName;
   }
 
   getTestConfigFileName() {
-    return this.getPathWithTestDirectory(this.testConfigFileName);
+    return this.getPathWithinTestDirectory(this.testConfigFileName);
   }
 
-  getPathWithTestDirectory(filepath: string) {
+  getPathWithinTestDirectory(filepath: string) {
     return path.join(this.testOutputDir, filepath);
   }
 
   existsInProjectFolder(filepath: string) {
-    return existsSync(this.getPathWithTestDirectory(filepath));
+    return existsSync(this.getPathWithinTestDirectory(filepath));
   }
 
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.getTestConfigFileRelative()}"`],
+        ['init', `--c="${this.getTestConfigFileNameRelative()}"`],
         getInitPromptSequence(this.getPAK())
       );
 

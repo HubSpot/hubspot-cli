@@ -17,7 +17,7 @@ describe('hs list', () => {
   it('should print the correct output', async () => {
     const val = await testState.cli.execute([
       'list',
-      `--c="${testState.getTestConfigFileRelative()}"`,
+      `--c="${testState.getTestConfigFileNameRelative()}"`,
     ]);
     expect(val).toContain('CLI_TEST_TEMPLATE.html');
   });

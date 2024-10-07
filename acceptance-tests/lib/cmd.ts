@@ -41,10 +41,6 @@ export function createProcess(
 
   const testOutputDir = path.join(process.cwd(), config.testDir);
 
-  if (!existsSync(testOutputDir)) {
-    mkdirSync(testOutputDir);
-  }
-
   // This works for node based CLIs, but can easily be adjusted to
   // any other process installed in the system
   return spawn(processCommand, args, {
