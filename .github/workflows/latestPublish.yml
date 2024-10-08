@@ -25,7 +25,7 @@ jobs:
           node-version: 18.x
       - name: Install Deps
         run: npm install
-      - name: Add package to npx cache
+      - name: Globally install the CLI
         run: |
           npm install -g @hubspot/cli@${{ env.version }}
       - name: Test Latest CLI Release
