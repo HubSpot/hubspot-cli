@@ -187,7 +187,7 @@ exports.handler = async options => {
     (storybook = false),
     (hubspotCliConfigPathOption = false),
     (hubspotCliAccountNameOption = false),
-    (sslEnabledOption = false),
+    !noSsl,
     (fieldGenEnabledOption = false),
     (themePreviewOptions = {
       filePaths,
