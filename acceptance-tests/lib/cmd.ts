@@ -8,6 +8,9 @@ import { existsSync } from 'fs';
 import { constants } from 'os';
 import spawn from 'cross-spawn';
 import concat from 'concat-stream';
+import * as process from 'node:process';
+import * as path from 'node:path';
+import { testOutputDir } from './testState';
 
 const PATH = process.env.PATH;
 
@@ -49,6 +52,7 @@ export function createProcess(
       GITHUB_TOKEN: config.githubToken,
     },
     stdio: [null, null, null, 'ipc'], // This enables interprocess communication (IPC)
+    cwd: path.join(process.cwd(), testOutputDir),
   });
 }
 

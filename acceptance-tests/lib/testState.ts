@@ -6,6 +6,9 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import yaml from 'js-yaml';
 import rimraf from 'rimraf';
 import { v4 as uuidv4 } from 'uuid';
+import * as path from 'node:path';
+
+export const testOutputDir = 'test-output';
 
 export class TestState {
   public config: TestConfig;
@@ -23,14 +26,26 @@ export class TestState {
     return this.config?.personalAccessKey;
   }
 
-  getTestConfigFileName() {
+  getTestConfigFileNameRelativeToOutputDir() {
     return this.testConfigFileName;
+  }
+
+  getTestConfigFileName() {
+    return this.getPathWithinTestDirectory(this.testConfigFileName);
+  }
+
+  getPathWithinTestDirectory(filepath: string) {
+    return path.join(testOutputDir, filepath);
+  }
+
+  existsInTestOutputDirectory(filepath: string) {
+    return existsSync(this.getPathWithinTestDirectory(filepath));
   }
 
   async initializeAuth() {
     try {
       await this.cli.execute(
-        ['init', `--c="${this.getTestConfigFileName()}"`],
+        ['init', `--c="${this.getTestConfigFileNameRelativeToOutputDir()}"`],
         getInitPromptSequence(this.getPAK())
       );
 
@@ -63,6 +78,6 @@ export class TestState {
   }
 
   cleanup() {
-    rimraf.sync(this.testConfigFileName);
+    rimraf.sync(this.getTestConfigFileName());
   }
 }
