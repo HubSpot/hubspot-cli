@@ -6,7 +6,6 @@ export interface TestConfig {
   portalId: string;
   qa: boolean;
   githubToken: string;
-  testDir: string;
 }
 
 export interface CLI {

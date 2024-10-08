@@ -71,7 +71,9 @@ describe('hs create', () => {
       ['label', ENTER, ENTER, ENTER, 'y', ENTER]
     );
 
-    expect(testState.existsInProjectFolder(FOLDERS.module.folder)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(FOLDERS.module.folder)).toBe(
+      true
+    );
   });
 
   it('creates a template', async () => {
@@ -79,30 +81,36 @@ describe('hs create', () => {
       ['create', 'template', FOLDERS.template.name],
       [ENTER]
     );
-    expect(testState.existsInProjectFolder(FOLDERS.template.folder)).toBe(true);
-  });
-
-  it('website-theme', async () => {
-    await testState.cli.execute(['create', 'website-theme']);
-    expect(testState.existsInProjectFolder(FOLDERS.websiteTheme.folder)).toBe(
+    expect(testState.existsInTestOutputDirectory(FOLDERS.template.folder)).toBe(
       true
     );
   });
 
+  it('website-theme', async () => {
+    await testState.cli.execute(['create', 'website-theme']);
+    expect(
+      testState.existsInTestOutputDirectory(FOLDERS.websiteTheme.folder)
+    ).toBe(true);
+  });
+
   it('react-app', async () => {
     await testState.cli.execute(['create', 'react-app']);
-    expect(testState.existsInProjectFolder(FOLDERS.reactApp.folder)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(FOLDERS.reactApp.folder)).toBe(
+      true
+    );
   });
 
   it('vue-app', async () => {
     await testState.cli.execute(['create', 'vue-app']);
-    expect(testState.existsInProjectFolder(FOLDERS.vueApp.folder)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(FOLDERS.vueApp.folder)).toBe(
+      true
+    );
   });
 
   it('webpack-serverless', async () => {
     await testState.cli.execute(['create', 'webpack-serverless']);
     expect(
-      testState.existsInProjectFolder(FOLDERS.webpackServerless.folder)
+      testState.existsInTestOutputDirectory(FOLDERS.webpackServerless.folder)
     ).toBe(true);
   });
 
@@ -119,7 +127,9 @@ describe('hs create', () => {
 
   it('app', async () => {
     await testState.cli.execute(['create', 'app']);
-    expect(testState.existsInProjectFolder(FOLDERS.app.folder)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(FOLDERS.app.folder)).toBe(
+      true
+    );
   });
 
   it('function', async () => {
@@ -135,6 +145,8 @@ describe('hs create', () => {
         ENTER,
       ]
     );
-    expect(testState.existsInProjectFolder(FOLDERS.function.folder)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(FOLDERS.function.folder)).toBe(
+      true
+    );
   });
 });

@@ -31,6 +31,6 @@ describe('hs project create', () => {
       '--template="getting-started-private-app"',
       `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
     ]);
-    expect(testState.existsInProjectFolder(PROJECT_FOLDER)).toBe(true);
+    expect(testState.existsInTestOutputDirectory(PROJECT_FOLDER)).toBe(true);
   });
 });

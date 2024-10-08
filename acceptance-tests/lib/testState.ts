@@ -15,11 +15,9 @@ export class TestState {
   public cli: CLI;
   private testConfigFileName: string;
   private parsedYaml: ReturnType<yaml.load>;
-  private testOutputDir = 'test-output';
 
   constructor() {
     this.config = getTestConfig();
-    this.config.testDir = this.testOutputDir;
     this.cli = createCli(this.config);
     this.testConfigFileName = `hs-acceptance-test.config-${uuidv4()}.yml`;
   }
@@ -37,10 +35,10 @@ export class TestState {
   }
 
   getPathWithinTestDirectory(filepath: string) {
-    return path.join(this.testOutputDir, filepath);
+    return path.join(testOutputDir, filepath);
   }
 
-  existsInProjectFolder(filepath: string) {
+  existsInTestOutputDirectory(filepath: string) {
     return existsSync(this.getPathWithinTestDirectory(filepath));
   }
 

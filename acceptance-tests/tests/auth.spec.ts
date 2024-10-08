@@ -18,7 +18,7 @@ describe('hs auth', () => {
 
   it('should update the tokens for the existing configured account', async () => {
     expect(
-      testState.existsInProjectFolder(
+      testState.existsInTestOutputDirectory(
         testState.getTestConfigFileNameRelativeToOutputDir()
       )
     ).toBe(true);
@@ -29,7 +29,7 @@ describe('hs auth', () => {
     );
 
     expect(
-      testState.existsInProjectFolder(
+      testState.existsInTestOutputDirectory(
         testState.getTestConfigFileNameRelativeToOutputDir()
       )
     ).toBe(true);
