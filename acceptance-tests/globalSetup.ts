@@ -7,12 +7,14 @@ import * as path from "path";
 
 // Vitest docs on globalSetup modules https://vitest.dev/config/#globalsetup
 export function setup(__context: GlobalSetupContext) {
-    const dotEnvConfig = dotEnv.config({ path: path.join(__dirname, './.env') });
-    const { parsed }  = dotEnvConfig
-    if(parsed && parsed.USE_INSTALLED) {
-        console.log('Using installed version of the hs command')
-    }
     try {
+        const dotEnvConfig = dotEnv.config({ path: path.join(__dirname, './.env') });
+        const { parsed }  = dotEnvConfig
+
+        if(parsed && parsed.USE_INSTALLED) {
+            console.log('Using installed version of the hs command')
+        }
+
         if(existsSync(testOutputDir)) {
             console.log(`The directory ${testOutputDir} already exists, deleting it's contents\n`);
             rmSync(testOutputDir, { recursive: true, force: true });
