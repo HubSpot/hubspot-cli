@@ -1,6 +1,5 @@
 import { ENTER } from '../lib/prompt';
 
-import { existsSync } from 'fs';
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import rimraf from 'rimraf';
 import { TestState } from '../lib/testState';
@@ -16,15 +15,19 @@ const FOLDERS = {
   },
   websiteTheme: {
     folder: 'website-theme',
+    name: 'website-theme',
   },
   reactApp: {
     folder: 'react-app',
+    name: 'react-app',
   },
   vueApp: {
     folder: 'vue-app',
+    name: 'vue-app',
   },
   webpackServerless: {
     folder: 'webpack-serverless',
+    name: 'webpack-serverless',
   },
   apiSample: {
     name: 'api-sample',
@@ -32,6 +35,7 @@ const FOLDERS = {
   },
   app: {
     folder: 'app',
+    name: 'app',
   },
   function: {
     folder: 'function.functions',
@@ -87,28 +91,28 @@ describe('hs create', () => {
   });
 
   it('website-theme', async () => {
-    await testState.cli.execute(['create', 'website-theme']);
+    await testState.cli.execute(['create', FOLDERS.websiteTheme.name]);
     expect(
       testState.existsInTestOutputDirectory(FOLDERS.websiteTheme.folder)
     ).toBe(true);
   });
 
   it('react-app', async () => {
-    await testState.cli.execute(['create', 'react-app']);
+    await testState.cli.execute(['create', FOLDERS.reactApp.name]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.reactApp.folder)).toBe(
       true
     );
   });
 
   it('vue-app', async () => {
-    await testState.cli.execute(['create', 'vue-app']);
+    await testState.cli.execute(['create', FOLDERS.vueApp.name]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.vueApp.folder)).toBe(
       true
     );
   });
 
   it('webpack-serverless', async () => {
-    await testState.cli.execute(['create', 'webpack-serverless']);
+    await testState.cli.execute(['create', FOLDERS.webpackServerless.name]);
     expect(
       testState.existsInTestOutputDirectory(FOLDERS.webpackServerless.folder)
     ).toBe(true);
@@ -119,14 +123,17 @@ describe('hs create', () => {
   // instead we just check for some output to make sure the command runs
   it('api-sample', async () => {
     const out = await testState.cli.execute(
-      ['create', 'api-sample', 'api-sample'],
+      ['create', FOLDERS.apiSample.name, FOLDERS.apiSample.name],
       [ENTER, ENTER]
     );
-    expect(out).toContain('node');
+
+    expect(
+      testState.existsInTestOutputDirectory(FOLDERS.apiSample.folder)
+    ).toBe(true);
   });
 
   it('app', async () => {
-    await testState.cli.execute(['create', 'app']);
+    await testState.cli.execute(['create', FOLDERS.app.name]);
     expect(testState.existsInTestOutputDirectory(FOLDERS.app.folder)).toBe(
       true
     );

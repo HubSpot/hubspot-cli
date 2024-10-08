@@ -1,6 +1,6 @@
 export interface TestConfig {
   debug: boolean;
-  cliVersion: string;
+  useInstalled: boolean;
   cliPath: string;
   personalAccessKey: string;
   portalId: string;

@@ -27,14 +27,14 @@ jobs:
         run: npm install
       - name: Add package to npx cache
         run: |
-          npx --yes --package @hubspot/cli@${{ env.version }} hs
+          npm install -g @hubspot/cli@${{ env.version }}
       - name: Test Latest CLI Release
         run: |
           npm run test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
-          CLI_VERSION: ${{ env.version }}
+          USE_INSTALLED: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2
