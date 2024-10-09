@@ -21,12 +21,7 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  uiAccountDescription,
-  uiBetaTag,
-  uiCommandReference,
-  uiLink,
-} = require('../../lib/ui');
+const { uiBetaTag, uiCommandReference, uiLink } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const LocalDevManager = require('../../lib/LocalDevManager');
 const {
@@ -45,13 +40,14 @@ const {
 const {
   confirmDefaultAccountIsTarget,
   suggestRecommendedNestedAccount,
-  checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
+  checkIfDefaultAccountIsSupported,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   useExistingDevTestAccount,
+  checkIfAccountFlagIsSupported,
+  checkIfParentAccountIsAuthed,
 } = require('../../lib/localDev');
 
 const i18nKey = 'commands.project.subcommands.dev';
@@ -86,11 +82,20 @@ exports.handler = async options => {
   validateProjectConfig(projectConfig, projectDir);
 
   const components = await findProjectComponents(projectDir);
-  const componentTypes = getProjectComponentTypes(components);
+  const runnableComponents = components.filter(component => component.runnable);
+  const componentTypes = getProjectComponentTypes(runnableComponents);
   const hasPrivateApps = !!componentTypes[COMPONENT_TYPES.privateApp];
   const hasPublicApps = !!componentTypes[COMPONENT_TYPES.publicApp];
 
-  if (hasPrivateApps && hasPublicApps) {
+  if (runnableComponents.length === 0) {
+    logger.error(
+      i18n(`${i18nKey}.errors.noRunnableComponents`, {
+        projectDir,
+        command: uiCommandReference('hs project add'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (hasPrivateApps && hasPublicApps) {
     logger.error(i18n(`${i18nKey}.errors.invalidProjectComponents`));
     process.exit(EXIT_CODES.SUCCESS);
   }
@@ -106,14 +111,16 @@ exports.handler = async options => {
   // The account that we are locally testing against
   let targetTestingAccountId = options.account ? accountId : null;
 
-  if (options.account && hasPublicApps) {
-    checkIfDeveloperTestAccount(accountConfig);
-    targetProjectAccountId = accountConfig.parentAccountId;
-    targetTestingAccountId = accountId;
-  }
+  // Check that the default account or flag option is valid for the type of app in this project
+  if (options.account) {
+    checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
-  let createNewSandbox = false;
-  let createNewDeveloperTestAccount = false;
+    if (hasPublicApps) {
+      targetProjectAccountId = accountConfig.parentAccountId;
+    }
+  } else {
+    checkIfDefaultAccountIsSupported(accountConfig, hasPublicApps);
+  }
 
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
@@ -122,26 +129,15 @@ exports.handler = async options => {
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
-      // Exit if the user has not authed the parent account in the config
-      if (!getAccountConfig(accountConfig.parentAccountId)) {
-        logger.error(
-          i18n(`${i18nKey}.errors.parentAccountNotConfigured`, {
-            accountId: accountConfig.parentAccountId,
-            accountIdentifier: uiAccountDescription(targetTestingAccountId),
-            authCommand: uiCommandReference(
-              `hs auth --account=${accountConfig.parentAccountId}`
-            ),
-          })
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+      checkIfParentAccountIsAuthed(accountConfig);
       targetProjectAccountId = accountConfig.parentAccountId;
     } else {
       targetProjectAccountId = accountId;
     }
-  } else if (!targetProjectAccountId && hasPublicApps) {
-    checkIfAppDeveloperAccount(accountConfig);
   }
+
+  let createNewSandbox = false;
+  let createNewDeveloperTestAccount = false;
 
   if (!targetProjectAccountId) {
     const {
@@ -222,7 +218,7 @@ exports.handler = async options => {
   }
 
   const LocalDev = new LocalDevManager({
-    components,
+    runnableComponents,
     debug: options.debug,
     deployedBuild,
     isGithubLinked,

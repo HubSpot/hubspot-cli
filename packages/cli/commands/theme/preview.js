@@ -20,10 +20,7 @@ const {
   FILE_UPLOAD_RESULT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/files');
 const cliProgress = require('cli-progress');
-const {
-  ApiErrorContext,
-  logApiUploadErrorInstance,
-} = require('../../lib/errorHandlers/apiErrors');
+const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const { handleExit, handleKeypress } = require('../../lib/process');
 const { getThemeJSONPath } = require('@hubspot/local-dev-lib/cms/themes');
 const { getProjectConfig } = require('../../lib/projects');
@@ -109,7 +106,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug, resetSession } = options;
+  const { noSsl, resetSession } = options;
 
   await loadAndValidateOptions(options);
 
@@ -164,7 +161,7 @@ exports.handler = async options => {
               result.file,
               dest
             );
-            logApiUploadErrorInstance(
+            logError(
               result.error,
               new ApiErrorContext({
                 accountId,
@@ -182,31 +179,13 @@ exports.handler = async options => {
   trackCommandUsage('preview', accountId);
   const { createDevServer } = await import('@hubspot/cms-dev-server');
 
-  createDevServer(
-    absoluteSrc,
-    (storybook = false),
-    (hubspotCliConfigPathOption = false),
-    (hubspotCliAccountNameOption = false),
-    !noSsl,
-    (fieldGenEnabledOption = false),
-    (themePreviewOptions = {
-      filePaths,
-      resetSession,
-      startProgressBar,
-      handleUserInput,
-      dest,
-    })
-  );
-  //preview(accountId, absoluteSrc, dest, {
-  //  notify,
-  //  filePaths,
-  //  skipUpload,
-  //  noSsl,
-  //  port,
-  //  debug,
-  //  uploadOptions,
-  //  handleUserInput,
-  //});
+  createDevServer(absoluteSrc, false, false, false, !noSsl, false, {
+    filePaths,
+    resetSession,
+    startProgressBar,
+    handleUserInput,
+    dest,
+  });
 };
 
 exports.builder = yargs => {

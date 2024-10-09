@@ -25,6 +25,7 @@ const POLLING_DELAY = 2000;
 const POLLING_STATUS = {
   SUCCESS: 'SUCCESS',
   ERROR: 'ERROR',
+  REVERTED: 'REVERTED',
   FAILURE: 'FAILURE',
 };
 
@@ -65,8 +66,9 @@ const PROJECT_ERROR_TYPES = {
 };
 const PROJECT_TASK_TYPES = {
   PRIVATE_APP: 'private app',
+  PUBLIC_APP: 'public app',
   APP_FUNCTION: 'function',
-  CRM_CARD_V2: 'crm card',
+  CRM_CARD_V2: 'card',
 };
 const PROJECT_COMPONENT_TYPES = {
   PROJECTS: 'projects',

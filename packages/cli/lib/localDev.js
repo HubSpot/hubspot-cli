@@ -6,7 +6,7 @@ const {
 const {
   isMissingScopeError,
   isSpecifiedError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
+} = require('@hubspot/local-dev-lib/errors/index');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { getAccountConfig, getEnv } = require('@hubspot/local-dev-lib/config');
 const { createProject } = require('@hubspot/local-dev-lib/api/projects');
@@ -28,7 +28,6 @@ const { syncSandbox } = require('./sandboxSync');
 const {
   validateDevTestAccountUsageLimits,
 } = require('./developerTestAccounts');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
 const { uiCommandReference, uiLine, uiAccountDescription } = require('./ui');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { i18n } = require('./lang');
@@ -47,10 +46,7 @@ const {
   PROJECT_BUILD_TEXT,
   PROJECT_DEPLOY_TEXT,
 } = require('./constants');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('./errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('./errorHandlers/index');
 const {
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
 } = require('@hubspot/local-dev-lib/constants/auth');
@@ -82,18 +78,67 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const checkIfAppDeveloperAccount = accountConfig => {
-  if (!isAppDeveloperAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfAppDevloperAccount`));
+// Confirm the default account is supported for the type of apps being developed
+const checkIfDefaultAccountIsSupported = (accountConfig, hasPublicApps) => {
+  if (
+    hasPublicApps &&
+    !(
+      isAppDeveloperAccount(accountConfig) ||
+      isDeveloperTestAccount(accountConfig)
+    )
+  ) {
+    logger.error(
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.publicApp`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.privateApp`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+const checkIfParentAccountIsAuthed = accountConfig => {
+  if (!getAccountConfig(accountConfig.parentAccountId)) {
+    logger.error(
+      i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
+        accountId: accountConfig.parentAccountId,
+        accountIdentifier: uiAccountDescription(accountConfig.portalId),
+        authCommand: uiCommandReference(
+          `hs auth --account=${accountConfig.parentAccountId}`
+        ),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
 
 // Confirm the default account is a developer account if developing public apps
-const checkIfDeveloperTestAccount = accountConfig => {
-  if (!isDeveloperTestAccount(accountConfig)) {
-    logger.error(i18n(`${i18nKey}.checkIfDeveloperTestAccount`));
+const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps) {
+    if (!isDeveloperTestAccount) {
+      logger.error(
+        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+    checkIfParentAccountIsAuthed(accountConfig);
+  } else if (isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
+        useCommand: uiCommandReference('hs accounts use'),
+      })
+    );
     process.exit(EXIT_CODES.SUCCESS);
   }
 };
@@ -109,20 +154,11 @@ const suggestRecommendedNestedAccount = async (
   if (hasPublicApps) {
     logger.log(
       i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.publicAppNonDeveloperTestAccountWarning`
+        `${i18nKey}.validateAccountOption.publicAppNonDeveloperTestAccountWarning`
       )
     );
-  } else if (isAppDeveloperAccount(accountConfig)) {
-    logger.error(
-      i18n(
-        `${i18nKey}.suggestRecommendedNestedAccount.privateAppInAppDeveloperAccountError`
-      )
-    );
-    process.exit(EXIT_CODES.ERROR);
   } else {
-    logger.log(
-      i18n(`${i18nKey}.suggestRecommendedNestedAccount.nonSandboxWarning`)
-    );
+    logger.log(i18n(`${i18nKey}.validateAccountOption.nonSandboxWarning`));
   }
   uiLine();
   logger.log();
@@ -158,7 +194,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -187,17 +223,17 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountConfig,
       sandboxAccountConfig
     );
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     await syncSandbox({
       accountConfig: sandboxAccountConfig,
       parentAccountConfig: accountConfig,
       env,
       syncTasks,
-      allowEarlyTermination: false, // Don't let user terminate early in this flow
-      skipPolling: true, // Skip polling, sync will run and complete in the background
+      slimInfoMessage: true,
     });
     return targetAccountId;
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -236,7 +272,7 @@ const createDeveloperTestAccountForLocalDev = async (
         })
       );
     } else {
-      logErrorInstance(err);
+      logError(err);
     }
     process.exit(EXIT_CODES.ERROR);
   }
@@ -262,7 +298,7 @@ const createDeveloperTestAccountForLocalDev = async (
 
     return result.id;
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -341,7 +377,10 @@ const createNewProjectForLocalDev = async (
     });
 
     try {
-      const project = await createProject(targetAccountId, projectConfig.name);
+      const { data: project } = await createProject(
+        targetAccountId,
+        projectConfig.name
+      );
       SpinniesManager.succeed('createProject', {
         text: i18n(`${i18nKey}.createNewProjectForLocalDev.createdProject`, {
           accountIdentifier: uiAccountDescription(targetAccountId),
@@ -394,7 +433,7 @@ const createInitialBuildForNewProject = async (
       );
       logger.log();
     } else {
-      logApiErrorInstance(
+      logError(
         initialUploadResult.uploadError,
         new ApiErrorContext({
           accountId: targetAccountId,
@@ -439,8 +478,8 @@ const getAccountHomeUrl = accountId => {
 
 module.exports = {
   confirmDefaultAccountIsTarget,
-  checkIfAppDeveloperAccount,
-  checkIfDeveloperTestAccount,
+  checkIfDefaultAccountIsSupported,
+  checkIfAccountFlagIsSupported,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
@@ -448,4 +487,5 @@ module.exports = {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   getAccountHomeUrl,
+  checkIfParentAccountIsAuthed,
 };

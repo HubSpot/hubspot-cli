@@ -17,10 +17,8 @@ const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
-const {
-  isSpecifiedHubSpotAuthError,
-} = require('@hubspot/local-dev-lib/errors/apiErrors');
 const { uiAccountDescription } = require('../../lib/ui');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.accounts.subcommands.clean';
 
@@ -54,16 +52,16 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(account.portalId);
+      await accessTokenForPersonalAccessKey(account.portalId, true);
     } catch (error) {
       if (
-        isSpecifiedHubSpotAuthError(error, {
-          status: 401,
+        isSpecifiedError(error, {
+          statusCode: 401,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
         }) ||
-        isSpecifiedHubSpotAuthError(error, {
-          status: 404,
+        isSpecifiedError(error, {
+          statusCode: 404,
           category: 'INVALID_AUTHENTICATION',
           subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
         })

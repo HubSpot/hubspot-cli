@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const {
+  getCwd,
+  sanitizeFileName,
+  isValidPath,
+  untildify,
+} = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../../lib/constants');
 const { promptUser } = require('./promptUtils');
 const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
@@ -55,14 +60,20 @@ const createProjectPrompt = async (
   skipTemplatePrompt = false
 ) => {
   let projectTemplates = [];
+  let selectedTemplate;
+
   if (!skipTemplatePrompt) {
     projectTemplates = await createTemplateOptions(
       promptOptions.templateSource,
       githubRef
     );
+
+    selectedTemplate =
+      promptOptions.template &&
+      projectTemplates.find(t => t.name === promptOptions.template);
   }
 
-  return promptUser([
+  const result = await promptUser([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),
@@ -79,7 +90,10 @@ const createProjectPrompt = async (
       message: i18n(`${i18nKey}.enterLocation`),
       when: !promptOptions.location,
       default: answers => {
-        return path.resolve(getCwd(), answers.name || promptOptions.name);
+        const projectName = sanitizeFileName(
+          answers.name || promptOptions.name
+        );
+        return path.resolve(getCwd(), projectName);
       },
       validate: input => {
         if (!input) {
@@ -88,7 +102,13 @@ const createProjectPrompt = async (
         if (fs.existsSync(input)) {
           return i18n(`${i18nKey}.errors.invalidLocation`);
         }
+        if (!isValidPath(input)) {
+          return i18n(`${i18nKey}.errors.invalidCharacters`);
+        }
         return true;
+      },
+      filter: input => {
+        return untildify(input);
       },
     },
     {
@@ -101,10 +121,7 @@ const createProjectPrompt = async (
             })
           : i18n(`${i18nKey}.selectTemplate`);
       },
-      when:
-        !skipTemplatePrompt &&
-        (!promptOptions.template ||
-          !projectTemplates.find(t => t.name === promptOptions.template)),
+      when: !skipTemplatePrompt && !selectedTemplate,
       type: 'list',
       choices: projectTemplates.map(template => {
         return {
@@ -114,6 +131,12 @@ const createProjectPrompt = async (
       }),
     },
   ]);
+
+  if (selectedTemplate) {
+    result.template = selectedTemplate;
+  }
+
+  return result;
 };
 
 module.exports = {

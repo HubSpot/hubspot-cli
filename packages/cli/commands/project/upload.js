@@ -20,12 +20,9 @@ const {
 } = require('../../lib/projects');
 const { i18n } = require('../../lib/lang');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/apiErrors');
+const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.upload';
@@ -71,11 +68,11 @@ exports.handler = async options => {
         logger.error(i18n(`${i18nKey}.errors.projectLockedError`));
         logger.log();
       } else {
-        logApiErrorInstance(
+        logError(
           result.uploadError,
           new ApiErrorContext({
             accountId,
-            projectName: projectConfig.name,
+            request: 'project upload',
           })
         );
       }
@@ -92,7 +89,7 @@ exports.handler = async options => {
       logger.log(
         i18n(`${i18nKey}.logs.autoDeployDisabled`, {
           deployCommand: uiCommandReference(
-            `hs project deploy --buildId=${result.buildId}`
+            `hs project deploy --build=${result.buildId}`
           ),
         })
       );
@@ -102,8 +99,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
-    const projectName = projectConfig.name;
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+    logError(e, new ApiErrorContext({ accountId, request: 'project upload' }));
     process.exit(EXIT_CODES.ERROR);
   }
 };

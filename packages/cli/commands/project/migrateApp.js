@@ -5,14 +5,16 @@ const {
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
-const { trackCommandUsage } = require('../../lib/usageTracking');
+const {
+  trackCommandUsage,
+  trackCommandMetadataUsage,
+} = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
   createProjectPrompt,
 } = require('../../lib/prompts/createProjectPrompt');
 const { i18n } = require('../../lib/lang');
 const {
-  fetchPublicAppOptions,
   selectPublicAppPrompt,
 } = require('../../lib/prompts/selectPublicAppPrompt');
 const { poll } = require('../../lib/polling');
@@ -24,10 +26,7 @@ const {
   uiAccountDescription,
 } = require('../../lib/ui');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
@@ -37,17 +36,20 @@ const {
   migrateApp,
   checkMigrationStatus,
 } = require('@hubspot/local-dev-lib/api/projects');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { downloadProject } = require('@hubspot/local-dev-lib/api/projects');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
+const {
+  fetchPublicAppMetadata,
+} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.migrateApp';
 
 exports.command = 'migrate-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -57,6 +59,16 @@ exports.handler = async options => {
   const accountName = uiAccountDescription(accountId);
 
   trackCommandUsage('migrate-app', {}, accountId);
+
+  logger.log('');
+  logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
+  logger.log(
+    uiLink(
+      i18n(`${i18nKey}.header.link`),
+      'https://developers.hubspot.com/docs/platform/migrate-a-public-app-to-projects'
+    )
+  );
+  logger.log('');
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
@@ -68,7 +80,7 @@ exports.handler = async options => {
       })
     );
     uiLine();
-    process.exit(EXIT_CODES.ERROR);
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   const { appId } =
@@ -77,39 +89,61 @@ exports.handler = async options => {
       : await selectPublicAppPrompt({
           accountId,
           accountName,
-          migrateApp: true,
+          isMigratingApp: true,
         });
 
-  const publicApps = await fetchPublicAppOptions(accountId, accountName);
-  const selectedApp = publicApps.find(a => a.id === appId);
-  const appName = selectedApp ? selectedApp.name : 'app';
-  if (!selectedApp) {
-    logger.error(i18n(`${i18nKey}.errors.invalidAppId`, { appId }));
+  try {
+    const { data: selectedApp } = await fetchPublicAppMetadata(
+      appId,
+      accountId
+    );
+    // preventProjectMigrations returns true if we have not added app to allowlist config.
+    // listingInfo will only exist for marketplace apps
+    const preventProjectMigrations = selectedApp.preventProjectMigrations;
+    const listingInfo = selectedApp.listingInfo;
+    if (preventProjectMigrations && listingInfo) {
+      logger.error(i18n(`${i18nKey}.errors.invalidApp`, { appId }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } catch (error) {
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { name, location } = await createProjectPrompt('', options, true);
+  let projectName;
+  let projectLocation;
+  try {
+    const { name, location } = await createProjectPrompt('', options, true);
 
-  const projectName = options.name || name;
-  const projectLocation = options.location || location;
+    projectName = options.name || name;
+    projectLocation = options.location || location;
 
-  const { projectExists } = await ensureProjectExists(accountId, projectName, {
-    allowCreate: false,
-    noLogs: true,
-  });
-
-  if (projectExists) {
-    logger.error(
-      i18n(`${i18nKey}.errors.projectAlreadyExists`, {
-        projectName,
-      })
+    const { projectExists } = await ensureProjectExists(
+      accountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
     );
+
+    if (projectExists) {
+      logger.error(
+        i18n(`${i18nKey}.errors.projectAlreadyExists`, {
+          projectName,
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  } catch (error) {
+    logError(error, new ApiErrorContext({ accountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
   logger.log('');
   uiLine();
-  logger.log(uiBetaTag(i18n(`${i18nKey}.warning.title`, { appName }), false));
+  logger.warn(i18n(`${i18nKey}.warning.title`));
+  logger.log('');
   logger.log(i18n(`${i18nKey}.warning.projectConversion`));
   logger.log(i18n(`${i18nKey}.warning.appConfig`));
   logger.log('');
@@ -146,7 +180,11 @@ exports.handler = async options => {
       }
     });
 
-    const migrateResponse = await migrateApp(accountId, appId, projectName);
+    const { data: migrateResponse } = await migrateApp(
+      accountId,
+      appId,
+      projectName
+    );
     const { id } = migrateResponse;
     const pollResponse = await poll(checkMigrationStatus, accountId, id);
     const { status, project } = pollResponse;
@@ -155,13 +193,23 @@ exports.handler = async options => {
       const { env } = getAccountConfig(accountId);
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
-      const zippedProject = await downloadProject(accountId, projectName, 1);
+      const { data: zippedProject } = await downloadProject(
+        accountId,
+        projectName,
+        1
+      );
 
       await extractZipArchive(
         zippedProject,
-        projectName,
+        sanitizeFileName(projectName),
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
+      );
+
+      trackCommandMetadataUsage(
+        'migrate-app',
+        { type: projectName, assetType: appId, successful: status },
+        accountId
       );
 
       SpinniesManager.succeed('migrateApp', {
@@ -175,20 +223,28 @@ exports.handler = async options => {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.projectDetailsLink`),
-          `${baseUrl}/developer-projects/${accountId}/project/${project.name}`
+          `${baseUrl}/developer-projects/${accountId}/project/${encodeURIComponent(
+            project.name
+          )}`
         )
       );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
+    trackCommandMetadataUsage(
+      'migrate-app',
+      { projectName, appId, status: 'FAILURE', error },
+      accountId
+    );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
       failColor: 'white',
     });
-    logApiErrorInstance(
-      error.error || error,
-      new ApiErrorContext({ accountId })
-    );
+    if (error.errors) {
+      error.errors.forEach(logError);
+    } else {
+      logError(error, new ApiErrorContext({ accountId }));
+    }
 
     process.exit(EXIT_CODES.ERROR);
   }

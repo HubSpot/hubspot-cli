@@ -9,7 +9,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/localDevAuth');
 const {
   fetchPublicAppsForPortal,
-  fetchPublicAppDeveloperTestAccountInstallData,
+  fetchPublicAppProductionInstallCounts,
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
@@ -34,7 +34,7 @@ const {
   uiLink,
   uiLine,
 } = require('./ui');
-const { logErrorInstance } = require('./errorHandlers/standardErrors');
+const { logError } = require('./errorHandlers/index');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
 const {
   activeInstallConfirmationPrompt,
@@ -63,7 +63,7 @@ class LocalDevManager {
     this.isGithubLinked = options.isGithubLinked;
     this.watcher = null;
     this.uploadWarnings = {};
-    this.runnableComponents = this.getRunnableComponents(options.components);
+    this.runnableComponents = options.runnableComponents;
     this.activeApp = null;
     this.activePublicAppData = null;
     this.env = options.env;
@@ -78,27 +78,6 @@ class LocalDevManager {
       logger.log(i18n(`${i18nKey}.failedToInitialize`));
       process.exit(EXIT_CODES.ERROR);
     }
-
-    // The project is empty, there is nothing to run locally
-    if (!options.components.length) {
-      logger.error(i18n(`${i18nKey}.noComponents`));
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-
-    // The project does not contain any components that support local development
-    if (!this.runnableComponents.length) {
-      logger.error(
-        i18n(`${i18nKey}.noRunnableComponents`, {
-          projectSourceDir: this.projectSourceDir,
-          command: uiCommandReference('hs project add'),
-        })
-      );
-      process.exit(EXIT_CODES.SUCCESS);
-    }
-  }
-
-  getRunnableComponents(components) {
-    return components.filter(component => component.runnable);
   }
 
   async setActiveApp(appUid) {
@@ -120,7 +99,7 @@ class LocalDevManager {
         await this.checkActivePublicAppInstalls();
         await this.checkPublicAppInstallation();
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
     }
   }
@@ -130,7 +109,7 @@ class LocalDevManager {
       return;
     }
 
-    const portalPublicApps = await fetchPublicAppsForPortal(
+    const { data: portalPublicApps } = await fetchPublicAppsForPortal(
       this.targetProjectAccountId
     );
 
@@ -138,17 +117,16 @@ class LocalDevManager {
       ({ sourceId }) => sourceId === this.activeApp.config.uid
     );
 
+    // TODO: Update to account for new API with { data }
     const {
-      testPortalInstallCount,
-    } = await fetchPublicAppDeveloperTestAccountInstallData(
+      data: { uniquePortalInstallCount },
+    } = await fetchPublicAppProductionInstallCounts(
       activePublicAppData.id,
       this.targetProjectAccountId
     );
 
     this.activePublicAppData = activePublicAppData;
-    this.publicAppActiveInstalls =
-      activePublicAppData.publicApplicationInstallCounts
-        .uniquePortalInstallCount - testPortalInstallCount;
+    this.publicAppActiveInstalls = uniquePortalInstallCount;
   }
 
   async checkActivePublicAppInstalls() {
@@ -286,28 +264,34 @@ class LocalDevManager {
     process.exit(EXIT_CODES.SUCCESS);
   }
 
-  getActiveAppInstallationData() {
-    return fetchAppInstallationData(
+  async getActiveAppInstallationData() {
+    const { data } = await fetchAppInstallationData(
       this.targetAccountId,
       this.projectId,
       this.activeApp.config.uid,
       this.activeApp.config.auth.requiredScopes,
       this.activeApp.config.auth.optionalScopes
     );
+
+    return data;
   }
 
   async checkPublicAppInstallation() {
     const {
-      isInstalledWithScopeGroups: isInstalled,
+      isInstalledWithScopeGroups,
+      previouslyAuthorizedScopeGroups,
     } = await this.getActiveAppInstallationData();
 
-    if (!isInstalled) {
+    const isReinstall = previouslyAuthorizedScopeGroups.length > 0;
+
+    if (!isInstalledWithScopeGroups) {
       await installPublicAppPrompt(
         this.env,
         this.targetAccountId,
         this.activePublicAppData.clientId,
         this.activeApp.config.auth.requiredScopes,
-        this.activeApp.config.auth.redirectUrls
+        this.activeApp.config.auth.redirectUrls,
+        isReinstall
       );
     }
   }

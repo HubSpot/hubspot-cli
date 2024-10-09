@@ -6,29 +6,62 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   deployProject,
   fetchProject,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { getProjectConfig, pollDeployStatus } = require('../../lib/projects');
+const {
+  getProjectConfig,
+  pollDeployStatus,
+  getProjectDetailUrl,
+} = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const { buildIdPrompt } = require('../../lib/prompts/buildIdPrompt');
+const {
+  deployBuildIdPrompt,
+} = require('../../lib/prompts/deployBuildIdPrompt');
 const { i18n } = require('../../lib/lang');
-const { uiBetaTag } = require('../../lib/ui');
+const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
-exports.command = 'deploy [--project] [--buildId]';
+exports.command = 'deploy';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
+
+const validateBuildId = (
+  buildId,
+  deployedBuildId,
+  latestBuildId,
+  projectName,
+  accountId
+) => {
+  if (Number(buildId) > latestBuildId) {
+    return i18n(`${i18nKey}.errors.buildIdDoesNotExist`, {
+      buildId: buildId,
+      projectName,
+      linkToProject: uiLink(
+        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        getProjectDetailUrl(projectName, accountId)
+      ),
+    });
+  }
+  if (Number(buildId) === deployedBuildId) {
+    return i18n(`${i18nKey}.errors.buildAlreadyDeployed`, {
+      buildId: buildId,
+      linkToProject: uiLink(
+        i18n(`${i18nKey}.errors.viewProjectsBuilds`),
+        getProjectDetailUrl(projectName, accountId)
+      ),
+    });
+  }
+  return true;
+};
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -59,42 +92,61 @@ exports.handler = async options => {
   let buildIdToDeploy = buildIdOption;
 
   try {
-    if (!buildIdOption) {
-      const { latestBuild, deployedBuildId } = await fetchProject(
-        accountId,
-        projectName
+    const {
+      data: { latestBuild, deployedBuildId },
+    } = await fetchProject(accountId, projectName);
+
+    if (!latestBuild || !latestBuild.buildId) {
+      logger.error(i18n(`${i18nKey}.errors.noBuilds`));
+      return process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (buildIdToDeploy) {
+      const validationResult = validateBuildId(
+        buildIdToDeploy,
+        deployedBuildId,
+        latestBuild.buildId,
+        projectName,
+        accountId
       );
-      if (!latestBuild || !latestBuild.buildId) {
-        logger.error(i18n(`${i18nKey}.errors.noBuilds`));
-        process.exit(EXIT_CODES.ERROR);
+      if (validationResult !== true) {
+        logger.error(validationResult);
+        return process.exit(EXIT_CODES.ERROR);
       }
-      const buildIdPromptResponse = await buildIdPrompt(
+    } else {
+      const deployBuildIdPromptResponse = await deployBuildIdPrompt(
         latestBuild.buildId,
         deployedBuildId,
-        projectName
+        buildId =>
+          validateBuildId(
+            buildId,
+            deployedBuildId,
+            latestBuild.buildId,
+            projectName,
+            accountId
+          )
       );
-
-      buildIdToDeploy = buildIdPromptResponse.buildId;
+      buildIdToDeploy = deployBuildIdPromptResponse.buildId;
     }
 
     if (!buildIdToDeploy) {
       logger.error(i18n(`${i18nKey}.errors.noBuildId`));
-      process.exit(EXIT_CODES.ERROR);
+      return process.exit(EXIT_CODES.ERROR);
     }
 
-    const deployResp = await deployProject(
+    const { data: deployResp } = await deployProject(
       accountId,
       projectName,
       buildIdToDeploy
     );
 
-    if (deployResp.error) {
+    if (!deployResp || deployResp.error) {
       logger.error(
         i18n(`${i18nKey}.errors.deploy`, {
           details: deployResp.error.message,
         })
       );
-      return;
+      return process.exit(EXIT_CODES.ERROR);
     }
 
     await pollDeployStatus(
@@ -104,7 +156,7 @@ exports.handler = async options => {
       buildIdToDeploy
     );
   } catch (e) {
-    if (e.statusCode === 404) {
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
@@ -112,13 +164,15 @@ exports.handler = async options => {
           command: uiCommandReference('hs project upload'),
         })
       );
-    }
-    if (e.statusCode === 400) {
-      logger.error(e.error.message);
+    } else if (isHubSpotHttpError(e) && e.status === 400) {
+      logger.error(e.message);
     } else {
-      logApiErrorInstance(e, new ApiErrorContext({ accountId, projectName }));
+      logError(
+        e,
+        new ApiErrorContext({ accountId, request: 'project deploy' })
+      );
     }
-    process.exit(EXIT_CODES.ERROR);
+    return process.exit(EXIT_CODES.ERROR);
   }
 };
 
@@ -128,16 +182,17 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.project.describe`),
       type: 'string',
     },
-    buildId: {
-      describe: i18n(`${i18nKey}.options.buildId.describe`),
+    build: {
+      alias: ['buildId'],
+      describe: i18n(`${i18nKey}.options.build.describe`),
       type: 'number',
     },
   });
 
-  yargs.example([['$0 project deploy', i18n(`${i18nKey}.examples.default`)]]);
   yargs.example([
+    ['$0 project deploy', i18n(`${i18nKey}.examples.default`)],
     [
-      '$0 project deploy --project="my-project" --buildId=5',
+      '$0 project deploy --project="my-project" --build=5',
       i18n(`${i18nKey}.examples.withOptions`),
     ],
   ]);
