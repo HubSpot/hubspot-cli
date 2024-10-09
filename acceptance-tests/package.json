@@ -26,6 +26,7 @@
     "url": "https://github.com/HubSpot/hubspot-cli/issues"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "concat-stream": "^2.0.0",
     "cross-spawn": "^7.0.3",
     "dotenv": "^16.4.5",
