@@ -132,18 +132,14 @@ exports.handler = async options => {
 
   const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
   if (doesOtherConfigFileExist) {
-    const path =
-      (c && path.join(getCwd(), c)) || getConfigPath('', !useHiddenConfig);
+    const path = getConfigPath('', !useHiddenConfig);
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
-    process.exit(EXIT_CODES.ERROR);
-  }
-  if (c && useHiddenConfig) {
-    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  //Needed to load deprecated config
   loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 
@@ -159,10 +155,15 @@ exports.handler = async options => {
       debugErrorAndContext(e);
     }
 
+    let newConfigPath = configPath;
+    if (!newConfigPath && !useHiddenConfig) {
+      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
+    }
+
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath,
+        configPath: newConfigPath,
       })
     );
     logger.success(
@@ -188,28 +189,30 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.options({
-    auth: {
-      describe: i18n(`${i18nKey}.options.auth.describe`),
-      type: 'string',
-      choices: [
-        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-        `${OAUTH_AUTH_METHOD.value}`,
-      ],
-      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-        defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      }),
-    },
-    account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
-      type: 'string',
-    },
-    useHiddenConfig: {
-      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-      type: 'boolean',
-    },
-  });
+  yargs
+    .options({
+      auth: {
+        describe: i18n(`${i18nKey}.options.auth.describe`),
+        type: 'string',
+        choices: [
+          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+          `${OAUTH_AUTH_METHOD.value}`,
+        ],
+        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
+          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }),
+      },
+      account: {
+        describe: i18n(`${i18nKey}.options.account.describe`),
+        type: 'string',
+      },
+      useHiddenConfig: {
+        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+        type: 'boolean',
+      },
+    })
+    .conflicts('useHiddenConfig', 'config');
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);

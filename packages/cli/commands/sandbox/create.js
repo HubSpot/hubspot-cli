@@ -145,6 +145,7 @@ exports.handler = async options => {
     });
 
     const sandboxAccountConfig = getAccountConfig(result.sandbox.sandboxHubId);
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     const handleSyncSandbox = async syncTasks => {
       await syncSandbox({
         accountConfig: sandboxAccountConfig,

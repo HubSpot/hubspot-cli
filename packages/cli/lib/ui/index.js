@@ -1,5 +1,8 @@
 const chalk = require('chalk');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const supportsHyperlinks = require('./supportHyperlinks');
 const supportsColor = require('./supportsColor');
@@ -79,7 +82,7 @@ const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
   const message = `${account.name} [${
     HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
-  }] (${account.portalId})`;
+  }] (${getAccountIdentifier(account)})`;
   return bold ? chalk.bold(message) : message;
 };
 

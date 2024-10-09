@@ -1,5 +1,13 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
+const {
+  getConfig,
+  getConfigPath,
+  getDefaultAccount,
+  getAccounts,
+} = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
 const {
@@ -33,7 +41,7 @@ const sortAndMapPortals = portals => {
           p.accountType === HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER)
     )
     .forEach(portal => {
-      mappedPortalData[portal.portalId] = [portal];
+      mappedPortalData[getAccountIdentifier(portal)] = [portal];
     });
   // Non-standard portals (sandbox, developer test account)
   portals
@@ -45,7 +53,7 @@ const sortAndMapPortals = portals => {
           p,
         ];
       } else {
-        mappedPortalData[p.portalId] = [p];
+        mappedPortalData[getAccountIdentifier(p)] = [p];
       }
     });
   return mappedPortalData;
@@ -55,7 +63,7 @@ const getPortalData = mappedPortalData => {
   const portalData = [];
   Object.entries(mappedPortalData).forEach(([key, set]) => {
     const hasParentPortal = set.filter(
-      p => p.portalId === parseInt(key, 10)
+      p => getAccountIdentifier(p) === parseInt(key, 10)
     )[0];
     set.forEach(portal => {
       let name = `${portal.name} [${
@@ -70,7 +78,7 @@ const getPortalData = mappedPortalData => {
           name = `↳ ${name}`;
         }
       }
-      portalData.push([name, portal.portalId, portal.authType]);
+      portalData.push([name, getAccountIdentifier(portal), portal.authType]);
     });
   });
   return portalData;
@@ -85,7 +93,8 @@ exports.handler = async options => {
 
   const config = getConfig();
   const configPath = getConfigPath();
-  const mappedPortalData = sortAndMapPortals(config.portals);
+  const accountsList = getAccounts();
+  const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
   portalData.unshift(
     getTableHeader([
@@ -97,7 +106,9 @@ exports.handler = async options => {
 
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
   logger.log(
-    i18n(`${i18nKey}.defaultAccount`, { account: config.defaultPortal })
+    i18n(`${i18nKey}.defaultAccount`, {
+      account: getDefaultAccount(config),
+    })
   );
   logger.log(i18n(`${i18nKey}.accounts`));
   logger.log(getTableContents(portalData, { border: { bodyLeft: '  ' } }));

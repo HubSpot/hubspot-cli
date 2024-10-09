@@ -24,16 +24,21 @@ const {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
+  getDefaultAccount,
+  getAccounts,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const {
   selectAndSetAsDefaultAccountPrompt,
 } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
@@ -72,15 +77,16 @@ exports.handler = async options => {
     account: account || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(config.defaultPortal);
+    sandboxAccountId === getAccountId(getDefaultAccount(config));
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
-  for (const portal of config.portals) {
-    if (portal.portalId === sandboxAccountId) {
+  const accountsList = getAccounts();
+  for (const portal of accountsList) {
+    if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {

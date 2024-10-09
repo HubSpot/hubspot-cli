@@ -421,11 +421,9 @@ en:
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
       logs:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
-      useNewConfig: "Would you like to use the new version of the HubSpot config file? It will be located in the root directory"
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
         bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
-        noSpecifiedPathWithHiddenConfig: "It's not possible to specify a config path when creating a config file hidden in the user's working directory"
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -489,7 +487,6 @@ en:
             noProjectConfig: "No project detected. Please run this command again from a project directory."
             invalidProjectComponents: "Projects cannot contain both private and public apps. Move your apps to separate projects before attempting local development."
             noRunnableComponents: "No supported components were found in this project. Run {{ command }} to see a list of available components and add one to your project."
-            parentAccountNotConfigured: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
           examples:
             default: "Start local dev for the current project"
         create:
@@ -518,13 +515,16 @@ en:
               describe: "Directory where project should be created"
             name:
               describe: "Project name (cannot be changed)"
+          header:
+            text: "Migrate an app to the projects framework"
+            link: "Learn more about migrating apps to the projects framework"
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
             done: "Converting app configuration to public-app.json component definition ... DONE"
             failure: "Converting app configuration to public-app.json component definition ... FAILED"
           warning:
-            title: "{{#bold}}Migrate {{appName}} to the projects framework?{{/bold}}"
+            title: "{{#bold}}You are about to migrate an app to the projects framework{{/bold}}"
             projectConversion: "{{#bold}}The selected app will be converted to a project component.{{/bold}}"
             appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
@@ -712,6 +712,20 @@ en:
               describe: "Open Github issues in your browser to report a bug."
             general:
               describe: "Open Github issues in your browser to give feedback."
+        installDeps:
+          help:
+            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project"
+            installAppDepsExample: "Install the dependencies for the project"
+            addDepToSubComponentExample: "Install the dependencies to one or more project subcomponents"
+          installLocationPrompt: "Choose the project components to install the dependencies:"
+          installLocationPromptRequired: "You must choose at least one subcomponent"
+          installingDependencies: "Installing dependencies in {{directory}}"
+          installationSuccessful: "Installed dependencies in {{directory}}"
+          addingDependenciesToLocation: "Installing {{dependencies}} in {{directory}}"
+          installingDependenciesFailed: "Installing dependencies for {{directory}} failed"
+          noProjectConfig: "No project detected. Run this command from a project directory."
+          noPackageJsonInProject: "No dependencies to install. The project {{ projectName }} folder might be missing component or subcomponent files. {{ link }}"
+          packageManagerNotInstalled: "This command depends on {{ packageManager }}, install {{#bold}}{{ link }}{{/bold}}"
     remove:
       describe: "Delete a file or folder from HubSpot."
       deleted: "Deleted \"{{ path }}\" from account {{ accountId }}"
@@ -769,30 +783,6 @@ en:
           options:
             account:
               describe: "Account name or id to delete"
-        sync:
-          describe: "Sync to a sandbox account"
-          examples:
-            default: "Initiates a sync to a sandbox account."
-            force: "Skips all confirmation prompts when initiating a sync."
-          info:
-            developmentSandbox: "This will sync CRM object definitions."
-            standardSandbox: "This will sync all supported assets.
-              \nTo sync only specific assets, follow this link: {{#bold}}{{ url }}{{/bold}}"
-            sync: "\nSync direction:
-              \n- Target sandbox: {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}}
-              \n- Source account: {{#bold}}{{ parentAccountName }}{{/bold}}
-              \n\nRun {{#bold}}hs accounts use{{/bold}} to change your default account and sync to a different target sandbox."
-          warning:
-            developmentSandbox: "Syncing will update previously synced object definitions and add new ones from production to your development sandbox. Object definitions that were created in your sandbox will stay the same."
-            standardSandbox: "Syncing can have a big impact. Updates from your production account may overwrite changes in your standard sandbox. Standard sandboxes are usually shared with other Super Admins."
-          confirm:
-            developmentSandbox: "Sync CRM object definitions to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-            standardSandbox: "Sync all supported assets to {{#cyan}}{{#bold}}{{ sandboxName }}{{/bold}}{{/cyan}} from {{#bold}}{{ parentAccountName }}{{/bold}}?"
-          failure:
-            invalidAccountType: "Sync must be run in a sandbox account. Your default account is a {{ accountType }}. Run {{#bold}}hs auth{{/bold}} to connect your sandbox account to the CLI or {{#bold}}hs accounts use{{/bold}} to change your default account, then try again."
-            missingParentPortal: "The production account associated to {{#bold}}{{ sandboxName }}{{/bold}} is not connected to your HubSpot CLI.
-              \n- Run {{#bold}}hs auth{{/bold}} to connect that account to your terminal, then try again.
-              \n- Run {{#bold}}hs accounts use{{/bold}} to change your default account, if you want to sync to a different sandbox. Then try again.\n"
     secrets:
       describe: "Manage HubSpot secrets."
       subcommands:
@@ -1021,7 +1011,9 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+      checkIfDefaultAccountIsSupported:
+        publicApp: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+        privateApp: "This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
       validateAccountOption:
         invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
         invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
@@ -1038,6 +1030,8 @@ en:
       createInitialBuildForNewProject:
         initialUploadMessage: "HubSpot Local Dev Server Startup"
         projectLockedError: "Your project is locked. This may mean that another user is running the {{#bold}}`hs project watch`{{/bold}} command for this project. If this is you, unlock the project in Projects UI."
+      checkIfParentAccountIsAuthed:
+        notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
       config:
         srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
@@ -1122,12 +1116,6 @@ en:
           projectDevCommand:
             command: "hs project dev"
             message: "Run {{ command }} to set up your test environment and start local development"
-          sandboxSyncDevelopmentCommand:
-            command: "hs sandbox sync"
-            message: "Run {{ command }} to to update CRM object definitions in your sandbox"
-          sandboxSyncStandardCommand:
-            command: "hs sandbox sync"
-            message: "Run {{ command }} to to update all supported assets to your sandbox from production"
           sampleProjects:
             linkText: "HubSpot's sample projects"
             url: "https://developers.hubspot.com/docs/platform/sample-projects?utm_source=cli&utm_content=project_create_whats_next"
@@ -1239,7 +1227,7 @@ en:
           languageRequired: "Please select API sample app's language"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
-        enterLocation: "[--location] Where should the project be created?"
+        enterLocation: "[--location] Enter the folder to create the project in:"
         selectTemplate: "[--template] Choose a project template: "
         errors:
           nameRequired: "A project name is required"
@@ -1414,8 +1402,7 @@ en:
           successDevSbInfo: "Initiated sync of object definitions from production to {{ accountName }}. It may take some time. {{ url }}"
         failure:
           invalidUser: "Couldn't sync {{ accountName }} because your account has been removed from {{ parentAccountName }} or your permission set doesn't allow you to sync the sandbox. To update your permissions, contact a super admin in {{ parentAccountName }}."
-          missingScopes: "Couldn’t run the sync because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{#bold}}{{ accountName }}{{/bold}}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-          syncInProgress: "Couldn’t run the sync because there’s another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
+          syncInProgress: "Couldn't run the sync because there's another sync in progress. Wait for the current sync to finish and then try again. To check the sync status, visit the sync activity log: {{ url }}."
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
     errorHandlers:
@@ -1430,21 +1417,6 @@ en:
         errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
         errorExplanation: "This is the result of a system error: {{ errorMessage }}"
       apiErrors:
-        messageDetail: "{{ request }} in account {{ accountId }}"
-        unableToUpload: 'Unable to upload "{{ payload }}.'
-        codes:
-          400: "The {{ messageDetail }} was bad."
-          401: "The {{ messageDetail }} was unauthorized."
-          403MissingScope: "Couldn't run the project command because there are scopes missing in your production account. To update scopes, deactivate your current personal access key for {{ accountId }}, and generate a new one. Then run `hs auth` to update the CLI with the new key."
-          403Gating: "The current target account {{ accountId }} does not have access to HubSpot projects. To opt in to the CRM Development Beta and use projects, visit https://app.hubspot.com/l/product-updates/in-beta?update=13899236."
-          403: "The {{ messageDetail }} was forbidden."
-          404Request: 'The {{ action }} failed because "{{ request }}" was not found in account {{ accountId }}.'
-          404: "The {{ messageDetail }} was not found."
-          429: "The {{ messageDetail }} surpassed the rate limit. Retry in one minute."
-          503: "The {{ messageDetail }} could not be handled at this time. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-          500Generic: "The {{ messageDetail }} failed due to a server error. Please try again or visit https://help.hubspot.com/ to submit a ticket or contact HubSpot Support if the issue persists."
-          400Generic: "The {{ messageDetail }} failed due to a client error."
-          generic: "The {{ messageDetail }} failed."
         verifyAccessKeyAndUserAccess:
           fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
           portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
@@ -1459,5 +1431,4 @@ en:
           updateProject: "Please update your project to the latest version and try again."
           docsLink: "Projects platform versioning (BETA)"
           betaLink: "For more info, see {{ docsLink }}."
-
-
+        missingScopeError: "Couldn't execute the {{ request }} because the access key for {{ accountName }} is missing required scopes. To update scopes, run {{ authCommand }}. Then deactivate the existing key and generate a new one that includes the missing scopes."

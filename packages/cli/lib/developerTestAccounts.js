@@ -1,7 +1,10 @@
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
-const { getAccountId, getConfig } = require('@hubspot/local-dev-lib/config');
+const { getAccountId, getAccounts } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { i18n } = require('./lang');
 const {
   fetchDeveloperTestAccounts,
@@ -16,9 +19,10 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logErrorInstance } = require('./errorHandlers/standardErrors');
 
 const getHasDevTestAccounts = appDeveloperAccountConfig => {
-  const config = getConfig();
-  const parentPortalId = getAccountId(appDeveloperAccountConfig.portalId);
-  for (const portal of config.portals) {
+  const id = getAccountIdentifier(appDeveloperAccountConfig);
+  const parentPortalId = getAccountId(id);
+  const accountsList = getAccounts();
+  for (const portal of accountsList) {
     if (
       Boolean(portal.parentAccountId) &&
       portal.parentAccountId === parentPortalId &&
@@ -31,7 +35,8 @@ const getHasDevTestAccounts = appDeveloperAccountConfig => {
 };
 
 const validateDevTestAccountUsageLimits = async accountConfig => {
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = getAccountIdentifier(accountConfig);
+  const accountId = getAccountId(id);
   const response = await fetchDeveloperTestAccounts(accountId);
   if (response) {
     const limit = response.maxTestPortals;

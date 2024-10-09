@@ -82,11 +82,19 @@ const confirmDefaultAccountIsTarget = async accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const checkIfAppDeveloperAccount = accountConfig => {
-  if (!isAppDeveloperAccount(accountConfig)) {
+// Confirm the default account is supported for the type of apps being developed
+const checkIfDefaultAccountIsSupported = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps && !isAppDeveloperAccount(accountConfig)) {
     logger.error(
-      i18n(`${i18nKey}.checkIfAppDevloperAccount`, {
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.publicApp`, {
+        useCommand: uiCommandReference('hs accounts use'),
+        authCommand: uiCommandReference('hs auth'),
+      })
+    );
+    process.exit(EXIT_CODES.SUCCESS);
+  } else if (!hasPublicApps && isAppDeveloperAccount(accountConfig)) {
+    logger.error(
+      i18n(`${i18nKey}.checkIfDefaultAccountIsSupported.privateApp`, {
         useCommand: uiCommandReference('hs accounts use'),
         authCommand: uiCommandReference('hs auth'),
       })
@@ -95,16 +103,34 @@ const checkIfAppDeveloperAccount = accountConfig => {
   }
 };
 
-// Confirm the default account is a developer account if developing public apps
-const validateAccountOption = (accountConfig, hasPublicApps) => {
-  if (hasPublicApps && !isDeveloperTestAccount(accountConfig)) {
+const checkIfParentAccountIsAuthed = accountConfig => {
+  if (!getAccountConfig(accountConfig.parentAccountId)) {
     logger.error(
-      i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
-        useCommand: uiCommandReference('hs accounts use'),
-        devCommand: uiCommandReference('hs project dev'),
+      i18n(`${i18nKey}.checkIfParentAccountIsAuthed.notAuthedError`, {
+        accountId: accountConfig.parentAccountId,
+        accountIdentifier: uiAccountDescription(accountConfig.portalId),
+        authCommand: uiCommandReference(
+          `hs auth --account=${accountConfig.parentAccountId}`
+        ),
       })
     );
     process.exit(EXIT_CODES.SUCCESS);
+  }
+};
+
+// Confirm the default account is a developer account if developing public apps
+const checkIfAccountFlagIsSupported = (accountConfig, hasPublicApps) => {
+  if (hasPublicApps) {
+    if (!isDeveloperTestAccount) {
+      logger.error(
+        i18n(`${i18nKey}.validateAccountOption.invalidPublicAppAccount`, {
+          useCommand: uiCommandReference('hs accounts use'),
+          devCommand: uiCommandReference('hs project dev'),
+        })
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
+    checkIfParentAccountIsAuthed(accountConfig);
   } else if (isAppDeveloperAccount(accountConfig)) {
     logger.error(
       i18n(`${i18nKey}.validateAccountOption.invalidPrivateAppAccount`, {
@@ -195,6 +221,7 @@ const createSandboxForLocalDev = async (accountId, accountConfig, env) => {
       accountConfig,
       sandboxAccountConfig
     );
+    // For v1 sandboxes, keep sync here. Once we migrate to v2, this will be handled by BE automatically
     await syncSandbox({
       accountConfig: sandboxAccountConfig,
       parentAccountConfig: accountConfig,
@@ -446,8 +473,8 @@ const getAccountHomeUrl = accountId => {
 
 module.exports = {
   confirmDefaultAccountIsTarget,
-  checkIfAppDeveloperAccount,
-  validateAccountOption,
+  checkIfDefaultAccountIsSupported,
+  checkIfAccountFlagIsSupported,
   suggestRecommendedNestedAccount,
   createSandboxForLocalDev,
   createDeveloperTestAccountForLocalDev,
@@ -455,4 +482,5 @@ module.exports = {
   createNewProjectForLocalDev,
   createInitialBuildForNewProject,
   getAccountHomeUrl,
+  checkIfParentAccountIsAuthed,
 };

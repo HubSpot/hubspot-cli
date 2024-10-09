@@ -4,7 +4,14 @@ const { uiAccountDescription } = require('../ui');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSandbox } = require('../accountTypes');
+const {
+  getDefaultAccount,
+  getAccounts,
+} = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
 
@@ -13,8 +20,8 @@ const mapSandboxAccountChoices = portals =>
     .filter(p => isSandbox(p))
     .map(p => {
       return {
-        name: uiAccountDescription(p.portalId, false),
-        value: p.name || p.portalId,
+        name: uiAccountDescription(getAccountIdentifier(p), false),
+        value: p.name || getAccountIdentifier(p),
       };
     });
 
@@ -23,8 +30,8 @@ const mapNonSandboxAccountChoices = portals =>
     .filter(p => !isSandbox(p))
     .map(p => {
       return {
-        name: `${p.name} (${p.portalId})`,
-        value: p.name || p.portalId,
+        name: `${p.name} (${getAccountIdentifier(p)})`,
+        value: p.name || getAccountIdentifier(p),
       };
     });
 
@@ -51,9 +58,10 @@ const sandboxTypePrompt = () => {
 };
 
 const deleteSandboxPrompt = (config, promptParentAccount = false) => {
+  const accountsList = getAccounts();
   const choices = promptParentAccount
-    ? mapNonSandboxAccountChoices(config.portals)
-    : mapSandboxAccountChoices(config.portals);
+    ? mapNonSandboxAccountChoices(accountsList)
+    : mapSandboxAccountChoices(accountsList);
   if (!choices.length) {
     return undefined;
   }
@@ -69,7 +77,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       look: false,
       pageSize: 20,
       choices,
-      default: config.defaultPortal,
+      default: getDefaultAccount(config),
     },
   ]);
 };

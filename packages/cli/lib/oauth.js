@@ -4,6 +4,9 @@ const {
   default: OAuth2Manager,
 } = require('@hubspot/local-dev-lib/models/OAuth2Manager');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { addOauthToAccountConfig } = require('@hubspot/local-dev-lib/oauth');
 const { handleExit } = require('./process');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
@@ -86,7 +89,8 @@ const authorize = async oauthManager => {
 };
 
 const setupOauth = accountConfig => {
-  const accountId = parseInt(accountConfig.portalId, 10);
+  const id = getAccountIdentifier(accountConfig);
+  const accountId = parseInt(id, 10);
   const config = getAccountConfig(accountId) || {};
   return new OAuth2Manager({
     ...accountConfig,

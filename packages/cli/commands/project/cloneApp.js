@@ -20,6 +20,7 @@ const {
 } = require('../../lib/prompts/createProjectPrompt');
 const { poll } = require('../../lib/polling');
 const {
+  uiBetaTag,
   uiLine,
   uiCommandReference,
   uiAccountDescription,
@@ -42,14 +43,11 @@ const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { extractZipArchive } = require('@hubspot/local-dev-lib/archive');
-const {
-  fetchPublicAppMetadata,
-} = require('@hubspot/local-dev-lib/api/appsDev');
 
 const i18nKey = 'commands.project.subcommands.cloneApp';
 
 exports.command = 'clone-app';
-exports.describe = null; // uiBetaTag(i18n(`${i18nKey}.describe`), false);
+exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -76,8 +74,6 @@ exports.handler = async options => {
   let appId;
   let name;
   let location;
-  let preventProjectMigrations;
-  let listingInfo;
   try {
     appId = options.appId;
     if (!appId) {
@@ -89,11 +85,6 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
-    const selectedApp = await fetchPublicAppMetadata(appId, accountId);
-    // preventProjectMigrations returns true if we have not added app to allowlist config.
-    // listingInfo will only exist for marketplace apps
-    preventProjectMigrations = selectedApp.preventProjectMigrations;
-    listingInfo = selectedApp.listingInfo;
 
     const projectResponse = await createProjectPrompt('', options, true);
     name = projectResponse.name;
@@ -138,15 +129,12 @@ exports.handler = async options => {
       };
       const success = writeProjectConfig(configPath, configContent);
 
-      const isListed = Boolean(listingInfo);
       trackCommandMetadataUsage(
         'clone-app',
         {
-          projectName: name,
-          appId,
-          status,
-          preventProjectMigrations,
-          isListed,
+          type: name,
+          assetType: appId,
+          successful: success,
         },
         accountId
       );
