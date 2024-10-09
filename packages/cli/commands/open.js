@@ -8,7 +8,6 @@ const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
 const { promptUser } = require('../lib/prompts/promptUtils');
 const { i18n } = require('../lib/lang');
-const { loadConfig } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'commands.open';
 
@@ -33,7 +32,6 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { shortcut, list } = options;
-  loadConfig();
   const accountId = getAccountId(options);
 
   trackCommandUsage('open', null, accountId);

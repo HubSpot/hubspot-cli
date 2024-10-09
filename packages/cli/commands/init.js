@@ -143,6 +143,7 @@ exports.handler = async options => {
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  //Needed to load deprecated config
   loadConfig(configPath, options);
   handleExit(deleteEmptyConfigFile);
 

@@ -6,6 +6,7 @@ const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const { loadNewConfig } = require('@hubspot/local-dev-lib/config');
 const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
 const { setLogLevel, getCommandName } = require('../lib/commonOpts');
 const {
@@ -136,7 +137,8 @@ const setRequestHeaders = () => {
 
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel, setRequestHeaders])
+  // loadConfig loads the new hidden config for all commands
+  .middleware([setLogLevel, setRequestHeaders, loadNewConfig])
   .exitProcess(false)
   .fail(handleFailure)
   .option('debug', {

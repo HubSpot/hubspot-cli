@@ -78,6 +78,7 @@ exports.handler = async options => {
   logDebugInfo(options);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  // Needed to load deprecated config
   loadConfig(c);
   checkAndWarnGitInclusion(getConfigPath());
 
