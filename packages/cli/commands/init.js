@@ -136,10 +136,6 @@ exports.handler = async options => {
     logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
     process.exit(EXIT_CODES.ERROR);
   }
-  if (c && useHiddenConfig) {
-    logger.error(i18n(`${i18nKey}.errors.noSpecifiedPathWithHiddenConfig`));
-    process.exit(EXIT_CODES.ERROR);
-  }
 
   trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   createEmptyConfigFile({ path: configPath }, useHiddenConfig);
@@ -193,28 +189,30 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.options({
-    auth: {
-      describe: i18n(`${i18nKey}.options.auth.describe`),
-      type: 'string',
-      choices: [
-        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-        `${OAUTH_AUTH_METHOD.value}`,
-      ],
-      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-        defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      }),
-    },
-    account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
-      type: 'string',
-    },
-    useHiddenConfig: {
-      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-      type: 'boolean',
-    },
-  });
+  yargs
+    .options({
+      auth: {
+        describe: i18n(`${i18nKey}.options.auth.describe`),
+        type: 'string',
+        choices: [
+          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+          `${OAUTH_AUTH_METHOD.value}`,
+        ],
+        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
+          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }),
+      },
+      account: {
+        describe: i18n(`${i18nKey}.options.account.describe`),
+        type: 'string',
+      },
+      useHiddenConfig: {
+        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+        type: 'boolean',
+      },
+    })
+    .conflicts('useHiddenConfig', 'config');
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
