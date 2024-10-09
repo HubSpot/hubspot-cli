@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import { ENTER } from '../lib/prompt';
 

@@ -7,9 +7,6 @@ on:
   schedule:
     - cron: '0 */5 * * *' # Run every 5 hours
 
-env:
-  version: "latest"
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,16 +22,16 @@ jobs:
           node-version: 18.x
       - name: Install Deps
         run: npm install
-      - name: Add package to npx cache
+      - name: Globally install the CLI
         run: |
-          npx --yes --package @hubspot/cli@${{ env.version }} hs
+          npm install -g @hubspot/cli@latest
       - name: Test Latest CLI Release
         run: |
           npm run test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
-          CLI_VERSION: ${{ env.version }}
+          USE_INSTALLED: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2

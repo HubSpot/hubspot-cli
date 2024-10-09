@@ -29,7 +29,7 @@ const envOverrides: TestConfig = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
   cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
-  cliVersion: getEnvValue('CLI_VERSION'),
+  useInstalled: getEnvValue('USE_INSTALLED'),
   debug: getEnvValue('DEBUG'),
   qa: getEnvValue('QA'),
   githubToken: getEnvValue('GITHUB_TOKEN'),
@@ -45,13 +45,13 @@ export const getTestConfig = (): TestConfig => {
     );
   }
 
-  if (config.cliPath && config.cliVersion) {
+  if (config.cliPath && config.useInstalled) {
     throw new Error(
-      'You cannot specify both a cliPath and a cliVersion. Remove one and try again.'
+      'You cannot specify both a cliPath and useLatest. Remove one and try again.'
     );
   }
 
-  if (!config.cliPath && !config.cliVersion) {
+  if (!config.cliPath && !config.useInstalled) {
     const defaultPath = path.join(process.cwd(), '../packages/cli/bin/hs');
 
     if (existsSync(defaultPath)) {

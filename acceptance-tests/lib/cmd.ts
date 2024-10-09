@@ -20,13 +20,10 @@ export function createProcess(
   env = null
 ) {
   let processCommand: string;
-  const { cliVersion, cliPath, debug } = config;
+  const { useInstalled, cliPath, debug } = config;
 
-  if (cliVersion) {
-    processCommand = 'npx';
-    args = ['--yes', '--package', `@hubspot/cli@${cliVersion}`, 'hs'].concat(
-      args
-    );
+  if (useInstalled) {
+    processCommand = 'hs';
   } else {
     // Ensure that path exists
     if (!cliPath || !existsSync(cliPath)) {
