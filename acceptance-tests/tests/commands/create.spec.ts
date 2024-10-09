@@ -1,8 +1,7 @@
-import { ENTER } from '../lib/prompt';
-
 import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import rimraf from 'rimraf';
-import { TestState } from '../lib/testState';
+import { ENTER } from '../../lib/prompt';
+import { TestState } from '../../lib/TestState';
 
 const FOLDERS = {
   module: {

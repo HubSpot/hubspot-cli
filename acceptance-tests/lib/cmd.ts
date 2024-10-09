@@ -4,13 +4,12 @@
  * Taken from https://gist.github.com/zorrodg/c349cf54a3f6d0a9ba62e0f4066f31cb
  */
 import { CLI, TestConfig } from './types';
-import { existsSync } from 'fs';
 import { constants } from 'os';
 import spawn from 'cross-spawn';
 import concat from 'concat-stream';
 import * as process from 'node:process';
 import * as path from 'node:path';
-import { testOutputDir } from './testState';
+import { testOutputDir } from './TestState';
 
 const PATH = process.env.PATH;
 
@@ -25,10 +24,6 @@ export function createProcess(
   if (useInstalled) {
     processCommand = 'hs';
   } else {
-    // Ensure that path exists
-    if (!cliPath || !existsSync(cliPath)) {
-      throw new Error(`Invalid process path ${cliPath}`);
-    }
     processCommand = 'node';
     args = [cliPath].concat(args);
   }

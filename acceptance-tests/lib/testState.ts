@@ -1,12 +1,12 @@
-import { getTestConfig } from './env';
-import { createCli } from './cmd';
-import { CLI, TestConfig } from './types';
-import { getInitPromptSequence } from './prompt';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import yaml from 'js-yaml';
 import rimraf from 'rimraf';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'node:path';
+import { getTestConfig } from './env';
+import { createCli } from './cmd';
+import { CLI, TestConfig } from './types';
+import { getInitPromptSequence } from './prompt';
 
 export const testOutputDir = 'test-output';
 
@@ -14,7 +14,7 @@ export class TestState {
   public config: TestConfig;
   public cli: CLI;
   private testConfigFileName: string;
-  private parsedYaml: ReturnType<yaml.load>;
+  private parsedYaml: ReturnType<typeof yaml.load>;
 
   constructor() {
     this.config = getTestConfig();
