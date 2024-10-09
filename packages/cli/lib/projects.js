@@ -39,10 +39,17 @@ const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { uiLine, uiLink, uiAccountDescription } = require('../lib/ui');
+const {
+  uiLine,
+  uiLink,
+  uiAccountDescription,
+  uiCommandReference,
+} = require('../lib/ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { logError, ApiErrorContext } = require('./errorHandlers/index');
+const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
+const { DEFAULT_MODE } = require('@hubspot/local-dev-lib/constants/files');
 
 const i18nKey = 'lib.projects';
 
@@ -101,7 +108,8 @@ const createProjectConfig = async (
   projectName,
   template,
   templateSource,
-  githubRef
+  githubRef,
+  accountId
 ) => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
@@ -140,12 +148,25 @@ const createProjectConfig = async (
 
   const hasCustomTemplateSource = Boolean(templateSource);
 
-  await downloadGithubRepoContents(
-    templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
-    template.path,
-    projectPath,
-    hasCustomTemplateSource ? undefined : githubRef
-  );
+  const { isHubSpotAsset } = template;
+
+  // if template config is marked `isHubSpotAsset` download no-template project to fetch the @hubspot asset into it.
+  if (isHubSpotAsset) {
+    await downloadGithubRepoContents(
+      HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      'projects/no-template',
+      projectPath,
+      githubRef
+    );
+  } else {
+    await downloadGithubRepoContents(
+      templateSource || HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH,
+      template.path,
+      projectPath,
+      hasCustomTemplateSource ? undefined : githubRef
+    );
+  }
+
   const _config = JSON.parse(fs.readFileSync(projectConfigPath));
   writeProjectConfig(projectConfigPath, {
     ..._config,
@@ -154,6 +175,36 @@ const createProjectConfig = async (
 
   if (template.name === 'no-template') {
     fs.ensureDirSync(path.join(projectPath, 'src'));
+  }
+
+  if (isHubSpotAsset) {
+    const assetPath = template.path;
+    const destinationPath = path.join(
+      projectPath,
+      template.insertPath,
+      template.name
+    );
+    // fetch the @hubspot asset and place it in the new project folder
+    try {
+      // Fetch and write file/folder.
+      await downloadFileOrFolder(
+        accountId,
+        assetPath,
+        destinationPath,
+        DEFAULT_MODE,
+        false
+      );
+    } catch (err) {
+      logger.error(
+        i18n(`${i18nKey}.errors.downloadFileOrFolder`, {
+          src: template.path,
+          command: uiCommandReference(
+            `hs fetch ${assetPath} ${destinationPath}`
+          ),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
   return true;

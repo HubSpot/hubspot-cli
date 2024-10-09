@@ -54,7 +54,8 @@ exports.handler = async options => {
     options.name || name,
     template,
     options.templateSource,
-    githubRef
+    githubRef,
+    accountId
   );
 
   logger.log('');
