@@ -7,9 +7,6 @@ on:
   schedule:
     - cron: '0 */5 * * *' # Run every 5 hours
 
-env:
-  version: "latest"
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,7 +24,7 @@ jobs:
         run: npm install
       - name: Globally install the CLI
         run: |
-          npm install -g @hubspot/cli@${{ env.version }}
+          npm install -g @hubspot/cli@latest
       - name: Test Latest CLI Release
         run: |
           npm run test-cli

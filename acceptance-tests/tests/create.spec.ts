@@ -118,9 +118,6 @@ describe('hs create', () => {
     ).toBe(true);
   });
 
-  // For some reason, this test is getting tripped up on the creation.
-  // I verified it's just the test though, not the code, so
-  // instead we just check for some output to make sure the command runs
   it('api-sample', async () => {
     const out = await testState.cli.execute(
       ['create', FOLDERS.apiSample.name, FOLDERS.apiSample.name],
