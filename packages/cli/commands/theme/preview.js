@@ -8,7 +8,6 @@ const {
   getAccountId,
 } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -107,7 +106,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug } = options;
+  const { noSsl, resetSession } = options;
 
   await loadAndValidateOptions(options);
 
@@ -117,70 +116,75 @@ exports.handler = async options => {
 
   const filePaths = await getUploadableFileList(absoluteSrc, false);
 
-  const initialUploadProgressBar = new cliProgress.SingleBar(
-    {
-      gracefulExit: true,
-      format: '[{bar}] {percentage}% | {value}/{total} | {label}',
-      hideCursor: true,
-    },
-    cliProgress.Presets.rect
-  );
-  initialUploadProgressBar.start(filePaths.length, 0, {
-    label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
-  });
-  let uploadsHaveStarted = false;
-  const uploadOptions = {
-    onAttemptCallback: () => {
-      /* Intentionally blank */
-    },
-    onSuccessCallback: () => {
-      initialUploadProgressBar.increment();
-      if (!uploadsHaveStarted) {
-        uploadsHaveStarted = true;
-        initialUploadProgressBar.update(0, {
-          label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
-        });
-      }
-    },
-    onFirstErrorCallback: () => {
-      /* Intentionally blank */
-    },
-    onRetryCallback: () => {
-      /* Intentionally blank */
-    },
-    onFinalErrorCallback: () => initialUploadProgressBar.increment(),
-    onFinishCallback: results => {
-      initialUploadProgressBar.update(filePaths.length, {
-        label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
-      });
-      initialUploadProgressBar.stop();
-      results.forEach(result => {
-        if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
-          logger.error('Uploading file "%s" to "%s" failed', result.file, dest);
-          logError(
-            result.error,
-            new ApiErrorContext({
-              accountId,
-              request: dest,
-              payload: result.file,
-            })
-          );
+  const startProgressBar = numFiles => {
+    const initialUploadProgressBar = new cliProgress.SingleBar(
+      {
+        gracefulExit: true,
+        format: '[{bar}] {percentage}% | {value}/{total} | {label}',
+        hideCursor: true,
+      },
+      cliProgress.Presets.rect
+    );
+    initialUploadProgressBar.start(numFiles, 0, {
+      label: i18n(`${i18nKey}.initialUploadProgressBar.start`),
+    });
+    let uploadsHaveStarted = false;
+    const uploadOptions = {
+      onAttemptCallback: () => {
+        /* Intentionally blank */
+      },
+      onSuccessCallback: () => {
+        initialUploadProgressBar.increment();
+        if (!uploadsHaveStarted) {
+          uploadsHaveStarted = true;
+          initialUploadProgressBar.update(0, {
+            label: i18n(`${i18nKey}.initialUploadProgressBar.uploading`),
+          });
         }
-      });
-    },
+      },
+      onFirstErrorCallback: () => {
+        /* Intentionally blank */
+      },
+      onRetryCallback: () => {
+        /* Intentionally blank */
+      },
+      onFinalErrorCallback: () => initialUploadProgressBar.increment(),
+      onFinishCallback: results => {
+        initialUploadProgressBar.update(numFiles, {
+          label: i18n(`${i18nKey}.initialUploadProgressBar.finish`),
+        });
+        initialUploadProgressBar.stop();
+        results.forEach(result => {
+          if (result.resultType == FILE_UPLOAD_RESULT_TYPES.FAILURE) {
+            logger.error(
+              'Uploading file "%s" to "%s" failed',
+              result.file,
+              dest
+            );
+            logError(
+              result.error,
+              new ApiErrorContext({
+                accountId,
+                request: dest,
+                payload: result.file,
+              })
+            );
+          }
+        });
+      },
+    };
+    return uploadOptions;
   };
 
   trackCommandUsage('preview', accountId);
+  const { createDevServer } = await import('@hubspot/cms-dev-server');
 
-  preview(accountId, absoluteSrc, dest, {
-    notify,
+  createDevServer(absoluteSrc, false, false, false, !noSsl, false, {
     filePaths,
-    skipUpload,
-    noSsl,
-    port,
-    debug,
-    uploadOptions,
+    resetSession,
+    startProgressBar,
     handleUserInput,
+    dest,
   });
 };
 
@@ -198,12 +202,6 @@ exports.builder = yargs => {
     type: 'string',
     requiresArg: true,
   });
-  yargs.option('notify', {
-    alias: 'n',
-    describe: i18n(`${i18nKey}.options.notify.describe`),
-    type: 'string',
-    requiresArg: true,
-  });
   yargs.option('no-ssl', {
     describe: i18n(`${i18nKey}.options.noSsl.describe`),
     type: 'boolean',
@@ -218,6 +216,10 @@ exports.builder = yargs => {
   });
   yargs.option('skipUpload', {
     alias: 'skip',
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('resetSession', {
     describe: false,
     type: 'boolean',
   });
