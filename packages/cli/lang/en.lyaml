@@ -183,8 +183,6 @@ en:
             noSamples: "Currently there are no samples available, please, try again later."
           info:
             sampleChosen: "You've chosen {{ sampleType }} sample written on {{ sampleLanguage }} language"
-          loading:
-            apiSamples: "Loading available API samples"
           success:
             sampleCreated: "Please, follow {{ filePath }}/README.md to find out how to run the sample"
         module:
@@ -335,7 +333,8 @@ en:
             notFunctionsFolder: "Specified path {{ functionPath }} is not a .functions folder."
           examples:
             default: "Build and deploy a new bundle for all functions within the myFunctionFolder.functions folder"
-          loading: "Building and deploying bundle for \"{{ functionPath }}\" on account \"{{ accountId }}\".\n"
+          loading: "Building and deploying bundle for \"{{ functionPath }}\" on {{ account }}"
+          loadingFailed: "Failed to build and deploy bundle for \"{{ functionPath }}\" on {{ account }}"
           positionals:
             path:
               describe: "Path to .functions folder"
@@ -512,13 +511,16 @@ en:
               describe: "Directory where project should be created"
             name:
               describe: "Project name (cannot be changed)"
+          header:
+            text: "Migrate an app to the projects framework"
+            link: "Learn more about migrating apps to the projects framework"
           migrationStatus:
             inProgress: "Converting app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             success: "{{#bold}}Your app was converted and build #1 is deployed{{/bold}}"
             done: "Converting app configuration to public-app.json component definition ... DONE"
             failure: "Converting app configuration to public-app.json component definition ... FAILED"
           warning:
-            title: "{{#bold}}Migrate {{appName}} to the projects framework?{{/bold}}"
+            title: "{{#bold}}You are about to migrate an app to the projects framework{{/bold}}"
             projectConversion: "{{#bold}}The selected app will be converted to a project component.{{/bold}}"
             appConfig: "All supported app configuration will be moved to the {{#bold}}public-app.json{{/bold}} component definition file. Future updates to those features must be made through the project build and deploy pipeline, not the developer account UI."
             buildAndDeploy: "This will create a new project with a single app component and immediately build and deploy it to your developer account (build #1)."
@@ -1005,7 +1007,9 @@ en:
     localDev:
       confirmDefaultAccountIsTarget:
         declineDefaultAccountExplanation: "To develop on a different account, run {{ useCommand }} to change your default account, then re-run {{ devCommand }}."
-      checkIfAppDevloperAccount: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+      checkIfDefaultAccountIsSupported:
+        publicApp: "This project contains a public app. Local development of public apps is only supported on developer accounts and developer test accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
+        privateApp: "This project contains a private app. Local development of private apps is not supported in developer accounts. Change your default account using {{ useCommand }}, or link a new account with {{ authCommand }}."
       validateAccountOption:
         invalidPublicAppAccount: "This project contains a public app. The \"--account\" flag must point to a developer test account to develop this project locally. Alternatively, change your default account to an App Developer Account using {{ useCommand }} and run {{ devCommand }} to set up a new Developer Test Account."
         invalidPrivateAppAccount: "This project contains a private app. The account specified with the \"--account\" flag points to a developer account, which do not support the local development of private apps. Update the \"--account\" flag to point to a standard, sandbox, or developer test account, or change your default account by running {{ useCommand }}."
@@ -1219,7 +1223,7 @@ en:
           languageRequired: "Please select API sample app's language"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
-        enterLocation: "[--location] Where should the project be created?"
+        enterLocation: "[--location] Enter the folder to create the project in:"
         selectTemplate: "[--template] Choose a project template: "
         errors:
           nameRequired: "A project name is required"
@@ -1398,23 +1402,12 @@ en:
           notSuperAdmin: "Couldn't run the sync because you are not a super admin in {{ account }}. Ask the account owner for super admin access to the sandbox."
           objectNotFound: "Couldn't sync the sandbox because {{#bold}}{{ account }}{{/bold}} may have been deleted through the UI. Run {{#bold}}hs sandbox delete{{/bold}} to remove this account from the config. "
     errorHandlers:
-      standardErrors:
+      index:
         errorOccurred: "Error: {{ error }}"
         errorContext: "Context: {{ context }}"
         errorCause: "Cause: {{ cause }}"
-        systemErrorOccurred: "A system error has occurred: {{ errorMessage }}"
-        genericErrorOccurred: "A {{ name }} has occurred."
-        unknownErrorOccurred: "An unknown error has occurred"
-      fileSystemErrors:
-        errorOccurred: "An error occurred while {{ fileAction }} {{ filepath }}."
-        errorExplanation: "This is the result of a system error: {{ errorMessage }}"
-      apiErrors:
-        verifyAccessKeyAndUserAccess:
-          fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
-          portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
-          userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
-          genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
-      overrideErrors:
+        unknownErrorOccurred: "An unknown error has occurred."
+      suppressErrors:
         platformVersionErrors:
           header: "Platform version update required"
           unspecifiedPlatformVersion: "Projects with an {{#bold}}{{platformVersion}}{{/bold}} are no longer supported."
@@ -1424,3 +1417,9 @@ en:
           docsLink: "Projects platform versioning (BETA)"
           betaLink: "For more info, see {{ docsLink }}."
         missingScopeError: "Couldn't execute the {{ request }} because the access key for {{ accountName }} is missing required scopes. To update scopes, run {{ authCommand }}. Then deactivate the existing key and generate a new one that includes the missing scopes."
+    serverless:
+      verifyAccessKeyAndUserAccess:
+        fetchScopeDataError: "Error verifying access of scopeGroup {{ scopeGroup }}: {{ error }}"
+        portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
+        userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
+        genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."

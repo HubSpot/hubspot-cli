@@ -11,10 +11,7 @@ const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
 } = require('@hubspot/local-dev-lib/gitignore');
-const {
-  logErrorInstance,
-  debugErrorAndContext,
-} = require('../lib/errorHandlers/standardErrors');
+const { debugError, logError } = require('../lib/errorHandlers/index');
 const {
   OAUTH_AUTH_METHOD,
   PERSONAL_ACCESS_KEY_AUTH_METHOD,
@@ -71,7 +68,7 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
       true
     );
   } catch (e) {
-    logErrorInstance(e);
+    logError(e);
   }
   return updatedConfig;
 };
@@ -140,7 +137,7 @@ exports.handler = async options => {
     try {
       checkAndAddConfigToGitignore(configPath);
     } catch (e) {
-      debugErrorAndContext(e);
+      debugError(e);
     }
 
     logger.log('');
@@ -165,7 +162,7 @@ exports.handler = async options => {
     );
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
-    logErrorInstance(err);
+    logError(err);
     await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
     process.exit(EXIT_CODES.ERROR);
   }

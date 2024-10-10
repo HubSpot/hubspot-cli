@@ -1,4 +1,4 @@
-const ora = require('ora');
+const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addAccountOptions,
   addConfigOptions,
@@ -6,11 +6,8 @@ const {
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../../lib/errorHandlers/apiErrors');
-
+const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
+const { uiAccountDescription } = require('../../lib/ui');
 const { poll } = require('../../lib/polling');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
@@ -20,6 +17,7 @@ const {
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { outputBuildLog } = require('../../lib/serverlessLogs');
 const { i18n } = require('../../lib/lang');
+const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.functions.subcommands.deploy';
 
@@ -32,7 +30,6 @@ exports.handler = async options => {
   const { path: functionPath } = options;
   const accountId = getAccountId(options);
   const splitFunctionPath = functionPath.split('.');
-  let spinner;
 
   trackCommandUsage('functions-deploy', null, accountId);
 
@@ -54,17 +51,22 @@ exports.handler = async options => {
     })
   );
 
+  SpinniesManager.init();
+
+  SpinniesManager.add('loading', {
+    text: i18n(`${i18nKey}.loading`, {
+      account: uiAccountDescription(accountId),
+      functionPath,
+    }),
+  });
+
   try {
-    spinner = ora(
-      i18n(`${i18nKey}.loading`, {
-        accountId,
-        functionPath,
-      })
-    ).start();
-    const buildId = await buildPackage(accountId, functionPath);
+    const { data: buildId } = await buildPackage(accountId, functionPath);
     const successResp = await poll(getBuildStatus, accountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
-    spinner.stop();
+
+    SpinniesManager.succeed('loading');
+
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
       i18n(`${i18nKey}.success.deployed`, {
@@ -74,15 +76,19 @@ exports.handler = async options => {
       })
     );
   } catch (e) {
-    spinner && spinner.stop && spinner.stop();
-    if (e.response && e.response.status === 404) {
+    SpinniesManager.fail('loading', {
+      text: i18n(`${i18nKey}.loadingFailed`, {
+        account: uiAccountDescription(accountId),
+        functionPath,
+      }),
+    });
+
+    if (isHubSpotHttpError(e) && e.status === 404) {
       logger.error(
         i18n(`${i18nKey}.errors.noPackageJson`, {
           functionPath,
         })
       );
-    } else if (e.response && e.response.status === 400) {
-      logger.error(e.error.message);
     } else if (e.status === 'ERROR') {
       await outputBuildLog(e.cdnUrl);
       logger.error(
@@ -91,10 +97,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      logApiErrorInstance(
-        e,
-        new ApiErrorContext({ accountId, request: functionPath })
-      );
+      logError(e, new ApiErrorContext({ accountId, request: functionPath }));
     }
   }
 };

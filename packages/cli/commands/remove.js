@@ -1,9 +1,6 @@
 const { deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  logApiErrorInstance,
-  ApiErrorContext,
-} = require('../lib/errorHandlers/apiErrors');
+const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');
 
 const {
   addConfigOptions,
@@ -36,7 +33,7 @@ exports.handler = async options => {
     logger.error(
       i18n(`${i18nKey}.errors.deleteFailed`, { accountId, path: hsPath })
     );
-    logApiErrorInstance(
+    logError(
       error,
       new ApiErrorContext({
         accountId,

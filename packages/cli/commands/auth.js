@@ -46,7 +46,7 @@ const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
-const { logErrorInstance } = require('../lib/errorHandlers/standardErrors');
+const { logError } = require('../lib/errorHandlers/index');
 
 const i18nKey = 'commands.auth';
 
@@ -70,19 +70,19 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
-  const { type, config: configPath, qa, account } = options;
+  const { type, config: c, qa, account } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
   logDebugInfo(options);
 
-  if (!getConfigPath()) {
+  if (!getConfigPath(c)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configPath);
+  loadConfig(c);
   checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
@@ -117,7 +117,7 @@ exports.handler = async options => {
           env
         );
       } catch (e) {
-        logErrorInstance(e);
+        logError(e);
       }
 
       if (!updatedConfig) {

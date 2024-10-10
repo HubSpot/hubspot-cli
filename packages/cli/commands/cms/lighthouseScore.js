@@ -42,7 +42,7 @@ const selectTheme = async accountId => {
       message: i18n(`${i18nKey}.info.promptMessage`),
       choices: async () => {
         try {
-          const result = await fetchThemes(accountId, {
+          const { data: result } = await fetchThemes(accountId, {
             limit: 500,
             sorting: 'MOST_USED',
           });
@@ -77,7 +77,7 @@ exports.handler = async options => {
   if (themeToCheck) {
     let isValidTheme = true;
     try {
-      const result = await fetchThemes(accountId, {
+      const { data: result } = await fetchThemes(accountId, {
         name: encodeURIComponent(themeToCheck),
       });
       isValidTheme = result && result.total;
@@ -98,9 +98,10 @@ exports.handler = async options => {
   // Kick off the scoring
   let requestResult;
   try {
-    requestResult = await requestLighthouseScore(accountId, {
+    const { data } = await requestLighthouseScore(accountId, {
       themePath: themeToCheck,
     });
+    requestResult = data;
   } catch (err) {
     logger.debug(err);
   }
@@ -119,16 +120,21 @@ exports.handler = async options => {
     });
 
     const checkScoreStatus = async () => {
-      const desktopScoreStatus = includeDesktopScore
-        ? await getLighthouseScoreStatus(accountId, {
-            themeId: requestResult.desktopId,
-          })
-        : 'COMPLETED';
-      const mobileScoreStatus = includeMobileScore
-        ? await getLighthouseScoreStatus(accountId, {
-            themeId: requestResult.mobileId,
-          })
-        : 'COMPLETED';
+      let desktopScoreStatus = 'COMPLETED';
+      if (includeDesktopScore) {
+        const { data } = await getLighthouseScoreStatus(accountId, {
+          themeId: requestResult.desktopId,
+        });
+        desktopScoreStatus = data;
+      }
+
+      let mobileScoreStatus = 'COMPLETED';
+      if (includeDesktopScore) {
+        const { data } = await getLighthouseScoreStatus(accountId, {
+          themeId: requestResult.mobileId,
+        });
+        mobileScoreStatus = data;
+      }
 
       if (
         desktopScoreStatus === 'REQUESTED' ||
@@ -148,32 +154,37 @@ exports.handler = async options => {
   }
 
   // Fetch the scoring results
-  let desktopScoreResult;
-  let mobileScoreResult;
-  let verboseViewAverageScoreResult;
+  let desktopScoreResult = {};
+  let mobileScoreResult = {};
+  let verboseViewAverageScoreResult = {};
   try {
     const params = { isAverage: !options.verbose };
-    desktopScoreResult = includeDesktopScore
-      ? await getLighthouseScore(accountId, {
-          ...params,
-          desktopId: requestResult.desktopId,
-        })
-      : {};
-    mobileScoreResult = includeMobileScore
-      ? await getLighthouseScore(accountId, {
-          ...params,
-          mobileId: requestResult.mobileId,
-        })
-      : {};
+
+    if (includeDesktopScore) {
+      const { data } = await getLighthouseScore(accountId, {
+        ...params,
+        desktopId: requestResult.desktopId,
+      });
+      desktopScoreResult = data;
+    }
+
+    if (includeMobileScore) {
+      const { data } = await getLighthouseScore(accountId, {
+        ...params,
+        mobileId: requestResult.mobileId,
+      });
+      mobileScoreResult = data;
+    }
     // This is needed to show the average scores above the verbose output
-    verboseViewAverageScoreResult = options.verbose
-      ? await getLighthouseScore(accountId, {
-          ...params,
-          isAverage: true,
-          desktopId: includeDesktopScore ? requestResult.desktopId : null,
-          mobileId: includeMobileScore ? requestResult.mobileId : null,
-        })
-      : {};
+    if (options.verbose) {
+      const { data } = await getLighthouseScore(accountId, {
+        ...params,
+        isAverage: true,
+        desktopId: includeDesktopScore ? requestResult.desktopId : null,
+        mobileId: includeMobileScore ? requestResult.mobileId : null,
+      });
+      verboseViewAverageScoreResult = data;
+    }
   } catch (err) {
     logger.error(i18n(`${i18nKey}.errors.failedToGetLighthouseScore`));
     process.exit(EXIT_CODES.ERROR);
