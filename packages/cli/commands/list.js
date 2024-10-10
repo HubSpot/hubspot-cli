@@ -2,7 +2,6 @@ const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -29,12 +28,11 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path } = options;
+  const { path, account } = options;
   const directoryPath = path || '/';
-  const accountId = getAccountId(options);
   let contentsResp;
 
-  trackCommandUsage('list', null, accountId);
+  trackCommandUsage('list', null, account);
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {
@@ -43,9 +41,9 @@ exports.handler = async options => {
   );
 
   try {
-    contentsResp = await getDirectoryContentsByPath(accountId, directoryPath);
+    contentsResp = await getDirectoryContentsByPath(account, directoryPath);
   } catch (e) {
-    logApiErrorInstance(e, new ApiErrorContext({ accountId, directoryPath }));
+    logApiErrorInstance(e, new ApiErrorContext({ account, directoryPath }));
     process.exit(EXIT_CODES.SUCCESS);
   }
 

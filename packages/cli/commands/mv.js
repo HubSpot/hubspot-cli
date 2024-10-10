@@ -9,7 +9,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
@@ -34,16 +33,15 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { srcPath, destPath } = options;
-  const accountId = getAccountId(options);
+  const { srcPath, destPath, account } = options;
 
-  trackCommandUsage('mv', null, accountId);
+  trackCommandUsage('mv', null, account);
 
   try {
-    await moveFile(accountId, srcPath, getCorrectedDestPath(srcPath, destPath));
+    await moveFile(account, srcPath, getCorrectedDestPath(srcPath, destPath));
     logger.success(
       i18n(`${i18nKey}.move`, {
-        accountId,
+        account,
         destPath,
         srcPath,
       })
@@ -51,7 +49,7 @@ exports.handler = async options => {
   } catch (error) {
     logger.error(
       i18n(`${i18nKey}.errors.moveFailed`, {
-        accountId,
+        account,
         destPath,
         srcPath,
       })
@@ -67,7 +65,7 @@ exports.handler = async options => {
       logApiErrorInstance(
         error,
         new ApiErrorContext({
-          accountId,
+          account,
           srcPath,
           destPath,
         })

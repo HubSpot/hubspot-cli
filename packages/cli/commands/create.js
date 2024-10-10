@@ -27,7 +27,7 @@ const {
   logFileSystemErrorInstance,
 } = require('../lib/errorHandlers/fileSystemErrors');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { setLogLevel, getAccountId } = require('../lib/commonOpts');
+const { setLogLevel } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -77,7 +77,8 @@ exports.handler = async options => {
   const argsToPass = { assetType, name, dest, getInternalVersion, options };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
-  trackCommandUsage('create', { assetType }, getAccountId(options));
+  const { account } = options;
+  trackCommandUsage('create', { assetType }, account);
 
   try {
     await fs.ensureDir(dest);

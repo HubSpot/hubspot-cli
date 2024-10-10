@@ -9,7 +9,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../lib/commonOpts');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -21,25 +20,23 @@ exports.command = 'remove <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { path: hsPath } = options;
+  const { path: hsPath, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('remove', null, accountId);
+  trackCommandUsage('remove', null, account);
 
   try {
-    await deleteFile(accountId, hsPath);
-    logger.log(i18n(`${i18nKey}.deleted`, { accountId, path: hsPath }));
+    await deleteFile(account, hsPath);
+    logger.log(i18n(`${i18nKey}.deleted`, { account, path: hsPath }));
   } catch (error) {
     logger.error(
-      i18n(`${i18nKey}.errors.deleteFailed`, { accountId, path: hsPath })
+      i18n(`${i18nKey}.errors.deleteFailed`, { account, path: hsPath })
     );
     logApiErrorInstance(
       error,
       new ApiErrorContext({
-        accountId,
+        account,
         request: hsPath,
       })
     );
