@@ -11,12 +11,14 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 usage() {
- echo "Usage"
- echo "yarn release --version=<major|minor|patch> --tag=<latest|next|experimental>"
- echo
- echo "Options:"
- echo " -v, --version   Type of version to release   <major|minor|patch>"
- echo " -t, --tag       Release tag                  <latest|next|experimental>"
+  echo "Usage"
+  echo "yarn release --version=<major|minor|patch> --tag=<latest|next|experimental>"
+  echo
+  echo "Options:"
+  echo " -v, --version   Type of version to release   <major|minor|patch>"
+  echo " -t, --tag       Release tag                  <latest|next|experimental>"
+  echo
+  echo "Note: you must be on the main branch to create a new release."
 }
 
 check_main() {
@@ -88,8 +90,8 @@ confirmation_prompt() {
   echo
 }
 
-check_main
 handle_options "$@"
+check_main
 validate_options
 
 [[ "$tag" = "latest" ]] && prefix="" || prefix="pre"
