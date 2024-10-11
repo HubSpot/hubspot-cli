@@ -88,7 +88,7 @@ confirmation_prompt() {
   echo
 }
 
-# check_main
+check_main
 handle_options "$@"
 validate_options
 
@@ -101,8 +101,8 @@ confirmation_prompt
 yarn version --$prefix$version_increment --preid=$preid
 yarn build
 cd dist
-npm publish --tag "$tag" --dry-run
-# git push --atomic origin main v$next_versgit sion
+npm publish --tag "$tag"
+git push --atomic origin main v$next_version
 
 
 
