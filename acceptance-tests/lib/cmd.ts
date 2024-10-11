@@ -175,10 +175,10 @@ function executeWithInput(
 
 export function createCli(config: TestConfig, testConfigFileName: string): CLI {
   return {
-    // For commands that do not interface with the config file
+    // For commands that do not interface with the test CLI config file
     execute: (args: string[], inputs?: string[], opts?: {}) =>
       executeWithInput(config, args, inputs, opts),
-    // For commands that interface with the config file
+    // For commands that interface with the test CLI config file
     executeWithTestConfig: (args: string[], inputs?: string[], opts?: {}) =>
       executeWithInput(
         config,
