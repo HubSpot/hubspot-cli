@@ -25,8 +25,6 @@ describe('Account Management Flow', () => {
   });
 
   describe('hs init', () => {
-    it('should create a new config file', async () => {});
-
     it('should generate a config file', async () => {
       await testState.cli.execute(
         [

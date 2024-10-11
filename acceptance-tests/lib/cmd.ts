@@ -16,7 +16,7 @@ const PATH = process.env.PATH;
 export function createProcess(
   config: TestConfig,
   args: string[] = [],
-  env = null
+  env = {}
 ) {
   let processCommand: string;
   const { useInstalled, cliPath, debug } = config;
@@ -37,6 +37,7 @@ export function createProcess(
   return spawn(processCommand, args, {
     env: {
       NODE_ENV: 'test',
+      BROWSER: 'none', // Prevent the browser from opening when `open` is called
       preventAutoStart: false,
       PATH, // This is needed in order to get all the binaries in your current terminal
       npm_config_loglevel: 'silent', // suppress warnings
@@ -59,12 +60,10 @@ function executeWithInput(
     inputs = [];
   }
 
-  // Prevent the browser from opening when `open` is called
-  opts.env = { BROWSER: 'none' };
+  const { env, timeout = 1000, maxTimeout = 30000 } = opts;
 
-  const { env = opts.env, timeout = 1000, maxTimeout = 30000 } = opts;
   const childProcess = createProcess(config, args, env);
-  childProcess.stdin.setEncoding('utf-8');
+  (childProcess.stdin as any).setEncoding('utf-8');
 
   let currentInputTimeout: NodeJS.Timeout;
   let killIOTimeout: NodeJS.Timeout;
@@ -108,14 +107,14 @@ function executeWithInput(
   // Get errors from CLI for debugging
   childProcess.stderr.on('data', (err: unknown) => {
     if (config.debug) {
-      console.log('error:', err.toString());
+      console.log('error:', String(err));
     }
   });
 
   // Get output from CLI for debugging
   childProcess.stdout.on('data', (data: unknown) => {
     if (config.debug) {
-      console.log('output:', data.toString());
+      console.log('output:', String(data));
     }
   });
 
@@ -127,7 +126,7 @@ function executeWithInput(
         '[WARNING]', // Ignore our own CLI warning messages
       ];
 
-      const error = err.toString();
+      const error = String(err);
       if (allowedErrors.some(s => error.includes(s))) {
         if (config.debug) {
           console.log('suppressed error:', error);
@@ -158,8 +157,8 @@ function executeWithInput(
           clearTimeout(killIOTimeout);
         }
 
-        resolve(result.toString());
-      })
+        resolve(String(result));
+      }) as any
     );
   });
 

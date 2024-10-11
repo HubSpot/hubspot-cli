@@ -1,6 +1,6 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
-import { TestState } from '../../lib/testState';
+import { TestState } from '../../lib/TestState';
 
 const PROJECT_FOLDER = 'my-project';
 
