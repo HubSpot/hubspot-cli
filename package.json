@@ -1,7 +1,7 @@
 {
   "name": "@hubspot/cli",
   "version": "6.2.1",
-  "description": "CLI for working with HubSpot",
+  "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
@@ -22,7 +22,6 @@
     "js-yaml": "^4.1.0",
     "moment": "^2.29.1",
     "open": "^7.0.3",
-    "ora": "^4.0.3",
     "p-queue": "^6.0.2",
     "strip-ansi": "^5.2.0",
     "table": "^6.6.0",
@@ -34,11 +33,11 @@
     "axios": "^1.7.2",
     "eslint": "^8.56.0",
     "husky": "^4.3.8",
-    "lerna": "^6.6.1",
     "lint-staged": "^10.5.4",
     "madge": "^8.0.0",
     "prettier": "^1.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "mock-stdin": "^1.0.0"
   },
   "scripts": {
     "build": "rm -rf ./dist/ && tsc --rootDir . --outdir dist && yarn copy-files",
