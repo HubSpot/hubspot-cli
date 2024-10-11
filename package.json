@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "6.2.1",
+  "version": "6.2.2-0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
@@ -35,9 +35,10 @@
     "husky": "^4.3.8",
     "lint-staged": "^10.5.4",
     "madge": "^8.0.0",
+    "mock-stdin": "^1.0.0",
     "prettier": "^1.19.1",
-    "typescript": "^5.6.2",
-    "mock-stdin": "^1.0.0"
+    "semver": "^7.6.3",
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "build": "rm -rf ./dist/ && tsc --rootDir . --outdir dist && yarn copy-files",
@@ -51,7 +52,6 @@
     "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test-cli",
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
-    "check-main": "branch=$(git rev-parse --abbrev-ref HEAD) && [ $branch = main ] || (echo 'Error: New release can only be published on main branch' && exit 1)",
     "pub": "yarn build && cd dist && npm publish --tag latest",
     "push": "git push --atomic origin main v$npm_package_version",
     "release:major": "yarn check-main && yarn version --major && yarn pub && yarn push",
