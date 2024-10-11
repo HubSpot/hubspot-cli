@@ -18,7 +18,7 @@ describe('Account Management Flow', () => {
     it('config file should not exist', async () => {
       expect(
         testState.existsInTestOutputDirectory(
-          testState.getTestConfigFileNameRelativeToOutputDir()
+          testState.getTestConfigPathRelativeToOutputDir()
         )
       ).toBe(false);
     });
@@ -26,17 +26,14 @@ describe('Account Management Flow', () => {
 
   describe('hs init', () => {
     it('should generate a config file', async () => {
-      await testState.cli.execute(
-        [
-          'init',
-          `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
-        ],
+      await testState.cli.executeWithTestConfig(
+        ['init'],
         getInitPromptSequence(testState.getPAK(), accountName)
       );
 
       expect(
         testState.existsInTestOutputDirectory(
-          testState.getTestConfigFileNameRelativeToOutputDir()
+          testState.getTestConfigPathRelativeToOutputDir()
         )
       ).toBe(true);
     });
@@ -44,10 +41,9 @@ describe('Account Management Flow', () => {
 
   describe('hs accounts list', () => {
     it('should list the authenticated account', async () => {
-      const output = await testState.cli.execute([
+      const output = await testState.cli.executeWithTestConfig([
         'accounts',
         'list',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
 
       expect(output).toContain(accountName);
@@ -56,10 +52,9 @@ describe('Account Management Flow', () => {
 
   describe('hs accounts info', () => {
     it('should provide info for the authenticated account', async () => {
-      const output = await testState.cli.execute([
+      const output = await testState.cli.executeWithTestConfig([
         'accounts',
         'info',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
 
       expect(output).toContain(accountName);
@@ -68,21 +63,19 @@ describe('Account Management Flow', () => {
 
   describe('hs accounts remove', () => {
     it('should remove the authenticated account', async () => {
-      await testState.cli.execute([
+      await testState.cli.executeWithTestConfig([
         'accounts',
         'remove',
         `--account=${accountName}`,
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
     });
   });
 
   describe('hs accounts list', () => {
     it('should not list the removed authenticated account', async () => {
-      const output = await testState.cli.execute([
+      const output = await testState.cli.executeWithTestConfig([
         'accounts',
         'list',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
 
       expect(output).not.toContain(accountName);
@@ -91,11 +84,8 @@ describe('Account Management Flow', () => {
 
   describe('hs auth', () => {
     it('should add the account to the config', async () => {
-      await testState.cli.execute(
-        [
-          'auth',
-          `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
-        ],
+      await testState.cli.executeWithTestConfig(
+        ['auth'],
         [ENTER, testState.getPAK(), ENTER]
       );
 

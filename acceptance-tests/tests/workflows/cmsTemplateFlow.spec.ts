@@ -21,8 +21,6 @@ describe('CMS Template Flow', () => {
   });
 
   describe('hs create', () => {
-    it('creates a template', async () => {});
-
     it('should create a CMS template', async () => {
       await testState.cli.execute(
         ['create', 'template', TEMPLATE.name],
@@ -34,32 +32,27 @@ describe('CMS Template Flow', () => {
 
   describe('hs upload', () => {
     it('should upload the template to the Design Manager', async () => {
-      await testState.cli.execute([
+      await testState.cli.executeWithTestConfig([
         'upload',
         `--src=${TEMPLATE.folder}`,
         `--dest=${TEMPLATE.folder}`,
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
     });
   });
 
   describe('hs list', () => {
     it('should validate that the template exists in the Design Manager', async () => {
-      const val = await testState.cli.execute([
-        'list',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
-      ]);
+      const val = await testState.cli.executeWithTestConfig(['list']);
       expect(val).toContain(TEMPLATE.folder);
     });
   });
 
   describe('hs mv', () => {
     it('should move the file to a new location in the Design Manager', async () => {
-      const val = await testState.cli.execute([
+      const val = await testState.cli.executeWithTestConfig([
         'mv',
         TEMPLATE.folder,
         NEW_TEMPLATE_FOLDER,
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
       expect(val).toContain(TEMPLATE.folder);
     });
@@ -67,10 +60,7 @@ describe('CMS Template Flow', () => {
 
   describe('hs list', () => {
     it('should validate that the template exists in the Design Manager', async () => {
-      const val = await testState.cli.execute([
-        'list',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
-      ]);
+      const val = await testState.cli.executeWithTestConfig(['list']);
       expect(val).not.toContain(TEMPLATE.folder);
       expect(val).toContain(NEW_TEMPLATE_FOLDER);
     });
@@ -78,20 +68,16 @@ describe('CMS Template Flow', () => {
 
   describe('hs remove', () => {
     it('should delete the template from Design Manager', async () => {
-      await testState.cli.execute([
+      await testState.cli.executeWithTestConfig([
         'remove',
         NEW_TEMPLATE_FOLDER,
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
       ]);
     });
   });
 
   describe('hs list', () => {
     it('should validate that the template does not exist in the Design Manager', async () => {
-      const val = await testState.cli.execute([
-        'list',
-        `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
-      ]);
+      const val = await testState.cli.executeWithTestConfig(['list']);
       expect(val).not.toContain(NEW_TEMPLATE_FOLDER);
     });
   });

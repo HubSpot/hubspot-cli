@@ -1,8 +1,6 @@
 # CLI Workflow Acceptance Tests
 
-These tests are intended to mimic real developer workflows. Whenever possible we should prioritize writing workflows for new commands, or adding tests for new commands into existing workflows. Testing real CLI use-cases is more valuable to us than testing individual commands in isolation.
-
-Another benefit of workflow tests is that they enable us to run the tests against new HubSpot accounts without requiring us to pre-configure each account.
+These tests are intended to mimic real developer workflows. Whenever possible we should write workflows tests for new commands. Testing real CLI use-cases is an effective way for us to catch impactful bugs before releases. These workflow tests enable testing on new HubSpot accounts without requiring any pre-configuration of the accounts. This is useful for testing commands that rely on certain assets existing within the target HubSpot account.
 
 **An example workflow looks something like this:**
 1. Create an asset locally using a CLI command

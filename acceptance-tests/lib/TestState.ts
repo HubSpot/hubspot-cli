@@ -18,19 +18,19 @@ export class TestState {
 
   constructor() {
     this.config = getTestConfig();
-    this.cli = createCli(this.config);
     this.testConfigFileName = `hs-acceptance-test.config-${uuidv4()}.yml`;
+    this.cli = createCli(this.config, this.testConfigFileName);
   }
 
   getPAK() {
     return this.config?.personalAccessKey;
   }
 
-  getTestConfigFileNameRelativeToOutputDir() {
+  getTestConfigPathRelativeToOutputDir() {
     return this.testConfigFileName;
   }
 
-  getTestConfigFileName() {
+  getTestConfigPath() {
     return this.getPathWithinTestDirectory(this.testConfigFileName);
   }
 
@@ -44,13 +44,13 @@ export class TestState {
 
   async initializeAuth() {
     try {
-      await this.cli.execute(
-        ['init', `--c="${this.getTestConfigFileNameRelativeToOutputDir()}"`],
+      await this.cli.executeWithTestConfig(
+        ['init'],
         getInitPromptSequence(this.getPAK())
       );
 
       this.parsedYaml = yaml.load(
-        readFileSync(this.getTestConfigFileName(), 'utf8')
+        readFileSync(this.getTestConfigPath(), 'utf8')
       );
     } catch (e) {
       console.error(e);
@@ -66,18 +66,18 @@ export class TestState {
       await this.initializeAuth();
     } else {
       writeFileSync(
-        this.getTestConfigFileName(),
+        this.getTestConfigPath(),
         yaml.dump(JSON.parse(JSON.stringify(this.parsedYaml, null, 2)))
       );
     }
   }
 
   getParsedConfig() {
-    const temp = yaml.load(readFileSync(this.getTestConfigFileName(), 'utf8'));
+    const temp = yaml.load(readFileSync(this.getTestConfigPath(), 'utf8'));
     return JSON.parse(JSON.stringify(temp, null, 2));
   }
 
   cleanup() {
-    rimraf.sync(this.getTestConfigFileName());
+    rimraf.sync(this.getTestConfigPath());
   }
 }

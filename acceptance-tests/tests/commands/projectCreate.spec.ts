@@ -23,13 +23,12 @@ describe('hs project create', () => {
   });
 
   it('should create a project containing a private app', async () => {
-    await testState.cli.execute([
+    await testState.cli.executeWithTestConfig([
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
-      `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
     ]);
     expect(testState.existsInTestOutputDirectory(PROJECT_FOLDER)).toBe(true);
   });

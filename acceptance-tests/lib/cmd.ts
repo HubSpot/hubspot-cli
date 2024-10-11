@@ -173,9 +173,18 @@ function executeWithInput(
   return promise;
 }
 
-export function createCli(config: TestConfig): CLI {
+export function createCli(config: TestConfig, testConfigFileName: string): CLI {
   return {
+    // For commands that do not interface with the config file
     execute: (args: string[], inputs?: string[], opts?: {}) =>
       executeWithInput(config, args, inputs, opts),
+    // For commands that interface with the config file
+    executeWithTestConfig: (args: string[], inputs?: string[], opts?: {}) =>
+      executeWithInput(
+        config,
+        [...args, `--c="${testConfigFileName}"`],
+        inputs,
+        opts
+      ),
   };
 }
