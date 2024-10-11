@@ -100,9 +100,7 @@ exports.handler = async options => {
     const {
       data: { exportId },
     } = await cloneApp(accountId, appId);
-    const {
-      data: { status },
-    } = await poll(checkCloneStatus, accountId, exportId);
+    const { status } = await poll(checkCloneStatus, accountId, exportId);
     if (status === 'SUCCESS') {
       // Ensure correct project folder structure exists
       const baseDestPath = path.resolve(getCwd(), location);
