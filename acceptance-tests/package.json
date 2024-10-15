@@ -17,10 +17,10 @@
     "url": "git+https://github.com/HubSpot/hubspot-cli.git"
   },
   "scripts": {
-    "test": "yarn && vitest run",
-    "test-debug": "DEBUG=true yarn && vitest run",
-    "test-ci": "CI=true yarn && vitest run",
-    "test-qa": "QA=true yarn && vitest run"
+    "test": "vitest run",
+    "test-debug": "DEBUG=true vitest run",
+    "test-ci": "CI=true vitest run",
+    "test-qa": "QA=true vitest run"
   },
   "bugs": {
     "url": "https://github.com/HubSpot/hubspot-cli/issues"

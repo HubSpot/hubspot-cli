@@ -13,6 +13,9 @@ jobs:
       - name: Install deps
         run: |
           yarn install
+      - name: Install acceptance test dep
+        run: |
+          yarn install --cwd=acceptance-tests
       - name: Verify package dependencies
         run: |
           npx depcheck --ignores=semver
