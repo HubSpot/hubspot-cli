@@ -53,7 +53,7 @@
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
     "release": "bash ./scripts/release.sh",
-    "hs": "yarn build && node ./dist/bin/cli.js"
+    "hs": "yarn build && node ./dist/bin/hs"
   },
   "lint-staged": {
     "**/*.{js,scss,css}": [
