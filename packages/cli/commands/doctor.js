@@ -1,14 +1,16 @@
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const fs = require('fs');
-const Doctor = require('../lib/doctor');
+const { Doctor } = require('../lib/doctor');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const path = require('path');
+const util = require('node:util');
 
 // const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
 exports.describe = 'The doctor is in';
 
-exports.handler = async ({ file }) => {
+exports.handler = async ({ outputDir }) => {
   const doctor = new Doctor();
 
   try {
@@ -16,23 +18,31 @@ exports.handler = async ({ file }) => {
   } catch (e) {
     logger.debug(e);
   }
-  const diagnosis = await doctor.diagnose();
+  const output = await doctor.diagnose();
 
-  if (file) {
-    try {
-      fs.writeFileSync(file, JSON.stringify(diagnosis, null, 4));
-      logger.info(`Output written to ${file}`);
-    } catch (e) {
-      logger.error(`Unable to write output to ${file}, ${e.message}`);
-      process.exit(EXIT_CODES.ERROR);
-    }
+  if (!outputDir) {
+    const { diagnosis } = output;
+    console.log(diagnosis.toString());
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  const outputFile = path.join(
+    outputDir,
+    `doctor-${new Date().toISOString()}.json`
+  );
+  try {
+    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
+    logger.success(`Output written to ${outputFile}`);
+  } catch (e) {
+    logger.error(`Unable to write output to ${outputFile}, ${e.message}`);
+    process.exit(EXIT_CODES.ERROR);
   }
 };
 
 exports.builder = yargs =>
   yargs.option({
-    file: {
-      describe: 'Where to write the output',
+    'output-dir': {
+      describe: 'The directory to write the output file into',
       type: 'string',
     },
   });

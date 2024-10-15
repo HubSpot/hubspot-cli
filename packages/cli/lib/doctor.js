@@ -15,6 +15,83 @@ const {
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
+const { prefixOptions } = require('./ui/spinniesUtils');
+const { red, green, cyan, bold } = require('chalk');
+const { orange } = require('./interpolationHelpers');
+
+const minMajorNodeVersion = 18;
+
+class Diagnosis {
+  constructor({ configFilePath, defaultAccount, projectDir, projectName }) {
+    const { succeedPrefix, failPrefix } = prefixOptions({});
+    this.succeedPrefix = green(succeedPrefix);
+    this.failPrefix = red(failPrefix);
+    this.warnPrefix = orange('!');
+    this.diagnosis = {
+      cli: {
+        header: 'HubSpot CLI install',
+        sections: [],
+      },
+      cliConfig: {
+        header: 'CLI configuration',
+        subheaders: [],
+        sections: [],
+      },
+      project: {
+        header: 'Project configuration',
+        subheaders: [
+          `Project dir: ${cyan(projectDir)}`,
+          `Project name: ${cyan(projectName)}`,
+        ],
+        sections: [],
+      },
+    };
+  }
+
+  addCliSection(cliError) {
+    this.diagnosis.cli.sections.push(cliError);
+  }
+
+  addProjectError(cliError) {
+    this.diagnosis.project.sections.push(cliError);
+  }
+
+  addCLIConfigError(cliError) {
+    this.diagnosis.cliConfig.sections.push(cliError);
+  }
+
+  toString() {
+    const output = [];
+    for (const [__key, value] of Object.entries(this.diagnosis)) {
+      output.push(this.generateSections(value));
+    }
+
+    return output.join('\n');
+  }
+
+  generateSections(section) {
+    const output = [];
+
+    if (section.sections && section.sections.length === 0) {
+      return '';
+    }
+
+    output.push(`\n${bold(section.header)}`);
+
+    (section.subheaders || []).forEach(subheader => {
+      output.push(`${subheader}`);
+    });
+
+    section.sections.forEach(error => {
+      output.push(`    ${this.failPrefix} ${error.message}`);
+      if (error.secondaryMessaging) {
+        output.push(`      - ${error.secondaryMessaging}`);
+      }
+    });
+
+    return output.join('\n');
+  }
+}
 
 class Doctor {
   constructor() {
@@ -28,25 +105,24 @@ class Doctor {
   }
 
   async diagnose() {
-    SpinniesManager.add('loadingProjectDetails', {
-      text: 'Loading project details',
+    SpinniesManager.add('runningDiagnostics', {
+      text: 'Running diagnostics...',
     });
 
     this.projectConfig = await getProjectConfig();
-    if (!this.projectConfig?.projectConfig) {
-      SpinniesManager.fail('loadingProjectDetails', {
-        text: 'Not running within a project',
-      });
-    } else {
+
+    if (this.projectConfig?.projectConfig) {
       await this.fetchProjectDetails();
       await this.getAccessToken();
       await this.loadProjectFiles();
-      SpinniesManager.succeed('loadingProjectDetails', {
-        text: 'Project details loaded',
-      });
     }
 
-    await this.generateOutput();
+    this.diagnosticInfo = await this.gatherDiagnosticInfo();
+
+    this.diagnosis = new Diagnosis({
+      projectDir: this.projectConfig?.projectDir,
+      projectName: this.projectConfig?.projectConfig?.name,
+    });
 
     await Promise.all([
       this.checkIfNodeIsInstalled(),
@@ -55,56 +131,63 @@ class Doctor {
       ...this.validateProjectJsonFiles(),
     ]);
 
-    return this.output;
+    SpinniesManager.succeed('runningDiagnostics', {
+      text: 'Diagnostics successful...',
+    });
+
+    this.diagnosticInfo.diagnosis = this.diagnosis.toString();
+
+    return this.diagnosticInfo;
   }
 
   async checkIfNodeIsInstalled() {
     try {
-      SpinniesManager.add('checkingNodeInstalled', {
-        text: 'Checking if node is installed',
-      });
-      const isNodeInstalled = await isGloballyInstalled('node');
-      if (isNodeInstalled) {
-        SpinniesManager.succeed('checkingNodeInstalled', {
-          text: 'node is installed',
+      if (!this.diagnosticInfo.versions.node) {
+        this.diagnosis.addCliSection({
+          type: 'error',
+          message: 'Unable to determine what version of node is installed',
         });
-        return;
+      }
+
+      const [currentNodeMajor] = this.diagnosticInfo.versions.node.split('.');
+
+      if (parseInt(currentNodeMajor) < minMajorNodeVersion) {
+        this.diagnosis.addCliSection({
+          type: 'error',
+          message: `Minimum Node version is not met, ${this.diagnosticInfo.versions.node}`,
+        });
       }
     } catch (e) {
+      this.diagnosis.addCliSection({
+        type: 'error',
+        message: 'Unable to determine if node is installed',
+      });
       logger.debug(e);
     }
-    SpinniesManager.fail('checkingNodeInstalled', {
-      text: 'node may not be installed',
-    });
   }
 
   async checkIfNpmIsInstalled() {
     try {
-      SpinniesManager.add('checkingNpmInstalled', {
-        text: 'Checking if node is installed',
-      });
-      const isNpmInstalled = await isGloballyInstalled('npm');
-      if (isNpmInstalled) {
-        SpinniesManager.succeed('checkingNpmInstalled', {
-          text: 'npm is installed',
+      const npmInstalled = await isGloballyInstalled('npm');
+      if (!npmInstalled) {
+        this.diagnosis.addCliSection({
+          type: 'error',
+          message: 'npm is not installed',
         });
-        return;
       }
     } catch (e) {
+      this.diagnosis.addCliSection({
+        type: 'error',
+        message: 'Unable to determine if npm is installed',
+      });
       logger.debug(e);
     }
-    SpinniesManager.fail('checkingNpmInstalled', {
-      text: 'npm may not be installed',
-    });
   }
 
   checkIfNpmInstallRequired() {
     const checks = [];
-    for (const packageFile of this.output?.packageFiles || []) {
+    for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
-      SpinniesManager.add(`checkingIfNpmInstallRequired-${packageDirName}`, {
-        text: `Checking if npm is required in ${packageFile}`,
-      });
       checks.push(
         (async () => {
           try {
@@ -112,35 +195,26 @@ class Doctor {
               path.join(this.projectConfig.projectDir, packageDirName)
             );
             if (needsInstall) {
-              SpinniesManager.fail(
-                `checkingIfNpmInstallRequired-${packageDirName}`,
-                {
-                  text: `You need to run npm install in ${packageDirName}`,
-                }
-              );
-              return;
+              this.diagnosis.addProjectError({
+                type: 'error',
+                message: `missing dependencies in ${cyan(packageDirName)}`,
+                secondaryMessaging: `Run ${orange(
+                  '`hs project install-deps`'
+                )} to install all project dependencies locally`,
+              });
             }
-            SpinniesManager.succeed(
-              `checkingIfNpmInstallRequired-${packageDirName}`,
-              {
-                text: `Dependencies are up to date in ${packageDirName}`,
-              }
-            );
           } catch (e) {
             if (!(await this.isValidJsonFile(packageFile))) {
-              return SpinniesManager.fail(
-                `checkingIfNpmInstallRequired-${packageDirName}`,
-                {
-                  text: `The following is not a valid json file: ${packageFile}`,
-                }
-              );
+              this.diagnosis.addProjectError({
+                type: 'error',
+                message: `invalid JSON in ${cyan(packageDirName)}`,
+              });
+              return;
             }
-            SpinniesManager.fail(
-              `checkingIfNpmInstallRequired-${packageDirName}`,
-              {
-                text: `Unable to determine if dependencies are installed in ${packageDirName}`,
-              }
-            );
+            this.diagnosis.addProjectError({
+              type: 'error',
+              message: `Unable to determine if dependencies are installed ${packageDirName}`,
+            });
             logger.debug(e);
           }
         })()
@@ -162,10 +236,11 @@ class Doctor {
 
   async fetchProjectDetails() {
     try {
-      this.projectDetails = await fetchProject(
+      const { data } = await fetchProject(
         this.accountId,
         this.projectConfig?.projectConfig?.name
       );
+      this.projectDetails = data;
       delete this.projectDetails?.deployedBuild;
       delete this.projectDetails?.latestBuild;
       delete this.projectDetails?.portalId;
@@ -182,6 +257,11 @@ class Doctor {
         this.accountId
       );
     } catch (e) {
+      // TODO find the data returned from this
+      this.diagnosis.addCLIConfigError({
+        type: 'error',
+        message: 'Unable to fetch access token',
+      });
       logger.debug(e);
     }
   }
@@ -198,7 +278,7 @@ class Doctor {
     }
   }
 
-  async generateOutput() {
+  async gatherDiagnosticInfo() {
     const {
       platform,
       arch,
@@ -206,7 +286,7 @@ class Doctor {
       mainModule: { path: modulePath },
     } = process;
 
-    this.output = {
+    return {
       platform,
       arch,
       path: modulePath,
@@ -252,7 +332,6 @@ class Doctor {
         this.files?.filter(file => path.extname(file) === '.json') || [],
       files: this.files || [],
     };
-    return this.output;
   }
 
   async isValidJsonFile(filename) {
@@ -268,31 +347,25 @@ class Doctor {
 
   validateProjectJsonFiles() {
     const checks = [];
-    for (const jsonFile of this.output?.configFiles || []) {
+    for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
       checks.push(
         (async () => {
           try {
-            SpinniesManager.add(`checkingJsonValid-${jsonFile}`, {
-              text: `Checking if ${jsonFile} is valid JSON`,
-            });
-
             if (
               !(await this.isValidJsonFile(
                 path.join(this.projectConfig.projectDir, jsonFile)
               ))
             ) {
-              return SpinniesManager.fail(`checkingJsonValid-${jsonFile}`, {
-                text: `${jsonFile} is not a valid JSON file`,
+              this.diagnosis.addProjectError({
+                type: 'error',
+                message: `invalid JSON in ${cyan(jsonFile)}`,
               });
             }
-
-            SpinniesManager.succeed(`checkingJsonValid-${jsonFile}`, {
-              text: `${jsonFile} is a valid JSON file`,
-            });
           } catch (e) {
             logger.debug(e);
-            return SpinniesManager.fail(`checkingJsonValid-${jsonFile}`, {
-              text: `${jsonFile} is not a valid JSON file`,
+            this.diagnosis.addProjectError({
+              type: 'error',
+              message: `invalid JSON in ${cyan(jsonFile)}`,
             });
           }
         })()
@@ -302,4 +375,7 @@ class Doctor {
   }
 }
 
-module.exports = Doctor;
+module.exports = {
+  Doctor,
+  Diagnostic: Diagnosis,
+};

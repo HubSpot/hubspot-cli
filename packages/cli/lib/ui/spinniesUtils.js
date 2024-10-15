@@ -171,4 +171,5 @@ module.exports = {
   SPINNERS,
   terminalSupportsUnicode,
   writeStream,
+  prefixOptions,
 };
