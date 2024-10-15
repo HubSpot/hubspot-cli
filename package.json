@@ -41,7 +41,7 @@
     "typescript": "^5.6.2"
   },
   "scripts": {
-    "build": "rm -rf ./dist/ && tsc --rootDir . --outdir dist && yarn copy-files",
+    "build": "rm -rf ./dist/ && tsc && yarn copy-files",
     "copy-files": "cp -r lang dist/lang && cp bin/hs dist/bin/hs && cp bin/hscms dist/bin/hscms",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",

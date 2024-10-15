@@ -7,8 +7,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "allowJs": true
+    "allowJs": true,
+    "rootDir": ".",
+    "outDir": "dist"
   },
   "include": ["bin", "commands", "lib"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["**/__tests__/*"]
 }
