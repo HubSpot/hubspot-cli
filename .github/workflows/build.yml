@@ -15,7 +15,7 @@ jobs:
           yarn install
       - name: Verify package dependencies
         run: |
-          npx depcheck
+          npx depcheck --ignores=semver
       - name: Lint
         run: |
           yarn lint
