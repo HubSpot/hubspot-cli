@@ -28,7 +28,7 @@
     "test-cli": "yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn --cwd 'acceptance-tests' test-debug",
     "test-cli-qa": "yarn --cwd 'acceptance-tests' test-qa",
-    "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test-cli",
+    "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn --cwd 'acceptance-tests' test-latest",
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular packages"
   },
