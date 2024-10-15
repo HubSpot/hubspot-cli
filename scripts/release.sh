@@ -94,8 +94,18 @@ handle_options "$@"
 check_main
 validate_options
 
+# The $prefix var is used to add the string "pre" to the $version_increment
+# This is used to tell `yarn version` to do a prerelease version increment rather than a standard increment
+# See https://classic.yarnpkg.com/lang/en/docs/cli/version/#toc-yarn-version-premajor
+# If $tag isn't "latest", the next release will be a prerelease, so set $prefix to "pre"
 [[ "$tag" = "latest" ]] && prefix="" || prefix="pre"
+
+# preid is the string identifier used in prerelease tags
+# For example, in v1.0.0-beta.0, the preid is "beta"
+# This sets the proper preid based on the tag. For non prereleases, preid is ignored
 [[ "$tag" = "experimental" ]] && preid="experimental" || preid="beta"
+
+# Get the next version so we can display it before the user confirms the release
 next_version=$(yarn --silent semver $current_version -i $prefix$version_increment --preid $preid)
 
 confirmation_prompt
