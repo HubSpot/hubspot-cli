@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test-debug": "DEBUG=true vitest run",
     "test-ci": "CI=true vitest run",
+    "test-latest": "USE_INSTALLED=true vitest run",
     "test-qa": "QA=true vitest run"
   },
   "bugs": {
