@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["bin", "commands", "lib"],
+  "exclude": ["**/__tests__/*"]
+}
