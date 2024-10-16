@@ -19,12 +19,83 @@ import path from 'path';
 import { prefixOptions } from './ui/spinniesUtils';
 import { red, green, cyan, bold } from 'chalk';
 import { orange } from './interpolationHelpers';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import {
+  AccessToken,
+  AccountType,
+  AuthType,
+} from '@hubspot/local-dev-lib/types/Accounts';
+import { Project } from '@hubspot/local-dev-lib/types/Project';
 
 const minMajorNodeVersion = 18;
 
+interface DiagnosisOptions {
+  configFilePath: string;
+  defaultAccount: string;
+  projectDir: string;
+  projectName: string;
+}
+
+interface Section {
+  type: 'error' | 'warning' | 'success';
+  message: string;
+  secondaryMessaging?: string;
+}
+
+interface DiagnosisCategory {
+  header: string;
+  subheaders?: string[];
+  sections: Section[];
+}
+
+interface DiagnosisCategories {
+  cli: DiagnosisCategory;
+  project: DiagnosisCategory;
+  cliConfig: DiagnosisCategory;
+}
+
+type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
+
+interface DiagnosticInfo {
+  path?: string;
+  files: string[];
+  envFiles: string[];
+  configFiles: string[];
+  packageFiles: string[];
+  packageLockFiles: string[];
+  jsonFiles: string[];
+
+  versions: { '@hubspot/cli': string; node: string; npm: string | null };
+  project: {
+    details?: Project;
+    config?: ProjectConfig;
+  };
+  arch: typeof process.arch;
+  platform: typeof process.platform;
+  account: {
+    name?: string;
+    accountId?: number | null;
+    scopeGroups?: AccessToken['scopeGroups'];
+    enabledFeatures?: AccessToken['enabledFeatures'];
+    accountType?: AccessToken['accountType'];
+    authType?: AuthType;
+  };
+  diagnosis?: string;
+}
+
 export class Diagnosis {
-  constructor({ configFilePath, defaultAccount, projectDir, projectName }) {
-    const { succeedPrefix, failPrefix } = prefixOptions({});
+  private succeedPrefix: string;
+  private readonly failPrefix: string;
+  private warnPrefix: string;
+  private readonly diagnosis: DiagnosisCategories;
+
+  constructor({
+    configFilePath,
+    defaultAccount,
+    projectDir,
+    projectName,
+  }: DiagnosisOptions) {
+    const { succeedPrefix, failPrefix } = prefixOptions({} as any);
     this.succeedPrefix = green(succeedPrefix);
     this.failPrefix = red(failPrefix);
     this.warnPrefix = orange('!');
@@ -35,7 +106,10 @@ export class Diagnosis {
       },
       cliConfig: {
         header: 'CLI configuration',
-        subheaders: [],
+        subheaders: [
+          `Project dir: ${cyan(projectDir)}`,
+          `Project name: ${cyan(projectName)}`,
+        ],
         sections: [],
       },
       project: {
@@ -49,16 +123,16 @@ export class Diagnosis {
     };
   }
 
-  addCliSection(cliError) {
-    this.diagnosis.cli.sections.push(cliError);
+  addCliSection(section: Section) {
+    this.diagnosis.cli.sections.push(section);
   }
 
-  addProjectError(cliError) {
-    this.diagnosis.project.sections.push(cliError);
+  addProjectSection(section: Section) {
+    this.diagnosis.project.sections.push(section);
   }
 
-  addCLIConfigError(cliError) {
-    this.diagnosis.cliConfig.sections.push(cliError);
+  addCLIConfigError(section: Section) {
+    this.diagnosis.cliConfig.sections.push(section);
   }
 
   toString() {
@@ -70,7 +144,7 @@ export class Diagnosis {
     return output.join('\n');
   }
 
-  generateSections(section) {
+  generateSections(section: DiagnosisCategory) {
     const output = [];
 
     if (section.sections && section.sections.length === 0) {
@@ -95,10 +169,22 @@ export class Diagnosis {
 }
 
 export class Doctor {
+  accountId: number | null;
+  private readonly env: Environment | undefined;
+  private readonly authType: AuthType | undefined;
+  private readonly accountType: AccountType | undefined;
+  private readonly personalAccessKey: string | undefined;
+  private diagnosis?: Diagnosis;
+  private projectConfig?: ProjectConfig;
+  private diagnosticInfo?: DiagnosticInfo;
+  private accessToken?: AccessToken;
+  private projectDetails?: Project;
+  private files?: string[];
+
   constructor() {
     SpinniesManager.init();
     this.accountId = getAccountId();
-    const accountConfig = getAccountConfig(this.accountId);
+    const accountConfig = getAccountConfig(this.accountId!);
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
     this.accountType = accountConfig?.accountType;
@@ -121,7 +207,9 @@ export class Doctor {
     this.diagnosticInfo = await this.gatherDiagnosticInfo();
 
     this.diagnosis = new Diagnosis({
-      projectDir: this.projectConfig?.projectDir,
+      configFilePath: '',
+      defaultAccount: '',
+      projectDir: this.projectConfig?.projectDir!,
       projectName: this.projectConfig?.projectConfig?.name,
     });
 
@@ -136,30 +224,34 @@ export class Doctor {
       text: 'Diagnostics successful...',
     });
 
-    this.diagnosticInfo.diagnosis = this.diagnosis.toString();
+    this.diagnosticInfo!.diagnosis = this.diagnosis.toString();
 
     return this.diagnosticInfo;
   }
 
   async checkIfNodeIsInstalled() {
     try {
-      if (!this.diagnosticInfo.versions.node) {
-        this.diagnosis.addCliSection({
+      if (!this.diagnosticInfo?.versions.node) {
+        this.diagnosis?.addCliSection({
           type: 'error',
           message: 'Unable to determine what version of node is installed',
         });
       }
 
-      const [currentNodeMajor] = this.diagnosticInfo.versions.node.split('.');
+      const nodeVersion = this.diagnosticInfo?.versions.node?.split('.');
+      const currentNodeMajor = nodeVersion?.[0];
 
-      if (parseInt(currentNodeMajor) < minMajorNodeVersion) {
-        this.diagnosis.addCliSection({
+      if (
+        !currentNodeMajor ||
+        parseInt(currentNodeMajor) < minMajorNodeVersion
+      ) {
+        this.diagnosis?.addCliSection({
           type: 'error',
-          message: `Minimum Node version is not met, ${this.diagnosticInfo.versions.node}`,
+          message: `Minimum Node version is not met, ${this.diagnosticInfo?.versions.node}`,
         });
       }
     } catch (e) {
-      this.diagnosis.addCliSection({
+      this.diagnosis?.addCliSection({
         type: 'error',
         message: 'Unable to determine if node is installed',
       });
@@ -171,13 +263,13 @@ export class Doctor {
     try {
       const npmInstalled = await isGloballyInstalled('npm');
       if (!npmInstalled) {
-        this.diagnosis.addCliSection({
+        this.diagnosis?.addCliSection({
           type: 'error',
           message: 'npm is not installed',
         });
       }
     } catch (e) {
-      this.diagnosis.addCliSection({
+      this.diagnosis?.addCliSection({
         type: 'error',
         message: 'Unable to determine if npm is installed',
       });
@@ -193,10 +285,10 @@ export class Doctor {
         (async () => {
           try {
             const needsInstall = await packagesNeedInstalled(
-              path.join(this.projectConfig.projectDir, packageDirName)
+              path.join(this.projectConfig?.projectDir!, packageDirName)
             );
             if (needsInstall) {
-              this.diagnosis.addProjectError({
+              this.diagnosis?.addProjectSection({
                 type: 'error',
                 message: `missing dependencies in ${cyan(packageDirName)}`,
                 secondaryMessaging: `Run ${orange(
@@ -206,13 +298,13 @@ export class Doctor {
             }
           } catch (e) {
             if (!(await this.isValidJsonFile(packageFile))) {
-              this.diagnosis.addProjectError({
+              this.diagnosis?.addProjectSection({
                 type: 'error',
                 message: `invalid JSON in ${cyan(packageDirName)}`,
               });
               return;
             }
-            this.diagnosis.addProjectError({
+            this.diagnosis?.addProjectSection({
               type: 'error',
               message: `Unable to determine if dependencies are installed ${packageDirName}`,
             });
@@ -238,13 +330,10 @@ export class Doctor {
   async fetchProjectDetails() {
     try {
       const { data } = await fetchProject(
-        this.accountId,
+        this.accountId!,
         this.projectConfig?.projectConfig?.name
       );
       this.projectDetails = data;
-      delete this.projectDetails?.deployedBuild;
-      delete this.projectDetails?.latestBuild;
-      delete this.projectDetails?.portalId;
     } catch (e) {
       logger.debug(e);
     }
@@ -253,13 +342,13 @@ export class Doctor {
   async getAccessToken() {
     try {
       this.accessToken = await getAccessToken(
-        this.personalAccessKey,
+        this.personalAccessKey!,
         this.env,
-        this.accountId
+        this.accountId!
       );
     } catch (e) {
       // TODO find the data returned from this
-      this.diagnosis.addCLIConfigError({
+      this.diagnosis?.addCLIConfigError({
         type: 'error',
         message: 'Unable to fetch access token',
       });
@@ -269,28 +358,28 @@ export class Doctor {
 
   async loadProjectFiles() {
     try {
-      this.files = (await walk(this.projectConfig?.projectDir))
+      this.files = (await walk(this.projectConfig?.projectDir!))
         .filter(file => !path.dirname(file).includes('node_modules'))
         .map(filename =>
-          path.relative(this.projectConfig?.projectDir, filename)
+          path.relative(this.projectConfig?.projectDir!, filename)
         );
     } catch (e) {
       logger.debug(e);
     }
   }
 
-  async gatherDiagnosticInfo() {
+  async gatherDiagnosticInfo(): Promise<DiagnosticInfo> {
     const {
       platform,
       arch,
       versions: { node },
-      mainModule: { path: modulePath },
+      mainModule,
     } = process;
 
     return {
       platform,
       arch,
-      path: modulePath,
+      path: mainModule?.path,
       versions: {
         '@hubspot/cli': pkg.version,
         node,
@@ -305,10 +394,7 @@ export class Doctor {
         enabledFeatures: this.accessToken?.enabledFeatures,
       },
       project: {
-        config:
-          this.projectConfig && this.projectConfig.projectConfig
-            ? this.projectConfig
-            : undefined,
+        config: this.projectConfig,
         details: this.projectDetails,
       },
       packageFiles:
@@ -335,7 +421,7 @@ export class Doctor {
     };
   }
 
-  async isValidJsonFile(filename) {
+  async isValidJsonFile(filename: string) {
     const readFile = util.promisify(fs.readFile);
     try {
       const fileContents = await readFile(filename);
@@ -354,17 +440,17 @@ export class Doctor {
           try {
             if (
               !(await this.isValidJsonFile(
-                path.join(this.projectConfig.projectDir, jsonFile)
+                path.join(this.projectConfig?.projectDir!, jsonFile)
               ))
             ) {
-              this.diagnosis.addProjectError({
+              this.diagnosis?.addProjectSection({
                 type: 'error',
                 message: `invalid JSON in ${cyan(jsonFile)}`,
               });
             }
           } catch (e) {
             logger.debug(e);
-            this.diagnosis.addProjectError({
+            this.diagnosis?.addProjectSection({
               type: 'error',
               message: `invalid JSON in ${cyan(jsonFile)}`,
             });
