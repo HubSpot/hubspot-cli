@@ -23,7 +23,7 @@ exports.handler = async options => {
 
   let config = getConfig();
 
-  let accountToRemove = options.account;
+  let accountToRemove = options.accountFlag;
 
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(

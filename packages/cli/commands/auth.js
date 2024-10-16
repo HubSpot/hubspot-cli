@@ -71,7 +71,7 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
-  const { type, config: c, qa, account } = options;
+  const { type, config: c, qa, accountFlag } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
@@ -107,7 +107,7 @@ exports.handler = async options => {
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env, account });
+      configData = await personalAccessKeyPrompt({ env, account: accountFlag });
 
       try {
         token = await getAccessToken(configData.personalAccessKey, env);
