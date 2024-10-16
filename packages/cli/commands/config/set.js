@@ -1,6 +1,5 @@
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
-const { getAccountId } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -52,16 +51,16 @@ const handleConfigUpdate = async (accountId, options) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { account } = options;
 
-  trackCommandUsage('config-set', null, accountId);
+  trackCommandUsage('config-set', null, account);
 
-  const configUpdated = await handleConfigUpdate(accountId, options);
+  const configUpdated = await handleConfigUpdate(account, options);
 
   if (!configUpdated) {
     const selectedOptions = await selectOptions();
 
-    await handleConfigUpdate(accountId, selectedOptions);
+    await handleConfigUpdate(account, selectedOptions);
   }
 
   process.exit(EXIT_CODES.SUCCESS);

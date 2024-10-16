@@ -1,7 +1,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -31,19 +30,18 @@ exports.command = 'open [shortcut]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { shortcut, list } = options;
-  const accountId = getAccountId(options);
+  const { shortcut, list, account } = options;
 
-  trackCommandUsage('open', null, accountId);
+  trackCommandUsage('open', null, account);
 
   if (shortcut === undefined && !list) {
-    const choice = await createListPrompt(accountId);
-    openLink(accountId, choice.open);
+    const choice = await createListPrompt(account);
+    openLink(account, choice.open);
   } else if (list || shortcut === 'list') {
-    logSiteLinks(accountId);
+    logSiteLinks(account);
     return;
   } else {
-    openLink(accountId, shortcut);
+    openLink(account, shortcut);
   }
 };
 
