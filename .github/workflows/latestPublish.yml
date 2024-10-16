@@ -26,6 +26,8 @@ jobs:
       - name: Globally install the CLI
         run: |
           npm install -g @hubspot/cli@latest
+      - name: Install the test dependencies
+        run: yarn install --cwd='acceptance-tests'
       - name: Test Latest CLI Release
         run: |
           npm run test-cli
