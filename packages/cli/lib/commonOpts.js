@@ -94,6 +94,8 @@ const getAccountId = (options = {}) => {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
+  // Preserves the original --account and --portal flags for certain commands.
+  options.accountFlag = portal || account;
   options.account = getAccountIdFromConfig(portal || account);
   options.portal = getAccountIdFromConfig(portal || account);
   return getAccountIdFromConfig(portal || account);

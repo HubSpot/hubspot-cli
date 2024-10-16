@@ -150,7 +150,7 @@ const loadConfigMiddleware = argv => {
 
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  // loadConfig loads the new hidden config for all commands
+  // loadConfigMiddleware loads the new hidden config for all commands
   .middleware([
     setLogLevel,
     setRequestHeaders,
