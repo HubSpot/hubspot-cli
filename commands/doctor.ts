@@ -1,10 +1,10 @@
-const { trackCommandUsage } = require('../lib/usageTracking');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const fs = require('fs');
-const { Doctor } = require('../lib/doctor');
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
-const path = require('path');
-const util = require('node:util');
+import { trackCommandUsage } from '../lib/usageTracking';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import fs from 'fs';
+import { Doctor } from '../lib/doctor';
+
+import { EXIT_CODES } from '../lib/enums/exitCodes';
+import path from 'path';
 
 // const i18nKey = 'commands.doctor';
 exports.command = 'doctor';
@@ -18,6 +18,7 @@ exports.handler = async ({ outputDir }) => {
   } catch (e) {
     logger.debug(e);
   }
+
   const output = await doctor.diagnose();
 
   if (!outputDir) {
@@ -30,6 +31,7 @@ exports.handler = async ({ outputDir }) => {
     outputDir,
     `doctor-${new Date().toISOString()}.json`
   );
+
   try {
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
     logger.success(`Output written to ${outputFile}`);

@@ -1,27 +1,28 @@
-const { exec: execAsync } = require('child_process');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { fetchProject } = require('@hubspot/local-dev-lib/api/projects');
-const { getAccountId } = require('./commonOpts');
-const { getProjectConfig } = require('./projects');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
-const pkg = require('../package.json');
-const { walk } = require('@hubspot/local-dev-lib/fs');
-const SpinniesManager = require('./ui/SpinniesManager');
-const {
+import { exec as execAsync } from 'child_process';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
+import { getAccountId } from './commonOpts';
+import { getProjectConfig } from './projects';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
+
+import pkg from '../package.json';
+import { walk } from '@hubspot/local-dev-lib/fs';
+import SpinniesManager from './ui/SpinniesManager';
+import {
   isGloballyInstalled,
   packagesNeedInstalled,
-} = require('./dependencyManagement');
-const util = require('util');
-const fs = require('fs');
-const path = require('path');
-const { prefixOptions } = require('./ui/spinniesUtils');
-const { red, green, cyan, bold } = require('chalk');
-const { orange } = require('./interpolationHelpers');
+} from './dependencyManagement';
+import util from 'util';
+import fs from 'fs';
+import path from 'path';
+import { prefixOptions } from './ui/spinniesUtils';
+import { red, green, cyan, bold } from 'chalk';
+import { orange } from './interpolationHelpers';
 
 const minMajorNodeVersion = 18;
 
-class Diagnosis {
+export class Diagnosis {
   constructor({ configFilePath, defaultAccount, projectDir, projectName }) {
     const { succeedPrefix, failPrefix } = prefixOptions({});
     this.succeedPrefix = green(succeedPrefix);
@@ -93,7 +94,7 @@ class Diagnosis {
   }
 }
 
-class Doctor {
+export class Doctor {
   constructor() {
     SpinniesManager.init();
     this.accountId = getAccountId();
@@ -374,8 +375,3 @@ class Doctor {
     return checks;
   }
 }
-
-module.exports = {
-  Doctor,
-  Diagnostic: Diagnosis,
-};
