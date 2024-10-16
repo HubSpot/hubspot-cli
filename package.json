@@ -42,7 +42,6 @@
   },
   "scripts": {
     "build": "bash ./scripts/build.sh",
-    "copy-files": "cp -r lang dist/lang && cp bin/hs dist/bin/hs && cp bin/hscms dist/bin/hscms",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",
     "test": "jest",
