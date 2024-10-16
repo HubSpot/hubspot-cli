@@ -50,7 +50,7 @@ export const getTestConfig = (): TestConfig => {
     if (existsSync(defaultPath)) {
       config.cliPath = defaultPath;
     } else {
-      throw new Error('Unable to locate the CLI executable to run');
+      throw new Error('Unable to locate the CLI executable to run.');
     }
   }
 

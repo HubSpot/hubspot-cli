@@ -9,14 +9,6 @@ To contribute, fork this repository and create a new branch. Then create a PR. F
 yarn
 ```
 
-* Bootstrap `lerna`
-
-In order to manage multiple npm packages in the same Github repos, we use [lerna](https://lerna.js.org/).
-
-```bash
-yarn lerna bootstrap
-````
-
 * To test a command
 
 First, you will need to create a config for the accounts that you want to be able to test using.
@@ -39,19 +31,19 @@ yarn link @hubspot/cli
 ## Local development with local-dev-lib
 When contributing to hubspot-cli, you may also need to make changes to cli-local-dev-lib. To use a local version of local-dev-lib as a dependancy, use [yarn link](https://classic.yarnpkg.com/lang/en/docs/cli/link/).
 1. Run `yarn local-dev` in `local-dev-lib`
-2. Run `yarn link @hubspot/local-dev-lib` in the hubspot-cli root and again in `packages/cli` to use the symlinked local package.
+2. Run `yarn link @hubspot/local-dev-lib` in the hubspot-cli root to use the symlinked local package.
 
 To stop using your local `local-dev-lib`, you can follow a similar process with [yarn unlink](https://classic.yarnpkg.com/en/docs/cli/unlink).
 
 ## Testing
 Ensure you are on the minimum version of Node supported by the CLI before running any tests, since that is the version of node that the build step uses. To find the minimum,
-see the `engine` entry in the [cli package.json](./packages/cli/package.json).
+see the `engine` entry in the [package.json](./package.json).
 
 Using [nvm](https://github.com/nvm-sh/nvm) to switch between versions will help speed up development.
 
 Tests on the CLI are located in two places:
 - `/acceptance-tests/tests`
-- `/packages/cli/lib/__tests__`
+- `/lib/__tests__`
 
 The acceptance tests are run using `yarn test-cli`. You will need to do some configuration before being able to run the acceptance tests. See the [acceptance-tests folder](./acceptance-tests/README.md) for more information.
 
@@ -102,7 +94,6 @@ To merge, either create, or have a maintainer create a blank branch, and set you
 ## Documentation
 
 - [Technical Design](./docs/TechnicalDesign.md)
-- [Publishing Releases](./docs/PublishingReleases.md)
 - [Debugging](./docs/Debugging.md)
 
 ## Debugging tips

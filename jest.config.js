@@ -1,6 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
-  projects: ['<rootDir>/packages/*'],
-  roots: ['packages'],
+  roots: ['commands', 'lib'],
   collectCoverage: true,
+  clearMocks: true,
 };
