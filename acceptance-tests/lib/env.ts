@@ -52,7 +52,7 @@ export const getTestConfig = (): TestConfig => {
   }
 
   if (!config.cliPath && !config.useInstalled) {
-    const defaultPath = path.join(process.cwd(), '../packages/cli/bin/hs');
+    const defaultPath = path.join(process.cwd(), '../bin/hs');
 
     if (existsSync(defaultPath)) {
       config.cliPath = defaultPath;
