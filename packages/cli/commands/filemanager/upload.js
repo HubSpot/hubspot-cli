@@ -19,7 +19,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -32,11 +31,10 @@ exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest } = options;
+  const { src, dest, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
   const absoluteSrcPath = path.resolve(getCwd(), src);
 
   let stats;
@@ -67,7 +65,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'filemanager-upload',
     { type: stats.isFile() ? 'file' : 'folder' },
-    accountId
+    account
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(
@@ -89,11 +87,11 @@ exports.handler = async options => {
       return;
     }
 
-    uploadFile(accountId, absoluteSrcPath, normalizedDest)
+    uploadFile(account, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.upload`, {
-            accountId,
+            accountId: account,
             dest: normalizedDest,
             src,
           })
@@ -109,7 +107,7 @@ exports.handler = async options => {
         logApiUploadErrorInstance(
           error,
           new ApiErrorContext({
-            accountId,
+            accountId: account,
             request: normalizedDest,
             payload: src,
           })
@@ -118,12 +116,12 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.logs.uploading`, {
-        accountId,
+        accountId: account,
         dest,
         src,
       })
     );
-    uploadFolder(accountId, absoluteSrcPath, dest)
+    uploadFolder(account, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.uploadComplete`, {
@@ -134,7 +132,7 @@ exports.handler = async options => {
       .catch(error => {
         logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
         logErrorInstance(error, {
-          accountId,
+          accountId: account,
         });
       });
   }

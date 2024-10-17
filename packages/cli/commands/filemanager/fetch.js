@@ -5,7 +5,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -19,7 +18,7 @@ exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { src, dest, includeArchived } = options;
+  let { src, dest, includeArchived, account } = options;
 
   await loadAndValidateOptions(options);
 
@@ -30,14 +29,12 @@ exports.handler = async options => {
 
   dest = resolveLocalPath(dest);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('filemanager-fetch', null, accountId);
+  trackCommandUsage('filemanager-fetch', null, account);
 
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      accountId,
+      account,
       src,
       dest,
       false,

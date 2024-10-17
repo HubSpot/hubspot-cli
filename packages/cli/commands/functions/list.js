@@ -10,7 +10,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -25,14 +24,14 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { account } = options;
 
-  trackCommandUsage('functions-list', null, accountId);
+  trackCommandUsage('functions-list', null, account);
 
   logger.debug(i18n(`${i18nKey}.debug.gettingFunctions`));
 
-  const routesResp = await getRoutes(accountId).catch(async e => {
-    await logApiErrorInstance(e, new ApiErrorContext({ accountId }));
+  const routesResp = await getRoutes(account).catch(async e => {
+    logApiErrorInstance(e, new ApiErrorContext({ accountId: account }));
     process.exit(EXIT_CODES.SUCCESS);
   });
 

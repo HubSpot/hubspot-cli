@@ -1,7 +1,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -18,10 +17,9 @@ exports.describe = false;
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: functionPath } = options;
-  const accountId = getAccountId(options);
+  const { path: functionPath, account } = options;
 
-  trackCommandUsage('functions-server', null, accountId);
+  trackCommandUsage('functions-server', null, account);
 
   logger.debug(
     i18n(`${i18nKey}.debug.startingServer`, {
@@ -30,7 +28,7 @@ exports.handler = async options => {
   );
 
   startTestServer({
-    accountId,
+    accountId: account,
     ...options,
   });
 };
