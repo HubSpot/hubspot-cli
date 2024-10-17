@@ -1,7 +1,7 @@
 import { trackCommandUsage } from '../lib/usageTracking';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import fs from 'fs';
-import { Doctor } from '../lib/doctor';
+import { Doctor } from '../lib/doctor/Doctor';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
