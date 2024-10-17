@@ -2,7 +2,6 @@ const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -68,12 +67,12 @@ const validateBuildId = (
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
+  const { account } = options;
+  const accountConfig = getAccountConfig(account);
   const { project: projectOption, buildId: buildIdOption } = options;
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-deploy', { type: accountType }, accountId);
+  trackCommandUsage('project-deploy', { type: accountType }, account);
 
   const { projectConfig } = await getProjectConfig();
 
@@ -83,7 +82,7 @@ exports.handler = async options => {
     projectName = projectConfig.name;
   }
 
-  const namePromptResponse = await projectNamePrompt(accountId, {
+  const namePromptResponse = await projectNamePrompt(account, {
     project: projectName,
   });
 
@@ -95,7 +94,7 @@ exports.handler = async options => {
 
   try {
     const { latestBuild, deployedBuildId } = await fetchProject(
-      accountId,
+      account,
       projectName
     );
 
@@ -110,7 +109,7 @@ exports.handler = async options => {
         deployedBuildId,
         latestBuild.buildId,
         projectName,
-        accountId
+        account
       );
       if (validationResult !== true) {
         logger.error(validationResult);
@@ -126,7 +125,7 @@ exports.handler = async options => {
             deployedBuildId,
             latestBuild.buildId,
             projectName,
-            accountId
+            account
           )
       );
       buildIdToDeploy = deployBuildIdPromptResponse.buildId;
@@ -138,7 +137,7 @@ exports.handler = async options => {
     }
 
     const deployResp = await deployProject(
-      accountId,
+      account,
       projectName,
       buildIdToDeploy
     );
@@ -153,7 +152,7 @@ exports.handler = async options => {
     }
 
     await pollDeployStatus(
-      accountId,
+      account,
       projectName,
       deployResp.id,
       buildIdToDeploy
@@ -163,7 +162,7 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountIdentifier: uiAccountDescription(accountId),
+          accountIdentifier: uiAccountDescription(account),
           command: uiCommandReference('hs project upload'),
         })
       );
@@ -172,7 +171,7 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(
         e,
-        new ApiErrorContext({ accountId, request: 'project deploy' })
+        new ApiErrorContext({ accountId: account, request: 'project deploy' })
       );
     }
     return process.exit(EXIT_CODES.ERROR);

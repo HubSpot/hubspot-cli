@@ -1,5 +1,4 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { logErrorInstance } = require('../../lib/errorHandlers/standardErrors');
 const { fetchReleaseData } = require('@hubspot/local-dev-lib/github');
 
@@ -24,11 +23,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
+  const { account } = options;
+
   logger.log('');
   logger.log(i18n(`${i18nKey}.creatingComponent.message`));
   logger.log('');
-
-  const accountId = getAccountId(options);
 
   const releaseData = await fetchReleaseData(
     HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH
@@ -47,7 +46,7 @@ exports.handler = async options => {
     component = components.find(t => t.path === options.type);
   }
 
-  trackCommandUsage('project-add', null, accountId);
+  trackCommandUsage('project-add', null, account);
 
   try {
     await createProjectComponent(component, name, projectComponentsVersion);

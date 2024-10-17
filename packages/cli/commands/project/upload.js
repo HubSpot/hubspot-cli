@@ -1,7 +1,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
@@ -36,25 +35,24 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath, message } = options;
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
+  const { forceCreate, path: projectPath, message, account } = options;
+  const accountConfig = getAccountConfig(account);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, accountId);
+  trackCommandUsage('project-upload', { type: accountType }, account);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, {
+  await ensureProjectExists(account, projectConfig.name, {
     forceCreate,
     uploadCommand: true,
   });
 
   try {
     const result = await handleProjectUpload(
-      accountId,
+      account,
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
@@ -74,7 +72,7 @@ exports.handler = async options => {
         logApiErrorInstance(
           result.uploadError,
           new ApiErrorContext({
-            accountId,
+            accountId: account,
             request: 'project upload',
           })
         );
@@ -98,13 +96,13 @@ exports.handler = async options => {
       );
       logFeedbackMessage(result.buildId);
 
-      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(account, projectConfig.name, result.buildId);
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
     logApiErrorInstance(
       e,
-      new ApiErrorContext({ accountId, request: 'project upload' })
+      new ApiErrorContext({ accountId: account, request: 'project upload' })
     );
     process.exit(EXIT_CODES.ERROR);
   }
