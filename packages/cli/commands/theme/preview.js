@@ -2,11 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  addAccountOptions,
-  addConfigOptions,
-  getAccountId,
-} = require('../../lib/commonOpts');
+const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
@@ -110,11 +106,9 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { notify, skipUpload, noSsl, port, debug } = options;
+  const { notify, skipUpload, noSsl, port, debug, account } = options;
 
   await loadAndValidateOptions(options);
-
-  const accountId = getAccountId(options);
 
   const { absoluteSrc, dest } = await determineSrcAndDest(options);
 
@@ -163,7 +157,7 @@ exports.handler = async options => {
           logApiUploadErrorInstance(
             result.error,
             new ApiErrorContext({
-              accountId,
+              accountId: account,
               request: dest,
               payload: result.file,
             })
@@ -173,9 +167,9 @@ exports.handler = async options => {
     },
   };
 
-  trackCommandUsage('preview', accountId);
+  trackCommandUsage('preview', account);
 
-  preview(accountId, absoluteSrc, dest, {
+  preview(account, absoluteSrc, dest, {
     notify,
     filePaths,
     skipUpload,
