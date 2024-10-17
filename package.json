@@ -41,15 +41,14 @@
     "typescript": "^5.6.2"
   },
   "scripts": {
-    "build": "rm -rf ./dist/ && tsc && yarn copy-files",
-    "copy-files": "cp -r lang dist/lang && cp bin/hs dist/bin/hs && cp bin/hscms dist/bin/hscms",
+    "build": "bash ./scripts/build.sh",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",
     "test": "jest",
     "test-cli": "yarn --cwd 'acceptance-tests' test-ci",
     "test-cli-debug": "yarn --cwd 'acceptance-tests' test-debug",
     "test-cli-qa": "yarn --cwd 'acceptance-tests' test-qa",
-    "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn test-cli",
+    "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn --cwd 'acceptance-tests' test-latest",
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
     "release": "bash ./scripts/release.sh",
