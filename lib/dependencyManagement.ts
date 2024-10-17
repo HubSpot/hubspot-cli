@@ -28,7 +28,7 @@ class NoPackageJsonFilesError extends Error {
   }
 }
 
-async function isGloballyInstalled(command) {
+export async function isGloballyInstalled(command) {
   const exec = util.promisify(execAsync);
   try {
     await exec(`${command} --version`);
@@ -150,7 +150,7 @@ async function getProjectPackageJsonLocations() {
   return packageParentDirs;
 }
 
-async function packagesNeedInstalled(directory) {
+export async function packagesNeedInstalled(directory) {
   const exec = util.promisify(execAsync);
   const { stdout } = await exec(`npm install --ignore-scripts --dry-run`, {
     cwd: directory,

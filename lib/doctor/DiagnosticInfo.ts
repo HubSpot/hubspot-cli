@@ -18,19 +18,20 @@ import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
 import { exec as execAsync } from 'child_process';
 import * as process from 'node:process';
-import {string} from "yargs";
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
-export interface DiagnosticInfo {
-  path?: string;
+interface FilesInfo {
   files: string[];
-  envFiles: string[];
   configFiles: string[];
   packageFiles: string[];
   packageLockFiles: string[];
+  envFiles: string[];
   jsonFiles: string[];
+}
 
+export interface DiagnosticInfo extends FilesInfo {
+  path?: string;
   versions: { '@hubspot/cli': string; node: string; npm: string | null };
   project: {
     details?: Project;
@@ -129,54 +130,54 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  generateFilesArrays() {
-    this.files?.reduce(
-      (acc: {
-        configFiles: string[]
-        packageFiles: string[]
-        packageLockFiles: string[]
-        envFiles: string[]
-        jsonFiles: string[]
-      }, file) => {
+  generateFilesArrays(): FilesInfo {
+    const output: FilesInfo = {
+      files: this.files || [],
+      configFiles: [],
+      packageFiles: [],
+      packageLockFiles: [],
+      envFiles: [],
+      jsonFiles: [],
+    };
 
-        const {base } = path.parse(file)
-        if(base === 'package.json') {
-          acc.packageFiles.push(file)
-        }
+    if (!this.files) {
+      return output;
+    }
+    return this.files?.reduce((acc: FilesInfo, file) => {
+      const { base } = path.parse(file);
+      if (base === 'package.json') {
+        acc.packageFiles.push(file);
+      }
 
-        if([
+      if (
+        [
           'serverless.json',
           'hsproject.json',
           'app.json',
           'public-app.json',
-        ].includes(base)) {
-          acc.configFiles.push(file)
-        }
-
-        if(base === 'package-local.json') {
-          acc.packageLockFiles.push(file)
-        }
-
-        if() {
-
-        }
-            envFiles: this.files?.filter(file => file.endsWith('.env')) || [],
-            jsonFiles:
-        this.files?.filter(file => path.extname(file) === '.json') || [],
-        return acc;
-      },
-      {
-        configFiles: [],
-        packageFiles: [],
-        packageLockFiles: [],
-        envFiles: [],
-        jsonFiles: [],
+        ].includes(base)
+      ) {
+        acc.configFiles.push(file);
       }
-    );
+
+      if (base === 'package-local.json') {
+        acc.packageLockFiles.push(file);
+      }
+
+      if (file.endsWith('.env')) {
+        acc.envFiles.push();
+      }
+
+      if (file.endsWith('.json')) {
+        acc.envFiles.push();
+      }
+
+      return acc;
+    }, output);
   }
 
   async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
-    this._projectConfig = await getProjectConfig();
+    this._projectConfig = await getProjectConfig(null);
 
     if (this._projectConfig?.projectConfig) {
       await this.fetchProjectDetails();
@@ -212,26 +213,7 @@ export class DiagnosticInfoBuilder {
         config: this._projectConfig,
         details: this.projectDetails,
       },
-      packageFiles:
-        this.files?.filter(file => {
-          return path.parse(file).base === 'package.json';
-        }) || [],
-      configFiles:
-        this.files?.filter(file => {
-          return [
-            'serverless.json',
-            'hsproject.json',
-            'app.json',
-            'public-app.json',
-          ].includes(path.parse(file).base);
-        }) || [],
-      packageLockFiles:
-        this.files?.filter(file => {
-          return path.parse(file).base === 'package-lock.json';
-        }) || [],
-      envFiles: this.files?.filter(file => file.endsWith('.env')) || [],
-      jsonFiles:
-        this.files?.filter(file => path.extname(file) === '.json') || [],
+      ...this.generateFilesArrays(),
       files: this.files || [],
     };
   }

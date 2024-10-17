@@ -79,7 +79,7 @@ const getProjectConfigPath = _dir => {
   return configPath;
 };
 
-const getProjectConfig = async _dir => {
+export const getProjectConfig = async _dir => {
   const configPath = await getProjectConfigPath(_dir);
   if (!configPath) {
     return { projectConfig: null, projectDir: null };

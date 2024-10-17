@@ -97,7 +97,7 @@ function colorOptions({ color, succeedColor, failColor, spinnerColor }) {
   return colors;
 }
 
-function prefixOptions({ succeedPrefix, failPrefix }) {
+export function prefixOptions({ succeedPrefix, failPrefix }) {
   if (terminalSupportsUnicode()) {
     succeedPrefix = succeedPrefix || '✓';
     failPrefix = failPrefix || '✖';

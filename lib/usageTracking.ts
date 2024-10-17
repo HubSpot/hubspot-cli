@@ -43,7 +43,7 @@ const getNodeVersionData = () => ({
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
 
-function trackCommandUsage(command, meta = {}, accountId) {
+export function trackCommandUsage(command, meta = {}, accountId) {
   if (!isTrackingAllowed()) {
     return;
   }
