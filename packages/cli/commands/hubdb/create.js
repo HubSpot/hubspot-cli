@@ -14,7 +14,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -25,13 +24,11 @@ exports.command = 'create <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src } = options;
+  const { src, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('hubdb-create', null, accountId);
+  trackCommandUsage('hubdb-create', null, account);
 
   try {
     const filePath = path.resolve(getCwd(), src);
@@ -39,13 +36,10 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
 
-    const table = await createHubDbTable(
-      accountId,
-      path.resolve(getCwd(), src)
-    );
+    const table = await createHubDbTable(account, path.resolve(getCwd(), src));
     logger.success(
       i18n(`${i18nKey}.success.create`, {
-        accountId,
+        accountId: account,
         rowCount: table.rowCount,
         tableId: table.tableId,
       })

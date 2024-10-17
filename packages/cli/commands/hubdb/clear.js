@@ -10,7 +10,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -20,16 +19,14 @@ exports.command = 'clear <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId } = options;
+  const { tableId, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('hubdb-clear', null, accountId);
+  trackCommandUsage('hubdb-clear', null, account);
 
   try {
-    const { deletedRowCount } = await clearHubDbTableRows(accountId, tableId);
+    const { deletedRowCount } = await clearHubDbTableRows(account, tableId);
     if (deletedRowCount > 0) {
       logger.log(
         i18n(`${i18nKey}.logs.removedRows`, {
@@ -37,7 +34,7 @@ exports.handler = async options => {
           tableId,
         })
       );
-      const { rowCount } = await publishTable(accountId, tableId);
+      const { rowCount } = await publishTable(account, tableId);
       logger.log(
         i18n(`${i18nKey}.logs.rowCount`, {
           rowCount,
