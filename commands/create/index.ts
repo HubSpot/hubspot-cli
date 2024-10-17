@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 module.exports = {
   'api-sample': require('./api-sample'),
   app: require('./app'),

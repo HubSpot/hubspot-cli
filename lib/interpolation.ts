@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const helpers = require('./interpolationHelpers');
 const delimiters = {
   interpolation: {

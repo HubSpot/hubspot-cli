@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {

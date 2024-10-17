@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { getProjectConfig, ensureProjectExists } = require('./projects');
 const {
   fetchProjectComponentsMetadata,

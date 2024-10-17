@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 
 const addSecretCommand = require('./secrets/addSecret');

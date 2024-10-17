@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 /*
  * 0: Successful run
  * 1: Config problem or internal error

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const path = require('path');
 const fs = require('fs');
 const { promptUser } = require('./promptUtils');

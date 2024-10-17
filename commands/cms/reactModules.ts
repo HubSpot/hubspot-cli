@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const fs = require('fs');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { retrieveDefaultModule } = require('@hubspot/local-dev-lib/cms/modules');

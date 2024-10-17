@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');

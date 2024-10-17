@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { renameAccount } = require('@hubspot/local-dev-lib/config');
 

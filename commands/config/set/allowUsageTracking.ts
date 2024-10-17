@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { updateAllowUsageTracking } = require('@hubspot/local-dev-lib/config');
 const { trackCommandUsage } = require('../../../lib/usageTracking');

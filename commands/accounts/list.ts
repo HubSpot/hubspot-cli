@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');

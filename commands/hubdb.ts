@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const createCommand = require('./hubdb/create');
 const fetchCommand = require('./hubdb/fetch');

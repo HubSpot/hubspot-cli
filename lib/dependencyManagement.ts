@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('./projects');
 const { exec: execAsync } = require('child_process');

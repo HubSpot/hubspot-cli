@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const fs = require('fs');
 const path = require('path');
 const { i18n } = require('../../lib/lang');

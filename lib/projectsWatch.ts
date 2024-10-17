@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const chokidar = require('chokidar');
 const path = require('path');
 const chalk = require('chalk');

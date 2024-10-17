@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const readline = require('readline');
 const {
   logger,

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { i18n } = require('../lib/lang');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const lighthouseScore = require('./cms/lighthouseScore');

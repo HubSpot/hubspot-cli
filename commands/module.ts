@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const marketplaceValidate = require('./module/marketplace-validate');
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 // const { i18n } = require('../lib/lang');

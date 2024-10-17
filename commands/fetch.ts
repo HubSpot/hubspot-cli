@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileMapper');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {

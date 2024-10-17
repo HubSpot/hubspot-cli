@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const process = require('process');
 const os = require('os');
 const tty = require('tty');

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { projectLogsPrompt } = require('../projectsLogsPrompt');
 
 jest.mock('../promptUtils');

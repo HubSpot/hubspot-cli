@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { lint } = require('@hubspot/local-dev-lib/cms/validate');
 const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/local-dev-lib/logger');

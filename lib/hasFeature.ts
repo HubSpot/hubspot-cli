@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const {
   fetchEnabledFeatures,
 } = require('@hubspot/local-dev-lib/api/localDevAuth');

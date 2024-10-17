@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const getPlatform = () => {
   switch (process.platform) {
     case 'darwin':

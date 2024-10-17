@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { cloneGithubRepo } = require('@hubspot/local-dev-lib/github');
 const { getIsInProject } = require('../../lib/projects');
 

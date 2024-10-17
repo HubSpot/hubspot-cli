@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const createCommand = require('./schema/create');
 const fetchCommand = require('./schema/fetch');
 const fetchAllCommand = require('./schema/fetch-all');

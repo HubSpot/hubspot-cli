@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const {
   LOG_LEVEL,
   setLogLevel: setLoggerLogLevel,

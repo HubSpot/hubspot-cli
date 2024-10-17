@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const marketplaceValidate = require('./theme/marketplace-validate');
 const generateSelectors = require('./theme/generate-selectors');
 const previewCommand = require('./theme/preview');

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { i18n } = require('../../lib/lang');
 const { createWatcher } = require('../../lib/projectsWatch');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');

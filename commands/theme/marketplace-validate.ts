@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addConfigOptions,

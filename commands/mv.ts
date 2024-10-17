@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { moveFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');

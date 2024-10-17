@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const path = require('path');
 const fs = require('fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');

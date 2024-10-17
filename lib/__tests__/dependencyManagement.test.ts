@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('@hubspot/local-dev-lib/fs');

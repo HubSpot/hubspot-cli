@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 /**
  * To add a new asset type: See vue-app.js for a simple example
  * 1. Create a new file under the `create` directory with the command name being the name of the file

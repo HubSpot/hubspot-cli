@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const fs = require('fs');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/local-dev-lib/logger');

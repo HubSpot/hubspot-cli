@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { deleteFile } = require('@hubspot/local-dev-lib/api/fileMapper');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../lib/errorHandlers/index');

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const open = require('open');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');

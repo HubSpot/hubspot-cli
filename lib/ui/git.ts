@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const os = require('os');
 const { checkGitInclusion } = require('@hubspot/local-dev-lib/gitignore');
 const { logger } = require('@hubspot/local-dev-lib/logger');

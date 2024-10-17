@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { fetchSecrets } = require('@hubspot/local-dev-lib/api/secrets');

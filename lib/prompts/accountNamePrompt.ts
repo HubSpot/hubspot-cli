@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
 const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');

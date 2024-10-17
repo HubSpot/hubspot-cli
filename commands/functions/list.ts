@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { getRoutes } = require('@hubspot/local-dev-lib/api/functions');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');

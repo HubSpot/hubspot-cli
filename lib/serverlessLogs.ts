@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const https = require('https');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { handleExit, handleKeypress } = require('./process');

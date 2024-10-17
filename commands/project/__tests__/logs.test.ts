@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/validation');

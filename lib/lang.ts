@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const util = require('util');
 const path = require('path');
 const fs = require('fs-extra');

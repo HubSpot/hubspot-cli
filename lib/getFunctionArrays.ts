@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const moment = require('moment');
 
 const getFunctionArrays = resp => {

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {

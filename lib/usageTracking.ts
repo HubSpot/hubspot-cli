@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { trackUsage } = require('@hubspot/local-dev-lib/trackUsage');
 const {
   isTrackingAllowed,

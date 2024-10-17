@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const express = require('express');
 const open = require('open');
 const {

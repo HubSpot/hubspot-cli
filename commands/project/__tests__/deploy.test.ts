@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 jest.mock('../../../lib/commonOpts');
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');

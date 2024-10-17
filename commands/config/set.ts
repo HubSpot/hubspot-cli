@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getAccountId } = require('../../lib/commonOpts');

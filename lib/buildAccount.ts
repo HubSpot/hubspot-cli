@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const {
   getAccessToken,
   updateConfigWithAccessToken,

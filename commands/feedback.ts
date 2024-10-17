@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const open = require('open');
 
 const { i18n } = require('../lib/lang');

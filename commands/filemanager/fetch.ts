@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { downloadFileOrFolder } = require('@hubspot/local-dev-lib/fileManager');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { resolveLocalPath } = require('../../lib/filesystem');

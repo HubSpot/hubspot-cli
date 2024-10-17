@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const chalk = require('chalk');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');

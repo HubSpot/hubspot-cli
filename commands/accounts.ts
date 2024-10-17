@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const { i18n } = require('../lib/lang');
 const list = require('./accounts/list');

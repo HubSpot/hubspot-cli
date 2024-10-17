@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { createTemplate } = require('@hubspot/local-dev-lib/cms/templates');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');

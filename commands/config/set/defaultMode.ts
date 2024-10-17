@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { updateDefaultMode } = require('@hubspot/local-dev-lib/config');
 const { MODE } = require('@hubspot/local-dev-lib/constants/files');

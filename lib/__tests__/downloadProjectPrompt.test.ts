@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 jest.mock('@hubspot/local-dev-lib/api/projects', () => ({
   fetchProjects: jest.fn().mockResolvedValue({
     data: { results: [] },

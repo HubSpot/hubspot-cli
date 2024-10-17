@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { createModule } = require('@hubspot/local-dev-lib/cms/modules');
 const { i18n } = require('../../lib/lang');

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH =
   'HubSpot/hubspot-project-components';
 const DEFAULT_PROJECT_TEMPLATE_BRANCH = 'main';

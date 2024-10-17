@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 

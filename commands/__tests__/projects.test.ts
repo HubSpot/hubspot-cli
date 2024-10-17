@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { command, describe: projectDescribe, builder } = require('../project');
 
 jest.mock('../project/deploy');

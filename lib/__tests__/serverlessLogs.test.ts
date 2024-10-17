@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const mockStdIn = require('mock-stdin');
 const { outputLogs } = require('../ui/serverlessFunctionLogs');
 const { tailLogs } = require('../serverlessLogs');

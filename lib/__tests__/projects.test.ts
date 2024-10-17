@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 jest.mock('@hubspot/local-dev-lib/logger');
 
 const fs = require('fs');

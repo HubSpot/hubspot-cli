@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const {
   createApiSamplePrompt,
 } = require('../../lib/prompts/createApiSamplePrompt');

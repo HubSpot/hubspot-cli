@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const fs = require('fs');
 const path = require('path');
 const { walk } = require('@hubspot/local-dev-lib/fs');

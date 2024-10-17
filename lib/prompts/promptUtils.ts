@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const inquirer = require('inquirer');
 
 const promptUser = async promptConfig => {

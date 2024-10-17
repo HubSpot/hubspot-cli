@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
 const list = require('./functions/list');
 const deploy = require('./functions/deploy');

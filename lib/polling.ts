@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { POLLING_DELAY, POLLING_STATUS } = require('./constants');
 
 const poll = (callback, accountId, taskId) => {

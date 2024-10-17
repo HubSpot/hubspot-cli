@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { updateDefaultAccount } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const process = require('process');
 
 // See https://github.com/sindresorhus/has-flag/blob/main/index.js (License: https://github.com/sindresorhus/has-flag/blob/main/license)

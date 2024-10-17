@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { version } = require('../package.json');
 const { getPlatform } = require('./environment');
 

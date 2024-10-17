@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { getEnv } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {

@@ -1,4 +1,4 @@
-// @ts-nocheck 
+// @ts-nocheck
 const { createFunction } = require('@hubspot/local-dev-lib/cms/functions');
 const {
   createFunctionPrompt,
