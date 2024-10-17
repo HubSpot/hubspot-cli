@@ -6,7 +6,6 @@ const {
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { getAccountId } = require('../../lib/commonOpts');
 const {
   batchCreateObjects,
 } = require('@hubspot/local-dev-lib/api/customObjects');
@@ -19,13 +18,11 @@ exports.command = 'create <name> <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name } = options;
+  const { definition, name, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('custom-object-batch-create', null, accountId);
+  trackCommandUsage('custom-object-batch-create', null, account);
 
   const filePath = getAbsoluteFilePath(definition);
   const objectJson = checkAndConvertToJson(filePath);
@@ -35,10 +32,10 @@ exports.handler = async options => {
   }
 
   try {
-    await batchCreateObjects(accountId, name, objectJson);
+    await batchCreateObjects(account, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
-    logApiErrorInstance(e, { accountId });
+    logApiErrorInstance(e, { accountId: account });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

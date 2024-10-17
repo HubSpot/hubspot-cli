@@ -6,7 +6,7 @@ const {
   loadAndValidateOptions,
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
+const { addTestingOptions } = require('../../../lib/commonOpts');
 const {
   getEnv,
   isConfigFlagEnabled,
@@ -31,13 +31,11 @@ exports.command = 'create <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition } = options;
+  const { definition, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('custom-object-schema-create', null, accountId);
+  trackCommandUsage('custom-object-schema-create', null, account);
 
   const filePath = getAbsoluteFilePath(definition);
   const schemaJson = checkAndConvertToJson(filePath);
@@ -47,24 +45,24 @@ exports.handler = async options => {
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
-      await createSchemaFromHubFile(accountId, filePath);
+      await createSchemaFromHubFile(account, filePath);
       logger.success(
         i18n(`${i18nKey}.success.schemaCreated`, {
-          accountId,
+          accountId: account,
         })
       );
     } else {
-      const res = await createObjectSchema(accountId, schemaJson);
+      const res = await createObjectSchema(account, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.schemaViewable`, {
           url: `${getHubSpotWebsiteOrigin(
             getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${accountId}/objects/${res.objectTypeId}`,
+          )}/contacts/${account}/objects/${res.objectTypeId}`,
         })
       );
     }
   } catch (e) {
-    logApiErrorInstance(e, { accountId });
+    logApiErrorInstance(e, { accountId: account });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

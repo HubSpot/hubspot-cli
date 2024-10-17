@@ -9,7 +9,7 @@ const {
   loadAndValidateOptions,
 } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { addTestingOptions, getAccountId } = require('../../../lib/commonOpts');
+const { addTestingOptions } = require('../../../lib/commonOpts');
 const { CONFIG_FLAGS } = require('../../../lib/constants');
 const {
   getEnv,
@@ -31,13 +31,11 @@ exports.command = 'update <name> <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name } = options;
+  const { definition, name, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('custom-object-schema-update', null, accountId);
+  trackCommandUsage('custom-object-schema-update', null, account);
 
   const filePath = getAbsoluteFilePath(definition);
   const schemaJson = checkAndConvertToJson(filePath);
@@ -47,24 +45,24 @@ exports.handler = async options => {
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
-      await updateSchemaFromHubFile(accountId, filePath);
+      await updateSchemaFromHubFile(account, filePath);
       logger.success(
         i18n(`${i18nKey}.success.update`, {
-          accountId,
+          accountId: account,
         })
       );
     } else {
-      const res = await updateObjectSchema(accountId, name, schemaJson);
+      const res = await updateObjectSchema(account, name, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.viewAtUrl`, {
           url: `${getHubSpotWebsiteOrigin(
             getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${accountId}/objects/${res.objectTypeId}`,
+          )}/contacts/${account}/objects/${res.objectTypeId}`,
         })
       );
     }
   } catch (e) {
-    logApiErrorInstance(e, { accountId });
+    logApiErrorInstance(e, { accountId: account });
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
         definition,
