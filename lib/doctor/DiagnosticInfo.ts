@@ -3,7 +3,7 @@ import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import pkg from '../../package.json';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { Environment } from '@hubspot/local-dev-lib/types/Config';
+import { CLIConfig, Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
   AccessToken,
   AccountType,
@@ -12,7 +12,7 @@ import {
 import { Diagnosis } from './Diagnosis';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { getAccountId } from '../commonOpts';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
@@ -33,6 +33,7 @@ interface FilesInfo {
 export interface DiagnosticInfo extends FilesInfo {
   path?: string;
   versions: { '@hubspot/cli': string; node: string; npm: string | null };
+  config: string | null;
   project: {
     details?: Project;
     config?: ProjectConfig;
@@ -78,7 +79,50 @@ export class DiagnosticInfoBuilder {
     this.personalAccessKey = accountConfig?.personalAccessKey;
   }
 
-  async fetchProjectDetails() {
+  async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
+    this._projectConfig = await getProjectConfig(null);
+
+    if (this._projectConfig?.projectConfig) {
+      await this.fetchProjectDetails();
+      await this.getAccessToken();
+      await this.loadProjectFiles();
+    }
+
+    const {
+      platform,
+      arch,
+      versions: { node },
+      mainModule,
+    } = process;
+
+    return {
+      platform,
+      arch,
+      path: mainModule?.path,
+      config: getConfigPath(),
+      versions: {
+        '@hubspot/cli': pkg.version,
+        node,
+        npm: await this.getNpmVersion(),
+      },
+      account: {
+        accountId: this.accountId,
+        accountType: this.accountType,
+        authType: this.authType,
+        name: this.accessToken?.hubName,
+        scopeGroups: this.accessToken?.scopeGroups,
+        enabledFeatures: this.accessToken?.enabledFeatures,
+      },
+      project: {
+        config: this._projectConfig,
+        details: this.projectDetails,
+      },
+      ...this.generateFilesArrays(),
+      files: this.files || [],
+    };
+  }
+
+  private async fetchProjectDetails() {
     try {
       const { data } = await fetchProject(
         this.accountId!,
@@ -90,7 +134,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  async getAccessToken() {
+  private async getAccessToken() {
     try {
       this.accessToken = await getAccessToken(
         this.personalAccessKey!,
@@ -107,7 +151,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  async loadProjectFiles() {
+  private async loadProjectFiles() {
     try {
       this.files = (await walk(this._projectConfig?.projectDir!))
         .filter(file => !path.dirname(file).includes('node_modules'))
@@ -119,7 +163,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  async getNpmVersion() {
+  private async getNpmVersion() {
     const exec = util.promisify(execAsync);
     try {
       const { stdout } = await exec('npm --version');
@@ -130,7 +174,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  generateFilesArrays(): FilesInfo {
+  private generateFilesArrays(): FilesInfo {
     const output: FilesInfo = {
       files: this.files || [],
       configFiles: [],
@@ -174,47 +218,5 @@ export class DiagnosticInfoBuilder {
 
       return acc;
     }, output);
-  }
-
-  async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
-    this._projectConfig = await getProjectConfig(null);
-
-    if (this._projectConfig?.projectConfig) {
-      await this.fetchProjectDetails();
-      await this.getAccessToken();
-      await this.loadProjectFiles();
-    }
-
-    const {
-      platform,
-      arch,
-      versions: { node },
-      mainModule,
-    } = process;
-
-    return {
-      platform,
-      arch,
-      path: mainModule?.path,
-      versions: {
-        '@hubspot/cli': pkg.version,
-        node,
-        npm: await this.getNpmVersion(),
-      },
-      account: {
-        accountId: this.accountId,
-        accountType: this.accountType,
-        authType: this.authType,
-        name: this.accessToken?.hubName,
-        scopeGroups: this.accessToken?.scopeGroups,
-        enabledFeatures: this.accessToken?.enabledFeatures,
-      },
-      project: {
-        config: this._projectConfig,
-        details: this.projectDetails,
-      },
-      ...this.generateFilesArrays(),
-      files: this.files || [],
-    };
   }
 }

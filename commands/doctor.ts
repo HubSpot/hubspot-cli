@@ -5,7 +5,7 @@ import { Doctor } from '../lib/doctor/Doctor';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
-
+import { getCwd } from '@hubspot/local-dev-lib/path';
 interface DoctorOptions {
   'output-dir': string;
 }
@@ -31,6 +31,10 @@ export const handler = async ({
     const { diagnosis } = output;
     console.log(diagnosis);
     return process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  if (!path.isAbsolute(outputDir)) {
+    outputDir = path.join(getCwd(), outputDir);
   }
 
   const outputFile = path.join(

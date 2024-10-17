@@ -17,6 +17,7 @@ import {
   DiagnosticInfoBuilder,
   ProjectConfig,
 } from './DiagnosticInfo';
+import { getConfigPath } from '@hubspot/local-dev-lib/config';
 
 const minMajorNodeVersion = 18;
 
@@ -36,15 +37,12 @@ export class Doctor {
       text: 'Running diagnostics...',
     });
 
-    // TODO: Change this
     this.diagnosticInfo = await new DiagnosticInfoBuilder().generateDiagnosticInfo();
     this.projectConfig = this.diagnosticInfo?.project.config;
 
     this.diagnosis = new Diagnosis({
-      configFilePath: '',
-      defaultAccount: '',
-      projectDir: this.projectConfig?.projectDir!,
-      projectName: this.projectConfig?.projectConfig?.name,
+      diagnosticInfo: this.diagnosticInfo,
+      accountId: this.accountId,
     });
 
     await Promise.all([
@@ -67,10 +65,7 @@ export class Doctor {
   }
 
   performProjectChecks(): Array<Promise<void>> {
-    return [
-      ...this.checkIfNpmInstallRequired(),
-      ...this.validateProjectJsonFiles(),
-    ];
+    return [this.checkIfNpmInstallRequired(), this.validateProjectJsonFiles()];
   }
 
   performCliConfigChecks(): Array<Promise<void>> {
@@ -113,8 +108,7 @@ export class Doctor {
 
   async checkIfNpmIsInstalled() {
     try {
-      const npmInstalled = await isGloballyInstalled('npm');
-      if (!npmInstalled) {
+      if (!this.diagnosticInfo?.versions?.npm) {
         return this.diagnosis?.addCliSection({
           type: 'error',
           message: 'npm is not installed',
@@ -123,7 +117,7 @@ export class Doctor {
 
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: `npm is installed`,
+        message: `npm v${this.diagnosticInfo?.versions?.npm} is installed`,
       });
     } catch (e) {
       this.diagnosis?.addCliSection({
@@ -134,43 +128,49 @@ export class Doctor {
     }
   }
 
-  checkIfNpmInstallRequired() {
-    const checks = [];
+  async checkIfNpmInstallRequired() {
+    let foundError = false;
+
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
-      checks.push(
-        (async () => {
-          try {
-            const needsInstall = await packagesNeedInstalled(
-              path.join(this.projectConfig?.projectDir!, packageDirName)
-            );
-            if (needsInstall) {
-              return this.diagnosis?.addProjectSection({
-                type: 'error',
-                message: `missing dependencies in ${cyan(packageDirName)}`,
-                secondaryMessaging: `Run ${orange(
-                  '`hs project install-deps`'
-                )} to install all project dependencies locally`,
-              });
-            }
-          } catch (e) {
-            if (!(await this.isValidJsonFile(packageFile))) {
-              this.diagnosis?.addProjectSection({
-                type: 'error',
-                message: `invalid JSON in ${cyan(packageDirName)}`,
-              });
-              return;
-            }
-            this.diagnosis?.addProjectSection({
-              type: 'error',
-              message: `Unable to determine if dependencies are installed ${packageDirName}`,
-            });
-            logger.debug(e);
-          }
-        })()
-      );
+      try {
+        const needsInstall = await packagesNeedInstalled(
+          path.join(this.projectConfig?.projectDir!, packageDirName)
+        );
+
+        if (needsInstall) {
+          foundError = true;
+          this.diagnosis?.addProjectSection({
+            type: 'warning',
+            message: `missing dependencies in ${cyan(packageDirName)}`,
+            secondaryMessaging: `Run ${orange(
+              '`hs project install-deps`'
+            )} to install all project dependencies locally`,
+          });
+        }
+      } catch (e) {
+        foundError = true;
+        if (!(await this.isValidJsonFile(packageFile))) {
+          this.diagnosis?.addProjectSection({
+            type: 'error',
+            message: `invalid JSON in ${cyan(packageDirName)}`,
+          });
+        } else {
+          this.diagnosis?.addProjectSection({
+            type: 'error',
+            message: `Unable to determine if dependencies are installed ${packageDirName}`,
+          });
+        }
+        logger.debug(e);
+      }
     }
-    return checks;
+
+    if (!foundError) {
+      this.diagnosis?.addProjectSection({
+        type: 'success',
+        message: `App dependencies are installed an up to date`,
+      });
+    }
   }
 
   async isValidJsonFile(filename: string) {
@@ -184,32 +184,34 @@ export class Doctor {
     return true;
   }
 
-  validateProjectJsonFiles() {
-    const checks = [];
+  async validateProjectJsonFiles() {
+    let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
-      checks.push(
-        (async () => {
-          try {
-            if (
-              !(await this.isValidJsonFile(
-                path.join(this.projectConfig?.projectDir!, jsonFile)
-              ))
-            ) {
-              this.diagnosis?.addProjectSection({
-                type: 'error',
-                message: `invalid JSON in ${cyan(jsonFile)}`,
-              });
-            }
-          } catch (e) {
-            logger.debug(e);
-            this.diagnosis?.addProjectSection({
-              type: 'error',
-              message: `invalid JSON in ${cyan(jsonFile)}`,
-            });
-          }
-        })()
-      );
+      try {
+        if (
+          !(await this.isValidJsonFile(
+            path.join(this.projectConfig?.projectDir!, jsonFile)
+          ))
+        ) {
+          foundError = true;
+          this.diagnosis?.addProjectSection({
+            type: 'error',
+            message: `invalid JSON in ${cyan(jsonFile)}`,
+          });
+        }
+      } catch (e) {
+        logger.debug(e);
+        this.diagnosis?.addProjectSection({
+          type: 'error',
+          message: `invalid JSON in ${cyan(jsonFile)}`,
+        });
+      }
     }
-    return checks;
+    if (!foundError) {
+      this.diagnosis?.addProjectSection({
+        type: 'success',
+        message: `Config files are valid JSON`,
+      });
+    }
   }
 }

@@ -1,12 +1,12 @@
 import { prefixOptions } from '../ui/spinniesUtils';
 import { bold, cyan, green, red } from 'chalk';
 import { orange } from '../interpolationHelpers';
+import { DiagnosticInfo } from './DiagnosticInfo';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 
 interface DiagnosisOptions {
-  configFilePath: string;
-  defaultAccount: string;
-  projectDir: string;
-  projectName: string;
+  diagnosticInfo: DiagnosticInfo;
+  accountId: number | null;
 }
 
 interface Section {
@@ -32,16 +32,16 @@ interface DiagnosisCategories {
 }
 
 export class Diagnosis {
-  private prefixes: prefixes;
+  private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
+  private readonly indentation = '  ';
+  errorCount = 0;
+  warningCount = 0;
 
-  constructor({
-    configFilePath,
-    defaultAccount,
-    projectDir,
-    projectName,
-  }: DiagnosisOptions) {
+  constructor({ diagnosticInfo, accountId }: DiagnosisOptions) {
     const { succeedPrefix, failPrefix } = prefixOptions({} as any);
+
+    const { name, accountType } = getAccountConfig(accountId!) || {};
 
     this.prefixes = {
       success: green(succeedPrefix),
@@ -57,20 +57,26 @@ export class Diagnosis {
       cliConfig: {
         header: 'CLI configuration',
         subheaders: [
-          `Project dir: ${cyan(projectDir)}`,
-          `Project name: ${cyan(projectName)}`,
+          `Config File: ${cyan(diagnosticInfo.config)}`,
+          `Default Account: ${cyan(`name [${accountType}](${accountId})`)}`,
         ],
-        sections: [],
+        sections: [{ type: 'success', message: 'Yooooooo' }],
       },
       project: {
         header: 'Project configuration',
         subheaders: [
-          `Project dir: ${cyan(projectDir)}`,
-          `Project name: ${cyan(projectName)}`,
+          `Project dir: ${cyan(diagnosticInfo.project.config?.projectDir)}`,
+          `Project name: ${cyan(
+            diagnosticInfo.project.config?.projectConfig.name
+          )}`,
         ],
         sections: [],
       },
     };
+  }
+
+  private indent(level: number) {
+    return this.indentation.repeat(level);
   }
 
   addCliSection(section: Section) {
@@ -91,6 +97,11 @@ export class Diagnosis {
       output.push(this.generateSections(value));
     }
 
+    output.push('');
+    output.push(`Errors:   ${this.errorCount}`);
+    output.push(`Warnings: ${this.warningCount}`);
+    output.push('');
+
     return output.join('\n');
   }
 
@@ -108,9 +119,17 @@ export class Diagnosis {
     });
 
     category.sections.forEach(section => {
-      output.push(`  ${this.prefixes[section.type]} ${section.message}`);
+      if (section.type === 'error') {
+        this.errorCount++;
+      } else if (section.type === 'warning') {
+        this.warningCount++;
+      }
+
+      output.push(
+        `${this.indent(1)}${this.prefixes[section.type]} ${section.message}`
+      );
       if (section.secondaryMessaging) {
-        output.push(`  - ${section.secondaryMessaging}`);
+        output.push(`${this.indent(2)}- ${section.secondaryMessaging}`);
       }
     });
 
