@@ -20,6 +20,10 @@ describe('hs config', () => {
         ['config', 'set'],
         [ENTER, DOWN, ENTER]
       );
+
+      const parsedConfig = testState.getParsedConfig();
+
+      expect(parsedConfig.defaultMode).toEqual('draft');
     });
   });
 });
