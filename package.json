@@ -30,6 +30,7 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.13",
     "axios": "^1.7.2",
     "eslint": "^8.56.0",
     "husky": "^4.3.8",
