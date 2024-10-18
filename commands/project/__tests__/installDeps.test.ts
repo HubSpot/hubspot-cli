@@ -1,14 +1,9 @@
 // @ts-nocheck
-jest.mock('../../../lib/projects');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/dependencyManagement');
-jest.mock('../../../lib/prompts/promptUtils');
-jest.mock('../../../lib/usageTracking');
-jest.mock('../../../lib/commonOpts');
-
+const yargs = require('yargs');
+const path = require('path');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('../../../lib/projects');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
-const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { getAccountId } = require('../../../lib/commonOpts');
 const {
@@ -16,37 +11,34 @@ const {
   getProjectPackageJsonLocations,
 } = require('../../../lib/dependencyManagement');
 const { promptUser } = require('../../../lib/prompts/promptUtils');
-const {
-  command,
-  describe: installDepsDescribe,
-  builder,
-  handler,
-} = require('../installDeps');
-const path = require('path');
+
+jest.mock('yargs');
+jest.mock('@hubspot/local-dev-lib/logger');
+jest.mock('../../../lib/projects');
+jest.mock('../../../lib/dependencyManagement');
+jest.mock('../../../lib/prompts/promptUtils');
+jest.mock('../../../lib/usageTracking');
+jest.mock('../../../lib/commonOpts');
+
+// Import this last so mocks apply
+const installDepsCommand = require('../installDeps');
 
 describe('commands/project/installDeps', () => {
   describe('command', () => {
-    it('should have the correct command string', () => {
-      expect(command).toEqual('install-deps [packages..]');
+    it('should have the correct command structure', () => {
+      expect(installDepsCommand.command).toEqual('install-deps [packages..]');
     });
   });
 
   describe('describe', () => {
-    it('should have the correct description', () => {
-      expect(installDepsDescribe).toEqual(null);
+    it('should not provide a description', () => {
+      expect(installDepsCommand.describe).toEqual(null);
     });
   });
 
   describe('builder', () => {
-    let yargs;
-    beforeEach(() => {
-      yargs = {
-        example: jest.fn().mockImplementation(() => yargs),
-      };
-    });
-
-    it('should add correct examples', () => {
-      builder(yargs);
+    it('should provide examples', () => {
+      installDepsCommand.builder(yargs);
       expect(yargs.example).toHaveBeenCalledTimes(1);
       expect(yargs.example).toHaveBeenCalledWith([
         ['$0 project install-deps', 'Install the dependencies for the project'],
@@ -68,7 +60,7 @@ describe('commands/project/installDeps', () => {
     it('should track the command usage', async () => {
       const accountId = 999999;
       getAccountId.mockReturnValue(accountId);
-      await handler({});
+      await installDepsCommand.handler({});
 
       expect(getAccountId).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
@@ -86,7 +78,7 @@ describe('commands/project/installDeps', () => {
         throw error;
       });
 
-      await handler({});
+      await installDepsCommand.handler({});
 
       expect(logger.debug).toHaveBeenCalledTimes(1);
       expect(logger.debug).toHaveBeenCalledWith(error);
@@ -100,7 +92,7 @@ describe('commands/project/installDeps', () => {
 
     it('should log an error and exit when the project config is not defined', async () => {
       getProjectConfig.mockResolvedValueOnce(null);
-      await handler({});
+      await installDepsCommand.handler({});
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -112,7 +104,7 @@ describe('commands/project/installDeps', () => {
 
     it('should log an error and exit when the project config has no projectDir', async () => {
       getProjectConfig.mockResolvedValueOnce({ projectDir: null });
-      await handler({});
+      await installDepsCommand.handler({});
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -128,7 +120,9 @@ describe('commands/project/installDeps', () => {
       const packageJsonLocation = path.join(projectDir, 'directory1');
       promptUser.mockResolvedValueOnce(packageJsonLocation);
       getProjectPackageJsonLocations.mockResolvedValue([packageJsonLocation]);
-      await handler({ packages: ['@hubspot/local-dev-lib'] });
+      await installDepsCommand.handler({
+        packages: ['@hubspot/local-dev-lib'],
+      });
       expect(getProjectPackageJsonLocations).toHaveBeenCalledTimes(1);
       expect(promptUser).toHaveBeenCalledTimes(1);
       expect(promptUser).toHaveBeenCalledWith([
@@ -157,7 +151,7 @@ describe('commands/project/installDeps', () => {
       getProjectConfig.mockResolvedValue({ projectDir });
       promptUser.mockResolvedValueOnce(packageJsonLocation);
       getProjectPackageJsonLocations.mockResolvedValue(installLocations);
-      await handler({ packages });
+      await installDepsCommand.handler({ packages });
 
       expect(installPackages).toHaveBeenCalledTimes(1);
       expect(installPackages).toHaveBeenCalledWith({

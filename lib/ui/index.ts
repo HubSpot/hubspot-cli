@@ -21,7 +21,7 @@ const UI_COLORS = {
  *
  * @returns
  */
-const uiLine = () => {
+export const uiLine = () => {
   logger.log('-'.repeat(50));
 };
 
@@ -46,7 +46,7 @@ const getTerminalUISupport = () => {
  * @param {object} options
  * @returns {string}
  */
-const uiLink = (linkText, url) => {
+export const uiLink = (linkText, url) => {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
 
