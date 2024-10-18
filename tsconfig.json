@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "allowJs": true,
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "noErrorTruncation": true
   },
   "include": ["bin", "commands", "lib"],
   "exclude": ["**/__tests__/*"]

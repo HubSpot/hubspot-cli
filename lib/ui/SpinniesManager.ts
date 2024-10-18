@@ -282,4 +282,6 @@ class SpinniesManager {
   }
 }
 
-module.exports = new SpinniesManager();
+const toExport = new SpinniesManager();
+export default toExport;
+module.exports = toExport;
