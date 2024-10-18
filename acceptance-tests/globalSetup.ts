@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, rmSync } from 'fs';
-import { testOutputDir } from './lib/testState';
+import { testOutputDir } from './lib/TestState';
 import type { GlobalSetupContext } from 'vitest/node'
 import { getTestConfig } from "./lib/env";
 
