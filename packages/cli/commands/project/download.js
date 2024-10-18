@@ -1,10 +1,7 @@
 const path = require('path');
 const chalk = require('chalk');
 
-const {
-  getAccountId,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
+const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const {
@@ -41,29 +38,23 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, buildNumber } = options;
+  const { project, dest, buildNumber, account } = options;
   let { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('project-download', null, accountId);
+  trackCommandUsage('project-download', null, account);
 
   try {
-    const { projectExists } = await ensureProjectExists(
-      accountId,
-      projectName,
-      {
-        allowCreate: false,
-        noLogs: true,
-      }
-    );
+    const { projectExists } = await ensureProjectExists(account, projectName, {
+      allowCreate: false,
+      noLogs: true,
+    });
 
     if (!projectExists) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountId: chalk.bold(accountId),
+          accountId: chalk.bold(account),
         })
       );
       let { name: promptedProjectName } = await downloadProjectPrompt(options);
@@ -77,7 +68,7 @@ exports.handler = async options => {
     if (!buildNumberToDownload) {
       let projectBuildsResult;
 
-      projectBuildsResult = await fetchProjectBuilds(accountId, projectName);
+      projectBuildsResult = await fetchProjectBuilds(account, projectName);
 
       const { results: projectBuilds } = projectBuildsResult;
 
@@ -88,7 +79,7 @@ exports.handler = async options => {
     }
 
     const zippedProject = await downloadProject(
-      accountId,
+      account,
       projectName,
       buildNumberToDownload
     );
@@ -110,7 +101,7 @@ exports.handler = async options => {
   } catch (e) {
     logApiErrorInstance(
       e,
-      new ApiErrorContext({ accountId, request: 'project download' })
+      new ApiErrorContext({ accountId: account, request: 'project download' })
     );
     process.exit(EXIT_CODES.ERROR);
   }

@@ -3,7 +3,6 @@ const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -37,10 +36,9 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath, limit } = options;
-  const accountId = getAccountId(options);
+  const { path: projectPath, limit, account } = options;
 
-  trackCommandUsage('project-list-builds', null, accountId);
+  trackCommandUsage('project-list-builds', null, account);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const { projectConfig, projectDir } = await getProjectConfig(cwd);
@@ -51,7 +49,7 @@ exports.handler = async options => {
 
   const fetchAndDisplayBuilds = async (project, options) => {
     const { results, paging } = await fetchProjectBuilds(
-      accountId,
+      account,
       project.name,
       options
     );
@@ -65,7 +63,7 @@ exports.handler = async options => {
         `Showing the ${results.length} most recent builds for ${project.name}. ` +
           uiLink(
             'View all builds in project details.',
-            getProjectDetailUrl(project.name, accountId)
+            getProjectDetailUrl(project.name, account)
           )
       );
     }
@@ -120,7 +118,7 @@ exports.handler = async options => {
   };
 
   try {
-    const project = await fetchProject(accountId, projectConfig.name);
+    const project = await fetchProject(account, projectConfig.name);
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
@@ -129,7 +127,10 @@ exports.handler = async options => {
     } else {
       logApiErrorInstance(
         e,
-        new ApiErrorContext({ accountId, projectName: projectConfig.name })
+        new ApiErrorContext({
+          accountId: account,
+          projectName: projectConfig.name,
+        })
       );
     }
   }

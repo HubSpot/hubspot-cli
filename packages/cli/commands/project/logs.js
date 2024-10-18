@@ -3,10 +3,7 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   ENVIRONMENTS,
 } = require('@hubspot/local-dev-lib/constants/environments');
-const {
-  getAccountId,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
+const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
@@ -85,13 +82,13 @@ exports.command = 'logs';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const accountId = getAccountId(options);
-  trackCommandUsage('project-logs', null, accountId);
+  const { account } = options;
+  trackCommandUsage('project-logs', null, account);
 
   await loadAndValidateOptions(options);
 
   try {
-    await ProjectLogsManager.init(accountId);
+    await ProjectLogsManager.init(account);
 
     const { functionName } = await projectLogsPrompt({
       functionChoices: ProjectLogsManager.getFunctionNames(),
@@ -104,7 +101,7 @@ exports.handler = async options => {
     logPreamble();
   } catch (e) {
     logApiErrorInstance(e, {
-      accountId: getAccountId(),
+      accountId: account,
       projectName: ProjectLogsManager.projectName,
     });
     return process.exit(EXIT_CODES.ERROR);
