@@ -2,10 +2,7 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountId } from '../commonOpts';
 
 import SpinniesManager from '../ui/SpinniesManager';
-import {
-  isGloballyInstalled,
-  packagesNeedInstalled,
-} from '../dependencyManagement';
+import { packagesNeedInstalled } from '../dependencyManagement';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
@@ -17,7 +14,10 @@ import {
   DiagnosticInfoBuilder,
   ProjectConfig,
 } from './DiagnosticInfo';
-import { getConfigPath } from '@hubspot/local-dev-lib/config';
+import { isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
+import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
+import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
+import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 
 const minMajorNodeVersion = 18;
 
@@ -26,6 +26,7 @@ export class Doctor {
   private diagnosis?: Diagnosis;
   private projectConfig?: ProjectConfig;
   private diagnosticInfo?: DiagnosticInfo;
+  private diagnosticInfoBuilder?: DiagnosticInfoBuilder;
 
   constructor() {
     SpinniesManager.init();
@@ -37,11 +38,13 @@ export class Doctor {
       text: 'Running diagnostics...',
     });
 
-    this.diagnosticInfo = await new DiagnosticInfoBuilder().generateDiagnosticInfo();
+    this.diagnosticInfoBuilder = new DiagnosticInfoBuilder();
+    this.diagnosticInfo = await this.diagnosticInfoBuilder.generateDiagnosticInfo();
+
     this.projectConfig = this.diagnosticInfo?.project.config;
 
     this.diagnosis = new Diagnosis({
-      diagnosticInfo: this.diagnosticInfo,
+      diagnosticInfo: this.diagnosticInfo!,
       accountId: this.accountId,
     });
 
@@ -60,19 +63,47 @@ export class Doctor {
     return this.diagnosticInfo;
   }
 
-  performCliChecks(): Array<Promise<void>> {
+  private performCliChecks(): Array<Promise<void>> {
     return [this.checkIfNodeIsInstalled(), this.checkIfNpmIsInstalled()];
   }
 
-  performProjectChecks(): Array<Promise<void>> {
-    return [this.checkIfNpmInstallRequired(), this.validateProjectJsonFiles()];
+  private performProjectChecks(): Array<Promise<void>> {
+    return [
+      this.checkIfNpmInstallRequired(),
+      this.checkProjectConfigJsonFiles(),
+      this.checkIfPortsAreAvailable(),
+    ];
   }
 
-  performCliConfigChecks(): Array<Promise<void>> {
-    return [];
+  private performCliConfigChecks(): Array<Promise<void>> {
+    return [this.checkIfAccessTokenValid()];
   }
 
-  async checkIfNodeIsInstalled() {
+  private async checkIfAccessTokenValid(): Promise<void> {
+    try {
+      await accessTokenForPersonalAccessKey(this.accountId!, true);
+      this.diagnosis?.addCLIConfigSection({
+        type: 'success',
+        message: 'Default account active',
+      });
+    } catch (error) {
+      const portalNotActive = isSpecifiedError(error, {
+        statusCode: 401,
+        category: 'INVALID_AUTHENTICATION',
+        subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
+      });
+      if (portalNotActive) {
+        this.diagnosis?.addCLIConfigSection({
+          type: 'error',
+          message: `Default account isn't active`,
+          secondaryMessaging:
+            'Run `hs accounts clean` to remove inactive accounts from your CLI config',
+        });
+      }
+    }
+  }
+
+  private async checkIfNodeIsInstalled() {
     try {
       if (!this.diagnosticInfo?.versions.node) {
         return this.diagnosis?.addCliSection({
@@ -106,7 +137,7 @@ export class Doctor {
     }
   }
 
-  async checkIfNpmIsInstalled() {
+  private async checkIfNpmIsInstalled() {
     try {
       if (!this.diagnosticInfo?.versions?.npm) {
         return this.diagnosis?.addCliSection({
@@ -128,7 +159,7 @@ export class Doctor {
     }
   }
 
-  async checkIfNpmInstallRequired() {
+  private async checkIfNpmInstallRequired() {
     let foundError = false;
 
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
@@ -140,6 +171,7 @@ export class Doctor {
 
         if (needsInstall) {
           foundError = true;
+
           this.diagnosis?.addProjectSection({
             type: 'warning',
             message: `missing dependencies in ${cyan(packageDirName)}`,
@@ -150,6 +182,7 @@ export class Doctor {
         }
       } catch (e) {
         foundError = true;
+
         if (!(await this.isValidJsonFile(packageFile))) {
           this.diagnosis?.addProjectSection({
             type: 'error',
@@ -161,6 +194,7 @@ export class Doctor {
             message: `Unable to determine if dependencies are installed ${packageDirName}`,
           });
         }
+
         logger.debug(e);
       }
     }
@@ -173,9 +207,9 @@ export class Doctor {
     }
   }
 
-  async isValidJsonFile(filename: string) {
-    const readFile = util.promisify(fs.readFile);
+  private async isValidJsonFile(filename: string) {
     try {
+      const readFile = util.promisify(fs.readFile);
       const fileContents = await readFile(filename);
       JSON.parse(fileContents.toString());
     } catch (e) {
@@ -184,33 +218,39 @@ export class Doctor {
     return true;
   }
 
-  async validateProjectJsonFiles() {
+  private async checkProjectConfigJsonFiles() {
     let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
-      try {
-        if (
-          !(await this.isValidJsonFile(
-            path.join(this.projectConfig?.projectDir!, jsonFile)
-          ))
-        ) {
-          foundError = true;
-          this.diagnosis?.addProjectSection({
-            type: 'error',
-            message: `invalid JSON in ${cyan(jsonFile)}`,
-          });
-        }
-      } catch (e) {
-        logger.debug(e);
+      const fileToCheck = path.join(this.projectConfig?.projectDir!, jsonFile);
+      if (!(await this.isValidJsonFile(fileToCheck))) {
+        foundError = true;
         this.diagnosis?.addProjectSection({
           type: 'error',
           message: `invalid JSON in ${cyan(jsonFile)}`,
         });
       }
     }
+
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
         message: `Config files are valid JSON`,
+      });
+    }
+  }
+
+  private async checkIfPortsAreAvailable() {
+    if (await isPortManagerServerRunning()) {
+      this.diagnosis?.addProjectSection({
+        type: 'warning',
+        message: `Port ${PORT_MANAGER_SERVER_PORT} is in use`,
+        secondaryMessaging:
+          'Make sure it is available if before running `hs project dev`',
+      });
+    } else {
+      this.diagnosis?.addProjectSection({
+        type: 'success',
+        message: `Port ${PORT_MANAGER_SERVER_PORT} available for local development`,
       });
     }
   }

@@ -3,6 +3,7 @@ import { bold, cyan, green, red } from 'chalk';
 import { orange } from '../interpolationHelpers';
 import { DiagnosticInfo } from './DiagnosticInfo';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
@@ -58,9 +59,11 @@ export class Diagnosis {
         header: 'CLI configuration',
         subheaders: [
           `Config File: ${cyan(diagnosticInfo.config)}`,
-          `Default Account: ${cyan(`name [${accountType}](${accountId})`)}`,
+          `Default Account: ${cyan(
+            `name [${HUBSPOT_ACCOUNT_TYPE_STRINGS[accountType!]}](${accountId})`
+          )}`,
         ],
-        sections: [{ type: 'success', message: 'Yooooooo' }],
+        sections: [],
       },
       project: {
         header: 'Project configuration',
@@ -87,7 +90,7 @@ export class Diagnosis {
     this.diagnosis.project.sections.push(section);
   }
 
-  addCLIConfigError(section: Section) {
+  addCLIConfigSection(section: Section) {
     this.diagnosis.cliConfig.sections.push(section);
   }
 

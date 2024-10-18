@@ -28,8 +28,12 @@ export const handler = async ({
   const output = await doctor.diagnose();
 
   if (!outputDir) {
-    const { diagnosis } = output;
-    console.log(diagnosis);
+    if (output?.diagnosis) {
+      console.log(output.diagnosis);
+    } else {
+      logger.error('Error generating diagnosis');
+      return process.exit(EXIT_CODES.ERROR);
+    }
     return process.exit(EXIT_CODES.SUCCESS);
   }
 

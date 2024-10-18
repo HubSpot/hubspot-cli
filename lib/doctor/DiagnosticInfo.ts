@@ -3,13 +3,12 @@ import { fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import path from 'path';
 import pkg from '../../package.json';
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { CLIConfig, Environment } from '@hubspot/local-dev-lib/types/Config';
+import { Environment } from '@hubspot/local-dev-lib/types/Config';
 import {
   AccessToken,
   AccountType,
   AuthType,
 } from '@hubspot/local-dev-lib/types/Accounts';
-import { Diagnosis } from './Diagnosis';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
 import { getAccountId } from '../commonOpts';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
@@ -17,7 +16,6 @@ import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
 import { exec as execAsync } from 'child_process';
-import * as process from 'node:process';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
@@ -51,20 +49,19 @@ export interface DiagnosticInfo extends FilesInfo {
   diagnosis?: string;
 }
 
-export class DiagnosticInfoBuilder {
-  get projectConfig(): ProjectConfig {
-    return this._projectConfig;
-  }
+const configFiles = [
+  'serverless.json',
+  'hsproject.json',
+  'app.json',
+  'public-app.json',
+];
 
-  set projectConfig(value: ProjectConfig) {
-    this._projectConfig = value;
-  }
+export class DiagnosticInfoBuilder {
   accountId: number | null;
   private readonly env: Environment | undefined;
   private readonly authType: AuthType | undefined;
   private readonly accountType: AccountType | undefined;
   private readonly personalAccessKey: string | undefined;
-  private diagnosis?: Diagnosis;
   private _projectConfig?: ProjectConfig;
   private accessToken?: AccessToken;
   private projectDetails?: Project;
@@ -84,8 +81,8 @@ export class DiagnosticInfoBuilder {
 
     if (this._projectConfig?.projectConfig) {
       await this.fetchProjectDetails();
-      await this.getAccessToken();
-      await this.loadProjectFiles();
+      await this.fetchAccessToken();
+      await this.fetchProjectFilenames();
     }
 
     const {
@@ -134,7 +131,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  private async getAccessToken() {
+  async fetchAccessToken() {
     try {
       this.accessToken = await getAccessToken(
         this.personalAccessKey!,
@@ -142,16 +139,13 @@ export class DiagnosticInfoBuilder {
         this.accountId!
       );
     } catch (e) {
-      // TODO find the data returned from this
-      this.diagnosis?.addCLIConfigError({
-        type: 'error',
-        message: 'Unable to fetch access token',
-      });
       logger.debug(e);
     }
+
+    return this.accessToken;
   }
 
-  private async loadProjectFiles() {
+  private async fetchProjectFilenames() {
     try {
       this.files = (await walk(this._projectConfig?.projectDir!))
         .filter(file => !path.dirname(file).includes('node_modules'))
@@ -187,32 +181,19 @@ export class DiagnosticInfoBuilder {
     if (!this.files) {
       return output;
     }
-    return this.files?.reduce((acc: FilesInfo, file) => {
+
+    return this.files.reduce((acc: FilesInfo, file) => {
       const { base } = path.parse(file);
+
       if (base === 'package.json') {
         acc.packageFiles.push(file);
-      }
-
-      if (
-        [
-          'serverless.json',
-          'hsproject.json',
-          'app.json',
-          'public-app.json',
-        ].includes(base)
-      ) {
+      } else if (configFiles.includes(base)) {
         acc.configFiles.push(file);
-      }
-
-      if (base === 'package-local.json') {
+      } else if (base === 'package-lock.json') {
         acc.packageLockFiles.push(file);
-      }
-
-      if (file.endsWith('.env')) {
+      } else if (file.endsWith('.env')) {
         acc.envFiles.push();
-      }
-
-      if (file.endsWith('.json')) {
+      } else if (file.endsWith('.json')) {
         acc.envFiles.push();
       }
 
