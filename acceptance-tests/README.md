@@ -26,7 +26,6 @@ There are 2 ways to pass in necessary configuration to the script.
 ```bash
 ACCOUNT_ID="123456789"
 PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-CLI_PATH="hs"
 ```
 
 2. Through environment variables.
@@ -34,7 +33,6 @@ CLI_PATH="hs"
 ```bash
 export ACCOUNT_ID="123456789"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-export CLI_PATH="hs"
 ```
 
 ### Running Locally
