@@ -63,6 +63,9 @@ describe('Secrets Flow', () => {
         'delete',
         SECRET.name,
       ]);
+
+      // Wait for the secret to be added
+      await sleep(1000);
     });
   });
 
