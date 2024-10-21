@@ -1,12 +1,11 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';
 import { ENTER } from '../../lib/prompt';
 
-const TEMPLATE = {
-  name: 'test-template',
-  folder: 'test-template.html',
-};
-const NEW_TEMPLATE_FOLDER = 'test-template-moved.html';
+const TEMPLATE_NAME = uuidv4();
+const TEMPLATE_FOLDER = `${TEMPLATE_NAME}.html`;
+const NEW_TEMPLATE_FOLDER = `${uuidv4()}.html`;
 
 describe('CMS Template Flow', () => {
   let testState: TestState;
@@ -23,10 +22,10 @@ describe('CMS Template Flow', () => {
   describe('hs create', () => {
     it('should create a CMS template', async () => {
       await testState.cli.execute(
-        ['create', 'template', TEMPLATE.name],
+        ['create', 'template', TEMPLATE_NAME],
         [ENTER]
       );
-      expect(testState.existsInTestOutputDirectory(TEMPLATE.folder)).toBe(true);
+      expect(testState.existsInTestOutputDirectory(TEMPLATE_FOLDER)).toBe(true);
     });
   });
 
@@ -34,8 +33,8 @@ describe('CMS Template Flow', () => {
     it('should upload the template to the Design Manager', async () => {
       await testState.cli.executeWithTestConfig([
         'upload',
-        `--src=${TEMPLATE.folder}`,
-        `--dest=${TEMPLATE.folder}`,
+        `--src=${TEMPLATE_FOLDER}`,
+        `--dest=${TEMPLATE_FOLDER}`,
       ]);
     });
   });
@@ -43,7 +42,7 @@ describe('CMS Template Flow', () => {
   describe('hs list', () => {
     it('should validate that the template exists in the Design Manager', async () => {
       const val = await testState.cli.executeWithTestConfig(['list']);
-      expect(val).toContain(TEMPLATE.folder);
+      expect(val).toContain(TEMPLATE_FOLDER);
     });
   });
 
@@ -51,17 +50,17 @@ describe('CMS Template Flow', () => {
     it('should move the file to a new location in the Design Manager', async () => {
       const val = await testState.cli.executeWithTestConfig([
         'mv',
-        TEMPLATE.folder,
+        TEMPLATE_FOLDER,
         NEW_TEMPLATE_FOLDER,
       ]);
-      expect(val).toContain(TEMPLATE.folder);
+      expect(val).toContain(TEMPLATE_FOLDER);
     });
   });
 
   describe('hs list', () => {
     it('should validate that the template exists in the Design Manager', async () => {
       const val = await testState.cli.executeWithTestConfig(['list']);
-      expect(val).not.toContain(TEMPLATE.folder);
+      expect(val).not.toContain(TEMPLATE_FOLDER);
       expect(val).toContain(NEW_TEMPLATE_FOLDER);
     });
   });

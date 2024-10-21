@@ -1,8 +1,9 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
+import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';
 
-const PROJECT_FOLDER = 'my-project';
+const PROJECT_FOLDER = uuidv4();
 
 const cleanup = (testState: TestState) => {
   rimraf.sync(testState.getPathWithinTestDirectory(PROJECT_FOLDER));

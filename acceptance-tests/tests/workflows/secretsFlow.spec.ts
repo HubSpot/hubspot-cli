@@ -1,10 +1,13 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
+import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';
 import { ENTER } from '../../lib/prompt';
 
 const SECRET = {
-  name: 'KRABBY_PATTY_SECRET_FORMULA',
-  value: 'nice-try-plankton',
+  name: uuidv4()
+    .toUpperCase()
+    .replaceAll('-', '_'),
+  value: 'an initial secret value',
 };
 
 describe('Secrets Flow', () => {
@@ -43,7 +46,7 @@ describe('Secrets Flow', () => {
     it('should update the existing secret', async () => {
       await testState.cli.executeWithTestConfig(
         ['secrets', 'update', SECRET.name],
-        ['ok fine the recipe is...', ENTER]
+        ['a different secret value', ENTER]
       );
     });
   });
