@@ -6,6 +6,7 @@ import { ENTER } from '../../lib/prompt';
 const SECRET = {
   name: uuidv4()
     .toUpperCase()
+    .replace(/^[0-9,-]+/g, '') // Remove leading numbers
     .replaceAll('-', '_'),
   value: 'an initial secret value',
 };
