@@ -2,6 +2,7 @@ import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';
 import { ENTER } from '../../lib/prompt';
+import { sleep } from '../../lib/sleep';
 
 const SECRET = {
   name: uuidv4()
@@ -29,6 +30,9 @@ describe('Secrets Flow', () => {
         ['secrets', 'add', SECRET.name],
         [SECRET.value, ENTER]
       );
+
+      // Wait for the secret to be added
+      await sleep(1000);
     });
   });
 
