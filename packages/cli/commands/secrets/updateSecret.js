@@ -13,7 +13,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
@@ -24,20 +23,19 @@ exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName } = options;
+  const { name: secretName, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-update', null, accountId);
+  trackCommandUsage('secrets-update', null, account);
 
   try {
     const { secretValue } = await secretValuePrompt();
 
-    await updateSecret(accountId, secretName, secretValue);
+    await updateSecret(account, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.update`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(account),
         secretName,
       })
     );
@@ -52,7 +50,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'update secret',
-        accountId,
+        accountId: account,
       })
     );
   }

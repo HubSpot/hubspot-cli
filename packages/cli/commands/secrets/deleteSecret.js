@@ -13,7 +13,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -23,18 +22,17 @@ exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName } = options;
+  const { name: secretName, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-delete', null, accountId);
+  trackCommandUsage('secrets-delete', null, account);
 
   try {
-    await deleteSecret(accountId, secretName);
+    await deleteSecret(account, secretName);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(account),
         secretName,
       })
     );
@@ -48,7 +46,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'delete a secret',
-        accountId,
+        accountId: account,
       })
     );
   }

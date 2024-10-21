@@ -13,7 +13,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -25,13 +24,13 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-list', null, accountId);
+  const { account } = options;
+  trackCommandUsage('secrets-list', null, account);
 
   try {
-    const { results } = await fetchSecrets(accountId);
+    const { results } = await fetchSecrets(account);
     const groupLabel = i18n(`${i18nKey}.groupLabel`, {
-      accountIdentifier: uiAccountDescription(accountId),
+      accountIdentifier: uiAccountDescription(account),
     });
     logger.group(groupLabel);
     results.forEach(secret => logger.log(secret));
@@ -42,7 +41,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'add secret',
-        accountId,
+        accountId: account,
       })
     );
   }

@@ -12,7 +12,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { uiAccountDescription } = require('../../lib/ui');
 const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
@@ -24,20 +23,19 @@ exports.command = 'add <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName } = options;
+  const { name: secretName, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-add', null, accountId);
+  trackCommandUsage('secrets-add', null, account);
 
   try {
     const { secretValue } = await secretValuePrompt();
 
-    await addSecret(accountId, secretName, secretValue);
+    await addSecret(account, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.add`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(account),
         secretName,
       })
     );
@@ -51,7 +49,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'add secret',
-        accountId,
+        accountId: account,
       })
     );
   }
