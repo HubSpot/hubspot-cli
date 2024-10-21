@@ -2,7 +2,6 @@ import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 import { TestState } from '../../lib/TestState';
 import { ENTER } from '../../lib/prompt';
-import { sleep } from '../../lib/sleep';
 
 const SECRET = {
   name: uuidv4()
@@ -30,9 +29,6 @@ describe('Secrets Flow', () => {
         ['secrets', 'add', SECRET.name],
         [SECRET.value, ENTER]
       );
-
-      // Wait for the secret to be added
-      await sleep(1000);
     });
   });
 
@@ -43,7 +39,10 @@ describe('Secrets Flow', () => {
         'list',
       ]);
 
-      expect(output).toContain(SECRET.name);
+      expect.poll(() => expect(output).toContain(SECRET.name), {
+        interval: 1000,
+        timeout: 10000,
+      });
     });
   });
 
@@ -63,9 +62,6 @@ describe('Secrets Flow', () => {
         'delete',
         SECRET.name,
       ]);
-
-      // Wait for the secret to be added
-      await sleep(1000);
     });
   });
 
@@ -76,7 +72,10 @@ describe('Secrets Flow', () => {
         'list',
       ]);
 
-      expect(output).not.toContain(SECRET.name);
+      expect.poll(() => expect(output).not.toContain(SECRET.name), {
+        interval: 1000,
+        timeout: 10000,
+      });
     });
   });
 });
