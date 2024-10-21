@@ -51,13 +51,13 @@ exports.describe = exports.describe = uiBetaTag(
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account, force } = options;
+  const { accountFlag, force } = options;
   const config = getConfig();
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
-  if (!account) {
+  if (!accountFlag) {
     if (!force) {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
@@ -74,7 +74,7 @@ exports.handler = async options => {
   }
 
   const sandboxAccountId = getAccountId({
-    account: account || accountPrompt.account,
+    account: accountFlag || accountPrompt.account,
   });
   const isDefaultAccount =
     sandboxAccountId === getAccountId(getDefaultAccount(config));
@@ -158,7 +158,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: account || accountPrompt.account,
+        account: accountFlag || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );

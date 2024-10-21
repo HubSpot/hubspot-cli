@@ -30,7 +30,6 @@ const {
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../../lib/commonOpts');
 
@@ -133,7 +132,6 @@ describe('commands/project/deploy', () => {
   describe('handler', () => {
     let projectConfig;
     let processExitSpy;
-    const accountId = 1234567890;
     const accountType = 'STANDARD';
     let options;
     const projectDetails = {
@@ -150,7 +148,7 @@ describe('commands/project/deploy', () => {
       options = {
         project: 'project name from options',
         buildId: 2,
-        accountId,
+        account: 1234567890,
       };
       projectConfig = {
         name: 'project name from config',
@@ -161,7 +159,6 @@ describe('commands/project/deploy', () => {
       uiLink.mockImplementation(text => {
         return text;
       });
-      getAccountId.mockReturnValue(accountId);
       getAccountConfig.mockReturnValue({ accountType });
       fetchProject.mockResolvedValue(projectDetails);
       deployProject.mockResolvedValue(deployDetails);
@@ -179,16 +176,10 @@ describe('commands/project/deploy', () => {
       expect(loadAndValidateOptions).toHaveBeenCalledWith(options);
     });
 
-    it('should get the account id from the options', async () => {
-      await handler(options);
-      expect(getAccountId).toHaveBeenCalledTimes(1);
-      expect(getAccountId).toHaveBeenCalledWith(options);
-    });
-
     it('should load the account config for the correct account id', async () => {
       await handler(options);
       expect(getAccountConfig).toHaveBeenCalledTimes(1);
-      expect(getAccountConfig).toHaveBeenCalledWith(accountId);
+      expect(getAccountConfig).toHaveBeenCalledWith(options.account);
     });
 
     it('should track the command usage', async () => {
@@ -197,7 +188,7 @@ describe('commands/project/deploy', () => {
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
         { type: accountType },
-        accountId
+        options.account
       );
     });
 
@@ -216,7 +207,7 @@ describe('commands/project/deploy', () => {
     it('should prompt for the project name', async () => {
       await handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {
+      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {
         project: options.project,
       });
     });
@@ -225,7 +216,7 @@ describe('commands/project/deploy', () => {
       delete options.project;
       await handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {
+      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {
         project: projectConfig.name,
       });
     });
@@ -233,7 +224,10 @@ describe('commands/project/deploy', () => {
     it('should fetch the project details', async () => {
       await handler(options);
       expect(fetchProject).toHaveBeenCalledTimes(1);
-      expect(fetchProject).toHaveBeenCalledWith(accountId, options.project);
+      expect(fetchProject).toHaveBeenCalledWith(
+        options.account,
+        options.project
+      );
     });
 
     it('should use the name from the prompt if no others are defined', async () => {
@@ -245,9 +239,12 @@ describe('commands/project/deploy', () => {
       await handler(options);
 
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {});
+      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {});
       expect(fetchProject).toHaveBeenCalledTimes(1);
-      expect(fetchProject).toHaveBeenCalledWith(accountId, promptProjectName);
+      expect(fetchProject).toHaveBeenCalledWith(
+        options.account,
+        promptProjectName
+      );
     });
 
     it('should log an error and exit when latest build is not defined', async () => {
@@ -323,7 +320,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
       expect(deployProject).toHaveBeenCalledTimes(1);
       expect(deployProject).toHaveBeenCalledWith(
-        accountId,
+        options.account,
         options.project,
         options.buildId
       );
@@ -348,7 +345,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
-        accountId,
+        options.account,
         options.project,
         deployDetails.id,
         options.buildId
@@ -423,7 +420,7 @@ describe('commands/project/deploy', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `The request for 'project deploy' in account ${accountId} failed due to a client error.`
+        `The request for 'project deploy' in account ${options.account} failed due to a client error.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

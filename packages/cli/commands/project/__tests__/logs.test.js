@@ -16,10 +16,7 @@ const { uiLine, uiLink, uiBetaTag } = require('../../../lib/ui');
 
 uiBetaTag.mockImplementation(libUi.uiBetaTag);
 
-const {
-  addUseEnvironmentOptions,
-  getAccountId,
-} = require('../../../lib/commonOpts');
+const { addUseEnvironmentOptions } = require('../../../lib/commonOpts');
 const ProjectLogsManager = require('../../../lib/projectLogsManager');
 const {
   projectLogsPrompt,
@@ -130,42 +127,32 @@ describe('commands/project/logs', () => {
   });
 
   describe('handler', () => {
-    const accountId = 12345678;
-
     beforeEach(() => {
-      getAccountId.mockReturnValue(accountId);
       projectLogsPrompt.mockResolvedValue({ functionName: 'foo' });
-    });
-
-    it('should get the account id', async () => {
-      const options = {
-        foo: 'bar',
-      };
-      await handler(options);
-      expect(getAccountId).toHaveBeenCalledTimes(1);
-      expect(getAccountId).toHaveBeenCalledWith(options);
     });
 
     it('should track the command usage', async () => {
       const options = {
         foo: 'bar',
+        account: 12345678,
       };
       await handler(options);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-logs',
         null,
-        accountId
+        options.account
       );
     });
 
     it('should initialize the ProjectLogsManager', async () => {
       const options = {
         foo: 'bar',
+        account: 12345678,
       };
       await handler(options);
       expect(ProjectLogsManager.init).toHaveBeenCalledTimes(1);
-      expect(ProjectLogsManager.init).toHaveBeenCalledWith(accountId);
+      expect(ProjectLogsManager.init).toHaveBeenCalledWith(options.account);
     });
 
     it('should prompt the user for input', async () => {
@@ -200,6 +187,10 @@ describe('commands/project/logs', () => {
     });
 
     it('should log public functions correctly', async () => {
+      const options = {
+        account: 12345678,
+      };
+      await handler(options);
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
       ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
@@ -211,12 +202,11 @@ describe('commands/project/logs', () => {
       getTableHeader.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = true;
-      ProjectLogsManager.accountId = accountId;
+      ProjectLogsManager.accountId = options.account;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.endpointName = 'my-endpoint';
       ProjectLogsManager.appId = 123456;
 
-      await handler({});
       expect(getTableHeader).toHaveBeenCalledTimes(1);
       expect(getTableHeader).toHaveBeenCalledWith([
         'Account',
@@ -239,7 +229,7 @@ describe('commands/project/logs', () => {
       expect(uiLink).toHaveBeenCalledTimes(1);
       expect(uiLink).toHaveBeenCalledWith(
         'View function logs in HubSpot',
-        `https://app.hubspot.com/private-apps/${accountId}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
+        `https://app.hubspot.com/private-apps/${options.account}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
       );
       expect(uiLine).toHaveBeenCalledTimes(1);
     });
@@ -247,6 +237,10 @@ describe('commands/project/logs', () => {
     it('should log private functions correctly', async () => {
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
+      const options = {
+        account: 12345678,
+      };
+      await handler(options);
 
       ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
       projectLogsPrompt.mockReturnValue({
@@ -257,11 +251,10 @@ describe('commands/project/logs', () => {
       getTableHeader.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = false;
-      ProjectLogsManager.accountId = accountId;
+      ProjectLogsManager.accountId = options.account;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.appId = 456789;
 
-      await handler({});
       expect(getTableHeader).toHaveBeenCalledTimes(1);
       expect(getTableHeader).toHaveBeenCalledWith(['Account', 'Function']);
 
@@ -276,13 +269,17 @@ describe('commands/project/logs', () => {
 
       expect(uiLink).toHaveBeenCalledWith(
         'View function logs in HubSpot',
-        `https://app.hubspot.com/private-apps/${accountId}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
+        `https://app.hubspot.com/private-apps/${options.account}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
       );
 
       expect(uiLine).toHaveBeenCalledTimes(1);
     });
 
     it('should handle errors correctly', async () => {
+      const options = {
+        account: 12345678,
+      };
+      await handler(options);
       const error = new Error('Something went wrong');
       ProjectLogsManager.init.mockImplementation(() => {
         throw error;
@@ -290,11 +287,9 @@ describe('commands/project/logs', () => {
 
       ProjectLogsManager.projectName = 'Super cool project';
 
-      await handler({});
-
       expect(logApiErrorInstance).toHaveBeenCalledTimes(1);
       expect(logApiErrorInstance).toHaveBeenCalledWith(error, {
-        accountId: accountId,
+        accountId: options.account,
         projectName: ProjectLogsManager.projectName,
       });
 

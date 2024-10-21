@@ -1,7 +1,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
@@ -44,12 +43,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name, type, force } = options;
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const env = getValidEnv(getEnv(accountId));
+  const { name, type, force, account } = options;
+  const accountConfig = getAccountConfig(account);
+  const env = getValidEnv(getEnv(account));
 
-  trackCommandUsage('sandbox-create', null, accountId);
+  trackCommandUsage('sandbox-create', null, account);
 
   // Default account is not a production portal
   if (
@@ -90,14 +88,14 @@ exports.handler = async options => {
     if (isMissingScopeError(err)) {
       logger.error(
         i18n('lib.sandbox.create.failure.scopes.message', {
-          accountName: accountConfig.name || accountId,
+          accountName: accountConfig.name || account,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
-      const url = `${websiteOrigin}/personal-access-key/${accountId}`;
+      const url = `${websiteOrigin}/personal-access-key/${account}`;
       logger.info(
         i18n('lib.sandbox.create.failure.scopes.instructions', {
-          accountName: accountConfig.name || accountId,
+          accountName: accountConfig.name || account,
           url,
         })
       );
