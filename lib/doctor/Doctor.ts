@@ -51,7 +51,7 @@ export class Doctor {
     await Promise.all([
       ...this.performCliChecks(),
       ...this.performCliConfigChecks(),
-      ...this.performProjectChecks(),
+      ...(this.projectConfig?.projectConfig ? this.performProjectChecks() : []),
     ]);
 
     SpinniesManager.succeed('runningDiagnostics', {
