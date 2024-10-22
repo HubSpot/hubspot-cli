@@ -508,10 +508,10 @@
     table "^6.8.1"
     tmp "^0.2.1"
 
-"@hubspot/theme-preview-dev-server@0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.8.tgz#ee9c339a3c493b9fb40c2a29fe8c2c29068917e7"
-  integrity sha512-1hsms3qE8I++ZLQJ8IpY0rB3Pk7+7KRtBB3xX6c0PmN1+1e8oIzBnQPx2jVFyfX4Ny/SuOCkHtuMYS3K1qIOzw==
+"@hubspot/theme-preview-dev-server@0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.9.tgz#51ce32156365527dfd2d7044f5a87f90d6434283"
+  integrity sha512-w6a6E9f6DVbUcVGStEFakUL9voUMfyuYZRVsoIyaWR5fYlejmn1MJnpMlkU25W2nRWDwkr8RgdYMvZ/DstJUzw==
   dependencies:
     "@types/node-fetch" "^2.6.11"
     chokidar "^3.6.0"
