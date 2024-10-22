@@ -7,7 +7,7 @@
   "dependencies": {
     "@hubspot/local-dev-lib": "^2.0.1",
     "@hubspot/serverless-dev-runtime": "7.0.0",
-    "@hubspot/theme-preview-dev-server": "0.0.8",
+    "@hubspot/theme-preview-dev-server": "0.0.9",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
     "archiver": "^7.0.1",
     "chalk": "^4.1.2",

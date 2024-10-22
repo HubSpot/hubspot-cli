@@ -10,4 +10,9 @@ export interface TestConfig {
 
 export interface CLI {
   execute: (args: string[], inputs?: string[], opts?: {}) => Promise<unknown>;
+  executeWithTestConfig: (
+    args: string[],
+    inputs?: string[],
+    opts?: {}
+  ) => Promise<unknown>;
 }

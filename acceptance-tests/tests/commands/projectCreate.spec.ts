@@ -1,8 +1,9 @@
 import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import rimraf from 'rimraf';
-import { TestState } from '../../lib/testState';
+import { v4 as uuidv4 } from 'uuid';
+import { TestState } from '../../lib/TestState';
 
-const PROJECT_FOLDER = 'my-project';
+const PROJECT_FOLDER = uuidv4();
 
 const cleanup = (testState: TestState) => {
   rimraf.sync(testState.getPathWithinTestDirectory(PROJECT_FOLDER));
@@ -23,13 +24,12 @@ describe('hs project create', () => {
   });
 
   it('should create a project containing a private app', async () => {
-    await testState.cli.execute([
+    await testState.cli.executeWithTestConfig([
       'project',
       'create',
       `--name="${PROJECT_FOLDER}"`,
       `--location="${PROJECT_FOLDER}"`,
       '--template="getting-started-private-app"',
-      `--c="${testState.getTestConfigFileNameRelativeToOutputDir()}"`,
     ]);
     expect(testState.existsInTestOutputDirectory(PROJECT_FOLDER)).toBe(true);
   });
