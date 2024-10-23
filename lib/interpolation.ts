@@ -12,7 +12,6 @@ const delimiters = {
 };
 
 const isHelperIdentifier = identifier => {
-  console.log('test');
   return (
     identifier.startsWith(delimiters.helpers.start) ||
     identifier.startsWith(delimiters.helpers.end)
