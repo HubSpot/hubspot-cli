@@ -56,7 +56,7 @@
     "hs": "yarn build && node ./dist/bin/hs"
   },
   "lint-staged": {
-    "**/*.{js,scss,css}": [
+    "**/*.{js,ts,scss,css}": [
       "prettier -l",
       "eslint"
     ]
