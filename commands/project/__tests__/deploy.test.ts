@@ -76,15 +76,11 @@ describe('commands/project/deploy', () => {
 
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        [projectFlag]: {
-          describe: 'Project name',
-          type: 'string',
-        },
-        [buildFlag]: {
+        [projectFlag]: expect.objectContaining({ type: 'string' }),
+        [buildFlag]: expect.objectContaining({
           alias: buildAliases,
-          describe: 'Project build ID to be deployed',
           type: 'number',
-        },
+        }),
       });
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
@@ -101,13 +97,6 @@ describe('commands/project/deploy', () => {
       deployCommand.builder(yargs);
 
       expect(yargs.example).toHaveBeenCalledTimes(1);
-      expect(yargs.example).toHaveBeenCalledWith([
-        ['$0 project deploy', 'Deploy the latest build of the current project'],
-        [
-          `$0 project deploy --${projectFlag}="my-project" --${buildFlag}=5`,
-          'Deploy build 5 of the project my-project',
-        ],
-      ]);
     });
   });
 

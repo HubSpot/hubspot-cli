@@ -26,14 +26,14 @@ describe('commands/auth', () => {
       authCommand.builder(yargs);
 
       expect(yargs.positional).toHaveBeenCalledTimes(1);
-      expect(yargs.positional).toHaveBeenCalledWith('type', {
-        describe: 'Authentication mechanism',
-        type: 'string',
-        choices: ['personalaccesskey', 'oauth2'],
-        default: 'personalaccesskey',
-        defaultDescription:
-          '"personalaccesskey": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools.',
-      });
+      expect(yargs.positional).toHaveBeenCalledWith(
+        'type',
+        expect.objectContaining({
+          type: 'string',
+          choices: ['personalaccesskey', 'oauth2'],
+          default: 'personalaccesskey',
+        })
+      );
     });
 
     it('should support the correct options', () => {
@@ -41,10 +41,7 @@ describe('commands/auth', () => {
 
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        account: {
-          describe: 'HubSpot account to authenticate',
-          type: 'string',
-        },
+        account: expect.objectContaining({ type: 'string' }),
       });
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);

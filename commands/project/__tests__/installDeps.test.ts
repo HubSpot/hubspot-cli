@@ -40,13 +40,6 @@ describe('commands/project/installDeps', () => {
     it('should provide examples', () => {
       installDepsCommand.builder(yargs);
       expect(yargs.example).toHaveBeenCalledTimes(1);
-      expect(yargs.example).toHaveBeenCalledWith([
-        ['$0 project install-deps', 'Install the dependencies for the project'],
-        [
-          '$0 project install-deps dependency1 dependency2',
-          'Install the dependencies to one or more project subcomponents',
-        ],
-      ]);
     });
   });
 

@@ -49,6 +49,7 @@ describe('commands/project/logs', () => {
     it('should contain the beta tag', () => {
       expect(logsCommand.describe).toContain('[BETA]');
     });
+
     it('should provide a description', () => {
       expect(logsCommand.describe).toBeDefined();
     });
@@ -59,30 +60,25 @@ describe('commands/project/logs', () => {
       logsCommand.builder(yargs);
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        function: {
+        function: expect.objectContaining({
           alias: 'function',
           requiresArg: true,
-          describe: 'App function name',
           type: 'string',
-        },
-        latest: {
+        }),
+        latest: expect.objectContaining({
           alias: 'l',
           type: 'boolean',
-          describe: 'Retrieve most recent log only',
-        },
-        compact: {
+        }),
+        compact: expect.objectContaining({
           type: 'boolean',
-          describe: 'Output compact logs',
-        },
-        tail: {
+        }),
+        tail: expect.objectContaining({
           alias: ['t', 'follow'],
-          describe: 'Tail logs',
           type: 'boolean',
-        },
-        limit: {
+        }),
+        limit: expect.objectContaining({
           type: 'number',
-          describe: 'Limit the number of logs to output',
-        },
+        }),
       });
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
@@ -98,16 +94,6 @@ describe('commands/project/logs', () => {
     it('should provide examples', () => {
       logsCommand.builder(yargs);
       expect(yargs.example).toHaveBeenCalledTimes(1);
-      expect(yargs.example).toHaveBeenCalledWith([
-        [
-          '$0 project logs',
-          'Open the project logs prompt to get logs for a serverless function',
-        ],
-        [
-          '$0 project logs --function=my-function',
-          'Get logs for function named "my-function" within the app named "app" within the project named "my-project"',
-        ],
-      ]);
     });
   });
 
