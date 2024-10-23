@@ -6,6 +6,7 @@ on:
   # Scheduled jobs will only run on the default branch
   schedule:
     - cron: '0 */5 * * *' # Run every 5 hours
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,20 +14,28 @@ jobs:
       - uses: actions/checkout@v2
       # Sleep when triggered by new tag to wait for npm publish
       - name: Sleep For 3 Mins
+        if: ${{ github.event_name == 'push' }}
         run: sleep 180s
         shell: bash
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 16.x
+          node-version: 18.x
       - name: Install Deps
         run: npm install
+      - name: Globally install the CLI
+        run: |
+          npm install -g @hubspot/cli@latest
+      - name: Install the test dependencies
+        run: yarn install --cwd='acceptance-tests'
       - name: Test Latest CLI Release
         run: |
-          npm run test-cli --cliVersion="latest"
+          npm run test-cli
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+          USE_INSTALLED: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ always() && github.ref_name == 'main' }}

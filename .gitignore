@@ -5,10 +5,16 @@ coverage
 hubspot.config.yml
 hubspot.config.yaml
 hs-acceptance-test.config.yml
-lerna-debug.log
 npm-debug.log
 npm-debug.log.*
 *.log
 .DS_Store
 coverage
 .env
+dist
+
+# Acceptance Tests
+acceptance-tests/my-project
+acceptance-tests/*.yml
+acceptance-tests/*.html
+acceptance-tests/test-output
