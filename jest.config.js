@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
-  projects: ['<rootDir>/packages/*'],
-  roots: ['packages'],
+  preset: 'ts-jest',
+  roots: ['commands', 'lib'],
   collectCoverage: true,
+  clearMocks: true,
 };
