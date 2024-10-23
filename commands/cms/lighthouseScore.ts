@@ -158,7 +158,7 @@ exports.handler = async options => {
   let mobileScoreResult = {};
   let verboseViewAverageScoreResult = {};
   try {
-    const params = { isAverage: !options.verbose };
+    const params = { isAverage: !verbose };
 
     if (includeDesktopScore) {
       const { data } = await getLighthouseScore(account, {
@@ -176,7 +176,7 @@ exports.handler = async options => {
       mobileScoreResult = data;
     }
     // This is needed to show the average scores above the verbose output
-    if (options.verbose) {
+    if (verbose) {
       const { data } = await getLighthouseScore(account, {
         ...params,
         isAverage: true,
