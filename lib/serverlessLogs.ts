@@ -7,7 +7,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { outputLogs } = require('./ui/serverlessFunctionLogs');
 const { logError, ApiErrorContext } = require('./errorHandlers/index');
 
-const { EXIT_CODES } = require('../lib/enums/exitCodes');
+const { EXIT_CODES } = require('./enums/exitCodes');
 const {
   isHubSpotHttpError,
   isMissingScopeError,

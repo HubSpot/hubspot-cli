@@ -7,7 +7,7 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchPublicAppsForPortal,
 } = require('@hubspot/local-dev-lib/api/appsDev');
-const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { EXIT_CODES } = require('../enums/exitCodes');
 
 const i18nKey = 'lib.prompts.selectPublicAppPrompt';
 
