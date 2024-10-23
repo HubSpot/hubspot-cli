@@ -98,11 +98,7 @@ exports.handler = async options => {
   // Kick off the scoring
   let requestResult;
   try {
-<<<<<<< HEAD:packages/cli/commands/cms/lighthouseScore.js
-    requestResult = await requestLighthouseScore(account, {
-=======
-    const { data } = await requestLighthouseScore(accountId, {
->>>>>>> refactor-config:commands/cms/lighthouseScore.ts
+    const { data } = await requestLighthouseScore(account, {
       themePath: themeToCheck,
     });
     requestResult = data;
@@ -124,21 +120,9 @@ exports.handler = async options => {
     });
 
     const checkScoreStatus = async () => {
-<<<<<<< HEAD:packages/cli/commands/cms/lighthouseScore.js
-      const desktopScoreStatus = includeDesktopScore
-        ? await getLighthouseScoreStatus(account, {
-            themeId: requestResult.desktopId,
-          })
-        : 'COMPLETED';
-      const mobileScoreStatus = includeMobileScore
-        ? await getLighthouseScoreStatus(account, {
-            themeId: requestResult.mobileId,
-          })
-        : 'COMPLETED';
-=======
       let desktopScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(accountId, {
+        const { data } = await getLighthouseScoreStatus(account, {
           themeId: requestResult.desktopId,
         });
         desktopScoreStatus = data;
@@ -146,12 +130,11 @@ exports.handler = async options => {
 
       let mobileScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(accountId, {
+        const { data } = await getLighthouseScoreStatus(account, {
           themeId: requestResult.mobileId,
         });
         mobileScoreStatus = data;
       }
->>>>>>> refactor-config:commands/cms/lighthouseScore.ts
 
       if (
         desktopScoreStatus === 'REQUESTED' ||
@@ -175,34 +158,10 @@ exports.handler = async options => {
   let mobileScoreResult = {};
   let verboseViewAverageScoreResult = {};
   try {
-<<<<<<< HEAD:packages/cli/commands/cms/lighthouseScore.js
-    const params = { isAverage: !verbose };
-    desktopScoreResult = includeDesktopScore
-      ? await getLighthouseScore(account, {
-          ...params,
-          desktopId: requestResult.desktopId,
-        })
-      : {};
-    mobileScoreResult = includeMobileScore
-      ? await getLighthouseScore(account, {
-          ...params,
-          mobileId: requestResult.mobileId,
-        })
-      : {};
-    // This is needed to show the average scores above the verbose output
-    verboseViewAverageScoreResult = verbose
-      ? await getLighthouseScore(account, {
-          ...params,
-          isAverage: true,
-          desktopId: includeDesktopScore ? requestResult.desktopId : null,
-          mobileId: includeMobileScore ? requestResult.mobileId : null,
-        })
-      : {};
-=======
     const params = { isAverage: !options.verbose };
 
     if (includeDesktopScore) {
-      const { data } = await getLighthouseScore(accountId, {
+      const { data } = await getLighthouseScore(account, {
         ...params,
         desktopId: requestResult.desktopId,
       });
@@ -210,7 +169,7 @@ exports.handler = async options => {
     }
 
     if (includeMobileScore) {
-      const { data } = await getLighthouseScore(accountId, {
+      const { data } = await getLighthouseScore(account, {
         ...params,
         mobileId: requestResult.mobileId,
       });
@@ -218,7 +177,7 @@ exports.handler = async options => {
     }
     // This is needed to show the average scores above the verbose output
     if (options.verbose) {
-      const { data } = await getLighthouseScore(accountId, {
+      const { data } = await getLighthouseScore(account, {
         ...params,
         isAverage: true,
         desktopId: includeDesktopScore ? requestResult.desktopId : null,
@@ -226,7 +185,6 @@ exports.handler = async options => {
       });
       verboseViewAverageScoreResult = data;
     }
->>>>>>> refactor-config:commands/cms/lighthouseScore.ts
   } catch (err) {
     logger.error(i18n(`${i18nKey}.errors.failedToGetLighthouseScore`));
     process.exit(EXIT_CODES.ERROR);
