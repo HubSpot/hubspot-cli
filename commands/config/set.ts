@@ -5,9 +5,11 @@ const { getAccountId } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { setDefaultMode } = require('./set/defaultMode');
-const { setHttpTimeout } = require('./set/httpTimeout');
-const { setAllowUsageTracking } = require('./set/allowUsageTracking');
+const {
+  setDefaultMode,
+  setHttpTimeout,
+  setAllowUsageTracking,
+} = require('../../lib/configOptions');
 
 const i18nKey = 'commands.config.subcommands.set';
 
