@@ -2,7 +2,7 @@
 const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
+const { logError, ApiErrorContext } = require('../errorHandlers/index');
 const { EXIT_CODES } = require('../enums/exitCodes');
 const { i18n } = require('../lang');
 

@@ -2,7 +2,7 @@
 const path = require('path');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const { createIgnoreFilter } = require('@hubspot/local-dev-lib/ignoreRules');
-const { fieldsJsPrompt } = require('../lib/prompts/cmsFieldPrompt');
+const { fieldsJsPrompt } = require('./prompts/cmsFieldPrompt');
 const { isAllowedExtension } = require('@hubspot/local-dev-lib/path');
 const {
   isConvertableFieldJs,

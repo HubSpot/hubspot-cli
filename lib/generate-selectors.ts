@@ -2,7 +2,7 @@
 const fs = require('fs');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('../lib/lang');
+const { i18n } = require('./lang');
 
 const CSS_COMMENTS_REGEX = new RegExp(/\/\*.*\*\//, 'g');
 const CSS_PSEUDO_CLASS_REGEX = new RegExp(
