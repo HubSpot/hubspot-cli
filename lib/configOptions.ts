@@ -51,7 +51,9 @@ const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
 
   updateAllowUsageTracking(isEnabled);
 
-  return logger.log(i18n(`${i18nKey}.success`, { isEnabled }));
+  return logger.log(
+    i18n(`${i18nKey}.allowUsageTracking.success`, { isEnabled })
+  );
 };
 
 const ALL_MODES = Object.values(MODE);
