@@ -91,7 +91,7 @@ exports.handler = async options => {
       i18n(`${i18nKey}.errors.folderFailed`, {
         src,
         dest,
-        account,
+        accountId: account,
       })
     );
     logError(error, {
@@ -104,13 +104,13 @@ exports.handler = async options => {
       i18n(`${i18nKey}.errors.fileFailed`, {
         file,
         dest,
-        account,
+        accountId: account,
       })
     );
     logError(
       error,
       new ApiErrorContext({
-        account,
+        accountId: account,
         request: dest,
         payload: file,
       })
