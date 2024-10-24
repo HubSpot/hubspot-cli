@@ -53,6 +53,7 @@ function executeWithInput(
   config: TestConfig,
   args: string[] = [],
   inputs: string[] = [],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: any = {}
 ) {
   if (!Array.isArray(inputs)) {
@@ -63,7 +64,7 @@ function executeWithInput(
   const { env, timeout = 1000, maxTimeout = 30000 } = opts;
 
   const childProcess = createProcess(config, args, env);
-  (childProcess.stdin as any).setEncoding('utf-8');
+  childProcess.stdin.setEncoding('utf-8');
 
   let currentInputTimeout: NodeJS.Timeout;
   let killIOTimeout: NodeJS.Timeout;
@@ -158,7 +159,7 @@ function executeWithInput(
         }
 
         resolve(String(result));
-      }) as any
+      })
     );
   });
 
@@ -176,10 +177,10 @@ function executeWithInput(
 export function createCli(config: TestConfig, testConfigFileName: string): CLI {
   return {
     // For commands that do not interface with the test CLI config file
-    execute: (args: string[], inputs?: string[], opts?: {}) =>
+    execute: (args: string[], inputs?: string[], opts?: object) =>
       executeWithInput(config, args, inputs, opts),
     // For commands that interface with the test CLI config file
-    executeWithTestConfig: (args: string[], inputs?: string[], opts?: {}) =>
+    executeWithTestConfig: (args: string[], inputs?: string[], opts?: object) =>
       executeWithInput(
         config,
         [...args, `--c="${testConfigFileName}"`],

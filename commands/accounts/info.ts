@@ -19,7 +19,7 @@ exports.command = 'info [--account]';
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  let accountId = getAccountId(options);
+  const accountId = getAccountId(options);
   const config = getAccountConfig(accountId);
 
   // check if the provided account is using a personal access key, if not, show an error

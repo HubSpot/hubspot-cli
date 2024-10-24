@@ -73,7 +73,7 @@ const syncSandbox = async ({
       availableSyncTasks,
       accountId
     );
-    let spinniesText = isDevSandbox
+    const spinniesText = isDevSandbox
       ? `${i18nKey}.loading.succeedDevSb`
       : `${i18nKey}.loading.succeed`;
     SpinniesManager.succeed('sandboxSync', {
