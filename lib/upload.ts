@@ -32,7 +32,7 @@ const getUploadableFileList = async (src, convertFields) => {
     return allowedFiles;
   }
 
-  let uploadableFiles = [];
+  const uploadableFiles = [];
   let skipFiles = [];
   for (const filePath of allowedFiles) {
     const fileName = path.basename(filePath);

@@ -22,7 +22,7 @@ exports.command = 'fetch <name> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { name, dest } = options;
+  const { name, dest } = options;
 
   await loadAndValidateOptions(options);
 

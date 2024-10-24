@@ -172,13 +172,15 @@ const handleWatchEvent = async (
 ) => {
   const remotePath = path.relative(projectSourceDir, filePath);
   if (queue.isPaused) {
-    standbyeQueue.find(file => file.filePath === filePath)
-      ? logger.debug(i18n(`${i18nKey}.debug.fileAlreadyQueued`, { filePath }))
-      : standbyeQueue.push({
-          filePath,
-          remotePath,
-          action,
-        });
+    if (standbyeQueue.find(file => file.filePath === filePath)) {
+      logger.debug(i18n(`${i18nKey}.debug.fileAlreadyQueued`, { filePath }));
+    } else {
+      standbyeQueue.push({
+        filePath,
+        remotePath,
+        action,
+      });
+    }
   } else {
     await queueFileOrFolder(
       accountId,

@@ -35,11 +35,10 @@ describe('Secrets Flow', () => {
   describe('hs secrets list', () => {
     it('should list the secret', async () => {
       await expect
-        .poll(
-          async () =>
-            await testState.cli.executeWithTestConfig(['secrets', 'list']),
-          { interval: 1000, timeout: 10000 }
-        )
+        .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
+          interval: 1000,
+          timeout: 10000,
+        })
         .toContain(SECRET.name);
     });
   });
@@ -66,11 +65,10 @@ describe('Secrets Flow', () => {
   describe('hs secrets list', () => {
     it('should not list the secret', async () => {
       await expect
-        .poll(
-          async () =>
-            await testState.cli.executeWithTestConfig(['secrets', 'list']),
-          { interval: 1000, timeout: 10000 }
-        )
+        .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
+          interval: 1000,
+          timeout: 10000,
+        })
         .not.toContain(SECRET.name);
     });
   });
