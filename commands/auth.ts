@@ -72,6 +72,8 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
+  // We don't want to auto inject the account flag from middleware.
+  // --accountFlag preserves the original --account and --portal flags.
   const { type, config: c, qa, accountFlag } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
