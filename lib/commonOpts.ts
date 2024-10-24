@@ -86,7 +86,7 @@ const getCommandName = argv => (argv && argv._ && argv._[0]) || '';
 /**
  * Obtains accountId using supplied --account flag or from environment variables
  */
-const getAccountId = (options = {}) => {
+export const getAccountId = (options = {}) => {
   const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
