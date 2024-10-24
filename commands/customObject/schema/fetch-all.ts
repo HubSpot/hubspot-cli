@@ -2,7 +2,6 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { getAccountId } = require('../../../lib/commonOpts');
 const {
   downloadSchemas,
   getResolvedPath,
@@ -19,12 +18,12 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { account } = options;
 
-  trackCommandUsage('custom-object-schema-fetch-all', null, accountId);
+  trackCommandUsage('custom-object-schema-fetch-all', null, account);
 
   try {
-    const schemas = await downloadSchemas(accountId, options.dest);
+    const schemas = await downloadSchemas(account, options.dest);
     logSchemas(schemas);
     logger.success(
       i18n(`${i18nKey}.success.fetch`, {

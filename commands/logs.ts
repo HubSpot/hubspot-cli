@@ -2,7 +2,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -90,13 +89,11 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { latest } = options;
+  const { latest, account } = options;
 
-  const accountId = getAccountId(options);
+  trackCommandUsage('logs', { latest }, account);
 
-  trackCommandUsage('logs', { latest }, accountId);
-
-  endpointLog(accountId, options);
+  endpointLog(account, options);
 };
 
 exports.builder = yargs => {

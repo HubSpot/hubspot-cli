@@ -3,7 +3,6 @@ const open = require('open');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
@@ -28,23 +27,18 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  const { project } = options;
+  const { project, account } = options;
 
-  trackCommandUsage('project-open', null, accountId);
+  trackCommandUsage('project-open', null, account);
 
   const { projectConfig } = await getProjectConfig();
 
   let projectName = project;
 
   if (projectName) {
-    const { projectExists } = await ensureProjectExists(
-      accountId,
-      projectName,
-      {
-        allowCreate: false,
-      }
-    );
+    const { projectExists } = await ensureProjectExists(account, projectName, {
+      allowCreate: false,
+    });
 
     if (!projectExists) {
       process.exit(EXIT_CODES.ERROR);
@@ -52,7 +46,7 @@ exports.handler = async options => {
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
-    const namePrompt = await projectNamePrompt(accountId);
+    const namePrompt = await projectNamePrompt(account);
 
     if (!namePrompt.projectName) {
       process.exit(EXIT_CODES.ERROR);
@@ -60,7 +54,7 @@ exports.handler = async options => {
     projectName = namePrompt.projectName;
   }
 
-  const url = getProjectDetailUrl(projectName, accountId);
+  const url = getProjectDetailUrl(projectName, account);
   open(url, { url: true });
   logger.success(i18n(`${i18nKey}.success`, { projectName }));
   process.exit(EXIT_CODES.SUCCESS);

@@ -3,7 +3,6 @@ const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -28,11 +27,10 @@ exports.describe = false;
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: functionPath } = options;
-  const accountId = getAccountId(options);
+  const { path: functionPath, account } = options;
   const splitFunctionPath = functionPath.split('.');
 
-  trackCommandUsage('functions-deploy', null, accountId);
+  trackCommandUsage('functions-deploy', null, account);
 
   if (
     !splitFunctionPath.length ||
@@ -62,8 +60,8 @@ exports.handler = async options => {
   });
 
   try {
-    const { data: buildId } = await buildPackage(accountId, functionPath);
-    const successResp = await poll(getBuildStatus, accountId, buildId);
+    const { data: buildId } = await buildPackage(account, functionPath);
+    const successResp = await poll(getBuildStatus, account, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
 
     SpinniesManager.succeed('loading');
@@ -71,7 +69,7 @@ exports.handler = async options => {
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
       i18n(`${i18nKey}.success.deployed`, {
-        accountId,
+        accountId: account,
         buildTimeSeconds,
         functionPath,
       })
@@ -98,7 +96,10 @@ exports.handler = async options => {
         })
       );
     } else {
-      logError(e, new ApiErrorContext({ accountId, request: functionPath }));
+      logError(
+        e,
+        new ApiErrorContext({ accountId: account, request: functionPath })
+      );
     }
   }
 };

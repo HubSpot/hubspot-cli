@@ -10,7 +10,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -20,16 +19,14 @@ exports.command = 'fetch <tableId> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId, dest } = options;
+  const { tableId, dest, account } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('hubdb-fetch', null, accountId);
+  trackCommandUsage('hubdb-fetch', null, account);
 
   try {
-    const { filePath } = await downloadHubDbTable(accountId, tableId, dest);
+    const { filePath } = await downloadHubDbTable(account, tableId, dest);
 
     logger.success(
       i18n(`${i18nKey}.success.fetch`, {
