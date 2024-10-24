@@ -1,18 +1,28 @@
 // @ts-nocheck
-const { updateDefaultAccount } = require('@hubspot/local-dev-lib/config');
+const {
+  updateDefaultAccount,
+  getDefaultAccount,
+  getAccounts,
+} = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 
 const mapAccountChoices = portals =>
   portals.map(p => ({
-    name: uiAccountDescription(p.portalId, false),
-    value: p.name || p.portalId,
+    name: uiAccountDescription(getAccountIdentifier(p), false),
+    value: p.name || getAccountIdentifier(p),
   }));
 
 const i18nKey = 'commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
+  const accountsList = getAccounts();
+  const defaultAccount = getDefaultAccount(config);
+
   const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
@@ -20,8 +30,8 @@ const selectAccountFromConfig = async (config, prompt) => {
       name: 'default',
       pageSize: 20,
       message: prompt || i18n(`${i18nKey}.promptMessage`),
-      choices: mapAccountChoices(config.portals),
-      default: config.defaultPortal,
+      choices: mapAccountChoices(accountsList),
+      default: defaultAccount,
     },
   ]);
 
@@ -29,6 +39,9 @@ const selectAccountFromConfig = async (config, prompt) => {
 };
 
 const selectAndSetAsDefaultAccountPrompt = async config => {
+  const accountsList = getAccounts();
+  const defaultAccount = getDefaultAccount(config);
+
   const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
@@ -36,8 +49,8 @@ const selectAndSetAsDefaultAccountPrompt = async config => {
       name: 'default',
       pageSize: 20,
       message: i18n(`${i18nKey}.promptMessage`),
-      choices: mapAccountChoices(config.portals),
-      default: config.defaultPortal,
+      choices: mapAccountChoices(accountsList),
+      default: defaultAccount,
     },
   ]);
   updateDefaultAccount(selectedDefault);

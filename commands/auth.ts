@@ -22,6 +22,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
+  getDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -77,14 +78,15 @@ exports.handler = async options => {
   setLogLevel(options);
   logDebugInfo(options);
 
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  // Needed to load deprecated config
+  loadConfig(c);
+  checkAndWarnGitInclusion(getConfigPath());
+
   if (!getConfigPath(c)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(c);
-  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
@@ -173,7 +175,7 @@ exports.handler = async options => {
     const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
+        accountName: getDefaultAccount(config),
       })
     );
   }
