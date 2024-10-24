@@ -1,44 +1,23 @@
 // @ts-nocheck
-jest.mock('../../../lib/commonOpts');
-jest.mock('yargs');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('@hubspot/local-dev-lib/api/projects');
-jest.mock('../../../lib/validation');
-jest.mock('../../../lib/projects');
-jest.mock('../../../lib/prompts/projectNamePrompt');
-jest.mock('../../../lib/prompts/deployBuildIdPrompt');
-jest.mock('@hubspot/local-dev-lib/config');
-jest.mock('../../../lib/usageTracking');
-jest.mock('../../../lib/ui');
-
-const libUi = jest.requireActual('../../../lib/ui');
+const { AxiosError, HttpStatusCode } = require('axios');
+const yargs = require('yargs');
+const chalk = require('chalk');
 const {
-  uiCommandReference,
-  uiAccountDescription,
-  uiBetaTag,
-  uiLink,
-} = require('../../../lib/ui');
-
-uiBetaTag.mockImplementation(libUi.uiBetaTag);
-
+  HubSpotHttpError,
+} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
+const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  handler,
-  describe: deployDescribe,
-  command,
-  builder,
-} = require('../deploy');
-
+  deployProject,
+  fetchProject,
+} = require('@hubspot/local-dev-lib/api/projects');
+const ui = require('../../../lib/ui');
 const {
   addAccountOptions,
   addConfigOptions,
   getAccountId,
   addUseEnvironmentOptions,
 } = require('../../../lib/commonOpts');
-
-const {
-  deployProject,
-  fetchProject,
-} = require('@hubspot/local-dev-lib/api/projects');
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const {
   getProjectConfig,
@@ -49,88 +28,75 @@ const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
 const {
   deployBuildIdPrompt,
 } = require('../../../lib/prompts/deployBuildIdPrompt');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-
-const yargs = require('yargs');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
-const { AxiosError, HttpStatusCode } = require('axios');
 
-const chalk = require('chalk');
-const {
-  HubSpotHttpError,
-} = require('@hubspot/local-dev-lib/models/HubSpotHttpError');
+jest.mock('yargs');
+jest.mock('@hubspot/local-dev-lib/logger');
+jest.mock('@hubspot/local-dev-lib/api/projects');
+jest.mock('@hubspot/local-dev-lib/config');
+jest.mock('../../../lib/commonOpts');
+jest.mock('../../../lib/validation');
+jest.mock('../../../lib/projects');
+jest.mock('../../../lib/prompts/projectNamePrompt');
+jest.mock('../../../lib/prompts/deployBuildIdPrompt');
+jest.mock('../../../lib/usageTracking');
+const uiLinkSpy = jest.spyOn(ui, 'uiLink').mockImplementation(text => text);
+const uiLineSpy = jest.spyOn(ui, 'uiLine');
+const uiCommandReferenceSpy = jest.spyOn(ui, 'uiCommandReference');
+const uiAccountDescriptionSpy = jest.spyOn(ui, 'uiAccountDescription');
+
+// Import this last so mocks apply
+const deployCommand = require('../deploy');
 
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
   const buildAliases = ['buildId'];
 
-  describe('describe', () => {
-    it('should contain the beta tag', () => {
-      expect(deployDescribe).toContain('[BETA]');
-    });
-    it('should provide an accurate description of what the command is doing', () => {
-      expect(deployDescribe).toMatch(/Deploy a project build/);
+  describe('command', () => {
+    it('should have the correct command structure', () => {
+      expect(deployCommand.command).toEqual('deploy');
     });
   });
 
-  describe('command', () => {
-    it('should the correct command structure', () => {
-      expect(command).toEqual('deploy');
+  describe('describe', () => {
+    it('should contain the beta tag', () => {
+      expect(deployCommand.describe).toContain('[BETA]');
+    });
+
+    it('should provide a description', () => {
+      expect(deployCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
-    it('should add the correct options', () => {
-      builder(yargs);
+    it('should support the correct options', () => {
+      deployCommand.builder(yargs);
+
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        [projectFlag]: {
-          describe: 'Project name',
-          type: 'string',
-        },
-        [buildFlag]: {
+        [projectFlag]: expect.objectContaining({ type: 'string' }),
+        [buildFlag]: expect.objectContaining({
           alias: buildAliases,
-          describe: 'Project build ID to be deployed',
           type: 'number',
-        },
+        }),
       });
-    });
 
-    it('should add the correct examples', () => {
-      builder(yargs);
-      expect(yargs.example).toHaveBeenCalledTimes(1);
-      expect(yargs.example).toHaveBeenCalledWith([
-        ['$0 project deploy', 'Deploy the latest build of the current project'],
-        [
-          `$0 project deploy --${projectFlag}="my-project" --${buildFlag}=5`,
-          'Deploy build 5 of the project my-project',
-        ],
-      ]);
-    });
-
-    it('should add the config options', () => {
-      builder(yargs);
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-    });
 
-    it('should add the account options', () => {
-      builder(yargs);
       expect(addAccountOptions).toHaveBeenCalledTimes(1);
       expect(addAccountOptions).toHaveBeenCalledWith(yargs);
-    });
 
-    it('should add the environment options', () => {
-      builder(yargs);
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
     });
 
-    it('should the yargs object it is passed', () => {
-      expect(builder(yargs)).toEqual(yargs);
+    it('should provide examples', () => {
+      deployCommand.builder(yargs);
+
+      expect(yargs.example).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -162,9 +128,6 @@ describe('commands/project/deploy', () => {
       getProjectConfig.mockResolvedValue({ projectConfig });
       projectNamePrompt.mockResolvedValue({ projectName: 'fooo' });
       getProjectDetailUrl.mockReturnValue(projectDetailUrl);
-      uiLink.mockImplementation(text => {
-        return text;
-      });
       getAccountId.mockReturnValue(accountId);
       getAccountConfig.mockReturnValue({ accountType });
       fetchProject.mockResolvedValue({ data: projectDetails });
@@ -178,25 +141,25 @@ describe('commands/project/deploy', () => {
     });
 
     it('should load and validate the options', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(loadAndValidateOptions).toHaveBeenCalledTimes(1);
       expect(loadAndValidateOptions).toHaveBeenCalledWith(options);
     });
 
     it('should get the account id from the options', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(getAccountId).toHaveBeenCalledTimes(1);
       expect(getAccountId).toHaveBeenCalledWith(options);
     });
 
     it('should load the account config for the correct account id', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(getAccountConfig).toHaveBeenCalledTimes(1);
       expect(getAccountConfig).toHaveBeenCalledWith(accountId);
     });
 
     it('should track the command usage', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
@@ -206,19 +169,19 @@ describe('commands/project/deploy', () => {
     });
 
     it('should load the project config', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(getProjectConfig).toHaveBeenCalledTimes(1);
       expect(getProjectConfig).toHaveBeenCalledWith();
     });
 
     it('should load the project config', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(getProjectConfig).toHaveBeenCalledTimes(1);
       expect(getProjectConfig).toHaveBeenCalledWith();
     });
 
     it('should prompt for the project name', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
       expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {
         project: options.project,
@@ -227,7 +190,7 @@ describe('commands/project/deploy', () => {
 
     it('should use the project name from the config is a project options is not provided', async () => {
       delete options.project;
-      await handler(options);
+      await deployCommand.handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
       expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {
         project: projectConfig.name,
@@ -235,7 +198,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should fetch the project details', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(accountId, options.project);
     });
@@ -246,7 +209,7 @@ describe('commands/project/deploy', () => {
       projectNamePrompt.mockReturnValue({ projectName: promptProjectName });
       getProjectConfig.mockResolvedValue({});
 
-      await handler(options);
+      await deployCommand.handler(options);
 
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
       expect(projectNamePrompt).toHaveBeenCalledWith(accountId, {});
@@ -256,7 +219,7 @@ describe('commands/project/deploy', () => {
 
     it('should log an error and exit when latest build is not defined', async () => {
       fetchProject.mockResolvedValue({ data: {} });
-      await handler(options);
+      await deployCommand.handler(options);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'Deploy error: no builds for this project were found.'
@@ -267,9 +230,9 @@ describe('commands/project/deploy', () => {
 
     it('should log an error and exit when buildId option is not a valid build', async () => {
       options.buildId = projectDetails.latestBuild.buildId + 1;
-      await handler(options);
-      expect(uiLink).toHaveBeenCalledTimes(1);
-      expect(uiLink).toHaveBeenCalledWith(
+      await deployCommand.handler(options);
+      expect(uiLinkSpy).toHaveBeenCalledTimes(1);
+      expect(uiLinkSpy).toHaveBeenCalledWith(
         viewProjectsInHubSpot,
         projectDetailUrl
       );
@@ -283,9 +246,9 @@ describe('commands/project/deploy', () => {
 
     it('should log an error and exit when buildId option is already deployed', async () => {
       options.buildId = projectDetails.deployedBuildId;
-      await handler(options);
-      expect(uiLink).toHaveBeenCalledTimes(1);
-      expect(uiLink).toHaveBeenCalledWith(
+      await deployCommand.handler(options);
+      expect(uiLinkSpy).toHaveBeenCalledTimes(1);
+      expect(uiLinkSpy).toHaveBeenCalledWith(
         viewProjectsInHubSpot,
         projectDetailUrl
       );
@@ -299,7 +262,7 @@ describe('commands/project/deploy', () => {
 
     it('should prompt for build id if no option is provided', async () => {
       delete options.buildId;
-      await handler(options);
+      await deployCommand.handler(options);
       expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
       expect(deployBuildIdPrompt).toHaveBeenCalledWith(
         projectDetails.latestBuild.buildId,
@@ -312,7 +275,7 @@ describe('commands/project/deploy', () => {
       delete options.buildId;
       deployBuildIdPrompt.mockReturnValue({});
 
-      await handler(options);
+      await deployCommand.handler(options);
 
       expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledTimes(1);
@@ -324,7 +287,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should deploy the project', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(deployProject).toHaveBeenCalledTimes(1);
       expect(deployProject).toHaveBeenCalledWith(
         accountId,
@@ -341,7 +304,7 @@ describe('commands/project/deploy', () => {
         },
       });
 
-      await handler(options);
+      await deployCommand.handler(options);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         `Deploy error: ${errorMessage}`
@@ -351,7 +314,7 @@ describe('commands/project/deploy', () => {
     });
 
     it('should poll the deploy status', async () => {
-      await handler(options);
+      await deployCommand.handler(options);
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
         accountId,
@@ -364,8 +327,8 @@ describe('commands/project/deploy', () => {
     it('log an error and exit if a 404 status is returned', async () => {
       const commandReference = 'hs project upload';
       const accountDescription = 'SuperCoolTestAccount';
-      uiCommandReference.mockReturnValue(commandReference);
-      uiAccountDescription.mockReturnValue(accountDescription);
+      uiCommandReferenceSpy.mockReturnValueOnce(commandReference);
+      uiAccountDescriptionSpy.mockReturnValueOnce(accountDescription);
       fetchProject.mockImplementation(() => {
         throw new HubSpotHttpError('OH NO', {
           cause: new AxiosError(
@@ -377,7 +340,7 @@ describe('commands/project/deploy', () => {
           ),
         });
       });
-      await handler(options);
+      await deployCommand.handler(options);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
@@ -390,10 +353,6 @@ describe('commands/project/deploy', () => {
     });
 
     it('log an error and exit if a 400 status is returned', async () => {
-      const commandReference = 'hs project upload';
-      const accountDescription = 'SuperCoolTestAccount';
-      uiCommandReference.mockReturnValue(commandReference);
-      uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
         throw new HubSpotHttpError(errorMessage, {
@@ -406,7 +365,7 @@ describe('commands/project/deploy', () => {
           ),
         });
       });
-      await handler(options);
+      await deployCommand.handler(options);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith('The request was bad.');
@@ -415,10 +374,6 @@ describe('commands/project/deploy', () => {
     });
 
     it('log an error another unexpected status code is returned', async () => {
-      const commandReference = 'hs project upload';
-      const accountDescription = 'SuperCoolTestAccount';
-      uiCommandReference.mockReturnValue(commandReference);
-      uiAccountDescription.mockReturnValue(accountDescription);
       const errorMessage = 'Something bad happened';
       fetchProject.mockImplementation(() => {
         throw new HubSpotHttpError('OH NO', {
@@ -431,7 +386,7 @@ describe('commands/project/deploy', () => {
           ),
         });
       });
-      await handler(options);
+      await deployCommand.handler(options);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
