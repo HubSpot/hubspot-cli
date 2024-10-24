@@ -40,7 +40,7 @@ exports.handler = async options => {
   }
 
   const { project, dest, buildNumber } = options;
-  let { project: promptedProjectName } = await downloadProjectPrompt(options);
+  const { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
   const accountId = getAccountId(options);
@@ -64,7 +64,9 @@ exports.handler = async options => {
           accountId: chalk.bold(accountId),
         })
       );
-      let { name: promptedProjectName } = await downloadProjectPrompt(options);
+      const { name: promptedProjectName } = await downloadProjectPrompt(
+        options
+      );
       projectName = promptedProjectName || project;
     }
 

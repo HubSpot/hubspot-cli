@@ -782,9 +782,11 @@ const makePollTaskStatusFunc = ({
                 ''
               )} ${taskStatusText}${hasNewline ? '\n' : ''}`;
 
-              status === statusText.STATES.SUCCESS
-                ? SpinniesManager.succeed(id, { text: updatedText })
-                : SpinniesManager.fail(id, { text: updatedText });
+              if (status === statusText.STATES.SUCCESS) {
+                SpinniesManager.succeed(id, { text: updatedText });
+              } else {
+                SpinniesManager.fail(id, { text: updatedText });
+              }
 
               if (topLevelTask) {
                 topLevelTask.subtasks.forEach(currentSubtask =>
@@ -952,7 +954,7 @@ const createProjectComponent = async (
   projectComponentsVersion
 ) => {
   const i18nKey = 'commands.project.subcommands.add';
-  let componentName = name;
+  const componentName = name;
 
   const configInfo = await getProjectConfig();
 

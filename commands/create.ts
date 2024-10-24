@@ -45,7 +45,8 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
-  let { type: assetType, name, dest, internal: getInternalVersion } = options;
+  let { type: assetType, dest } = options;
+  const { name, internal: getInternalVersion } = options;
 
   setLogLevel(options);
   logDebugInfo(options);

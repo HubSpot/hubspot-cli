@@ -380,7 +380,7 @@ class LocalDevManager {
       subbuildStatus => subbuildStatus.buildName
     );
 
-    let missingComponents = [];
+    const missingComponents = [];
 
     this.runnableComponents.forEach(({ type, config, path }) => {
       if (Object.values(COMPONENT_TYPES).includes(type)) {

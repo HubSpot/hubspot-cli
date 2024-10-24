@@ -32,7 +32,7 @@ const hasAllProperties = projectList => {
 
 const createTemplateOptions = async (templateSource, githubRef) => {
   const hasCustomTemplateSource = Boolean(templateSource);
-  let branch = hasCustomTemplateSource
+  const branch = hasCustomTemplateSource
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 

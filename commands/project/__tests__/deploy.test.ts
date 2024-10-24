@@ -41,8 +41,8 @@ jest.mock('../../../lib/projects');
 jest.mock('../../../lib/prompts/projectNamePrompt');
 jest.mock('../../../lib/prompts/deployBuildIdPrompt');
 jest.mock('../../../lib/usageTracking');
+jest.spyOn(ui, 'uiLine');
 const uiLinkSpy = jest.spyOn(ui, 'uiLink').mockImplementation(text => text);
-const uiLineSpy = jest.spyOn(ui, 'uiLine');
 const uiCommandReferenceSpy = jest.spyOn(ui, 'uiCommandReference');
 const uiAccountDescriptionSpy = jest.spyOn(ui, 'uiAccountDescription');
 
