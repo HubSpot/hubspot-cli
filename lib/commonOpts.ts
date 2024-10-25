@@ -90,16 +90,18 @@ const getAccountId = (options = {}) => {
   const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    options.account = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-    options.portal = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    const accountIdFromEnv = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    options.account = accountIdFromEnv;
+    options.portal = accountIdFromEnv;
+    return accountIdFromEnv;
   }
 
   // Preserves the original --account and --portal flags for certain commands.
-  options.accountFlag = portal || account;
-  options.account = getAccountIdFromConfig(portal || account);
-  options.portal = getAccountIdFromConfig(portal || account);
-  return getAccountIdFromConfig(portal || account);
+  options.providedAccount = portal || account;
+  const accountIdFromConfig = getAccountIdFromConfig(portal || account);
+  options.account = accountIdFromConfig;
+  options.portal = accountIdFromConfig;
+  return accountIdFromConfig;
 };
 
 const getMode = (command = {}) => {

@@ -25,8 +25,8 @@ exports.handler = async options => {
   let config = getConfig();
 
   // We don't want to auto inject the account flag from middleware.
-  // --accountFlag preserves the original --account and --portal flags.
-  let accountToRemove = options.accountFlag;
+  // --providedAccount preserves the original --account and --portal flags.
+  let accountToRemove = options.providedAccount;
 
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
