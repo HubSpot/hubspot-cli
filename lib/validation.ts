@@ -26,14 +26,12 @@ const {
   getExt,
 } = require('@hubspot/local-dev-lib/path');
 const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
-const { logDebugInfo } = require('./debugInfo');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { checkAndWarnGitInclusion } = require('./ui/git');
 const { logError } = require('./errorHandlers/index');
 
 async function loadAndValidateOptions(options, shouldValidateAccount = true) {
   setLogLevel(options);
-  logDebugInfo(options);
   const { config: configPath } = options;
   loadConfig(configPath, options);
   checkAndWarnGitInclusion(getConfigPath());

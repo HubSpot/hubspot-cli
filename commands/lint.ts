@@ -1,9 +1,7 @@
 // @ts-nocheck
 const { lint } = require('@hubspot/local-dev-lib/cms/validate');
-const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../lib/errorHandlers/index');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -20,6 +18,33 @@ const { EXIT_CODES } = require('../lib/enums/exitCodes');
 exports.command = 'lint <path>';
 // Hiding since this command is still experimental
 exports.describe = null; //'Lint a file or folder for HubL syntax';
+
+const getErrorsFromHublValidationObject = validation =>
+  (validation && validation.meta && validation.meta.template_errors) || [];
+
+function printHublValidationError(err) {
+  const { severity, message, lineno, startPosition } = err;
+  const method = severity === 'FATAL' ? 'error' : 'warn';
+  logger[method]('[%d, %d]: %s', lineno, startPosition, message);
+}
+
+function printHublValidationResult({ file, validation }) {
+  let count = 0;
+  const errors = getErrorsFromHublValidationObject(validation);
+  if (!errors.length) {
+    return count;
+  }
+  logger.group(file);
+  errors.forEach(err => {
+    if (err.reason !== 'SYNTAX_ERROR') {
+      return;
+    }
+    ++count;
+    printHublValidationError(err);
+  });
+  logger.groupEnd(file);
+  return count;
+}
 
 exports.handler = async options => {
   const { path: lintPath } = options;

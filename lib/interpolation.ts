@@ -1,5 +1,27 @@
 // @ts-nocheck
-const helpers = require('./interpolationHelpers');
+const chalk = require('chalk');
+
+const helpers = {
+  bold: function(stringValue) {
+    return chalk.bold(stringValue);
+  },
+  yellow: function(stringValue) {
+    return chalk.reset.yellow(stringValue);
+  },
+  green: function(stringValue) {
+    return chalk.reset.green(stringValue);
+  },
+  red: function(stringValue) {
+    return chalk.reset.red(stringValue);
+  },
+  cyan: function(stringValue) {
+    return chalk.cyan(stringValue);
+  },
+  orange: function(stringValue) {
+    return chalk.hex('#FC9900')(stringValue);
+  },
+};
+
 const delimiters = {
   interpolation: {
     start: '{{',
