@@ -1,6 +1,6 @@
 // @ts-nocheck
 'use strict';
-const hasFlag = require('../hasFlag');
+const { hasFlag } = require('../hasFlag');
 
 //See https://github.com/jamestalmage/supports-hyperlinks (License: https://github.com/jamestalmage/supports-hyperlinks/blob/master/license)
 

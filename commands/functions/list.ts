@@ -20,19 +20,6 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-const getFunctionArrays = resp => {
-  return resp.objects.map(func => {
-    const { route, method, created, updated, secretNames } = func;
-    return [
-      route,
-      method,
-      secretNames.join(', '),
-      moment(created).format(),
-      moment(updated).format(),
-    ];
-  });
-};
-
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
@@ -55,7 +42,17 @@ exports.handler = async options => {
     return logger.log(routesResp.objects);
   }
 
-  const functionsAsArrays = getFunctionArrays(routesResp);
+  const functionsAsArrays = routesResp.objects.map(func => {
+    const { route, method, created, updated, secretNames } = func;
+    return [
+      route,
+      method,
+      secretNames.join(', '),
+      moment(created).format(),
+      moment(updated).format(),
+    ];
+  });
+
   functionsAsArrays.unshift(
     getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
   );
