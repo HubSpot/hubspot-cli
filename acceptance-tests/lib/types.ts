@@ -1,6 +1,6 @@
 export interface TestConfig {
   debug: boolean;
-  cliVersion: string;
+  useInstalled: boolean;
   cliPath: string;
   personalAccessKey: string;
   portalId: string;
@@ -9,5 +9,14 @@ export interface TestConfig {
 }
 
 export interface CLI {
-  execute: (args: string[], inputs?: string[], opts?: {}) => Promise<unknown>;
+  execute: (
+    args: string[],
+    inputs?: string[],
+    opts?: object
+  ) => Promise<unknown>;
+  executeWithTestConfig: (
+    args: string[],
+    inputs?: string[],
+    opts?: object
+  ) => Promise<unknown>;
 }

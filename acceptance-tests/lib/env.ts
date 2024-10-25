@@ -27,9 +27,8 @@ const getEnvValue = (envVariable: string) => {
 
 const envOverrides: TestConfig = getTruthyValuesOnly({
   portalId: getEnvValue('PORTAL_ID') || getEnvValue('ACCOUNT_ID'),
-  cliPath: getEnvValue('CLI_PATH'),
   personalAccessKey: getEnvValue('PERSONAL_ACCESS_KEY'),
-  cliVersion: getEnvValue('CLI_VERSION'),
+  useInstalled: getEnvValue('USE_INSTALLED'),
   debug: getEnvValue('DEBUG'),
   qa: getEnvValue('QA'),
   githubToken: getEnvValue('GITHUB_TOKEN'),
@@ -45,21 +44,13 @@ export const getTestConfig = (): TestConfig => {
     );
   }
 
-  if (config.cliPath && config.cliVersion) {
-    throw new Error(
-      'You cannot specify both a cliPath and a cliVersion. Remove one and try again.'
-    );
-  }
-
-  if (!config.cliPath && !config.cliVersion) {
-    const defaultPath = path.join(process.cwd(), '../packages/cli/bin/hs');
+  if (!config.useInstalled) {
+    const defaultPath = path.join(process.cwd(), '../dist/bin/hs');
 
     if (existsSync(defaultPath)) {
       config.cliPath = defaultPath;
     } else {
-      throw new Error(
-        'cliPath must be defined. Either set the CLI_PATH environment variable or use the --cliPath flag to pass it in.'
-      );
+      throw new Error('Unable to locate the CLI executable to run.');
     }
   }
 

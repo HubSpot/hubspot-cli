@@ -15,7 +15,7 @@ To setup these tests, there are two required arguments and one optional one:
 1. The ID of a HubSpot account that you are a user in
 2. Your generated personal access key in that account (available in [personal access key ui](https://app.hubspot.com/l/personal-access-key))
 3. [Optional] A path to an instance of the CLI. The test runner will execute the commands against this provided instance
-   - The default behavior is to use `../packages/cli/bin/hs`
+   - The default behavior is to use `../bin/hs`
 
 ### Configuration
 
@@ -26,7 +26,6 @@ There are 2 ways to pass in necessary configuration to the script.
 ```bash
 ACCOUNT_ID="123456789"
 PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-CLI_PATH="hs"
 ```
 
 2. Through environment variables.
@@ -34,12 +33,11 @@ CLI_PATH="hs"
 ```bash
 export ACCOUNT_ID="123456789"
 export PERSONAL_ACCESS_KEY="AiRiNGU2Y***************m1wLi2s8k2UlMYHEX"
-export CLI_PATH="hs"
 ```
 
 ### Running Locally
 
-1. Run `lerna bootstrap` to install dependencies
+1. Run `yarn` to install dependencies
 2. Run `yarn test-cli` from the root of the CLI repo
 
 **NOTE:** Include the `--debug` flag for more verbose output
