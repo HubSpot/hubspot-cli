@@ -164,7 +164,7 @@ exports.handler = async options => {
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.fileUploaded`, {
-            account,
+            accountId: account,
             dest: normalizedDest,
             src,
           })
@@ -181,7 +181,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            account,
+            accountId: account,
             request: normalizedDest,
             payload: src,
           })
@@ -198,7 +198,7 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.uploading`, {
-        account,
+        accountId: account,
         dest,
         src,
       })
@@ -219,11 +219,13 @@ exports.handler = async options => {
       if (cleanUpload) {
         try {
           await deleteFile(account, dest);
-          logger.log(i18n(`${i18nKey}.cleaning`, { account, filePath: dest }));
+          logger.log(
+            i18n(`${i18nKey}.cleaning`, { accountId: account, filePath: dest })
+          );
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
-              account,
+              accountId: account,
               path: dest,
             })
           );

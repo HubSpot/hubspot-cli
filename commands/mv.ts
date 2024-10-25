@@ -39,7 +39,7 @@ exports.handler = async options => {
     await moveFile(account, srcPath, getCorrectedDestPath(srcPath, destPath));
     logger.success(
       i18n(`${i18nKey}.move`, {
-        account,
+        accountId: account,
         destPath,
         srcPath,
       })
@@ -47,7 +47,7 @@ exports.handler = async options => {
   } catch (error) {
     logger.error(
       i18n(`${i18nKey}.errors.moveFailed`, {
-        account,
+        accountId: account,
         destPath,
         srcPath,
       })
@@ -63,7 +63,7 @@ exports.handler = async options => {
       logError(
         error,
         new ApiErrorContext({
-          account,
+          accountId: account,
           srcPath,
           destPath,
         })

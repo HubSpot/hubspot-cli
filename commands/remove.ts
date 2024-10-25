@@ -26,15 +26,20 @@ exports.handler = async options => {
 
   try {
     await deleteFile(account, hsPath);
-    logger.log(i18n(`${i18nKey}.deleted`, { account, path: hsPath }));
+    logger.log(
+      i18n(`${i18nKey}.deleted`, { accountId: account, path: hsPath })
+    );
   } catch (error) {
     logger.error(
-      i18n(`${i18nKey}.errors.deleteFailed`, { account, path: hsPath })
+      i18n(`${i18nKey}.errors.deleteFailed`, {
+        accountId: account,
+        path: hsPath,
+      })
     );
     logError(
       error,
       new ApiErrorContext({
-        account,
+        accountId: account,
         request: hsPath,
       })
     );
