@@ -47,14 +47,14 @@ exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
   // We don't want to auto inject the account flag from middleware.
-  // --providedAccount preserves the original --account and --portal flags.
-  const { providedAccount, force } = options;
+  // --providedAccountId preserves the original --account and --portal flags.
+  const { providedAccountId, force } = options;
   const config = getConfig();
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
-  if (!providedAccount) {
+  if (!providedAccountId) {
     if (!force) {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
@@ -71,7 +71,7 @@ exports.handler = async options => {
   }
 
   const sandboxAccountId = getAccountId({
-    account: providedAccount || accountPrompt.account,
+    account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
     sandboxAccountId === getAccountId(getDefaultAccount(config));
@@ -155,7 +155,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: providedAccount || accountPrompt.account,
+        account: providedAccountId || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );

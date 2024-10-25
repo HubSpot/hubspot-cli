@@ -14,7 +14,7 @@ const { logError } = require('../lib/errorHandlers/index');
 const {
   setLogLevel,
   getCommandName,
-  getAccountId,
+  injectAccountIdMiddleware,
 } = require('../lib/commonOpts');
 const {
   trackHelpUsage,
@@ -155,7 +155,7 @@ const argv = yargs
     setLogLevel,
     setRequestHeaders,
     loadConfigMiddleware,
-    getAccountId,
+    injectAccountIdMiddleware,
   ])
   .exitProcess(false)
   .fail(handleFailure)

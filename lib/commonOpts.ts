@@ -90,18 +90,26 @@ const getAccountId = (options = {}) => {
   const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    const accountIdFromEnv = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
-    options.account = accountIdFromEnv;
-    options.portal = accountIdFromEnv;
-    return accountIdFromEnv;
+    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
+  return getAccountIdFromConfig(portal || account);
+};
+
+/**
+ * Auto-injects the the derivedAccountId flag into all commands
+ */
+const injectAccountIdMiddleware = (options = {}) => {
+  const { portal, account } = options;
   // Preserves the original --account and --portal flags for certain commands.
-  options.providedAccount = portal || account;
-  const accountIdFromConfig = getAccountIdFromConfig(portal || account);
-  options.account = accountIdFromConfig;
-  options.portal = accountIdFromConfig;
-  return accountIdFromConfig;
+  options.providedAccountId = portal || account;
+
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    return;
+  }
+
+  options.derivedAccountId = getAccountIdFromConfig(portal || account);
 };
 
 const getMode = (command = {}) => {
@@ -134,5 +142,6 @@ module.exports = {
   getCommandName,
   getMode,
   getAccountId,
+  injectAccountIdMiddleware,
   setLogLevel,
 };
