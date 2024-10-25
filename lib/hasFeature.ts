@@ -1,16 +1,12 @@
-// @ts-nocheck
-const {
-  fetchEnabledFeatures,
-} = require('@hubspot/local-dev-lib/api/localDevAuth');
+import { fetchEnabledFeatures } from '@hubspot/local-dev-lib/api/localDevAuth';
 
-const hasFeature = async (accountId, feature) => {
+export async function hasFeature(
+  accountId: number,
+  feature: string
+): Promise<boolean> {
   const {
     data: { enabledFeatures },
   } = await fetchEnabledFeatures(accountId);
 
-  return enabledFeatures[feature];
-};
-
-module.exports = {
-  hasFeature,
-};
+  return Boolean(enabledFeatures[feature]);
+}

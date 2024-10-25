@@ -1,35 +1,42 @@
-// @ts-nocheck
-const {
-  HUBSPOT_ACCOUNT_TYPES,
-} = require('@hubspot/local-dev-lib/constants/config');
+import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { CLIAccount, AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
-const isAccountType = (config, accountType) =>
-  config.accountType && config.accountType === accountType;
+function isAccountType(
+  accountConfig: CLIAccount,
+  accountType: AccountType
+): boolean {
+  return (
+    Boolean(accountConfig.accountType) &&
+    accountConfig.accountType === accountType
+  );
+}
 
-const isStandardAccount = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.STANDARD);
+export function isStandardAccount(accountConfig: CLIAccount): boolean {
+  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD);
+}
 
-const isSandbox = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) ||
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX);
+export function isSandbox(accountConfig: CLIAccount): boolean {
+  return (
+    isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX) ||
+    isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX)
+  );
+}
 
-const isStandardSandbox = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX);
+export function isStandardSandbox(accountConfig: CLIAccount): boolean {
+  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX);
+}
 
-const isDevelopmentSandbox = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX);
+export function isDevelopmentSandbox(accountConfig: CLIAccount): boolean {
+  return isAccountType(
+    accountConfig,
+    HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX
+  );
+}
 
-const isDeveloperTestAccount = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST);
+export function isDeveloperTestAccount(accountConfig: CLIAccount): boolean {
+  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST);
+}
 
-const isAppDeveloperAccount = config =>
-  isAccountType(config, HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER);
-
-module.exports = {
-  isStandardAccount,
-  isSandbox,
-  isStandardSandbox,
-  isDevelopmentSandbox,
-  isDeveloperTestAccount,
-  isAppDeveloperAccount,
-};
+export function isAppDeveloperAccount(accountConfig: CLIAccount): boolean {
+  return isAccountType(accountConfig, HUBSPOT_ACCOUNT_TYPES.APP_DEVELOPER);
+}
