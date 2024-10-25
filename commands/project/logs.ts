@@ -83,13 +83,13 @@ exports.command = 'logs';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
-  const { account } = options;
-  trackCommandUsage('project-logs', null, account);
+  const { derivedAccountId } = options;
+  trackCommandUsage('project-logs', null, derivedAccountId);
 
   await loadAndValidateOptions(options);
 
   try {
-    await ProjectLogsManager.init(account);
+    await ProjectLogsManager.init(derivedAccountId);
 
     const { functionName } = await projectLogsPrompt({
       functionChoices: ProjectLogsManager.getFunctionNames(),
@@ -102,7 +102,7 @@ exports.handler = async options => {
     logPreamble();
   } catch (e) {
     logError(e, {
-      accountId: account,
+      accountId: derivedAccountId,
       projectName: ProjectLogsManager.projectName,
     });
     return process.exit(EXIT_CODES.ERROR);

@@ -88,25 +88,25 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { initialUpload, path: projectPath, account } = options;
+  const { initialUpload, path: projectPath, derivedAccountId } = options;
 
-  trackCommandUsage('project-watch', null, account);
+  trackCommandUsage('project-watch', null, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(account, projectConfig.name);
+  await ensureProjectExists(derivedAccountId, projectConfig.name);
 
   try {
     const {
       data: { results: builds },
-    } = await fetchProjectBuilds(account, projectConfig.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, projectConfig.name, options);
     const hasNoBuilds = !builds || !builds.length;
 
     const startWatching = async () => {
       await createWatcher(
-        account,
+        derivedAccountId,
         projectConfig,
         projectDir,
         handleBuildStatus,
@@ -117,7 +117,7 @@ exports.handler = async options => {
     // Upload all files if no build exists for this project yet
     if (initialUpload || hasNoBuilds) {
       const result = await handleProjectUpload(
-        account,
+        derivedAccountId,
         projectConfig,
         projectDir,
         startWatching
@@ -136,7 +136,7 @@ exports.handler = async options => {
           logError(
             result.uploadError,
             new ApiErrorContext({
-              accountId: account,
+              accountId: derivedAccountId,
               request: 'project upload',
             })
           );
@@ -147,7 +147,7 @@ exports.handler = async options => {
       await startWatching();
     }
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId: account }));
+    logError(e, new ApiErrorContext({ accountId: derivedAccountId }));
   }
 };
 

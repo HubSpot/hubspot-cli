@@ -22,23 +22,23 @@ exports.handler = async options => {
 
   await loadAndValidateOptions(options);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
   const localPath = resolveLocalPath(lintPath);
   const groupName = i18n(`${i18nKey}.groupName`, {
     path: localPath,
   });
 
-  trackCommandUsage('lint', null, account);
+  trackCommandUsage('lint', null, derivedAccountId);
 
   logger.group(groupName);
   let count = 0;
   try {
-    await lint(account, localPath, result => {
+    await lint(derivedAccountId, localPath, result => {
       count += printHublValidationResult(result);
     });
   } catch (err) {
     logger.groupEnd(groupName);
-    logError(err, { accountId: account });
+    logError(err, { accountId: derivedAccountId });
     process.exit(EXIT_CODES.ERROR);
   }
   logger.groupEnd(groupName);

@@ -33,24 +33,24 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath, message, account } = options;
-  const accountConfig = getAccountConfig(account);
+  const { forceCreate, path: projectPath, message, derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, account);
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(account, projectConfig.name, {
+  await ensureProjectExists(derivedAccountId, projectConfig.name, {
     forceCreate,
     uploadCommand: true,
   });
 
   try {
     const result = await handleProjectUpload(
-      account,
+      derivedAccountId,
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
@@ -70,7 +70,7 @@ exports.handler = async options => {
         logError(
           result.uploadError,
           new ApiErrorContext({
-            accountId: account,
+            accountId: derivedAccountId,
             request: 'project upload',
           })
         );
@@ -94,13 +94,20 @@ exports.handler = async options => {
       );
       logFeedbackMessage(result.buildId);
 
-      await displayWarnLogs(account, projectConfig.name, result.buildId);
+      await displayWarnLogs(
+        derivedAccountId,
+        projectConfig.name,
+        result.buildId
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
     logError(
       e,
-      new ApiErrorContext({ accountId: account, request: 'project upload' })
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project upload',
+      })
     );
     process.exit(EXIT_CODES.ERROR);
   }

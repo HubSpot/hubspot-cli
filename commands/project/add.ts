@@ -24,7 +24,7 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
 
   logger.log('');
   logger.log(i18n(`${i18nKey}.creatingComponent.message`));
@@ -47,7 +47,7 @@ exports.handler = async options => {
     component = components.find(t => t.path === options.type);
   }
 
-  trackCommandUsage('project-add', null, account);
+  trackCommandUsage('project-add', null, derivedAccountId);
 
   try {
     await createProjectComponent(component, name, projectComponentsVersion);

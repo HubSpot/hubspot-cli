@@ -35,9 +35,9 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath, limit, account } = options;
+  const { path: projectPath, limit, derivedAccountId } = options;
 
-  trackCommandUsage('project-list-builds', null, account);
+  trackCommandUsage('project-list-builds', null, derivedAccountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const { projectConfig, projectDir } = await getProjectConfig(cwd);
@@ -49,7 +49,7 @@ exports.handler = async options => {
   const fetchAndDisplayBuilds = async (project, options) => {
     const {
       data: { results, paging },
-    } = await fetchProjectBuilds(account, project.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, project.name, options);
     const currentDeploy = project.deployedBuildId;
     if (options && options.after) {
       logger.log(
@@ -60,7 +60,7 @@ exports.handler = async options => {
         `Showing the ${results.length} most recent builds for ${project.name}. ` +
           uiLink(
             'View all builds in project details.',
-            getProjectDetailUrl(project.name, account)
+            getProjectDetailUrl(project.name, derivedAccountId)
           )
       );
     }
@@ -115,7 +115,10 @@ exports.handler = async options => {
   };
 
   try {
-    const { data: project } = await fetchProject(account, projectConfig.name);
+    const { data: project } = await fetchProject(
+      derivedAccountId,
+      projectConfig.name
+    );
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
@@ -125,7 +128,7 @@ exports.handler = async options => {
       logError(
         e,
         new ApiErrorContext({
-          accountId: account,
+          accountId: derivedAccountId,
           projectName: projectConfig.name,
         })
       );

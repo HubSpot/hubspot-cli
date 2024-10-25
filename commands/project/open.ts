@@ -27,18 +27,22 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { project, account } = options;
+  const { project, derivedAccountId } = options;
 
-  trackCommandUsage('project-open', null, account);
+  trackCommandUsage('project-open', null, derivedAccountId);
 
   const { projectConfig } = await getProjectConfig();
 
   let projectName = project;
 
   if (projectName) {
-    const { projectExists } = await ensureProjectExists(account, projectName, {
-      allowCreate: false,
-    });
+    const { projectExists } = await ensureProjectExists(
+      derivedAccountId,
+      projectName,
+      {
+        allowCreate: false,
+      }
+    );
 
     if (!projectExists) {
       process.exit(EXIT_CODES.ERROR);
@@ -46,7 +50,7 @@ exports.handler = async options => {
   } else if (!projectName && projectConfig) {
     projectName = projectConfig.name;
   } else if (!projectName && !projectConfig) {
-    const namePrompt = await projectNamePrompt(account);
+    const namePrompt = await projectNamePrompt(derivedAccountId);
 
     if (!namePrompt.projectName) {
       process.exit(EXIT_CODES.ERROR);
@@ -54,7 +58,7 @@ exports.handler = async options => {
     projectName = namePrompt.projectName;
   }
 
-  const url = getProjectDetailUrl(projectName, account);
+  const url = getProjectDetailUrl(projectName, derivedAccountId);
   open(url, { url: true });
   logger.success(i18n(`${i18nKey}.success`, { projectName }));
   process.exit(EXIT_CODES.SUCCESS);

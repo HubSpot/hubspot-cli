@@ -89,11 +89,11 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { latest, account } = options;
+  const { latest, derivedAccountId } = options;
 
-  trackCommandUsage('logs', { latest }, account);
+  trackCommandUsage('logs', { latest }, derivedAccountId);
 
-  endpointLog(account, options);
+  endpointLog(derivedAccountId, options);
 };
 
 exports.builder = yargs => {

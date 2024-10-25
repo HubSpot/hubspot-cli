@@ -36,23 +36,27 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, buildNumber, account } = options;
+  const { project, dest, buildNumber, derivedAccountId } = options;
   let { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
-  trackCommandUsage('project-download', null, account);
+  trackCommandUsage('project-download', null, derivedAccountId);
 
   try {
-    const { projectExists } = await ensureProjectExists(account, projectName, {
-      allowCreate: false,
-      noLogs: true,
-    });
+    const { projectExists } = await ensureProjectExists(
+      derivedAccountId,
+      projectName,
+      {
+        allowCreate: false,
+        noLogs: true,
+      }
+    );
 
     if (!projectExists) {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountId: chalk.bold(account),
+          accountId: chalk.bold(derivedAccountId),
         })
       );
       let { name: promptedProjectName } = await downloadProjectPrompt(options);
@@ -65,7 +69,7 @@ exports.handler = async options => {
 
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
-        account,
+        derivedAccountId,
         projectName
       );
 
@@ -78,7 +82,7 @@ exports.handler = async options => {
     }
 
     const { data: zippedProject } = await downloadProject(
-      account,
+      derivedAccountId,
       projectName,
       buildNumberToDownload
     );
@@ -100,7 +104,10 @@ exports.handler = async options => {
   } catch (e) {
     logError(
       e,
-      new ApiErrorContext({ accountId: account, request: 'project download' })
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project download',
+      })
     );
     process.exit(EXIT_CODES.ERROR);
   }

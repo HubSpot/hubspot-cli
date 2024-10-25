@@ -31,15 +31,19 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { srcPath, destPath, account } = options;
+  const { srcPath, destPath, derivedAccountId } = options;
 
-  trackCommandUsage('mv', null, account);
+  trackCommandUsage('mv', null, derivedAccountId);
 
   try {
-    await moveFile(account, srcPath, getCorrectedDestPath(srcPath, destPath));
+    await moveFile(
+      derivedAccountId,
+      srcPath,
+      getCorrectedDestPath(srcPath, destPath)
+    );
     logger.success(
       i18n(`${i18nKey}.move`, {
-        accountId: account,
+        accountId: derivedAccountId,
         destPath,
         srcPath,
       })
@@ -47,7 +51,7 @@ exports.handler = async options => {
   } catch (error) {
     logger.error(
       i18n(`${i18nKey}.errors.moveFailed`, {
-        accountId: account,
+        accountId: derivedAccountId,
         destPath,
         srcPath,
       })
@@ -63,7 +67,7 @@ exports.handler = async options => {
       logError(
         error,
         new ApiErrorContext({
-          accountId: account,
+          accountId: derivedAccountId,
           srcPath,
           destPath,
         })

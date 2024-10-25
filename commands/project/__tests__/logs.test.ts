@@ -134,25 +134,27 @@ describe('commands/project/logs', () => {
     it('should track the command usage', async () => {
       const options = {
         foo: 'bar',
-        account: 12345678,
+        derivedAccountId: 12345678,
       };
       await handler(options);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-logs',
         null,
-        options.account
+        options.derivedAccountId
       );
     });
 
     it('should initialize the ProjectLogsManager', async () => {
       const options = {
         foo: 'bar',
-        account: 12345678,
+        derivedAccountId: 12345678,
       };
       await handler(options);
       expect(ProjectLogsManager.init).toHaveBeenCalledTimes(1);
-      expect(ProjectLogsManager.init).toHaveBeenCalledWith(options.account);
+      expect(ProjectLogsManager.init).toHaveBeenCalledWith(
+        options.derivedAccountId
+      );
     });
 
     it('should prompt the user for input', async () => {
@@ -188,7 +190,7 @@ describe('commands/project/logs', () => {
 
     it('should log public functions correctly', async () => {
       const options = {
-        account: 12345678,
+        derivedAccountId: 12345678,
       };
       await handler(options);
       const functionNames = ['function1', 'function2'];
@@ -202,7 +204,7 @@ describe('commands/project/logs', () => {
       getTableHeader.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = true;
-      ProjectLogsManager.accountId = options.account;
+      ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.endpointName = 'my-endpoint';
       ProjectLogsManager.appId = 123456;
@@ -229,7 +231,7 @@ describe('commands/project/logs', () => {
       expect(uiLink).toHaveBeenCalledTimes(1);
       expect(uiLink).toHaveBeenCalledWith(
         'View function logs in HubSpot',
-        `https://app.hubspot.com/private-apps/${options.account}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
+        `https://app.hubspot.com/private-apps/${options.derivedAccountId}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
       );
       expect(uiLine).toHaveBeenCalledTimes(1);
     });
@@ -238,7 +240,7 @@ describe('commands/project/logs', () => {
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
       const options = {
-        account: 12345678,
+        derivedAccountId: 12345678,
       };
       await handler(options);
 
@@ -251,7 +253,7 @@ describe('commands/project/logs', () => {
       getTableHeader.mockReturnValue(tableHeaders);
 
       ProjectLogsManager.isPublicFunction = false;
-      ProjectLogsManager.accountId = options.account;
+      ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.appId = 456789;
 
@@ -269,7 +271,7 @@ describe('commands/project/logs', () => {
 
       expect(uiLink).toHaveBeenCalledWith(
         'View function logs in HubSpot',
-        `https://app.hubspot.com/private-apps/${options.account}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
+        `https://app.hubspot.com/private-apps/${options.derivedAccountId}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
       );
 
       expect(uiLine).toHaveBeenCalledTimes(1);
@@ -277,7 +279,7 @@ describe('commands/project/logs', () => {
 
     it('should handle errors correctly', async () => {
       const options = {
-        account: 12345678,
+        derivedAccountId: 12345678,
       };
       await handler(options);
       const error = new Error('Something went wrong');
@@ -291,7 +293,7 @@ describe('commands/project/logs', () => {
 
       expect(logError).toHaveBeenCalledTimes(1);
       expect(logError).toHaveBeenCalledWith(error, {
-        accountId: account,
+        accountId: options.derivedAccountId,
         projectName: ProjectLogsManager.projectName,
       });
 

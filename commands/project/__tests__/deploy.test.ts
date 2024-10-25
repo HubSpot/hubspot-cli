@@ -152,7 +152,7 @@ describe('commands/project/deploy', () => {
       options = {
         project: 'project name from options',
         buildId: 2,
-        account: 1234567890,
+        derivedAccountId: 1234567890,
       };
       projectConfig = {
         name: 'project name from config',
@@ -183,7 +183,7 @@ describe('commands/project/deploy', () => {
     it('should load the account config for the correct account id', async () => {
       await handler(options);
       expect(getAccountConfig).toHaveBeenCalledTimes(1);
-      expect(getAccountConfig).toHaveBeenCalledWith(options.account);
+      expect(getAccountConfig).toHaveBeenCalledWith(options.derivedAccountId);
     });
 
     it('should track the command usage', async () => {
@@ -192,7 +192,7 @@ describe('commands/project/deploy', () => {
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-deploy',
         { type: accountType },
-        options.account
+        options.derivedAccountId
       );
     });
 
@@ -211,7 +211,7 @@ describe('commands/project/deploy', () => {
     it('should prompt for the project name', async () => {
       await handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {
+      expect(projectNamePrompt).toHaveBeenCalledWith(options.derivedAccountId, {
         project: options.project,
       });
     });
@@ -220,7 +220,7 @@ describe('commands/project/deploy', () => {
       delete options.project;
       await handler(options);
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {
+      expect(projectNamePrompt).toHaveBeenCalledWith(options.derivedAccountId, {
         project: projectConfig.name,
       });
     });
@@ -229,7 +229,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(
-        options.account,
+        options.derivedAccountId,
         options.project
       );
     });
@@ -243,10 +243,13 @@ describe('commands/project/deploy', () => {
       await handler(options);
 
       expect(projectNamePrompt).toHaveBeenCalledTimes(1);
-      expect(projectNamePrompt).toHaveBeenCalledWith(options.account, {});
+      expect(projectNamePrompt).toHaveBeenCalledWith(
+        options.derivedAccountId,
+        {}
+      );
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(
-        options.account,
+        options.derivedAccountId,
         promptProjectName
       );
     });
@@ -324,7 +327,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
       expect(deployProject).toHaveBeenCalledTimes(1);
       expect(deployProject).toHaveBeenCalledWith(
-        options.account,
+        options.derivedAccountId,
         options.project,
         options.buildId
       );
@@ -351,7 +354,7 @@ describe('commands/project/deploy', () => {
       await handler(options);
       expect(pollDeployStatus).toHaveBeenCalledTimes(1);
       expect(pollDeployStatus).toHaveBeenCalledWith(
-        options.account,
+        options.derivedAccountId,
         options.project,
         deployDetails.id,
         options.buildId
@@ -432,7 +435,7 @@ describe('commands/project/deploy', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `The request for 'project deploy' in account ${options.account} failed due to a client error.`
+        `The request for 'project deploy' in account ${options.derivedAccountId} failed due to a client error.`
       );
       expect(processExitSpy).toHaveBeenCalledTimes(1);
       expect(processExitSpy).toHaveBeenCalledWith(EXIT_CODES.ERROR);

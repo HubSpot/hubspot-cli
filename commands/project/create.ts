@@ -29,7 +29,7 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
 
   const hasCustomTemplateSource = Boolean(options.templateSource);
 
@@ -47,7 +47,11 @@ exports.handler = async options => {
     options
   );
 
-  trackCommandUsage('project-create', { type: template.name }, account);
+  trackCommandUsage(
+    'project-create',
+    { type: template.name },
+    derivedAccountId
+  );
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),

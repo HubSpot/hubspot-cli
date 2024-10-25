@@ -26,11 +26,11 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path, account } = options;
+  const { path, derivedAccountId } = options;
   const directoryPath = path || '/';
   let contentsResp;
 
-  trackCommandUsage('list', null, account);
+  trackCommandUsage('list', null, derivedAccountId);
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {
@@ -39,7 +39,10 @@ exports.handler = async options => {
   );
 
   try {
-    const { data } = await getDirectoryContentsByPath(account, directoryPath);
+    const { data } = await getDirectoryContentsByPath(
+      derivedAccountId,
+      directoryPath
+    );
     contentsResp = data;
   } catch (e) {
     logError(e);

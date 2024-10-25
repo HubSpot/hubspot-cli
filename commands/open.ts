@@ -31,18 +31,18 @@ exports.command = 'open [shortcut]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { shortcut, list, account } = options;
+  const { shortcut, list, derivedAccountId } = options;
 
-  trackCommandUsage('open', null, account);
+  trackCommandUsage('open', null, derivedAccountId);
 
   if (shortcut === undefined && !list) {
-    const choice = await createListPrompt(account);
-    openLink(account, choice.open);
+    const choice = await createListPrompt(derivedAccountId);
+    openLink(derivedAccountId, choice.open);
   } else if (list || shortcut === 'list') {
-    logSiteLinks(account);
+    logSiteLinks(derivedAccountId);
     return;
   } else {
-    openLink(account, shortcut);
+    openLink(derivedAccountId, shortcut);
   }
 };
 

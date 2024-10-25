@@ -57,11 +57,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const { account } = options;
-  const accountConfig = getAccountConfig(account);
-  const env = getValidEnv(getEnv(account));
+  const { derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const env = getValidEnv(getEnv(derivedAccountId));
 
-  trackCommandUsage('project-dev', null, account);
+  trackCommandUsage('project-dev', null, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig();
 
@@ -107,12 +107,12 @@ exports.handler = async options => {
     (!hasPublicApps && isSandbox(accountConfig));
 
   // The account that the project must exist in
-  let targetProjectAccountId = account || null;
+  let targetProjectAccountId = derivedAccountId || null;
   // The account that we are locally testing against
-  let targetTestingAccountId = account || null;
+  let targetTestingAccountId = derivedAccountId || null;
 
   // Check that the default account or flag option is valid for the type of app in this project
-  if (account) {
+  if (derivedAccountId) {
     checkIfAccountFlagIsSupported(accountConfig, hasPublicApps);
 
     if (hasPublicApps) {
@@ -124,7 +124,7 @@ exports.handler = async options => {
 
   // The user is targeting an account type that we recommend developing on
   if (!targetProjectAccountId && defaultAccountIsRecommendedType) {
-    targetTestingAccountId = account;
+    targetTestingAccountId = derivedAccountId;
 
     await confirmDefaultAccountIsTarget(accountConfig, hasPublicApps);
 
@@ -132,7 +132,7 @@ exports.handler = async options => {
       checkIfParentAccountIsAuthed(accountConfig);
       targetProjectAccountId = accountConfig.parentAccountId;
     } else {
-      targetProjectAccountId = account;
+      targetProjectAccountId = derivedAccountId;
     }
   }
 
@@ -166,7 +166,7 @@ exports.handler = async options => {
 
   if (createNewSandbox) {
     targetProjectAccountId = await createSandboxForLocalDev(
-      account,
+      derivedAccountId,
       accountConfig,
       env
     );
@@ -175,11 +175,11 @@ exports.handler = async options => {
   }
   if (createNewDeveloperTestAccount) {
     targetTestingAccountId = await createDeveloperTestAccountForLocalDev(
-      account,
+      derivedAccountId,
       accountConfig,
       env
     );
-    targetProjectAccountId = account;
+    targetProjectAccountId = derivedAccountId;
   }
 
   let { projectExists, project } = await ensureProjectExists(
