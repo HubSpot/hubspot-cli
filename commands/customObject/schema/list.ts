@@ -15,12 +15,12 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('custom-object-schema-list', null, account);
+  trackCommandUsage('custom-object-schema-list', null, derivedAccountId);
 
   try {
-    await listSchemas(account);
+    await listSchemas(derivedAccountId);
   } catch (e) {
     logError(e);
     logger.error(i18n(`${i18nKey}.errors.list`));

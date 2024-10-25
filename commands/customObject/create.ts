@@ -19,11 +19,11 @@ exports.command = 'create <name> <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name, account } = options;
+  const { definition, name, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('custom-object-batch-create', null, account);
+  trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 
   const filePath = getAbsoluteFilePath(definition);
   const objectJson = checkAndConvertToJson(filePath);
@@ -33,10 +33,10 @@ exports.handler = async options => {
   }
 
   try {
-    await batchCreateObjects(account, name, objectJson);
+    await batchCreateObjects(derivedAccountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
-    logError(e, { accountId: account });
+    logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

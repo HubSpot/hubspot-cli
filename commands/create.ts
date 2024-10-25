@@ -76,8 +76,8 @@ exports.handler = async options => {
   const argsToPass = { assetType, name, dest, getInternalVersion, options };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
-  const { account } = options;
-  trackCommandUsage('create', { assetType }, account);
+  const { derivedAccountId } = options;
+  trackCommandUsage('create', { assetType }, derivedAccountId);
 
   try {
     await fs.ensureDir(dest);

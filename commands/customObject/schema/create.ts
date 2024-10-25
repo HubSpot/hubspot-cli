@@ -32,11 +32,11 @@ exports.command = 'create <definition>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, account } = options;
+  const { definition, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('custom-object-schema-create', null, account);
+  trackCommandUsage('custom-object-schema-create', null, derivedAccountId);
 
   const filePath = getAbsoluteFilePath(definition);
   const schemaJson = checkAndConvertToJson(filePath);
@@ -46,24 +46,24 @@ exports.handler = async options => {
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
-      await createSchemaFromHubFile(account, filePath);
+      await createSchemaFromHubFile(derivedAccountId, filePath);
       logger.success(
         i18n(`${i18nKey}.success.schemaCreated`, {
-          accountId: account,
+          accountId: derivedAccountId,
         })
       );
     } else {
-      const { data } = await createObjectSchema(account, schemaJson);
+      const { data } = await createObjectSchema(derivedAccountId, schemaJson);
       logger.success(
         i18n(`${i18nKey}.success.schemaViewable`, {
           url: `${getHubSpotWebsiteOrigin(
             getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
-          )}/contacts/${account}/objects/${data.objectTypeId}`,
+          )}/contacts/${derivedAccountId}/objects/${data.objectTypeId}`,
         })
       );
     }
   } catch (e) {
-    logError(e, { accountId: account });
+    logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
         definition,

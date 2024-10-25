@@ -68,7 +68,7 @@ const selectTheme = async accountId => {
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
-  const { target, verbose, theme, account } = options;
+  const { target, verbose, theme, derivedAccountId } = options;
 
   const includeDesktopScore = target === 'desktop' || !verbose;
   const includeMobileScore = target === 'mobile' || !verbose;
@@ -77,7 +77,7 @@ exports.handler = async options => {
   if (themeToCheck) {
     let isValidTheme = true;
     try {
-      const { data: result } = await fetchThemes(account, {
+      const { data: result } = await fetchThemes(derivedAccountId, {
         name: encodeURIComponent(themeToCheck),
       });
       isValidTheme = result && result.total;
@@ -91,14 +91,14 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } else {
-    themeToCheck = await selectTheme(account);
+    themeToCheck = await selectTheme(derivedAccountId);
     logger.log();
   }
 
   // Kick off the scoring
   let requestResult;
   try {
-    const { data } = await requestLighthouseScore(account, {
+    const { data } = await requestLighthouseScore(derivedAccountId, {
       themePath: themeToCheck,
     });
     requestResult = data;
@@ -122,7 +122,7 @@ exports.handler = async options => {
     const checkScoreStatus = async () => {
       let desktopScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(account, {
+        const { data } = await getLighthouseScoreStatus(derivedAccountId, {
           themeId: requestResult.desktopId,
         });
         desktopScoreStatus = data;
@@ -130,7 +130,7 @@ exports.handler = async options => {
 
       let mobileScoreStatus = 'COMPLETED';
       if (includeDesktopScore) {
-        const { data } = await getLighthouseScoreStatus(account, {
+        const { data } = await getLighthouseScoreStatus(derivedAccountId, {
           themeId: requestResult.mobileId,
         });
         mobileScoreStatus = data;
@@ -161,7 +161,7 @@ exports.handler = async options => {
     const params = { isAverage: !verbose };
 
     if (includeDesktopScore) {
-      const { data } = await getLighthouseScore(account, {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         desktopId: requestResult.desktopId,
       });
@@ -169,7 +169,7 @@ exports.handler = async options => {
     }
 
     if (includeMobileScore) {
-      const { data } = await getLighthouseScore(account, {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         mobileId: requestResult.mobileId,
       });
@@ -177,7 +177,7 @@ exports.handler = async options => {
     }
     // This is needed to show the average scores above the verbose output
     if (verbose) {
-      const { data } = await getLighthouseScore(account, {
+      const { data } = await getLighthouseScore(derivedAccountId, {
         ...params,
         isAverage: true,
         desktopId: includeDesktopScore ? requestResult.desktopId : null,

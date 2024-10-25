@@ -15,9 +15,9 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   loadAndValidateOptions(options);
 
-  const { accountName, newName, account } = options;
+  const { accountName, newName, derivedAccountId } = options;
 
-  trackCommandUsage('accounts-rename', null, account);
+  trackCommandUsage('accounts-rename', null, derivedAccountId);
 
   await renameAccount(accountName, newName);
 

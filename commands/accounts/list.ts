@@ -84,9 +84,9 @@ const getPortalData = mappedPortalData => {
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('accounts-list', null, account);
+  trackCommandUsage('accounts-list', null, derivedAccountId);
 
   const config = getConfig();
   const configPath = getConfigPath();

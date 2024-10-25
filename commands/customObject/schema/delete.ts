@@ -14,14 +14,14 @@ exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { name, account } = options;
+  let { name, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('custom-object-schema-delete', null, account);
+  trackCommandUsage('custom-object-schema-delete', null, derivedAccountId);
 
   try {
-    await deleteObjectSchema(account, name);
+    await deleteObjectSchema(derivedAccountId, name);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
         name,

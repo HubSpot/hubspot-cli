@@ -52,16 +52,16 @@ const handleConfigUpdate = async (accountId, options) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { account } = options;
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('config-set', null, account);
+  trackCommandUsage('config-set', null, derivedAccountId);
 
-  const configUpdated = await handleConfigUpdate(account, options);
+  const configUpdated = await handleConfigUpdate(derivedAccountId, options);
 
   if (!configUpdated) {
     const selectedOptions = await selectOptions();
 
-    await handleConfigUpdate(account, selectedOptions);
+    await handleConfigUpdate(derivedAccountId, selectedOptions);
   }
 
   process.exit(EXIT_CODES.SUCCESS);

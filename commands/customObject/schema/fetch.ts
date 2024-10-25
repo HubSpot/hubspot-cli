@@ -21,16 +21,16 @@ exports.command = 'fetch <name> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { name, dest, account } = options;
+  let { name, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('custom-object-schema-fetch', null, account);
+  trackCommandUsage('custom-object-schema-fetch', null, derivedAccountId);
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       const fullpath = path.resolve(getCwd(), dest);
-      await fetchSchema(account, name, fullpath);
+      await fetchSchema(derivedAccountId, name, fullpath);
       logger.success(
         i18n(`${i18nKey}.success.save`, {
           name,
@@ -38,7 +38,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      await downloadSchema(account, name, dest);
+      await downloadSchema(derivedAccountId, name, dest);
       logger.success(
         i18n(`${i18nKey}.success.savedToPath`, {
           path: getResolvedPath(dest, name),

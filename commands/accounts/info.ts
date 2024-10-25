@@ -15,19 +15,23 @@ exports.command = 'info [--account]';
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { account } = options;
-  const config = getAccountConfig(account);
+  const { derivedAccountId } = options;
+  const config = getAccountConfig(derivedAccountId);
 
   // check if the provided account is using a personal access key, if not, show an error
   if (config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
 
-    const response = await getAccessToken(personalAccessKey, env, account);
+    const response = await getAccessToken(
+      personalAccessKey,
+      env,
+      derivedAccountId
+    );
 
     const scopeGroups = response.scopeGroups.map(s => [s]);
 
     logger.log(i18n(`${i18nKey}.name`, { name }));
-    logger.log(i18n(`${i18nKey}.accountId`, { accountId: account }));
+    logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
   } else {
