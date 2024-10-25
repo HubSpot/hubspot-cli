@@ -23,7 +23,6 @@ jest.mock('../../../lib/projectLogsManager');
 jest.mock('../../../lib/prompts/projectsLogsPrompt');
 jest.mock('../../../lib/ui/table');
 jest.mock('../../../lib/errorHandlers');
-
 yargs.options.mockReturnValue(yargs);
 yargs.conflicts.mockReturnValue(yargs);
 const uiLinkSpy = jest.spyOn(ui, 'uiLink');
@@ -85,7 +84,7 @@ describe('commands/project/logs', () => {
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
     });
 
-    it('should set tail and limit as conflicting arguments', () => {
+    it('should set the correct conflicts', () => {
       logsCommand.builder(yargs);
       expect(yargs.conflicts).toHaveBeenCalledTimes(1);
       expect(yargs.conflicts).toHaveBeenCalledWith('tail', 'limit');
