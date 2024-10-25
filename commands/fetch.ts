@@ -35,15 +35,15 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { account } = options;
+  const { derivedAccountId } = options;
   const mode = getMode(options);
 
-  trackCommandUsage('fetch', { mode }, account);
+  trackCommandUsage('fetch', { mode }, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      account,
+      derivedAccountId,
       src,
       resolveLocalPath(dest),
       mode,

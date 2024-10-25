@@ -20,14 +20,17 @@ exports.command = 'clear <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId, account } = options;
+  const { tableId, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('hubdb-clear', null, account);
+  trackCommandUsage('hubdb-clear', null, derivedAccountId);
 
   try {
-    const { deletedRowCount } = await clearHubDbTableRows(account, tableId);
+    const { deletedRowCount } = await clearHubDbTableRows(
+      derivedAccountId,
+      tableId
+    );
     if (deletedRowCount > 0) {
       logger.log(
         i18n(`${i18nKey}.logs.removedRows`, {
@@ -37,7 +40,7 @@ exports.handler = async options => {
       );
       const {
         data: { rowCount },
-      } = await publishTable(account, tableId);
+      } = await publishTable(derivedAccountId, tableId);
       logger.log(
         i18n(`${i18nKey}.logs.rowCount`, {
           rowCount,

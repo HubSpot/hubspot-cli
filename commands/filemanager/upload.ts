@@ -28,7 +28,7 @@ exports.command = 'upload <src> <dest>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, dest, account } = options;
+  const { src, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
@@ -62,7 +62,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'filemanager-upload',
     { type: stats.isFile() ? 'file' : 'folder' },
-    account
+    derivedAccountId
   );
 
   const srcDestIssues = await validateSrcAndDestPaths(
@@ -84,11 +84,11 @@ exports.handler = async options => {
       return;
     }
 
-    uploadFile(account, absoluteSrcPath, normalizedDest)
+    uploadFile(derivedAccountId, absoluteSrcPath, normalizedDest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.upload`, {
-            accountId: account,
+            accountId: derivedAccountId,
             dest: normalizedDest,
             src,
           })
@@ -104,7 +104,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            accountId: account,
+            accountId: derivedAccountId,
             request: normalizedDest,
             payload: src,
           })
@@ -113,12 +113,12 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.logs.uploading`, {
-        accountId: account,
+        accountId: derivedAccountId,
         dest,
         src,
       })
     );
-    uploadFolder(account, absoluteSrcPath, dest)
+    uploadFolder(derivedAccountId, absoluteSrcPath, dest)
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.uploadComplete`, {
@@ -129,7 +129,7 @@ exports.handler = async options => {
       .catch(error => {
         logger.error(i18n(`${i18nKey}.errors.uploadingFailed`));
         logError(error, {
-          accountId: account,
+          accountId: derivedAccountId,
         });
       });
   }

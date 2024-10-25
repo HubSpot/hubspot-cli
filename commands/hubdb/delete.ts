@@ -18,17 +18,17 @@ exports.command = 'delete <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId, account } = options;
+  const { tableId, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('hubdb-delete', null, account);
+  trackCommandUsage('hubdb-delete', null, derivedAccountId);
 
   try {
-    await deleteTable(account, tableId);
+    await deleteTable(derivedAccountId, tableId);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountId: account,
+        accountId: derivedAccountId,
         tableId,
       })
     );

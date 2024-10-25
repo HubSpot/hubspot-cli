@@ -18,9 +18,9 @@ exports.describe = false;
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: functionPath, account } = options;
+  const { path: functionPath, derivedAccountId } = options;
 
-  trackCommandUsage('functions-server', null, account);
+  trackCommandUsage('functions-server', null, derivedAccountId);
 
   logger.debug(
     i18n(`${i18nKey}.debug.startingServer`, {
@@ -29,7 +29,7 @@ exports.handler = async options => {
   );
 
   startTestServer({
-    accountId: account,
+    accountId: derivedAccountId,
     ...options,
   });
 };

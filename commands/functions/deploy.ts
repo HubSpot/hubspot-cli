@@ -27,10 +27,10 @@ exports.describe = false;
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: functionPath, account } = options;
+  const { path: functionPath, derivedAccountId } = options;
   const splitFunctionPath = functionPath.split('.');
 
-  trackCommandUsage('functions-deploy', null, account);
+  trackCommandUsage('functions-deploy', null, derivedAccountId);
 
   if (
     !splitFunctionPath.length ||
@@ -54,14 +54,17 @@ exports.handler = async options => {
 
   SpinniesManager.add('loading', {
     text: i18n(`${i18nKey}.loading`, {
-      account: uiAccountDescription(accountId),
+      account: uiAccountDescription(derivedAccountId),
       functionPath,
     }),
   });
 
   try {
-    const { data: buildId } = await buildPackage(account, functionPath);
-    const successResp = await poll(getBuildStatus, account, buildId);
+    const { data: buildId } = await buildPackage(
+      derivedAccountId,
+      functionPath
+    );
+    const successResp = await poll(getBuildStatus, derivedAccountId, buildId);
     const buildTimeSeconds = (successResp.buildTime / 1000).toFixed(2);
 
     SpinniesManager.succeed('loading');
@@ -69,7 +72,7 @@ exports.handler = async options => {
     await outputBuildLog(successResp.cdnUrl);
     logger.success(
       i18n(`${i18nKey}.success.deployed`, {
-        accountId: account,
+        accountId: derivedAccountId,
         buildTimeSeconds,
         functionPath,
       })
@@ -77,7 +80,7 @@ exports.handler = async options => {
   } catch (e) {
     SpinniesManager.fail('loading', {
       text: i18n(`${i18nKey}.loadingFailed`, {
-        account: uiAccountDescription(accountId),
+        account: uiAccountDescription(derivedAccountId),
         functionPath,
       }),
     });
@@ -98,7 +101,10 @@ exports.handler = async options => {
     } else {
       logError(
         e,
-        new ApiErrorContext({ accountId: account, request: functionPath })
+        new ApiErrorContext({
+          accountId: derivedAccountId,
+          request: functionPath,
+        })
       );
     }
   }

@@ -19,14 +19,18 @@ exports.command = 'fetch <tableId> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId, dest, account } = options;
+  const { tableId, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('hubdb-fetch', null, account);
+  trackCommandUsage('hubdb-fetch', null, derivedAccountId);
 
   try {
-    const { filePath } = await downloadHubDbTable(account, tableId, dest);
+    const { filePath } = await downloadHubDbTable(
+      derivedAccountId,
+      tableId,
+      dest
+    );
 
     logger.success(
       i18n(`${i18nKey}.success.fetch`, {

@@ -25,11 +25,11 @@ exports.command = 'create <src>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, account } = options;
+  const { src, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('hubdb-create', null, account);
+  trackCommandUsage('hubdb-create', null, derivedAccountId);
 
   try {
     const filePath = path.resolve(getCwd(), src);
@@ -37,10 +37,13 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
 
-    const table = await createHubDbTable(account, path.resolve(getCwd(), src));
+    const table = await createHubDbTable(
+      derivedAccountId,
+      path.resolve(getCwd(), src)
+    );
     logger.success(
       i18n(`${i18nKey}.success.create`, {
-        accountId: account,
+        accountId: derivedAccountId,
         rowCount: table.rowCount,
         tableId: table.tableId,
       })
