@@ -42,11 +42,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { name, type, force, account } = options;
-  const accountConfig = getAccountConfig(account);
-  const env = getValidEnv(getEnv(account));
+  const { name, type, force, derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const env = getValidEnv(getEnv(derivedAccountId));
 
-  trackCommandUsage('sandbox-create', null, account);
+  trackCommandUsage('sandbox-create', null, derivedAccountId);
 
   // Default account is not a production portal
   if (
@@ -87,14 +87,14 @@ exports.handler = async options => {
     if (isMissingScopeError(err)) {
       logger.error(
         i18n('lib.sandbox.create.failure.scopes.message', {
-          accountName: accountConfig.name || account,
+          accountName: accountConfig.name || derivedAccountId,
         })
       );
       const websiteOrigin = getHubSpotWebsiteOrigin(env);
-      const url = `${websiteOrigin}/personal-access-key/${account}`;
+      const url = `${websiteOrigin}/personal-access-key/${derivedAccountId}`;
       logger.info(
         i18n('lib.sandbox.create.failure.scopes.instructions', {
-          accountName: accountConfig.name || account,
+          accountName: accountConfig.name || derivedAccountId,
           url,
         })
       );

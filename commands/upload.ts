@@ -69,7 +69,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.WARNING);
   }
 
-  const { account } = options;
+  const { derivedAccountId } = options;
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
@@ -126,7 +126,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'upload',
     { mode, type: stats.isFile() ? 'file' : 'folder' },
-    account
+    derivedAccountId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
@@ -156,7 +156,7 @@ exports.handler = async options => {
       return;
     }
     upload(
-      account,
+      derivedAccountId,
       absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues(mode, options)
@@ -164,12 +164,12 @@ exports.handler = async options => {
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.fileUploaded`, {
-            accountId: account,
+            accountId: derivedAccountId,
             dest: normalizedDest,
             src,
           })
         );
-        logThemePreview(src, account);
+        logThemePreview(src, derivedAccountId);
       })
       .catch(error => {
         logger.error(
@@ -181,7 +181,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            accountId: account,
+            accountId: derivedAccountId,
             request: normalizedDest,
             payload: src,
           })
@@ -198,7 +198,7 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.uploading`, {
-        accountId: account,
+        accountId: derivedAccountId,
         dest,
         src,
       })
@@ -214,18 +214,21 @@ exports.handler = async options => {
       //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
       let cleanUpload = options.force;
       if (!options.force) {
-        cleanUpload = await cleanUploadPrompt(account, dest);
+        cleanUpload = await cleanUploadPrompt(derivedAccountId, dest);
       }
       if (cleanUpload) {
         try {
-          await deleteFile(account, dest);
+          await deleteFile(derivedAccountId, dest);
           logger.log(
-            i18n(`${i18nKey}.cleaning`, { accountId: account, filePath: dest })
+            i18n(`${i18nKey}.cleaning`, {
+              accountId: derivedAccountId,
+              filePath: dest,
+            })
           );
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
-              accountId: account,
+              accountId: derivedAccountId,
               path: dest,
             })
           );
@@ -233,7 +236,7 @@ exports.handler = async options => {
       }
     }
     uploadFolder(
-      account,
+      derivedAccountId,
       absoluteSrcPath,
       dest,
       {
@@ -249,7 +252,7 @@ exports.handler = async options => {
               dest,
             })
           );
-          logThemePreview(src, account);
+          logThemePreview(src, derivedAccountId);
         } else {
           logger.error(
             i18n(`${i18nKey}.errors.someFilesFailed`, {
@@ -267,7 +270,7 @@ exports.handler = async options => {
           })
         );
         logError(error, {
-          accountId: account,
+          accountId: derivedAccountId,
         });
         process.exit(EXIT_CODES.WARNING);
       });

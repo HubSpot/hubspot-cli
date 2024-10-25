@@ -110,7 +110,7 @@ exports.handler = async options => {
     noSsl,
     port,
     debug,
-    account,
+    derivedAccountId,
     resetSession,
   } = options;
 
@@ -168,7 +168,7 @@ exports.handler = async options => {
             logError(
               result.error,
               new ApiErrorContext({
-                accountId: account,
+                accountId: derivedAccountId,
                 request: dest,
                 payload: result.file,
               })
@@ -180,9 +180,9 @@ exports.handler = async options => {
     return uploadOptions;
   };
 
-  trackCommandUsage('preview', account);
+  trackCommandUsage('preview', derivedAccountId);
 
-  preview(account, absoluteSrc, dest, {
+  preview(derivedAccountId, absoluteSrc, dest, {
     notify,
     filePaths,
     skipUpload,

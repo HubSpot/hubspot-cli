@@ -20,17 +20,17 @@ exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName, account } = options;
+  const { name: secretName, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('secrets-delete', null, account);
+  trackCommandUsage('secrets-delete', null, derivedAccountId);
 
   try {
-    await deleteSecret(account, secretName);
+    await deleteSecret(derivedAccountId, secretName);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountIdentifier: uiAccountDescription(account),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -44,7 +44,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'delete a secret',
-        accountId: account,
+        accountId: derivedAccountId,
       })
     );
   }

@@ -21,19 +21,19 @@ exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName, account } = options;
+  const { name: secretName, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('secrets-update', null, account);
+  trackCommandUsage('secrets-update', null, derivedAccountId);
 
   try {
     const { secretValue } = await secretValuePrompt();
 
-    await updateSecret(account, secretName, secretValue);
+    await updateSecret(derivedAccountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.update`, {
-        accountIdentifier: uiAccountDescription(account),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -48,7 +48,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'update secret',
-        accountId: account,
+        accountId: derivedAccountId,
       })
     );
   }

@@ -21,19 +21,19 @@ exports.command = 'add <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName, account } = options;
+  const { name: secretName, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('secrets-add', null, account);
+  trackCommandUsage('secrets-add', null, derivedAccountId);
 
   try {
     const { secretValue } = await secretValuePrompt();
 
-    await addSecret(account, secretName, secretValue);
+    await addSecret(derivedAccountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.add`, {
-        accountIdentifier: uiAccountDescription(account),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -47,7 +47,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'add secret',
-        accountId: account,
+        accountId: derivedAccountId,
       })
     );
   }

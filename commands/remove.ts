@@ -18,28 +18,28 @@ exports.command = 'remove <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { path: hsPath, account } = options;
+  const { path: hsPath, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  trackCommandUsage('remove', null, account);
+  trackCommandUsage('remove', null, derivedAccountId);
 
   try {
-    await deleteFile(account, hsPath);
+    await deleteFile(derivedAccountId, hsPath);
     logger.log(
-      i18n(`${i18nKey}.deleted`, { accountId: account, path: hsPath })
+      i18n(`${i18nKey}.deleted`, { accountId: derivedAccountId, path: hsPath })
     );
   } catch (error) {
     logger.error(
       i18n(`${i18nKey}.errors.deleteFailed`, {
-        accountId: account,
+        accountId: derivedAccountId,
         path: hsPath,
       })
     );
     logError(
       error,
       new ApiErrorContext({
-        accountId: account,
+        accountId: derivedAccountId,
         request: hsPath,
       })
     );
