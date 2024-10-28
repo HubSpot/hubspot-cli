@@ -107,7 +107,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { noSsl, resetSession } = options;
+  const { noSsl, resetSession, port, storybook, generateFieldsTypes } = options;
 
   await loadAndValidateOptions(options);
 
@@ -179,14 +179,23 @@ exports.handler = async options => {
 
   trackCommandUsage('preview', accountId);
   const { createDevServer } = await import('@hubspot/cms-dev-server');
+  process.env['PORT'] = port;
 
-  createDevServer(absoluteSrc, false, false, false, !noSsl, false, {
-    filePaths,
-    resetSession,
-    startProgressBar,
-    handleUserInput,
-    dest,
-  });
+  createDevServer(
+    absoluteSrc,
+    storybook,
+    false,
+    false,
+    !noSsl,
+    generateFieldsTypes,
+    {
+      filePaths,
+      resetSession,
+      startProgressBar,
+      handleUserInput,
+      dest,
+    }
+  );
 };
 
 exports.builder = yargs => {
@@ -211,16 +220,15 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.port.describe`),
     type: 'number',
   });
-  yargs.option('debug', {
-    describe: false,
-    type: 'boolean',
-  });
-  yargs.option('skipUpload', {
-    alias: 'skip',
-    describe: false,
-    type: 'boolean',
-  });
   yargs.option('resetSession', {
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('storybook', {
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('generateFieldsTypes', {
     describe: false,
     type: 'boolean',
   });
