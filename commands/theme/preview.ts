@@ -107,7 +107,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { noSsl, resetSession, port, storybook, generateFieldsTypes } = options;
+  const { noSsl, resetSession, port, generateFieldsTypes } = options;
 
   await loadAndValidateOptions(options);
 
@@ -183,7 +183,7 @@ exports.handler = async options => {
 
   createDevServer(
     absoluteSrc,
-    storybook,
+    false,
     false,
     false,
     !noSsl,
@@ -221,10 +221,6 @@ exports.builder = yargs => {
     type: 'number',
   });
   yargs.option('resetSession', {
-    describe: false,
-    type: 'boolean',
-  });
-  yargs.option('storybook', {
     describe: false,
     type: 'boolean',
   });
