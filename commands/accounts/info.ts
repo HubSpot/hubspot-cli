@@ -2,11 +2,7 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
-const {
-  getAccountId,
-  addAccountOptions,
-  addConfigOptions,
-} = require('../../lib/commonOpts');
+const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getTableContents } = require('../../lib/ui/table');
@@ -19,19 +15,23 @@ exports.command = 'info [--account]';
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  let accountId = getAccountId(options);
-  const config = getAccountConfig(accountId);
+  const { derivedAccountId } = options;
+  const config = getAccountConfig(derivedAccountId);
 
   // check if the provided account is using a personal access key, if not, show an error
   if (config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
 
-    const response = await getAccessToken(personalAccessKey, env, accountId);
+    const response = await getAccessToken(
+      personalAccessKey,
+      env,
+      derivedAccountId
+    );
 
     const scopeGroups = response.scopeGroups.map(s => [s]);
 
     logger.log(i18n(`${i18nKey}.name`, { name }));
-    logger.log(i18n(`${i18nKey}.accountId`, { accountId }));
+    logger.log(i18n(`${i18nKey}.accountId`, { accountId: derivedAccountId }));
     logger.log(i18n(`${i18nKey}.scopeGroups`));
     logger.log(getTableContents(scopeGroups, { border: { bodyLeft: '  ' } }));
   } else {

@@ -9,7 +9,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -19,19 +18,17 @@ exports.command = 'delete <tableId>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId } = options;
+  const { tableId, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('hubdb-delete', null, accountId);
+  trackCommandUsage('hubdb-delete', null, derivedAccountId);
 
   try {
-    await deleteTable(accountId, tableId);
+    await deleteTable(derivedAccountId, tableId);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountId,
+        accountId: derivedAccountId,
         tableId,
       })
     );

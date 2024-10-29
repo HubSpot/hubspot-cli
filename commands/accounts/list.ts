@@ -11,11 +11,7 @@ const {
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
-const {
-  addConfigOptions,
-  addAccountOptions,
-  getAccountId,
-} = require('../../lib/commonOpts');
+const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
@@ -88,9 +84,9 @@ const getPortalData = mappedPortalData => {
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('accounts-list', null, accountId);
+  trackCommandUsage('accounts-list', null, derivedAccountId);
 
   const config = getConfig();
   const configPath = getConfigPath();

@@ -72,7 +72,9 @@ exports.describe = i18n(`${i18nKey}.describe`, {
 });
 
 exports.handler = async options => {
-  const { type, config: c, qa, account } = options;
+  // We don't want to auto inject the account flag from middleware.
+  // --providedAccountId preserves the original --account and --portal flags.
+  const { type, config: c, qa, providedAccountId } = options;
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
@@ -108,7 +110,10 @@ exports.handler = async options => {
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env, account });
+      configData = await personalAccessKeyPrompt({
+        env,
+        account: providedAccountId,
+      });
 
       try {
         token = await getAccessToken(configData.personalAccessKey, env);

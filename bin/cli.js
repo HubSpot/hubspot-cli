@@ -11,7 +11,11 @@ const {
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const { setLogLevel, getCommandName } = require('../lib/commonOpts');
+const {
+  setLogLevel,
+  getCommandName,
+  injectAccountIdMiddleware,
+} = require('../lib/commonOpts');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -146,8 +150,13 @@ const loadConfigMiddleware = argv => {
 
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  // loadConfig loads the new hidden config for all commands
-  .middleware([setLogLevel, setRequestHeaders, loadConfigMiddleware])
+  // loadConfigMiddleware loads the new hidden config for all commands
+  .middleware([
+    setLogLevel,
+    setRequestHeaders,
+    loadConfigMiddleware,
+    injectAccountIdMiddleware,
+  ])
   .exitProcess(false)
   .fail(handleFailure)
   .option('debug', {

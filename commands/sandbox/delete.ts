@@ -46,13 +46,15 @@ exports.describe = exports.describe = uiBetaTag(
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account, force } = options;
+  // We don't want to auto inject the account flag from middleware.
+  // --providedAccountId preserves the original --account and --portal flags.
+  const { providedAccountId, force } = options;
   const config = getConfig();
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
-  if (!account) {
+  if (!providedAccountId) {
     if (!force) {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
@@ -69,7 +71,7 @@ exports.handler = async options => {
   }
 
   const sandboxAccountId = getAccountId({
-    account: account || accountPrompt.account,
+    account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
     sandboxAccountId === getAccountId(getDefaultAccount(config));
@@ -153,7 +155,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: account || accountPrompt.account,
+        account: providedAccountId || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );

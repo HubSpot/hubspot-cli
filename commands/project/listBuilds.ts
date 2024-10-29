@@ -4,7 +4,6 @@ const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -36,10 +35,9 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath, limit } = options;
-  const accountId = getAccountId(options);
+  const { path: projectPath, limit, derivedAccountId } = options;
 
-  trackCommandUsage('project-list-builds', null, accountId);
+  trackCommandUsage('project-list-builds', null, derivedAccountId);
 
   const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
   const { projectConfig, projectDir } = await getProjectConfig(cwd);
@@ -51,7 +49,7 @@ exports.handler = async options => {
   const fetchAndDisplayBuilds = async (project, options) => {
     const {
       data: { results, paging },
-    } = await fetchProjectBuilds(accountId, project.name, options);
+    } = await fetchProjectBuilds(derivedAccountId, project.name, options);
     const currentDeploy = project.deployedBuildId;
     if (options && options.after) {
       logger.log(
@@ -62,7 +60,7 @@ exports.handler = async options => {
         `Showing the ${results.length} most recent builds for ${project.name}. ` +
           uiLink(
             'View all builds in project details.',
-            getProjectDetailUrl(project.name, accountId)
+            getProjectDetailUrl(project.name, derivedAccountId)
           )
       );
     }
@@ -117,7 +115,10 @@ exports.handler = async options => {
   };
 
   try {
-    const { data: project } = await fetchProject(accountId, projectConfig.name);
+    const { data: project } = await fetchProject(
+      derivedAccountId,
+      projectConfig.name
+    );
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
@@ -126,7 +127,10 @@ exports.handler = async options => {
     } else {
       logError(
         e,
-        new ApiErrorContext({ accountId, projectName: projectConfig.name })
+        new ApiErrorContext({
+          accountId: derivedAccountId,
+          projectName: projectConfig.name,
+        })
       );
     }
   }
