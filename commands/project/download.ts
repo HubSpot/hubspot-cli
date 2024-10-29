@@ -37,7 +37,7 @@ exports.handler = async options => {
   }
 
   const { project, dest, buildNumber, derivedAccountId } = options;
-  let { project: promptedProjectName } = await downloadProjectPrompt(options);
+  const { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
   trackCommandUsage('project-download', null, derivedAccountId);
@@ -59,7 +59,9 @@ exports.handler = async options => {
           accountId: chalk.bold(derivedAccountId),
         })
       );
-      let { name: promptedProjectName } = await downloadProjectPrompt(options);
+      const { name: promptedProjectName } = await downloadProjectPrompt(
+        options
+      );
       projectName = promptedProjectName || project;
     }
 

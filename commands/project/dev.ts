@@ -182,6 +182,7 @@ exports.handler = async options => {
     targetProjectAccountId = derivedAccountId;
   }
 
+  // eslint-disable-next-line prefer-const
   let { projectExists, project } = await ensureProjectExists(
     targetProjectAccountId,
     projectConfig.name,

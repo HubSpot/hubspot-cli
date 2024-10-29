@@ -14,7 +14,7 @@ exports.command = 'delete <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { name, derivedAccountId } = options;
+  const { name, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 

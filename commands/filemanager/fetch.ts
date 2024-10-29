@@ -19,7 +19,7 @@ exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { src, dest, includeArchived, derivedAccountId } = options;
+  const { src, includeArchived, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
@@ -28,7 +28,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  dest = resolveLocalPath(dest);
+  const dest = resolveLocalPath(options.dest);
 
   trackCommandUsage('filemanager-fetch', null, derivedAccountId);
 

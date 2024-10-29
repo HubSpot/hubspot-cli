@@ -118,7 +118,7 @@ describe('hs create', () => {
   });
 
   it('api-sample', async () => {
-    const out = await testState.cli.execute(
+    await testState.cli.execute(
       ['create', FOLDERS.apiSample.name, FOLDERS.apiSample.name],
       [ENTER, ENTER]
     );

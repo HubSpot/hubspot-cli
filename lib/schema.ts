@@ -1,12 +1,10 @@
-// @ts-nocheck
-const chalk = require('chalk');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { table, getBorderCharacters } = require('table');
-const {
-  fetchObjectSchemas,
-} = require('@hubspot/local-dev-lib/api/customObjects');
+import chalk from 'chalk';
+import { table, getBorderCharacters } from 'table';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
+import { Schema } from '@hubspot/local-dev-lib/types/Schemas';
 
-const logSchemas = schemas => {
+export function logSchemas(schemas: Array<Schema>): void {
   const data = schemas
     .map(r => [r.labels.singular, r.name, r.objectTypeId || ''])
     .sort((a, b) => (a[1] > b[1] ? 1 : -1));
@@ -22,14 +20,9 @@ const logSchemas = schemas => {
   };
 
   logger.log(data.length ? table(data, tableConfig) : 'No Schemas were found');
-};
+}
 
-const listSchemas = async accountId => {
+export async function listSchemas(accountId: number): Promise<void> {
   const { data } = await fetchObjectSchemas(accountId);
   logSchemas(data.results);
-};
-
-module.exports = {
-  logSchemas,
-  listSchemas,
-};
+}

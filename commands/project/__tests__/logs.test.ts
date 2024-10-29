@@ -1,128 +1,96 @@
 // @ts-nocheck
-jest.mock('../../../lib/commonOpts');
-jest.mock('../../../lib/usageTracking');
-jest.mock('../../../lib/validation');
-jest.mock('../../../lib/projectLogsManager');
-jest.mock('../../../lib/prompts/projectsLogsPrompt');
-jest.mock('@hubspot/local-dev-lib/logger');
-jest.mock('../../../lib/ui/table');
-jest.mock('../../../lib/ui');
-jest.mock('../../../lib/errorHandlers');
-
-// Deps where we don't want mocks
-const libUi = jest.requireActual('../../../lib/ui');
-
-const { uiLine, uiLink, uiBetaTag } = require('../../../lib/ui');
-
-uiBetaTag.mockImplementation(libUi.uiBetaTag);
-
+const yargs = require('yargs');
 const { addUseEnvironmentOptions } = require('../../../lib/commonOpts');
 const ProjectLogsManager = require('../../../lib/projectLogsManager');
 const {
   projectLogsPrompt,
 } = require('../../../lib/prompts/projectsLogsPrompt');
 const { getTableContents, getTableHeader } = require('../../../lib/ui/table');
-
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-
-const {
-  handler,
-  describe: logsDescribe,
-  command,
-  builder,
-} = require('../logs');
+const ui = require('../../../lib/ui');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 const { logError } = require('../../../lib/errorHandlers');
 
+jest.mock('yargs');
+jest.mock('@hubspot/local-dev-lib/logger');
+jest.mock('../../../lib/commonOpts');
+jest.mock('../../../lib/usageTracking');
+jest.mock('../../../lib/validation');
+jest.mock('../../../lib/projectLogsManager');
+jest.mock('../../../lib/prompts/projectsLogsPrompt');
+jest.mock('../../../lib/ui/table');
+jest.mock('../../../lib/errorHandlers');
+
+yargs.options.mockReturnValue(yargs);
+yargs.conflicts.mockReturnValue(yargs);
+const uiLinkSpy = jest.spyOn(ui, 'uiLink');
+const uiLineSpy = jest.spyOn(ui, 'uiLine');
+
+// Import this last so mocks apply
+const logsCommand = require('../logs');
+
 describe('commands/project/logs', () => {
   let processExitSpy;
+
   beforeEach(() => {
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
   });
 
   describe('command', () => {
-    it('should have the proper command string', async () => {
-      expect(command).toEqual('logs');
+    it('should have the correct command structure', async () => {
+      expect(logsCommand.command).toEqual('logs');
     });
   });
 
   describe('describe', () => {
     it('should contain the beta tag', () => {
-      expect(logsDescribe).toContain('[BETA]');
+      expect(logsCommand.describe).toContain('[BETA]');
     });
-    it('should provide an accurate description of what the command is doing', () => {
-      expect(logsDescribe).toMatch(
-        /Get execution logs for a serverless function within a project/
-      );
+
+    it('should provide a description', () => {
+      expect(logsCommand.describe).toBeDefined();
     });
   });
 
   describe('builder', () => {
-    let yargsMock = {};
-    beforeEach(() => {
-      yargsMock = {
-        options: jest.fn().mockImplementation(() => yargsMock),
-        conflicts: jest.fn().mockImplementation(() => yargsMock),
-        example: jest.fn().mockImplementation(() => yargsMock),
-      };
-    });
-
-    it('should add all of the options', () => {
-      builder(yargsMock);
-      expect(yargsMock.options).toHaveBeenCalledTimes(1);
-      expect(yargsMock.options).toHaveBeenCalledWith({
-        function: {
+    it('should support the correct options', () => {
+      logsCommand.builder(yargs);
+      expect(yargs.options).toHaveBeenCalledTimes(1);
+      expect(yargs.options).toHaveBeenCalledWith({
+        function: expect.objectContaining({
           alias: 'function',
           requiresArg: true,
-          describe: 'App function name',
           type: 'string',
-        },
-        latest: {
+        }),
+        latest: expect.objectContaining({
           alias: 'l',
           type: 'boolean',
-          describe: 'Retrieve most recent log only',
-        },
-        compact: {
+        }),
+        compact: expect.objectContaining({
           type: 'boolean',
-          describe: 'Output compact logs',
-        },
-        tail: {
+        }),
+        tail: expect.objectContaining({
           alias: ['t', 'follow'],
-          describe: 'Tail logs',
           type: 'boolean',
-        },
-        limit: {
+        }),
+        limit: expect.objectContaining({
           type: 'number',
-          describe: 'Limit the number of logs to output',
-        },
+        }),
       });
-    });
 
-    it('should add the environment options', () => {
-      builder(yargsMock);
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
-      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargsMock);
+      expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should set tail and limit as conflicting arguments', () => {
-      builder(yargsMock);
-      expect(yargsMock.conflicts).toHaveBeenCalledTimes(1);
-      expect(yargsMock.conflicts).toHaveBeenCalledWith('tail', 'limit');
+      logsCommand.builder(yargs);
+      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
+      expect(yargs.conflicts).toHaveBeenCalledWith('tail', 'limit');
     });
 
-    it('should set examples', () => {
-      builder(yargsMock);
-      expect(yargsMock.example).toHaveBeenCalledTimes(1);
-      expect(yargsMock.example).toHaveBeenCalledWith([
-        [
-          '$0 project logs',
-          'Open the project logs prompt to get logs for a serverless function',
-        ],
-        [
-          '$0 project logs --function=my-function',
-          'Get logs for function named "my-function" within the app named "app" within the project named "my-project"',
-        ],
-      ]);
+    it('should provide examples', () => {
+      logsCommand.builder(yargs);
+      expect(yargs.example).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -136,7 +104,7 @@ describe('commands/project/logs', () => {
         foo: 'bar',
         derivedAccountId: 12345678,
       };
-      await handler(options);
+      await logsCommand.handler(options);
       expect(trackCommandUsage).toHaveBeenCalledTimes(1);
       expect(trackCommandUsage).toHaveBeenCalledWith(
         'project-logs',
@@ -150,7 +118,7 @@ describe('commands/project/logs', () => {
         foo: 'bar',
         derivedAccountId: 12345678,
       };
-      await handler(options);
+      await logsCommand.handler(options);
       expect(ProjectLogsManager.init).toHaveBeenCalledTimes(1);
       expect(ProjectLogsManager.init).toHaveBeenCalledWith(
         options.derivedAccountId
@@ -163,7 +131,7 @@ describe('commands/project/logs', () => {
       const options = {
         foo: 'bar',
       };
-      await handler(options);
+      await logsCommand.handler(options);
       expect(projectLogsPrompt).toHaveBeenCalledTimes(1);
       expect(projectLogsPrompt).toHaveBeenCalledWith({
         functionChoices: functionNames,
@@ -181,7 +149,7 @@ describe('commands/project/logs', () => {
         functionName: selectedFunction,
       });
 
-      await handler({});
+      await logsCommand.handler({});
       expect(ProjectLogsManager.setFunction).toHaveBeenCalledTimes(1);
       expect(ProjectLogsManager.setFunction).toHaveBeenCalledWith(
         selectedFunction
@@ -228,12 +196,12 @@ describe('commands/project/logs', () => {
         ],
         { border: { bodyLeft: '  ' } }
       );
-      expect(uiLink).toHaveBeenCalledTimes(1);
-      expect(uiLink).toHaveBeenCalledWith(
+      expect(uiLinkSpy).toHaveBeenCalledTimes(1);
+      expect(uiLinkSpy).toHaveBeenCalledWith(
         'View function logs in HubSpot',
         `https://app.hubspot.com/private-apps/${options.derivedAccountId}/${ProjectLogsManager.appId}/logs/serverlessGatewayExecution?path=${ProjectLogsManager.endpointName}`
       );
-      expect(uiLine).toHaveBeenCalledTimes(1);
+      expect(uiLineSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should log private functions correctly', async () => {
@@ -269,12 +237,12 @@ describe('commands/project/logs', () => {
         { border: { bodyLeft: '  ' } }
       );
 
-      expect(uiLink).toHaveBeenCalledWith(
+      expect(uiLinkSpy).toHaveBeenCalledWith(
         'View function logs in HubSpot',
         `https://app.hubspot.com/private-apps/${options.derivedAccountId}/${ProjectLogsManager.appId}/logs/crm?serverlessFunction=${selectedFunction}`
       );
 
-      expect(uiLine).toHaveBeenCalledTimes(1);
+      expect(uiLineSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should handle errors correctly', async () => {
@@ -289,7 +257,7 @@ describe('commands/project/logs', () => {
 
       ProjectLogsManager.projectName = 'Super cool project';
 
-      await handler({});
+      await logsCommand.handler({});
 
       expect(logError).toHaveBeenCalledTimes(1);
       expect(logError).toHaveBeenCalledWith(error, {

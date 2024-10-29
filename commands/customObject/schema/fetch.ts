@@ -21,7 +21,7 @@ exports.command = 'fetch <name> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  let { name, dest, derivedAccountId } = options;
+  const { name, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
