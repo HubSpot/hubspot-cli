@@ -19,6 +19,9 @@ const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { uiAccountDescription } = require('../../lib/ui');
 const { deleteAccount, getAccounts } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.accounts.subcommands.clean';
