@@ -57,7 +57,7 @@ export function handleKeypress(callback: (arg0: KeyPress) => void): void {
 
   process.stdin.removeAllListeners('keypress');
 
-  process.stdin.on('keypress', (str, key) => {
+  process.stdin.on('keypress', (str: string, key: KeyPress): void => {
     if (key) {
       callback(key);
     }
