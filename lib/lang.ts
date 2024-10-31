@@ -1,17 +1,20 @@
-// @ts-nocheck
-const util = require('util');
-const path = require('path');
-const fs = require('fs-extra');
-const yaml = require('js-yaml');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { interpolate } = require('./interpolation');
+import util from 'util';
+import path from 'path';
+// @ts-ignore
+import fs from 'fs-extra';
+// @ts-ignore
+import yaml from 'js-yaml';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { interpolate } from './interpolation';
 
-const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
+export const MISSING_LANGUAGE_DATA_PREFIX = '[Missing language data]';
 
-let locale;
-let languageObj;
+type LanguageObject = { [key: string]: string | LanguageObject };
 
-const loadLanguageFromYaml = () => {
+let locale: string;
+let languageObj: LanguageObject;
+
+function loadLanguageFromYaml(): void {
   if (languageObj) return;
 
   try {
@@ -37,19 +40,21 @@ const loadLanguageFromYaml = () => {
   } catch (e) {
     logger.error('Error loading language data: ', e);
   }
-};
+}
 
-const getTextValue = lookupDotNotation => {
+function getTextValue(lookupDotNotation: string): string {
   const lookupProps = [locale, ...lookupDotNotation.split('.')];
   const missingTextData = `${MISSING_LANGUAGE_DATA_PREFIX}: ${lookupProps.join(
     '.'
   )}`;
-  let textValue = languageObj;
+  let textValue: string | LanguageObject | undefined = languageObj;
   let previouslyCheckedProp = lookupProps[0];
 
   try {
     lookupProps.forEach(prop => {
-      textValue = textValue[prop];
+      if (textValue && typeof textValue === 'object') {
+        textValue = textValue[prop];
+      }
       previouslyCheckedProp = prop;
     });
   } catch (e) {
@@ -66,10 +71,14 @@ const getTextValue = lookupDotNotation => {
     return missingTextData;
   }
 
-  return textValue;
-};
+  if (typeof textValue !== 'string') {
+    return missingTextData;
+  }
 
-const i18n = (lookupDotNotation, options = {}) => {
+  return textValue;
+}
+
+export function i18n(lookupDotNotation: string, options = {}): string {
   if (!languageObj) {
     loadLanguageFromYaml();
   }
@@ -84,15 +93,12 @@ const i18n = (lookupDotNotation, options = {}) => {
   const shouldInterpolate = !textValue.startsWith(MISSING_LANGUAGE_DATA_PREFIX);
 
   return shouldInterpolate ? interpolate(textValue, options) : textValue;
-};
+}
 
-const setLangData = (newLocale, newLangObj) => {
+export function setLangData(
+  newLocale: string,
+  newLangObj: LanguageObject
+): void {
   locale = newLocale;
   languageObj = newLangObj;
-};
-
-module.exports = {
-  i18n,
-  setLangData,
-  MISSING_LANGUAGE_DATA_PREFIX,
-};
+}

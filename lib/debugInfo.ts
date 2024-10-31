@@ -1,8 +1,12 @@
-// @ts-nocheck
-const { version } = require('../package.json');
-const { getPlatform } = require('./environment');
+import { version } from '../package.json';
+import { getPlatform } from './environment';
+import { Arguments } from 'yargs';
 
-const logDebugInfo = ({ debug }) => {
+interface CustomOptions {
+  debug?: boolean;
+}
+
+export function logDebugInfo({ debug }: Arguments<CustomOptions>): void {
   if (!debug) {
     return;
   }
@@ -13,8 +17,4 @@ const logDebugInfo = ({ debug }) => {
   console.log(`node version: ${process.version}`);
   console.log(`platform: ${getPlatform()}`);
   console.log('');
-};
-
-module.exports = {
-  logDebugInfo,
-};
+}
