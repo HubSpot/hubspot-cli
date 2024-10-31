@@ -1,17 +1,33 @@
 import { exec } from 'child_process';
-import { name as packageName } from '../package.json';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
+import semver from 'semver';
 
+import { name as packageName, version as localVersion } from '../package.json';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 
-const MAIN_BRANCH = 'improved-release-script';
-const VERSION_INCREMENTS = ['patch', 'minor', 'major'] as const;
-const TAGS = ['latest', 'next', 'experimental'] as const;
+// const BRANCH = {
+//   MAIN: 'main',
+//   EXPERIMENTAL: 'experimental',
+// };
+
+const BRANCH = {
+  MAIN: 'improved-release-script',
+  EXPERIMENTAL: 'improved-release-script',
+};
+
+const TAG = {
+  LATEST: 'latest',
+  NEXT: 'next',
+  EXPERIMENTAL: 'experimental',
+};
+
+const VERSION_INCREMENT_OPTIONS = ['patch', 'minor', 'major'] as const;
+const TAG_OPTIONS = [TAG.LATEST, TAG.NEXT, TAG.EXPERIMENTAL] as const;
 
 type ReleaseArguments = {
-  versionIncrement: typeof VERSION_INCREMENTS[number];
-  tag: typeof TAGS[number];
+  versionIncrement: typeof VERSION_INCREMENT_OPTIONS[number];
+  tag: typeof TAG_OPTIONS[number];
 };
 
 type DistTags = {
@@ -20,7 +36,7 @@ type DistTags = {
   experimental: string;
 };
 
-function isMainBranch(): Promise<boolean> {
+function getGitBranch(): Promise<string> {
   return new Promise(resolve => {
     exec('git rev-parse --abbrev-ref HEAD', (error, stdout) => {
       if (error) {
@@ -29,7 +45,7 @@ function isMainBranch(): Promise<boolean> {
       }
 
       const branch = stdout.trim();
-      resolve(branch === MAIN_BRANCH);
+      resolve(branch);
     });
   });
 }
@@ -55,15 +71,46 @@ async function handler({
   versionIncrement,
   tag,
 }: ArgumentsCamelCase<ReleaseArguments>): Promise<void> {
-  const onCorrectBranch = await isMainBranch();
+  const branch = await getGitBranch();
 
-  if (!onCorrectBranch) {
-    logger.error('New release can only be published on main branch');
+  const isExperimental = tag === TAG.EXPERIMENTAL;
+
+  if (isExperimental && branch !== BRANCH.EXPERIMENTAL) {
+    logger.error(
+      'Releases to experimental tag can only be published from the experimental branch'
+    );
+    process.exit(EXIT_CODES.ERROR);
+  } else if (branch !== BRANCH.MAIN) {
+    logger.error(
+      'Releases to latest and next tags can only be published from the main branch'
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const distTags = await getDistTags();
-  console.log(distTags);
+  const {
+    next: currentNextTag,
+    experimental: currentExperimentalTag,
+  } = await getDistTags();
+
+  if (!isExperimental && currentNextTag !== localVersion) {
+    logger.error(
+      `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
+  const prereleaseIdentifier = isExperimental ? 'experimental' : 'beta';
+  const incrementType =
+    tag === TAG.LATEST ? versionIncrement : (`pre${versionIncrement}` as const);
+
+  const nextVersion = semver.inc(
+    currentVersion,
+    incrementType,
+    prereleaseIdentifier
+  );
+
+  console.log(nextVersion);
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
@@ -72,13 +119,13 @@ async function builder(yargs: Argv): Promise<Argv> {
       alias: 'v',
       demandOption: true,
       describe: 'SemVer increment type for the next release',
-      choices: VERSION_INCREMENTS,
+      choices: VERSION_INCREMENT_OPTIONS,
     },
     tag: {
       alias: 't',
       demandOption: true,
       describe: 'Tag for the next release',
-      choices: TAGS,
+      choices: TAG_OPTIONS,
     },
   });
 }
