@@ -9,10 +9,10 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 **/
 
-const readline = require('readline');
-const chalk = require('chalk');
-const cliCursor = require('cli-cursor');
-const {
+import readline from 'readline';
+import chalk from 'chalk';
+import cliCursor from 'cli-cursor';
+import {
   breakText,
   cleanStream,
   colorOptions,
@@ -22,7 +22,7 @@ const {
   SPINNERS,
   terminalSupportsUnicode,
   writeStream,
-} = require('./spinniesUtils');
+} from './spinniesUtils';
 
 class SpinniesManager {
   constructor() {

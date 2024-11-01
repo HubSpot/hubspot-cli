@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
 https://github.com/jbcarpanelli/spinnies
 
@@ -8,8 +7,8 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 **/
-const readline = require('readline');
-const stripAnsi = require('strip-ansi');
+import readline from 'readline';
+import stripAnsi from 'strip-ansi';
 
 const VALID_STATUSES = [
   'succeed',
@@ -36,7 +35,27 @@ const VALID_COLORS = [
   'cyanBright',
   'whiteBright',
 ];
-const SPINNERS = {
+
+interface Spinner {
+  interval: number;
+  frames: string[];
+}
+
+interface SpinnerOptions {
+  spinner?: Partial<Spinner>;
+  disableSpins?: boolean;
+  text?: string;
+  status?: typeof VALID_STATUSES;
+  color?: typeof VALID_COLORS;
+  spinnerColor?: typeof VALID_COLORS;
+  succeedColor?: typeof VALID_COLORS;
+  failColor?: typeof VALID_COLORS;
+  succeedPrefix?: string;
+  failPrefix?: string;
+  indent?: number;
+}
+
+export const SPINNERS: Record<string, Spinner> = {
   dots: {
     interval: 50,
     frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
@@ -47,19 +66,24 @@ const SPINNERS = {
   },
 };
 
-function purgeSpinnerOptions(options) {
+export function purgeSpinnerOptions(options: SpinnerOptions): SpinnerOptions {
   const { text, status, indent } = options;
   const opts = { text, status, indent };
   const colors = colorOptions(options);
 
-  if (!VALID_STATUSES.includes(status)) delete opts.status;
+  if (typeof status === 'string' && !VALID_STATUSES.includes(status))
+    delete opts.status;
   if (typeof text !== 'string') delete opts.text;
   if (typeof indent !== 'number') delete opts.indent;
 
   return { ...colors, ...opts };
 }
 
-function purgeSpinnersOptions({ spinner, disableSpins, ...others }) {
+export function purgeSpinnersOptions({
+  spinner,
+  disableSpins,
+  ...others
+}: SpinnerOptions): SpinnerOptions {
   const colors = colorOptions(others);
   const prefixes = prefixOptions(others);
   const disableSpinsOption =
@@ -69,7 +93,7 @@ function purgeSpinnersOptions({ spinner, disableSpins, ...others }) {
   return { ...colors, ...prefixes, ...disableSpinsOption, spinner };
 }
 
-function turnToValidSpinner(spinner = {}) {
+function turnToValidSpinner(spinner: Partial<Spinner> = {}): Spinner {
   const platformSpinner = terminalSupportsUnicode()
     ? SPINNERS.dots
     : SPINNERS.dashes;
@@ -86,18 +110,31 @@ function turnToValidSpinner(spinner = {}) {
   return { interval, frames };
 }
 
-function colorOptions({ color, succeedColor, failColor, spinnerColor }) {
-  const colors = { color, succeedColor, failColor, spinnerColor };
-  Object.keys(colors).forEach(key => {
-    if (!VALID_COLORS.includes(colors[key])) {
-      delete colors[key];
+export function colorOptions({
+  color,
+  succeedColor,
+  failColor,
+  spinnerColor,
+}: SpinnerOptions): Partial<SpinnerOptions> {
+  const colors: Partial<SpinnerOptions> = {
+    color,
+    succeedColor,
+    failColor,
+    spinnerColor,
+  };
+  (Object.keys(colors) as Array<keyof SpinnerOptions>).forEach(key => {
+    if (!VALID_COLORS.includes(colors[key] as string)) {
+      delete colors[key as keyof SpinnerOptions];
     }
   });
 
   return colors;
 }
 
-function prefixOptions({ succeedPrefix, failPrefix }) {
+function prefixOptions({
+  succeedPrefix,
+  failPrefix,
+}: SpinnerOptions): Partial<SpinnerOptions> {
   if (terminalSupportsUnicode()) {
     succeedPrefix = succeedPrefix || '✓';
     failPrefix = failPrefix || '✖';
@@ -109,7 +146,7 @@ function prefixOptions({ succeedPrefix, failPrefix }) {
   return { succeedPrefix, failPrefix };
 }
 
-function breakText(text, prefixLength) {
+export function breakText(text: string, prefixLength: number): string {
   return text
     .split('\n')
     .map((line, index) =>
@@ -118,7 +155,7 @@ function breakText(text, prefixLength) {
     .join('\n');
 }
 
-function breakLine(line, prefixLength) {
+function breakLine(line: string, prefixLength: number): string {
   const columns = process.stderr.columns || 95;
   return line.length >= columns - prefixLength
     ? `${line.substring(0, columns - prefixLength - 1)}\n${breakLine(
@@ -128,7 +165,7 @@ function breakLine(line, prefixLength) {
     : line;
 }
 
-function getLinesLength(text, prefixLength) {
+export function getLinesLength(text: string, prefixLength: number): number[] {
   return stripAnsi(text)
     .split('\n')
     .map((line, index) =>
@@ -136,12 +173,19 @@ function getLinesLength(text, prefixLength) {
     );
 }
 
-function writeStream(stream, output, rawLines) {
+export function writeStream(
+  stream: NodeJS.WriteStream,
+  output: string,
+  rawLines: number[]
+): void {
   stream.write(output);
   readline.moveCursor(stream, 0, -rawLines.length);
 }
 
-function cleanStream(stream, rawLines) {
+export function cleanStream(
+  stream: NodeJS.WriteStream,
+  rawLines: number[]
+): void {
   rawLines.forEach((lineLength, index) => {
     readline.moveCursor(stream, lineLength, index);
     readline.clearLine(stream, 1);
@@ -152,7 +196,7 @@ function cleanStream(stream, rawLines) {
   readline.moveCursor(stream, 0, -rawLines.length);
 }
 
-function terminalSupportsUnicode() {
+export function terminalSupportsUnicode(): boolean {
   // The default command prompt and powershell in Windows do not support Unicode characters.
   // However, the VSCode integrated terminal and the Windows Terminal both do.
   return (
@@ -161,15 +205,3 @@ function terminalSupportsUnicode() {
     !!process.env.WT_SESSION
   );
 }
-
-module.exports = {
-  breakText,
-  cleanStream,
-  colorOptions,
-  getLinesLength,
-  purgeSpinnerOptions,
-  purgeSpinnersOptions,
-  SPINNERS,
-  terminalSupportsUnicode,
-  writeStream,
-};

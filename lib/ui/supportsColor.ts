@@ -1,14 +1,20 @@
-// @ts-nocheck
-const process = require('process');
-const os = require('os');
-const tty = require('tty');
-const { hasFlag } = require('../hasFlag');
+import process from 'process';
+import os from 'os';
+import tty from 'tty';
+import { hasFlag } from '../hasFlag';
 
 const { env } = process;
 
 //From: https://github.com/chalk/supports-color/blob/main/index.js (License: https://github.com/chalk/supports-color/blob/main/license)
 
-function translateLevel(level) {
+interface ColorSupportLevel {
+  level: number;
+  hasBasic: boolean;
+  has256: boolean;
+  has16m: boolean;
+}
+
+function translateLevel(level: number): ColorSupportLevel {
   if (level === 0) {
     return {
       level,
@@ -26,7 +32,10 @@ function translateLevel(level) {
   };
 }
 
-function _supportsColor(haveStream, { streamIsTTY } = {}) {
+function _supportsColor(
+  haveStream: { isTTY?: boolean } | null,
+  { streamIsTTY }: { streamIsTTY?: boolean } = {}
+) {
   if (haveStream && !streamIsTTY) {
     return 0;
   }
@@ -95,11 +104,12 @@ function _supportsColor(haveStream, { streamIsTTY } = {}) {
     }
   }
 
-  if (/-256(color)?$/i.test(env.TERM)) {
+  if (env.TERM && /-256(color)?$/i.test(env.TERM)) {
     return 2;
   }
 
   if (
+    env.TERM &&
     /^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)
   ) {
     return 1;
@@ -112,19 +122,20 @@ function _supportsColor(haveStream, { streamIsTTY } = {}) {
   return min;
 }
 
-function createSupportsColor(stream, options = {}) {
+function createSupportsColor(
+  stream: { isTTY?: boolean } | null,
+  options: { streamIsTTY?: boolean } = {}
+): ColorSupportLevel {
   const level = _supportsColor(stream, {
-    streamIsTTY: stream && stream.isTTY,
+    streamIsTTY: stream ? stream.isTTY : undefined,
     ...options,
   });
 
   return translateLevel(level);
 }
 
-const supportsColor = {
+export const supportsColor = {
   createSupportsColor,
   stdout: createSupportsColor({ isTTY: tty.isatty(1) }),
   stderr: createSupportsColor({ isTTY: tty.isatty(2) }),
 };
-
-module.exports = supportsColor;
