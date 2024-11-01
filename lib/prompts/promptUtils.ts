@@ -1,13 +1,18 @@
-// @ts-nocheck
-const inquirer = require('inquirer');
+// @ts-expect-error I'm not entirely sure why this upsets VScode but it doesn't break builds
+import inquirer, { Answers, QuestionCollection } from 'inquirer';
 
-const promptUser = async promptConfig => {
+export async function promptUser<T extends Answers>(
+  promptConfig: QuestionCollection<T>
+): Promise<T> {
   const prompt = inquirer.createPromptModule();
   return prompt(promptConfig);
-};
+}
 
-const confirmPrompt = async (message, defaultAnswer = true) => {
-  const { choice } = await promptUser([
+export async function confirmPrompt(
+  message: string,
+  defaultAnswer = true
+): Promise<boolean> {
+  const { choice } = await promptUser<Record<string, boolean>>([
     {
       name: 'choice',
       type: 'confirm',
@@ -16,9 +21,4 @@ const confirmPrompt = async (message, defaultAnswer = true) => {
     },
   ]);
   return choice;
-};
-
-module.exports = {
-  promptUser,
-  confirmPrompt,
-};
+}

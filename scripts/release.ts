@@ -5,6 +5,7 @@ import semver from 'semver';
 
 import { name as packageName, version as localVersion } from '../package.json';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
+import { confirmPrompt } from '../lib/prompts/promptUtils';
 
 // const BRANCH = {
 //   MAIN: 'main',
@@ -14,13 +15,13 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 const BRANCH = {
   MAIN: 'improved-release-script',
   EXPERIMENTAL: 'improved-release-script',
-};
+} as const;
 
 const TAG = {
   LATEST: 'latest',
   NEXT: 'next',
   EXPERIMENTAL: 'experimental',
-};
+} as const;
 
 const VERSION_INCREMENT_OPTIONS = ['patch', 'minor', 'major'] as const;
 const TAG_OPTIONS = [TAG.LATEST, TAG.NEXT, TAG.EXPERIMENTAL] as const;
@@ -31,9 +32,9 @@ type ReleaseArguments = {
 };
 
 type DistTags = {
-  latest: string;
-  next: string;
-  experimental: string;
+  [TAG.LATEST]: string;
+  [TAG.NEXT]: string;
+  [TAG.EXPERIMENTAL]: string;
 };
 
 function getGitBranch(): Promise<string> {
@@ -104,13 +105,18 @@ async function handler({
   const incrementType =
     tag === TAG.LATEST ? versionIncrement : (`pre${versionIncrement}` as const);
 
-  const nextVersion = semver.inc(
+  const newVersion = semver.inc(
     currentVersion,
     incrementType,
     prereleaseIdentifier
   );
 
-  console.log(nextVersion);
+  console.log(`Current version: ${currentVersion}`);
+  console.log(`New version to release: ${newVersion}`);
+
+  const shouldRelease = confirmPrompt(
+    `Release version ${newVersion} on tag ${tag}?`
+  );
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
