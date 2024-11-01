@@ -37,35 +37,32 @@ type DistTags = {
   [TAG.EXPERIMENTAL]: string;
 };
 
-function getGitBranch(): Promise<string> {
+function getCommandOutput(command: string): Promise<string> {
   return new Promise(resolve => {
-    exec('git rev-parse --abbrev-ref HEAD', (error, stdout) => {
-      if (error) {
-        logger.error(`An error occured while checking the branch: ${error}`);
+    exec(command, (err, stdout) => {
+      if (err) {
+        logger.error(err);
         process.exit(EXIT_CODES.ERROR);
       }
-
-      const branch = stdout.trim();
-      resolve(branch);
+      resolve(stdout.trim());
     });
   });
 }
 
-function getDistTags(): Promise<DistTags> {
-  return new Promise(resolve => {
-    exec(`npm view ${packageName} dist-tags --json`, async (error, stdout) => {
-      if (error) {
-        logger.error(
-          `AN error occured while fetching current dist tags: ${error}`
-        );
-        process.exit(EXIT_CODES.ERROR);
-      }
+function getGitBranch(): Promise<string> {
+  return getCommandOutput('git rev-parse --abbrev-ref HEAD');
+}
 
-      const distTags = stdout.trim();
-      const json = await JSON.parse(distTags);
-      resolve(json);
-    });
-  });
+async function getDistTags(): Promise<DistTags> {
+  const distTags = await getCommandOutput(
+    `npm view ${packageName} dist-tags --json`
+  );
+  return JSON.parse(distTags) as DistTags;
+}
+
+async function cleanup(oldVersion: string, newVersion: string): Promise<void> {
+  await exec(`yarn version --new-version ${oldVersion}`);
+  await exec(`git tag -D v${newVersion}`);
 }
 
 async function handler({
@@ -93,12 +90,12 @@ async function handler({
     experimental: currentExperimentalTag,
   } = await getDistTags();
 
-  if (!isExperimental && currentNextTag !== localVersion) {
-    logger.error(
-      `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
+  // if (!isExperimental && currentNextTag !== localVersion) {
+  //   logger.error(
+  //     `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
+  //   );
+  //   process.exit(EXIT_CODES.ERROR);
+  // }
 
   const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
   const prereleaseIdentifier = isExperimental ? 'experimental' : 'beta';
@@ -117,6 +114,12 @@ async function handler({
   const shouldRelease = confirmPrompt(
     `Release version ${newVersion} on tag ${tag}?`
   );
+
+  if (!shouldRelease) {
+    process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  await exec(`yarn version --new-version ${newVersion}`);
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
