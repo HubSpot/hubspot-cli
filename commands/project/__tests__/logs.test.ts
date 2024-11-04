@@ -160,7 +160,6 @@ describe('commands/project/logs', () => {
       const options = {
         derivedAccountId: 12345678,
       };
-      await handler(options);
       const functionNames = ['function1', 'function2'];
       const selectedFunction = 'function1';
       ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
@@ -176,6 +175,8 @@ describe('commands/project/logs', () => {
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.endpointName = 'my-endpoint';
       ProjectLogsManager.appId = 123456;
+
+      await logsCommand.handler(options);
 
       expect(getTableHeader).toHaveBeenCalledTimes(1);
       expect(getTableHeader).toHaveBeenCalledWith([
@@ -210,7 +211,6 @@ describe('commands/project/logs', () => {
       const options = {
         derivedAccountId: 12345678,
       };
-      await handler(options);
 
       ProjectLogsManager.getFunctionNames.mockReturnValue(functionNames);
       projectLogsPrompt.mockReturnValue({
@@ -224,6 +224,8 @@ describe('commands/project/logs', () => {
       ProjectLogsManager.accountId = options.derivedAccountId;
       ProjectLogsManager.functionName = selectedFunction;
       ProjectLogsManager.appId = 456789;
+
+      await logsCommand.handler(options);
 
       expect(getTableHeader).toHaveBeenCalledTimes(1);
       expect(getTableHeader).toHaveBeenCalledWith(['Account', 'Function']);
@@ -249,15 +251,13 @@ describe('commands/project/logs', () => {
       const options = {
         derivedAccountId: 12345678,
       };
-      await handler(options);
       const error = new Error('Something went wrong');
       ProjectLogsManager.init.mockImplementation(() => {
         throw error;
       });
 
       ProjectLogsManager.projectName = 'Super cool project';
-
-      await logsCommand.handler({});
+      await logsCommand.handler(options);
 
       expect(logError).toHaveBeenCalledTimes(1);
       expect(logError).toHaveBeenCalledWith(error, {

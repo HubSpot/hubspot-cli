@@ -126,7 +126,7 @@ describe('commands/project/deploy', () => {
       getProjectConfig.mockResolvedValue({ projectConfig });
       projectNamePrompt.mockResolvedValue({ projectName: 'fooo' });
       getProjectDetailUrl.mockReturnValue(projectDetailUrl);
-      uiLink.mockImplementation(text => {
+      uiLinkSpy.mockImplementation(text => {
         return text;
       });
       getAccountConfig.mockReturnValue({ accountType });
