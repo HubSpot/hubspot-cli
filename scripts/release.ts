@@ -10,7 +10,7 @@ import { confirmPrompt } from '../lib/prompts/promptUtils';
 import { build } from './build';
 
 // TODO: Change to import when this is converted to TS
-const { uiLink } = require('../lib/ui');
+const { uiLink, uiLine } = require('../lib/ui');
 
 const exec = promisify(_exec);
 
@@ -76,6 +76,8 @@ async function cleanup(newVersion: string): Promise<void> {
 }
 
 async function publish(tag: Tag): Promise<void> {
+  logger.log(`Publishing to ${tag}`);
+  uiLine();
   return new Promise((resolve, reject) => {
     const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag]);
     let error = false;
@@ -174,6 +176,10 @@ async function handler({
 
   try {
     await publish(tag);
+
+    if (tag === TAG.LATEST) {
+      await publish(TAG.NEXT);
+    }
   } catch (e) {
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
