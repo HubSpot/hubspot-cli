@@ -84,16 +84,15 @@ async function publish(tag: Tag): Promise<void> {
   return new Promise((resolve, reject) => {
     const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag]);
 
-    childProcess.stdout.on('data', data => {
+    childProcess.stderr.on('data', data => {
       logger.log(data.toString());
     });
 
     childProcess.stderr.on('data', data => {
-      logger.error(data.toString());
+      logger.log(data.toString());
     });
 
     childProcess.on('close', code => {
-      console.log(code);
       if (code !== EXIT_CODES.SUCCESS) {
         reject();
       } else {
