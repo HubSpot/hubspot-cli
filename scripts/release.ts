@@ -1,7 +1,7 @@
 import { exec as _exec } from 'child_process';
 import { promisify } from 'util';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
-import { logger } from '@hubspot/local-dev-lib/logger';
+import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
 import semver from 'semver';
 
 import { name as packageName, version as localVersion } from '../package.json';
@@ -67,8 +67,9 @@ async function getDistTags(): Promise<DistTags> {
   return JSON.parse(distTags) as DistTags;
 }
 
-async function cleanup(oldVersion: string, newVersion: string): Promise<void> {
-  await exec(`yarn version --new-version ${oldVersion} --no-git-tag-version`);
+async function cleanup(newVersion: string): Promise<void> {
+  await exec(`git reset HEAD~`);
+  await exec(`git checkout .`);
   await exec(`git tag -d v${newVersion}`);
 }
 
@@ -76,6 +77,8 @@ async function handler({
   versionIncrement,
   tag,
 }: ArgumentsCamelCase<ReleaseArguments>): Promise<void> {
+  setLogLevel(LOG_LEVEL.LOG);
+
   const branch = await getGitBranch();
 
   const isExperimental = tag === TAG.EXPERIMENTAL;
@@ -151,12 +154,12 @@ async function handler({
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
     process.chdir('..dist');
-    await cleanup(currentVersion, newVersion);
+    await cleanup(newVersion);
     process.exit(EXIT_CODES.ERROR);
   }
 
   process.chdir('..');
-  await cleanup(currentVersion, newVersion);
+  await cleanup(newVersion);
   // await exec(`git push --atomic origin main v${newVersion}`);
 
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
