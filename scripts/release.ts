@@ -76,23 +76,25 @@ async function cleanup(newVersion: string): Promise<void> {
 }
 
 async function publish(tag: Tag): Promise<void> {
+  logger.log();
   logger.log(`Publishing to ${tag}`);
   uiLine();
+  logger.log();
+
   return new Promise((resolve, reject) => {
     const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag]);
-    let error = false;
 
     childProcess.stdout.on('data', data => {
       logger.log(data.toString());
     });
 
-    childProcess.on('error', e => {
-      error = true;
-      logger.error(e);
+    childProcess.stderr.on('data', data => {
+      logger.error(data.toString());
     });
 
-    childProcess.on('close', () => {
-      if (error) {
+    childProcess.on('close', code => {
+      console.log(code);
+      if (code !== EXIT_CODES.SUCCESS) {
         reject();
       } else {
         resolve();
@@ -195,7 +197,10 @@ async function handler({
 
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
   logger.log(
-    uiLink('https://www.npmjs.com/package/@hubspot/cli?activeTab=versions')
+    uiLink(
+      'View on npm',
+      'https://www.npmjs.com/package/@hubspot/cli?activeTab=versions'
+    )
   );
 }
 
