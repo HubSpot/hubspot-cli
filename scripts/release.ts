@@ -27,7 +27,19 @@ const TAG = {
   EXPERIMENTAL: 'experimental',
 } as const;
 
-const VERSION_INCREMENT_OPTIONS = ['patch', 'minor', 'major'] as const;
+const INCREMENT = {
+  PATCH: 'patch',
+  MINOR: 'minor',
+  MAJOR: 'major',
+  PRERELEASE: 'prerelease',
+} as const;
+
+const VERSION_INCREMENT_OPTIONS = [
+  INCREMENT.PATCH,
+  INCREMENT.MINOR,
+  INCREMENT.MAJOR,
+  INCREMENT.PRERELEASE,
+] as const;
 const TAG_OPTIONS = [TAG.LATEST, TAG.NEXT, TAG.EXPERIMENTAL] as const;
 
 type ReleaseArguments = {
@@ -88,6 +100,12 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
+  if (tag === TAG.LATEST && versionIncrement === INCREMENT.PRERELEASE) {
+    logger.error(
+      'Invalid release: cannot increment prerelease number on latest tag.'
+    );
+  }
+
   const {
     next: currentNextTag,
     experimental: currentExperimentalTag,
@@ -103,7 +121,9 @@ async function handler({
   const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
   const prereleaseIdentifier = isExperimental ? 'experimental' : 'beta';
   const incrementType =
-    tag === TAG.LATEST ? versionIncrement : (`pre${versionIncrement}` as const);
+    tag === TAG.LATEST || versionIncrement === INCREMENT.PRERELEASE
+      ? versionIncrement
+      : (`pre${versionIncrement}` as const);
 
   const newVersion = semver.inc(
     currentVersion,
@@ -119,7 +139,7 @@ async function handler({
   logger.log(`Current version: ${currentVersion}`);
   logger.log(`New version to release: ${newVersion}`);
 
-  const shouldRelease = confirmPrompt(
+  const shouldRelease = await confirmPrompt(
     `Release version ${newVersion} on tag ${tag}?`
   );
 
@@ -132,7 +152,7 @@ async function handler({
   process.chdir('./dist');
 
   try {
-    await runCommandAndGetOutput(`npm publish --tag ${tag}`);
+    await runCommandAndGetOutput(`npm publish --dry-run --tag ${tag}`);
   } catch (e) {
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
@@ -141,7 +161,8 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
-  await exec(`git push --atomic origin main v${newVersion}`);
+  await cleanup(currentVersion, newVersion);
+  // await exec(`git push --atomic origin main v${newVersion}`);
 
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
   logger.log(
