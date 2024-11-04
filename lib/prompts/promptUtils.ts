@@ -1,4 +1,3 @@
-// @ts-expect-error I'm not entirely sure why this upsets VScode but it doesn't break builds
 import inquirer, { Answers, QuestionCollection } from 'inquirer';
 
 export async function promptUser<T extends Answers>(
