@@ -150,10 +150,12 @@ async function handler({
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
+    process.chdir('./dist');
     await cleanup(currentVersion, newVersion);
     process.exit(EXIT_CODES.ERROR);
   }
 
+  process.chdir('./dist');
   await cleanup(currentVersion, newVersion);
   // await exec(`git push --atomic origin main v${newVersion}`);
 
@@ -161,8 +163,6 @@ async function handler({
   logger.log(
     uiLink('https://www.npmjs.com/package/@hubspot/cli?activeTab=versions')
   );
-
-  process.exit(EXIT_CODES.SUCCESS);
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
