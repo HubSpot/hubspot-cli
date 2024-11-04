@@ -14,15 +14,7 @@ const { uiLink, uiLine } = require('../lib/ui');
 
 const exec = promisify(_exec);
 
-// const BRANCH = {
-//   MAIN: 'main',
-//   EXPERIMENTAL: 'experimental',
-// };
-
-const BRANCH = {
-  MAIN: 'improved-release-script',
-  EXPERIMENTAL: 'improved-release-script',
-} as const;
+const MAIN_BRANCH = 'main';
 
 const TAG = {
   LATEST: 'latest',
@@ -84,6 +76,7 @@ async function publish(tag: Tag): Promise<void> {
   return new Promise((resolve, reject) => {
     const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag], {
       stdio: 'inherit',
+      cwd: './dist',
     });
 
     childProcess.on('close', code => {
@@ -106,12 +99,12 @@ async function handler({
 
   const isExperimental = tag === TAG.EXPERIMENTAL;
 
-  if (isExperimental && branch !== BRANCH.EXPERIMENTAL) {
+  if (isExperimental && branch === MAIN_BRANCH) {
     logger.error(
-      'Releases to experimental tag can only be published from the experimental branch'
+      'Releases to experimental tag cannot be published from the main branch'
     );
     process.exit(EXIT_CODES.ERROR);
-  } else if (branch !== BRANCH.MAIN) {
+  } else if (!isExperimental && branch !== MAIN_BRANCH) {
     logger.error(
       'Releases to latest and next tags can only be published from the main branch'
     );
@@ -129,12 +122,12 @@ async function handler({
     experimental: currentExperimentalTag,
   } = await getDistTags();
 
-  // if (!isExperimental && currentNextTag !== localVersion) {
-  //   logger.error(
-  //     `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
-  //   );
-  //   process.exit(EXIT_CODES.ERROR);
-  // }
+  if (!isExperimental && currentNextTag !== localVersion) {
+    logger.error(
+      `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
+    );
+    process.exit(EXIT_CODES.ERROR);
+  }
 
   const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
   const prereleaseIdentifier = isExperimental ? 'experimental' : 'beta';
@@ -176,8 +169,6 @@ async function handler({
   await build();
   logger.success('Build successful');
 
-  process.chdir('./dist');
-
   try {
     await publish(tag);
 
@@ -188,14 +179,14 @@ async function handler({
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
-    process.chdir('..');
     await cleanup(newVersion);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  process.chdir('..');
-  await cleanup(newVersion);
-  // await exec(`git push --atomic origin main v${newVersion}`);
+  logger.log();
+  logger.log(`Pushing changes to Github...`);
+  await exec(`git push --atomic origin ${branch} v${newVersion}`);
+  logger.log(`Changes pushed successfully`);
 
   logger.log();
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
