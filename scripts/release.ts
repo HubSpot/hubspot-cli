@@ -150,12 +150,12 @@ async function handler({
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
-    process.chdir('./dist');
+    process.chdir('..dist');
     await cleanup(currentVersion, newVersion);
     process.exit(EXIT_CODES.ERROR);
   }
 
-  process.chdir('./dist');
+  process.chdir('..');
   await cleanup(currentVersion, newVersion);
   // await exec(`git push --atomic origin main v${newVersion}`);
 
