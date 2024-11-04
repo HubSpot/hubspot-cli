@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import fs from 'fs';
 
-async function build(): Promise<void> {
+export async function build(): Promise<void> {
   // Remove the current dist dir
   fs.rmSync('dist', { recursive: true, force: true });
 
