@@ -56,7 +56,8 @@
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
     "release": "bash ./scripts/release.sh",
-    "hs": "yarn build && node ./dist/bin/hs"
+    "hs": "yarn build && node ./dist/bin/hs",
+    "update-ldl": "yarn add --exact @hubspot/local-dev-lib@latest"
   },
   "lint-staged": {
     "**/*.{js,ts,scss,css}": [
