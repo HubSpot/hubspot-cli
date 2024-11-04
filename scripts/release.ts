@@ -82,14 +82,8 @@ async function publish(tag: Tag): Promise<void> {
   logger.log();
 
   return new Promise((resolve, reject) => {
-    const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag]);
-
-    childProcess.stderr.on('data', data => {
-      logger.log(data.toString());
-    });
-
-    childProcess.stderr.on('data', data => {
-      logger.log(data.toString());
+    const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag], {
+      stdio: 'inherit',
     });
 
     childProcess.on('close', code => {
