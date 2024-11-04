@@ -1,6 +1,6 @@
 {
   "name": "@hubspot/cli",
-  "version": "6.2.1",
+  "version": "6.2.3-experimental.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
@@ -30,10 +30,10 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.7",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
-    "@types/inquirer": "^9.0.7",
     "axios": "^1.7.2",
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.31.0",
