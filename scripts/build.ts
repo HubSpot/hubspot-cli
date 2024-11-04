@@ -1,5 +1,8 @@
-import { exec } from 'child_process';
+import { exec as _exec } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
+
+const exec = promisify(_exec);
 
 export async function build(): Promise<void> {
   // Remove the current dist dir
