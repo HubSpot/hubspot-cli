@@ -1,4 +1,4 @@
-import { exec as _exec } from 'child_process';
+import { exec as _exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
@@ -56,6 +56,8 @@ type DistTags = {
   [TAG.EXPERIMENTAL]: string;
 };
 
+type Tag = typeof TAG_OPTIONS[number];
+
 async function getGitBranch(): Promise<string> {
   const { stdout } = await exec('git rev-parse --abbrev-ref HEAD');
   return stdout.trim();
@@ -71,6 +73,30 @@ async function cleanup(newVersion: string): Promise<void> {
   await exec(`git reset HEAD~`);
   await exec(`git checkout .`);
   await exec(`git tag -d v${newVersion}`);
+}
+
+async function publish(tag: Tag): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag]);
+    let error = false;
+
+    childProcess.stdout.on('data', data => {
+      logger.log(data.toString());
+    });
+
+    childProcess.on('error', e => {
+      error = true;
+      logger.error(e);
+    });
+
+    childProcess.on('close', () => {
+      if (error) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 async function handler({
@@ -147,13 +173,12 @@ async function handler({
   process.chdir('./dist');
 
   try {
-    await exec(`npm publish --dry-run --tag ${tag}`);
+    await publish(tag);
   } catch (e) {
-    logger.error(e);
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
-    process.chdir('..dist');
+    process.chdir('..');
     await cleanup(newVersion);
     process.exit(EXIT_CODES.ERROR);
   }
