@@ -77,7 +77,7 @@ async function cleanup(newVersion: string): Promise<void> {
 
 async function publish(tag: Tag): Promise<void> {
   logger.log();
-  logger.log(`Publishing to ${tag}`);
+  logger.log(`Publishing to ${tag}...`);
   uiLine();
   logger.log();
 
@@ -154,6 +154,7 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
+  logger.log();
   logger.log(`Current version: ${currentVersion}`);
   logger.log(`New version to release: ${newVersion}`);
 
@@ -165,8 +166,16 @@ async function handler({
     process.exit(EXIT_CODES.SUCCESS);
   }
 
+  logger.log();
+  logger.log(`Updating version to ${newVersion}...`);
   await exec(`yarn version --new-version ${newVersion}`);
+  logger.success('Version updated successfully');
+
+  logger.log();
+  logger.log('Creating a new build...');
   await build();
+  logger.success('Build successful');
+
   process.chdir('./dist');
 
   try {
@@ -188,6 +197,7 @@ async function handler({
   await cleanup(newVersion);
   // await exec(`git push --atomic origin main v${newVersion}`);
 
+  logger.log();
   logger.success(`HubSpot CLI version ${newVersion} published successfully`);
   logger.log(
     uiLink(
