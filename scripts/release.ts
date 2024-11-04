@@ -1,4 +1,5 @@
-import { exec } from 'child_process';
+import { exec as _exec } from 'child_process';
+import { promisify } from 'util';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import semver from 'semver';
@@ -10,6 +11,8 @@ import { build } from './build';
 
 // TODO: Change to import when this is converted to TS
 const { uiLink } = require('../lib/ui');
+
+const exec = promisify(_exec);
 
 // const BRANCH = {
 //   MAIN: 'main',
@@ -53,31 +56,20 @@ type DistTags = {
   [TAG.EXPERIMENTAL]: string;
 };
 
-function runCommandAndGetOutput(command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    exec(command, (err, stdout) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(stdout.trim());
-    });
-  });
-}
-
-function getGitBranch(): Promise<string> {
-  return runCommandAndGetOutput('git rev-parse --abbrev-ref HEAD');
+async function getGitBranch(): Promise<string> {
+  const { stdout } = await exec('git rev-parse --abbrev-ref HEAD');
+  return stdout.trim();
 }
 
 async function getDistTags(): Promise<DistTags> {
-  const distTags = await runCommandAndGetOutput(
-    `npm view ${packageName} dist-tags --json`
-  );
+  const { stdout } = await exec(`npm view ${packageName} dist-tags --json`);
+  const distTags = stdout.trim();
   return JSON.parse(distTags) as DistTags;
 }
 
 async function cleanup(oldVersion: string, newVersion: string): Promise<void> {
   await exec(`yarn version --new-version ${oldVersion} --no-git-tag-version`);
-  await exec(`git tag -D v${newVersion}`);
+  await exec(`git tag -d v${newVersion}`);
 }
 
 async function handler({
@@ -152,8 +144,9 @@ async function handler({
   process.chdir('./dist');
 
   try {
-    await runCommandAndGetOutput(`npm publish --dry-run --tag ${tag}`);
+    await exec(`npm publish --dry-run --tag ${tag}`);
   } catch (e) {
+    logger.error(e);
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
     );
