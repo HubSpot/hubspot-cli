@@ -10,7 +10,7 @@ The above copyright notice and this permission notice shall be included in all c
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
 
-const VALID_STATUSES = [
+export const VALID_STATUSES = [
   'succeed',
   'fail',
   'spinning',
@@ -36,24 +36,24 @@ const VALID_COLORS = [
   'whiteBright',
 ];
 
-interface Spinner {
+export type Spinner = {
   interval: number;
   frames: string[];
-}
+};
 
-interface SpinnerOptions {
+export type SpinnerOptions = {
   spinner?: Partial<Spinner>;
   disableSpins?: boolean;
   text?: string;
-  status?: typeof VALID_STATUSES;
-  color?: typeof VALID_COLORS;
-  spinnerColor?: typeof VALID_COLORS;
-  succeedColor?: typeof VALID_COLORS;
-  failColor?: typeof VALID_COLORS;
+  status?: typeof VALID_STATUSES[number];
+  color?: typeof VALID_COLORS[number];
+  spinnerColor?: typeof VALID_COLORS[number];
+  succeedColor?: typeof VALID_COLORS[number];
+  failColor?: typeof VALID_COLORS[number];
   succeedPrefix?: string;
   failPrefix?: string;
   indent?: number;
-}
+};
 
 export const SPINNERS: Record<string, Spinner> = {
   dots: {
@@ -131,7 +131,7 @@ export function colorOptions({
   return colors;
 }
 
-function prefixOptions({
+export function prefixOptions({
   succeedPrefix,
   failPrefix,
 }: SpinnerOptions): Partial<SpinnerOptions> {
