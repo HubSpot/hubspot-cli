@@ -11,14 +11,6 @@ import {
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
 
-interface CustomOptions {
-  debug?: boolean;
-  _?: Array<string>;
-  portal?: number | string;
-  account?: number | string;
-  mode?: string;
-}
-
 const i18nKey = 'lib.commonOpts';
 
 export function addAccountOptions(yargs: Argv): Argv {
@@ -81,7 +73,7 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
   });
 }
 
-export function setLogLevel(options: Arguments<CustomOptions>): void {
+export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {
   const { debug } = options;
   if (debug) {
     setLoggerLogLevel(LOG_LEVEL.DEBUG);
@@ -90,14 +82,16 @@ export function setLogLevel(options: Arguments<CustomOptions>): void {
   }
 }
 
-export function getCommandName(argv: Arguments<CustomOptions>): string {
+export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
   return (argv && argv._ && argv._[0]) || '';
 }
 
 /**
  * Obtains accountId using supplied --account flag or from environment variables
  */
-export function getAccountId(options: Arguments<CustomOptions>): number | null {
+export function getAccountId(
+  options: Arguments<{ portal?: number | string; account?: number | string }>
+): number | null {
   const { portal, account } = options;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
@@ -107,7 +101,7 @@ export function getAccountId(options: Arguments<CustomOptions>): number | null {
   return getAccountIdFromConfig(portal || account);
 }
 
-export function getMode(options: Arguments<CustomOptions>): string {
+export function getMode(options: Arguments<{ mode?: string }>): string {
   // 1. --mode
   const { mode } = options;
   if (mode && typeof mode === 'string') {

@@ -1,11 +1,10 @@
 import * as helpers from './interpolationHelpers';
 
-interface interpolationDataType {
-  [key: string]: string;
-}
+type InterpolationData = {
+  [identifier: string]: string | number;
+};
 
-type HelperFunctions = typeof helpers;
-type HelperIdentifier = keyof HelperFunctions;
+type HelperIdentifier = keyof typeof helpers;
 
 const delimiters = {
   interpolation: {
@@ -29,7 +28,7 @@ function generateReplaceFn(
   matchedText: string,
   startIndex: number,
   replacementString: string
-): (arg0: string) => string {
+): (helperFn: string) => string {
   return currentStringValue =>
     `${currentStringValue.slice(0, startIndex)}${
       replacementString !== null && replacementString !== undefined
@@ -40,7 +39,7 @@ function generateReplaceFn(
 
 function interpolation(
   stringValue: string,
-  interpolationData: interpolationDataType
+  interpolationData: InterpolationData
 ): string {
   const interpolationIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(.*?)${delimiters.interpolation.end}`,
@@ -57,7 +56,11 @@ function interpolation(
 
     if (identifier && !isHelperIdentifier(identifier)) {
       replaceQueue.unshift(
-        generateReplaceFn(matchedText, index, interpolationData[identifier])
+        generateReplaceFn(
+          matchedText,
+          index,
+          String(interpolationData[identifier])
+        )
       );
     }
   }
@@ -73,7 +76,7 @@ function interpolation(
 function compileHelper(
   stringValue: string,
   helperIdentifier: string,
-  helperFn: (arg0: string) => string
+  helperFn: (helper: string) => string
 ): string {
   const helperIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*?)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
@@ -125,7 +128,7 @@ function compileHelpers(stringValue: string): string {
 
 export function interpolate(
   stringValue: string,
-  interpolationData: interpolationDataType
+  interpolationData: InterpolationData
 ): string {
   const interpolatedString = interpolation(stringValue, interpolationData);
   const helperCompiledString = compileHelpers(interpolatedString);

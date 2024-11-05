@@ -13,7 +13,7 @@ interface KeyPress {
 }
 
 export function handleExit(
-  callback: (arg0?: { isSIGHUP: boolean }) => void
+  callback: (onTerminate?: { isSIGHUP: boolean }) => void
 ): void {
   const terminationSignals = [
     'beforeExit',
@@ -47,7 +47,7 @@ export function handleExit(
   });
 }
 
-export function handleKeypress(callback: (arg0: KeyPress) => void): void {
+export function handleKeypress(callback: (onKeyPress: KeyPress) => void): void {
   readline.createInterface(process.stdin, process.stdout);
   readline.emitKeypressEvents(process.stdin);
 

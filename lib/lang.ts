@@ -1,8 +1,6 @@
 import util from 'util';
 import path from 'path';
-// @ts-ignore
 import fs from 'fs-extra';
-// @ts-ignore
 import yaml from 'js-yaml';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { interpolate } from './interpolation';
@@ -31,7 +29,7 @@ function loadLanguageFromYaml(): void {
     locale = languageFileExists ? nodeLocale : 'en';
     languageObj = yaml.load(
       fs.readFileSync(path.join(__dirname, `../lang/${locale}.lyaml`), 'utf8')
-    );
+    ) as LanguageObject;
 
     logger.debug(
       'Loaded language data: ',
@@ -78,7 +76,10 @@ function getTextValue(lookupDotNotation: string): string {
   return textValue;
 }
 
-export function i18n(lookupDotNotation: string, options = {}): string {
+export function i18n(
+  lookupDotNotation: string,
+  options: { [identifier: string]: string | number } = {}
+): string {
   if (!languageObj) {
     loadLanguageFromYaml();
   }
