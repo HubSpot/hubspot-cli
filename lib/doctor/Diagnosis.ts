@@ -40,9 +40,10 @@ export class Diagnosis {
   warningCount = 0;
 
   constructor({ diagnosticInfo, accountId }: DiagnosisOptions) {
-    const { succeedPrefix, failPrefix } = prefixOptions({} as any);
+    // @ts-expect-error Prefix options is not typed yet
+    const { succeedPrefix, failPrefix } = prefixOptions({});
 
-    const { name, accountType } = getAccountConfig(accountId!) || {};
+    const { accountType } = getAccountConfig(accountId!) || {};
 
     this.prefixes = {
       success: green(succeedPrefix),
@@ -96,7 +97,7 @@ export class Diagnosis {
 
   toString() {
     const output = [];
-    for (const [__key, value] of Object.entries(this.diagnosis)) {
+    for (const value of Object.values(this.diagnosis)) {
       output.push(this.generateSections(value));
     }
 

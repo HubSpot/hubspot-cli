@@ -166,7 +166,7 @@ export class Doctor {
       const packageDirName = path.dirname(packageFile);
       try {
         const needsInstall = await packagesNeedInstalled(
-          path.join(this.projectConfig?.projectDir!, packageDirName)
+          path.join(this.projectConfig?.projectDir, packageDirName)
         );
 
         if (needsInstall) {
@@ -221,7 +221,7 @@ export class Doctor {
   private async checkProjectConfigJsonFiles() {
     let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
-      const fileToCheck = path.join(this.projectConfig?.projectDir!, jsonFile);
+      const fileToCheck = path.join(this.projectConfig?.projectDir, jsonFile);
       if (!(await this.isValidJsonFile(fileToCheck))) {
         foundError = true;
         this.diagnosis?.addProjectSection({

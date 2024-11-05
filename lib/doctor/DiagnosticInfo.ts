@@ -147,10 +147,10 @@ export class DiagnosticInfoBuilder {
 
   private async fetchProjectFilenames() {
     try {
-      this.files = (await walk(this._projectConfig?.projectDir!))
+      this.files = (await walk(this._projectConfig?.projectDir))
         .filter(file => !path.dirname(file).includes('node_modules'))
         .map(filename =>
-          path.relative(this._projectConfig?.projectDir!, filename)
+          path.relative(this._projectConfig?.projectDir, filename)
         );
     } catch (e) {
       logger.debug(e);
