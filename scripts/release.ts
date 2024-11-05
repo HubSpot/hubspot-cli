@@ -180,11 +180,13 @@ async function handler({
     tag === TAG.LATEST &&
     !localVersion.includes(PRERELEASE_IDENTIFIER.NEXT)
   ) {
+    logger.log();
     const proceedWithoutBetaRelease = await confirmPrompt(
       `The current changes have not yet been released in beta. It's recommended to release and test all changes on the ${TAG.NEXT} tag before releasing them to ${TAG.LATEST}. Are you sure you want to proceed?`
     );
 
     if (!proceedWithoutBetaRelease) {
+      logger.log();
       logger.log(
         `To release your changes on the next tag, run \`yarn release -v=${versionIncrement} -t=next\``
       );
