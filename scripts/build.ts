@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
+import { EXIT_CODES } from '../lib/enums/exitCodes';
 
 export async function build(): Promise<void> {
   // Remove the current dist dir
@@ -11,7 +12,10 @@ export async function build(): Promise<void> {
       stdio: 'inherit',
     });
 
-    childProcess.on('close', () => {
+    childProcess.on('close', code => {
+      if (code !== EXIT_CODES.SUCCESS) {
+        process.exit(code);
+      }
       resolve('');
     });
   });
