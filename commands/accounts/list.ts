@@ -3,8 +3,8 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfig,
   getConfigPath,
-  getDefaultAccount,
-  getAccounts,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
@@ -90,7 +90,7 @@ exports.handler = async options => {
 
   const config = getConfig();
   const configPath = getConfigPath();
-  const accountsList = getAccounts();
+  const accountsList = getConfigAccounts();
   const mappedPortalData = sortAndMapPortals(accountsList);
   const portalData = getPortalData(mappedPortalData);
   portalData.unshift(
@@ -104,7 +104,7 @@ exports.handler = async options => {
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
-      account: getDefaultAccount(config),
+      account: getConfigDefaultAccount(config),
     })
   );
   logger.log(i18n(`${i18nKey}.accounts`));

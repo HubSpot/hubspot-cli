@@ -22,7 +22,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
-  getDefaultAccount,
+  getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -180,7 +180,7 @@ exports.handler = async options => {
     const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: getDefaultAccount(config),
+        accountName: getConfigDefaultAccount(config),
       })
     );
   }

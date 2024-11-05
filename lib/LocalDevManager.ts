@@ -14,7 +14,7 @@ const {
 } = require('@hubspot/local-dev-lib/api/appsDev');
 const {
   getAccountId,
-  getDefaultAccount,
+  getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const { PROJECT_CONFIG_FILE } = require('./constants');
 const SpinniesManager = require('./ui/SpinniesManager');
@@ -306,7 +306,7 @@ class LocalDevManager {
   }
 
   getUploadCommand() {
-    const currentDefaultAccount = getDefaultAccount();
+    const currentDefaultAccount = getConfigDefaultAccount();
 
     return this.targetProjectAccountId !== getAccountId(currentDefaultAccount)
       ? uiCommandReference(

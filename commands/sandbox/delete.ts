@@ -19,8 +19,8 @@ const {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
-  getDefaultAccount,
-  getAccounts,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
@@ -74,14 +74,14 @@ exports.handler = async options => {
     account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(getDefaultAccount(config));
+    sandboxAccountId === getAccountId(getConfigDefaultAccount(config));
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
-  const accountsList = getAccounts();
+  const accountsList = getConfigAccounts();
   for (const portal of accountsList) {
     if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {

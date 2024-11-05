@@ -1,8 +1,8 @@
 // @ts-nocheck
 const {
   updateDefaultAccount,
-  getDefaultAccount,
-  getAccounts,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const {
   getAccountIdentifier,
@@ -20,8 +20,8 @@ const mapAccountChoices = portals =>
 const i18nKey = 'commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
-  const accountsList = getAccounts();
-  const defaultAccount = getDefaultAccount(config);
+  const accountsList = getConfigAccounts();
+  const defaultAccount = getConfigDefaultAccount(config);
 
   const { default: selectedDefault } = await promptUser([
     {
@@ -39,8 +39,8 @@ const selectAccountFromConfig = async (config, prompt) => {
 };
 
 const selectAndSetAsDefaultAccountPrompt = async config => {
-  const accountsList = getAccounts();
-  const defaultAccount = getDefaultAccount(config);
+  const accountsList = getConfigAccounts();
+  const defaultAccount = getConfigDefaultAccount(config);
 
   const { default: selectedDefault } = await promptUser([
     {

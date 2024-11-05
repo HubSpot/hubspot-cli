@@ -8,7 +8,7 @@ const { fetchTypes } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const {
   getAccountId,
   getEnv,
-  getAccounts,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./prompts/promptUtils');
 const { isDevelopmentSandbox } = require('./accountTypes');
@@ -53,7 +53,7 @@ const getSandboxTypeAsString = accountType => {
 function getHasSandboxesByType(parentAccountConfig, type) {
   const id = getAccountIdentifier(parentAccountConfig);
   const parentPortalId = getAccountId(id);
-  const accountsList = getAccounts();
+  const accountsList = getConfigAccounts();
   for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||

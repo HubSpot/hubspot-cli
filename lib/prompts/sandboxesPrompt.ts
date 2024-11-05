@@ -10,8 +10,8 @@ const {
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSandbox } = require('../accountTypes');
 const {
-  getDefaultAccount,
-  getAccounts,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 
 const i18nKey = 'lib.prompts.sandboxesPrompt';
@@ -59,7 +59,7 @@ const sandboxTypePrompt = () => {
 };
 
 const deleteSandboxPrompt = (config, promptParentAccount = false) => {
-  const accountsList = getAccounts();
+  const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
     : mapSandboxAccountChoices(accountsList);
@@ -78,7 +78,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       look: false,
       pageSize: 20,
       choices,
-      default: getDefaultAccount(config),
+      default: getConfigDefaultAccount(config),
     },
   ]);
 };

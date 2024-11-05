@@ -4,7 +4,7 @@ const {
   getConfig,
   getConfigPath,
   deleteAccount,
-  getDefaultAccount,
+  getConfigDefaultAccount,
   getAccountId: getAccountIdFromConfig,
   updateDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
@@ -50,7 +50,7 @@ exports.handler = async options => {
     getAccountIdFromConfig(accountToRemove)
   );
 
-  const currentDefaultAccount = getDefaultAccount();
+  const currentDefaultAccount = getConfigDefaultAccount();
 
   await deleteAccount(accountToRemove);
   logger.success(
