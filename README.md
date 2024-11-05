@@ -64,3 +64,8 @@ The CLI will exit with one of the following exit codes:
 - `0`: A successful run
 - `1`: There was a config problem or an internal error
 - `2`: There are warnings or validation issues
+
+
+## Changelog
+
+The best way to stay up to date is to check out the [Github Releases](https://github.com/HubSpot/hubspot-cli/releases) and also follow our [developer changelog posts](https://developers.hubspot.com/changelog) for an easier to read breakdown of major changes.

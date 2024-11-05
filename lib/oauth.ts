@@ -29,7 +29,7 @@ const buildAuthUrl = oauthManager => {
 
 const handleServerOnProcessEnd = server => {
   const shutdownServerIfRunning = () => {
-    server && server.close();
+    server?.close();
   };
 
   handleExit(shutdownServerIfRunning);

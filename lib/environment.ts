@@ -1,5 +1,4 @@
-// @ts-nocheck
-const getPlatform = () => {
+export function getPlatform(): string {
   switch (process.platform) {
     case 'darwin':
       return 'macos';
@@ -8,8 +7,4 @@ const getPlatform = () => {
     default:
       return process.platform;
   }
-};
-
-module.exports = {
-  getPlatform,
-};
+}

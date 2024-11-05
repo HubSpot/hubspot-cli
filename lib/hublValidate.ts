@@ -1,17 +1,34 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
+  HubLValidationError,
+  LintResult,
+  Validation,
+} from '@hubspot/local-dev-lib/types/HublValidation';
 
-const getErrorsFromHublValidationObject = validation =>
-  (validation && validation.meta && validation.meta.template_errors) || [];
+function getErrorsFromHublValidationObject(
+  validation: Validation
+): Array<HubLValidationError> {
+  return (
+    (validation && validation.meta && validation.meta.template_errors) || []
+  );
+}
 
-function printHublValidationError(err) {
+function printHublValidationError(err: HubLValidationError) {
   const { severity, message, lineno, startPosition } = err;
   const method = severity === 'FATAL' ? 'error' : 'warn';
   logger[method]('[%d, %d]: %s', lineno, startPosition, message);
 }
 
-function printHublValidationResult({ file, validation }) {
+export function printHublValidationResult({
+  file,
+  validation,
+}: LintResult): number {
   let count = 0;
+
+  if (!validation) {
+    return count;
+  }
+
   const errors = getErrorsFromHublValidationObject(validation);
   if (!errors.length) {
     return count;
@@ -24,10 +41,6 @@ function printHublValidationResult({ file, validation }) {
     ++count;
     printHublValidationError(err);
   });
-  logger.groupEnd(file);
+  logger.groupEnd();
   return count;
 }
-
-module.exports = {
-  printHublValidationResult,
-};

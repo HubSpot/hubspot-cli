@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
  * 0: Successful run
  * 1: Config problem or internal error
@@ -8,6 +7,4 @@ export const EXIT_CODES = {
   SUCCESS: 0,
   ERROR: 1,
   WARNING: 2,
-};
-
-module.exports = { EXIT_CODES };
+} as const;

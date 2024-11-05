@@ -32,7 +32,7 @@ const hasAllProperties = projectList => {
 
 const createTemplateOptions = async (templateSource, githubRef) => {
   const hasCustomTemplateSource = Boolean(templateSource);
-  let branch = hasCustomTemplateSource
+  const branch = hasCustomTemplateSource
     ? DEFAULT_PROJECT_TEMPLATE_BRANCH
     : githubRef;
 
@@ -55,6 +55,12 @@ const createTemplateOptions = async (templateSource, githubRef) => {
   return config[PROJECT_COMPONENT_TYPES.PROJECTS];
 };
 
+function findTemplate(projectTemplates, templateNameOrLabel) {
+  return projectTemplates.find(
+    t => t.name === templateNameOrLabel || t.label === templateNameOrLabel
+  );
+}
+
 const createProjectPrompt = async (
   githubRef,
   promptOptions = {},
@@ -71,7 +77,7 @@ const createProjectPrompt = async (
 
     selectedTemplate =
       promptOptions.template &&
-      projectTemplates.find(t => t.name === promptOptions.template);
+      findTemplate(projectTemplates, promptOptions.template);
   }
 
   const result = await promptUser([
@@ -116,7 +122,7 @@ const createProjectPrompt = async (
       name: 'template',
       message: () => {
         return promptOptions.template &&
-          !projectTemplates.find(t => t.name === promptOptions.template)
+          !findTemplate(projectTemplates, promptOptions.template)
           ? i18n(`${i18nKey}.errors.invalidTemplate`, {
               template: promptOptions.template,
             })

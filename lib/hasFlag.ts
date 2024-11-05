@@ -1,9 +1,8 @@
-// @ts-nocheck
-const process = require('process');
+import process from 'process';
 
 // See https://github.com/sindresorhus/has-flag/blob/main/index.js (License: https://github.com/sindresorhus/has-flag/blob/main/license)
 
-function hasFlag(flag, argv = process.argv) {
+export function hasFlag(flag: string, argv = process.argv): boolean {
   const prefix = flag.startsWith('-') ? '' : flag.length === 1 ? '-' : '--';
   const position = argv.indexOf(prefix + flag);
   const terminatorPosition = argv.indexOf('--');
@@ -12,5 +11,3 @@ function hasFlag(flag, argv = process.argv) {
     (terminatorPosition === -1 || position < terminatorPosition)
   );
 }
-
-module.exports = hasFlag;

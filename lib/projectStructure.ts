@@ -18,7 +18,7 @@ const CONFIG_FILES = {
 };
 
 function getTypeFromConfigFile(configFile) {
-  for (let key in CONFIG_FILES) {
+  for (const key in CONFIG_FILES) {
     if (CONFIG_FILES[key] === configFile) {
       return key;
     }
@@ -40,7 +40,7 @@ function loadConfigFile(configPath) {
 }
 
 function getAppCardConfigs(appConfig, appPath) {
-  let cardConfigs = [];
+  const cardConfigs = [];
   let cards;
 
   if (appConfig && appConfig.extensions && appConfig.extensions.crm) {
