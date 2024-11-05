@@ -40,6 +40,7 @@ const TAG_OPTIONS = [TAG.LATEST, TAG.NEXT, TAG.EXPERIMENTAL] as const;
 type ReleaseArguments = {
   versionIncrement: typeof VERSION_INCREMENT_OPTIONS[number];
   tag: typeof TAG_OPTIONS[number];
+  dryRun?: boolean;
 };
 
 type DistTags = {
@@ -67,14 +68,20 @@ async function cleanup(newVersion: string): Promise<void> {
   await exec(`git tag -d v${newVersion}`);
 }
 
-async function publish(tag: Tag): Promise<void> {
+async function publish(tag: Tag, isDryRun: boolean): Promise<void> {
   logger.log();
   logger.log(`Publishing to ${tag}...`);
   uiLine();
   logger.log();
 
+  const commandArgs = ['publish', '--tag', tag];
+
+  if (isDryRun) {
+    commandArgs.push('--dry-run');
+  }
+
   return new Promise((resolve, reject) => {
-    const childProcess = spawn('npm', ['publish', '--dry-run', '--tag', tag], {
+    const childProcess = spawn('npm', commandArgs, {
       stdio: 'inherit',
       cwd: './dist',
     });
@@ -92,12 +99,14 @@ async function publish(tag: Tag): Promise<void> {
 async function handler({
   versionIncrement,
   tag,
+  dryRun,
 }: ArgumentsCamelCase<ReleaseArguments>): Promise<void> {
   setLogLevel(LOG_LEVEL.LOG);
 
   const branch = await getGitBranch();
 
   const isExperimental = tag === TAG.EXPERIMENTAL;
+  const isDryRun = Boolean(dryRun);
 
   if (isExperimental && branch === MAIN_BRANCH) {
     logger.error(
@@ -170,10 +179,10 @@ async function handler({
   logger.success('Build successful');
 
   try {
-    await publish(tag);
+    await publish(tag, isDryRun);
 
     if (tag === TAG.LATEST) {
-      await publish(TAG.NEXT);
+      await publish(TAG.NEXT, isDryRun);
     }
   } catch (e) {
     logger.error(
@@ -181,6 +190,13 @@ async function handler({
     );
     await cleanup(newVersion);
     process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (isDryRun) {
+    await cleanup(newVersion);
+    logger.log();
+    logger.success('Dry run release finished successfully');
+    process.exit(EXIT_CODES.SUCCESS);
   }
 
   logger.log();
@@ -211,6 +227,11 @@ async function builder(yargs: Argv): Promise<Argv> {
       demandOption: true,
       describe: 'Tag for the next release',
       choices: TAG_OPTIONS,
+    },
+    dryRun: {
+      alias: 'd',
+      describe: 'Run through the publish process without actually publishing',
+      type: 'boolean',
     },
   });
 }
