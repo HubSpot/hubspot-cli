@@ -182,7 +182,8 @@ async function handler({
   ) {
     logger.log();
     const proceedWithoutBetaRelease = await confirmPrompt(
-      `The current changes have not yet been released in beta. It's recommended to release and test all changes on the ${TAG.NEXT} tag before releasing them to ${TAG.LATEST}. Are you sure you want to proceed?`
+      `The current changes have not yet been released in beta. It's recommended to release and test all changes on the ${TAG.NEXT} tag before releasing them to ${TAG.LATEST}. Are you sure you want to proceed?`,
+      false
     );
 
     if (!proceedWithoutBetaRelease) {
