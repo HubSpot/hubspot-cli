@@ -6,7 +6,7 @@ import { packagesNeedInstalled } from '../dependencyManagement';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
-import { cyan } from 'chalk';
+import { cyan, white } from 'chalk';
 import { orange } from '../interpolationHelpers';
 import { Diagnosis } from './Diagnosis';
 import {
@@ -55,7 +55,8 @@ export class Doctor {
     ]);
 
     SpinniesManager.succeed('runningDiagnostics', {
-      text: 'Diagnostics successful...',
+      text: white('Diagnostics complete'),
+      succeedColor: 'white',
     });
 
     this.diagnosticInfo!.diagnosis = this.diagnosis.toString();

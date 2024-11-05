@@ -71,7 +71,7 @@ export class Diagnosis {
         subheaders: [
           `Project dir: ${cyan(diagnosticInfo.project.config?.projectDir)}`,
           `Project name: ${cyan(
-            diagnosticInfo.project.config?.projectConfig.name
+            diagnosticInfo.project.config?.projectConfig?.name
           )}`,
         ],
         sections: [],
@@ -102,8 +102,8 @@ export class Diagnosis {
     }
 
     output.push('');
-    output.push(`Errors:   ${this.errorCount}`);
-    output.push(`Warnings: ${this.warningCount}`);
+    output.push(`${bold('Errors')}:   ${this.errorCount}`);
+    output.push(`${bold('Warnings')}: ${this.warningCount}`);
     output.push('');
 
     return output.join('\n');
