@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "^2.0.1",
+    "@hubspot/local-dev-lib": "2.1.1",
     "@hubspot/serverless-dev-runtime": "7.0.0",
     "@hubspot/theme-preview-dev-server": "0.0.9",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
@@ -58,7 +58,8 @@
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
     "release": "yarn ts-node ./scripts/release.ts release",
-    "hs": "yarn build && node ./dist/bin/hs"
+    "hs": "yarn build && node ./dist/bin/hs",
+    "update-ldl": "yarn add --exact @hubspot/local-dev-lib@latest"
   },
   "lint-staged": {
     "**/*.{js,ts,scss,css}": [
