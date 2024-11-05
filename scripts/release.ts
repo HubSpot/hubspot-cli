@@ -14,7 +14,7 @@ const { confirmPrompt } = require('../lib/prompts/promptUtils');
 
 const exec = promisify(_exec);
 
-const MAIN_BRANCH = 'main';
+const MAIN_BRANCH = 'test-release-script_';
 
 const TAG = {
   LATEST: 'latest',
@@ -133,16 +133,16 @@ async function handler({
   }
 
   const {
-    next: currentNextTag,
+    // next: currentNextTag,
     experimental: currentExperimentalTag,
   } = await getDistTags();
 
-  if (!isExperimental && currentNextTag !== localVersion) {
-    logger.error(
-      `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
-    );
-    process.exit(EXIT_CODES.ERROR);
-  }
+  // if (!isExperimental && currentNextTag !== localVersion) {
+  //   logger.error(
+  //     `Local package.json version ${localVersion} is out of sync with published version ${currentNextTag}`
+  //   );
+  //   process.exit(EXIT_CODES.ERROR);
+  // }
 
   const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
   const prereleaseIdentifier = isExperimental
@@ -256,6 +256,7 @@ async function builder(yargs: Argv): Promise<Argv> {
       alias: 'd',
       describe: 'Run through the publish process without actually publishing',
       type: 'boolean',
+      demandOption: true,
     },
   });
 }
