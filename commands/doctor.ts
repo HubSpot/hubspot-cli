@@ -9,10 +9,12 @@ import { getCwd } from '@hubspot/local-dev-lib/path';
 interface DoctorOptions {
   'output-dir': string;
 }
+const { i18n } = require('../lib/lang');
 
-// const i18nKey = 'commands.doctor';
+const i18nKey = 'commands.doctor';
+
 export const command = 'doctor';
-export const describe = 'The doctor is in';
+export const describe = i18n(`${i18nKey}.describe`);
 
 export const handler = async ({
   outputDir,
@@ -31,7 +33,7 @@ export const handler = async ({
     if (output?.diagnosis) {
       console.log(output.diagnosis);
     } else {
-      logger.error('Error generating diagnosis');
+      logger.error(i18n(`${i18nKey}.errors.generatingDiagnosis`));
       return process.exit(EXIT_CODES.ERROR);
     }
     return process.exit(EXIT_CODES.SUCCESS);
@@ -50,18 +52,17 @@ export const handler = async ({
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
     logger.success(`Output written to ${outputFile}`);
   } catch (e) {
-    logger.error(
-      `Unable to write output to ${outputFile}, ${
-        e instanceof Error ? e.message : e
-      }`
-    );
+    logger.error(i18n(`${i18nKey}.errors.unableToWriteOutputFile`), {
+      filename: outputFile,
+      errorMessage: e instanceof Error ? e.message : e,
+    });
     return process.exit(EXIT_CODES.ERROR);
   }
 };
 
 export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
   yargs.option<keyof DoctorOptions, Options>('output-dir', {
-    describe: 'The directory to write the output file into',
+    describe: i18n(`${i18nKey}.options.outputDir`),
     type: 'string',
   });
 };

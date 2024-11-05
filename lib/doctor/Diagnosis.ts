@@ -1,9 +1,11 @@
 import { prefixOptions } from '../ui/spinniesUtils';
-import { bold, cyan, green, red } from 'chalk';
+import { bold, green, red } from 'chalk';
 import { orange } from '../interpolationHelpers';
 import { DiagnosticInfo } from './DiagnosticInfo';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
+
+const { i18n } = require('../lang');
 
 interface DiagnosisOptions {
   diagnosticInfo: DiagnosticInfo;
@@ -32,6 +34,8 @@ interface DiagnosisCategories {
   cliConfig: DiagnosisCategory;
 }
 
+const i18nKey = `lib.doctor.diagnosis`;
+
 export class Diagnosis {
   private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
@@ -43,7 +47,8 @@ export class Diagnosis {
     // @ts-expect-error Prefix options is not typed yet
     const { succeedPrefix, failPrefix } = prefixOptions({});
 
-    const { accountType } = getAccountConfig(accountId!) || {};
+    const { accountType, name: accountName } =
+      getAccountConfig(accountId!) || {};
 
     this.prefixes = {
       success: green(succeedPrefix),
@@ -53,26 +58,32 @@ export class Diagnosis {
 
     this.diagnosis = {
       cli: {
-        header: 'HubSpot CLI install',
+        header: i18n(`${i18nKey}.cli.header`),
         sections: [],
       },
       cliConfig: {
-        header: 'CLI configuration',
+        header: i18n(`${i18nKey}.cliConfig.header`),
         subheaders: [
-          `Config File: ${cyan(diagnosticInfo.config)}`,
-          `Default Account: ${cyan(
-            `name [${HUBSPOT_ACCOUNT_TYPE_STRINGS[accountType!]}](${accountId})`
-          )}`,
+          i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
+            filename: diagnosticInfo.config,
+          }),
+          i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
+            accountName,
+            accountType: HUBSPOT_ACCOUNT_TYPE_STRINGS[accountType!],
+            accountId,
+          }),
         ],
         sections: [],
       },
       project: {
-        header: 'Project configuration',
+        header: i18n(`${i18nKey}.projectConfig.header`),
         subheaders: [
-          `Project dir: ${cyan(diagnosticInfo.project.config?.projectDir)}`,
-          `Project name: ${cyan(
-            diagnosticInfo.project.config?.projectConfig?.name
-          )}`,
+          i18n(`${i18nKey}.projectConfig.projectDirSubHeader`, {
+            projectDir: diagnosticInfo.project.config?.projectDir,
+          }),
+          i18n(`${i18nKey}.projectConfig.projectNameSubHeader`, {
+            projectName: diagnosticInfo.project.config?.projectConfig?.name,
+          }),
         ],
         sections: [],
       },
@@ -102,8 +113,16 @@ export class Diagnosis {
     }
 
     output.push('');
-    output.push(`${bold('Errors')}:   ${this.errorCount}`);
-    output.push(`${bold('Warnings')}: ${this.warningCount}`);
+    output.push(
+      i18n(`${i18nKey}.counts.errors`, {
+        count: this.errorCount,
+      })
+    );
+    output.push(
+      i18n(`${i18nKey}.counts.warnings`, {
+        count: this.warningCount,
+      })
+    );
     output.push('');
 
     return output.join('\n');

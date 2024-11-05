@@ -6,8 +6,7 @@ import { packagesNeedInstalled } from '../dependencyManagement';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
-import { cyan, white } from 'chalk';
-import { orange } from '../interpolationHelpers';
+import { cyan } from 'chalk';
 import { Diagnosis } from './Diagnosis';
 import {
   DiagnosticInfo,
@@ -18,8 +17,11 @@ import { isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+const { i18n } = require('../lang');
 
 const minMajorNodeVersion = 18;
+
+const i18nKey = `lib.doctor`;
 
 export class Doctor {
   accountId: number | null;
@@ -35,7 +37,7 @@ export class Doctor {
 
   async diagnose() {
     SpinniesManager.add('runningDiagnostics', {
-      text: 'Running diagnostics...',
+      text: i18n(`${i18nKey}.runningDiagnostics`),
     });
 
     this.diagnosticInfoBuilder = new DiagnosticInfoBuilder();
@@ -55,7 +57,7 @@ export class Doctor {
     ]);
 
     SpinniesManager.succeed('runningDiagnostics', {
-      text: white('Diagnostics complete'),
+      text: i18n(`${i18nKey}.diagnosticsComplete`),
       succeedColor: 'white',
     });
 
@@ -81,11 +83,12 @@ export class Doctor {
   }
 
   private async checkIfAccessTokenValid(): Promise<void> {
+    const localI18nKey = `${i18nKey}.accountChecks`;
     try {
       await accessTokenForPersonalAccessKey(this.accountId!, true);
       this.diagnosis?.addCLIConfigSection({
         type: 'success',
-        message: 'Default account active',
+        message: i18n(`${localI18nKey}.active`),
       });
     } catch (error) {
       const portalNotActive = isSpecifiedError(error, {
@@ -96,20 +99,20 @@ export class Doctor {
       if (portalNotActive) {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
-          message: `Default account isn't active`,
-          secondaryMessaging:
-            'Run `hs accounts clean` to remove inactive accounts from your CLI config',
+          message: i18n(`${localI18nKey}.inactive`),
+          secondaryMessaging: i18n(`${localI18nKey}.inactiveSecondary`),
         });
       }
     }
   }
 
   private async checkIfNodeIsInstalled() {
+    const localI18nKey = `${i18nKey}.nodeChecks`;
     try {
       if (!this.diagnosticInfo?.versions.node) {
         return this.diagnosis?.addCliSection({
           type: 'error',
-          message: 'Unable to determine what version of node is installed',
+          message: i18n(`${localI18nKey}.unableToDetermine`),
         });
       }
 
@@ -122,39 +125,47 @@ export class Doctor {
       ) {
         return this.diagnosis?.addCliSection({
           type: 'warning',
-          message: `Minimum Node version is not met, ${this.diagnosticInfo?.versions.node}`,
+          message: i18n(`${localI18nKey}.minimumNotMet`, {
+            nodeVersion: this.diagnosticInfo?.versions.node,
+          }),
         });
       }
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: `node v${this.diagnosticInfo?.versions.node} is installed`,
+        message: i18n(`${localI18nKey}.success`, {
+          nodeVersion: this.diagnosticInfo?.versions.node,
+        }),
       });
     } catch (e) {
       this.diagnosis?.addCliSection({
         type: 'error',
-        message: 'Unable to determine if node is installed',
+        message: i18n(`${localI18nKey}.unableToDetermine`),
       });
       logger.debug(e);
     }
   }
 
   private async checkIfNpmIsInstalled() {
+    const localI18nKey = `${i18nKey}.npmChecks`;
     try {
-      if (!this.diagnosticInfo?.versions?.npm) {
+      const npmVersion = this.diagnosticInfo?.versions?.npm;
+      if (!npmVersion) {
         return this.diagnosis?.addCliSection({
           type: 'error',
-          message: 'npm is not installed',
+          message: i18n(`${localI18nKey}.notInstalled`),
         });
       }
 
       this.diagnosis?.addCliSection({
         type: 'success',
-        message: `npm v${this.diagnosticInfo?.versions?.npm} is installed`,
+        message: i18n(`${localI18nKey}.installed`, {
+          npmVersion,
+        }),
       });
     } catch (e) {
       this.diagnosis?.addCliSection({
         type: 'error',
-        message: 'Unable to determine if npm is installed',
+        message: i18n(`${localI18nKey}.unableToDetermine`),
       });
       logger.debug(e);
     }
@@ -162,6 +173,7 @@ export class Doctor {
 
   private async checkIfNpmInstallRequired() {
     let foundError = false;
+    const localI18nKey = `${i18nKey}.projectDependenciesChecks`;
 
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
@@ -175,10 +187,12 @@ export class Doctor {
 
           this.diagnosis?.addProjectSection({
             type: 'warning',
-            message: `missing dependencies in ${cyan(packageDirName)}`,
-            secondaryMessaging: `Run ${orange(
-              '`hs project install-deps`'
-            )} to install all project dependencies locally`,
+            message: i18n(`${localI18nKey}.missingDependencies`, {
+              dir: packageDirName,
+            }),
+            secondaryMessaging: i18n(
+              `${localI18nKey}.missingDependenciesSecondary`
+            ),
           });
         }
       } catch (e) {
@@ -187,12 +201,16 @@ export class Doctor {
         if (!(await this.isValidJsonFile(packageFile))) {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: `invalid JSON in ${cyan(packageDirName)}`,
+            message: i18n(`${i18nKey}.files.invalidJson`, {
+              filename: packageFile,
+            }),
           });
         } else {
           this.diagnosis?.addProjectSection({
             type: 'error',
-            message: `Unable to determine if dependencies are installed ${packageDirName}`,
+            message: i18n(`${localI18nKey}.unableToDetermine`, {
+              dir: packageDirName,
+            }),
           });
         }
 
@@ -203,7 +221,7 @@ export class Doctor {
     if (!foundError) {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: `App dependencies are installed an up to date`,
+        message: i18n(`${localI18nKey}.success`),
       });
     }
   }
