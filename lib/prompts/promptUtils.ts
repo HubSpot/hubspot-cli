@@ -1,17 +1,13 @@
-import inquirer, { Answers, QuestionCollection } from 'inquirer';
+// @ts-nocheck
+const inquirer = require('inquirer');
 
-export async function promptUser<T extends Answers>(
-  promptConfig: QuestionCollection<T>
-): Promise<T> {
+const promptUser = async promptConfig => {
   const prompt = inquirer.createPromptModule();
   return prompt(promptConfig);
-}
+};
 
-export async function confirmPrompt(
-  message: string,
-  defaultAnswer = true
-): Promise<boolean> {
-  const { choice } = await promptUser<Record<string, boolean>>([
+const confirmPrompt = async (message, defaultAnswer = true) => {
+  const { choice } = await promptUser([
     {
       name: 'choice',
       type: 'confirm',
@@ -20,4 +16,9 @@ export async function confirmPrompt(
     },
   ]);
   return choice;
-}
+};
+
+module.exports = {
+  promptUser,
+  confirmPrompt,
+};
