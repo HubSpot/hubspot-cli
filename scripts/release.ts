@@ -37,6 +37,11 @@ const VERSION_INCREMENT_OPTIONS = [
 ] as const;
 const TAG_OPTIONS = [TAG.LATEST, TAG.NEXT, TAG.EXPERIMENTAL] as const;
 
+const PRERELEASE_IDENTIFIER = {
+  NEXT: 'beta',
+  EXPERIMENTAL: 'experimental',
+} as const;
+
 type ReleaseArguments = {
   versionIncrement: typeof VERSION_INCREMENT_OPTIONS[number];
   tag: typeof TAG_OPTIONS[number];
@@ -124,6 +129,7 @@ async function handler({
     logger.error(
       'Invalid release: cannot increment prerelease number on latest tag.'
     );
+    process.exit(EXIT_CODES.ERROR);
   }
 
   const {
@@ -139,7 +145,9 @@ async function handler({
   }
 
   const currentVersion = isExperimental ? currentExperimentalTag : localVersion;
-  const prereleaseIdentifier = isExperimental ? 'experimental' : 'beta';
+  const prereleaseIdentifier = isExperimental
+    ? PRERELEASE_IDENTIFIER.EXPERIMENTAL
+    : PRERELEASE_IDENTIFIER.NEXT;
   const incrementType =
     tag === TAG.LATEST || versionIncrement === INCREMENT.PRERELEASE
       ? versionIncrement
@@ -166,6 +174,22 @@ async function handler({
 
   if (!shouldRelease) {
     process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  if (
+    tag === TAG.LATEST &&
+    !localVersion.includes(PRERELEASE_IDENTIFIER.NEXT)
+  ) {
+    const proceedWithoutBetaRelease = await confirmPrompt(
+      `The current changes have not yet been released in beta. It's recommended to release and test all changes on the ${TAG.NEXT} tag before releasing them to ${TAG.LATEST}. Are you sure you want to proceed?`
+    );
+
+    if (!proceedWithoutBetaRelease) {
+      logger.log(
+        `To release your changes on the next tag, run \`yarn release -v=${versionIncrement} -t=next\``
+      );
+      process.exit(EXIT_CODES.SUCCESS);
+    }
   }
 
   logger.log();
