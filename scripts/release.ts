@@ -14,7 +14,7 @@ const { confirmPrompt } = require('../lib/prompts/promptUtils');
 
 const exec = promisify(_exec);
 
-const MAIN_BRANCH = 'test-release-script_';
+const MAIN_BRANCH = 'test-release-script';
 
 const TAG = {
   LATEST: 'latest',
