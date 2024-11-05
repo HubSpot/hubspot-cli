@@ -30,9 +30,9 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
+    "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
-    "@types/yargs": "^17.0.33",
     "axios": "^1.7.2",
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.31.0",
