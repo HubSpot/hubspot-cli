@@ -1,7 +1,7 @@
 import { prefixOptions } from '../ui/spinniesUtils';
 import { bold, green, red } from 'chalk';
 import { orange } from '../interpolationHelpers';
-import { DiagnosticInfo } from './DiagnosticInfo';
+import { DiagnosticInfo } from './DiagnosticInfoBuilder';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
 
@@ -128,7 +128,7 @@ export class Diagnosis {
     return output.join('\n');
   }
 
-  generateSections(category: DiagnosisCategory) {
+  private generateSections(category: DiagnosisCategory) {
     const output = [];
 
     if (category.sections && category.sections.length === 0) {

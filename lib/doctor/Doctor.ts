@@ -9,10 +9,10 @@ import path from 'path';
 import { cyan } from 'chalk';
 import { Diagnosis } from './Diagnosis';
 import {
-  DiagnosticInfo,
   DiagnosticInfoBuilder,
+  DiagnosticInfo,
   ProjectConfig,
-} from './DiagnosticInfo';
+} from './DiagnosticInfoBuilder';
 import { isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
