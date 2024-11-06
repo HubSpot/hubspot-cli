@@ -17,7 +17,9 @@ import { isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
+import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 const { i18n } = require('../lang');
+const { uiLink } = require('../ui');
 
 const minMajorNodeVersion = 18;
 
@@ -90,17 +92,55 @@ export class Doctor {
         type: 'success',
         message: i18n(`${localI18nKey}.active`),
       });
-    } catch (error) {
-      const portalNotActive = isSpecifiedError(error, {
-        statusCode: 401,
-        category: 'INVALID_AUTHENTICATION',
-        subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
+      this.diagnosis?.addCLIConfigSection({
+        type: 'success',
+        message: i18n(`${localI18nKey}.pak.valid`, {
+          link: uiLink(
+            i18n(`${localI18nKey}.pak.viewScopes`),
+            `${getHubSpotWebsiteOrigin(
+              this.diagnosticInfoBuilder?.env || 'PROD'
+            )}/personal-access-key/${this.diagnosticInfo?.account.accountId}`
+          ),
+        }),
       });
+    } catch (error) {
+      const portalNotActive =
+        isSpecifiedError(error, {
+          statusCode: 401,
+          category: 'INVALID_AUTHENTICATION',
+          subCategory: 'LocalDevAuthErrorType.PORTAL_NOT_ACTIVE',
+        }) ||
+        isSpecifiedError(error, {
+          statusCode: 404,
+          category: 'INVALID_AUTHENTICATION',
+          subCategory: 'LocalDevAuthErrorType.INVALID_PORTAL_ID',
+        });
       if (portalNotActive) {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
           message: i18n(`${localI18nKey}.inactive`),
           secondaryMessaging: i18n(`${localI18nKey}.inactiveSecondary`),
+        });
+      } else if (
+        isSpecifiedError(error, {
+          statusCode: 401,
+          category: 'INVALID_AUTHENTICATION',
+          subCategory:
+            'LocalDevAuthErrorType.FAILED_TO_SIGN_REFRESH_TOKEN_DECODE',
+        })
+      ) {
+        this.diagnosis?.addCLIConfigSection({
+          type: 'success',
+          message: i18n(`${localI18nKey}.active`),
+        });
+        this.diagnosis?.addCLIConfigSection({
+          type: 'error',
+          message: i18n(`${localI18nKey}.pak.invalid`),
+        });
+      } else {
+        this.diagnosis?.addCLIConfigSection({
+          type: 'error',
+          message: i18n(`${localI18nKey}.unableToDetermine`),
         });
       }
     }

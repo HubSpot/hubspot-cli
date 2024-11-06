@@ -1435,8 +1435,13 @@ en:
       diagnosticsComplete: "Diagnostics complete"
       accountChecks:
         active: "Default account active"
-        inactive: "Default account isn't active"
+q        inactive: "Default account isn't active"
         inactiveSecondary: "Run `hs accounts clean` to remove inactive accounts from your CLI config"
+        unableToDetermine: "Unable to determine if the portal is active"
+        pak:
+          invalid: "Personal access key is invalid"
+          valid: "Personal Access Key valid. {{ link }}"
+          viewScopes: "View selected scopes"
       nodeChecks:
         unableToDetermine: "Unable to determine what version of node is installed"
         minimumNotMet: "Minimum Node version is not met, {{ nodeVersion }}"

@@ -58,7 +58,7 @@ const configFiles = [
 
 export class DiagnosticInfoBuilder {
   accountId: number | null;
-  private readonly env: Environment | undefined;
+  readonly env: Environment | undefined;
   private readonly authType: AuthType | undefined;
   private readonly accountType: AccountType | undefined;
   private readonly personalAccessKey: string | undefined;
