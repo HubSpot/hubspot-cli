@@ -280,7 +280,7 @@ en:
         outputDir: "The directory to write the output file into"
       errors:
         generatingDiagnosis: "Error generating diagnosis"
-        unableToWriteOutputFile: "Unable to write output to \"{{ filename }}\", {{ errorMessage}} "
+        unableToWriteOutputFile: "Unable to write output to {{ file }}, {{ errorMessage }}"
     fetch:
       describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
       errors:

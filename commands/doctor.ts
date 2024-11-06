@@ -6,10 +6,11 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
-interface DoctorOptions {
-  'output-dir': string;
-}
 const { i18n } = require('../lib/lang');
+
+export interface DoctorOptions {
+  'output-dir'?: string;
+}
 
 const i18nKey = 'commands.doctor';
 
@@ -31,7 +32,7 @@ export const handler = async ({
 
   if (!outputDir) {
     if (output?.diagnosis) {
-      console.log(output.diagnosis);
+      logger.log(output.diagnosis);
     } else {
       logger.error(i18n(`${i18nKey}.errors.generatingDiagnosis`));
       return process.exit(EXIT_CODES.ERROR);
@@ -52,12 +53,16 @@ export const handler = async ({
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
     logger.success(`Output written to ${outputFile}`);
   } catch (e) {
-    logger.error(i18n(`${i18nKey}.errors.unableToWriteOutputFile`), {
-      filename: outputFile,
-      errorMessage: e instanceof Error ? e.message : e,
-    });
+    logger.error(
+      i18n(`${i18nKey}.errors.unableToWriteOutputFile`, {
+        file: outputFile,
+        errorMessage: e instanceof Error ? e.message : e,
+      })
+    );
     return process.exit(EXIT_CODES.ERROR);
   }
+
+  return process.exit(EXIT_CODES.SUCCESS);
 };
 
 export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
