@@ -109,7 +109,14 @@ export class Diagnosis {
   toString() {
     const output = [];
     for (const value of Object.values(this.diagnosis)) {
-      output.push(this.generateSections(value));
+      const section = this.generateSections(value);
+      if (section) {
+        output.push(section);
+      }
+    }
+
+    if (output.length === 0) {
+      return '';
     }
 
     output.push('');
