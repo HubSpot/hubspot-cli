@@ -1435,7 +1435,7 @@ en:
       diagnosticsComplete: "Diagnostics complete"
       accountChecks:
         active: "Default account active"
-q        inactive: "Default account isn't active"
+        inactive: "Default account isn't active"
         inactiveSecondary: "Run `hs accounts clean` to remove inactive accounts from your CLI config"
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
