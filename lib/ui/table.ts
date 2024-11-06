@@ -1,12 +1,16 @@
-// @ts-nocheck
-const chalk = require('chalk');
-const { table } = require('table');
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-function isObject(item) {
+import chalk from 'chalk';
+import { table, TableUserConfig } from 'table';
+
+function isObject(item: any): boolean {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
-function mergeDeep(target, ...sources) {
+function mergeDeep<T extends Record<string, any>>(
+  target: T,
+  ...sources: any[]
+): T {
   if (!sources.length) return target;
   const source = sources.shift();
 
@@ -24,7 +28,7 @@ function mergeDeep(target, ...sources) {
   return mergeDeep(target, ...sources);
 }
 
-const tableConfigDefaults = {
+const tableConfigDefaults: TableUserConfig = {
   singleLine: true,
   border: {
     topBody: '',
@@ -55,17 +59,15 @@ const tableConfigDefaults = {
   },
 };
 
-function getTableContents(tableData = [], tableConfig = {}) {
+export function getTableContents(
+  tableData: any[][] = [],
+  tableConfig: Partial<TableUserConfig> = {}
+): string {
   const mergedConfig = mergeDeep({}, tableConfigDefaults, tableConfig);
 
   return table(tableData, mergedConfig);
 }
 
-function getTableHeader(headerItems) {
+export function getTableHeader(headerItems: string[]): string[] {
   return headerItems.map(headerItem => chalk.bold(headerItem));
 }
-
-module.exports = {
-  getTableContents,
-  getTableHeader,
-};

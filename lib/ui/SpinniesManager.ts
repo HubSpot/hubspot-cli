@@ -77,7 +77,7 @@ class SpinniesManager {
     this.bindSigint();
   }
 
-  resetState() {
+  private resetState() {
     // Default Spinnies fields
     this.spinners = {};
     this.isCursorHidden = false;
@@ -294,13 +294,13 @@ class SpinniesManager {
     this.lineCount = linesLength.length;
   }
 
-  setRawStreamOutput(): void {
+  private setRawStreamOutput(): void {
     Object.values(this.spinners).forEach(i => {
       process.stderr.write(`- ${i.text}\n`);
     });
   }
 
-  checkIfActiveSpinners(): void {
+  private checkIfActiveSpinners(): void {
     if (!this.hasActiveSpinners()) {
       if (this.spin) {
         this.setStreamOutput();
@@ -313,7 +313,7 @@ class SpinniesManager {
     }
   }
 
-  bindSigint(): void {
+  private bindSigint(): void {
     process.removeAllListeners('SIGINT');
     process.on('SIGINT', () => {
       cliCursor.show();
