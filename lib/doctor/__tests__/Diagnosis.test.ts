@@ -5,6 +5,7 @@ jest.mock('@hubspot/local-dev-lib/config');
 import { Diagnosis } from '../Diagnosis';
 import { DiagnosticInfo } from '../DiagnosticInfoBuilder';
 import { getAccountConfig as __getAccountConfig } from '@hubspot/local-dev-lib/config';
+import stripAnsi from 'strip-ansi';
 
 const getAccountConfig = __getAccountConfig as jest.MockedFunction<
   typeof __getAccountConfig
@@ -79,7 +80,7 @@ describe('lib/doctor/Diagnosis', () => {
         secondaryMessaging: projectSecondaryMessage,
       });
 
-      expect(diagnosis.toString()).toMatchSnapshot();
+      expect(stripAnsi(diagnosis.toString())).toMatchSnapshot();
     });
 
     it('should generate categories that have sections', () => {
@@ -94,7 +95,7 @@ describe('lib/doctor/Diagnosis', () => {
         secondaryMessaging: cliSecondaryMessage,
       });
 
-      expect(diagnosis.toString()).toMatchSnapshot();
+      expect(stripAnsi(diagnosis.toString())).toMatchSnapshot();
     });
   });
 });
