@@ -1,11 +1,8 @@
-const inquirer = require('inquirer');
+import inquirer from 'inquirer';
 
-// NOTE: we can eventually delete this and use inquirer.prompt when we bump up to v12 of inquirer
+// NOTE: we can eventually delete this and directly use inquirer.prompt when the files support imports
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const promptUser = async (promptConfig: any) => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
-};
+export const promptUser: any = inquirer.prompt;
 
 export async function confirmPrompt(
   message: string,
