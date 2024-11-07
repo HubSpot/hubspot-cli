@@ -178,6 +178,7 @@ en:
           describe: "Type of asset"
       subcommands:
         apiSample:
+          folderOverwritePrompt: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
           errors:
             nameRequired: "The \"name\" argument is required when creating an API Sample."
             noSamples: "Currently there are no samples available, please, try again later."
@@ -577,6 +578,7 @@ en:
             withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
+          deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
@@ -709,6 +711,11 @@ en:
           success: "Successfully opened \"{{ projectName }}\""
         feedback:
           describe: "Leave feedback on HubSpot projects or file a bug report"
+          feedbackType:
+            prompt: "What type of feedback would you like to leave?"
+            bug: "[--bug] Report a bug"
+            general: "[--general] Tell us about your experience with HubSpot's developer tools"
+          openPrompt: "Create a Github issue in your browser?"
           success: "We opened {{ url }} in your browser."
           options:
             bug:
@@ -1006,6 +1013,7 @@ en:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
+        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1200,8 +1208,6 @@ en:
           invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
           invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
           invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
-      folderOverwritePrompt:
-        overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
       createTemplatePrompt:
         selectTemplate: "Select the type of template to create"
       createModulePrompt:
@@ -1283,15 +1289,6 @@ en:
         errors:
           invalidName: "You entered an invalid name. Please try again."
           projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
-      feedbackPrompt:
-        feedbackType:
-          message: "What type of feedback would you like to leave?"
-          bug: "[--bug] Report a bug"
-          general: "[--general] Tell us about your experience with HubSpot's developer tools"
-        bugPrompt: "Create an issue on Github in your browser?"
-        generalPrompt: "Create an issue on Github in your browser?"
-      deployBuildIdPrompt:
-        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
@@ -1307,8 +1304,6 @@ en:
         prompt: "Open hubspot.com to install this app?"
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
-      activeInstallConfirmationPrompt:
-        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:
