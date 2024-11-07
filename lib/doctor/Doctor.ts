@@ -291,17 +291,23 @@ export class Doctor {
   }
 
   private async checkIfPortsAreAvailable() {
+    const localI18nKey = `${i18nKey}.port`;
     if (await isPortManagerServerRunning()) {
       this.diagnosis?.addProjectSection({
         type: 'warning',
-        message: `Port ${PORT_MANAGER_SERVER_PORT} is in use`,
-        secondaryMessaging:
-          'Make sure it is available if before running `hs project dev`',
+        message: i18n(`${localI18nKey}.inUse`, {
+          port: PORT_MANAGER_SERVER_PORT,
+        }),
+        secondaryMessaging: i18n(`${localI18nKey}.inUseSecondary`, {
+          command: uiCommandReference('hs project dev'),
+        }),
       });
     } else {
       this.diagnosis?.addProjectSection({
         type: 'success',
-        message: `Port ${PORT_MANAGER_SERVER_PORT} available for local development`,
+        message: i18n(`${localI18nKey}.available`, {
+          port: PORT_MANAGER_SERVER_PORT,
+        }),
       });
     }
   }
