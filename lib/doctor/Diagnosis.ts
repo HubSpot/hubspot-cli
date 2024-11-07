@@ -1,6 +1,6 @@
 import { prefixOptions } from '../ui/spinniesUtils';
 import { bold, green, red } from 'chalk';
-import { orange } from '../interpolationHelpers';
+import { helpers } from '../interpolation';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder';
 import { getAccountConfig } from '@hubspot/local-dev-lib/config';
 import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
@@ -53,7 +53,7 @@ export class Diagnosis {
     this.prefixes = {
       success: green(succeedPrefix),
       error: red(failPrefix),
-      warning: orange('!'),
+      warning: helpers.orange('!'),
     };
 
     this.diagnosis = {

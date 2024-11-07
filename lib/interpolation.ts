@@ -1,7 +1,7 @@
 // @ts-nocheck
 const chalk = require('chalk');
 
-const helpers = {
+export const helpers = {
   bold: function(stringValue: string): string {
     return chalk.bold(stringValue);
   },
@@ -160,4 +160,5 @@ const interpolate = (stringValue, interpolationData) => {
 
 module.exports = {
   interpolate,
+  helpers,
 };
