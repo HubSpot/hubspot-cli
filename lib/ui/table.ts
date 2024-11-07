@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import chalk from 'chalk';
 import { table, TableUserConfig } from 'table';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isObject(item: any): boolean {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mergeDeep<T extends Record<string, any>>(
   target: T,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...sources: any[]
 ): T {
   if (!sources.length) return target;
@@ -60,6 +61,7 @@ const tableConfigDefaults: TableUserConfig = {
 };
 
 export function getTableContents(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tableData: any[][] = [],
   tableConfig: Partial<TableUserConfig> = {}
 ): string {
