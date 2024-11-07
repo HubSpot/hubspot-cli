@@ -2,8 +2,6 @@
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
-const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
-
 const i18nKey = 'lib.prompts.createFunctionPrompt';
 
 const FUNCTIONS_FOLDER_PROMPT = {
@@ -14,7 +12,7 @@ const FUNCTIONS_FOLDER_PROMPT = {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
       return i18n(`${i18nKey}.errors.blank`);
-    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
+    } else if (val.indexOf(' ') >= 0) {
       return i18n(`${i18nKey}.errors.space`);
     }
     return true;
@@ -29,7 +27,7 @@ const FUNCTION_FILENAME_PROMPT = {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
       return i18n(`${i18nKey}.errors.blank`);
-    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
+    } else if (val.indexOf(' ') >= 0) {
       return i18n(`${i18nKey}.errors.space`);
     }
     return true;
@@ -52,7 +50,7 @@ const ENDPOINT_PATH_PROMPT = {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
       return i18n(`${i18nKey}.errors.blank`);
-    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
+    } else if (val.indexOf(' ') >= 0) {
       return i18n(`${i18nKey}.errors.space`);
     }
     return true;
