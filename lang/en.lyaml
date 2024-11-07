@@ -1436,7 +1436,7 @@ en:
       accountChecks:
         active: "Default account active"
         inactive: "Default account isn't active"
-        inactiveSecondary: "Run `hs accounts clean` to remove inactive accounts from your CLI config"
+        inactiveSecondary: "Run {{ command }} to remove inactive accounts from your CLI config"
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
           invalid: "Personal access key is invalid"

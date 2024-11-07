@@ -123,7 +123,9 @@ export class Doctor {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
           message: i18n(`${localI18nKey}.inactive`),
-          secondaryMessaging: i18n(`${localI18nKey}.inactiveSecondary`),
+          secondaryMessaging: i18n(`${localI18nKey}.inactiveSecondary`, {
+            command: uiCommandReference(`hs accounts clean`),
+          }),
         });
       } else if (
         isSpecifiedError(error, {
