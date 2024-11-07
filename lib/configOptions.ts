@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   updateAllowUsageTracking,
@@ -8,13 +9,12 @@ const {
 const { MODE } = require('@hubspot/local-dev-lib/constants/files');
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage } = require('./usageTracking');
-const { promptUser } = require('./prompts/promptUtils');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.config.subcommands.set.options';
 
 const enableOrDisableUsageTracking = async () => {
-  const { isEnabled } = await promptUser([
+  const { isEnabled } = await inquirer.prompt([
     {
       type: 'list',
       look: false,
@@ -59,7 +59,7 @@ const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
 const ALL_MODES = Object.values(MODE);
 
 const selectMode = async () => {
-  const { mode } = await promptUser([
+  const { mode } = await inquirer.prompt([
     {
       type: 'list',
       look: false,
@@ -103,7 +103,7 @@ const setDefaultMode = async ({ accountId, defaultMode }) => {
 };
 
 const enterTimeout = async () => {
-  const { timeout } = await promptUser([
+  const { timeout } = await inquirer.prompt([
     {
       name: 'timeout',
       message: i18n(`${i18nKey}.httpTimeout.promptMessage`),

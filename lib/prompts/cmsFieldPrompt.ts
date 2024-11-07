@@ -1,7 +1,7 @@
 // @ts-nocheck
 const path = require('path');
 const fs = require('fs');
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 const escapeRegExp = require('@hubspot/local-dev-lib/escapeRegExp');
 const i18nKey = 'lib.prompts.uploadPrompt';
@@ -32,7 +32,7 @@ const fieldsJsPrompt = async (filePath, projectDir, skipFiles = []) => {
       value: fileChoice,
     });
   });
-  const promptVal = await promptUser([
+  const promptVal = await inquirer.prompt([
     {
       message: i18n(`${i18nKey}.fieldsPrompt`, { dir: fileDir }),
       type: 'list',

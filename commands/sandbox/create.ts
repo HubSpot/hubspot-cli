@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -21,7 +22,6 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { sandboxTypePrompt } = require('../../lib/prompts/sandboxesPrompt');
-const { promptUser } = require('../../lib/prompts/promptUtils');
 const { syncSandbox } = require('../../lib/sandboxSync');
 const { logError } = require('../../lib/errorHandlers/index');
 const { isMissingScopeError } = require('@hubspot/local-dev-lib/errors/index');
@@ -123,7 +123,7 @@ exports.handler = async options => {
 
     // Prompt to sync contact records for standard sandboxes only
     if (isStandardSandbox) {
-      const { contactRecordsSyncPrompt } = await promptUser([
+      const { contactRecordsSyncPrompt } = await inquirer.prompt([
         {
           name: 'contactRecordsSyncPrompt',
           type: 'confirm',

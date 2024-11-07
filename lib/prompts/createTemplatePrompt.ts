@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.createTemplatePrompt';
@@ -21,7 +21,7 @@ const TEMPLATE_TYPE_PROMPT = {
 };
 
 function createTemplatePrompt() {
-  return promptUser([TEMPLATE_TYPE_PROMPT]);
+  return inquirer.prompt([TEMPLATE_TYPE_PROMPT]);
 }
 
 module.exports = {

@@ -1,6 +1,6 @@
 // @ts-nocheck
 const path = require('path');
-
+import inquirer from 'inquirer';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -25,7 +25,6 @@ const {
   validateProjectConfig,
 } = require('../../lib/projects');
 const moment = require('moment');
-const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.project.subcommands.listBuilds';
@@ -108,7 +107,7 @@ exports.handler = async options => {
       );
     }
     if (paging && paging.next) {
-      await promptUser({
+      await inquirer.prompt({
         name: 'more',
         message: 'Press <enter> to load more, or ctrl+c to exit',
       });

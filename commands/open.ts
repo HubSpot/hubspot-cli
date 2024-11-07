@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -7,14 +8,13 @@ const {
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
-const { promptUser } = require('../lib/prompts/promptUtils');
 const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.open';
 
 const separator = ' => ';
 const createListPrompt = async accountId =>
-  promptUser([
+  inquirer.prompt([
     {
       type: 'rawlist',
       look: false,

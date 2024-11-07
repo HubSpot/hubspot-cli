@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -22,7 +23,6 @@ const {
 } = require('@hubspot/local-dev-lib/config');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
@@ -123,7 +123,7 @@ exports.handler = async options => {
 
   try {
     if (!force) {
-      const { confirmSandboxDeletePrompt: confirmed } = await promptUser([
+      const { confirmSandboxDeletePrompt: confirmed } = await inquirer.prompt([
         {
           name: 'confirmSandboxDeletePrompt',
           type: 'confirm',

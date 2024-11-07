@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 const {
@@ -30,7 +30,7 @@ const mapNonSandboxAccountChoices = portals =>
     });
 
 const sandboxTypePrompt = () => {
-  return promptUser([
+  return inquirer.prompt([
     {
       name: 'type',
       message: i18n(`${i18nKey}.type.message`),
@@ -58,7 +58,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
   if (!choices.length) {
     return undefined;
   }
-  return promptUser([
+  return inquirer.prompt([
     {
       name: 'account',
       message: i18n(

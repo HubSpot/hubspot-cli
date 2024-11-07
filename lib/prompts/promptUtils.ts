@@ -1,19 +1,13 @@
-const inquirer = require('inquirer');
+import inquirer from 'inquirer';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const promptUser = async (promptConfig: any) => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
-};
-
-export const confirmPrompt = async (
+export async function confirmPrompt(
   message: string,
   {
     defaultAnswer = true,
     when,
   }: { defaultAnswer: boolean; when?: boolean | (() => boolean) }
-): Promise<boolean> => {
-  const { choice } = await promptUser([
+): Promise<boolean> {
+  const { choice } = await inquirer.prompt([
     {
       name: 'choice',
       type: 'confirm',
@@ -23,16 +17,19 @@ export const confirmPrompt = async (
     },
   ]);
   return choice;
-};
+}
 
-export const listPrompt = async (
+export async function listPrompt(
   message: string,
   {
     choices,
     when,
-  }: { choices: { [key: string]: string }[]; when?: boolean | (() => boolean) }
-): Promise<boolean> => {
-  const { choice } = await promptUser([
+  }: {
+    choices: Array<{ name: string; value: string }>;
+    when?: boolean | (() => boolean);
+  }
+): Promise<boolean> {
+  const { choice } = await inquirer.prompt([
     {
       name: 'choice',
       type: 'list',
@@ -42,4 +39,4 @@ export const listPrompt = async (
     },
   ]);
   return choice;
-};
+}

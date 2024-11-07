@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const {
   addAccountOptions,
@@ -9,7 +10,6 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
 const { fetchThemes } = require('@hubspot/local-dev-lib/api/designManager');
 const {
@@ -35,7 +35,7 @@ exports.command = 'lighthouse-score [--theme]';
 exports.describe = false; // i18n(`${i18nKey}.describe`);
 
 const selectTheme = async accountId => {
-  const { theme: selectedTheme } = await promptUser([
+  const { theme: selectedTheme } = await inquirer.prompt([
     {
       type: 'list',
       look: false,

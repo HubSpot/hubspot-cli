@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
@@ -14,7 +15,6 @@ const {
   addUseEnvironmentOptions,
   addTestingOptions,
 } = require('../../lib/commonOpts');
-const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
@@ -90,7 +90,7 @@ exports.handler = async options => {
         { border: { bodyLeft: '  ' } }
       )
     );
-    const { accountsCleanPrompt } = await promptUser([
+    const { accountsCleanPrompt } = await inquirer.prompt([
       {
         name: 'accountsCleanPrompt',
         type: 'confirm',

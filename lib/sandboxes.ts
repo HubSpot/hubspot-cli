@@ -1,4 +1,5 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const { i18n } = require('./lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
@@ -10,7 +11,6 @@ const {
   getAccountId,
   getEnv,
 } = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./prompts/promptUtils');
 const { isDevelopmentSandbox } = require('./accountTypes');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
@@ -107,7 +107,7 @@ const getSyncTypesWithContactRecordsPrompt = async (
     syncTasks.some(t => t.type === syncTypes.OBJECT_RECORDS) &&
     !skipPrompt
   ) {
-    const { contactRecordsSyncPrompt } = await promptUser([
+    const { contactRecordsSyncPrompt } = await inquirer.prompt([
       {
         name: 'contactRecordsSyncPrompt',
         type: 'confirm',

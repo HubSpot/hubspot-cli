@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 const { uiLine } = require('../ui');
 const { logError } = require('../errorHandlers/index');
@@ -67,7 +67,7 @@ const selectPublicAppPrompt = async ({
     ? 'selectAppIdMigrate'
     : 'selectAppIdClone';
 
-  return promptUser([
+  return inquirer.prompt([
     {
       name: 'appId',
       message: i18n(`${i18nKey}.${translationKey}`, {

@@ -1,6 +1,7 @@
 // @ts-nocheck
 const yargs = require('yargs');
 const path = require('path');
+import inquirer from 'inquirer';
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getProjectConfig } = require('../../../lib/projects');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
@@ -10,13 +11,12 @@ const {
   installPackages,
   getProjectPackageJsonLocations,
 } = require('../../../lib/dependencyManagement');
-const { promptUser } = require('../../../lib/prompts/promptUtils');
 
 jest.mock('yargs');
 jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('../../../lib/projects');
 jest.mock('../../../lib/dependencyManagement');
-jest.mock('../../../lib/prompts/promptUtils');
+jest.mock('inquirer');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/commonOpts');
 
@@ -111,14 +111,14 @@ describe('commands/project/installDeps', () => {
       const projectDir = 'src';
       getProjectConfig.mockResolvedValue({ projectDir });
       const packageJsonLocation = path.join(projectDir, 'directory1');
-      promptUser.mockResolvedValueOnce(packageJsonLocation);
+      inquirer.prompt.mockResolvedValueOnce(packageJsonLocation);
       getProjectPackageJsonLocations.mockResolvedValue([packageJsonLocation]);
       await installDepsCommand.handler({
         packages: ['@hubspot/local-dev-lib'],
       });
       expect(getProjectPackageJsonLocations).toHaveBeenCalledTimes(1);
-      expect(promptUser).toHaveBeenCalledTimes(1);
-      expect(promptUser).toHaveBeenCalledWith([
+      expect(inquirer.prompt).toHaveBeenCalledTimes(1);
+      expect(inquirer.prompt).toHaveBeenCalledWith([
         {
           name: 'selectedInstallLocations',
           type: 'checkbox',
@@ -142,7 +142,7 @@ describe('commands/project/installDeps', () => {
       const packages = ['@hubspot/local-dev-lib'];
 
       getProjectConfig.mockResolvedValue({ projectDir });
-      promptUser.mockResolvedValueOnce(packageJsonLocation);
+      inquirer.prompt.mockResolvedValueOnce(packageJsonLocation);
       getProjectPackageJsonLocations.mockResolvedValue(installLocations);
       await installDepsCommand.handler({ packages });
 

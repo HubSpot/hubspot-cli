@@ -1,6 +1,7 @@
 // @ts-nocheck
 const fs = require('fs');
 const path = require('path');
+import inquirer from 'inquirer';
 const {
   getCwd,
   sanitizeFileName,
@@ -8,7 +9,6 @@ const {
   untildify,
 } = require('@hubspot/local-dev-lib/path');
 const { PROJECT_COMPONENT_TYPES } = require('../constants');
-const { promptUser } = require('./promptUtils');
 const { fetchFileFromRepository } = require('@hubspot/local-dev-lib/github');
 const { i18n } = require('../lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -80,7 +80,7 @@ const createProjectPrompt = async (
       findTemplate(projectTemplates, promptOptions.template);
   }
 
-  const result = await promptUser([
+  const result = await inquirer.prompt([
     {
       name: 'name',
       message: i18n(`${i18nKey}.enterName`),

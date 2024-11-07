@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 const { uiAccountDescription, uiCommandReference } = require('../ui');
 const { isSandbox } = require('../accountTypes');
@@ -165,7 +165,7 @@ const selectTargetAccountPrompt = async (
   accountType,
   choices
 ) => {
-  const { targetAccountInfo } = await promptUser([
+  const { targetAccountInfo } = await inquirer.prompt([
     {
       name: 'targetAccountInfo',
       type: 'list',
@@ -181,7 +181,7 @@ const selectTargetAccountPrompt = async (
 };
 
 const confirmDefaultAccountPrompt = async (accountName, accountType) => {
-  const { useDefaultAccount } = await promptUser([
+  const { useDefaultAccount } = await inquirer.prompt([
     {
       name: 'useDefaultAccount',
       type: 'confirm',
@@ -195,7 +195,7 @@ const confirmDefaultAccountPrompt = async (accountName, accountType) => {
 };
 
 const confirmUseExistingDeveloperTestAccountPrompt = async account => {
-  const { confirmUseExistingDeveloperTestAccount } = await promptUser([
+  const { confirmUseExistingDeveloperTestAccount } = await inquirer.prompt([
     {
       name: 'confirmUseExistingDeveloperTestAccount',
       type: 'confirm',

@@ -1,6 +1,6 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const {
   HUBSPOT_ACCOUNT_TYPES,
@@ -27,7 +27,7 @@ const getCliAccountNamePromptConfig = defaultName => ({
 });
 
 const cliAccountNamePrompt = defaultName => {
-  return promptUser(getCliAccountNamePromptConfig(defaultName));
+  return inquirer.prompt(getCliAccountNamePromptConfig(defaultName));
 };
 
 const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
@@ -52,7 +52,7 @@ const hubspotAccountNamePrompt = ({ accountType, currentPortalCount = 0 }) => {
     });
   }
 
-  return promptUser([
+  return inquirer.prompt([
     {
       name: 'name',
       message: promptMessageString,

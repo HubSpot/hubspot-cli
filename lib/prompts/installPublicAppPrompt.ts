@@ -1,8 +1,8 @@
 // @ts-nocheck
 const open = require('open');
+import inquirer from 'inquirer';
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { EXIT_CODES } = require('../enums/exitCodes');
 
@@ -23,7 +23,7 @@ const installPublicAppPrompt = async (
     logger.log(i18n(`${i18nKey}.explanation`));
   }
 
-  const { shouldOpenBrowser } = await promptUser({
+  const { shouldOpenBrowser } = await inquirer.prompt({
     name: 'shouldOpenBrowser',
     type: 'confirm',
     message: i18n(

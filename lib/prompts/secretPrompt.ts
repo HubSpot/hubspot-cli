@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.secretPrompt';
@@ -18,7 +18,7 @@ const SECRET_VALUE_PROMPT = {
 };
 
 function secretValuePrompt() {
-  return promptUser([SECRET_VALUE_PROMPT]);
+  return inquirer.prompt([SECRET_VALUE_PROMPT]);
 }
 
 module.exports = {

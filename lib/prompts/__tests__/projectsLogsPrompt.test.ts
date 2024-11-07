@@ -1,15 +1,15 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const { projectLogsPrompt } = require('../projectsLogsPrompt');
 
-jest.mock('../promptUtils');
-const { promptUser } = require('../promptUtils');
+jest.mock('inquirer');
 const chalk = require('chalk');
 
 describe('prompts/projectsLogsPrompt', () => {
   it('should return undefined functionName when functionChoices is nullable', async () => {
     const actual = await projectLogsPrompt({ functionChoices: null });
     expect(actual).toEqual({});
-    expect(promptUser).not.toHaveBeenCalled();
+    expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
   it('should return the functionName without prompting when there is only one functionChoice', async () => {
@@ -18,7 +18,7 @@ describe('prompts/projectsLogsPrompt', () => {
       functionChoices: [functionChoice],
     });
     expect(functionName).toEqual(functionChoice);
-    expect(promptUser).not.toHaveBeenCalled();
+    expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
   it('should prompt the user if there is more than one choice', async () => {
@@ -29,8 +29,8 @@ describe('prompts/projectsLogsPrompt', () => {
       projectName,
     });
 
-    expect(promptUser).toHaveBeenCalledTimes(1);
-    expect(promptUser).toHaveBeenLastCalledWith(
+    expect(inquirer.prompt).toHaveBeenCalledTimes(1);
+    expect(inquirer.prompt).toHaveBeenLastCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
           name: 'functionName',

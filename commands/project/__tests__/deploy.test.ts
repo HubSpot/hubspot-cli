@@ -1,5 +1,6 @@
 // @ts-nocheck
 const { AxiosError, HttpStatusCode } = require('axios');
+import inquirer from 'inquirer';
 const yargs = require('yargs');
 const chalk = require('chalk');
 const {
@@ -25,7 +26,6 @@ const {
   getProjectDetailUrl,
 } = require('../../../lib/projects');
 const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
-const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
@@ -37,7 +37,7 @@ jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/validation');
 jest.mock('../../../lib/projects');
 jest.mock('../../../lib/prompts/projectNamePrompt');
-jest.mock('../../../lib/prompts/promptUtils');
+jest.mock('inquirer');
 jest.mock('../../../lib/usageTracking');
 jest.spyOn(ui, 'uiLine');
 const uiLinkSpy = jest.spyOn(ui, 'uiLink').mockImplementation(text => text);
@@ -257,19 +257,19 @@ describe('commands/project/deploy', () => {
 
     it('should prompt for build id if no option is provided', async () => {
       delete options.buildId;
-      promptUser.mockResolvedValue({
+      inquirer.prompt.mockResolvedValue({
         buildId: projectDetails.latestBuild.buildId,
       });
       await deployCommand.handler(options);
-      expect(promptUser).toHaveBeenCalledTimes(1);
+      expect(inquirer.prompt).toHaveBeenCalledTimes(1);
     });
 
     it('should log an error and exit if the prompted value is invalid', async () => {
       delete options.buildId;
-      promptUser.mockResolvedValue({});
+      inquirer.prompt.mockResolvedValue({});
       await deployCommand.handler(options);
 
-      expect(promptUser).toHaveBeenCalledTimes(1);
+      expect(inquirer.prompt).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'You must specify a build to deploy'

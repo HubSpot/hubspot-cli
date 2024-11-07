@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { promptUser } = require('./promptUtils');
+import inquirer from 'inquirer';
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.createApiSamplePrompt';
@@ -43,12 +43,16 @@ const getLanguagesPrompt = choices => ({
 const createApiSamplePrompt = async samplesConfig => {
   try {
     const { samples } = samplesConfig;
-    const sampleTypeAnswer = await promptUser(getSampleTypesPrompt(samples));
+    const sampleTypeAnswer = await inquirer.prompt(
+      getSampleTypesPrompt(samples)
+    );
     const chosenSample = samples.find(
       sample => sample.id === sampleTypeAnswer.sampleType
     );
     const { languages } = chosenSample;
-    const languagesAnswer = await promptUser(getLanguagesPrompt(languages));
+    const languagesAnswer = await inquirer.prompt(
+      getLanguagesPrompt(languages)
+    );
     return {
       ...sampleTypeAnswer,
       ...languagesAnswer,

@@ -1,9 +1,9 @@
 // @ts-nocheck
+import inquirer from 'inquirer';
 const {
   getConfig,
   updateDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
@@ -11,7 +11,7 @@ const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
 const setAsDefaultAccountPrompt = async accountName => {
   const config = getConfig();
 
-  const { setAsDefault } = await promptUser([
+  const { setAsDefault } = await inquirer.prompt([
     {
       name: 'setAsDefault',
       type: 'confirm',
