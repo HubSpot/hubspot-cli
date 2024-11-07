@@ -1,11 +1,11 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.projectAddPrompt';
 
 const projectAddPrompt = async (components, promptOptions = {}) => {
-  return inquirer.prompt([
+  return promptUser([
     {
       name: 'component',
       message: () => {

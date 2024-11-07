@@ -1,5 +1,5 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { uiAccountDescription } = require('../ui');
 
@@ -12,7 +12,7 @@ const mapAccountChoices = portals =>
 const i18nKey = 'commands.accounts.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
-  const { default: selectedDefault } = await inquirer.prompt([
+  const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
       look: false,

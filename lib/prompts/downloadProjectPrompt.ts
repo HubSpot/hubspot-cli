@@ -1,5 +1,5 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { getAccountId } = require('@hubspot/local-dev-lib/config');
 const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
 const { logError, ApiErrorContext } = require('../errorHandlers/index');
@@ -22,7 +22,7 @@ const downloadProjectPrompt = async (promptOptions = {}) => {
   const accountId = getAccountId(promptOptions.account);
   const projectsList = await createProjectsList(accountId);
 
-  return inquirer.prompt([
+  return promptUser([
     {
       name: 'project',
       message: () => {

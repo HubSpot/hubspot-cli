@@ -1,9 +1,9 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getAccountId } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
   setDefaultMode,
@@ -17,7 +17,7 @@ exports.command = 'set';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const selectOptions = async () => {
-  const { mode } = await inquirer.prompt([
+  const { mode } = await promptUser([
     {
       type: 'list',
       look: false,

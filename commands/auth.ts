@@ -1,5 +1,4 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
 const { checkAndWarnGitInclusion } = require('../lib/ui/git');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
@@ -28,6 +27,7 @@ const {
   commaSeparatedValues,
   toKebabCase,
 } = require('@hubspot/local-dev-lib/text');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   personalAccessKeyPrompt,
   OAUTH_FLOW,
@@ -96,7 +96,7 @@ exports.handler = async options => {
 
   switch (authType) {
     case OAUTH_AUTH_METHOD.value:
-      configData = await inquirer.prompt(OAUTH_FLOW);
+      configData = await promptUser(OAUTH_FLOW);
       await authenticateWithOauth({
         ...configData,
         env,

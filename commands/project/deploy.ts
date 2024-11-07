@@ -1,5 +1,4 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
 const chalk = require('chalk');
 const {
   addAccountOptions,
@@ -21,6 +20,7 @@ const {
   getProjectDetailUrl,
 } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
@@ -113,7 +113,7 @@ exports.handler = async options => {
         return process.exit(EXIT_CODES.ERROR);
       }
     } else {
-      const deployBuildIdPromptResponse = await inquirer.prompt({
+      const deployBuildIdPromptResponse = await promptUser({
         name: 'buildId',
         message: i18n(`${i18nKey}.deployBuildIdPrompt`),
         default:

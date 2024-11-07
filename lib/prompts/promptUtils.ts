@@ -1,5 +1,12 @@
 import inquirer from 'inquirer';
 
+// NOTE: we can eventually delete this and use inquirer.prompt when the other files support imports
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const promptUser = async (promptConfig: any) => {
+  const prompt = inquirer.createPromptModule();
+  return prompt(promptConfig);
+};
+
 export async function confirmPrompt(
   message: string,
   {

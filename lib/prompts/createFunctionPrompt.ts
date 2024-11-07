@@ -1,5 +1,5 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.createFunctionPrompt';
@@ -58,7 +58,7 @@ const ENDPOINT_PATH_PROMPT = {
 };
 
 function createFunctionPrompt() {
-  return inquirer.prompt([
+  return promptUser([
     FUNCTIONS_FOLDER_PROMPT,
     FUNCTION_FILENAME_PROMPT,
     ENDPOINT_METHOD_PROMPT,

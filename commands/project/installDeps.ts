@@ -1,5 +1,4 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
 const {
   installPackages,
   getProjectPackageJsonLocations,
@@ -7,6 +6,7 @@ const {
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { getProjectConfig } = require('../../lib/projects');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const path = require('path');
 const { i18n } = require('../../lib/lang');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -34,7 +34,7 @@ exports.handler = async ({ packages }) => {
 
     let installLocations = await getProjectPackageJsonLocations();
     if (packages) {
-      const { selectedInstallLocations } = await inquirer.prompt([
+      const { selectedInstallLocations } = await promptUser([
         {
           name: 'selectedInstallLocations',
           type: 'checkbox',

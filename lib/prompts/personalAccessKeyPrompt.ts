@@ -1,6 +1,5 @@
 // @ts-nocheck
 const open = require('open');
-import inquirer from 'inquirer';
 const {
   OAUTH_SCOPES,
   DEFAULT_OAUTH_SCOPES,
@@ -8,6 +7,7 @@ const {
 const { deleteEmptyConfigFile } = require('@hubspot/local-dev-lib/config');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+const { promptUser } = require('./promptUtils');
 const { getCliAccountNamePromptConfig } = require('./accountNamePrompt');
 const { i18n } = require('../lang');
 const { uiInfoSection } = require('../ui');
@@ -29,9 +29,9 @@ const personalAccessKeyPrompt = async ({ env, account } = {}) => {
     if (account) {
       url = `${websiteOrigin}/personal-access-key/${account}`;
     }
-    const {
-      personalAcessKeyBrowserOpenPrep: shouldOpen,
-    } = await inquirer.prompt([PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP]);
+    const { personalAcessKeyBrowserOpenPrep: shouldOpen } = await promptUser([
+      PERSONAL_ACCESS_KEY_BROWSER_OPEN_PREP,
+    ]);
     if (shouldOpen) {
       open(url, { url: true });
     } else {
@@ -41,7 +41,7 @@ const personalAccessKeyPrompt = async ({ env, account } = {}) => {
   }
 
   logger.log(i18n(`${i18nKey}.logs.openingWebBrowser`, { url }));
-  const { personalAccessKey } = await inquirer.prompt(PERSONAL_ACCESS_KEY);
+  const { personalAccessKey } = await promptUser(PERSONAL_ACCESS_KEY);
 
   return {
     personalAccessKey,

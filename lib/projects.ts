@@ -1,7 +1,6 @@
 // @ts-nocheck
 const fs = require('fs-extra');
 const path = require('path');
-import inquirer from 'inquirer';
 const archiver = require('archiver');
 const tmp = require('tmp');
 const chalk = require('chalk');
@@ -39,6 +38,7 @@ const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
+const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { uiLine, uiLink, uiAccountDescription } = require('./ui');
 const { i18n } = require('./lang');
@@ -113,7 +113,7 @@ const createProjectConfig = async (
         : `Found an existing project definition in ${projectDir}.`
     );
 
-    const { shouldContinue } = await inquirer.prompt([
+    const { shouldContinue } = await promptUser([
       {
         name: 'shouldContinue',
         message: () => {
@@ -258,7 +258,7 @@ const ensureProjectExists = async (
       let shouldCreateProject = forceCreate;
       if (allowCreate && !shouldCreateProject) {
         const promptKey = uploadCommand ? 'createPromptUpload' : 'createPrompt';
-        const promptResult = await inquirer.prompt([
+        const promptResult = await promptUser([
           {
             name: 'shouldCreateProject',
             message: i18n(`${i18nKey}.ensureProjectExists.${promptKey}`, {

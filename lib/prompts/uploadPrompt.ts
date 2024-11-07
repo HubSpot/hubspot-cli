@@ -1,13 +1,13 @@
 // @ts-nocheck
 const path = require('path');
-import inquirer from 'inquirer';
 const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.uploadPrompt';
 
 const uploadPrompt = (promptOptions = {}) => {
-  return inquirer.prompt([
+  return promptUser([
     {
       name: 'src',
       message: i18n(`${i18nKey}.enterSrc`),

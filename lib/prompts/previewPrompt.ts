@@ -1,13 +1,13 @@
 // @ts-nocheck
 const path = require('path');
-import inquirer from 'inquirer';
 const { getCwd } = require('@hubspot/local-dev-lib/path');
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.previewPrompt';
 
 const previewPrompt = (promptOptions = {}) => {
-  return inquirer.prompt([
+  return promptUser([
     {
       name: 'src',
       message: i18n(`${i18nKey}.enterSrc`),
@@ -36,7 +36,7 @@ const previewPrompt = (promptOptions = {}) => {
 };
 
 const previewProjectPrompt = async themeComponents => {
-  return inquirer.prompt([
+  return promptUser([
     {
       name: 'themeComponentPath',
       message: i18n(`${i18nKey}.themeProjectSelect`),

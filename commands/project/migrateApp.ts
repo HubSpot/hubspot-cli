@@ -1,6 +1,5 @@
 // @ts-nocheck
 const path = require('path');
-import inquirer from 'inquirer';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -30,6 +29,7 @@ const {
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { isAppDeveloperAccount } = require('../../lib/accountTypes');
 const { ensureProjectExists } = require('../../lib/projects');
 const { handleKeypress } = require('../../lib/process');
@@ -155,7 +155,7 @@ exports.handler = async options => {
   logger.log(i18n(`${i18nKey}.warning.copyApp`));
   uiLine();
 
-  const { shouldCreateApp } = await inquirer.prompt({
+  const { shouldCreateApp } = await promptUser({
     name: 'shouldCreateApp',
     type: 'confirm',
     message: i18n(`${i18nKey}.createAppPrompt`),

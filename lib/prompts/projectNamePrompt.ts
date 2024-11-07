@@ -1,5 +1,5 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const { ensureProjectExists } = require('../projects');
 const { uiAccountDescription } = require('../ui');
@@ -7,7 +7,7 @@ const { uiAccountDescription } = require('../ui');
 const i18nKey = 'lib.prompts.projectNamePrompt';
 
 const projectNamePrompt = (accountId, options = {}) => {
-  return inquirer.prompt({
+  return promptUser({
     name: 'projectName',
     message: i18n(`${i18nKey}.enterName`),
     when: !options.project,

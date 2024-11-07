@@ -1,8 +1,8 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
+const { promptUser } = require('./prompts/promptUtils');
 const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
 const {
   startPortManagerServer,
@@ -82,7 +82,7 @@ class DevServerManager {
           await serverInterface.setup({
             components: compatibleComponents,
             onUploadRequired,
-            promptUser: inquirer.prompt,
+            promptUser,
             logger,
             urls: {
               api: getHubSpotApiOrigin(env),

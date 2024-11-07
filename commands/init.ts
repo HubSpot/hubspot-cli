@@ -1,7 +1,6 @@
 // @ts-nocheck
 const path = require('path');
 const fs = require('fs-extra');
-import inquirer from 'inquirer';
 const {
   getConfigPath,
   createEmptyConfigFile,
@@ -34,6 +33,7 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { toKebabCase } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage, trackAuthAction } = require('../lib/usageTracking');
 const { setLogLevel, addTestingOptions } = require('../lib/commonOpts');
+const { promptUser } = require('../lib/prompts/promptUtils');
 const {
   OAUTH_FLOW,
   personalAccessKeyPrompt,
@@ -74,7 +74,7 @@ const personalAccessKeyConfigCreationFlow = async (env, account) => {
 };
 
 const oauthConfigCreationFlow = async env => {
-  const configData = await inquirer.prompt(OAUTH_FLOW);
+  const configData = await promptUser(OAUTH_FLOW);
   const accountConfig = {
     ...configData,
     env,

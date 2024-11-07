@@ -1,5 +1,5 @@
 // @ts-nocheck
-import inquirer from 'inquirer';
+const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
 const i18nKey = 'lib.prompts.createModulePrompt';
@@ -53,7 +53,7 @@ const GLOBAL_PROMPT = {
 };
 
 function createModulePrompt() {
-  return inquirer.prompt([
+  return promptUser([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,
     CONTENT_TYPES_PROMPT,

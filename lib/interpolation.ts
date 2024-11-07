@@ -1,25 +1,23 @@
 // @ts-nocheck
 const chalk = require('chalk');
 
-import chalk from 'chalk';
-
 const helpers = {
-  bold: function(stringValue: string): string {
+  bold: function(stringValue) {
     return chalk.bold(stringValue);
   },
-  yellow: function(stringValue: string): string {
+  yellow: function(stringValue) {
     return chalk.reset.yellow(stringValue);
   },
-  green: function(stringValue: string): string {
+  green: function(stringValue) {
     return chalk.reset.green(stringValue);
   },
-  red: function(stringValue: string): string {
+  red: function(stringValue) {
     return chalk.reset.red(stringValue);
   },
-  cyan: function(stringValue: string): string {
+  cyan: function(stringValue) {
     return chalk.cyan(stringValue);
   },
-  orange: function(stringValue: string): string {
+  orange: function(stringValue) {
     return chalk.hex('#FC9900')(stringValue);
   },
 };
