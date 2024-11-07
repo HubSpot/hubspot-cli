@@ -42,7 +42,7 @@ export class Doctor {
       text: i18n(`${i18nKey}.runningDiagnostics`),
     });
 
-    this.diagnosticInfoBuilder = new DiagnosticInfoBuilder();
+    this.diagnosticInfoBuilder = new DiagnosticInfoBuilder(process);
     this.diagnosticInfo = await this.diagnosticInfoBuilder.generateDiagnosticInfo();
 
     this.projectConfig = this.diagnosticInfo?.project.config;

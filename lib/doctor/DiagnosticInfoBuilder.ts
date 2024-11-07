@@ -16,6 +16,7 @@ import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
 import util from 'util';
 import { exec as execAsync } from 'child_process';
+import process from 'process';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
@@ -59,21 +60,23 @@ const configFiles = [
 export class DiagnosticInfoBuilder {
   accountId: number | null;
   readonly env: Environment | undefined;
-  private readonly authType: AuthType | undefined;
-  private readonly accountType: AccountType | undefined;
-  private readonly personalAccessKey: string | undefined;
+  readonly authType: AuthType | undefined;
+  readonly accountType: AccountType | undefined;
+  readonly personalAccessKey: string | undefined;
   private _projectConfig?: ProjectConfig;
   private accessToken?: AccessToken;
   private projectDetails?: Project;
   private files?: string[];
+  readonly processInfo: NodeJS.Process;
 
-  constructor() {
+  constructor(processInfo: NodeJS.Process) {
     this.accountId = getAccountId();
     const accountConfig = getAccountConfig(this.accountId!);
     this.env = accountConfig?.env;
     this.authType = accountConfig?.authType;
     this.accountType = accountConfig?.accountType;
     this.personalAccessKey = accountConfig?.personalAccessKey;
+    this.processInfo = processInfo;
   }
 
   async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
@@ -90,7 +93,7 @@ export class DiagnosticInfoBuilder {
       arch,
       versions: { node },
       mainModule,
-    } = process;
+    } = this.processInfo;
 
     return {
       platform,

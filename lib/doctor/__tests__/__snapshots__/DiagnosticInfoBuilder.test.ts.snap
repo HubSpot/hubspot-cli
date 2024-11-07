@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the required data and generate the diagnostic 1`] = `
+{
+  "account": {
+    "accountId": 898989,
+    "accountType": "STANDARD",
+    "authType": "personalaccesskey",
+    "enabledFeatures": {},
+    "name": "My project",
+    "scopeGroups": [],
+  },
+  "arch": "x64",
+  "config": "/path/to/config",
+  "configFiles": [
+    "hsproject.json",
+    "src/app/app.json",
+    "src/app/public-app.json",
+    "src/app/app.functions/serverless.json",
+  ],
+  "envFiles": [],
+  "files": [
+    ".gitignore",
+    "README.md",
+    "hsproject.json",
+    "src/app/app.json",
+    "src/app/public-app.json",
+    "src/app/app.functions/.env",
+    "src/app/app.functions/function.js",
+    "src/app/app.functions/serverless.json",
+    "src/app/app.functions/package.json",
+    "src/app/app.functions/package-lock.json",
+    "src/app/extensions/extension.js",
+    "src/app/extensions/extension.json",
+    "src/app/extensions/package.json",
+    "src/app/extension/package-lock.json",
+  ],
+  "jsonFiles": [],
+  "packageFiles": [
+    "src/app/app.functions/package.json",
+    "src/app/extensions/package.json",
+  ],
+  "packageLockFiles": [
+    "src/app/app.functions/package-lock.json",
+    "src/app/extension/package-lock.json",
+  ],
+  "path": "/path/to/main/module",
+  "platform": "darwin",
+  "project": {
+    "config": {
+      "projectConfig": {
+        "name": "My project",
+      },
+      "projectDir": "/Users/test/project",
+    },
+    "details": {
+      "createdAt": 12345,
+      "deletedAt": 0,
+      "deployedBuildId": 1,
+      "id": 8989898,
+      "isLocked": false,
+      "name": "My project",
+      "portalId": 898989,
+      "updatedAt": 12345,
+    },
+  },
+  "versions": {
+    "@hubspot/cli": "1.0.0",
+    "node": "v18.17.0",
+    "npm": null,
+  },
+}
+`;
