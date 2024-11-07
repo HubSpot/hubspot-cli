@@ -27,7 +27,7 @@ import { AccessToken, CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 import { getProjectConfig as _getProjectConfig } from '../../projects';
 import { fetchProject as _fetchProject } from '@hubspot/local-dev-lib/api/projects';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { AxiosResponse } from 'axios';
+import { AxiosPromise } from 'axios';
 
 const walk = _walk as jest.MockedFunction<typeof _walk>;
 const getAccessToken = _getAccessToken as jest.MockedFunction<
@@ -151,7 +151,9 @@ describe('lib/doctor/DiagnosticInfo', () => {
       };
 
       getProjectConfig.mockResolvedValue(projectConfig);
-      fetchProject.mockResolvedValue({ data: projectDetails } as AxiosResponse);
+      fetchProject.mockResolvedValue(({
+        data: projectDetails,
+      } as unknown) as AxiosPromise<Project>);
       getAccessToken.mockResolvedValue(accessToken);
       getConfigPath.mockReturnValue(configPath);
       utilPromisify.mockReturnValue(jest.fn().mockResolvedValue(npmVersion));
