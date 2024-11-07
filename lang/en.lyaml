@@ -1451,13 +1451,13 @@ en:
         installed: "npm v{{ npmVersion }} is installed"
         unableToDetermine: "Unable to determine if npm is installed"
       projectDependenciesChecks:
-        missingDependencies: "missing dependencies in {{#cyan}}{{ dir }}{{/bold}}"
-        missingDependenciesSecondary: "Run {{#orange}}`hs project install-deps`'{{/orange}} to install all project dependencies locally"
+        missingDependencies: "missing dependencies in {{#cyan}}{{ dir }}{{/cyan}}"
+        missingDependenciesSecondary: "Run {{ command }} to install all project dependencies locally"
         unableToDetermine: "Unable to determine if dependencies are installed {{ dir }}"
         success: "App dependencies are installed an up to date"
       files:
-        invalidJson: "invalid JSON in {{#orange}} {{ filename )} {{/orange}}"
-        validJson: "Valid JSON"
+        invalidJson: "invalid JSON in {{#cyan}}{{ filename }}{{/cyan}}"
+        validJson: "Config files are valid JSON"
       diagnosis:
         cli:
           header: "HubSpot CLI install"

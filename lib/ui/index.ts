@@ -93,7 +93,7 @@ const uiInfoSection = (title, logContent) => {
   uiLine();
 };
 
-const uiCommandReference = command => {
+export const uiCommandReference = command => {
   const terminalUISupport = getTerminalUISupport();
 
   const commandReference = `\`${command}\``;
