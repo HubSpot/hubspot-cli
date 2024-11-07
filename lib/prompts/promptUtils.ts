@@ -28,7 +28,7 @@ export async function listPrompt(
     choices: Array<{ name: string; value: string }>;
     when?: boolean | (() => boolean);
   }
-): Promise<boolean> {
+): Promise<string> {
   const { choice } = await inquirer.prompt([
     {
       name: 'choice',
