@@ -276,12 +276,13 @@ en:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
     doctor:
-      describe: "The doctor is in"
+      describe: "Run diagnostics to detect common CLI issues"
       options:
         outputDir: "The directory to write the output file into"
       errors:
         generatingDiagnosis: "Error generating diagnosis"
         unableToWriteOutputFile: "Unable to write output to {{ file }}, {{ errorMessage }}"
+      outputWritten: "Output written to {{ filename }}"
     fetch:
       describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
       errors:
@@ -1435,7 +1436,7 @@ en:
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
           invalid: "Personal access key is invalid"
-          valid: "Personal Access Key valid. {{ link }}"
+          valid: "Personal Access Key is valid. {{ link }}"
           viewScopes: "View selected scopes"
       nodeChecks:
         unableToDetermine: "Unable to determine what version of node is installed"
@@ -1449,7 +1450,7 @@ en:
         missingDependencies: "missing dependencies in {{#cyan}}{{ dir }}{{/cyan}}"
         missingDependenciesSecondary: "Run {{ command }} to install all project dependencies locally"
         unableToDetermine: "Unable to determine if dependencies are installed {{ dir }}"
-        success: "App dependencies are installed an up to date"
+        success: "App dependencies are installed and up to date"
       files:
         invalidJson: "invalid JSON in {{#cyan}}{{ filename }}{{/cyan}}"
         validJson: "Config files are valid JSON"
@@ -1463,14 +1464,14 @@ en:
         cliConfig:
           header: "CLI configuration"
           configFileSubHeader: "Config File: {{#cyan}}{{ filename }}{{/cyan}}"
-          defaultAccountSubHeader: "Default Account: {{#cyan}}{{ accountName }}[{{ accountType }}]({{ accountId }}) {{/cyan}}"
+          defaultAccountSubHeader: "Default Account: {{accountDetails}}"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#cyan}}{{ projectDir }}{{/cyan}}"
           projectNameSubHeader: "Project name: {{#cyan}}{{ projectName }}{{/cyan}}"
         counts:
-          errors: '{{#bold}}Errors{{/bold}}: {{ count }}'
-          warnings: "{{#bold}}Warning{{/bold}}: {{ count }}"
+          errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
+          warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
 
 
 

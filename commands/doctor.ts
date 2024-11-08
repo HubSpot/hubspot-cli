@@ -22,11 +22,7 @@ export const handler = async ({
 }: ArgumentsCamelCase<DoctorOptions>) => {
   const doctor = new Doctor();
 
-  try {
-    trackCommandUsage('doctor', undefined, doctor.accountId);
-  } catch (e) {
-    logger.debug(e);
-  }
+  trackCommandUsage('doctor', undefined, doctor.accountId);
 
   const output = await doctor.diagnose();
 
@@ -46,12 +42,12 @@ export const handler = async ({
 
   const outputFile = path.join(
     outputDir,
-    `doctor-${new Date().toISOString()}.json`
+    `hubspot-doctor-${new Date().toISOString()}.json`
   );
 
   try {
     fs.writeFileSync(outputFile, JSON.stringify(output, null, 4));
-    logger.success(`Output written to ${outputFile}`);
+    logger.success(i18n(`${i18nKey}.outputWritten`, { filename: outputFile }));
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.unableToWriteOutputFile`, {

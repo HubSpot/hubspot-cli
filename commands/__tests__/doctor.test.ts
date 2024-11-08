@@ -50,7 +50,9 @@ describe('doctor', () => {
 
   describe('describe', () => {
     it('should have a description', () => {
-      expect(doctorDescribe).toEqual('The doctor is in');
+      expect(doctorDescribe).toEqual(
+        'Run diagnostics to detect common CLI issues'
+      );
     });
   });
 
@@ -117,7 +119,7 @@ describe('doctor', () => {
       const writeFileSpy = jest
         .spyOn(fs, 'writeFileSync')
         .mockImplementationOnce(() => {});
-      const expectedOutputFile = `/foo/doctor-${date.toISOString()}.json`;
+      const expectedOutputFile = `/foo/hubspot-doctor-${date.toISOString()}.json`;
       await handler({ outputDir: '/foo' } as ArgumentsCamelCase<DoctorOptions>);
 
       expect(logger.log).not.toHaveBeenCalled();
@@ -145,7 +147,7 @@ describe('doctor', () => {
       const cwd = '/some/path/to';
       getCwd.mockImplementationOnce(() => cwd);
 
-      const expectedOutputFile = `${cwd}/foo/doctor-${date.toISOString()}.json`;
+      const expectedOutputFile = `${cwd}/foo/hubspot-doctor-${date.toISOString()}.json`;
       await handler({ outputDir: './foo' } as ArgumentsCamelCase<
         DoctorOptions
       >);
@@ -180,12 +182,12 @@ describe('doctor', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Unable to write output to /foo/doctor-2022-02-22T00:00:00.000Z.json, ${errorMessage}`
+        `Unable to write output to /foo/hubspot-doctor-2022-02-22T00:00:00.000Z.json, ${errorMessage}`
       );
 
       expect(writeFileSpy).toHaveBeenCalledTimes(1);
       expect(writeFileSpy).toHaveBeenCalledWith(
-        `/foo/doctor-${date.toISOString()}.json`,
+        `/foo/hubspot-doctor-${date.toISOString()}.json`,
         expect.stringContaining(diagnosis)
       );
 

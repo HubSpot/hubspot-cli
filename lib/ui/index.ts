@@ -76,7 +76,7 @@ const uiLink = (linkText, url) => {
  * @param {boolean} bold
  * @returns {string}
  */
-const uiAccountDescription = (accountId, bold = true) => {
+export const uiAccountDescription = (accountId, bold = true) => {
   const account = getAccountConfig(accountId);
   const message = `${account.name} [${
     HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]

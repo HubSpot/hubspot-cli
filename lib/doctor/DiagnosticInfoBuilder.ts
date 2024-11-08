@@ -20,6 +20,7 @@ import process from 'process';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
+const hubspotCli = '@hubspot/cli';
 interface FilesInfo {
   files: string[];
   configFiles: string[];
@@ -31,7 +32,7 @@ interface FilesInfo {
 
 export interface DiagnosticInfo extends FilesInfo {
   path?: string;
-  versions: { '@hubspot/cli': string; node: string; npm: string | null };
+  versions: { [hubspotCli]: string; node: string; npm: string | null };
   config: string | null;
   project: {
     details?: Project;
@@ -59,10 +60,10 @@ const configFiles = [
 
 export class DiagnosticInfoBuilder {
   accountId: number | null;
-  readonly env: Environment | undefined;
-  readonly authType: AuthType | undefined;
-  readonly accountType: AccountType | undefined;
-  readonly personalAccessKey: string | undefined;
+  readonly env?: Environment;
+  readonly authType?: AuthType;
+  readonly accountType?: AccountType;
+  readonly personalAccessKey?: string;
   private _projectConfig?: ProjectConfig;
   private accessToken?: AccessToken;
   private projectDetails?: Project;
@@ -101,7 +102,7 @@ export class DiagnosticInfoBuilder {
       path: mainModule?.path,
       config: getConfigPath(),
       versions: {
-        '@hubspot/cli': pkg.version,
+        [hubspotCli]: pkg.version,
         node,
         npm: await this.getNpmVersion(),
       },
@@ -122,7 +123,7 @@ export class DiagnosticInfoBuilder {
     };
   }
 
-  private async fetchProjectDetails() {
+  private async fetchProjectDetails(): Promise<void> {
     try {
       const { data } = await fetchProject(
         this.accountId!,
@@ -134,7 +135,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  async fetchAccessToken() {
+  async fetchAccessToken(): Promise<AccessToken | undefined> {
     try {
       this.accessToken = await getAccessToken(
         this.personalAccessKey!,
@@ -148,7 +149,7 @@ export class DiagnosticInfoBuilder {
     return this.accessToken;
   }
 
-  private async fetchProjectFilenames() {
+  private async fetchProjectFilenames(): Promise<void> {
     try {
       this.files = (await walk(this._projectConfig?.projectDir))
         .filter(file => !path.dirname(file).includes('node_modules'))
@@ -160,7 +161,7 @@ export class DiagnosticInfoBuilder {
     }
   }
 
-  private async getNpmVersion() {
+  private async getNpmVersion(): Promise<string | null> {
     const exec = util.promisify(execAsync);
     try {
       const { stdout } = await exec('npm --version');

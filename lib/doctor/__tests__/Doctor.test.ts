@@ -181,7 +181,7 @@ describe('lib/doctor/Doctor', () => {
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addCLIConfigSection).toHaveBeenCalledWith({
           type: 'success',
-          message: expect.stringMatching(/Personal Access Key valid./),
+          message: expect.stringMatching(/Personal Access Key is valid./),
         });
       });
 
@@ -312,7 +312,7 @@ describe('lib/doctor/Doctor', () => {
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
           type: 'success',
-          message: 'App dependencies are installed an up to date',
+          message: 'App dependencies are installed and up to date',
         });
       });
 

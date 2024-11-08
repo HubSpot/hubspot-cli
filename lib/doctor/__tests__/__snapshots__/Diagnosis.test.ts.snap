@@ -19,7 +19,7 @@ HubSpot CLI install
 
 CLI configuration
 Config File: path/to/config.json
-Default Account: Standard Account[standard](123456) 
+Default Account: Standard Account [standard] (undefined)
   ✖ Important CLI Config Message
     - The CLI Config Section is Showing
 

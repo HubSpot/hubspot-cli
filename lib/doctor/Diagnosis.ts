@@ -2,9 +2,7 @@ import { prefixOptions } from '../ui/spinniesUtils';
 import { bold, green, red } from 'chalk';
 import { helpers } from '../interpolation';
 import { DiagnosticInfo } from './DiagnosticInfoBuilder';
-import { getAccountConfig } from '@hubspot/local-dev-lib/config';
-import { HUBSPOT_ACCOUNT_TYPE_STRINGS } from '@hubspot/local-dev-lib/constants/config';
-
+import { uiAccountDescription } from '../ui';
 const { i18n } = require('../lang');
 
 interface DiagnosisOptions {
@@ -47,9 +45,6 @@ export class Diagnosis {
     // @ts-expect-error Prefix options is not typed yet
     const { succeedPrefix, failPrefix } = prefixOptions({});
 
-    const { accountType, name: accountName } =
-      getAccountConfig(accountId!) || {};
-
     this.prefixes = {
       success: green(succeedPrefix),
       error: red(failPrefix),
@@ -68,9 +63,7 @@ export class Diagnosis {
             filename: diagnosticInfo.config,
           }),
           i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
-            accountName,
-            accountType: HUBSPOT_ACCOUNT_TYPE_STRINGS[accountType!],
-            accountId,
+            accountDetails: uiAccountDescription(accountId),
           }),
         ],
         sections: [],
@@ -90,23 +83,23 @@ export class Diagnosis {
     };
   }
 
-  private indent(level: number) {
+  private indent(level: number): string {
     return this.indentation.repeat(level);
   }
 
-  addCliSection(section: Section) {
+  addCliSection(section: Section): void {
     this.diagnosis.cli.sections.push(section);
   }
 
-  addProjectSection(section: Section) {
+  addProjectSection(section: Section): void {
     this.diagnosis.project.sections.push(section);
   }
 
-  addCLIConfigSection(section: Section) {
+  addCLIConfigSection(section: Section): void {
     this.diagnosis.cliConfig.sections.push(section);
   }
 
-  toString() {
+  toString(): string {
     const output = [];
     for (const value of Object.values(this.diagnosis)) {
       const section = this.generateSections(value);
@@ -135,7 +128,7 @@ export class Diagnosis {
     return output.join('\n');
   }
 
-  private generateSections(category: DiagnosisCategory) {
+  private generateSections(category: DiagnosisCategory): string {
     const output = [];
 
     if (category.sections && category.sections.length === 0) {

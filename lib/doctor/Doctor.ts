@@ -152,7 +152,7 @@ export class Doctor {
     }
   }
 
-  private async checkIfNodeIsInstalled() {
+  private async checkIfNodeIsInstalled(): Promise<void> {
     const localI18nKey = `${i18nKey}.nodeChecks`;
     if (!this.diagnosticInfo?.versions.node) {
       return this.diagnosis?.addCliSection({
@@ -180,7 +180,7 @@ export class Doctor {
     });
   }
 
-  private async checkIfNpmIsInstalled() {
+  private async checkIfNpmIsInstalled(): Promise<void> {
     const localI18nKey = `${i18nKey}.npmChecks`;
     const npmVersion = this.diagnosticInfo?.versions?.npm;
     if (!npmVersion) {
@@ -198,7 +198,7 @@ export class Doctor {
     });
   }
 
-  private async checkIfNpmInstallRequired() {
+  private async checkIfNpmInstallRequired(): Promise<void> {
     let foundError = false;
     const localI18nKey = `${i18nKey}.projectDependenciesChecks`;
 
@@ -256,7 +256,7 @@ export class Doctor {
     }
   }
 
-  private async isValidJsonFile(filename: string) {
+  private async isValidJsonFile(filename: string): Promise<boolean> {
     try {
       const readFile = util.promisify(fs.readFile);
       const fileContents = await readFile(filename);
@@ -267,7 +267,7 @@ export class Doctor {
     return true;
   }
 
-  private async checkProjectConfigJsonFiles() {
+  private async checkProjectConfigJsonFiles(): Promise<void> {
     let foundError = false;
     for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
       const fileToCheck = path.join(this.projectConfig?.projectDir, jsonFile);
@@ -290,7 +290,7 @@ export class Doctor {
     }
   }
 
-  private async checkIfPortsAreAvailable() {
+  private async checkIfPortsAreAvailable(): Promise<void> {
     const localI18nKey = `${i18nKey}.port`;
     if (await isPortManagerServerRunning()) {
       this.diagnosis?.addProjectSection({
