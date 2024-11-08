@@ -10,14 +10,14 @@ The above copyright notice and this permission notice shall be included in all c
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
 
-export const VALID_STATUSES = [
+const VALID_STATUSES: string[] = [
   'succeed',
   'fail',
   'spinning',
   'non-spinnable',
   'stopped',
 ] as const;
-const VALID_COLORS = [
+const VALID_COLORS: string[] = [
   'black',
   'red',
   'green',
@@ -42,17 +42,17 @@ export type Spinner = {
 };
 
 export type SpinnerOptions = {
-  spinner?: Partial<Spinner>;
-  disableSpins?: boolean;
   text?: string;
   status?: typeof VALID_STATUSES[number];
+  indent?: number;
+  spinner?: Partial<Spinner>;
+  disableSpins?: boolean;
   color?: typeof VALID_COLORS[number];
   spinnerColor?: typeof VALID_COLORS[number];
   succeedColor?: typeof VALID_COLORS[number];
   failColor?: typeof VALID_COLORS[number];
   succeedPrefix?: string;
   failPrefix?: string;
-  indent?: number;
 };
 
 export const SPINNERS: { [key: string]: Spinner } = {
@@ -71,8 +71,7 @@ export function purgeSpinnerOptions(options: SpinnerOptions): SpinnerOptions {
   const opts = { text, status, indent };
   const colors = colorOptions(options);
 
-  if (typeof status === 'string' && !VALID_STATUSES.includes(status))
-    delete opts.status;
+  if (!VALID_STATUSES.includes(status!)) delete opts.status;
   if (typeof text !== 'string') delete opts.text;
   if (typeof indent !== 'number') delete opts.indent;
 
@@ -100,7 +99,14 @@ function turnToValidSpinner(spinner: Partial<Spinner> = {}): Spinner {
   if (typeof spinner !== 'object') {
     return platformSpinner;
   }
-  let { interval, frames } = spinner;
+  let interval, frames;
+  if ('interval' in spinner && 'frames' in spinner) {
+    interval = spinner.interval;
+    frames = spinner.frames;
+  } else {
+    interval = platformSpinner.interval;
+    frames = platformSpinner.frames;
+  }
   if (!Array.isArray(frames) || frames.length < 1)
     frames = platformSpinner.frames;
   if (typeof interval !== 'number') {
@@ -131,7 +137,7 @@ export function colorOptions({
   return colors;
 }
 
-export function prefixOptions({
+function prefixOptions({
   succeedPrefix,
   failPrefix,
 }: SpinnerOptions): Partial<SpinnerOptions> {
