@@ -38,7 +38,9 @@ function errorHandler(log: Log, options: Options): string {
   return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 }
 
-const logHandler: Record<LogStatus, (log: Log, options: Options) => string> = {
+const logHandler: {
+  [key in LogStatus]: (log: Log, options: Options) => string;
+} = {
   ERROR: errorHandler,
   UNHANDLED_ERROR: errorHandler,
   HANDLED_ERROR: errorHandler,

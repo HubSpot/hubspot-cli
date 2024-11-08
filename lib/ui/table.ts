@@ -7,7 +7,7 @@ function isObject(item: any): boolean {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mergeDeep<T extends Record<string, any>>(
+function mergeDeep<T extends { [key: string]: any }>(
   target: T,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...sources: any[]

@@ -4,7 +4,6 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { supportsHyperlinkModule } from './supportHyperlinks';
 import { supportsColor } from './supportsColor';
 import { i18n } from '../lang';
-import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
@@ -55,13 +54,10 @@ export function uiLink(linkText: string, url: string): string {
     : `${linkText}: ${encodedUrl}`;
 }
 
-export function uiAccountDescription(
-  accountId: number,
-  bold: boolean = true
-): string {
-  const account = getAccountConfig(accountId) as CLIAccount;
+export function uiAccountDescription(accountId: number, bold = true): string {
+  const account = getAccountConfig(accountId);
   let message;
-  if (account.accountType) {
+  if (account && account.accountType) {
     message = `${account.name} [${
       HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
     }] (${accountId})`;
@@ -108,7 +104,7 @@ export function uiFeatureHighlight(commands: string[], title: string): void {
   });
 }
 
-export function uiBetaTag(message: string, log: boolean = true): void | string {
+export function uiBetaTag(message: string, log = true): void | string {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -125,10 +121,7 @@ export function uiBetaTag(message: string, log: boolean = true): void | string {
   }
 }
 
-export function uiDeprecatedTag(
-  message: string,
-  log: boolean = true
-): void | string {
+export function uiDeprecatedTag(message: string): void {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -138,17 +131,13 @@ export function uiDeprecatedTag(
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  if (log) {
-    logger.log(result);
-  } else {
-    return result;
-  }
+  logger.log(result);
 }
 
 export function uiCommandDisabledBanner(
   command: string,
-  url: string | undefined = undefined,
-  message: string | undefined = undefined
+  url?: string,
+  message?: string
 ): void {
   const i18nKey = 'lib.ui';
 
@@ -170,8 +159,7 @@ export function uiCommandDisabledBanner(
 export function uiDeprecatedDescription(
   message: string,
   command: string,
-  url: string | undefined = undefined,
-  log: boolean = false
+  url?: string
 ) {
   const i18nKey = 'lib.ui';
 
@@ -180,13 +168,13 @@ export function uiDeprecatedDescription(
     command: uiCommandReference(command),
     url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : '',
   });
-  return uiDeprecatedTag(tag, log);
+  return uiDeprecatedTag(tag);
 }
 
 export function uiDeprecatedMessage(
   command: string,
-  url: string | undefined = undefined,
-  message: string | undefined = undefined
+  url?: string,
+  message?: string
 ): void {
   const i18nKey = 'lib.ui';
 
@@ -198,6 +186,6 @@ export function uiDeprecatedMessage(
     });
 
   logger.log();
-  uiDeprecatedTag(tag, true);
+  uiDeprecatedTag(tag);
   logger.log();
 }

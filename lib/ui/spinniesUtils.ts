@@ -16,7 +16,7 @@ export const VALID_STATUSES = [
   'spinning',
   'non-spinnable',
   'stopped',
-];
+] as const;
 const VALID_COLORS = [
   'black',
   'red',
@@ -34,7 +34,7 @@ const VALID_COLORS = [
   'magentaBright',
   'cyanBright',
   'whiteBright',
-];
+] as const;
 
 export type Spinner = {
   interval: number;
@@ -55,7 +55,7 @@ export type SpinnerOptions = {
   indent?: number;
 };
 
-export const SPINNERS: Record<string, Spinner> = {
+export const SPINNERS: { [key: string]: Spinner } = {
   dots: {
     interval: 50,
     frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
@@ -123,7 +123,7 @@ export function colorOptions({
     spinnerColor,
   };
   (Object.keys(colors) as Array<keyof SpinnerOptions>).forEach(key => {
-    if (!VALID_COLORS.includes(colors[key] as string)) {
+    if (!VALID_COLORS.includes(colors[key] as typeof VALID_COLORS[number])) {
       delete colors[key as keyof SpinnerOptions];
     }
   });

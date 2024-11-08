@@ -127,7 +127,7 @@ function createSupportsColor(
   options: { streamIsTTY?: boolean } = {}
 ): ColorSupportLevel {
   const level = _supportsColor(stream, {
-    streamIsTTY: stream ? stream.isTTY : undefined,
+    streamIsTTY: stream?.isTTY,
     ...options,
   });
 

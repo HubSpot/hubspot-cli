@@ -42,13 +42,13 @@ function safeColor(text: string, color?: string): string {
 
 class SpinniesManager {
   private options!: SpinnerState;
-  private spinners: Record<string, SpinnerState> = {};
-  private isCursorHidden: boolean = false;
+  private spinners: { [key: string]: SpinnerState } = {};
+  private isCursorHidden = false;
   private currentInterval: NodeJS.Timeout | null = null;
-  private stream: NodeJS.WriteStream = process.stderr;
-  private lineCount: number = 0;
-  private currentFrameIndex: number = 0;
-  private spin: boolean = false;
+  private stream = process.stderr;
+  private lineCount = 0;
+  private currentFrameIndex = 0;
+  private spin!: boolean;
 
   constructor() {
     this.resetState();
@@ -91,7 +91,7 @@ class SpinniesManager {
   }
 
   pick(name: string): SpinnerState | undefined {
-    return this.spinners ? this.spinners[name] : undefined;
+    return this.spinners?.[name];
   }
 
   add(
@@ -105,7 +105,7 @@ class SpinniesManager {
       options.text = resolvedName;
     }
 
-    const spinnerProperties = {
+    const spinnerProperties: SpinnerState = {
       ...colorOptions(this.options),
       succeedPrefix: this.options.succeedPrefix,
       failPrefix: this.options.failPrefix,
@@ -120,7 +120,7 @@ class SpinniesManager {
   }
 
   update(name: string, options: Partial<SpinnerState> = {}): SpinnerState {
-    const { status = 'spinning' } = options;
+    const { status } = options;
     this.setSpinnerProperties(name, options, status);
     this.updateSpinnerState();
 
@@ -153,7 +153,7 @@ class SpinniesManager {
 
   stopAll(
     newStatus: typeof VALID_STATUSES[number] = 'stopped'
-  ): Record<string, SpinnerState> {
+  ): { [key: string]: SpinnerState } {
     Object.keys(this.spinners).forEach(name => {
       const { status: currentStatus } = this.spinners[name];
       if (
@@ -166,7 +166,7 @@ class SpinniesManager {
           this.spinners[name].color = this.options[`${newStatus}Color`];
         } else {
           this.spinners[name].status = 'stopped';
-          this.spinners[name].color = 'grey';
+          this.spinners[name].color = 'gray';
         }
       }
     });
@@ -188,7 +188,7 @@ class SpinniesManager {
   private setSpinnerProperties(
     name: string,
     options: Partial<SpinnerState>,
-    status: typeof VALID_STATUSES[number]
+    status?: typeof VALID_STATUSES[number]
   ): void {
     if (typeof name !== 'string') {
       throw Error('A spinner reference name must be specified');
@@ -204,7 +204,9 @@ class SpinniesManager {
 
   private updateSpinnerState(): void {
     if (this.spin) {
-      clearInterval(this.currentInterval as NodeJS.Timeout);
+      if (this.currentInterval) {
+        clearInterval(this.currentInterval);
+      }
       this.currentInterval = this.loopStream();
       if (!this.isCursorHidden) {
         cliCursor.hide();
@@ -305,7 +307,9 @@ class SpinniesManager {
       if (this.spin) {
         this.setStreamOutput();
         readline.moveCursor(this.stream, 0, this.lineCount);
-        clearInterval(this.currentInterval as NodeJS.Timeout);
+        if (this.currentInterval) {
+          clearInterval(this.currentInterval);
+        }
         this.isCursorHidden = false;
         cliCursor.show();
       }
