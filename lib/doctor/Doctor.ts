@@ -1,5 +1,5 @@
 import { logger } from '@hubspot/local-dev-lib/logger';
-import { getAccountId } from '../commonOpts';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
 import { packagesNeedInstalled } from '../dependencyManagement';

@@ -1,7 +1,6 @@
 import util from 'util';
 
 jest.mock('@hubspot/local-dev-lib/fs');
-jest.mock('../../commonOpts');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../../projects');
@@ -16,8 +15,8 @@ jest.mock('../../../package.json', () => ({
 }));
 
 import { DiagnosticInfoBuilder, ProjectConfig } from '../DiagnosticInfoBuilder';
-import { getAccountId as _getAccountId } from '../../commonOpts';
 import {
+  getAccountId as _getAccountId,
   getAccountConfig as _getAccountConfig,
   getConfigPath as _getConfigPath,
 } from '@hubspot/local-dev-lib/config';

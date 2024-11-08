@@ -10,7 +10,7 @@ import {
   AuthType,
 } from '@hubspot/local-dev-lib/types/Accounts';
 import { Project } from '@hubspot/local-dev-lib/types/Project';
-import { getAccountId } from '../commonOpts';
+import { getAccountId } from '@hubspot/local-dev-lib/config';
 import { getAccountConfig, getConfigPath } from '@hubspot/local-dev-lib/config';
 import { getAccessToken } from '@hubspot/local-dev-lib/personalAccessKey';
 import { walk } from '@hubspot/local-dev-lib/fs';
