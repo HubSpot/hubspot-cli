@@ -6,7 +6,7 @@ import semver from 'semver';
 
 import { name as packageName, version as localVersion } from '../package.json';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { build } from './build';
+import { build } from './lib/build';
 
 // TODO: Change to import when this is converted to TS
 const { uiLink, uiLine } = require('../lib/ui');
@@ -201,9 +201,7 @@ async function handler({
   logger.success('Version updated successfully');
 
   logger.log();
-  logger.log('Creating a new build...');
   await build();
-  logger.success('Build successful');
 
   try {
     await publish(tag, isDryRun);

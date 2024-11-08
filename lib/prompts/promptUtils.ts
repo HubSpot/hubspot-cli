@@ -6,17 +6,15 @@ export const promptUser: any = inquirer.createPromptModule();
 
 export async function confirmPrompt(
   message: string,
-  {
-    defaultAnswer = true,
-    when,
-  }: { defaultAnswer: boolean; when?: boolean | (() => boolean) }
+  options: { defaultAnswer?: boolean; when?: boolean | (() => boolean) } = {}
 ): Promise<boolean> {
+  const { defaultAnswer, when } = options;
   const { choice } = await promptUser([
     {
       name: 'choice',
       type: 'confirm',
       message,
-      default: defaultAnswer,
+      default: defaultAnswer || true,
       when,
     },
   ]);

@@ -1,15 +1,20 @@
-// @ts-nocheck
-const readline = require('readline');
-const {
-  logger,
-  setLogLevel,
-  LOG_LEVEL,
-} = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('./lang');
+import readline from 'readline';
+import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
+import { i18n } from './lang';
 
 const i18nKey = 'lib.process';
 
-const handleExit = callback => {
+interface KeyPress {
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+  name?: string;
+}
+
+export function handleExit(
+  callback: (onTerminate: { isSIGHUP: boolean }) => void
+): void {
   const terminationSignals = [
     'beforeExit',
     'SIGINT', // Terminal trying to interrupt (Ctrl + C)
@@ -40,9 +45,9 @@ const handleExit = callback => {
       }
     });
   });
-};
+}
 
-const handleKeypress = callback => {
+export function handleKeypress(callback: (onKeyPress: KeyPress) => void): void {
   readline.createInterface(process.stdin, process.stdout);
   readline.emitKeypressEvents(process.stdin);
 
@@ -52,14 +57,9 @@ const handleKeypress = callback => {
 
   process.stdin.removeAllListeners('keypress');
 
-  process.stdin.on('keypress', (str, key) => {
+  process.stdin.on('keypress', (str: string, key: KeyPress): void => {
     if (key) {
       callback(key);
     }
   });
-};
-
-module.exports = {
-  handleExit,
-  handleKeypress,
-};
+}
