@@ -13,7 +13,7 @@ interface KeyPress {
 }
 
 export function handleExit(
-  callback: (onTerminate?: { isSIGHUP: boolean }) => void
+  callback: (onTerminate: { isSIGHUP: boolean }) => void
 ): void {
   const terminationSignals = [
     'beforeExit',
