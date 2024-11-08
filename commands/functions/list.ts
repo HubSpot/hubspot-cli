@@ -1,7 +1,7 @@
 // @ts-nocheck
+const moment = require('moment');
 const { getRoutes } = require('@hubspot/local-dev-lib/api/functions');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const moment = require('moment');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
