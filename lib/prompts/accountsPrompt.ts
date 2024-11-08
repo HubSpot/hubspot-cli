@@ -1,6 +1,5 @@
 // @ts-nocheck
 const {
-  updateDefaultAccount,
   getConfigDefaultAccount,
   getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
@@ -38,26 +37,6 @@ const selectAccountFromConfig = async (config, prompt) => {
   return selectedDefault;
 };
 
-const selectAndSetAsDefaultAccountPrompt = async config => {
-  const accountsList = getConfigAccounts();
-  const defaultAccount = getConfigDefaultAccount(config);
-
-  const { default: selectedDefault } = await promptUser([
-    {
-      type: 'list',
-      look: false,
-      name: 'default',
-      pageSize: 20,
-      message: i18n(`${i18nKey}.promptMessage`),
-      choices: mapAccountChoices(accountsList),
-      default: defaultAccount,
-    },
-  ]);
-  updateDefaultAccount(selectedDefault);
-};
-
 module.exports = {
-  selectAndSetAsDefaultAccountPrompt,
   selectAccountFromConfig,
-  mapAccountChoices,
 };

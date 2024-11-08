@@ -1,11 +1,11 @@
 {
   "name": "@hubspot/cli",
-  "version": "6.2.2-experimental.0",
+  "version": "6.2.2-beta.0",
   "description": "The official CLI for developing on HubSpot",
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "^2.1.0",
+    "@hubspot/local-dev-lib": "2.1.1",
     "@hubspot/serverless-dev-runtime": "7.0.0",
     "@hubspot/theme-preview-dev-server": "0.0.9",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
@@ -30,6 +30,7 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
+    "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
     "axios": "^1.7.2",
@@ -42,10 +43,11 @@
     "prettier": "^1.19.1",
     "semver": "^7.6.3",
     "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
   "scripts": {
-    "build": "bash ./scripts/build.sh",
+    "build": "ts-node ./scripts/build.ts",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
     "prettier:write": "prettier --write ./**/*.{js,json}",
     "test": "jest",
@@ -55,8 +57,9 @@
     "test-cli-latest": "yarn build-docker && docker container run -it --rm --name=hs-cli-container hs-cli-image yarn --cwd 'acceptance-tests' test-latest",
     "build-docker": "docker image build --tag hs-cli-image . && docker image prune -f",
     "circular-deps": "yarn madge --circular .",
-    "release": "bash ./scripts/release.sh",
-    "hs": "yarn build && node ./dist/bin/hs"
+    "release": "yarn ts-node ./scripts/release.ts release",
+    "hs": "yarn build && node ./dist/bin/hs",
+    "update-ldl": "yarn add --exact @hubspot/local-dev-lib@latest"
   },
   "lint-staged": {
     "**/*.{js,ts,scss,css}": [

@@ -13,7 +13,7 @@ const {
   fetchValidationResults,
   processValidationErrors,
   displayValidationResults,
-} = require('../../lib/marketplace-validate');
+} = require('../../lib/marketplaceValidate');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.module.subcommands.marketplaceValidate';

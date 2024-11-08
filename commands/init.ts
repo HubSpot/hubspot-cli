@@ -41,7 +41,6 @@ const {
   personalAccessKeyPrompt,
 } = require('../lib/prompts/personalAccessKeyPrompt');
 const { cliAccountNamePrompt } = require('../lib/prompts/accountNamePrompt');
-const { logDebugInfo } = require('../lib/debugInfo');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { uiFeatureHighlight } = require('../lib/ui');
@@ -112,7 +111,6 @@ exports.handler = async options => {
   const configPath =
     (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
   setLogLevel(options);
-  logDebugInfo(options);
   trackCommandUsage('init', {
     authType,
   });

@@ -43,7 +43,6 @@ const {
   getAccountId,
   addTestingOptions,
 } = require('../lib/commonOpts');
-const { logDebugInfo } = require('../lib/debugInfo');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
@@ -78,7 +77,6 @@ exports.handler = async options => {
   const authType =
     (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
-  logDebugInfo(options);
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
   // Needed to load deprecated config

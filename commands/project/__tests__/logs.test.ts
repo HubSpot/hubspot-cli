@@ -16,7 +16,7 @@ jest.mock('@hubspot/local-dev-lib/logger');
 jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/usageTracking');
 jest.mock('../../../lib/validation');
-jest.mock('../../../lib/projectLogsManager');
+jest.mock('../../../lib/ProjectLogsManager');
 jest.mock('../../../lib/prompts/projectsLogsPrompt');
 jest.mock('../../../lib/ui/table');
 jest.mock('../../../lib/errorHandlers');

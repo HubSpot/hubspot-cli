@@ -1,17 +1,6 @@
 export const HUBSPOT_PROJECT_COMPONENTS_GITHUB_PATH = 'HubSpot/hubspot-project-components' as const;
 export const DEFAULT_PROJECT_TEMPLATE_BRANCH = 'main' as const;
 
-export const FEEDBACK_OPTIONS = {
-  BUG: 'bug',
-  GENERAL: 'general',
-} as const;
-
-export const FEEDBACK_URLS = {
-  BUG: 'https://github.com/HubSpot/hubspot-cli/issues/new',
-  GENERAL:
-    'https://docs.google.com/forms/d/e/1FAIpQLSejZZewYzuH3oKBU01tseX-cSWOUsTHLTr-YsiMGpzwcvgIMg/viewform?usp=sf_link',
-} as const;
-
 export const FEEDBACK_INTERVAL = 10 as const;
 
 export const HUBSPOT_FOLDER = '@hubspot' as const;

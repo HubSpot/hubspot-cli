@@ -25,9 +25,7 @@ const {
 const {
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const {
-  selectAndSetAsDefaultAccountPrompt,
-} = require('../../lib/prompts/accountsPrompt');
+const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
@@ -165,7 +163,8 @@ exports.handler = async options => {
       sandboxAccountId
     );
     if (promptDefaultAccount && !force) {
-      await selectAndSetAsDefaultAccountPrompt(getConfig());
+      const newDefaultAccount = await selectAccountFromConfig(getConfig());
+      updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
       updateDefaultAccount(parentAccountId);
@@ -217,7 +216,8 @@ exports.handler = async options => {
         sandboxAccountId
       );
       if (promptDefaultAccount && !force) {
-        await selectAndSetAsDefaultAccountPrompt(getConfig());
+        const newDefaultAccount = await selectAccountFromConfig(getConfig());
+        updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
         updateDefaultAccount(parentAccountId);

@@ -19,17 +19,15 @@ const {
   getProjectDetailUrl,
 } = require('../../lib/projects');
 const { projectNamePrompt } = require('../../lib/prompts/projectNamePrompt');
-const {
-  deployBuildIdPrompt,
-} = require('../../lib/prompts/deployBuildIdPrompt');
+const { promptUser } = require('../../lib/prompts/promptUtils');
 const { i18n } = require('../../lib/lang');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-
-const i18nKey = 'commands.project.subcommands.deploy';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { uiCommandReference, uiAccountDescription } = require('../../lib/ui');
 const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
+
+const i18nKey = 'commands.project.subcommands.deploy';
 
 exports.command = 'deploy';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
@@ -114,18 +112,22 @@ exports.handler = async options => {
         return process.exit(EXIT_CODES.ERROR);
       }
     } else {
-      const deployBuildIdPromptResponse = await deployBuildIdPrompt(
-        latestBuild.buildId,
-        deployedBuildId,
-        buildId =>
+      const deployBuildIdPromptResponse = await promptUser({
+        name: 'buildId',
+        message: i18n(`${i18nKey}.deployBuildIdPrompt`),
+        default:
+          latestBuild.buildId === deployedBuildId
+            ? undefined
+            : latestBuild.buildId,
+        validate: () =>
           validateBuildId(
             buildId,
             deployedBuildId,
             latestBuild.buildId,
             projectName,
             derivedAccountId
-          )
-      );
+          ),
+      });
       buildIdToDeploy = deployBuildIdPromptResponse.buildId;
     }
 
