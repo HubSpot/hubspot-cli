@@ -201,9 +201,7 @@ async function handler({
   logger.success('Version updated successfully');
 
   logger.log();
-  logger.log('Creating a new build...');
   await build();
-  logger.success('Build successful');
 
   try {
     await publish(tag, isDryRun);

@@ -1,10 +1,14 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
+import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
 import { EXIT_CODES } from '../../lib/enums/exitCodes';
 
 export async function build(): Promise<void> {
+  setLogLevel(LOG_LEVEL.LOG);
+  logger.log('Creating a new build...');
+  logger.log();
+
   // Remove the current dist dir
-  console.log('BUILD');
   fs.rmSync('dist', { recursive: true, force: true });
 
   // Build typescript
@@ -27,4 +31,6 @@ export async function build(): Promise<void> {
   fs.cpSync('bin/hscms', 'dist/bin/hscms');
   fs.cpSync('README.md', 'dist/README.md');
   fs.cpSync('LICENSE', 'dist/LICENSE');
+
+  logger.success('Build successful');
 }
