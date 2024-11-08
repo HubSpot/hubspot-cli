@@ -1,12 +1,30 @@
-import * as helpers from './interpolationHelpers';
+import chalk from 'chalk';
 
-type InterpolationData = {
-  [identifier: string]: string | number;
+const helpers: { [key: string]: (stringValue: string) => string } = {
+  bold: function(stringValue: string): string {
+    return chalk.bold(stringValue);
+  },
+  yellow: function(stringValue: string): string {
+    return chalk.reset.yellow(stringValue);
+  },
+  green: function(stringValue: string): string {
+    return chalk.reset.green(stringValue);
+  },
+  red: function(stringValue: string): string {
+    return chalk.reset.red(stringValue);
+  },
+  cyan: function(stringValue: string): string {
+    return chalk.cyan(stringValue);
+  },
+  orange: function(stringValue: string): string {
+    return chalk.hex('#FC9900')(stringValue);
+  },
 };
 
-type HelperIdentifier = keyof typeof helpers;
-
-const delimiters = {
+const delimiters: {
+  interpolation: { start: string; end: string };
+  helpers: { start: string; end: string };
+} = {
   interpolation: {
     start: '{{',
     end: '}}',
@@ -16,6 +34,12 @@ const delimiters = {
     end: '/',
   },
 };
+
+type InterpolationData = {
+  [identifier: string]: string | number;
+};
+
+type HelperIdentifier = keyof typeof helpers;
 
 function isHelperIdentifier(identifier: string): boolean {
   return (
@@ -75,8 +99,8 @@ function interpolation(
 
 function compileHelper(
   stringValue: string,
-  helperIdentifier: string,
-  helperFn: (helper: string) => string
+  helperIdentifier: HelperIdentifier,
+  helperFn: (stringValue: string) => string
 ): string {
   const helperIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*?)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
@@ -114,16 +138,13 @@ function compileHelper(
 }
 
 function compileHelpers(stringValue: string): string {
-  return (Object.keys(helpers) as HelperIdentifier[]).reduce(
-    (currentStringValue, helperIdentifier) => {
-      return compileHelper(
-        currentStringValue,
-        helperIdentifier,
-        helpers[helperIdentifier]
-      );
-    },
-    stringValue
-  );
+  return Object.keys(helpers).reduce((currentStringValue, helperIdentifier) => {
+    return compileHelper(
+      currentStringValue,
+      helperIdentifier,
+      helpers[helperIdentifier]
+    );
+  }, stringValue);
 }
 
 export function interpolate(

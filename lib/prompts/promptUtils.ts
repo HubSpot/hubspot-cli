@@ -1,24 +1,46 @@
-// @ts-nocheck
 const inquirer = require('inquirer');
 
-const promptUser = async promptConfig => {
-  const prompt = inquirer.createPromptModule();
-  return prompt(promptConfig);
-};
+// NOTE: we can eventually delete this and directly use inquirer.prompt when the files support imports
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const promptUser: any = inquirer.createPromptModule();
 
-const confirmPrompt = async (message, defaultAnswer = true) => {
+export async function confirmPrompt(
+  message: string,
+  {
+    defaultAnswer = true,
+    when,
+  }: { defaultAnswer: boolean; when?: boolean | (() => boolean) }
+): Promise<boolean> {
   const { choice } = await promptUser([
     {
       name: 'choice',
       type: 'confirm',
-      default: defaultAnswer,
       message,
+      default: defaultAnswer,
+      when,
     },
   ]);
   return choice;
-};
+}
 
-module.exports = {
-  promptUser,
-  confirmPrompt,
-};
+export async function listPrompt(
+  message: string,
+  {
+    choices,
+    when,
+  }: {
+    choices: Array<{ name: string; value: string }>;
+    when?: boolean | (() => boolean);
+  }
+): Promise<string> {
+  const { choice } = await promptUser([
+    {
+      name: 'choice',
+      type: 'list',
+      message,
+      choices,
+      when,
+    },
+  ]);
+  return choice;
+}

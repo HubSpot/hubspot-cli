@@ -9,7 +9,6 @@ const {
 } = require('@hubspot/local-dev-lib/constants/auth');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { version } = require('../package.json');
-const { getPlatform } = require('./environment');
 const { setLogLevel } = require('./commonOpts');
 
 /* **
@@ -42,6 +41,17 @@ const getNodeVersionData = () => ({
   nodeVersion: process.version,
   nodeMajorVersion: (process.version || '').split('.')[0],
 });
+
+const getPlatform = () => {
+  switch (process.platform) {
+    case 'darwin':
+      return 'macos';
+    case 'win32':
+      return 'windows';
+    default:
+      return process.platform;
+  }
+};
 
 function trackCommandUsage(command, meta = {}, accountId) {
   if (!isTrackingAllowed()) {
