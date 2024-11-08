@@ -10,7 +10,7 @@ The above copyright notice and this permission notice shall be included in all c
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
 
-const VALID_STATUSES: string[] = [
+export const VALID_STATUSES: string[] = [
   'succeed',
   'fail',
   'spinning',
@@ -137,7 +137,7 @@ export function colorOptions({
   return colors;
 }
 
-function prefixOptions({
+export function prefixOptions({
   succeedPrefix,
   failPrefix,
 }: SpinnerOptions): Partial<SpinnerOptions> {
