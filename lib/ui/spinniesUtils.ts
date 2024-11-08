@@ -10,14 +10,14 @@ The above copyright notice and this permission notice shall be included in all c
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
 
-export const VALID_STATUSES = [
+const VALID_STATUSES: string[] = [
   'succeed',
   'fail',
   'spinning',
   'non-spinnable',
   'stopped',
 ] as const;
-const VALID_COLORS = [
+const VALID_COLORS: string[] = [
   'black',
   'red',
   'green',
@@ -137,7 +137,7 @@ export function colorOptions({
   return colors;
 }
 
-export function prefixOptions({
+function prefixOptions({
   succeedPrefix,
   failPrefix,
 }: SpinnerOptions): Partial<SpinnerOptions> {
