@@ -56,9 +56,9 @@ describe('lib/doctor/Doctor', () => {
     diagnosis: '',
     envFiles: [],
     files: [],
-    jsonFiles: [],
+    jsonFiles: ['src/serverless.json', 'src/extension.json'],
     packageFiles: ['src/package.json'],
-    packageLockFiles: [],
+    packageLockFiles: ['src/package-lock.json'],
     path: '',
     platform: 'darwin',
     project: {
@@ -384,6 +384,9 @@ describe('lib/doctor/Doctor', () => {
 
     describe('JSON Files', () => {
       it('should add success section if project json files are valid', async () => {
+        utilPromisify.mockReturnValueOnce(
+          jest.fn().mockResolvedValue(JSON.stringify({ valid: true }))
+        );
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method

@@ -56,6 +56,8 @@ const configFiles = [
   'hsproject.json',
   'app.json',
   'public-app.json',
+  'theme.json',
+  'cms-assets.json',
 ];
 
 export class DiagnosticInfoBuilder {
@@ -193,12 +195,15 @@ export class DiagnosticInfoBuilder {
         acc.packageFiles.push(file);
       } else if (configFiles.includes(base)) {
         acc.configFiles.push(file);
+        if (file.endsWith('.json')) {
+          acc.jsonFiles.push(file);
+        }
       } else if (base === 'package-lock.json') {
         acc.packageLockFiles.push(file);
       } else if (file.endsWith('.env')) {
-        acc.envFiles.push();
+        acc.envFiles.push(file);
       } else if (file.endsWith('.json')) {
-        acc.envFiles.push();
+        acc.jsonFiles.push(file);
       }
 
       return acc;

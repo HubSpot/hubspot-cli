@@ -85,6 +85,15 @@ export class Doctor {
   }
 
   private performCliConfigChecks(): Array<Promise<void>> {
+    if (!this.diagnosticInfo?.config) {
+      this.diagnosis?.addCLIConfigSection({
+        type: 'error',
+        message: i18n(`${i18nKey}.diagnosis.cliConfig.noConfigFile`, {
+          command: uiCommandReference('hs init'),
+        }),
+      });
+      return [];
+    }
     return [this.checkIfAccessTokenValid()];
   }
 
@@ -269,7 +278,7 @@ export class Doctor {
 
   private async checkProjectConfigJsonFiles(): Promise<void> {
     let foundError = false;
-    for (const jsonFile of this.diagnosticInfo?.configFiles || []) {
+    for (const jsonFile of this.diagnosticInfo?.jsonFiles || []) {
       const fileToCheck = path.join(this.projectConfig?.projectDir, jsonFile);
       if (!(await this.isValidJsonFile(fileToCheck))) {
         foundError = true;

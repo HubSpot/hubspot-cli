@@ -60,10 +60,10 @@ export class Diagnosis {
         header: i18n(`${i18nKey}.cliConfig.header`),
         subheaders: [
           i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
-            filename: diagnosticInfo.config,
+            filename: diagnosticInfo.config || 'N/A',
           }),
           i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
-            accountDetails: uiAccountDescription(accountId),
+            accountDetails: uiAccountDescription(accountId) || 'N/A',
           }),
         ],
         sections: [],
@@ -72,10 +72,10 @@ export class Diagnosis {
         header: i18n(`${i18nKey}.projectConfig.header`),
         subheaders: [
           i18n(`${i18nKey}.projectConfig.projectDirSubHeader`, {
-            projectDir: diagnosticInfo.project.config?.projectDir,
+            projectDir: diagnosticInfo.project?.config?.projectDir,
           }),
           i18n(`${i18nKey}.projectConfig.projectNameSubHeader`, {
-            projectName: diagnosticInfo.project.config?.projectConfig?.name,
+            projectName: diagnosticInfo.project?.config?.projectConfig?.name,
           }),
         ],
         sections: [],

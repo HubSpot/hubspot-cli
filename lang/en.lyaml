@@ -1465,6 +1465,7 @@ en:
           header: "CLI configuration"
           configFileSubHeader: "Config File: {{#cyan}}{{ filename }}{{/cyan}}"
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
+          noConfigFile: "Missing config file for CLI. Run {{ command}} to generate a config file"
         projectConfig:
           header: "Project configuration"
           projectDirSubHeader: "Project dir: {{#cyan}}{{ projectDir }}{{/cyan}}"

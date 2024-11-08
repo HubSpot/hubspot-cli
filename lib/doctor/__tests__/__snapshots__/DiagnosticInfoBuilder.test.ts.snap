@@ -18,7 +18,9 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
     "src/app/public-app.json",
     "src/app/app.functions/serverless.json",
   ],
-  "envFiles": [],
+  "envFiles": [
+    "src/app/app.functions/.env",
+  ],
   "files": [
     ".gitignore",
     "README.md",
@@ -35,7 +37,13 @@ exports[`lib/doctor/DiagnosticInfo generateDiagnosticInfo should gather the requ
     "src/app/extensions/package.json",
     "src/app/extension/package-lock.json",
   ],
-  "jsonFiles": [],
+  "jsonFiles": [
+    "hsproject.json",
+    "src/app/app.json",
+    "src/app/public-app.json",
+    "src/app/app.functions/serverless.json",
+    "src/app/extensions/extension.json",
+  ],
   "packageFiles": [
     "src/app/app.functions/package.json",
     "src/app/extensions/package.json",
