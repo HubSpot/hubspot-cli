@@ -205,16 +205,18 @@ describe('lib/dependencyManagement', () => {
         throw new Error('OH NO');
       });
       util.promisify = jest.fn().mockReturnValue(execMock);
-      await expect(() =>
-        getProjectPackageJsonLocations()
-      ).rejects.toThrowError();
+      await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
+        /This command depends on npm, install/
+      );
     });
 
     it('should throw an error if the project directory does not exist', async () => {
       existsSync.mockReturnValueOnce(false);
-      await expect(() =>
-        getProjectPackageJsonLocations()
-      ).rejects.toThrowError();
+      await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
+      );
     });
 
     it('should ignore package.json files in certain directories', async () => {
@@ -236,9 +238,11 @@ describe('lib/dependencyManagement', () => {
     it('should throw an error if no package.json files are found', async () => {
       walk.mockResolvedValue([]);
 
-      await expect(() =>
-        getProjectPackageJsonLocations()
-      ).rejects.toThrowError();
+      await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
+      );
     });
   });
 });
