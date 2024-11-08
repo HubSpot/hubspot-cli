@@ -1,6 +1,5 @@
 // @ts-nocheck
 const { accountNameExistsInConfig } = require('@hubspot/local-dev-lib/config');
-const { STRING_WITH_NO_SPACES_REGEX } = require('../regex');
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 const {
@@ -18,7 +17,7 @@ const getCliAccountNamePromptConfig = defaultName => ({
       return i18n(`${i18nKey}.errors.invalidName`);
     } else if (!val.length) {
       return i18n(`${i18nKey}.errors.nameRequired`);
-    } else if (!STRING_WITH_NO_SPACES_REGEX.test(val)) {
+    } else if (val.indexOf(' ') >= 0) {
       return i18n(`${i18nKey}.errors.spacesInName`);
     }
     return accountNameExistsInConfig(val)

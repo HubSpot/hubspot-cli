@@ -1,8 +1,8 @@
 // @ts-nocheck
+const moment = require('moment');
 const { getRoutes } = require('@hubspot/local-dev-lib/api/functions');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
-const { getFunctionArrays } = require('../../lib/getFunctionArrays');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 const {
   addConfigOptions,
@@ -42,7 +42,17 @@ exports.handler = async options => {
     return logger.log(routesResp.objects);
   }
 
-  const functionsAsArrays = getFunctionArrays(routesResp);
+  const functionsAsArrays = routesResp.objects.map(func => {
+    const { route, method, created, updated, secretNames } = func;
+    return [
+      route,
+      method,
+      secretNames.join(', '),
+      moment(created).format(),
+      moment(updated).format(),
+    ];
+  });
+
   functionsAsArrays.unshift(
     getTableHeader(['Route', 'Method', 'Secrets', 'Created', 'Updated'])
   );

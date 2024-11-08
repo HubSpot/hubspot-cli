@@ -1,5 +1,5 @@
 // @ts-nocheck
-const ProjectLogsManager = require('../projectLogsManager');
+const ProjectLogsManager = require('../ProjectLogsManager');
 const { getProjectConfig, ensureProjectExists } = require('../projects');
 const {
   fetchProjectComponentsMetadata,
@@ -8,7 +8,7 @@ const {
 jest.mock('../projects');
 jest.mock('@hubspot/local-dev-lib/api/projects');
 
-describe('lib/projectLogsManager', () => {
+describe('lib/ProjectLogsManager', () => {
   const accountId = 12345678;
   const appId = 999999;
   const projectName = 'super cool test project';

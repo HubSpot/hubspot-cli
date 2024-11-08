@@ -9,7 +9,7 @@ const {
   generateInheritedSelectors,
   generateSelectorsMap,
   getMaxFieldsDepth,
-} = require('../../lib/generate-selectors');
+} = require('../../lib/generateSelectors');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const HUBL_EXPRESSION_REGEX = new RegExp(/{%\s*(.*)\s*%}/, 'g');
