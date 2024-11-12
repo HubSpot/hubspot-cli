@@ -199,6 +199,9 @@ async function handler({
   }
 
   logger.log();
+  if (dryRun) {
+    logger.log('DRY RUN');
+  }
   logger.log(`Current version: ${currentVersion}`);
   logger.log(`New version to release: ${newVersion}`);
 
