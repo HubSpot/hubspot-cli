@@ -64,6 +64,11 @@ export class TestState {
         cause: e,
       });
     }
+
+    // @ts-expect-error Non-existent field according to TS
+    if (this.parsedYaml?.allowUsageTracking) {
+      throw new Error('Usage tracking should be disabled');
+    }
   }
 
   async withAuth() {
