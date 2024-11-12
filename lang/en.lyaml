@@ -415,7 +415,7 @@ en:
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
-          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory (~)"
+          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"

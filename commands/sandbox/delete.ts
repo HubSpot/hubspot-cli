@@ -44,8 +44,6 @@ exports.describe = exports.describe = uiBetaTag(
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  // We don't want to auto inject the account flag from middleware.
-  // --providedAccountId preserves the original --account and --portal flags.
   const { providedAccountId, force } = options;
   const config = getConfig();
 

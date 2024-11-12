@@ -106,7 +106,7 @@ exports.handler = async options => {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
     account: optionalAccount,
-    useHiddenConfig,
+    'use-hidden-config': useHiddenConfig,
   } = options;
   const configPath =
     (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
@@ -203,12 +203,12 @@ exports.builder = yargs => {
         describe: i18n(`${i18nKey}.options.account.describe`),
         type: 'string',
       },
-      useHiddenConfig: {
+      'use-hidden-config': {
         describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
         type: 'boolean',
       },
     })
-    .conflicts('useHiddenConfig', 'config');
+    .conflicts('use-hidden-config', 'config');
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);

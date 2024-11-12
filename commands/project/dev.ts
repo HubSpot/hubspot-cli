@@ -107,9 +107,9 @@ exports.handler = async options => {
     (!hasPublicApps && isSandbox(accountConfig));
 
   // The account that the project must exist in
-  let targetProjectAccountId = derivedAccountId || null;
+  let targetProjectAccountId = derivedAccountId;
   // The account that we are locally testing against
-  let targetTestingAccountId = derivedAccountId || null;
+  let targetTestingAccountId = derivedAccountId;
 
   // Check that the default account or flag option is valid for the type of app in this project
   if (derivedAccountId) {
