@@ -20,9 +20,9 @@ const { i18n } = require('../lib/lang');
 const i18nKey = 'commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'lint <path>';
+export const command = 'lint <path>';
 // Hiding since this command is still experimental
-exports.describe = null; //'Lint a file or folder for HubL syntax';
+export const describe = null; //'Lint a file or folder for HubL syntax';
 
 function getErrorsFromHublValidationObject(
   validation: Validation
@@ -61,7 +61,7 @@ function printHublValidationResult({ file, validation }: LintResult): number {
   return count;
 }
 
-exports.handler = async options => {
+export const handler = async options => {
   const { path: lintPath } = options;
 
   await loadAndValidateOptions(options);
@@ -93,7 +93,7 @@ exports.handler = async options => {
   );
 };
 
-exports.builder = yargs => {
+export const builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   yargs.positional('path', {
@@ -101,4 +101,11 @@ exports.builder = yargs => {
     type: 'string',
   });
   return yargs;
+};
+
+module.exports = {
+  builder,
+  handler,
+  command,
+  describe,
 };

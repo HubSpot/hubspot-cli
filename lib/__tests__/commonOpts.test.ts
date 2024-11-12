@@ -14,7 +14,7 @@ const { getMode } = require('../commonOpts');
 jest.mock('@hubspot/local-dev-lib/config');
 jest.mock('@hubspot/local-dev-lib/logger');
 
-describe('@hubspot/cli/lib/commonOpts', () => {
+describe('lib/commonOpts', () => {
   describe('getMode()', () => {
     const accounts = {
       PROD: 123,

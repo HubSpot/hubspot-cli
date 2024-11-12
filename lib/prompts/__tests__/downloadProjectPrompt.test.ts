@@ -1,21 +1,19 @@
 // @ts-nocheck
+const { getAccountId } = require('@hubspot/local-dev-lib/config');
+const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
+const { downloadProjectPrompt } = require('../downloadProjectPrompt');
+
+jest.mock('../promptUtils');
 jest.mock('@hubspot/local-dev-lib/api/projects', () => ({
   fetchProjects: jest.fn().mockResolvedValue({
     data: { results: [] },
   }),
 }));
-
 jest.mock('@hubspot/local-dev-lib/config', () => ({
   getAccountId: jest.fn().mockImplementation(() => 123456789),
 }));
 
-jest.mock('../prompts/promptUtils');
-
-const { downloadProjectPrompt } = require('../prompts/downloadProjectPrompt');
-const { getAccountId } = require('@hubspot/local-dev-lib/config');
-const { fetchProjects } = require('@hubspot/local-dev-lib/api/projects');
-
-describe('downloadProjectPrompt', () => {
+describe('lib/prompts/downloadProjectPrompt', () => {
   it('should honor the account passed as an option', async () => {
     const account = 'Prod';
     await downloadProjectPrompt({ account });

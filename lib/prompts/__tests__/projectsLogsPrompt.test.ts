@@ -1,11 +1,11 @@
 // @ts-nocheck
 const { projectLogsPrompt } = require('../projectsLogsPrompt');
-
-jest.mock('../promptUtils');
 const { promptUser } = require('../promptUtils');
 const chalk = require('chalk');
 
-describe('prompts/projectsLogsPrompt', () => {
+jest.mock('../promptUtils');
+
+describe('lib/prompts/projectsLogsPrompt', () => {
   it('should return undefined functionName when functionChoices is nullable', async () => {
     const actual = await projectLogsPrompt({ functionChoices: null });
     expect(actual).toEqual({});

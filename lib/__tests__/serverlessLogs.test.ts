@@ -5,12 +5,11 @@ const { tailLogs } = require('../serverlessLogs');
 
 jest.mock('../ui/serverlessFunctionLogs');
 jest.mock('@hubspot/local-dev-lib/logger');
-
 jest.useFakeTimers();
 
 const ACCOUNT_ID = 123;
 
-describe('@hubspot/cli/lib/serverlessLogs', () => {
+describe('lib/serverlessLogs', () => {
   describe('tailLogs()', () => {
     let stdinMock;
     let spinnies;
