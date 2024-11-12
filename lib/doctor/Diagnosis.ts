@@ -90,6 +90,14 @@ export class Diagnosis {
     return this.indentation.repeat(level);
   }
 
+  hasErrors(): boolean {
+    return this.errorCount > 0;
+  }
+
+  hasWarnings(): boolean {
+    return this.warningCount > 0;
+  }
+
   addCliSection(section: Section): void {
     this.diagnosis.cli.sections.push(section);
   }

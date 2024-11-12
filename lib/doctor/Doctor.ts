@@ -71,7 +71,9 @@ export class Doctor {
       succeedColor: 'white',
     });
 
-    this.diagnosticInfo!.diagnosis = this.diagnosis.toString();
+    this.diagnosticInfo.diagnosis = this.diagnosis.toString();
+    this.diagnosticInfo.hasErrors = this.diagnosis.hasErrors();
+    this.diagnosticInfo.hasWarnings = this.diagnosis.hasWarnings();
 
     return this.diagnosticInfo;
   }

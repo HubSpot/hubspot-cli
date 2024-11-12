@@ -1,4 +1,7 @@
-import { trackCommandUsage } from '../lib/usageTracking';
+import {
+  trackCommandMetadataUsage,
+  trackCommandUsage,
+} from '../lib/usageTracking';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import fs from 'fs';
 import { Doctor } from '../lib/doctor/Doctor';
@@ -22,9 +25,13 @@ export const handler = async ({
 }: ArgumentsCamelCase<DoctorOptions>) => {
   const doctor = new Doctor();
 
-  trackCommandUsage('doctor', undefined, doctor.accountId);
+  trackCommandUsage(command, undefined, doctor.accountId);
 
   const output = await doctor.diagnose();
+
+  if (output?.hasErrors || output?.hasWarnings) {
+    trackCommandMetadataUsage(command, { success: false }, doctor.accountId);
+  }
 
   if (!outputDir) {
     if (output?.diagnosis) {
