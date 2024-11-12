@@ -10,14 +10,14 @@ The above copyright notice and this permission notice shall be included in all c
 import readline from 'readline';
 import stripAnsi from 'strip-ansi';
 
-export const VALID_STATUSES: string[] = [
+export const VALID_STATUSES = [
   'succeed',
   'fail',
   'spinning',
   'non-spinnable',
   'stopped',
 ] as const;
-const VALID_COLORS: string[] = [
+const VALID_COLORS = [
   'black',
   'red',
   'green',

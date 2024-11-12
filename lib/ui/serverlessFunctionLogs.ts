@@ -27,6 +27,10 @@ type Log = {
   };
 };
 
+type LogsResponse = {
+  results?: Log[];
+};
+
 type Options = {
   compact?: boolean;
   insertions?: {
@@ -104,15 +108,24 @@ function processLog(log: Log, options: Options): string | void {
   }
 }
 
+function isLogsResponse(
+  logsResp: LogsResponse | Log
+): logsResp is LogsResponse {
+  return (
+    'results' in logsResp &&
+    Array.isArray(logsResp.results) &&
+    logsResp.results !== undefined &&
+    logsResp.results.length > 0
+  );
+}
+
 function processLogs(
-  logsResp: { results?: Log[] },
+  logsResp: LogsResponse | Log,
   options: Options
 ): string | void {
-  if (!logsResp || (logsResp.results && !logsResp.results.length)) {
-    return 'No logs found.';
-  } else if (logsResp.results && logsResp.results.length) {
-    return logsResp.results
-      .map(log => {
+  if (isLogsResponse(logsResp)) {
+    return logsResp
+      .results!.map(log => {
         return processLog(log, options);
       })
       .join('\n');
@@ -120,7 +133,7 @@ function processLogs(
   return processLog(logsResp as Log, options);
 }
 
-function outputLogs(logsResp: { results?: Log[] }, options: Options): void {
+function outputLogs(logsResp: LogsResponse | Log, options: Options): void {
   logger.log(processLogs(logsResp, options));
 }
 
