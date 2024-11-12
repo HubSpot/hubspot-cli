@@ -269,6 +269,7 @@ describe('lib/doctor/Doctor', () => {
         expect(doctor.diagnosis.addCLIConfigSection).toHaveBeenCalledWith({
           type: 'error',
           message: 'Personal access key is invalid',
+          secondaryMessaging: expect.stringMatching(/To get a new key, run/),
         });
       });
 
@@ -392,7 +393,7 @@ describe('lib/doctor/Doctor', () => {
         // @ts-expect-error Testing private method
         expect(doctor.diagnosis.addProjectSection).toHaveBeenCalledWith({
           type: 'success',
-          message: 'Config files are valid JSON',
+          message: 'JSON files valid',
         });
       });
 

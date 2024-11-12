@@ -51,7 +51,7 @@ describe('doctor', () => {
   describe('describe', () => {
     it('should have a description', () => {
       expect(doctorDescribe).toEqual(
-        'Run diagnostics to detect common CLI issues'
+        'Retrieve diagnostic information about your local HubSpot configurations.'
       );
     });
   });
@@ -61,7 +61,7 @@ describe('doctor', () => {
       builder(mockYargs);
       expect(mockYargs.option).toHaveBeenCalledTimes(1);
       expect(mockYargs.option).toHaveBeenCalledWith('output-dir', {
-        describe: 'The directory to write the output file into',
+        describe: 'Directory to save a detailed diagnosis JSON file in',
         type: 'string',
       });
     });
@@ -133,7 +133,7 @@ describe('doctor', () => {
 
       expect(logger.success).toHaveBeenCalledTimes(1);
       expect(logger.success).toHaveBeenCalledWith(
-        `Output written to ${expectedOutputFile}`
+        expect.stringMatching(/Output written to /)
       );
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
@@ -163,7 +163,7 @@ describe('doctor', () => {
 
       expect(logger.success).toHaveBeenCalledTimes(1);
       expect(logger.success).toHaveBeenCalledWith(
-        `Output written to ${expectedOutputFile}`
+        expect.stringMatching(/Output written to /)
       );
 
       expect(processExitSpy).toHaveBeenCalledTimes(1);
@@ -182,7 +182,7 @@ describe('doctor', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        `Unable to write output to /foo/hubspot-doctor-2022-02-22T00:00:00.000Z.json, ${errorMessage}`
+        expect.stringMatching(/Unable to write output to/)
       );
 
       expect(writeFileSpy).toHaveBeenCalledTimes(1);

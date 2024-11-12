@@ -58,14 +58,6 @@ export class Diagnosis {
       },
       cliConfig: {
         header: i18n(`${i18nKey}.cliConfig.header`),
-        subheaders: [
-          i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
-            filename: diagnosticInfo.config || 'N/A',
-          }),
-          i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
-            accountDetails: uiAccountDescription(accountId) || 'N/A',
-          }),
-        ],
         sections: [],
       },
       project: {
@@ -81,6 +73,17 @@ export class Diagnosis {
         sections: [],
       },
     };
+
+    if (diagnosticInfo.config) {
+      this.diagnosis.cliConfig.subheaders = [
+        i18n(`${i18nKey}.cliConfig.configFileSubHeader`, {
+          filename: diagnosticInfo.config,
+        }),
+        i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
+          accountDetails: uiAccountDescription(accountId),
+        }),
+      ];
+    }
   }
 
   private indent(level: number): string {

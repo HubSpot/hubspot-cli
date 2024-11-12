@@ -9,7 +9,7 @@ const util = require('util');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
 const fs = require('fs');
-
+const pkg = require('../package.json');
 const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 const i18nKey = `commands.project.subcommands.installDeps`;
@@ -36,6 +36,13 @@ export async function isGloballyInstalled(command) {
   } catch (e) {
     return false;
   }
+}
+
+export async function getLatestCliVersion(): string {
+  const exec = util.promisify(execAsync);
+  const { stdout } = await exec(`npm info ${pkg.name} dist-tags --json`);
+  const { latest } = JSON.parse(stdout);
+  return latest;
 }
 
 async function installPackages({ packages, installLocations }) {
@@ -163,5 +170,6 @@ module.exports = {
   installPackages,
   DEFAULT_PACKAGE_MANAGER,
   getProjectPackageJsonLocations,
+  getLatestCliVersion,
   packagesNeedInstalled,
 };

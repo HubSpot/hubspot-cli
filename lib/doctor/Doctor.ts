@@ -2,7 +2,10 @@ import { logger } from '@hubspot/local-dev-lib/logger';
 import { getAccountId } from '@hubspot/local-dev-lib/config';
 
 import SpinniesManager from '../ui/SpinniesManager';
-import { packagesNeedInstalled } from '../dependencyManagement';
+import {
+  getLatestCliVersion,
+  packagesNeedInstalled,
+} from '../dependencyManagement';
 import util from 'util';
 import fs from 'fs';
 import path from 'path';
@@ -18,9 +21,10 @@ import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personal
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
 import { getHubSpotWebsiteOrigin } from '@hubspot/local-dev-lib/urls';
 import { uiCommandReference } from '../ui';
+import pkg from '../../package.json';
+
 const { i18n } = require('../lang');
 const { uiLink } = require('../ui');
-
 const minMajorNodeVersion = 18;
 
 const i18nKey = `lib.doctor`;
@@ -73,7 +77,11 @@ export class Doctor {
   }
 
   private performCliChecks(): Array<Promise<void>> {
-    return [this.checkIfNodeIsInstalled(), this.checkIfNpmIsInstalled()];
+    return [
+      this.checkIfNodeIsInstalled(),
+      this.checkIfNpmIsInstalled(),
+      this.checkCLIVersion(),
+    ];
   }
 
   private performProjectChecks(): Array<Promise<void>> {
@@ -88,9 +96,13 @@ export class Doctor {
     if (!this.diagnosticInfo?.config) {
       this.diagnosis?.addCLIConfigSection({
         type: 'error',
-        message: i18n(`${i18nKey}.diagnosis.cliConfig.noConfigFile`, {
-          command: uiCommandReference('hs init'),
-        }),
+        message: i18n(`${i18nKey}.diagnosis.cliConfig.noConfigFile`),
+        secondaryMessaging: i18n(
+          `${i18nKey}.diagnosis.cliConfig.noConfigFileSecondary`,
+          {
+            command: uiCommandReference('hs init'),
+          }
+        ),
       });
       return [];
     }
@@ -151,6 +163,9 @@ export class Doctor {
         this.diagnosis?.addCLIConfigSection({
           type: 'error',
           message: i18n(`${localI18nKey}.pak.invalid`),
+          secondaryMessaging: i18n(`${localI18nKey}.pak.invalidSecondary`, {
+            command: uiCommandReference(`hs auth`),
+          }),
         });
       } else {
         this.diagnosis?.addCLIConfigSection({
@@ -205,6 +220,49 @@ export class Doctor {
         npmVersion,
       }),
     });
+  }
+
+  private async checkCLIVersion(): Promise<void> {
+    let latestCLIVersion;
+    try {
+      latestCLIVersion = await getLatestCliVersion();
+    } catch (e) {
+      this.diagnosis?.addCliSection({
+        type: 'error',
+        message: i18n(`${i18nKey}.hsChecks.unableToDetermine`),
+        secondaryMessaging: i18n(
+          `${i18nKey}.hsChecks.unableToDetermineSecondary`,
+          {
+            command: uiCommandReference(`hs --version`),
+            link: uiLink(
+              'npm',
+              `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
+            ),
+          }
+        ),
+      });
+      return;
+    }
+
+    if (latestCLIVersion !== pkg.version) {
+      this.diagnosis?.addCliSection({
+        type: 'warning',
+        message: i18n(`${i18nKey}.hsChecks.notLatest`, {
+          hsVersion: pkg.version,
+        }),
+        secondaryMessaging: i18n(`${i18nKey}.hsChecks.notLatestSecondary`, {
+          hsVersion: pkg.version,
+          command: uiCommandReference(`npm install -g ${pkg.name}`),
+        }),
+      });
+    } else {
+      this.diagnosis?.addCliSection({
+        type: 'success',
+        message: i18n(`${i18nKey}.hsChecks.latest`, {
+          hsVersion: pkg.version,
+        }),
+      });
+    }
   }
 
   private async checkIfNpmInstallRequired(): Promise<void> {

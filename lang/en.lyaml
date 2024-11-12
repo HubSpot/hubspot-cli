@@ -276,13 +276,13 @@ en:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
     doctor:
-      describe: "Run diagnostics to detect common CLI issues"
+      describe: "Retrieve diagnostic information about your local HubSpot configurations."
       options:
-        outputDir: "The directory to write the output file into"
+        outputDir: "Directory to save a detailed diagnosis JSON file in"
       errors:
         generatingDiagnosis: "Error generating diagnosis"
-        unableToWriteOutputFile: "Unable to write output to {{ file }}, {{ errorMessage }}"
-      outputWritten: "Output written to {{ filename }}"
+        unableToWriteOutputFile: "Unable to write output to {{#bold}}{{ file }}{{/bold}}, {{ errorMessage }}"
+      outputWritten: "Output written to {{#bold}}{{ filename }}{{/bold}}"
     fetch:
       describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
       errors:
@@ -1436,24 +1436,31 @@ en:
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
           invalid: "Personal access key is invalid"
+          invalidSecondary: "To get a new key, run {{ command }}; deactivate your access key, and generate a new one. Then, use that new key to authenticate your account."
           valid: "Personal Access Key is valid. {{ link }}"
           viewScopes: "View selected scopes"
       nodeChecks:
         unableToDetermine: "Unable to determine what version of node is installed"
-        minimumNotMet: "Minimum Node version is not met, {{ nodeVersion }}"
+        minimumNotMet: "Minimum Node version is not met. Upgrade to {{ nodeVersion }} or higher"
         success: "node v{{ nodeVersion }} is installed"
       npmChecks:
         notInstalled: "npm is not installed"
         installed: "npm v{{ npmVersion }} is installed"
         unableToDetermine: "Unable to determine if npm is installed"
+      hsChecks:
+        notLatest: "Version {{ hsVersion }} outdated"
+        notLatestSecondary: "Run {{ command }} to upgrade to the latest version {{ hsVersion }}"
+        latest: "HubSpot CLI v{{ hsVersion }} up to date"
+        unableToDetermine: "Unable to determine if HubSpot CLI is up to date."
+        unableToDetermineSecondary: "This can be manually verified by running {{ command }} and checking the version against the latest release in {{ link }}"
       projectDependenciesChecks:
-        missingDependencies: "missing dependencies in {{#cyan}}{{ dir }}{{/cyan}}"
+        missingDependencies: "missing dependencies in {{#bold}}{{ dir }}{{/bold}}"
         missingDependenciesSecondary: "Run {{ command }} to install all project dependencies locally"
         unableToDetermine: "Unable to determine if dependencies are installed {{ dir }}"
         success: "App dependencies are installed and up to date"
       files:
-        invalidJson: "invalid JSON in {{#cyan}}{{ filename }}{{/cyan}}"
-        validJson: "Config files are valid JSON"
+        invalidJson: "invalid JSON in {{#bold}}{{ filename }}{{/bold}}"
+        validJson: "JSON files valid"
       port:
         inUse: "Port {{ port }} is in use"
         inUseSecondary: "Make sure it is available if before running {{ command }}"
@@ -1463,13 +1470,14 @@ en:
           header: "HubSpot CLI install"
         cliConfig:
           header: "CLI configuration"
-          configFileSubHeader: "Config File: {{#cyan}}{{ filename }}{{/cyan}}"
+          configFileSubHeader: "Config File: {{#bold}}{{ filename }}{{/bold}}"
           defaultAccountSubHeader: "Default Account: {{accountDetails}}"
-          noConfigFile: "Missing config file for CLI. Run {{ command}} to generate a config file"
+          noConfigFile: "CLI configuration not found"
+          noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
         projectConfig:
           header: "Project configuration"
-          projectDirSubHeader: "Project dir: {{#cyan}}{{ projectDir }}{{/cyan}}"
-          projectNameSubHeader: "Project name: {{#cyan}}{{ projectName }}{{/cyan}}"
+          projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"
+          projectNameSubHeader: "Project name: {{#bold}}{{ projectName }}{{/bold}}"
         counts:
           errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
           warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
