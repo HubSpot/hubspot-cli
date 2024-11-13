@@ -10,6 +10,7 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
+import { Mode } from '@hubspot/local-dev-lib/types/Files';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -101,11 +102,11 @@ export function getAccountId(
   return getAccountIdFromConfig(portal || account);
 }
 
-export function getMode(options: Arguments<{ mode?: string }>): string {
+export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
   // 1. --mode
   const { mode } = options;
   if (mode && typeof mode === 'string') {
-    return mode.toLowerCase();
+    return mode.toLowerCase() as Mode;
   }
   // 2. config[portal].defaultMode
   const accountId = getAccountId(options);
@@ -118,7 +119,7 @@ export function getMode(options: Arguments<{ mode?: string }>): string {
   // 3. config.defaultMode
   // 4. DEFAULT_MODE
   const config = getAndLoadConfigIfNeeded();
-  return (config && config.defaultMode) || DEFAULT_MODE;
+  return (config && (config.defaultMode as Mode)) || DEFAULT_MODE;
 }
 
 module.exports = {

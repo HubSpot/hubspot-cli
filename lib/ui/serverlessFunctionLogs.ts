@@ -1,8 +1,7 @@
-// @ts-nocheck
-const moment = require('moment');
-const chalk = require('chalk');
-const { logger, Styles } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('../lang');
+import moment from 'moment';
+import chalk from 'chalk';
+import { logger, Styles } from '@hubspot/local-dev-lib/logger';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.ui.serverlessFunctionLogs';
 
@@ -14,20 +13,47 @@ const LOG_STATUS_COLORS = {
   HANDLED_ERROR: Styles.error,
 };
 
-function errorHandler(log, options) {
+type LogStatus = keyof typeof LOG_STATUS_COLORS;
+
+type Log = {
+  status: LogStatus;
+  createdAt: string;
+  executionTime: number;
+  log?: string;
+  error?: {
+    type: string;
+    message: string;
+    stackTrace?: string[];
+  };
+};
+
+type LogsResponse = {
+  results?: Log[];
+};
+
+type Options = {
+  compact?: boolean;
+  insertions?: {
+    header?: string;
+  };
+};
+
+function errorHandler(log: Log, options: Options): string {
   return `${formatLogHeader(log, options)}${formatError(log, options)}`;
 }
 
-const logHandler = {
+const logHandler: {
+  [key in LogStatus]: (log: Log, options: Options) => string;
+} = {
   ERROR: errorHandler,
   UNHANDLED_ERROR: errorHandler,
   HANDLED_ERROR: errorHandler,
-  SUCCESS: (log, options) => {
+  SUCCESS: (log: Log, options: Options): string => {
     return `${formatLogHeader(log, options)}${formatSuccess(log, options)}`;
   },
 };
 
-function formatSuccess(log, options) {
+function formatSuccess(log: Log, options: Options): string {
   if (!log.log || options.compact) {
     return '';
   }
@@ -35,7 +61,7 @@ function formatSuccess(log, options) {
   return `\n${log.log}`;
 }
 
-function formatError(log, options) {
+function formatError(log: Log, options: Options): string {
   if (!log.error || options.compact) {
     return '';
   }
@@ -43,7 +69,7 @@ function formatError(log, options) {
   return `${log.error.type}: ${log.error.message}\n${formatStackTrace(log)}`;
 }
 
-function formatLogHeader(log, options) {
+function formatLogHeader(log: Log, options: Options): string {
   const color = LOG_STATUS_COLORS[log.status];
   const headerInsertion =
     options && options.insertions && options.insertions.header;
@@ -53,8 +79,8 @@ function formatLogHeader(log, options) {
   }${SEPARATOR}${formatExecutionTime(log)}`;
 }
 
-function formatStackTrace(log) {
-  const stackTrace = (log.error.stackTrace && log.error.stackTrace[0]) || [];
+function formatStackTrace(log: Log): string {
+  const stackTrace = log.error?.stackTrace || [];
   return stackTrace
     .map(trace => {
       return `  at ${trace}\n`;
@@ -62,15 +88,15 @@ function formatStackTrace(log) {
     .join('');
 }
 
-function formatTimestamp(log) {
+function formatTimestamp(log: Log): string {
   return `${chalk.whiteBright(moment(log.createdAt).toISOString())}`;
 }
 
-function formatExecutionTime(log) {
+function formatExecutionTime(log: Log): string {
   return `${chalk.whiteBright('Execution Time:')} ${log.executionTime}ms`;
 }
 
-function processLog(log, options) {
+function processLog(log: Log, options: Options): string | void {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
@@ -82,20 +108,32 @@ function processLog(log, options) {
   }
 }
 
-function processLogs(logsResp, options) {
-  if (!logsResp || (logsResp.results && !logsResp.results.length)) {
-    return 'No logs found.';
-  } else if (logsResp.results && logsResp.results.length) {
-    return logsResp.results
-      .map(log => {
+function isLogsResponse(
+  logsResp: LogsResponse | Log
+): logsResp is LogsResponse {
+  return (
+    'results' in logsResp &&
+    Array.isArray(logsResp.results) &&
+    logsResp.results !== undefined &&
+    logsResp.results.length > 0
+  );
+}
+
+function processLogs(
+  logsResp: LogsResponse | Log,
+  options: Options
+): string | void {
+  if (isLogsResponse(logsResp)) {
+    return logsResp
+      .results!.map(log => {
         return processLog(log, options);
       })
       .join('\n');
   }
-  return processLog(logsResp, options);
+  return processLog(logsResp as Log, options);
 }
 
-function outputLogs(logsResp, options) {
+function outputLogs(logsResp: LogsResponse | Log, options: Options): void {
   logger.log(processLogs(logsResp, options));
 }
 
