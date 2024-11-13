@@ -19,9 +19,10 @@ exports.command = 'install-deps [packages..]';
 exports.describe = null;
 // exports.describe = uiBetaTag(i18n(`${i18nKey}.help.describe`), false);
 
-exports.handler = async ({ packages }) => {
+exports.handler = async options => {
+  const { packages } = options || {};
   try {
-    const accountId = getAccountId({});
+    const accountId = getAccountId(options);
     trackCommandUsage('project-install-deps', null, accountId);
 
     const projectConfig = await getProjectConfig();
