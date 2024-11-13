@@ -42,7 +42,6 @@ export class Diagnosis {
   warningCount = 0;
 
   constructor({ diagnosticInfo, accountId }: DiagnosisOptions) {
-    // @ts-expect-error Prefix options is not typed yet
     const { succeedPrefix, failPrefix } = prefixOptions({});
 
     this.prefixes = {
@@ -80,7 +79,7 @@ export class Diagnosis {
           filename: diagnosticInfo.config,
         }),
         i18n(`${i18nKey}.cliConfig.defaultAccountSubHeader`, {
-          accountDetails: uiAccountDescription(accountId),
+          accountDetails: uiAccountDescription(accountId!),
         }),
       ];
     }

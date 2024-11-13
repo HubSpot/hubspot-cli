@@ -35,6 +35,7 @@ describe('doctor', () => {
   const accountId = 123456;
 
   beforeEach(() => {
+    // @ts-expect-error Doesn't match the actual signature because then the linter complains about unused variables
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
     mockYargs = {
