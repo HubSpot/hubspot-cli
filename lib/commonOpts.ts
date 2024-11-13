@@ -93,9 +93,9 @@ export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
 export function getAccountId(
   options: Arguments<{ portal?: number | string; account?: number | string }>
 ): number | null {
-  const { portal, account } = options;
+  const { portal, account } = options || {};
 
-  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+  if (options?.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 

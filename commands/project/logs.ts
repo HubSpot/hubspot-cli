@@ -105,7 +105,7 @@ exports.handler = async options => {
     logPreamble();
   } catch (e) {
     logError(e, {
-      accountId: getAccountId(),
+      accountId,
       projectName: ProjectLogsManager.projectName,
     });
     return process.exit(EXIT_CODES.ERROR);
