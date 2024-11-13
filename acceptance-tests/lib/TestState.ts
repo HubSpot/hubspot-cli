@@ -49,15 +49,25 @@ export class TestState {
         getInitPromptSequence(this.getPAK())
       );
 
+      await this.cli.executeWithTestConfig([
+        'config',
+        'set',
+        '--allowUsageTracking=false',
+      ]);
+
       this.parsedYaml = yaml.load(
         readFileSync(this.getTestConfigPath(), 'utf8')
       );
     } catch (e) {
       console.error(e);
-      // @ts-expect-error TypeScript thinks the cause doesn't exist
       throw new Error('Failed to initialize CLI config & authentication', {
         cause: e,
       });
+    }
+
+    // @ts-expect-error Non-existent field according to TS
+    if (this.parsedYaml?.allowUsageTracking) {
+      throw new Error('Usage tracking should be disabled');
     }
   }
 
