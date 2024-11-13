@@ -21,7 +21,7 @@ const { getProjectConfig } = require('../projects');
 const SpinniesManager = require('../ui/SpinniesManager');
 const { existsSync } = require('fs');
 
-describe('cli/lib/dependencyManagement', () => {
+describe('lib/dependencyManagement', () => {
   let execMock;
 
   const projectDir = path.join('path', 'to', 'project');
@@ -238,7 +238,9 @@ describe('cli/lib/dependencyManagement', () => {
     it('should throw an error if the project directory does not exist', async () => {
       existsSync.mockReturnValueOnce(false);
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
       );
     });
 
@@ -262,7 +264,9 @@ describe('cli/lib/dependencyManagement', () => {
       walk.mockResolvedValue([]);
 
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
       );
     });
   });

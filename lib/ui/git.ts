@@ -1,12 +1,11 @@
-// @ts-nocheck
-const os = require('os');
-const { checkGitInclusion } = require('@hubspot/local-dev-lib/gitignore');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const { i18n } = require('../lang');
+import os from 'os';
+import { checkGitInclusion } from '@hubspot/local-dev-lib/gitignore';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.ui.git';
 
-function checkAndWarnGitInclusion(configPath) {
+export function checkAndWarnGitInclusion(configPath: string): void {
   try {
     const { inGit, configIgnored } = checkGitInclusion(configPath);
 
@@ -23,7 +22,3 @@ function checkAndWarnGitInclusion(configPath) {
     logger.debug(i18n(`${i18nKey}.checkFailed`));
   }
 }
-
-module.exports = {
-  checkAndWarnGitInclusion,
-};

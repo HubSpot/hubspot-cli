@@ -4,7 +4,6 @@ const { getOauthManager } = require('@hubspot/local-dev-lib/oauth');
 const {
   accessTokenForPersonalAccessKey,
 } = require('@hubspot/local-dev-lib/personalAccessKey');
-
 const { getAccountId } = require('../commonOpts');
 const { validateAccount } = require('../validation');
 
@@ -14,7 +13,7 @@ jest.mock('@hubspot/local-dev-lib/oauth');
 jest.mock('@hubspot/local-dev-lib/personalAccessKey');
 jest.mock('../commonOpts');
 
-describe('validation', () => {
+describe('lib/validation', () => {
   describe('validateAccount', () => {
     it('returns false if an account is missing', async () => {
       getAccountId.mockReturnValueOnce(null);
