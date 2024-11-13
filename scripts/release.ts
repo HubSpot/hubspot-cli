@@ -6,7 +6,7 @@ import semver from 'semver';
 
 import { name as packageName, version as localVersion } from '../package.json';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
-import { build } from './build';
+import { build } from './lib/build';
 
 // TODO: Change to import when this is converted to TS
 const { uiLink, uiLine } = require('../lib/ui');
@@ -101,6 +101,40 @@ async function publish(tag: Tag, isDryRun: boolean): Promise<void> {
   });
 }
 
+async function updateNextTag(
+  newVersion: string,
+  isDryRun: boolean
+): Promise<void> {
+  logger.log();
+  logger.log(`Updating ${TAG.NEXT} tag...`);
+
+  const commandArgs = [
+    'dist-tag',
+    'add',
+    `${packageName}@${newVersion}`,
+    TAG.NEXT,
+  ];
+
+  return new Promise((resolve, reject) => {
+    if (isDryRun) {
+      const distTagCommand = ['npm', ...commandArgs].join(' ');
+      logger.log(`Dry run: skipping run of \`${distTagCommand}\``);
+      resolve();
+    } else {
+      const childProcess = spawn('npm', commandArgs, { stdio: 'inherit' });
+
+      childProcess.on('close', code => {
+        if (code !== EXIT_CODES.SUCCESS) {
+          reject();
+        } else {
+          logger.success(`${TAG.NEXT} tag updated successfully`);
+          resolve();
+        }
+      });
+    }
+  });
+}
+
 async function handler({
   versionIncrement,
   tag,
@@ -165,6 +199,9 @@ async function handler({
   }
 
   logger.log();
+  if (dryRun) {
+    logger.log('DRY RUN');
+  }
   logger.log(`Current version: ${currentVersion}`);
   logger.log(`New version to release: ${newVersion}`);
 
@@ -201,15 +238,13 @@ async function handler({
   logger.success('Version updated successfully');
 
   logger.log();
-  logger.log('Creating a new build...');
   await build();
-  logger.success('Build successful');
 
   try {
     await publish(tag, isDryRun);
 
     if (tag === TAG.LATEST) {
-      await publish(TAG.NEXT, isDryRun);
+      await updateNextTag(newVersion, isDryRun);
     }
   } catch (e) {
     logger.error(

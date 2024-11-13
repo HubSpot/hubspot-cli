@@ -1,12 +1,17 @@
-// @ts-nocheck
-const chalk = require('chalk');
-const { table } = require('table');
+import chalk from 'chalk';
+import { table, TableUserConfig } from 'table';
 
-function isObject(item) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isObject(item: any): boolean {
   return item && typeof item === 'object' && !Array.isArray(item);
 }
 
-function mergeDeep(target, ...sources) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mergeDeep<T extends { [key: string]: any }>(
+  target: T,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...sources: any[]
+): T {
   if (!sources.length) return target;
   const source = sources.shift();
 
@@ -24,7 +29,7 @@ function mergeDeep(target, ...sources) {
   return mergeDeep(target, ...sources);
 }
 
-const tableConfigDefaults = {
+const tableConfigDefaults: TableUserConfig = {
   singleLine: true,
   border: {
     topBody: '',
@@ -55,17 +60,16 @@ const tableConfigDefaults = {
   },
 };
 
-function getTableContents(tableData = [], tableConfig = {}) {
+export function getTableContents(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tableData: any[][] = [],
+  tableConfig: Partial<TableUserConfig> = {}
+): string {
   const mergedConfig = mergeDeep({}, tableConfigDefaults, tableConfig);
 
   return table(tableData, mergedConfig);
 }
 
-function getTableHeader(headerItems) {
+export function getTableHeader(headerItems: string[]): string[] {
   return headerItems.map(headerItem => chalk.bold(headerItem));
 }
-
-module.exports = {
-  getTableContents,
-  getTableHeader,
-};

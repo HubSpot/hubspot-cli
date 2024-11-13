@@ -37,6 +37,7 @@ jobs:
         env:
           PORTAL_ID: ${{ secrets.ACCEPTANCE_TEST_PORTAL_ID }}
           PERSONAL_ACCESS_KEY: ${{ secrets.ACCEPTANCE_TEST_PERSONAL_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Failure Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ always() && github.ref_name == 'main' }}

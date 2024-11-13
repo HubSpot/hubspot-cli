@@ -1,6 +1,4 @@
 // @ts-nocheck
-jest.mock('@hubspot/local-dev-lib/logger');
-
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -8,7 +6,9 @@ const { EXIT_CODES } = require('../enums/exitCodes');
 const projects = require('../projects');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 
-describe('@hubspot/cli/lib/projects', () => {
+jest.mock('@hubspot/local-dev-lib/logger');
+
+describe('lib/projects', () => {
   describe('validateProjectConfig()', () => {
     let realProcess;
     let projectDir;

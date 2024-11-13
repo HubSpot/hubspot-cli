@@ -93,9 +93,9 @@ export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
 export function getAccountId(
   options: Arguments<{ portal?: number | string; account?: number | string }>
 ): number | null {
-  const { portal, account } = options;
+  const { portal, account } = options || {};
 
-  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+  if (options?.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
   }
 
@@ -124,11 +124,11 @@ export function injectAccountIdMiddleware(
   options.derivedAccountId = getAccountIdFromConfig(portal || account);
 }
 
-export function getMode(options: Arguments<{ mode?: Mode }>): string {
+export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
   // 1. --mode
   const { mode } = options;
   if (mode && typeof mode === 'string') {
-    return mode.toLowerCase();
+    return mode.toLowerCase() as Mode;
   }
   // 2. config[portal].defaultMode
   const accountId = getAccountId(options);
@@ -141,5 +141,5 @@ export function getMode(options: Arguments<{ mode?: Mode }>): string {
   // 3. config.defaultMode
   // 4. DEFAULT_MODE
   const config = getAndLoadConfigIfNeeded();
-  return (config && config.defaultMode) || DEFAULT_MODE;
+  return (config && (config.defaultMode as Mode)) || DEFAULT_MODE;
 }
