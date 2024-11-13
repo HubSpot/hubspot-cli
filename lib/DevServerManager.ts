@@ -1,4 +1,5 @@
 // @ts-nocheck
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { COMPONENT_TYPES } = require('./projectStructure');
 const { i18n } = require('./lang');
@@ -6,7 +7,6 @@ const { promptUser } = require('./prompts/promptUtils');
 const { DevModeInterface } = require('@hubspot/ui-extensions-dev-server');
 const {
   startPortManagerServer,
-  portManagerHasActiveServers,
   stopPortManagerServer,
   requestPorts,
 } = require('@hubspot/local-dev-lib/portManager');
@@ -133,11 +133,7 @@ class DevServerManager {
         }
       });
 
-      const hasActiveServers = await portManagerHasActiveServers();
-
-      if (!hasActiveServers) {
-        await stopPortManagerServer();
-      }
+      await stopPortManagerServer();
     }
   }
 }
