@@ -21,7 +21,7 @@ exports.describe = null;
 
 exports.handler = async ({ packages }) => {
   try {
-    const accountId = getAccountId();
+    const accountId = getAccountId({});
     trackCommandUsage('project-install-deps', null, accountId);
 
     const projectConfig = await getProjectConfig();
