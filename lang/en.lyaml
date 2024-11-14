@@ -1436,7 +1436,7 @@ en:
         unableToDetermine: "Unable to determine if the portal is active"
         pak:
           invalid: "Personal access key is invalid"
-          invalidSecondary: "To get a new key, run {{ command }}; deactivate your access key, and generate a new one. Then, use that new key to authenticate your account."
+          invalidSecondary: "To get a new key, run {{ command }}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account."
           valid: "Personal Access Key is valid. {{ link }}"
           viewScopes: "View selected scopes"
       nodeChecks:

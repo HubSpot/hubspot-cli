@@ -261,7 +261,7 @@ export class Doctor {
       this.diagnosis?.addCliSection({
         type: 'success',
         message: i18n(`${i18nKey}.hsChecks.latest`, {
-          hsVersion: pkg.version,
+          hsVersion: latestCLIVersion,
         }),
       });
     }
