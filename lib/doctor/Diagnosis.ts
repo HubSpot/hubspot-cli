@@ -38,8 +38,8 @@ export class Diagnosis {
   private readonly prefixes: prefixes;
   private readonly diagnosis: DiagnosisCategories;
   private readonly indentation = '  ';
-  errorCount = 0;
-  warningCount = 0;
+  private errorCount = 0;
+  private warningCount = 0;
 
   constructor({ diagnosticInfo, accountId }: DiagnosisOptions) {
     const { succeedPrefix, failPrefix } = prefixOptions({});
@@ -89,12 +89,12 @@ export class Diagnosis {
     return this.indentation.repeat(level);
   }
 
-  hasErrors(): boolean {
-    return this.errorCount > 0;
+  getErrorCount(): number {
+    return this.errorCount;
   }
 
-  hasWarnings(): boolean {
-    return this.warningCount > 0;
+  getWarningCount(): number {
+    return this.warningCount;
   }
 
   addCliSection(section: Section): void {

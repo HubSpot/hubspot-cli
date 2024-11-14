@@ -1,6 +1,6 @@
 import { Doctor } from '../Doctor';
 import { packagesNeedInstalled as _packagesNeedInstalled } from '../../dependencyManagement';
-import { isPortManagerServerRunning as _isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
+import { isPortManagerPortAvailable as _isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import {
   DiagnosticInfo,
   DiagnosticInfoBuilder,
@@ -28,8 +28,8 @@ jest.mock('util', () => ({
 const packagesNeedInstalled = _packagesNeedInstalled as jest.MockedFunction<
   typeof _packagesNeedInstalled
 >;
-const isPortManagerServerRunning = _isPortManagerServerRunning as jest.MockedFunction<
-  typeof _isPortManagerServerRunning
+const isPortManagerPortAvailable = _isPortManagerPortAvailable as jest.MockedFunction<
+  typeof _isPortManagerPortAvailable
 >;
 
 const utilPromisify = util.promisify as jest.MockedFunction<
@@ -358,7 +358,7 @@ describe('lib/doctor/Doctor', () => {
 
     describe('Port', () => {
       it('should add warning section if port is in use', async () => {
-        isPortManagerServerRunning.mockResolvedValue(true);
+        isPortManagerPortAvailable.mockResolvedValue(false);
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method
@@ -372,7 +372,7 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add success section if port is available', async () => {
-        isPortManagerServerRunning.mockResolvedValue(false);
+        isPortManagerPortAvailable.mockResolvedValue(true);
 
         await doctor.diagnose();
         // @ts-expect-error Testing private method

@@ -15,7 +15,7 @@ import {
   DiagnosticInfo,
   ProjectConfig,
 } from './DiagnosticInfoBuilder';
-import { isPortManagerServerRunning } from '@hubspot/local-dev-lib/portManager';
+import { isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import { PORT_MANAGER_SERVER_PORT } from '@hubspot/local-dev-lib/constants/ports';
 import { accessTokenForPersonalAccessKey } from '@hubspot/local-dev-lib/personalAccessKey';
 import { isSpecifiedError } from '@hubspot/local-dev-lib/errors/index';
@@ -72,8 +72,8 @@ export class Doctor {
     });
 
     this.diagnosticInfo.diagnosis = this.diagnosis.toString();
-    this.diagnosticInfo.hasErrors = this.diagnosis.hasErrors();
-    this.diagnosticInfo.hasWarnings = this.diagnosis.hasWarnings();
+    this.diagnosticInfo.errorCount = this.diagnosis.getErrorCount();
+    this.diagnosticInfo.warningCount = this.diagnosis.getWarningCount();
 
     return this.diagnosticInfo;
   }
@@ -361,23 +361,25 @@ export class Doctor {
 
   private async checkIfPortsAreAvailable(): Promise<void> {
     const localI18nKey = `${i18nKey}.port`;
-    if (await isPortManagerServerRunning()) {
-      this.diagnosis?.addProjectSection({
-        type: 'warning',
-        message: i18n(`${localI18nKey}.inUse`, {
-          port: PORT_MANAGER_SERVER_PORT,
-        }),
-        secondaryMessaging: i18n(`${localI18nKey}.inUseSecondary`, {
-          command: uiCommandReference('hs project dev'),
-        }),
-      });
-    } else {
+
+    if (await isPortManagerPortAvailable()) {
       this.diagnosis?.addProjectSection({
         type: 'success',
         message: i18n(`${localI18nKey}.available`, {
           port: PORT_MANAGER_SERVER_PORT,
         }),
       });
+      return;
     }
+
+    this.diagnosis?.addProjectSection({
+      type: 'warning',
+      message: i18n(`${localI18nKey}.inUse`, {
+        port: PORT_MANAGER_SERVER_PORT,
+      }),
+      secondaryMessaging: i18n(`${localI18nKey}.inUseSecondary`, {
+        command: uiCommandReference('hs project dev'),
+      }),
+    });
   }
 }

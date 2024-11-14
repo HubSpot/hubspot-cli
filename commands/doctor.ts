@@ -29,8 +29,13 @@ export const handler = async ({
 
   const output = await doctor.diagnose();
 
-  if (output?.hasErrors || output?.hasWarnings) {
-    trackCommandMetadataUsage(command, { success: false }, doctor.accountId);
+  const totalCount = (output?.errorCount || 0) + (output?.warningCount || 0);
+  if (totalCount > 0) {
+    trackCommandMetadataUsage(
+      command,
+      { success: false, type: totalCount },
+      doctor.accountId
+    );
   }
 
   if (!outputDir) {

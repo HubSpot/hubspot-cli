@@ -49,8 +49,8 @@ export interface DiagnosticInfo extends FilesInfo {
     authType?: AuthType;
   };
   diagnosis?: string;
-  hasErrors?: boolean;
-  hasWarnings?: boolean;
+  errorCount?: number;
+  warningCount?: number;
 }
 
 const configFiles = [
