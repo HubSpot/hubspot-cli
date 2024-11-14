@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/local-dev-lib": "2.1.1",
+    "@hubspot/local-dev-lib": "2.3.0",
     "@hubspot/serverless-dev-runtime": "7.0.0",
     "@hubspot/theme-preview-dev-server": "0.0.9",
     "@hubspot/ui-extensions-dev-server": "0.8.33",
@@ -29,11 +29,11 @@
     "yargs": "17.7.2"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.14",
-    "@types/yargs": "^17.0.33",
     "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/semver": "^7.5.8",
+    "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
     "axios": "^1.7.2",
