@@ -11,8 +11,6 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
-const { loadAndValidateOptions } = require('./validation');
-import fs from 'fs';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -115,11 +113,6 @@ export async function injectAccountIdMiddleware(
   }>
 ): Promise<void> {
   const { portal, account } = options;
-  if (options.config) {
-    if (fs.existsSync(options.config as string)) {
-      await loadAndValidateOptions(options);
-    }
-  }
 
   // Preserves the original --account and --portal flags for certain commands.
   options.providedAccountId = portal || account;

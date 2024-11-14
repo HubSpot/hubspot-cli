@@ -3,6 +3,7 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
+const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
@@ -142,9 +143,16 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const loadConfigMiddleware = argv => {
+const loadConfigMiddleware = async options => {
   if (configFileExists(true)) {
-    loadConfig('', argv);
+    loadConfig('', options);
+  }
+
+  if (options.config) {
+    if (fs.existsSync(options.config)) {
+      const { config: configPath } = options;
+      await loadConfig(configPath, options);
+    }
   }
 };
 
