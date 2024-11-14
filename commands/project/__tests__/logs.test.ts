@@ -1,7 +1,7 @@
 // @ts-nocheck
 const yargs = require('yargs');
 const { addUseEnvironmentOptions } = require('../../../lib/commonOpts');
-const ProjectLogsManager = require('../../../lib/projectLogsManager');
+const ProjectLogsManager = require('../../../lib/ProjectLogsManager');
 const {
   projectLogsPrompt,
 } = require('../../../lib/prompts/projectsLogsPrompt');
