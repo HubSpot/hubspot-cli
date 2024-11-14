@@ -9,6 +9,11 @@ jest.mock('../../lib/commonOpts');
 import initCommand from '../init';
 
 describe('commands/init', () => {
+  beforeEach(() => {
+    yargs.options = jest.fn().mockReturnThis();
+    yargs.conflicts = jest.fn().mockReturnThis();
+  });
+
   describe('command', () => {
     it('should have the correct command structure', () => {
       expect(initCommand.command).toEqual('init [--account]');
@@ -33,7 +38,14 @@ describe('commands/init', () => {
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
+        'use-hidden-config': expect.objectContaining({ type: 'boolean' }),
       });
+
+      expect(yargs.conflicts).toHaveBeenCalledTimes(1);
+      expect(yargs.conflicts).toHaveBeenCalledWith(
+        'use-hidden-config',
+        'config'
+      );
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
       expect(addConfigOptions).toHaveBeenCalledWith(yargs);

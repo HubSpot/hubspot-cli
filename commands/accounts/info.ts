@@ -17,9 +17,8 @@ exports.handler = async options => {
 
   const { derivedAccountId } = options;
   const config = getAccountConfig(derivedAccountId);
-
   // check if the provided account is using a personal access key, if not, show an error
-  if (config.authType === 'personalaccesskey') {
+  if (config && config.authType === 'personalaccesskey') {
     const { name, personalAccessKey, env } = config;
 
     const response = await getAccessToken(
