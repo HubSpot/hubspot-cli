@@ -32,7 +32,11 @@ describe('commands/project/installDeps', () => {
 
   describe('describe', () => {
     it('should not provide a description', () => {
-      expect(installDepsCommand.describe).toEqual(null);
+      expect(installDepsCommand.describe).toEqual(
+        expect.stringMatching(
+          /Install the dependencies for your project, or add a dependency to a subcomponent of a project/
+        )
+      );
     });
   });
 
