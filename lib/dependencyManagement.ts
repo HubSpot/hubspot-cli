@@ -157,7 +157,7 @@ async function getProjectPackageJsonLocations() {
   return packageParentDirs;
 }
 
-export async function packagesNeedInstalled(directory) {
+export async function hasMissingPackages(directory) {
   const exec = util.promisify(execAsync);
   const { stdout } = await exec(`npm install --ignore-scripts --dry-run`, {
     cwd: directory,
@@ -171,5 +171,5 @@ module.exports = {
   DEFAULT_PACKAGE_MANAGER,
   getProjectPackageJsonLocations,
   getLatestCliVersion,
-  packagesNeedInstalled,
+  hasMissingPackages,
 };

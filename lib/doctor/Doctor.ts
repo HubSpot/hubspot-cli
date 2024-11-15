@@ -4,7 +4,7 @@ import { getAccountId } from '@hubspot/local-dev-lib/config';
 import SpinniesManager from '../ui/SpinniesManager';
 import {
   getLatestCliVersion,
-  packagesNeedInstalled,
+  hasMissingPackages,
 } from '../dependencyManagement';
 import util from 'util';
 import fs from 'fs';
@@ -46,7 +46,7 @@ export class Doctor {
     this.diagnosticInfoBuilder = diagnosticInfoBuilder;
   }
 
-  async diagnose() {
+  async diagnose(): Promise<DiagnosticInfo> {
     SpinniesManager.add('runningDiagnostics', {
       text: i18n(`${i18nKey}.runningDiagnostics`),
     });
@@ -274,7 +274,7 @@ export class Doctor {
     for (const packageFile of this.diagnosticInfo?.packageFiles || []) {
       const packageDirName = path.dirname(packageFile);
       try {
-        const needsInstall = await packagesNeedInstalled(
+        const needsInstall = await hasMissingPackages(
           path.join(this.projectConfig?.projectDir, packageDirName)
         );
 

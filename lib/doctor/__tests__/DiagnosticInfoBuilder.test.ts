@@ -162,7 +162,6 @@ describe('lib/doctor/DiagnosticInfo', () => {
       const diagnosticInfo = await builder.generateDiagnosticInfo();
 
       expect(getProjectConfig).toHaveBeenCalledTimes(1);
-      expect(getProjectConfig).toHaveBeenCalledWith(null);
 
       expect(fetchProject).toHaveBeenCalledTimes(1);
       expect(fetchProject).toHaveBeenCalledWith(

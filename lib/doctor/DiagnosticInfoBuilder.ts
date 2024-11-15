@@ -20,7 +20,9 @@ import process from 'process';
 
 export type ProjectConfig = Awaited<ReturnType<typeof getProjectConfig>>;
 
+// This needs to be hardcoded since we are using it in the TS type
 const hubspotCli = '@hubspot/cli';
+
 interface FilesInfo {
   files: string[];
   configFiles: string[];
@@ -85,7 +87,8 @@ export class DiagnosticInfoBuilder {
   }
 
   async generateDiagnosticInfo(): Promise<DiagnosticInfo> {
-    this._projectConfig = await getProjectConfig(null);
+    // @ts-expect-error getProjectConfig not typed yet
+    this._projectConfig = await getProjectConfig();
 
     if (this._projectConfig?.projectConfig) {
       await this.fetchProjectDetails();

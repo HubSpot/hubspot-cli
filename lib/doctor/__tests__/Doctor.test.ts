@@ -1,5 +1,5 @@
 import { Doctor } from '../Doctor';
-import { packagesNeedInstalled as _packagesNeedInstalled } from '../../dependencyManagement';
+import { hasMissingPackages as _hasMissingPackages } from '../../dependencyManagement';
 import { isPortManagerPortAvailable as _isPortManagerPortAvailable } from '@hubspot/local-dev-lib/portManager';
 import {
   DiagnosticInfo,
@@ -25,8 +25,8 @@ jest.mock('util', () => ({
   promisify: jest.fn().mockReturnValue(jest.fn()),
 }));
 
-const packagesNeedInstalled = _packagesNeedInstalled as jest.MockedFunction<
-  typeof _packagesNeedInstalled
+const hasMissingPackages = _hasMissingPackages as jest.MockedFunction<
+  typeof _hasMissingPackages
 >;
 const isPortManagerPortAvailable = _isPortManagerPortAvailable as jest.MockedFunction<
   typeof _isPortManagerPortAvailable
@@ -292,7 +292,7 @@ describe('lib/doctor/Doctor', () => {
   describe('Project Checks', () => {
     describe('Dependencies', () => {
       it('should add warning section if dependencies are missing', async () => {
-        packagesNeedInstalled.mockResolvedValue(true);
+        hasMissingPackages.mockResolvedValue(true);
 
         await doctor.diagnose();
 
@@ -307,7 +307,7 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add success section if no dependencies are missing', async () => {
-        packagesNeedInstalled.mockResolvedValue(false);
+        hasMissingPackages.mockResolvedValue(false);
         await doctor.diagnose();
 
         // @ts-expect-error Testing private method
@@ -318,7 +318,7 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add error section if the package.json file is invalid JSON', async () => {
-        packagesNeedInstalled.mockImplementationOnce(() => {
+        hasMissingPackages.mockImplementationOnce(() => {
           throw new Error('Uh oh');
         });
         utilPromisify.mockReturnValueOnce(
@@ -340,7 +340,7 @@ describe('lib/doctor/Doctor', () => {
       });
 
       it('should add error section if it is unable to determine if dependencies need installed', async () => {
-        packagesNeedInstalled.mockImplementationOnce(() => {
+        hasMissingPackages.mockImplementationOnce(() => {
           throw new Error('Uh oh');
         });
 
