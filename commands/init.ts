@@ -131,9 +131,7 @@ exports.handler = async options => {
     await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   }
 
-  createEmptyConfigFile({
-    path: configPath,
-  });
+  createEmptyConfigFile({ path: configPath });
 
   handleExit(deleteEmptyConfigFile);
 
