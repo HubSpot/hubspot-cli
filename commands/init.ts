@@ -133,7 +133,6 @@ exports.handler = async options => {
 
   createEmptyConfigFile({
     path: configPath,
-    allowUsageTracking: !options.disableTracking,
   });
 
   handleExit(deleteEmptyConfigFile);
