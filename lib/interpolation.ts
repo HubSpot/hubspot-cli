@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-const helpers: { [key: string]: (stringValue: string) => string } = {
+export const helpers: { [key: string]: (stringValue: string) => string } = {
   bold: function(stringValue: string): string {
     return chalk.bold(stringValue);
   },

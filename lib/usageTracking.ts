@@ -53,7 +53,7 @@ const getPlatform = () => {
   }
 };
 
-function trackCommandUsage(command, meta = {}, accountId) {
+export function trackCommandUsage(command, meta = {}, accountId) {
   if (!isTrackingAllowed()) {
     return;
   }
@@ -164,7 +164,7 @@ const trackAuthAction = async (command, authType, step, accountId) => {
   }
 };
 
-function trackCommandMetadataUsage(command, meta = {}, accountId) {
+export function trackCommandMetadataUsage(command, meta = {}, accountId) {
   if (!isTrackingAllowed()) {
     return;
   }

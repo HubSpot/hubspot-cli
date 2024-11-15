@@ -13,6 +13,7 @@ const {
   isGloballyInstalled,
   installPackages,
   getProjectPackageJsonLocations,
+  getLatestCliVersion,
 } = require('../dependencyManagement');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
@@ -40,6 +41,30 @@ describe('lib/dependencyManagement', () => {
         srcDir,
         name: projectName,
       },
+    });
+  });
+
+  describe('getLatestCliVersion', () => {
+    it('should return the version correctly', async () => {
+      const latest = '1.0.0';
+      execMock = jest
+        .fn()
+        .mockResolvedValueOnce({ stdout: JSON.stringify({ latest }) });
+
+      util.promisify = jest.fn().mockReturnValueOnce(execMock);
+      const actual = await getLatestCliVersion();
+      expect(actual).toBe(latest);
+    });
+
+    it('should throw any errors that encounter with the check', async () => {
+      const errorMessage = 'unsuccessful';
+      execMock = jest.fn().mockImplementationOnce(() => {
+        throw new Error(errorMessage);
+      });
+      util.promisify = jest.fn().mockReturnValueOnce(execMock);
+      await expect(() => getLatestCliVersion()).rejects.toThrowError(
+        errorMessage
+      );
     });
   });
 
