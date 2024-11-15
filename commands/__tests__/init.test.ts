@@ -33,6 +33,11 @@ describe('commands/init', () => {
           default: 'personalaccesskey',
         }),
         account: expect.objectContaining({ type: 'string' }),
+        'disable-tracking': expect.objectContaining({
+          type: 'boolean',
+          hidden: true,
+          default: false,
+        }),
       });
 
       expect(addConfigOptions).toHaveBeenCalledTimes(1);
