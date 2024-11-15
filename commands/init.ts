@@ -104,12 +104,17 @@ exports.handler = async options => {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
     account: optionalAccount,
+    disableTracking,
   } = options;
   const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
   setLogLevel(options);
-  trackCommandUsage('init', {
-    authType,
-  });
+
+  if (!disableTracking) {
+    trackCommandUsage('init', {
+      authType,
+    });
+  }
+
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (fs.existsSync(configPath)) {
@@ -122,8 +127,12 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
+  if (!disableTracking) {
+    await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
+  }
+
   createEmptyConfigFile({ path: configPath });
+
   handleExit(deleteEmptyConfigFile);
 
   try {
@@ -153,16 +162,20 @@ exports.handler = async options => {
     );
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
-    await trackAuthAction(
-      'init',
-      authType,
-      TRACKING_STATUS.COMPLETE,
-      accountId
-    );
+    if (!disableTracking) {
+      await trackAuthAction(
+        'init',
+        authType,
+        TRACKING_STATUS.COMPLETE,
+        accountId
+      );
+    }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logError(err);
-    await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    if (!disableTracking) {
+      await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -184,6 +197,11 @@ exports.builder = yargs => {
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+    },
+    'disable-tracking': {
+      type: 'boolean',
+      hidden: true,
+      default: false,
     },
   });
 
