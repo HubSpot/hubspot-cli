@@ -45,7 +45,7 @@ export class TestState {
   async initializeAuth() {
     try {
       await this.cli.executeWithTestConfig(
-        ['init'],
+        ['init', '--disable-tracking'],
         getInitPromptSequence(this.getPAK())
       );
 
