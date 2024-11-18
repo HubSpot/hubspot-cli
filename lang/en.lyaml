@@ -1452,7 +1452,8 @@ en:
         notLatestSecondary: "Run {{ command }} to upgrade to the latest version {{ hsVersion }}"
         latest: "HubSpot CLI v{{ hsVersion }} up to date"
         unableToDetermine: "Unable to determine if HubSpot CLI is up to date."
-        unableToDetermineSecondary: "This can be manually verified by running {{ command }} and checking the version against the latest release in {{ link }}"
+        unableToDetermineSecondary: "Run {{ command }} to check your installed version; then visit the {{ link }} to validate whether you have the latest version"
+        unableToDetermineSecondaryLink: "npm HubSpot CLI version history"
       projectDependenciesChecks:
         missingDependencies: "missing dependencies in {{#bold}}{{ dir }}{{/bold}}"
         missingDependenciesSecondary: "Run {{ command }} to install all project dependencies locally"

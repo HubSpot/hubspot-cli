@@ -229,7 +229,7 @@ export class Doctor {
     try {
       latestCLIVersion = await getLatestCliVersion();
     } catch (e) {
-      this.diagnosis?.addCliSection({
+      return this.diagnosis?.addCliSection({
         type: 'error',
         message: i18n(`${i18nKey}.hsChecks.unableToDetermine`),
         secondaryMessaging: i18n(
@@ -237,13 +237,12 @@ export class Doctor {
           {
             command: uiCommandReference(`hs --version`),
             link: uiLink(
-              'npm',
+              i18n(`${i18nKey}.hsChecks.unableToDetermineSecondaryLink`),
               `https://www.npmjs.com/package/${pkg.name}?activeTab=versions`
             ),
           }
         ),
       });
-      return;
     }
 
     if (latestCLIVersion !== pkg.version) {
