@@ -3,14 +3,19 @@ import { promisify } from 'util';
 import yargs, { ArgumentsCamelCase, Argv } from 'yargs';
 import { logger, setLogLevel, LOG_LEVEL } from '@hubspot/local-dev-lib/logger';
 import semver from 'semver';
+import open from 'open';
 
-import { name as packageName, version as localVersion } from '../package.json';
+import {
+  name as packageName,
+  version as localVersion,
+  publishConfig,
+} from '../package.json';
 import { EXIT_CODES } from '../lib/enums/exitCodes';
 import { build } from './lib/build';
 
 // TODO: Change to import when this is converted to TS
 const { uiLink, uiLine } = require('../lib/ui');
-const { confirmPrompt } = require('../lib/prompts/promptUtils');
+const { confirmPrompt, promptUser } = require('../lib/prompts/promptUtils');
 
 const exec = promisify(_exec);
 
@@ -41,6 +46,9 @@ const PRERELEASE_IDENTIFIER = {
   NEXT: 'beta',
   EXPERIMENTAL: 'experimental',
 } as const;
+
+// Commands run with `spawn` won't always get this from the package.json
+const REGISTRY = publishConfig.registry;
 
 type ReleaseArguments = {
   versionIncrement: typeof VERSION_INCREMENT_OPTIONS[number];
@@ -73,13 +81,25 @@ async function cleanup(newVersion: string): Promise<void> {
   await exec(`git tag -d v${newVersion}`);
 }
 
-async function publish(tag: Tag, isDryRun: boolean): Promise<void> {
+async function publish(
+  tag: Tag,
+  otp: string,
+  isDryRun: boolean
+): Promise<void> {
   logger.log();
   logger.log(`Publishing to ${tag}...`);
   uiLine();
   logger.log();
 
-  const commandArgs = ['publish', '--tag', tag];
+  const commandArgs = [
+    'publish',
+    '--tag',
+    tag,
+    '--registry',
+    REGISTRY,
+    '--otp',
+    otp,
+  ];
 
   if (isDryRun) {
     commandArgs.push('--dry-run');
@@ -103,6 +123,7 @@ async function publish(tag: Tag, isDryRun: boolean): Promise<void> {
 
 async function updateNextTag(
   newVersion: string,
+  otp: string,
   isDryRun: boolean
 ): Promise<void> {
   logger.log();
@@ -113,6 +134,10 @@ async function updateNextTag(
     'add',
     `${packageName}@${newVersion}`,
     TAG.NEXT,
+    '--registry',
+    REGISTRY,
+    '--otp',
+    otp,
   ];
 
   return new Promise((resolve, reject) => {
@@ -240,12 +265,21 @@ async function handler({
   logger.log();
   await build();
 
-  try {
-    await publish(tag, isDryRun);
+  let otp = '';
 
-    if (tag === TAG.LATEST) {
-      await updateNextTag(newVersion, isDryRun);
-    }
+  logger.log();
+  if (!isDryRun) {
+    const answer = await promptUser({
+      name: 'otp',
+      message: 'Enter your NPM one-time password:',
+    });
+    otp = answer.otp;
+  } else {
+    logger.log('Dry run: skipping one-time password entry');
+  }
+
+  try {
+    await publish(tag, otp, isDryRun);
   } catch (e) {
     logger.error(
       'An error occurred while releasing the CLI. Correct the error and re-run `yarn build`.'
@@ -254,16 +288,31 @@ async function handler({
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const gitCommand = `git push --atomic origin ${branch} v${newVersion}`;
+
+  if (tag === TAG.LATEST) {
+    try {
+      await updateNextTag(newVersion, otp, isDryRun);
+    } catch (e) {
+      logger.error(
+        `An error occured while updating the ${TAG.NEXT} tag. To finish this release, run the following commands:`
+      );
+      logger.log(`npm dist-tag add ${packageName}@${newVersion} ${TAG.NEXT}`);
+      logger.log(gitCommand);
+    }
+  }
+
   if (isDryRun) {
     await cleanup(newVersion);
     logger.log();
+    logger.log('Dry run: skipping push to Github');
     logger.success('Dry run release finished successfully');
     process.exit(EXIT_CODES.SUCCESS);
   }
 
   logger.log();
   logger.log(`Pushing changes to Github...`);
-  await exec(`git push --atomic origin ${branch} v${newVersion}`);
+  await exec(gitCommand);
   logger.log(`Changes pushed successfully`);
 
   logger.log();
@@ -274,6 +323,10 @@ async function handler({
       'https://www.npmjs.com/package/@hubspot/cli?activeTab=versions'
     )
   );
+
+  logger.log();
+  logger.log('Remember to create a new release on Github!');
+  open('https://github.com/HubSpot/hubspot-cli/releases/new');
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
