@@ -39,6 +39,11 @@ describe('commands/init', () => {
         }),
         account: expect.objectContaining({ type: 'string' }),
         'use-hidden-config': expect.objectContaining({ type: 'boolean' }),
+        'disable-tracking': expect.objectContaining({
+          type: 'boolean',
+          hidden: true,
+          default: false,
+        }),
       });
 
       expect(yargs.conflicts).toHaveBeenCalledTimes(1);

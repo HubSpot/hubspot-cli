@@ -18,7 +18,7 @@ jobs:
           yarn install --cwd=acceptance-tests
       - name: Verify package dependencies
         run: |
-          npx depcheck --ignores=semver
+          npx depcheck --ignores="semver,@types/*"
       - name: Lint
         run: |
           yarn lint

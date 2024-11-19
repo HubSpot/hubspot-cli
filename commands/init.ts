@@ -107,13 +107,18 @@ exports.handler = async options => {
     c,
     account: optionalAccount,
     'use-hidden-config': useHiddenConfig,
+    'disable-tracking': disableTracking,
   } = options;
   const configPath =
     (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
   setLogLevel(options);
-  trackCommandUsage('init', {
-    authType,
-  });
+
+  if (!disableTracking) {
+    trackCommandUsage('init', {
+      authType,
+    });
+  }
+
   const env = options.qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
 
   if (fs.existsSync(configPath)) {
@@ -124,6 +129,10 @@ exports.handler = async options => {
     );
     logger.info(i18n(`${i18nKey}.logs.updateConfig`));
     process.exit(EXIT_CODES.ERROR);
+  }
+
+  if (!disableTracking) {
+    await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   }
 
   const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
@@ -137,6 +146,7 @@ exports.handler = async options => {
   createEmptyConfigFile({ path: configPath }, useHiddenConfig);
   //Needed to load deprecated config
   loadConfig(configPath, options);
+
   handleExit(deleteEmptyConfigFile);
 
   try {
@@ -170,16 +180,20 @@ exports.handler = async options => {
     );
     uiFeatureHighlight(['helpCommand', 'authCommand', 'accountsListCommand']);
 
-    await trackAuthAction(
-      'init',
-      authType,
-      TRACKING_STATUS.COMPLETE,
-      accountId
-    );
+    if (!disableTracking) {
+      await trackAuthAction(
+        'init',
+        authType,
+        TRACKING_STATUS.COMPLETE,
+        accountId
+      );
+    }
     process.exit(EXIT_CODES.SUCCESS);
   } catch (err) {
     logError(err);
-    await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    if (!disableTracking) {
+      await trackAuthAction('init', authType, TRACKING_STATUS.ERROR);
+    }
     process.exit(EXIT_CODES.ERROR);
   }
 };
@@ -202,6 +216,11 @@ exports.builder = yargs => {
       account: {
         describe: i18n(`${i18nKey}.options.account.describe`),
         type: 'string',
+      },
+      'disable-tracking': {
+        type: 'boolean',
+        hidden: true,
+        default: false,
       },
       'use-hidden-config': {
         describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
