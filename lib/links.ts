@@ -12,7 +12,7 @@ type SiteLink = {
   url?: string;
 };
 
-const SITE_LINKS = {
+const SITE_LINKS: { [key: string]: SiteLink } = {
   APPS_MARKETPLACE: {
     shortcut: 'apps-marketplace',
     alias: 'apm',
@@ -82,7 +82,7 @@ const SITE_LINKS = {
     alias: 'wp',
     getUrl: (a: number): string => `website/${a}/pages/site`,
   },
-} as { [key: string]: SiteLink };
+};
 
 export function getSiteLinksAsArray(accountId: number): SiteLink[] {
   return Object.values(SITE_LINKS)
@@ -121,9 +121,3 @@ export function openLink(accountId: number, shortcut: string): void {
   open(`${baseUrl}/${match.getUrl(accountId)}`, { url: true });
   logger.success(`We opened ${match.getUrl(accountId)} in your browser`);
 }
-
-module.exports = {
-  getSiteLinksAsArray,
-  logSiteLinks,
-  openLink,
-};
