@@ -324,9 +324,11 @@ async function handler({
     )
   );
 
-  logger.log();
-  logger.log('Remember to create a new release on Github!');
-  open('https://github.com/HubSpot/hubspot-cli/releases/new');
+  if (tag === TAG.LATEST) {
+    logger.log();
+    logger.log('Remember to create a new release on Github!');
+    open('https://github.com/HubSpot/hubspot-cli/releases/new');
+  }
 }
 
 async function builder(yargs: Argv): Promise<Argv> {
