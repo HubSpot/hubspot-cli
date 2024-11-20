@@ -29,7 +29,8 @@ const {
   findProjectComponents,
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
-
+const { preview } = require('@hubspot/theme-preview-dev-server');
+const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
 
 exports.command = 'preview [--src] [--dest]';
@@ -179,23 +180,39 @@ exports.handler = async options => {
 
   trackCommandUsage('preview', accountId);
   const { createDevServer } = await import('@hubspot/cms-dev-server');
-  process.env['PORT'] = port;
+  if (port) {
+    process.env['PORT'] = port;
+  }
 
-  createDevServer(
-    absoluteSrc,
-    false,
-    false,
-    false,
-    !noSsl,
-    generateFieldsTypes,
-    {
+  const isUngatedForUnified = await hasFeature(
+    accountId,
+    'cms:react:unifiedThemePreview'
+  );
+  if (isUngatedForUnified) {
+    createDevServer(
+      absoluteSrc,
+      false,
+      false,
+      false,
+      !noSsl,
+      generateFieldsTypes,
+      {
+        filePaths,
+        resetSession,
+        startProgressBar,
+        handleUserInput,
+        dest,
+      }
+    );
+  } else {
+    preview(accountId, absoluteSrc, dest, {
       filePaths,
-      resetSession,
+      noSsl,
+      port,
       startProgressBar,
       handleUserInput,
-      dest,
-    }
-  );
+    });
+  }
 };
 
 exports.builder = yargs => {
