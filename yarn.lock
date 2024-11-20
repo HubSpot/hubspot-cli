@@ -457,7 +457,7 @@
     express "^4.18.2"
     uuid "^9.0.1"
 
-"@hubspot/local-dev-lib@2.3.0":
+"@hubspot/local-dev-lib@2.3.0", "@hubspot/local-dev-lib@^2.3.0":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@hubspot/local-dev-lib/-/local-dev-lib-2.3.0.tgz#3350b9902adb00b1b927d049197e7333501d90fe"
   integrity sha512-ovWE0XjuzzdyJoQ9rFXIYLotNCfowfMbN+8eIlBUu89uzBcWUZj+VQudU6GN15RlPS8ZTSSvVFnCcMxNJv1IKw==
@@ -480,6 +480,11 @@
     prettier "^3.3.0"
     semver "^6.3.0"
     unixify "^1.0.0"
+
+"@hubspot/project-parsing-lib@file:../project-translation-layer":
+  version "0.0.1"
+  dependencies:
+    "@hubspot/local-dev-lib" "^2.3.0"
 
 "@hubspot/serverless-dev-runtime@7.0.0":
   version "7.0.0"

@@ -26,6 +26,8 @@ const { PROJECT_ERROR_TYPES } = require('../../lib/constants');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
+const { translate } = require('@hubspot/project-parsing-lib');
+
 const i18nKey = 'commands.project.subcommands.upload';
 
 exports.command = 'upload [path] [--forceCreate] [--message]';
@@ -39,9 +41,14 @@ exports.handler = async options => {
   const accountConfig = getAccountConfig(accountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, accountId);
-
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+
+  if (options.translate) {
+    console.log(await translate(projectDir, projectConfig));
+    return process.exit(EXIT_CODES.SUCCESS);
+  }
+
+  trackCommandUsage('project-upload', { type: accountType }, accountId);
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -122,6 +129,12 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.message.describe`),
     type: 'string',
     default: '',
+  });
+
+  yargs.option('translate', {
+    describe: 'Translate the project files',
+    type: 'boolean',
+    default: false,
   });
 
   yargs.example([
