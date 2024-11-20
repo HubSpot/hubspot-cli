@@ -13,6 +13,7 @@ const {
   isGloballyInstalled,
   installPackages,
   getProjectPackageJsonLocations,
+  getLatestCliVersion,
 } = require('../dependencyManagement');
 const { walk } = require('@hubspot/local-dev-lib/fs');
 const path = require('path');
@@ -20,7 +21,7 @@ const { getProjectConfig } = require('../projects');
 const SpinniesManager = require('../ui/SpinniesManager');
 const { existsSync } = require('fs');
 
-describe('cli/lib/dependencyManagement', () => {
+describe('lib/dependencyManagement', () => {
   let execMock;
 
   const projectDir = path.join('path', 'to', 'project');
@@ -40,6 +41,30 @@ describe('cli/lib/dependencyManagement', () => {
         srcDir,
         name: projectName,
       },
+    });
+  });
+
+  describe('getLatestCliVersion', () => {
+    it('should return the version correctly', async () => {
+      const latest = '1.0.0';
+      execMock = jest
+        .fn()
+        .mockResolvedValueOnce({ stdout: JSON.stringify({ latest }) });
+
+      util.promisify = jest.fn().mockReturnValueOnce(execMock);
+      const actual = await getLatestCliVersion();
+      expect(actual).toBe(latest);
+    });
+
+    it('should throw any errors that encounter with the check', async () => {
+      const errorMessage = 'unsuccessful';
+      execMock = jest.fn().mockImplementationOnce(() => {
+        throw new Error(errorMessage);
+      });
+      util.promisify = jest.fn().mockReturnValueOnce(execMock);
+      await expect(() => getLatestCliVersion()).rejects.toThrowError(
+        errorMessage
+      );
     });
   });
 
@@ -213,7 +238,9 @@ describe('cli/lib/dependencyManagement', () => {
     it('should throw an error if the project directory does not exist', async () => {
       existsSync.mockReturnValueOnce(false);
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
       );
     });
 
@@ -237,7 +264,9 @@ describe('cli/lib/dependencyManagement', () => {
       walk.mockResolvedValue([]);
 
       await expect(() => getProjectPackageJsonLocations()).rejects.toThrowError(
-        `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files. Learn how to create a project from scratch.: https://developers.hubspot.com/beta-docs/guides/crm/intro/create-a-project`
+        new RegExp(
+          `No dependencies to install. The project ${projectName} folder might be missing component or subcomponent files.`
+        )
       );
     });
   });

@@ -1,6 +1,30 @@
-// @ts-nocheck
-const helpers = require('./interpolationHelpers');
-const delimiters = {
+import chalk from 'chalk';
+
+export const helpers: { [key: string]: (stringValue: string) => string } = {
+  bold: function(stringValue: string): string {
+    return chalk.bold(stringValue);
+  },
+  yellow: function(stringValue: string): string {
+    return chalk.reset.yellow(stringValue);
+  },
+  green: function(stringValue: string): string {
+    return chalk.reset.green(stringValue);
+  },
+  red: function(stringValue: string): string {
+    return chalk.reset.red(stringValue);
+  },
+  cyan: function(stringValue: string): string {
+    return chalk.cyan(stringValue);
+  },
+  orange: function(stringValue: string): string {
+    return chalk.hex('#FC9900')(stringValue);
+  },
+};
+
+const delimiters: {
+  interpolation: { start: string; end: string };
+  helpers: { start: string; end: string };
+} = {
   interpolation: {
     start: '{{',
     end: '}}',
@@ -11,32 +35,36 @@ const delimiters = {
   },
 };
 
-const isHelperIdentifier = identifier => {
+type InterpolationData = {
+  [identifier: string]: string | number;
+};
+
+type HelperIdentifier = keyof typeof helpers;
+
+function isHelperIdentifier(identifier: string): boolean {
   return (
     identifier.startsWith(delimiters.helpers.start) ||
     identifier.startsWith(delimiters.helpers.end)
   );
-};
+}
 
-const generateReplaceFn = (matchedText, startIndex, replacementString) => {
+function generateReplaceFn(
+  matchedText: string,
+  startIndex: number,
+  replacementString: string
+): (helperFn: string) => string {
   return currentStringValue =>
     `${currentStringValue.slice(0, startIndex)}${
       replacementString !== null && replacementString !== undefined
         ? replacementString
         : ''
     }${currentStringValue.slice(startIndex + matchedText.length)}`;
-};
+}
 
-/**
- * Interpolate a string with data
- * @param {string} stringValue - The string to interpolate
- * @param {object} interpolationData - The data to interpolate with
- * @returns {string} - The interpolated string
- * @example
- * interpolation('Hello {{name}}', { name: 'World' })
- * // 'Hello World'
- */
-const interpolation = (stringValue, interpolationData) => {
+function interpolation(
+  stringValue: string,
+  interpolationData: InterpolationData
+): string {
   const interpolationIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(.*?)${delimiters.interpolation.end}`,
     'g'
@@ -52,7 +80,11 @@ const interpolation = (stringValue, interpolationData) => {
 
     if (identifier && !isHelperIdentifier(identifier)) {
       replaceQueue.unshift(
-        generateReplaceFn(matchedText, index, interpolationData[identifier])
+        generateReplaceFn(
+          matchedText,
+          index,
+          String(interpolationData[identifier])
+        )
       );
     }
   }
@@ -63,19 +95,13 @@ const interpolation = (stringValue, interpolationData) => {
   );
 
   return compiledString;
-};
+}
 
-/**
- * Compile a string using a specified helper function
- * @param {string} stringValue - The string to modify
- * @param {object} helperIdentifier - Helper name
- * @param {function} helperFn - Helper function to call on string
- * @returns {string} - The modified string
- * @example
- * compileHelper('White {{#yellow}}yellow{{/yellow}}', 'yellow', (string) => { chalk.reset.yellow(string) }))))
- * // 'White yellow' (with 'yellow' colored yellow)
- */
-const compileHelper = (stringValue, helperIdentifier, helperFn) => {
+function compileHelper(
+  stringValue: string,
+  helperIdentifier: HelperIdentifier,
+  helperFn: (stringValue: string) => string
+): string {
   const helperIdentifierRegEx = new RegExp(
     `${delimiters.interpolation.start}(${delimiters.helpers.start}${helperIdentifier})${delimiters.interpolation.end}(.*?)${delimiters.interpolation.start}(${delimiters.helpers.end}${helperIdentifier})${delimiters.interpolation.end}`,
     'g'
@@ -109,9 +135,9 @@ const compileHelper = (stringValue, helperIdentifier, helperFn) => {
   );
 
   return compiledString;
-};
+}
 
-const compileHelpers = stringValue => {
+function compileHelpers(stringValue: string): string {
   return Object.keys(helpers).reduce((currentStringValue, helperIdentifier) => {
     return compileHelper(
       currentStringValue,
@@ -119,23 +145,13 @@ const compileHelpers = stringValue => {
       helpers[helperIdentifier]
     );
   }, stringValue);
-};
+}
 
-/**
- * Interpolate a string with data and compile helpers on the string
- * @param {string} stringValue - The string to interpolate
- * @param {object} interpolationData - The data to interpolate with
- * @returns {string} - The interpolated and helper-compiled string
- * @example
- * interpolateAndCompile('Some {{#bold}}{{text}}{{/bold}} text', { text: 'awesomely bold' })
- * // 'Some awsomely bold text' (with the words 'awesomely bold' in bold)
- */
-const interpolate = (stringValue, interpolationData) => {
+export function interpolate(
+  stringValue: string,
+  interpolationData: InterpolationData
+): string {
   const interpolatedString = interpolation(stringValue, interpolationData);
   const helperCompiledString = compileHelpers(interpolatedString);
   return helperCompiledString;
-};
-
-module.exports = {
-  interpolate,
-};
+}

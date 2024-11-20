@@ -1,9 +1,12 @@
 // @ts-nocheck
 const { lint } = require('@hubspot/local-dev-lib/cms/validate');
-const { printHublValidationResult } = require('../lib/hublValidate');
 const { logger } = require('@hubspot/local-dev-lib/logger');
+import {
+  HubLValidationError,
+  LintResult,
+  Validation,
+} from '@hubspot/local-dev-lib/types/HublValidation';
 const { logError } = require('../lib/errorHandlers/index');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -17,11 +20,48 @@ const { i18n } = require('../lib/lang');
 const i18nKey = 'commands.lint';
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'lint <path>';
+export const command = 'lint <path>';
 // Hiding since this command is still experimental
-exports.describe = null; //'Lint a file or folder for HubL syntax';
+export const describe = null; //'Lint a file or folder for HubL syntax';
 
-exports.handler = async options => {
+function getErrorsFromHublValidationObject(
+  validation: Validation
+): Array<HubLValidationError> {
+  return (
+    (validation && validation.meta && validation.meta.template_errors) || []
+  );
+}
+
+function printHublValidationError(err: HubLValidationError) {
+  const { severity, message, lineno, startPosition } = err;
+  const method = severity === 'FATAL' ? 'error' : 'warn';
+  logger[method]('[%d, %d]: %s', lineno, startPosition, message);
+}
+
+function printHublValidationResult({ file, validation }: LintResult): number {
+  let count = 0;
+
+  if (!validation) {
+    return count;
+  }
+
+  const errors = getErrorsFromHublValidationObject(validation);
+  if (!errors.length) {
+    return count;
+  }
+  logger.group(file);
+  errors.forEach(err => {
+    if (err.reason !== 'SYNTAX_ERROR') {
+      return;
+    }
+    ++count;
+    printHublValidationError(err);
+  });
+  logger.groupEnd();
+  return count;
+}
+
+export const handler = async options => {
   const { path: lintPath } = options;
 
   await loadAndValidateOptions(options);
@@ -53,7 +93,7 @@ exports.handler = async options => {
   );
 };
 
-exports.builder = yargs => {
+export const builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   yargs.positional('path', {
@@ -61,4 +101,11 @@ exports.builder = yargs => {
     type: 'string',
   });
   return yargs;
+};
+
+module.exports = {
+  builder,
+  handler,
+  command,
+  describe,
 };

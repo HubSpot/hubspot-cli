@@ -1,52 +1,37 @@
-// @ts-nocheck
-const chalk = require('chalk');
-const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const supportsHyperlinks = require('./supportHyperlinks');
-const supportsColor = require('./supportsColor');
-const { i18n } = require('../lang');
+import chalk from 'chalk';
+import { getAccountConfig } from '@hubspot/local-dev-lib/config';
+import { logger } from '@hubspot/local-dev-lib/logger';
+import { supportsHyperlinkModule } from './supportHyperlinks';
+import { supportsColor } from './supportsColor';
+import { i18n } from '../lang';
 
 const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const UI_COLORS = {
+type TerminalSupport = {
+  hyperlinks: boolean;
+  color: boolean;
+};
+
+export const UI_COLORS = {
   SORBET: '#FF8F59',
   MARIGOLD: '#f5c26b',
   MARIGOLD_DARK: '#dbae60',
 };
 
-/**
- * Outputs horizontal line
- *
- * @returns
- */
-const uiLine = () => {
+export function uiLine(): void {
   logger.log('-'.repeat(50));
-};
+}
 
-/**
- * Returns an object that aggregates what the terminal supports (eg. hyperlinks and color)
- *
- * @returns {object}
- */
-
-const getTerminalUISupport = () => {
+function getTerminalUISupport(): TerminalSupport {
   return {
-    hyperlinks: supportsHyperlinks.stdout,
+    hyperlinks: supportsHyperlinkModule.stdout,
     color: supportsColor.stdout.hasBasic,
   };
-};
+}
 
-/**
- * Returns a hyperlink or link and description
- *
- * @param {string} linkText
- * @param {string} url
- * @param {object} options
- * @returns {string}
- */
-const uiLink = (linkText, url) => {
+export function uiLink(linkText: string, url: string): string {
   const terminalUISupport = getTerminalUISupport();
   const encodedUrl = encodeURI(url);
 
@@ -67,33 +52,29 @@ const uiLink = (linkText, url) => {
   return terminalUISupport.color
     ? `${linkText}: ${chalk.reset.cyan(encodedUrl)}`
     : `${linkText}: ${encodedUrl}`;
-};
+}
 
-/**
- * Returns formatted account name, account type (if applicable), and ID
- *
- * @param {number} accountId
- * @param {boolean} bold
- * @returns {string}
- */
-const uiAccountDescription = (accountId, bold = true) => {
+export function uiAccountDescription(accountId: number, bold = true): string {
   const account = getAccountConfig(accountId);
-  const message = `${account.name} [${
-    HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
-  }] (${account.portalId})`;
-  return bold ? chalk.bold(message) : message;
-};
+  let message;
+  if (account && account.accountType) {
+    message = `${account.name} [${
+      HUBSPOT_ACCOUNT_TYPE_STRINGS[account.accountType]
+    }] (${accountId})`;
+  }
+  return bold ? chalk.bold(message) : message || '';
+}
 
-const uiInfoSection = (title, logContent) => {
+export function uiInfoSection(title: string, logContent: () => void): void {
   uiLine();
   logger.log(chalk.bold(title));
   logger.log('');
   logContent();
   logger.log('');
   uiLine();
-};
+}
 
-const uiCommandReference = command => {
+export function uiCommandReference(command: string): string {
   const terminalUISupport = getTerminalUISupport();
 
   const commandReference = `\`${command}\``;
@@ -103,9 +84,9 @@ const uiCommandReference = command => {
       ? chalk.hex(UI_COLORS.MARIGOLD_DARK)(commandReference)
       : commandReference
   );
-};
+}
 
-const uiFeatureHighlight = (commands, title) => {
+export function uiFeatureHighlight(commands: string[], title: string): void {
   const i18nKey = 'lib.ui.featureHighlight';
 
   uiInfoSection(title ? title : i18n(`${i18nKey}.defaultTitle`), () => {
@@ -121,9 +102,9 @@ const uiFeatureHighlight = (commands, title) => {
       logger.log(message);
     });
   });
-};
+}
 
-const uiBetaTag = (message, log = true) => {
+export function uiBetaTag(message: string, log = true): void | string {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -138,9 +119,9 @@ const uiBetaTag = (message, log = true) => {
   } else {
     return result;
   }
-};
+}
 
-const uiDeprecatedTag = (message, log = true) => {
+export function uiDeprecatedTag(message: string): void {
   const i18nKey = 'lib.ui';
 
   const terminalUISupport = getTerminalUISupport();
@@ -150,25 +131,21 @@ const uiDeprecatedTag = (message, log = true) => {
     terminalUISupport.color ? chalk.yellow(tag) : tag
   } ${message}`;
 
-  if (log) {
-    logger.log(result);
-  } else {
-    return result;
-  }
-};
+  logger.log(result);
+}
 
-const uiCommandDisabledBanner = (
-  command,
-  url = undefined,
-  message = undefined
-) => {
+export function uiCommandDisabledBanner(
+  command: string,
+  url?: string,
+  message?: string
+): void {
   const i18nKey = 'lib.ui';
 
   const tag =
     message ||
     i18n(`${i18nKey}.disabledMessage`, {
       command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : undefined,
+      url: url ? uiLink(i18n(`${i18nKey}.disabledUrlText`), url) : '',
       npmCommand: uiCommandReference('npm i -g @hubspot/cli@latest'),
     });
 
@@ -177,50 +154,38 @@ const uiCommandDisabledBanner = (
   logger.error(tag);
   uiLine();
   logger.log();
-};
+}
 
-const uiDeprecatedDescription = (
-  message,
-  command,
-  url = undefined,
-  log = false
-) => {
+export function uiDeprecatedDescription(
+  message: string,
+  command: string,
+  url?: string
+) {
   const i18nKey = 'lib.ui';
 
   const tag = i18n(`${i18nKey}.deprecatedDescription`, {
     message,
     command: uiCommandReference(command),
-    url,
+    url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : '',
   });
-  return uiDeprecatedTag(tag, log);
-};
+  return uiDeprecatedTag(tag);
+}
 
-const uiDeprecatedMessage = (command, url = undefined, message = undefined) => {
+export function uiDeprecatedMessage(
+  command: string,
+  url?: string,
+  message?: string
+): void {
   const i18nKey = 'lib.ui';
 
   const tag =
     message ||
     i18n(`${i18nKey}.deprecatedMessage`, {
       command: uiCommandReference(command),
-      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : undefined,
+      url: url ? uiLink(i18n(`${i18nKey}.deprecatedUrlText`), url) : '',
     });
 
   logger.log();
-  uiDeprecatedTag(tag, true);
+  uiDeprecatedTag(tag);
   logger.log();
-};
-
-module.exports = {
-  UI_COLORS,
-  uiAccountDescription,
-  uiCommandReference,
-  uiBetaTag,
-  uiDeprecatedTag,
-  uiFeatureHighlight,
-  uiInfoSection,
-  uiLine,
-  uiLink,
-  uiDeprecatedMessage,
-  uiDeprecatedDescription,
-  uiCommandDisabledBanner,
-};
+}

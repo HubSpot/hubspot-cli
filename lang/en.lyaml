@@ -178,6 +178,7 @@ en:
           describe: "Type of asset"
       subcommands:
         apiSample:
+          folderOverwritePrompt: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
           errors:
             nameRequired: "The \"name\" argument is required when creating an API Sample."
             noSamples: "Currently there are no samples available, please, try again later."
@@ -274,6 +275,14 @@ en:
               success:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
+    doctor:
+      describe: "Retrieve diagnostic information about your local HubSpot configurations."
+      options:
+        outputDir: "Directory to save a detailed diagnosis JSON file in"
+      errors:
+        generatingDiagnosis: "Error generating diagnosis"
+        unableToWriteOutputFile: "Unable to write output to {{#bold}}{{ file }}{{/bold}}, {{ errorMessage }}"
+      outputWritten: "Output written to {{#bold}}{{ filename }}{{/bold}}"
     fetch:
       describe: "Fetch a file, directory or module from HubSpot and write to a path on your computer."
       errors:
@@ -570,6 +579,7 @@ en:
             withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
           describe: "Deploy a project build"
+          deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
           errors:
@@ -702,6 +712,11 @@ en:
           success: "Successfully opened \"{{ projectName }}\""
         feedback:
           describe: "Leave feedback on HubSpot projects or file a bug report"
+          feedbackType:
+            prompt: "What type of feedback would you like to leave?"
+            bug: "[--bug] Report a bug"
+            general: "[--general] Tell us about your experience with HubSpot's developer tools"
+          openPrompt: "Create a Github issue in your browser?"
           success: "We opened {{ url }} in your browser."
           options:
             bug:
@@ -999,6 +1014,7 @@ en:
         installCount: "{{#bold}}The app {{ appName }} has {{ installCount }} production {{ installText }}{{/bold}}"
         explanation: "Some changes made during local development may need to be synced to HubSpot, which will impact those existing installs. We strongly recommend creating a copy of this app to use instead."
         confirmation: "You will always be asked to confirm any permanent changes to your app’s configuration before uploading them."
+        confirmationPrompt: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
       devServer:
         cleanupError: "Failed to cleanup local dev server: {{ message }}"
         setupError: "Failed to setup local dev server: {{ message }}"
@@ -1193,8 +1209,6 @@ en:
           invalidOauthClientSecretCopy: "Please copy the actual OAuth2 client secret rather than the asterisks that mask it."
           invalidPersonalAccessKey: "You did not enter a valid access key. Please try again."
           invalidPersonalAccessKeyCopy: "Please copy the actual access key rather than the bullets that mask it."
-      folderOverwritePrompt:
-        overwriteConfirm: "The folder with name \"{{ folderName }}\" already exists. Overwrite?"
       createTemplatePrompt:
         selectTemplate: "Select the type of template to create"
       createModulePrompt:
@@ -1276,15 +1290,6 @@ en:
         errors:
           invalidName: "You entered an invalid name. Please try again."
           projectDoesNotExist: "Project {{#bold}}{{ projectName }}{{/bold}} could not be found in \"{{ accountIdentifier }}\""
-      feedbackPrompt:
-        feedbackType:
-          message: "What type of feedback would you like to leave?"
-          bug: "[--bug] Report a bug"
-          general: "[--general] Tell us about your experience with HubSpot's developer tools"
-        bugPrompt: "Create an issue on Github in your browser?"
-        generalPrompt: "Create an issue on Github in your browser?"
-      deployBuildIdPrompt:
-        enterBuildId: "[--build] Deploy which build?"
       previewPrompt:
         enterSrc: "[--src] Enter a local theme directory to preview."
         enterDest: "[--dest] Enter the destination path for the src theme in HubSpot Design Tools."
@@ -1300,8 +1305,6 @@ en:
         prompt: "Open hubspot.com to install this app?"
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
-      activeInstallConfirmationPrompt:
-        message: "Proceed with local development of this {{#bold}}production{{/bold}} app?"
     convertFields:
       positionals:
         src:
@@ -1423,3 +1426,62 @@ en:
         portalMissingScope: "Your account does not have access to this action. Talk to an account admin to request it."
         userMissingScope: "You don't have access to this action. Ask an account admin to change your permissions in Users & Teams settings."
         genericMissingScope: "Your access key does not allow this action. Please generate a new access key by running `hs auth personalaccesskey`."
+    doctor:
+      runningDiagnostics: "Running diagnostics..."
+      diagnosticsComplete: "Diagnostics complete"
+      accountChecks:
+        active: "Default account active"
+        inactive: "Default account isn't active"
+        inactiveSecondary: "Run {{ command }} to remove inactive accounts from your CLI config"
+        unableToDetermine: "Unable to determine if the portal is active"
+        pak:
+          invalid: "Personal access key is invalid"
+          invalidSecondary: "To get a new key, run {{ command }}, deactivate your access key, and generate a new one. Then use that new key to authenticate your account."
+          valid: "Personal Access Key is valid. {{ link }}"
+          viewScopes: "View selected scopes"
+      nodeChecks:
+        unableToDetermine: "Unable to determine what version of node is installed"
+        minimumNotMet: "Minimum Node version is not met. Upgrade to {{ nodeVersion }} or higher"
+        success: "node v{{ nodeVersion }} is installed"
+      npmChecks:
+        notInstalled: "npm is not installed"
+        installed: "npm v{{ npmVersion }} is installed"
+        unableToDetermine: "Unable to determine if npm is installed"
+      hsChecks:
+        notLatest: "Version {{ hsVersion }} outdated"
+        notLatestSecondary: "Run {{ command }} to upgrade to the latest version {{ hsVersion }}"
+        latest: "HubSpot CLI v{{ hsVersion }} up to date"
+        unableToDetermine: "Unable to determine if HubSpot CLI is up to date."
+        unableToDetermineSecondary: "Run {{ command }} to check your installed version; then visit the {{ link }} to validate whether you have the latest version"
+        unableToDetermineSecondaryLink: "npm HubSpot CLI version history"
+      projectDependenciesChecks:
+        missingDependencies: "missing dependencies in {{#bold}}{{ dir }}{{/bold}}"
+        missingDependenciesSecondary: "Run {{ command }} to install all project dependencies locally"
+        unableToDetermine: "Unable to determine if dependencies are installed {{ dir }}"
+        success: "App dependencies are installed and up to date"
+      files:
+        invalidJson: "invalid JSON in {{#bold}}{{ filename }}{{/bold}}"
+        validJson: "JSON files valid"
+      port:
+        inUse: "Port {{ port }} is in use"
+        inUseSecondary: "Make sure it is available if before running {{ command }}"
+        available: "Port {{ port }} available for local development"
+      diagnosis:
+        cli:
+          header: "HubSpot CLI install"
+        cliConfig:
+          header: "CLI configuration"
+          configFileSubHeader: "Config File: {{#bold}}{{ filename }}{{/bold}}"
+          defaultAccountSubHeader: "Default Account: {{accountDetails}}"
+          noConfigFile: "CLI configuration not found"
+          noConfigFileSecondary: "Run {{command}} and follow the prompts to create your CLI configuration file and connect it to your HubSpot account"
+        projectConfig:
+          header: "Project configuration"
+          projectDirSubHeader: "Project dir: {{#bold}}{{ projectDir }}{{/bold}}"
+          projectNameSubHeader: "Project name: {{#bold}}{{ projectName }}{{/bold}}"
+        counts:
+          errors: '{{#bold}}Errors:{{/bold}} {{ count }}'
+          warnings: "{{#bold}}Warning:{{/bold}} {{ count }}"
+
+
+

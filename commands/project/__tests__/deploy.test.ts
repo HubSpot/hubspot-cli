@@ -25,9 +25,7 @@ const {
   getProjectDetailUrl,
 } = require('../../../lib/projects');
 const { projectNamePrompt } = require('../../../lib/prompts/projectNamePrompt');
-const {
-  deployBuildIdPrompt,
-} = require('../../../lib/prompts/deployBuildIdPrompt');
+const { promptUser } = require('../../../lib/prompts/promptUtils');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
@@ -39,7 +37,7 @@ jest.mock('../../../lib/commonOpts');
 jest.mock('../../../lib/validation');
 jest.mock('../../../lib/projects');
 jest.mock('../../../lib/prompts/projectNamePrompt');
-jest.mock('../../../lib/prompts/deployBuildIdPrompt');
+jest.mock('../../../lib/prompts/promptUtils');
 jest.mock('../../../lib/usageTracking');
 jest.spyOn(ui, 'uiLine');
 const uiLinkSpy = jest.spyOn(ui, 'uiLink').mockImplementation(text => text);
@@ -132,9 +130,6 @@ describe('commands/project/deploy', () => {
       getAccountConfig.mockReturnValue({ accountType });
       fetchProject.mockResolvedValue({ data: projectDetails });
       deployProject.mockResolvedValue({ data: deployDetails });
-      deployBuildIdPrompt.mockResolvedValue({
-        buildId: projectDetails.latestBuild.buildId,
-      });
 
       // Spy on process.exit so our tests don't close when it's called
       processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
@@ -262,22 +257,19 @@ describe('commands/project/deploy', () => {
 
     it('should prompt for build id if no option is provided', async () => {
       delete options.buildId;
+      promptUser.mockResolvedValue({
+        buildId: projectDetails.latestBuild.buildId,
+      });
       await deployCommand.handler(options);
-      expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
-      expect(deployBuildIdPrompt).toHaveBeenCalledWith(
-        projectDetails.latestBuild.buildId,
-        projectDetails.deployedBuildId,
-        expect.any(Function)
-      );
+      expect(promptUser).toHaveBeenCalledTimes(1);
     });
 
     it('should log an error and exit if the prompted value is invalid', async () => {
       delete options.buildId;
-      deployBuildIdPrompt.mockReturnValue({});
-
+      promptUser.mockResolvedValue({});
       await deployCommand.handler(options);
 
-      expect(deployBuildIdPrompt).toHaveBeenCalledTimes(1);
+      expect(promptUser).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
         'You must specify a build to deploy'

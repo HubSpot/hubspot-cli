@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lib/doctor/Diagnosis toString should generate categories that have sections 1`] = `
+"
+HubSpot CLI install
+  ✓ Important CLI Message
+    - The CLI Section is Showing
+
+Errors: 0
+Warning: 0
+"
+`;
+
+exports[`lib/doctor/Diagnosis toString should generate the diagnosis output 1`] = `
+"
+HubSpot CLI install
+  ✓ Important CLI Message
+    - The CLI Section is Showing
+
+CLI configuration
+Config File: path/to/config.json
+Default Account: Standard Account [standard] (123456)
+  ✖ Important CLI Config Message
+    - The CLI Config Section is Showing
+
+Project configuration
+Project dir: project-dir
+Project name: Super cool project
+  ! Important Project Message
+    - The Project Section is Showing
+
+Errors: 1
+Warning: 1
+"
+`;

@@ -37,9 +37,7 @@ const {
 } = require('./ui');
 const { logError } = require('./errorHandlers/index');
 const { installPublicAppPrompt } = require('./prompts/installPublicAppPrompt');
-const {
-  activeInstallConfirmationPrompt,
-} = require('./prompts/activeInstallConfirmationPrompt');
+const { confirmPrompt } = require('./prompts/promptUtils');
 
 const WATCH_EVENTS = {
   add: 'add',
@@ -150,7 +148,11 @@ class LocalDevManager {
     );
     logger.log(i18n(`${i18nKey}.activeInstallWarning.explanation`));
     uiLine();
-    const proceed = await activeInstallConfirmationPrompt();
+
+    const proceed = await confirmPrompt(
+      i18n(`${i18nKey}.activeInstallWarning.confirmationPrompt`),
+      { defaultAnswer: false }
+    );
 
     if (!proceed) {
       process.exit(EXIT_CODES.SUCCESS);
