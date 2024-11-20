@@ -18,6 +18,7 @@ import {
   getLinesLength,
   purgeSpinnerOptions,
   purgeSpinnersOptions,
+  Spinner,
   SPINNERS,
   terminalSupportsUnicode,
   writeStream,
@@ -58,7 +59,9 @@ class SpinniesManager {
       spinnerColor: 'greenBright',
       succeedColor: 'green',
       failColor: 'red',
-      spinner: terminalSupportsUnicode() ? SPINNERS.dots : SPINNERS.dashes,
+      spinner: (terminalSupportsUnicode()
+        ? SPINNERS.dots
+        : SPINNERS.dashes) as Spinner,
       disableSpins: false,
       ...purgeSpinnersOptions(options),
     };
