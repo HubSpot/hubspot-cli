@@ -10,6 +10,7 @@ const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
 const {
   loadConfig,
   configFileExists,
+  getConfigPath,
 } = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
 const {
@@ -147,13 +148,22 @@ const setRequestHeaders = () => {
 const loadConfigMiddleware = async options => {
   if (configFileExists(true)) {
     loadConfig('', options);
+
+    if (options.config) {
+      logger.error(
+        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+          configPath: getConfigPath(),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
   }
 
-  if (options.config) {
-    if (fs.existsSync(options.config)) {
-      const { config: configPath } = options;
-      await loadConfig(configPath, options);
-    }
+  // We need to load the config when options.config exists,
+  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
+  if (options.config && fs.existsSync(options.config)) {
+    const { config: configPath } = options;
+    await loadConfig(configPath, options);
   }
 };
 

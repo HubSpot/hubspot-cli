@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, beforeAll, it, expect, afterAll } from 'vitest';
 import { TestState } from '../../lib/TestState';
 import { getInitPromptSequence, ENTER } from '../../lib/prompt';
 
@@ -6,20 +6,31 @@ describe('Account Management Flow', () => {
   let testState: TestState;
   const accountName = 'test-account';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     testState = new TestState();
-    await testState.cli.executeWithTestConfig(
-      ['init'],
-      getInitPromptSequence(testState.getPAK(), accountName)
-    );
   });
 
-  afterEach(() => {
+  afterAll(() => {
     testState.cleanup();
+  });
+
+  describe('initial state', () => {
+    it('config file should not exist', async () => {
+      expect(
+        testState.existsInTestOutputDirectory(
+          testState.getTestConfigPathRelativeToOutputDir()
+        )
+      ).toBe(false);
+    });
   });
 
   describe('hs init', () => {
     it('should generate a config file', async () => {
+      await testState.cli.executeWithTestConfig(
+        ['init'],
+        getInitPromptSequence(testState.getPAK(), accountName)
+      );
+
       expect(
         testState.existsInTestOutputDirectory(
           testState.getTestConfigPathRelativeToOutputDir()
@@ -45,6 +56,7 @@ describe('Account Management Flow', () => {
         'accounts',
         'info',
       ]);
+
       expect(output).toContain(accountName);
     });
   });
@@ -56,9 +68,17 @@ describe('Account Management Flow', () => {
         'remove',
         `--account=${accountName}`,
       ]);
+    });
+  });
 
-      const parsedConfig = testState.getParsedConfig();
-      expect(parsedConfig.portals).toHaveLength(0);
+  describe('hs accounts list', () => {
+    it('should not list the removed authenticated account', async () => {
+      const output = await testState.cli.executeWithTestConfig([
+        'accounts',
+        'list',
+      ]);
+
+      expect(output).not.toContain(accountName);
     });
   });
 
