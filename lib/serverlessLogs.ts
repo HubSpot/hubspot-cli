@@ -133,6 +133,7 @@ const tailLogs = async ({
     }
 
     if (latestLog && latestLog.results.length) {
+      console.log('latestLog', latestLog);
       outputLogs(latestLog, {
         compact,
       });
