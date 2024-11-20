@@ -1,4 +1,3 @@
-// @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   isHubSpotHttpError,
@@ -7,37 +6,39 @@ const {
   isValidationError,
   isMissingScopeError,
 } = require('@hubspot/local-dev-lib/errors/index');
+import { FileSystemError } from '@hubspot/local-dev-lib/models/FileSystemError';
+import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
+import { BaseError } from '@hubspot/local-dev-lib/types/Error';
 const { shouldSuppressError } = require('./suppressError');
 const { i18n } = require('../lang');
 const util = require('util');
-const { isAxiosError } = require('axios');
 
 const i18nKey = 'lib.errorHandlers.index';
 
-function logError(error, context = {}) {
+export function logError(error: unknown, context?: typeof ApiErrorContext) {
   debugError(error, context);
 
   if (
     shouldSuppressError(error, context) ||
-    shouldSuppressError(error, error.context)
+    shouldSuppressError(error, (error as HubSpotHttpError).context)
   ) {
     return;
   }
 
-  if (isHubSpotHttpError(error) && context) {
-    error.updateContext(context);
+  if (isHubSpotHttpError(error) && context instanceof ApiErrorContext) {
+    (error as HubSpotHttpError).updateContext(context);
   }
 
   if (isHubSpotHttpError(error) || isFileSystemError(error)) {
     if (isValidationError(error) || isMissingScopeError(error)) {
-      logger.error(error.formattedValidationErrors());
+      logger.error((error as HubSpotHttpError).formattedValidationErrors());
     } else {
-      logger.error(error.message);
+      logger.error((error as HubSpotHttpError | FileSystemError).message);
     }
   } else if (isSystemError(error)) {
-    logger.error(error.message);
-  } else if (error.message || error.reason) {
-    const message = [];
+    logger.error((error as BaseError).message);
+  } else if (isErrorWithMessageOrReason(error)) {
+    const message: string[] = [];
 
     [error.message, error.reason].forEach(msg => {
       if (msg) {
@@ -51,25 +52,17 @@ function logError(error, context = {}) {
   }
 }
 
-/**
- * Logs (debug) the error and context objects.
- *
- * @param {Error}  error
- * @param {ApiErrorContext} context
- */
-function debugError(error, context = {}) {
+export function debugError(error: unknown, context?: typeof ApiErrorContext) {
   if (isHubSpotHttpError(error)) {
-    logger.debug(error.toString());
+    logger.debug((error as HubSpotHttpError).toString());
   } else {
     logger.debug(i18n(`${i18nKey}.errorOccurred`, { error }));
   }
 
-  if (error.cause) {
+  if (isErrorWithCause(error)) {
     logger.debug(
       i18n(`${i18nKey}.errorCause`, {
-        cause: isAxiosError(error.cause)
-          ? error.cause
-          : util.inspect(error.cause, false, null, true),
+        cause: util.inspect(error.cause, false, null, true),
       })
     );
   }
@@ -82,21 +75,37 @@ function debugError(error, context = {}) {
   }
 }
 
-class ApiErrorContext {
-  constructor(props = {}) {
-    /** @type {number} */
+export class ApiErrorContext {
+  accountId?: number;
+  request?: string;
+  payload?: string;
+  projectName?: string;
+
+  constructor(
+    props: {
+      accountId?: number;
+      request?: string;
+      payload?: string;
+      projectName?: string;
+    } = {}
+  ) {
     this.accountId = props.accountId;
-    /** @type {string} */
     this.request = props.request || '';
-    /** @type {string} */
     this.payload = props.payload || '';
-    /** @type {string} */
     this.projectName = props.projectName || '';
   }
 }
 
-module.exports = {
-  logError,
-  debugError,
-  ApiErrorContext,
-};
+function isErrorWithCause(error: unknown): error is { cause: unknown } {
+  return typeof error === 'object' && error !== null && 'cause' in error;
+}
+
+function isErrorWithMessageOrReason(
+  error: unknown
+): error is { message?: string; reason?: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    ('message' in error || 'reason' in error)
+  );
+}

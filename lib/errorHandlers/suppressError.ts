@@ -1,7 +1,7 @@
-// @ts-nocheck
 const {
   isSpecifiedError,
   isMissingScopeError,
+  ApiErrorContext,
 } = require('@hubspot/local-dev-lib/errors/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { PLATFORM_VERSION_ERROR_TYPES } = require('../constants');
@@ -15,25 +15,43 @@ const {
 
 const i18nKey = 'lib.errorHandlers.suppressErrors';
 
-function createPlatformVersionError(err, subCategory) {
+function createPlatformVersionError(err: unknown, subCategory: string): void {
   let translationKey = 'unspecifiedPlatformVersion';
   let platformVersion = 'unspecified platformVersion';
   const errorContext =
-    err.response && err.response.data && err.response.data.context;
+    typeof err === 'object' &&
+    err !== null &&
+    'response' in err &&
+    typeof err.response === 'object' &&
+    err.response !== null &&
+    'data' in err.response &&
+    typeof err.response.data === 'object' &&
+    err.response.data !== null &&
+    'context' in err.response.data
+      ? err.response.data.context
+      : undefined;
 
   switch (subCategory) {
-    case [PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED]:
+    case PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED:
       translationKey = 'platformVersionRetired';
-      if (errorContext && errorContext[subCategory]) {
-        platformVersion = errorContext[subCategory];
+      if (
+        errorContext &&
+        (errorContext as { [key: string]: string })[subCategory]
+      ) {
+        platformVersion = (errorContext as { [key: string]: string })[
+          subCategory
+        ];
       }
       break;
-    case [
-      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST,
-    ]:
+    case PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST:
       translationKey = 'nonExistentPlatformVersion';
-      if (errorContext && errorContext[subCategory]) {
-        platformVersion = errorContext[subCategory];
+      if (
+        errorContext &&
+        (errorContext as { [key: string]: string })[subCategory]
+      ) {
+        platformVersion = (errorContext as { [key: string]: string })[
+          subCategory
+        ];
       }
       break;
     default:
@@ -59,7 +77,10 @@ function createPlatformVersionError(err, subCategory) {
   uiLine();
 }
 
-function shouldSuppressError(err, context = {}) {
+export function shouldSuppressError(
+  err: unknown,
+  context?: typeof ApiErrorContext
+): boolean {
   if (isMissingScopeError(err)) {
     logger.error(
       i18n(`${i18nKey}.missingScopeError`, {
@@ -78,10 +99,12 @@ function shouldSuppressError(err, context = {}) {
       subCategory: PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED,
     })
   ) {
-    createPlatformVersionError(
-      err.data,
-      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
-    );
+    if (typeof err === 'object' && err !== null && 'data' in err) {
+      createPlatformVersionError(
+        (err as { data: unknown }).data,
+        PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_NOT_SPECIFIED
+      );
+    }
     return true;
   }
 
@@ -90,10 +113,12 @@ function shouldSuppressError(err, context = {}) {
       subCategory: PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED,
     })
   ) {
-    createPlatformVersionError(
-      err.data,
-      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED
-    );
+    if (typeof err === 'object' && err !== null && 'data' in err) {
+      createPlatformVersionError(
+        (err as { data: unknown }).data,
+        PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_RETIRED
+      );
+    }
     return true;
   }
 
@@ -103,15 +128,13 @@ function shouldSuppressError(err, context = {}) {
         PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST,
     })
   ) {
-    createPlatformVersionError(
-      err.data,
-      PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
-    );
+    if (typeof err === 'object' && err !== null && 'data' in err) {
+      createPlatformVersionError(
+        (err as { data: unknown }).data,
+        PLATFORM_VERSION_ERROR_TYPES.PLATFORM_VERSION_SPECIFIED_DOES_NOT_EXIST
+      );
+    }
     return true;
   }
   return false;
 }
-
-module.exports = {
-  shouldSuppressError,
-};
