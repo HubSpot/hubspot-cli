@@ -1473,7 +1473,7 @@
     table "^6.8.1"
     tmp "^0.2.1"
 
-"@hubspot/theme-preview-dev-server@^0.0.9":
+"@hubspot/theme-preview-dev-server@0.0.9":
   version "0.0.9"
   resolved "https://registry.yarnpkg.com/@hubspot/theme-preview-dev-server/-/theme-preview-dev-server-0.0.9.tgz#51ce32156365527dfd2d7044f5a87f90d6434283"
   integrity sha512-w6a6E9f6DVbUcVGStEFakUL9voUMfyuYZRVsoIyaWR5fYlejmn1MJnpMlkU25W2nRWDwkr8RgdYMvZ/DstJUzw==
@@ -11315,6 +11315,7 @@ wordwrap@^1.0.0:
   integrity sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
+  name wrap-ansi-cjs
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
