@@ -1350,25 +1350,25 @@
     express "^4.18.2"
     uuid "^9.0.1"
 
-"@hubspot/cms-components@^0.18.8":
-  version "0.18.8"
-  resolved "https://registry.yarnpkg.com/@hubspot/cms-components/-/cms-components-0.18.8.tgz#34f1f09472481efda1d04b263f47f6c345c0b89a"
-  integrity sha512-x541Lt3nyXDMIztBhI/gjEwgzzmN+clxFTOcmpyWPL2oHNTyslGyEhS7o+PPtJ5pKv0jiyQuIysHlrSVqNh3dA==
+"@hubspot/cms-components@^0.18.9":
+  version "0.18.9"
+  resolved "https://registry.yarnpkg.com/@hubspot/cms-components/-/cms-components-0.18.9.tgz#c091e91ae6322151a7d80b44121ccd822c805419"
+  integrity sha512-lx9z94AxGHK7MVdTyNHyOu8d7TIBCUhv9KKlBHw3s6jrO8uxGHhyIA3/dIOYfP3LIjY8pYLXzcnePglKn/1ZwA==
   dependencies:
     dot-prop "^8.0.2"
     react "18.3.1"
     react-dom "18.3.1"
 
-"@hubspot/cms-dev-server@^0.18.8":
-  version "0.18.8"
-  resolved "https://registry.yarnpkg.com/@hubspot/cms-dev-server/-/cms-dev-server-0.18.8.tgz#38db15a201288f94ed8c70ea19284e36c5dccbe5"
-  integrity sha512-8C8iN5377Fz1AWvueR8xmJAKHAR6LjT0iLYW5zWDwAJCXDj3f2yK/xQ3/a5Mp9o/4ikko3qsOb1B+UdLyz1SZg==
+"@hubspot/cms-dev-server@^0.18.9":
+  version "0.18.9"
+  resolved "https://registry.yarnpkg.com/@hubspot/cms-dev-server/-/cms-dev-server-0.18.9.tgz#e1f5f96eb47749999d0776aafe24dd8a893cd229"
+  integrity sha512-OtVvKy+8qfCUgOdQ3Z1Qa9sAGxq1oFG6MinmxjuPoTatnjQaS1SQNMRJyXM7nqqZW+58oz4woA/JnFIxSbbBDA==
   dependencies:
     "@babel/code-frame" "^7.24.7"
     "@babel/parser" "^7.25.3"
     "@babel/traverse" "^7.25.3"
     "@babel/types" "^7.25.2"
-    "@hubspot/cms-components" "^0.18.8"
+    "@hubspot/cms-components" "^0.18.9"
     "@hubspot/local-dev-lib" "2.0.1"
     "@inquirer/select" "^2.0.0"
     "@originjs/vite-plugin-commonjs" "^1.0.3"
@@ -6299,9 +6299,9 @@ flatted@^3.2.9:
   integrity sha512-AiwGJM8YcNOaobumgtng+6NHuOqC3A7MixFeDafM3X9cIUM+xUXoS5Vfgf+OihAYe20fxqNM9yPBXJzRtZ/4eA==
 
 flow-parser@0.*:
-  version "0.253.0"
-  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.253.0.tgz#d2f52afe2eec89534d4adc384373b70f5fa35d7c"
-  integrity sha512-EbxtzRIzp8dDSzTloPhsc6uOvrEFIyu08cqQzXBWLAgxK+i2d/5qOos9ryQHRmk+RyDDXfnz/7qteh3jnAlc4w==
+  version "0.254.1"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.254.1.tgz#914a3420506c0dbd7a3be73d94c51ca41f2a7727"
+  integrity sha512-dyUrQD6ZyI4PVQppj8PP5kj6BVThK8FprAcPCnJNLIZM7zcAL6/xGS1EE1haWv2HcO/dHy7GSwOAO59uaffjYw==
 
 follow-redirects@^1.0.0, follow-redirects@^1.15.6:
   version "1.15.9"
@@ -9255,9 +9255,9 @@ proxy-from-env@^1.0.0, proxy-from-env@^1.1.0:
   integrity sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==
 
 psl@^1.1.28:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/psl/-/psl-1.10.0.tgz#1450f7e16f922c3beeb7bd9db3f312635018fa15"
-  integrity sha512-KSKHEbjAnpUuAUserOq0FxGXCUrzC3WniuSJhvdbs102rL55266ZcHBqLWOsG30spQMlPdpy7icATiAQehg/iA==
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/psl/-/psl-1.12.0.tgz#8b09cba186ebee68c0d824c1b22944cf5b2ad42c"
+  integrity sha512-OVcqwt4qWJF9G0fnSEMNz7aSa1PiGX/IvSXDO+PpbDK3r/IJ3QX2iu8ywanYG07e9IaYDigMu+EapE8TdMZOJQ==
   dependencies:
     punycode "^2.3.1"
 
@@ -9602,14 +9602,14 @@ regexp.prototype.flags@^1.5.1, regexp.prototype.flags@^1.5.3:
     set-function-name "^2.0.2"
 
 regexpu-core@^6.1.1:
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/regexpu-core/-/regexpu-core-6.1.1.tgz#b469b245594cb2d088ceebc6369dceb8c00becac"
-  integrity sha512-k67Nb9jvwJcJmVpw0jPttR1/zVfnKf8Km0IPatrU/zJ5XeG3+Slx0xLXs9HByJSzXzrlz5EDvN6yLNMDc2qdnw==
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/regexpu-core/-/regexpu-core-6.2.0.tgz#0e5190d79e542bf294955dccabae04d3c7d53826"
+  integrity sha512-H66BPQMrv+V16t8xtmq+UC0CBpiTBA60V8ibS1QVReIp8T1z8hwFxqcGzm9K6lgsN7sB5edVH8a+ze6Fqm4weA==
   dependencies:
     regenerate "^1.4.2"
     regenerate-unicode-properties "^10.2.0"
     regjsgen "^0.8.0"
-    regjsparser "^0.11.0"
+    regjsparser "^0.12.0"
     unicode-match-property-ecmascript "^2.0.0"
     unicode-match-property-value-ecmascript "^2.1.0"
 
@@ -9632,10 +9632,10 @@ regjsgen@^0.8.0:
   resolved "https://registry.yarnpkg.com/regjsgen/-/regjsgen-0.8.0.tgz#df23ff26e0c5b300a6470cad160a9d090c3a37ab"
   integrity sha512-RvwtGe3d7LvWiDQXeQw8p5asZUmfU1G/l6WbUXeHta7Y2PEIvBTwH6E2EfmYUK8pxcxEdEmaomqyp0vZZ7C+3Q==
 
-regjsparser@^0.11.0:
-  version "0.11.2"
-  resolved "https://registry.yarnpkg.com/regjsparser/-/regjsparser-0.11.2.tgz#7404ad42be00226d72bcf1f003f1f441861913d8"
-  integrity sha512-3OGZZ4HoLJkkAZx/48mTXJNlmqTGOzc0o9OWQPuWpkOlXXPbyN6OafCcoXUnBqE2D3f/T5L+pWc1kdEmnfnRsA==
+regjsparser@^0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/regjsparser/-/regjsparser-0.12.0.tgz#0e846df6c6530586429377de56e0475583b088dc"
+  integrity sha512-cnE+y8bz4NhMjISKbgeVJtqNbtf5QpjZP+Bslo+UqkIt9QPnX9q095eiRRASJG1/tz6dlNr6Z5NsBiWYokp6EQ==
   dependencies:
     jsesc "~3.0.2"
 
@@ -10576,17 +10576,17 @@ tiny-invariant@^1.3.1, tiny-invariant@^1.3.3:
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.3.tgz#46680b7a873a0d5d10005995eb90a70d74d60127"
   integrity sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==
 
-tldts-core@^6.1.61:
-  version "6.1.61"
-  resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-6.1.61.tgz#5cd6507535ef5f5027ac9a1f52b9b60ecb9edfbd"
-  integrity sha512-In7VffkDWUPgwa+c9picLUxvb0RltVwTkSgMNFgvlGSWveCzGBemBqTsgJCL4EDFWZ6WH0fKTsot6yNhzy3ZzQ==
+tldts-core@^6.1.62:
+  version "6.1.62"
+  resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-6.1.62.tgz#4568182465aa84dd14404ccbae0e8d82364ed25d"
+  integrity sha512-ohONqbfobpuaylhqFbtCzc0dFFeNz85FVKSesgT8DS9OV3a25Yj730pTj7/dDtCqmgoCgEj6gDiU9XxgHKQlBw==
 
 tldts@^6.1.32:
-  version "6.1.61"
-  resolved "https://registry.yarnpkg.com/tldts/-/tldts-6.1.61.tgz#85df9810aa4c24bff281bf1fd0b838e087beef9c"
-  integrity sha512-rv8LUyez4Ygkopqn+M6OLItAOT9FF3REpPQDkdMx5ix8w4qkuE7Vo2o/vw1nxKQYmJDV8JpAMJQr1b+lTKf0FA==
+  version "6.1.62"
+  resolved "https://registry.yarnpkg.com/tldts/-/tldts-6.1.62.tgz#f66eaabce34287faf4d9ef7111781226aa001dbd"
+  integrity sha512-TF+wo3MgTLbf37keEwQD0IxvOZO8UZxnpPJDg5iFGAASGxYzbX/Q0y944ATEjrfxG/pF1TWRHCPbFp49Mz1Y1w==
   dependencies:
-    tldts-core "^6.1.61"
+    tldts-core "^6.1.62"
 
 tmp@^0.0.33:
   version "0.0.33"

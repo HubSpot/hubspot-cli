@@ -5,7 +5,6 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/HubSpot/hubspot-cli",
   "dependencies": {
-    "@hubspot/cms-dev-server": "^0.18.8",
     "@hubspot/local-dev-lib": "2.3.0",
     "@hubspot/serverless-dev-runtime": "7.0.0",
     "@hubspot/theme-preview-dev-server": "0.0.9",
@@ -50,6 +49,9 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
+  },
+  "optionalDependencies": {
+    "@hubspot/cms-dev-server": "^0.18.9"
   },
   "scripts": {
     "build": "ts-node ./scripts/build.ts",

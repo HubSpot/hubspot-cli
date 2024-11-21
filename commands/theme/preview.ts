@@ -179,17 +179,27 @@ exports.handler = async options => {
   };
 
   trackCommandUsage('preview', accountId);
-  const { createDevServer } = await import('@hubspot/cms-dev-server');
-  if (port) {
-    process.env['PORT'] = port;
+
+  let createUnifiedDevServer;
+  try {
+    require.resolve('@hubspot/cms-dev-server');
+    const { createDevServer } = await import('@hubspot/cms-dev-server');
+    createUnifiedDevServer = createDevServer;
+  } catch (e) {
+    logger.warn(
+      'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
+    );
   }
 
   const isUngatedForUnified = await hasFeature(
     accountId,
     'cms:react:unifiedThemePreview'
   );
-  if (isUngatedForUnified) {
-    createDevServer(
+  if (isUngatedForUnified && createUnifiedDevServer) {
+    if (port) {
+      process.env['PORT'] = port;
+    }
+    createUnifiedDevServer(
       absoluteSrc,
       false,
       false,
