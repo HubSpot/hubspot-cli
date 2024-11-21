@@ -22,7 +22,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
     }
   }
 
-  if (isHubSpotHttpError(error) && context instanceof ApiErrorContext) {
+  if (isHubSpotHttpError(error) && context) {
     error.updateContext(context);
   }
 

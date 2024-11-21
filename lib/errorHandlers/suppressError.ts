@@ -67,11 +67,10 @@ export function shouldSuppressError(
   if (isMissingScopeError(err)) {
     logger.error(
       i18n(`${i18nKey}.missingScopeError`, {
-        accountName:
-          context && context.accountId
-            ? uiAccountDescription(context.accountId)
-            : '',
-        request: (context && context.request) || 'request',
+        accountName: context?.accountId
+          ? uiAccountDescription(context.accountId)
+          : '',
+        request: context?.request || 'request',
         authCommand: uiCommandReference('hs auth'),
       })
     );
