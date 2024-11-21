@@ -1221,6 +1221,7 @@ en:
         selectReactType: "Is this a React module?"
         selectContentType: "What types of content will this module be used in?"
         confirmGlobal: "Is this a global module?"
+        availableForNewContent: "Make this module available for new content?"
         errors:
           invalidLabel: "You entered an invalid name. Please try again."
           labelRequired: "The name may not be blank. Please try again."

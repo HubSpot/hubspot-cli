@@ -52,12 +52,20 @@ const GLOBAL_PROMPT = {
   default: false,
 };
 
+const AVAILABLE_FOR_NEW_CONTENT = {
+  type: 'confirm',
+  name: 'availableForNewContent',
+  message: i18n(`${i18nKey}.availableForNewContent`),
+  default: true,
+};
+
 function createModulePrompt() {
   return promptUser([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,
     CONTENT_TYPES_PROMPT,
     GLOBAL_PROMPT,
+    AVAILABLE_FOR_NEW_CONTENT,
   ]);
 }
 
