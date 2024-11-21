@@ -3,7 +3,6 @@ import {
   isHubSpotHttpError,
   isValidationError,
 } from '@hubspot/local-dev-lib/errors/index';
-import { HubSpotHttpError } from '@hubspot/local-dev-lib/models/HubSpotHttpError';
 import { shouldSuppressError } from './suppressError';
 import { i18n } from '../lang';
 import util from 'util';
@@ -46,7 +45,7 @@ export function logError(error: unknown, context?: ApiErrorContext): void {
 
 export function debugError(error: unknown, context?: ApiErrorContext): void {
   if (isHubSpotHttpError(error)) {
-    logger.debug((error as HubSpotHttpError).toString());
+    logger.debug(error.toString());
   } else {
     logger.debug(i18n(`${i18nKey}.errorOccurred`, { error: String(error) }));
   }
