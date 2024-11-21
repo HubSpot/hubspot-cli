@@ -6,6 +6,8 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  loadConfig,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -104,9 +106,11 @@ exports.handler = async options => {
     auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
     c,
     account: optionalAccount,
-    disableTracking,
+    'use-hidden-config': useHiddenConfig,
+    'disable-tracking': disableTracking,
   } = options;
-  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
+  const configPath =
+    (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
   setLogLevel(options);
 
   if (!disableTracking) {
@@ -131,7 +135,17 @@ exports.handler = async options => {
     await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   }
 
-  createEmptyConfigFile({ path: configPath });
+  const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
+  if (doesOtherConfigFileExist) {
+    const path = getConfigPath('', !useHiddenConfig);
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
+  createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  //Needed to load deprecated config
+  loadConfig(configPath, options);
 
   handleExit(deleteEmptyConfigFile);
 
@@ -140,7 +154,6 @@ exports.handler = async options => {
       env,
       optionalAccount
     );
-    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
@@ -148,10 +161,15 @@ exports.handler = async options => {
       debugError(e);
     }
 
+    let newConfigPath = configPath;
+    if (!newConfigPath && !useHiddenConfig) {
+      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
+    }
+
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath,
+        configPath: newConfigPath,
       })
     );
     logger.success(
@@ -181,29 +199,35 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.options({
-    auth: {
-      describe: i18n(`${i18nKey}.options.auth.describe`),
-      type: 'string',
-      choices: [
-        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-        `${OAUTH_AUTH_METHOD.value}`,
-      ],
-      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-        defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      }),
-    },
-    account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
-      type: 'string',
-    },
-    'disable-tracking': {
-      type: 'boolean',
-      hidden: true,
-      default: false,
-    },
-  });
+  yargs
+    .options({
+      auth: {
+        describe: i18n(`${i18nKey}.options.auth.describe`),
+        type: 'string',
+        choices: [
+          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+          `${OAUTH_AUTH_METHOD.value}`,
+        ],
+        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
+          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }),
+      },
+      account: {
+        describe: i18n(`${i18nKey}.options.account.describe`),
+        type: 'string',
+      },
+      'disable-tracking': {
+        type: 'boolean',
+        hidden: true,
+        default: false,
+      },
+      'use-hidden-config': {
+        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+        type: 'boolean',
+      },
+    })
+    .conflicts('use-hidden-config', 'config');
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);

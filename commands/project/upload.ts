@@ -2,7 +2,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const chalk = require('chalk');
@@ -34,25 +33,24 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath, message } = options;
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
+  const { forceCreate, path: projectPath, message, derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-upload', { type: accountType }, accountId);
+  trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   validateProjectConfig(projectConfig, projectDir);
 
-  await ensureProjectExists(accountId, projectConfig.name, {
+  await ensureProjectExists(derivedAccountId, projectConfig.name, {
     forceCreate,
     uploadCommand: true,
   });
 
   try {
     const result = await handleProjectUpload(
-      accountId,
+      derivedAccountId,
       projectConfig,
       projectDir,
       pollProjectBuildAndDeploy,
@@ -72,7 +70,7 @@ exports.handler = async options => {
         logError(
           result.uploadError,
           new ApiErrorContext({
-            accountId,
+            accountId: derivedAccountId,
             request: 'project upload',
           })
         );
@@ -96,11 +94,21 @@ exports.handler = async options => {
       );
       logFeedbackMessage(result.buildId);
 
-      await displayWarnLogs(accountId, projectConfig.name, result.buildId);
+      await displayWarnLogs(
+        derivedAccountId,
+        projectConfig.name,
+        result.buildId
+      );
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (e) {
-    logError(e, new ApiErrorContext({ accountId, request: 'project upload' }));
+    logError(
+      e,
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project upload',
+      })
+    );
     process.exit(EXIT_CODES.ERROR);
   }
 };

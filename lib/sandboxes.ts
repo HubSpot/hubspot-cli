@@ -6,9 +6,9 @@ const {
 } = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const { fetchTypes } = require('@hubspot/local-dev-lib/api/sandboxSync');
 const {
-  getConfig,
   getAccountId,
   getEnv,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
 const { promptUser } = require('./prompts/promptUtils');
 const { isDevelopmentSandbox } = require('./accountTypes');
@@ -16,6 +16,9 @@ const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 const {
   HUBSPOT_ACCOUNT_TYPES,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { uiAccountDescription } = require('./ui');
 const {
   isMissingScopeError,
@@ -48,9 +51,10 @@ const getSandboxTypeAsString = accountType => {
 };
 
 function getHasSandboxesByType(parentAccountConfig, type) {
-  const config = getConfig();
-  const parentPortalId = getAccountId(parentAccountConfig.portalId);
-  for (const portal of config.portals) {
+  const id = getAccountIdentifier(parentAccountConfig);
+  const parentPortalId = getAccountId(id);
+  const accountsList = getConfigAccounts();
+  for (const portal of accountsList) {
     if (
       (portal.parentAccountId !== null ||
         portal.parentAccountId !== undefined) &&
@@ -72,8 +76,10 @@ function getSandboxLimit(error) {
 
 // Fetches available sync types for a given sandbox portal
 async function getAvailableSyncTypes(parentAccountConfig, config) {
-  const parentPortalId = getAccountId(parentAccountConfig.portalId);
-  const portalId = getAccountId(config.portalId);
+  const parentId = getAccountIdentifier(parentAccountConfig);
+  const parentPortalId = getAccountId(parentId);
+  const id = getAccountIdentifier(config);
+  const portalId = getAccountId(id);
   const {
     data: { results: syncTypes },
   } = await fetchTypes(parentPortalId, portalId);
@@ -128,7 +134,8 @@ const getSyncTypesWithContactRecordsPrompt = async (
  * @returns {null}
  */
 const validateSandboxUsageLimits = async (accountConfig, sandboxType, env) => {
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = getAccountIdentifier(accountConfig);
+  const accountId = getAccountId(id);
   const {
     data: { usage },
   } = await getSandboxUsageLimits(accountId);

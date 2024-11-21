@@ -11,7 +11,6 @@ const {
   addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
   getMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
@@ -28,7 +27,13 @@ exports.command = 'watch [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { remove, initialUpload, disableInitial, notify } = options;
+  const {
+    remove,
+    initialUpload,
+    disableInitial,
+    notify,
+    derivedAccountId,
+  } = options;
 
   await loadAndValidateOptions(options);
 
@@ -36,7 +41,6 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountId = getAccountId(options);
   const mode = getMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
@@ -85,7 +89,7 @@ exports.handler = async options => {
     );
   }
 
-  trackCommandUsage('watch', { mode }, accountId);
+  trackCommandUsage('watch', { mode }, derivedAccountId);
 
   const postInitialUploadCallback = null;
   const onUploadFolderError = error => {
@@ -93,33 +97,33 @@ exports.handler = async options => {
       i18n(`${i18nKey}.errors.folderFailed`, {
         src,
         dest,
-        accountId,
+        accountId: derivedAccountId,
       })
     );
     logError(error, {
-      accountId,
+      accountId: derivedAccountId,
     });
   };
   const onQueueAddError = null;
-  const onUploadFileError = (file, dest, accountId) => error => {
+  const onUploadFileError = (file, dest, derivedAccountId) => error => {
     logger.error(
       i18n(`${i18nKey}.errors.fileFailed`, {
         file,
         dest,
-        accountId,
+        accountId: derivedAccountId,
       })
     );
     logError(
       error,
       new ApiErrorContext({
-        accountId,
+        accountId: derivedAccountId,
         request: dest,
         payload: file,
       })
     );
   };
   watch(
-    accountId,
+    derivedAccountId,
     absoluteSrcPath,
     dest,
     {
