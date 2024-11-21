@@ -12,6 +12,7 @@ npm-debug.log.*
 coverage
 .env
 dist
+.node-version
 
 # Acceptance Tests
 acceptance-tests/my-project
