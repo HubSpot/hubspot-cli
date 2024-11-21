@@ -27,6 +27,7 @@ const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const { translate } = require('@hubspot/project-parsing-lib');
+const path = require('path');
 
 const i18nKey = 'commands.project.subcommands.upload';
 
@@ -44,7 +45,7 @@ exports.handler = async options => {
   const { projectConfig, projectDir } = await getProjectConfig(projectPath);
 
   if (options.translate) {
-    console.log(await translate(projectDir, projectConfig));
+    console.log(await translate(path.join(projectDir, projectConfig.srcDir)));
     return process.exit(EXIT_CODES.SUCCESS);
   }
 
