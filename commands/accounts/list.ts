@@ -1,6 +1,4 @@
 // @ts-nocheck
-import { addConfigOptions } from '../../lib/commonOpts';
-
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfig,
@@ -11,6 +9,7 @@ const {
 const {
   getAccountIdentifier,
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
 const { trackCommandUsage } = require('../../lib/usageTracking');

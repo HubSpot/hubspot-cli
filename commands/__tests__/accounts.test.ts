@@ -14,6 +14,7 @@ jest.mock('../accounts/use');
 jest.mock('../accounts/info');
 jest.mock('../accounts/remove');
 jest.mock('../accounts/clean');
+jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 
@@ -56,6 +57,7 @@ describe('commands/accounts', () => {
     });
 
     it.each(subcommands)('should attach the %s subcommand', (name, module) => {
+      console.log(name, module);
       accountsCommand.builder(yargs);
       expect(yargs.command).toHaveBeenCalledWith(module);
     });

@@ -1,6 +1,4 @@
 // @ts-nocheck
-import { addConfigOptions } from '../../lib/commonOpts';
-
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
@@ -10,7 +8,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const { addTestingOptions } = require('../../lib/commonOpts');
+const { addTestingOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
