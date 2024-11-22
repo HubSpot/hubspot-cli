@@ -111,12 +111,12 @@ exports.handler = async options => {
   }
 
   let projectName;
-  let projectLocation;
+  let projectDest;
   try {
-    const { name, location } = await createProjectPrompt('', options, true);
+    const { name, dest } = await createProjectPrompt('', options, true);
 
     projectName = options.name || name;
-    projectLocation = options.location || location;
+    projectDest = options.dest || dest;
 
     const { projectExists } = await ensureProjectExists(
       derivedAccountId,
@@ -189,7 +189,7 @@ exports.handler = async options => {
     const pollResponse = await poll(checkMigrationStatus, derivedAccountId, id);
     const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
-      const absoluteDestPath = path.resolve(getCwd(), projectLocation);
+      const absoluteDestPath = path.resolve(getCwd(), projectDest);
       const { env } = accountConfig;
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
@@ -256,11 +256,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    appId: {
+    'app-id': {
       describe: i18n(`${i18nKey}.options.appId.describe`),
       type: 'number',
     },

@@ -2,7 +2,10 @@
 const path = require('path');
 const chalk = require('chalk');
 
-const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
+const {
+  addAccountOptions,
+  addUseEnvironmentOptions,
+} = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
@@ -23,7 +26,7 @@ const { uiBetaTag } = require('../../lib/ui');
 const i18nKey = 'commands.project.subcommands.download';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'download [--project]';
+exports.command = 'download';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
@@ -36,7 +39,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, buildNumber, derivedAccountId } = options;
+  const { project, dest, build, derivedAccountId } = options;
   const { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
@@ -67,7 +70,7 @@ exports.handler = async options => {
 
     const absoluteDestPath = dest ? path.resolve(getCwd(), dest) : getCwd();
 
-    let buildNumberToDownload = buildNumber;
+    let buildNumberToDownload = build;
 
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
@@ -116,6 +119,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.options({
@@ -127,8 +131,9 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    buildNumber: {
-      describe: i18n(`${i18nKey}.options.buildNumber.describe`),
+    build: {
+      describe: i18n(`${i18nKey}.options.build.describe`),
+      alias: ['build-id'],
       type: 'number',
     },
   });

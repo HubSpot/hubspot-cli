@@ -21,7 +21,7 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.open';
 
-exports.command = 'open [--project]';
+exports.command = 'open';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
