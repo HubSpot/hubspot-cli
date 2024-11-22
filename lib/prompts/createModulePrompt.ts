@@ -28,12 +28,20 @@ const CONTENT_TYPES_PROMPT = {
   type: 'checkbox',
   name: 'contentTypes',
   message: i18n(`${i18nKey}.selectContentType`),
-  default: ['PAGE'],
+  default: ['ANY'],
   choices: [
-    { name: 'Page', value: 'PAGE' },
+    { name: 'Any', value: 'ANY' },
+    { name: 'Landing page', value: 'LANDING_PAGE' },
+    { name: 'Site page', value: 'SITE_PAGE' },
     { name: 'Blog post', value: 'BLOG_POST' },
     { name: 'Blog listing', value: 'BLOG_LISTING' },
     { name: 'Email', value: 'EMAIL' },
+    { name: 'Knowledge base', value: 'KNOWLEDGE_BASE' },
+    { name: 'Quote template', value: 'QUOTE_TEMPLATE' },
+    { name: 'Customer portal', value: 'CUSTOMER_PORTAL' },
+    { name: 'Web interactive', value: 'WEB_INTERACTIVE' },
+    { name: 'Subscription', value: 'SUBSCRIPTION' },
+    { name: 'Membership', value: 'MEMBERSHIP' },
   ],
   validate: input => {
     return new Promise(function(resolve, reject) {
