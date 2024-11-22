@@ -41,7 +41,7 @@ const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 const customObjectCommand = require('../commands/customObject');
-const functionsCommand = require('../commands/functions');
+const functionCommands = require('../commands/function');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
@@ -211,7 +211,7 @@ const argv = yargs
   .command(filemanagerCommand)
   .command(secretsCommand)
   .command(customObjectCommand)
-  .command(functionsCommand)
+  .command(functionCommands)
   .command({
     ...listCommand,
     aliases: 'ls',

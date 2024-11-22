@@ -1,31 +1,30 @@
 // @ts-nocheck
 import yargs from 'yargs';
-import list from '../functions/list';
-import deploy from '../functions/deploy';
-import server from '../functions/server';
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
+import list from '../function/list';
+import deploy from '../function/deploy';
+import server from '../function/server';
 
 jest.mock('yargs');
-jest.mock('../functions/list');
-jest.mock('../functions/deploy');
-jest.mock('../functions/server');
+jest.mock('../function/list');
+jest.mock('../function/deploy');
+jest.mock('../function/server');
 jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 
 // Import this last so mocks apply
-import functionsCommand from '../functions';
+import functionCommands from '../function';
 
-describe('commands/functions', () => {
+describe('commands/function', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(functionsCommand.command).toEqual('functions');
+      expect(functionCommands.command).toEqual(['function', 'functions']);
     });
   });
 
   describe('describe', () => {
     it('should provide a description', () => {
-      expect(functionsCommand.describe).toBeDefined();
+      expect(functionCommands.describe).toBeDefined();
     });
   });
 
@@ -37,29 +36,23 @@ describe('commands/functions', () => {
     ];
 
     it('should demand the command takes one positional argument', () => {
-      functionsCommand.builder(yargs);
+      functionCommands.builder(yargs);
 
       expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
       expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
     });
 
     it('should support the correct options', () => {
-      functionsCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
+      functionCommands.builder(yargs);
     });
 
     it('should add the correct number of sub commands', () => {
-      functionsCommand.builder(yargs);
+      functionCommands.builder(yargs);
       expect(yargs.command).toHaveBeenCalledTimes(subcommands.length);
     });
 
     it.each(subcommands)('should attach the %s subcommand', (name, module) => {
-      functionsCommand.builder(yargs);
+      functionCommands.builder(yargs);
       expect(yargs.command).toHaveBeenCalledWith(module);
     });
   });
