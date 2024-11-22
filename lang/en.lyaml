@@ -196,35 +196,36 @@ en:
             nameRequired: "The \"name\" argument is required when creating a Template."
     customObject:
       betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
-      describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+      describe: "Commands for managing custom objects."
       seeMoreLink: "View our docs to find out more."
       subcommands:
         create:
-          describe: "Create custom object instances"
+          describe: "Create custom object instances."
           errors:
             creationFailed: "Object creation from {{ definition }} failed"
-          positionals:
-            definition:
+          options:
+            path:
               describe: "Local path to the JSON file containing an array of object definitions"
+          positionals:
             name:
               describe: "Schema name to add the object instance to"
           success:
             objectsCreated: "Objects created"
         schema:
-          describe: "Manage custom object schemas"
+          describe: "Commands for managing custom object schemas."
           subcommands:
             create:
-              describe: "Create a custom object schema"
+              describe: "Create a custom object schema."
               errors:
                 creationFailed: "Schema creation from {{ definition }} failed"
-              positionals:
+              options:
                 definition:
                   describe: "Local path to the JSON file containing the schema definition"
               success:
                 schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
                 schemaViewable: "Schema can be viewed at {{ url }}"
             delete:
-              describe: "Delete a custom object schema"
+              describe: "Delete a custom object schema."
               errors:
                 delete: "Unable to delete {{ name }}"
               examples:
@@ -232,10 +233,13 @@ en:
               positionals:
                 name:
                   describe: "Name of the target schema"
+              options:
+                force:
+                  describe: "Force the deletion of the schema."
               success:
                 delete: "Successfully initiated deletion of {{ name }}"
             fetchAll:
-              describe: "Fetch all custom object schemas for an account"
+              describe: "Fetch all custom object schemas for an account."
               errors:
                 fetch: "Unable to fetch schemas"
               examples:
@@ -247,7 +251,7 @@ en:
               success:
                 fetch: "Saved schemas to {{ path }}"
             fetch:
-              describe: "Fetch a custom object schema"
+              describe: "Fetch a custom object schema."
               errors:
                 fetch: "Unable to fetch {{ name }}"
               examples:
@@ -262,16 +266,17 @@ en:
                 save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                 savedToPath: "Saved schema to {{ path }}"
             list:
-              describe: "List schemas available on your account"
+              describe: "List custom object schemas."
               errors:
                 list: "Unable to list schemas"
             update:
-              describe: "Update an existing custom object schema"
+              describe: "Update an existing custom object schema."
               errors:
                 update: "Schema update from {{ definition }} failed"
-              positionals:
+              options:
                 definition:
                   describe: "Local path to the JSON file containing the schema definition"
+              positionals:
                 name:
                   describe: "Name of the target schema"
               success:

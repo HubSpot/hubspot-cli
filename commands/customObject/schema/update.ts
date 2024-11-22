@@ -28,7 +28,7 @@ const { i18n } = require('../../../lib/lang');
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.update';
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
-exports.command = 'update <name> <definition>';
+exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -79,13 +79,13 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addTestingOptions(yargs);
 
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.positional('definition', {
-    describe: i18n(`${i18nKey}.positionals.definition.describe`),
-    type: 'string',
-  });
+  yargs
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .option('path', {
+      describe: i18n(`${i18nKey}.options.definition.describe`),
+      type: 'string',
+    });
 };

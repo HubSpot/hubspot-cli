@@ -15,7 +15,7 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = 'commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'create <name> <definition>';
+exports.command = 'create [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -33,6 +33,9 @@ exports.handler = async options => {
   }
 
   try {
+    if (!name) {
+      // TODO prompt for the name
+    }
     await batchCreateObjects(derivedAccountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
@@ -46,13 +49,13 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.positional('definition', {
-    describe: i18n(`${i18nKey}.positionals.definition.describe`),
-    type: 'string',
-  });
+  yargs
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .option('path', {
+      describe: i18n(`${i18nKey}.options.path.describe`),
+      type: 'string',
+    });
 };

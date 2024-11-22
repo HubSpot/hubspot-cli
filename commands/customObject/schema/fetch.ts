@@ -17,11 +17,19 @@ const { logError } = require('../../../lib/errorHandlers');
 
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.fetch';
 
-exports.command = 'fetch <name> [dest]';
+exports.command = 'fetch [name] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { name, dest, derivedAccountId } = options;
+
+  if (!name) {
+    // TODO: prompt for the name
+  }
+
+  if (!dest) {
+    // TODO: prompt for the dest
+  }
 
   await loadAndValidateOptions(options);
 
@@ -56,24 +64,23 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.example([
-    [
-      '$0 custom-object schema fetch schemaName',
-      i18n(`${i18nKey}.examples.default`),
-    ],
-    [
-      '$0 custom-object schema fetch schemaName my/folder',
-      i18n(`${i18nKey}.examples.specifyPath`),
-    ],
-  ]);
-
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.positional('dest', {
-    describe: i18n(`${i18nKey}.positionals.dest.describe`),
-    type: 'string',
-  });
+  yargs
+    .example([
+      [
+        '$0 custom-object schema fetch schemaName',
+        i18n(`${i18nKey}.examples.default`),
+      ],
+      [
+        '$0 custom-object schema fetch schemaName my/folder',
+        i18n(`${i18nKey}.examples.specifyPath`),
+      ],
+    ])
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .positional('dest', {
+      describe: i18n(`${i18nKey}.positionals.dest.describe`),
+      type: 'string',
+    });
 };

@@ -18,12 +18,15 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { derivedAccountId } = options;
+  const { derivedAccountId, dest } = options;
 
   trackCommandUsage('custom-object-schema-fetch-all', null, derivedAccountId);
 
   try {
-    const schemas = await downloadSchemas(derivedAccountId, options.dest);
+    if (!dest) {
+      // TODO: prompt for the dest
+    }
+    const schemas = await downloadSchemas(derivedAccountId, options);
     logSchemas(schemas);
     logger.success(
       i18n(`${i18nKey}.success.fetch`, {
