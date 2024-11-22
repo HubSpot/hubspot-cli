@@ -10,6 +10,7 @@ const { logError } = require('../lib/errorHandlers/index');
 const {
   addConfigOptions,
   addAccountOptions,
+  addGlobalOptions,
   getAccountId,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
@@ -96,6 +97,7 @@ export const handler = async options => {
 export const builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

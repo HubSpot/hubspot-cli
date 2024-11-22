@@ -7,6 +7,7 @@ const {
   addOverwriteOptions,
   addModeOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
@@ -57,12 +58,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addOverwriteOptions(yargs);
-  addModeOptions(yargs, { read: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -88,6 +83,13 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.assetVersion.describe`),
     },
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
+  addModeOptions(yargs, { read: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

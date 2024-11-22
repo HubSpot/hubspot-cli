@@ -41,6 +41,7 @@ const {
   setLogLevel,
   getAccountId,
   addTestingOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
@@ -217,6 +218,7 @@ exports.builder = yargs => {
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

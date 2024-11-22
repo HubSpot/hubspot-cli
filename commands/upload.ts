@@ -30,6 +30,7 @@ const {
   addAccountOptions,
   addModeOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
   getAccountId,
   getMode,
 } = require('../lib/commonOpts');
@@ -276,11 +277,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addModeOptions(yargs, { write: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -315,5 +311,12 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   return yargs;
 };
