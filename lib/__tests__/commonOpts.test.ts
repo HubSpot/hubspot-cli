@@ -35,7 +35,7 @@ describe('lib/commonOpts', () => {
     };
     const configWithDefaultCmsPublishMode = {
       ...config,
-      defaultCmsPublishMode: MODE.draft,
+      defaultCmsPublishMode: CMS_PUBLISH_MODE.draft,
     };
 
     afterEach(() => {
@@ -48,15 +48,17 @@ describe('lib/commonOpts', () => {
     describe('cms publish mode option precedence', () => {
       describe('1. --cmsPublishMode', () => {
         it('should return the cms publish mode specified by the command option if present.', () => {
-          getAndLoadConfigIfNeeded.mockReturnValue(configWithDefaultMode);
+          getAndLoadConfigIfNeeded.mockReturnValue(
+            configWithDefaultCmsPublishMode
+          );
           getAccountConfig.mockReturnValue(devAccountConfig);
-          expect(getMode({ cmsPublishMode: CMS_PUBLISH_MODE.draft })).toBe(
-            CMS_PUBLISH_MODE.draft
-          );
-          expect(getMode({ cmsPublishMode: CMS_PUBLISH_MODE.publish })).toBe(
-            CMS_PUBLISH_MODE.publish
-          );
-          expect(getMode({ cmsPublishMode: 'undefined-mode' })).toBe(
+          expect(
+            getCmsPublishMode({ cmsPublishMode: CMS_PUBLISH_MODE.draft })
+          ).toBe(CMS_PUBLISH_MODE.draft);
+          expect(
+            getCmsPublishMode({ cmsPublishMode: CMS_PUBLISH_MODE.publish })
+          ).toBe(CMS_PUBLISH_MODE.publish);
+          expect(getCmsPublishMode({ cmsPublishMode: 'undefined-mode' })).toBe(
             'undefined-mode'
           );
         });

@@ -125,7 +125,7 @@ export function getCmsPublishMode(
   // 4. DEFAULT_MODE
   const config = getAndLoadConfigIfNeeded();
   return (
-    (config && (config.defaultMode as CmsPublishMode)) ||
+    (config && (config.defaultCmsPublishMode as CmsPublishMode)) ||
     DEFAULT_CMS_PUBLISH_MODE
   );
 }
