@@ -64,24 +64,30 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
-exports.command = 'auth [type] [--account]';
+exports.command = 'auth';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
 
 exports.handler = async options => {
-  const { type, config: c, qa, account } = options;
+  const {
+    authType: authTypeFlagValue,
+    config: configFlagValue,
+    qa,
+    account,
+  } = options;
   const authType =
-    (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+    (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
 
-  if (!getConfigPath(c)) {
+  if (!getConfigPath(configFlagValue)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(c);
+  loadConfig(configFlagValue);
   checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
@@ -195,23 +201,26 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('type', {
-    describe: i18n(`${i18nKey}.positionals.type.describe`),
-    type: 'string',
-    choices: [
-      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-      `${OAUTH_AUTH_METHOD.value}`,
-    ],
-    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    }),
-  });
-
   yargs.options({
+    'auth-type': {
+      describe: i18n(`${i18nKey}.options.authType.describe`),
+      type: 'string',
+      choices: [
+        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+        `${OAUTH_AUTH_METHOD.value}`,
+      ],
+      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      defaultDescription: i18n(
+        `${i18nKey}.options.authType.defaultDescription`,
+        {
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
+    },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+      alias: 'a',
     },
   });
 

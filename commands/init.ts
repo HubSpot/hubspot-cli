@@ -94,19 +94,25 @@ const AUTH_TYPE_NAMES = {
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-exports.command = 'init [--account]';
+exports.command = 'init';
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
 exports.handler = async options => {
   const {
-    auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    c,
-    account: optionalAccount,
+    auth: authTypeFlagValue,
+    c: configFlagValue,
+    account: accountFlagValue,
     disableTracking,
   } = options;
-  const configPath = (c && path.join(getCwd(), c)) || getConfigPath();
+  const authType =
+    (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
+  const configPath =
+    (configFlagValue && path.join(getCwd(), configFlagValue)) ||
+    getConfigPath();
   setLogLevel(options);
 
   if (!disableTracking) {
@@ -138,7 +144,7 @@ exports.handler = async options => {
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](
       env,
-      optionalAccount
+      accountFlagValue
     );
     const configPath = getConfigPath();
 
@@ -182,21 +188,25 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   yargs.options({
-    auth: {
-      describe: i18n(`${i18nKey}.options.auth.describe`),
+    'auth-type': {
+      describe: i18n(`${i18nKey}.options.authType.describe`),
       type: 'string',
       choices: [
         `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
         `${OAUTH_AUTH_METHOD.value}`,
       ],
       default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-        defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      }),
+      defaultDescription: i18n(
+        `${i18nKey}.options.authType.defaultDescription`,
+        {
+          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
     },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+      alias: 'a',
     },
     'disable-tracking': {
       type: 'boolean',
