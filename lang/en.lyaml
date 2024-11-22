@@ -89,11 +89,10 @@ en:
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-      positionals:
-        type:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
       options:
+        authType:
+          describe: "Authentication mechanism"
+          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
       success:
@@ -419,9 +418,9 @@ en:
     init:
       describe: "Initialize {{ configName }} for a HubSpot account."
       options:
-        auth:
-          describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
-          defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        authType:
+          describe: "Authentication mechanism"
+          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:

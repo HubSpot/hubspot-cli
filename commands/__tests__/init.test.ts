@@ -16,7 +16,7 @@ describe('commands/init', () => {
 
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(initCommand.command).toEqual('init [--account]');
+      expect(initCommand.command).toEqual('init');
     });
   });
 
@@ -32,7 +32,7 @@ describe('commands/init', () => {
 
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
-        auth: expect.objectContaining({
+        'auth-type': expect.objectContaining({
           type: 'string',
           choices: ['personalaccesskey', 'oauth2'],
           default: 'personalaccesskey',
