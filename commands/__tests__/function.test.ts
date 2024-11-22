@@ -30,7 +30,7 @@ describe('commands/function', () => {
 
   describe('builder', () => {
     const subcommands = [
-      ['list', { ...list, aliases: 'ls' }],
+      ['list', list],
       ['deploy', deploy],
       ['server', server],
     ];
