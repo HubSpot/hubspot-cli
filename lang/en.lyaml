@@ -289,6 +289,7 @@ en:
               success:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
+              selectSchema: "Which schema would you like to update?"
     doctor:
       describe: "Retrieve diagnostic information about your local HubSpot configurations."
       options:

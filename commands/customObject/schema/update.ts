@@ -1,4 +1,7 @@
 // @ts-nocheck
+import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
+import { listPrompt } from '../../../lib/prompts/promptUtils';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
@@ -28,11 +31,11 @@ const { i18n } = require('../../../lib/lang');
 const i18nKey = 'commands.customObject.subcommands.schema.subcommands.update';
 const { EXIT_CODES } = require('../../../lib/enums/exitCodes');
 
-exports.command = 'update <name>';
+exports.command = 'update [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { path, name, derivedAccountId } = options;
+  const { path, name: providedName, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
@@ -44,7 +47,18 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  let name = providedName;
   try {
+    const {
+      data: { results },
+    } = await fetchObjectSchemas(derivedAccountId);
+    const schemaNames = results?.map(({ name: schemaName }) => schemaName);
+
+    name =
+      providedName ||
+      (await listPrompt(i18n(`${i18nKey}.selectSchema`), {
+        choices: schemaNames,
+      }));
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       await updateSchemaFromHubFile(derivedAccountId, filePath);
       logger.success(
