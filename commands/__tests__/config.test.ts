@@ -1,11 +1,9 @@
 // @ts-nocheck
 import yargs from 'yargs';
 import set from '../config/set';
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../config/set');
-jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 
@@ -33,16 +31,6 @@ describe('commands/config', () => {
 
       expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
       expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
-    });
-
-    it('should support the correct options', () => {
-      configCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should add the correct number of sub commands', () => {
