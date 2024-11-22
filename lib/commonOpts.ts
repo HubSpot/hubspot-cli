@@ -16,6 +16,7 @@ const i18nKey = 'lib.commonOpts';
 
 export function addGlobalOptions(yargs: Argv) {
   yargs.version(false);
+
   return yargs.option('debug', {
     alias: 'd',
     default: false,
