@@ -5,7 +5,6 @@ const { i18n } = require('../../lib/lang');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { getCwd } = require('@hubspot/local-dev-lib/path');
-const { preview } = require('@hubspot/theme-preview-dev-server');
 const { getUploadableFileList } = require('../../lib/upload');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -26,7 +25,7 @@ const {
   findProjectComponents,
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
-
+const { preview } = require('@hubspot/theme-preview-dev-server');
 const i18nKey = 'commands.theme.subcommands.preview';
 
 exports.command = 'preview [--src] [--dest]';
@@ -223,16 +222,11 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.port.describe`),
     type: 'number',
   });
-  yargs.option('debug', {
-    describe: false,
-    type: 'boolean',
-  });
-  yargs.option('skipUpload', {
-    alias: 'skip',
-    describe: false,
-    type: 'boolean',
-  });
   yargs.option('resetSession', {
+    describe: false,
+    type: 'boolean',
+  });
+  yargs.option('generateFieldsTypes', {
     describe: false,
     type: 'boolean',
   });

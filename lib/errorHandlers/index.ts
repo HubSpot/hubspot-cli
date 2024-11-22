@@ -1,43 +1,35 @@
-// @ts-nocheck
-const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
+import { logger } from '@hubspot/local-dev-lib/logger';
+import {
   isHubSpotHttpError,
-  isSystemError,
-  isFileSystemError,
   isValidationError,
-  isMissingScopeError,
-} = require('@hubspot/local-dev-lib/errors/index');
-const { shouldSuppressError } = require('./suppressError');
-const { i18n } = require('../lang');
-const util = require('util');
-const { isAxiosError } = require('axios');
+} from '@hubspot/local-dev-lib/errors/index';
+import { shouldSuppressError } from './suppressError';
+import { i18n } from '../lang';
+import util from 'util';
 
 const i18nKey = 'lib.errorHandlers.index';
 
-function logError(error, context = {}) {
+export function logError(error: unknown, context?: ApiErrorContext): void {
   debugError(error, context);
 
-  if (
-    shouldSuppressError(error, context) ||
-    shouldSuppressError(error, error.context)
-  ) {
+  if (shouldSuppressError(error, context)) {
     return;
+  }
+
+  if (isHubSpotHttpError(error) && 'context' in error) {
+    if (shouldSuppressError(error, error.context)) {
+      return;
+    }
   }
 
   if (isHubSpotHttpError(error) && context) {
     error.updateContext(context);
   }
 
-  if (isHubSpotHttpError(error) || isFileSystemError(error)) {
-    if (isValidationError(error) || isMissingScopeError(error)) {
-      logger.error(error.formattedValidationErrors());
-    } else {
-      logger.error(error.message);
-    }
-  } else if (isSystemError(error)) {
-    logger.error(error.message);
-  } else if (error.message || error.reason) {
-    const message = [];
+  if (isHubSpotHttpError(error) && isValidationError(error)) {
+    logger.error(error.formattedValidationErrors());
+  } else if (isErrorWithMessageOrReason(error)) {
+    const message: string[] = [];
 
     [error.message, error.reason].forEach(msg => {
       if (msg) {
@@ -51,25 +43,17 @@ function logError(error, context = {}) {
   }
 }
 
-/**
- * Logs (debug) the error and context objects.
- *
- * @param {Error}  error
- * @param {ApiErrorContext} context
- */
-function debugError(error, context = {}) {
+export function debugError(error: unknown, context?: ApiErrorContext): void {
   if (isHubSpotHttpError(error)) {
     logger.debug(error.toString());
   } else {
-    logger.debug(i18n(`${i18nKey}.errorOccurred`, { error }));
+    logger.debug(i18n(`${i18nKey}.errorOccurred`, { error: String(error) }));
   }
 
-  if (error.cause) {
+  if (error instanceof Error) {
     logger.debug(
       i18n(`${i18nKey}.errorCause`, {
-        cause: isAxiosError(error.cause)
-          ? error.cause
-          : util.inspect(error.cause, false, null, true),
+        cause: util.inspect(error.cause, false, null, true),
       })
     );
   }
@@ -82,21 +66,33 @@ function debugError(error, context = {}) {
   }
 }
 
-class ApiErrorContext {
-  constructor(props = {}) {
-    /** @type {number} */
+export class ApiErrorContext {
+  accountId?: number;
+  request?: string;
+  payload?: string;
+  projectName?: string;
+
+  constructor(
+    props: {
+      accountId?: number;
+      request?: string;
+      payload?: string;
+      projectName?: string;
+    } = {}
+  ) {
     this.accountId = props.accountId;
-    /** @type {string} */
     this.request = props.request || '';
-    /** @type {string} */
     this.payload = props.payload || '';
-    /** @type {string} */
     this.projectName = props.projectName || '';
   }
 }
 
-module.exports = {
-  logError,
-  debugError,
-  ApiErrorContext,
-};
+function isErrorWithMessageOrReason(
+  error: unknown
+): error is { message?: string; reason?: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    ('message' in error || 'reason' in error)
+  );
+}
