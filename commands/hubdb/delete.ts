@@ -4,7 +4,11 @@ const { logError } = require('../../lib/errorHandlers/index');
 const { deleteTable } = require('@hubspot/local-dev-lib/api/hubdb');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
+const {
+  addConfigOptions,
+  addAccountOptions,
+  addUseEnvironmentOptions,
+} = require('../../lib/commonOpts');
 const {
   selectHubDBTablePrompt,
 } = require('../../lib/prompts/selectHubDBTablePrompt');
@@ -66,6 +70,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('table-id', {

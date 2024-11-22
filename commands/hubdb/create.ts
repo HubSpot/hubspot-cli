@@ -11,7 +11,11 @@ const {
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
+const {
+  addConfigOptions,
+  addAccountOptions,
+  addUseEnvironmentOptions,
+} = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.hubdb.subcommands.create';
@@ -55,6 +59,8 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addAccountOptions(yargs);
+  addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.options('path', {
