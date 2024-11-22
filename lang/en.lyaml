@@ -476,7 +476,7 @@ en:
         moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
       move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
     open:
-      describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
+      describe: "Open a HubSpot page in your browser."
       options:
         list:
           describe: "List all supported shortcuts"
