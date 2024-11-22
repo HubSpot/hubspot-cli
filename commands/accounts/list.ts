@@ -11,7 +11,6 @@ const {
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
-const { addConfigOptions, addAccountOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { isSandbox, isDeveloperTestAccount } = require('../../lib/accountTypes');
@@ -24,7 +23,7 @@ const {
 
 const i18nKey = 'commands.accounts.subcommands.list';
 
-exports.command = 'list';
+exports.command = ['list', 'ls'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const sortAndMapPortals = portals => {
@@ -112,10 +111,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
   yargs.example([['$0 accounts list']]);
-
   return yargs;
 };

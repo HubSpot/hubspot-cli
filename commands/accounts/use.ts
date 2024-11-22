@@ -52,7 +52,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('account', {
+  yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });

@@ -8,12 +8,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} = require('../../lib/commonOpts');
+const { addTestingOptions } = require('../../lib/commonOpts');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
@@ -136,9 +131,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
 
   yargs.example([['$0 accounts clean']]);

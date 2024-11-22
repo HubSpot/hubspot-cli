@@ -16,15 +16,15 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 
 const i18nKey = 'commands.accounts.subcommands.remove';
 
-exports.command = 'remove [--account]';
+exports.command = 'remove <account>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
+  const { account } = options;
+  let accountToRemove = account;
 
   let config = getConfig();
-
-  let accountToRemove = options.providedAccountId;
 
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
@@ -69,7 +69,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('account', {
+  yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });

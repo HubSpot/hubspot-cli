@@ -6,7 +6,6 @@ import use from '../accounts/use';
 import info from '../accounts/info';
 import remove from '../accounts/remove';
 import clean from '../accounts/clean';
-import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../accounts/list');
@@ -15,7 +14,6 @@ jest.mock('../accounts/use');
 jest.mock('../accounts/info');
 jest.mock('../accounts/remove');
 jest.mock('../accounts/clean');
-jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
 
@@ -25,7 +23,7 @@ import accountsCommand from '../accounts';
 describe('commands/accounts', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(accountsCommand.command).toEqual('accounts');
+      expect(accountsCommand.command).toEqual(['account', 'accounts']);
     });
   });
 
@@ -37,7 +35,7 @@ describe('commands/accounts', () => {
 
   describe('builder', () => {
     const subcommands = [
-      ['list', { ...list, aliases: 'ls' }],
+      ['list', list],
       ['rename', rename],
       ['use', use],
       ['info', info],
@@ -50,16 +48,6 @@ describe('commands/accounts', () => {
 
       expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
       expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
-    });
-
-    it('should support the correct options', () => {
-      accountsCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should add the correct number of sub commands', () => {
