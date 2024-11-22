@@ -332,8 +332,8 @@ en:
           success:
             upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
             uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
-    functions:
-      describe: "Commands for working with functions."
+    function:
+      describe: "Commands for managing CMS serverless functions."
       subcommands:
         deploy:
           debug:
@@ -348,13 +348,13 @@ en:
           loadingFailed: "Failed to build and deploy bundle for \"{{ functionPath }}\" on {{ account }}"
           positionals:
             path:
-              describe: "Path to .functions folder"
+              describe: "Path to the \".functions\" folder"
           success:
             deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
         list:
           debug:
             gettingFunctions: "Getting currently deployed functions"
-          describe: "List currently deployed functions"
+          describe: "List the currently deployed CMS serverless functions."
           info:
             noFunctions: "No functions found"
           options:
@@ -448,13 +448,14 @@ en:
         path:
           describe: "Remote directory to list contents"
     logs:
-      describe: "Get logs for a function."
+      describe: "View logs for a CMS serverless function."
       errors:
         noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
       examples:
         default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
         follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
         limit: "Get 10 most recent logs for function residing at /_hcms/api/my-endpoint"
+      endpointPrompt: "Enter a serverless function endpoint:"
       gettingLogs: "Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}."
       options:
         compact:

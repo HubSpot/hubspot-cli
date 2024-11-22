@@ -1,19 +1,15 @@
 // @ts-nocheck
-const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
-const list = require('./functions/list');
-const deploy = require('./functions/deploy');
-const server = require('./functions/server');
+const list = require('./function/list');
+const deploy = require('./function/deploy');
+const server = require('./function/server');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'commands.functions';
+const i18nKey = 'commands.function';
 
-exports.command = 'functions';
+exports.command = ['function', 'functions'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-
   yargs
     .command({
       ...list,
