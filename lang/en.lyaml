@@ -386,11 +386,6 @@ en:
             removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
             rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
             tableEmpty: "HubDB table {{ tableId }} is already empty"
-          errors:
-            noTables: "No HubDB tables found in account {{ accountId }}"
-            unableToFetchTables: "Unable to fetch HubDB tables"
-          prompt:
-            selectTable: "Select a HubDB table to clear"
           positionals:
             tableId:
               describe: "HubDB Table ID"
@@ -1317,6 +1312,13 @@ en:
         prompt: "Open hubspot.com to install this app?"
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      selectHubDBTablePrompt:
+        selectTable: "Select a HubDB table:"
+        errors:
+          noTables: "No HubDB tables found in account {{ accountId }}"
+          allTablesEmpty: "All HubDB tables in account {{ accountId }} are empty"
+          unableToFetchTables: "Unable to fetch HubDB tables in account {{ accountId }}"
+          tableEmpty: "Empty table"
     convertFields:
       positionals:
         src:
