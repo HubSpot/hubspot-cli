@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { EXIT_CODES } from '../lib/enums/exitCodes';
 const {
   addAccountOptions,
   addConfigOptions,
@@ -38,12 +39,12 @@ exports.handler = async options => {
   if (shortcut === undefined && !list) {
     const choice = await createListPrompt(derivedAccountId);
     openLink(derivedAccountId, choice.open);
-  } else if (list || shortcut === 'list') {
+  } else if (list) {
     logSiteLinks(derivedAccountId);
-    return;
   } else {
     openLink(derivedAccountId, shortcut);
   }
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
