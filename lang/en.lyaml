@@ -378,14 +378,19 @@ en:
             path:
               describe: "Path to local .functions folder"
     hubdb:
-      describe: "Manage HubDB tables."
+      describe: "Commands for managing HubDB tables."
       subcommands:
         clear:
-          describe: "Clear all rows in a HubDB table"
+          describe: "Clear all rows in a HubDB table."
           logs:
             removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
             rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
             tableEmpty: "HubDB table {{ tableId }} is already empty"
+          errors:
+            noTables: "No HubDB tables found in account {{ accountId }}"
+            unableToFetchTables: "Unable to fetch HubDB tables"
+          prompt:
+            selectTable: "Select a HubDB table to clear"
           positionals:
             tableId:
               describe: "HubDB Table ID"
