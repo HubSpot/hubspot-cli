@@ -19,30 +19,30 @@ exports.command = 'create [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name, derivedAccountId } = options;
+  const { path, name: providedName, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 
-  const filePath = getAbsoluteFilePath(definition);
+  const filePath = getAbsoluteFilePath(path);
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  const name =
+    providedName || (await inputPrompt(i18n(`${i18nKey}.inputSchema`)));
+
   try {
-    if (!name) {
-      // TODO prompt for the name
-    }
     await batchCreateObjects(derivedAccountId, name, objectJson);
     logger.success(i18n(`${i18nKey}.success.objectsCreated`));
   } catch (e) {
     logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
-        definition,
+        definition: path,
       })
     );
   }
@@ -57,5 +57,6 @@ exports.builder = yargs => {
     .option('path', {
       describe: i18n(`${i18nKey}.options.path.describe`),
       type: 'string',
+      required: true,
     });
 };

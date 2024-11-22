@@ -211,6 +211,7 @@ en:
               describe: "Schema name to add the object instance to"
           success:
             objectsCreated: "Objects created"
+          inputSchema: "What would you like to name the schema?"
         schema:
           describe: "Commands for managing custom object schemas."
           subcommands:
@@ -238,6 +239,9 @@ en:
                   describe: "Force the deletion of the schema."
               success:
                 delete: "Successfully initiated deletion of {{ name }}"
+              confirmDelete: "Are you sure you want to delete the schema \"{{ name }}\"?"
+              deleteCancelled: "Deletion of schema \"{{ name }}\" cancelled."
+              selectSchema: "Which schema would you like to delete?"
             fetchAll:
               describe: "Fetch all custom object schemas for an account."
               errors:
@@ -250,6 +254,7 @@ en:
                   describe: "Local folder where schemas will be written"
               success:
                 fetch: "Saved schemas to {{ path }}"
+              inputDest: "Where would you like to save the schemas?"
             fetch:
               describe: "Fetch a custom object schema."
               errors:
@@ -262,6 +267,8 @@ en:
                   describe: "Local folder where schema will be written"
                 name:
                   describe: "Name of the target schema"
+              selectSchema: "Which schema would you like to fetch?"
+              inputDest: "What would you like to name the destination file?"
               success:
                 save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                 savedToPath: "Saved schema to {{ path }}"
@@ -274,7 +281,7 @@ en:
               errors:
                 update: "Schema update from {{ definition }} failed"
               options:
-                definition:
+                path:
                   describe: "Local path to the JSON file containing the schema definition"
               positionals:
                 name:

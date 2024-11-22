@@ -32,13 +32,13 @@ exports.command = 'update <name>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name, derivedAccountId } = options;
+  const { path, name, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-update', null, derivedAccountId);
 
-  const filePath = getAbsoluteFilePath(definition);
+  const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
   if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
@@ -70,7 +70,7 @@ exports.handler = async options => {
     logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.update`, {
-        definition,
+        definition: path,
       })
     );
   }
@@ -85,7 +85,8 @@ exports.builder = yargs => {
       type: 'string',
     })
     .option('path', {
-      describe: i18n(`${i18nKey}.options.definition.describe`),
+      describe: i18n(`${i18nKey}.options.path.describe`),
       type: 'string',
+      required: true,
     });
 };

@@ -32,13 +32,13 @@ exports.command = 'create';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, derivedAccountId } = options;
+  const { path, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-create', null, derivedAccountId);
 
-  const filePath = getAbsoluteFilePath(definition);
+  const filePath = getAbsoluteFilePath(path);
   const schemaJson = checkAndConvertToJson(filePath);
   if (!schemaJson) {
     process.exit(EXIT_CODES.ERROR);
@@ -66,7 +66,7 @@ exports.handler = async options => {
     logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
-        definition,
+        definition: path,
       })
     );
   }
@@ -78,5 +78,6 @@ exports.builder = yargs => {
   yargs.option('path', {
     describe: i18n(`${i18nKey}.options.definition.describe`),
     type: 'string',
+    required: true,
   });
 };

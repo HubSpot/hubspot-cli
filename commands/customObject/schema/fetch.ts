@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { inputPrompt } from '../../../lib/prompts/promptUtils';
+
 const path = require('path');
 const { isConfigFlagEnabled } = require('@hubspot/local-dev-lib/config');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -21,19 +23,18 @@ exports.command = 'fetch [name] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name, dest, derivedAccountId } = options;
-
-  if (!name) {
-    // TODO: prompt for the name
-  }
-
-  if (!dest) {
-    // TODO: prompt for the dest
-  }
+  const { name: providedName, dest: providedDest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-schema-fetch', null, derivedAccountId);
+
+  // TODO: Fetch the schemas and show a list.  Allow the user to select one.
+  const name =
+    providedName || (await inputPrompt(i18n(`${i18nKey}.selectSchema`)));
+  const dest =
+    providedDest || (await inputPrompt(i18n(`${i18nKey}.inputDest`)));
+  console.log(name);
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
