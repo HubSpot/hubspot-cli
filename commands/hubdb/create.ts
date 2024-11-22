@@ -11,35 +11,31 @@ const {
   loadAndValidateOptions,
 } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
+const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.hubdb.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'create <src>';
+exports.command = 'create';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, derivedAccountId } = options;
+  const { path: providedFilePath, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('hubdb-create', null, derivedAccountId);
 
   try {
-    const filePath = path.resolve(getCwd(), src);
+    const filePath = path.resolve(getCwd(), providedFilePath);
     if (!checkAndConvertToJson(filePath)) {
       process.exit(EXIT_CODES.ERROR);
     }
 
     const table = await createHubDbTable(
       derivedAccountId,
-      path.resolve(getCwd(), src)
+      path.resolve(getCwd(), providedFilePath)
     );
     logger.success(
       i18n(`${i18nKey}.success.create`, {
@@ -51,7 +47,7 @@ exports.handler = async options => {
   } catch (e) {
     logger.error(
       i18n(`${i18nKey}.errors.create`, {
-        src,
+        providedFilePath,
       })
     );
     logError(e);
@@ -59,12 +55,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addAccountOptions(yargs);
-  addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+  yargs.options('path', {
+    describe: i18n(`${i18nKey}.options.path.describe`),
     type: 'string',
   });
 };

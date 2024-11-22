@@ -395,11 +395,11 @@ en:
             tableId:
               describe: "HubDB Table ID"
         create:
-          describe: "Create a HubDB table"
+          describe: "Create a HubDB table."
           errors:
-            create: "Creating the table at \"{{ src }}\" failed"
-          positionals:
-            src:
+            create: "Creating the table at \"{{ providedFilePath }}\" failed"
+          options:
+            path:
               describe: "Local path to file used for import"
           success:
             create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
