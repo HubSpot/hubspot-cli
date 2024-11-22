@@ -82,7 +82,7 @@ const setDefaultCmsPublishMode = async ({
 
   let newDefault;
 
-  if (!defaulCmsPublishMode) {
+  if (!defaultCmsPublishMode) {
     newDefault = await selectCmsPublishMode();
   } else if (
     defaultCmsPublishMode &&
