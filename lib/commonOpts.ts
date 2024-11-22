@@ -15,14 +15,13 @@ import { Mode } from '@hubspot/local-dev-lib/types/Files';
 const i18nKey = 'lib.commonOpts';
 
 export function addGlobalOptions(yargs: Argv) {
-  return yargs
-    .option('debug', {
-      alias: 'd',
-      default: false,
-      describe: i18n(`${i18nKey}.options.debug.describe`),
-      type: 'boolean',
-    })
-    .version(false);
+  yargs.version(false);
+  return yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: i18n(`${i18nKey}.options.debug.describe`),
+    type: 'boolean',
+  });
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
