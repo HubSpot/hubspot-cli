@@ -399,12 +399,16 @@ en:
           success:
             create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
         delete:
-          describe: "Delete a HubDB table"
+          describe: "Delete a HubDB table."
+          shouldDeleteTable: "Proceed with deleting HubDB table {{ tableId }}?"
           errors:
             delete: "Deleting the table {{ tableId }} failed"
           positionals:
             tableId:
               describe: "HubDB Table ID"
+          options:
+            force:
+              describe: "Skips confirmation prompt when deleting a HubDB table"
           success:
             delete: "The table {{ tableId }} was deleted from {{ accountId }}"
         fetch:

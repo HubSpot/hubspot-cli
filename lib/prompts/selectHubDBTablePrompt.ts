@@ -35,6 +35,7 @@ export async function selectHubDBTablePrompt({
   accountId,
   options,
   skipDestPrompt = true,
+  isDeleteCommand = false,
 }: {
   accountId: number;
   options: {
@@ -42,6 +43,7 @@ export async function selectHubDBTablePrompt({
     dest?: string;
   };
   skipDestPrompt?: boolean;
+  isDeleteCommand?: boolean;
 }) {
   const hubdbTables: Table[] = (await fetchHubDBOptions(accountId)) || [];
   const id = options.tableId?.toString();
@@ -55,7 +57,7 @@ export async function selectHubDBTablePrompt({
       when: !id && !isValidTable,
       type: 'list',
       choices: hubdbTables.map(table => {
-        if (table.rowCount === 0) {
+        if (table.rowCount === 0 && !isDeleteCommand) {
           return {
             name: `${table.label} (${table.id})`,
             disabled: i18n(`${i18nKey}.errors.tableEmpty`),
