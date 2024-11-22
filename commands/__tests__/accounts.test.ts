@@ -57,7 +57,6 @@ describe('commands/accounts', () => {
     });
 
     it.each(subcommands)('should attach the %s subcommand', (name, module) => {
-      console.log(name, module);
       accountsCommand.builder(yargs);
       expect(yargs.command).toHaveBeenCalledWith(module);
     });

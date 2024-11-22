@@ -16,7 +16,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 
 const i18nKey = 'commands.accounts.subcommands.remove';
 
-exports.command = 'remove <account>';
+exports.command = 'remove [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
