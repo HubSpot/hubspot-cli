@@ -26,6 +26,7 @@ const {
   COMPONENT_TYPES,
 } = require('../../lib/projectStructure');
 const { preview } = require('@hubspot/theme-preview-dev-server');
+const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
 
 exports.command = 'preview [--src] [--dest]';
