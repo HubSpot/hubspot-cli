@@ -300,10 +300,10 @@ en:
         src:
           describe: "Path in HubSpot Design Tools"
     filemanager:
-      describe: "Commands for working with the File Manager."
+      describe: "Commands for managing files in the File Manager."
       subcommands:
         fetch:
-          describe: "Download a folder or file from the HubSpot File Manager to your computer"
+          describe: "Fetch a folder or file from the File Manager."
           errors:
             sourceRequired: "A source to fetch is required."
           options:
@@ -315,7 +315,7 @@ en:
             src:
               describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
         upload:
-          describe: "Upload a folder or file from your computer to the HubSpot File Manager"
+          describe: "Upload a folder or file to the File Manager."
           errors:
             destinationRequired: "A destination path needs to be passed"
             fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
