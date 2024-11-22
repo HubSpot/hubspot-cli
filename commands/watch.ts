@@ -9,13 +9,16 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   addConfigOptions,
   addAccountOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
   getAccountId,
-  getMode,
+  getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { validateMode, loadAndValidateOptions } = require('../lib/validation');
+const {
+  validateCmsPublishMode,
+  loadAndValidateOptions,
+} = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 const { getUploadableFileList } = require('../lib/upload');
@@ -32,12 +35,12 @@ exports.handler = async options => {
 
   await loadAndValidateOptions(options);
 
-  if (!validateMode(options)) {
+  if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.ERROR);
   }
 
   const accountId = getAccountId(options);
-  const mode = getMode(options);
+  const cmsPublishMode = getCmsPublishMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
 
@@ -85,7 +88,7 @@ exports.handler = async options => {
     );
   }
 
-  trackCommandUsage('watch', { mode }, accountId);
+  trackCommandUsage('watch', { mode: cmsPublishMode }, accountId);
 
   const postInitialUploadCallback = null;
   const onUploadFolderError = error => {
@@ -123,7 +126,7 @@ exports.handler = async options => {
     absoluteSrcPath,
     dest,
     {
-      mode,
+      cmsPublishMode,
       remove,
       disableInitial: initialUpload ? false : true,
       notify,
@@ -140,7 +143,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
-  addModeOptions(yargs, { write: true });
+  addCmsPublishModeOptions(yargs, { write: true });
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {

@@ -6,7 +6,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
-  setDefaultMode,
+  setDefaultCmsPublishMode,
   setHttpTimeout,
   setAllowUsageTracking,
 } = require('../../lib/configOptions');
@@ -17,29 +17,32 @@ exports.command = 'set';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const selectOptions = async () => {
-  const { mode } = await promptUser([
+  const { cmsPublishMode } = await promptUser([
     {
       type: 'list',
       look: false,
-      name: 'mode',
+      name: 'cmsPublishMode',
       pageSize: 20,
       message: i18n(`${i18nKey}.promptMessage`),
       choices: [
-        { name: 'Default mode', value: { defaultMode: '' } },
+        {
+          name: 'Default CMS publish mode',
+          value: { defaultCmsPublishMode: '' },
+        },
         { name: 'Allow usage tracking', value: { allowUsageTracking: '' } },
         { name: 'HTTP timeout', value: { httpTimeout: '' } },
       ],
     },
   ]);
 
-  return mode;
+  return cmsPublishMode;
 };
 
 const handleConfigUpdate = async (accountId, options) => {
-  const { allowUsageTracking, defaultMode, httpTimeout } = options;
+  const { allowUsageTracking, defaultCmsPublishMode, httpTimeout } = options;
 
-  if (typeof defaultMode !== 'undefined') {
-    await setDefaultMode({ defaultMode, accountId });
+  if (typeof defaultCmsPublishMode !== 'undefined') {
+    await setDefaultCmsPublishMode({ defaultCmsPublishMode, accountId });
     return true;
   } else if (typeof httpTimeout !== 'undefined') {
     await setHttpTimeout({ httpTimeout, accountId });
@@ -73,7 +76,7 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      defaultMode: {
+      defaultCmsPublishMode: {
         describe: i18n(`${i18nKey}.options.defaultMode.describe`),
         type: 'string',
       },
@@ -86,8 +89,8 @@ exports.builder = yargs => {
         type: 'string',
       },
     })
-    .conflicts('defaultMode', 'allowUsageTracking')
-    .conflicts('defaultMode', 'httpTimeout')
+    .conflicts('defaultCmsPublishMode', 'allowUsageTracking')
+    .conflicts('defaultCmsPublishMode', 'httpTimeout')
     .conflicts('allowUsageTracking', 'httpTimeout');
 
   yargs.example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);

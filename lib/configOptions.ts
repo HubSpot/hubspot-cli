@@ -2,10 +2,10 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   updateAllowUsageTracking,
-  updateDefaultMode,
+  updateDefaultCmsPublishMode,
   updateHttpTimeout,
 } = require('@hubspot/local-dev-lib/config');
-const { MODE } = require('@hubspot/local-dev-lib/constants/files');
+const { CMS_PUBLISH_MODE } = require('@hubspot/local-dev-lib/constants/files');
 const { commaSeparatedValues } = require('@hubspot/local-dev-lib/text');
 const { trackCommandUsage } = require('./usageTracking');
 const { promptUser } = require('./prompts/promptUtils');
@@ -56,44 +56,50 @@ const setAllowUsageTracking = async ({ accountId, allowUsageTracking }) => {
   );
 };
 
-const ALL_MODES = Object.values(MODE);
+const ALL_CMS_PUBLISH_MODES = Object.values(CMS_PUBLISH_MODE);
 
-const selectMode = async () => {
-  const { mode } = await promptUser([
+const selectCmsPublishMode = async () => {
+  const { cmsPublishMode } = await promptUser([
     {
       type: 'list',
       look: false,
-      name: 'mode',
+      name: 'cmsPublishMode',
       pageSize: 20,
       message: i18n(`${i18nKey}.defaultMode.promptMessage`),
-      choices: ALL_MODES,
-      default: MODE.publish,
+      choices: ALL_CMS_PUBLISH_MODES,
+      default: CMS_PUBLISH_MODE.publish,
     },
   ]);
 
-  return mode;
+  return cmsPublishMode;
 };
 
-const setDefaultMode = async ({ accountId, defaultMode }) => {
+const setDefaultCmsPublishMode = async ({
+  accountId,
+  defaultCmsPublishMode,
+}) => {
   trackCommandUsage('config-set-default-mode', null, accountId);
 
   let newDefault;
 
-  if (!defaultMode) {
-    newDefault = await selectMode();
-  } else if (defaultMode && ALL_MODES.find(m => m === defaultMode)) {
-    newDefault = defaultMode;
+  if (!defaulCmsPublishMode) {
+    newDefault = await selectCmsPublishMode();
+  } else if (
+    defaultCmsPublishMode &&
+    ALL_CMS_PUBLISH_MODES.find(m => m === defaultCmsPublishMode)
+  ) {
+    newDefault = defaultCmsPublishMode;
   } else {
     logger.error(
       i18n(`${i18nKey}.defaultMode.errors`, {
         mode: newDefault,
-        validModes: commaSeparatedValues(ALL_MODES),
+        validModes: commaSeparatedValues(ALL_CMS_PUBLISH_MODES),
       })
     );
-    newDefault = await selectMode();
+    newDefault = await selectCMsPublishMode();
   }
 
-  updateDefaultMode(newDefault);
+  updateDefaultCmsPublishMode(newDefault);
 
   return logger.success(
     i18n(`${i18nKey}.defaultMode.success`, {
@@ -135,6 +141,6 @@ const setHttpTimeout = async ({ accountId, httpTimeout }) => {
 
 module.exports = {
   setAllowUsageTracking,
-  setDefaultMode,
+  setDefaultCmsPublishMode,
   setHttpTimeout,
 };
