@@ -100,7 +100,6 @@ function processLog(log: Log, options: Options): string | void {
   try {
     return logHandler[log.status](log, options);
   } catch (e) {
-    console.log(e);
     logger.error(
       i18n(`${i18nKey}.unableToProcessLog`, {
         log: JSON.stringify(log),
