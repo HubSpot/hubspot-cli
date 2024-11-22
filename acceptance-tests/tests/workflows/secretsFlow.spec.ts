@@ -54,11 +54,10 @@ describe('Secrets Flow', () => {
 
   describe('hs secrets delete', () => {
     it('should delete the secret', async () => {
-      await testState.cli.executeWithTestConfig([
-        'secrets',
-        'delete',
-        SECRET.name,
-      ]);
+      await testState.cli.executeWithTestConfig(
+        ['secrets', 'delete', SECRET.name],
+        ['Y', ENTER]
+      );
     });
   });
 
