@@ -220,6 +220,7 @@ exports.handler = async options => {
       filePaths,
       noSsl,
       port,
+      resetSession,
       startProgressBar,
       handleUserInput,
     });
