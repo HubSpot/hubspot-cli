@@ -1,4 +1,5 @@
 // @ts-nocheck
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfig,
@@ -69,6 +70,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addConfigOptions(yargs);
   yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
