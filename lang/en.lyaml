@@ -10,7 +10,7 @@ en:
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
     accounts:
-      describe: "Commands for working with accounts."
+      describe: "Commands for managing configured accounts."
       subcommands:
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
@@ -22,7 +22,7 @@ en:
             authType: "Auth Type"
             name: "Name"
         rename:
-          describe: "Rename account in config."
+          describe: "Rename an account in the config."
           positionals:
             accountName:
               describe: "Name of account to be renamed."
@@ -63,7 +63,7 @@ en:
             accountRemoved: "Account \"{{ accountName }}\" removed from the config"
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
-          describe: "Print information about the default account, or about the account specified with the \"--account\" option."
+          describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           examples:

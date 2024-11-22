@@ -1,4 +1,5 @@
 // @ts-nocheck
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfig,
@@ -16,15 +17,15 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 
 const i18nKey = 'commands.accounts.subcommands.remove';
 
-exports.command = 'remove [--account]';
+exports.command = 'remove [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
+  const { account } = options;
+  let accountToRemove = account;
 
   let config = getConfig();
-
-  let accountToRemove = options.providedAccountId;
 
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
@@ -69,16 +70,14 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('account', {
+  addConfigOptions(yargs);
+  yargs.positional('account', {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
   yargs.example([
     ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts remove --account=MyAccount',
-      i18n(`${i18nKey}.examples.byName`),
-    ],
+    ['$0 accounts remove MyAccount', i18n(`${i18nKey}.examples.byName`)],
   ]);
 
   return yargs;
