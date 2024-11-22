@@ -1143,6 +1143,7 @@ en:
         checkFailed: "Unable to determine if config file is properly ignored by git."
       serverlessFunctionLogs:
         unableToProcessLog: "Unable to process log {{ log }}"
+        noLogsFound: "No logs found."
     commonOpts:
       options:
         portal:
