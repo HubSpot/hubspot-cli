@@ -3,7 +3,6 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { renameAccount } = require('@hubspot/local-dev-lib/config');
 
 const {
-  addGlobalOptions,
   addConfigOptions,
   addAccountOptions,
   getAccountId,
@@ -36,6 +35,9 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+
   yargs.positional('accountName', {
     describe: i18n(`${i18nKey}.positionals.accountName.describe`),
     type: 'string',
@@ -44,10 +46,6 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.positionals.newName.describe`),
     type: 'string',
   });
-
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addGlobalOptions(yargs);
 
   yargs.example([['$0 accounts rename myExistingPortalName myNewPortalName']]);
 

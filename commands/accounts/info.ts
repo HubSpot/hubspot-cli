@@ -4,7 +4,6 @@ const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
 const {
   getAccountId,
-  addGlobalOptions,
   addAccountOptions,
   addConfigOptions,
 } = require('../../lib/commonOpts');
@@ -41,7 +40,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 

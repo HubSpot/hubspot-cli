@@ -4,7 +4,6 @@ const { getConfig, getConfigPath } = require('@hubspot/local-dev-lib/config');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
 
 const {
-  addGlobalOptions,
   addConfigOptions,
   addAccountOptions,
   getAccountId,
@@ -106,7 +105,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 

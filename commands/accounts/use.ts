@@ -11,7 +11,6 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
-const { addGlobalOptions } = require('../../lib/commonOpts');
 
 const i18nKey = 'commands.accounts.subcommands.use';
 
@@ -65,8 +64,6 @@ exports.builder = yargs => {
     ],
     ['$0 accounts use --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
-
-  addGlobalOptions(yargs);
 
   return yargs;
 };

@@ -9,7 +9,6 @@ const { i18n } = require('../../lib/lang');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const {
-  addGlobalOptions,
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
@@ -127,7 +126,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
