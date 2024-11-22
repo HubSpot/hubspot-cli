@@ -108,7 +108,7 @@ const determineSrcAndDest = async options => {
 };
 
 exports.handler = async options => {
-  const { noSsl, resetSession, port, generateFieldsTypes } = options;
+  const { notify, noSsl, resetSession, port, generateFieldsTypes } = options;
 
   await loadAndValidateOptions(options);
 
@@ -216,6 +216,7 @@ exports.handler = async options => {
     );
   } else {
     preview(accountId, absoluteSrc, dest, {
+      notify,
       filePaths,
       noSsl,
       port,
@@ -236,6 +237,12 @@ exports.builder = yargs => {
   });
   yargs.option('dest', {
     describe: i18n(`${i18nKey}.options.dest.describe`),
+    type: 'string',
+    requiresArg: true,
+  });
+  yargs.option('notify', {
+    alias: 'n',
+    describe: i18n(`${i18nKey}.options.notify.describe`),
     type: 'string',
     requiresArg: true,
   });
