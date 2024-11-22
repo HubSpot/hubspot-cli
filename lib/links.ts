@@ -8,7 +8,7 @@ import { getTableContents, getTableHeader } from './ui/table';
 type SiteLink = {
   shortcut: string;
   alias?: string;
-  getUrl: (a: number) => string;
+  getUrl: (accountId: number, baseUrl: string) => string;
   url?: string;
 };
 
@@ -16,22 +16,26 @@ const SITE_LINKS: { [key: string]: SiteLink } = {
   APPS_MARKETPLACE: {
     shortcut: 'apps-marketplace',
     alias: 'apm',
-    getUrl: (a: number): string => `ecosystem/${a}/marketplace/apps`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/ecosystem/${accountId}/marketplace/apps`,
   },
   ASSET_MARKETPLACE: {
     shortcut: 'asset-marketplace',
     alias: 'asm',
-    getUrl: (a: number): string => `ecosystem/${a}/marketplace/products`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/ecosystem/${accountId}/marketplace/products`,
   },
   CONTENT_STAGING: {
     shortcut: 'content-staging',
     alias: 'cs',
-    getUrl: (a: number): string => `content/${a}/staging`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/content/${accountId}/staging`,
   },
   DESIGN_MANAGER: {
     shortcut: 'design-manager',
     alias: 'dm',
-    getUrl: (a: number): string => `design-manager/${a}`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/design-manager/${accountId}`,
   },
   DOCS: {
     shortcut: 'docs',
@@ -40,7 +44,8 @@ const SITE_LINKS: { [key: string]: SiteLink } = {
   FILE_MANAGER: {
     shortcut: 'file-manager',
     alias: 'fm',
-    getUrl: (a: number): string => `files/${a}`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/files/${accountId}`,
   },
   FORUMS: {
     shortcut: 'forums',
@@ -49,45 +54,55 @@ const SITE_LINKS: { [key: string]: SiteLink } = {
   HUBDB: {
     shortcut: 'hubdb',
     alias: 'hdb',
-    getUrl: (a: number): string => `hubdb/${a}`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/hubdb/${accountId}`,
   },
   SETTINGS: {
     shortcut: 'settings',
     alias: 's',
-    getUrl: (a: number): string => `settings/${a}`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/settings/${accountId}`,
   },
   SETTINGS_NAVIGATION: {
     shortcut: 'settings/navigation',
     alias: 'sn',
-    getUrl: (a: number): string => `menus/${a}/edit/`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/menus/${accountId}/edit/`,
   },
   SETTINGS_WEBSITE: {
     shortcut: 'settings/website',
     alias: 'sw',
-    getUrl: (a: number): string =>
-      `settings/${a}/website/pages/all-domains/page-templates`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/settings/${accountId}/website/pages/all-domains/page-templates`,
   },
   SETTINGS_getUrl_REDIRECTS: {
     shortcut: 'settings/url-redirects',
     alias: 'sur',
-    getUrl: (a: number): string => `domains/${a}/url-redirects`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/domains/${accountId}/url-redirects`,
   },
   PURCHASED_ASSETS: {
     shortcut: 'purchased-assets',
     alias: 'pa',
-    getUrl: (a: number): string => `marketplace/${a}/manage-purchases`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/marketplace/${accountId}/manage-purchases`,
   },
   WEBSITE_PAGES: {
     shortcut: 'website-pages',
     alias: 'wp',
-    getUrl: (a: number): string => `website/${a}/pages/site`,
+    getUrl: (accountId: number, baseUrl: string): string =>
+      `${baseUrl}/website/${accountId}/pages/site`,
   },
 };
 
 export function getSiteLinksAsArray(accountId: number): SiteLink[] {
+  const baseUrl = getHubSpotWebsiteOrigin(
+    getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
+  );
+
   return Object.values(SITE_LINKS)
     .sort((a, b) => (a.shortcut < b.shortcut ? -1 : 1))
-    .map(l => ({ ...l, url: l.getUrl(accountId) }));
+    .map(l => ({ ...l, url: l.getUrl(accountId, baseUrl) }));
 }
 
 export function logSiteLinks(accountId: number): void {
@@ -118,6 +133,8 @@ export function openLink(accountId: number, shortcut: string): void {
     getEnv() === 'qa' ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD
   );
 
-  open(`${baseUrl}/${match.getUrl(accountId)}`, { url: true });
-  logger.success(`We opened ${match.getUrl(accountId)} in your browser`);
+  open(match.getUrl(accountId, baseUrl), { url: true });
+  logger.success(
+    `We opened ${match.getUrl(accountId, baseUrl)} in your browser`
+  );
 }
