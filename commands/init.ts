@@ -204,37 +204,39 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.options({
-    'auth-type': {
-      describe: i18n(`${i18nKey}.options.authType.describe`),
-      type: 'string',
-      choices: [
-        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-        `${OAUTH_AUTH_METHOD.value}`,
-      ],
-      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-      defaultDescription: i18n(
-        `${i18nKey}.options.authType.defaultDescription`,
-        {
-          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }
-      ),
-    },
-    account: {
-      describe: i18n(`${i18nKey}.options.account.describe`),
-      type: 'string',
-      alias: 'a',
-    },
-    'disable-tracking': {
-      type: 'boolean',
-      hidden: true,
-      default: false,
-    },
-    'use-hidden-config': {
-      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
-      type: 'boolean',
-    },
-  });
+  yargs
+    .options({
+      'auth-type': {
+        describe: i18n(`${i18nKey}.options.authType.describe`),
+        type: 'string',
+        choices: [
+          `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+          `${OAUTH_AUTH_METHOD.value}`,
+        ],
+        default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        defaultDescription: i18n(
+          `${i18nKey}.options.authType.defaultDescription`,
+          {
+            defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          }
+        ),
+      },
+      account: {
+        describe: i18n(`${i18nKey}.options.account.describe`),
+        type: 'string',
+        alias: 'a',
+      },
+      'disable-tracking': {
+        type: 'boolean',
+        hidden: true,
+        default: false,
+      },
+      'use-hidden-config': {
+        describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+        type: 'boolean',
+      },
+    })
+    .conflicts('use-hidden-config', 'config');
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
