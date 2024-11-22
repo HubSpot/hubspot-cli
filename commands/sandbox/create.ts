@@ -36,7 +36,7 @@ const {
 
 const i18nKey = 'commands.sandbox.subcommands.create';
 
-exports.command = 'create [--name] [--type]';
+exports.command = 'create';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
@@ -184,10 +184,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.option('f', {
+  yargs.option('force', {
     type: 'boolean',
-    alias: 'force',
-    describe: i18n(`${i18nKey}.examples.force`),
+    alias: 'f',
+    describe: i18n(`${i18nKey}.options.force.describe`),
   });
   yargs.option('name', {
     describe: i18n(`${i18nKey}.options.name.describe`),
