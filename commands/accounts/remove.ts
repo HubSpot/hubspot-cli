@@ -13,6 +13,7 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
+const { addGlobalOptions } = require('../../lib/commonOpts');
 
 const i18nKey = 'commands.accounts.subcommands.remove';
 
@@ -80,6 +81,8 @@ exports.builder = yargs => {
       i18n(`${i18nKey}.examples.byName`),
     ],
   ]);
+
+  addGlobalOptions(yargs);
 
   return yargs;
 };
