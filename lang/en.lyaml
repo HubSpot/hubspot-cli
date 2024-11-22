@@ -751,18 +751,19 @@ en:
         path:
           describe: "Remote hubspot path"
     sandbox:
-      describe: "Commands for working with sandboxes."
+      describe: "Commands for managing sandboxes."
       subcommands:
         create:
-          describe: "Create a sandbox account"
+          describe: "Create a sandbox account."
           examples:
             default: "Creates a standard sandbox account named MySandboxAccount."
-            force: "Skips all confirmation prompts when creating a sandbox account."
           debug:
             error: "Error creating sandbox:"
           info:
             auth: "Run `hs auth` to authenticate with the new sandbox account."
           options:
+            force:
+              describe: "Skips all confirmation prompts when creating a sandbox account."
             name:
               describe: "Name to use for created sandbox"
             type:
@@ -775,13 +776,12 @@ en:
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
         delete:
-          describe: "Delete a sandbox account"
+          describe: "Delete a sandbox account."
           debug:
             deleting: "Deleting sandbox account \"{{ account }}\""
             error: "Error deleting sandbox account:"
           examples:
             default: "Deletes the sandbox account named MySandboxAccount."
-            force: "Skips all confirmation prompts when deleting a sandbox account."
           confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
           defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
           success:
@@ -797,6 +797,8 @@ en:
             noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
           options:
+            force:
+              describe: "Skips all confirmation prompts when deleting a sandbox account."
             account:
               describe: "Account name or id to delete"
     secrets:
