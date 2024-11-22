@@ -4,7 +4,6 @@ const fs = require('fs');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const {
@@ -50,11 +49,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const accountName = uiAccountDescription(accountId);
+  const { derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const accountName = uiAccountDescription(derivedAccountId);
 
-  trackCommandUsage('clone-app', {}, accountId);
+  trackCommandUsage('clone-app', {}, derivedAccountId);
 
   if (!isAppDeveloperAccount(accountConfig)) {
     uiLine();
@@ -76,7 +75,7 @@ exports.handler = async options => {
     appId = options.appId;
     if (!appId) {
       const appIdResponse = await selectPublicAppPrompt({
-        accountId,
+        accountId: derivedAccountId,
         accountName,
         options,
         isMigratingApp: false,
@@ -88,7 +87,7 @@ exports.handler = async options => {
     name = projectResponse.name;
     location = projectResponse.location;
   } catch (error) {
-    logError(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
   try {
@@ -100,8 +99,8 @@ exports.handler = async options => {
 
     const {
       data: { exportId },
-    } = await cloneApp(accountId, appId);
-    const { status } = await poll(checkCloneStatus, accountId, exportId);
+    } = await cloneApp(derivedAccountId, appId);
+    const { status } = await poll(checkCloneStatus, derivedAccountId, exportId);
     if (status === 'SUCCESS') {
       // Ensure correct project folder structure exists
       const baseDestPath = path.resolve(getCwd(), location);
@@ -110,7 +109,7 @@ exports.handler = async options => {
 
       // Extract zipped app files and place them in correct directory
       const { data: zippedApp } = await downloadClonedProject(
-        accountId,
+        derivedAccountId,
         exportId
       );
       await extractZipArchive(
@@ -139,7 +138,7 @@ exports.handler = async options => {
           assetType: appId,
           successful: success,
         },
-        accountId
+        derivedAccountId
       );
 
       SpinniesManager.succeed('cloneApp', {
@@ -162,7 +161,7 @@ exports.handler = async options => {
     trackCommandMetadataUsage(
       'clone-app',
       { projectName: name, appId, status: 'FAILURE', error },
-      accountId
+      derivedAccountId
     );
 
     SpinniesManager.fail('cloneApp', {
@@ -172,10 +171,10 @@ exports.handler = async options => {
     // Migrations endpoints return a response object with an errors property. The errors property contains an array of errors.
     if (error.errors && Array.isArray(error.errors)) {
       error.errors.forEach(e =>
-        logError(e, new ApiErrorContext({ accountId }))
+        logError(e, new ApiErrorContext({ accountId: derivedAccountId }))
       );
     } else {
-      logError(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     }
   }
 };

@@ -7,6 +7,8 @@ en:
         cliUpdateNotification: "HubSpot CLI version {{#cyan}}{{#bold}}{currentVersion}{{/bold}}{{/cyan}} is outdated.\nRun {{ updateCommand }} to upgrade to version {{#cyan}}{{#bold}}{latestVersion}{{/bold}}{{/cyan}}"
       srcIsProject: "\"{{ src }}\" is in a project folder. Did you mean \"hs project {{command}}\"?"
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
+      loadConfigMiddleware:
+        configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
     accounts:
       describe: "Commands for working with accounts."
       subcommands:
@@ -421,6 +423,8 @@ en:
           defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
+        useHiddenConfig:
+          describe: "Use the new HubSpot configuration file located in a hidden file in the user's home directory"
       success:
         configFileCreated: "Created config file \"{{ configPath }}\""
         configFileUpdated: "Connected account \"{{ account }}\" using \"{{ authType }}\" and set it as the default account"
@@ -428,6 +432,7 @@ en:
         updateConfig: "To update an existing config file, use the \"hs auth\" command."
       errors:
         configFileExists: "The config file {{ configPath }} already exists."
+        bothConfigFilesNotAllowed: "Unable to create config file, because there is an existing one at \"{{ path }}\". To create a new config file, delete the existing one and try again."
     lint:
       issuesFound: "{{ count }} issues found."
       groupName: "Linting {{ path }}"
@@ -1215,6 +1220,7 @@ en:
         selectReactType: "Is this a React module?"
         selectContentType: "What types of content will this module be used in?"
         confirmGlobal: "Is this a global module?"
+        availableForNewContent: "Make this module available for new content?"
         errors:
           invalidLabel: "You entered an invalid name. Please try again."
           labelRequired: "The name may not be blank. Please try again."

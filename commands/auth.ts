@@ -22,6 +22,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
+  getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -74,21 +75,22 @@ exports.handler = async options => {
     authType: authTypeFlagValue,
     config: configFlagValue,
     qa,
-    account,
+    providedAccountId,
   } = options;
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
     PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
 
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  // Needed to load deprecated config
+  loadConfig(configFlagValue);
+  checkAndWarnGitInclusion(getConfigPath());
+
   if (!getConfigPath(configFlagValue)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(configFlagValue);
-  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
@@ -110,7 +112,10 @@ exports.handler = async options => {
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env, account });
+      configData = await personalAccessKeyPrompt({
+        env,
+        account: providedAccountId,
+      });
 
       try {
         token = await getAccessToken(configData.personalAccessKey, env);
@@ -177,7 +182,7 @@ exports.handler = async options => {
     const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
+        accountName: getConfigDefaultAccount(config),
       })
     );
   }

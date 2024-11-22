@@ -7,7 +7,6 @@ const {
   addOverwriteOptions,
   addModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
   getMode,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
@@ -36,15 +35,15 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
   const mode = getMode(options);
 
-  trackCommandUsage('fetch', { mode }, accountId);
+  trackCommandUsage('fetch', { mode }, derivedAccountId);
 
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      accountId,
+      derivedAccountId,
       src,
       resolveLocalPath(dest),
       mode,

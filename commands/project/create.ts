@@ -2,7 +2,6 @@
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -30,7 +29,7 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
 
   const hasCustomTemplateSource = Boolean(options.templateSource);
 
@@ -48,7 +47,11 @@ exports.handler = async options => {
     options
   );
 
-  trackCommandUsage('project-create', { type: template.name }, accountId);
+  trackCommandUsage(
+    'project-create',
+    { type: template.name },
+    derivedAccountId
+  );
 
   await createProjectConfig(
     path.resolve(getCwd(), options.location || location),

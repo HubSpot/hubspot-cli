@@ -6,6 +6,8 @@ const {
   createEmptyConfigFile,
   deleteEmptyConfigFile,
   updateDefaultAccount,
+  loadConfig,
+  configFileExists,
 } = require('@hubspot/local-dev-lib/config');
 const { addConfigOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
@@ -103,8 +105,9 @@ exports.handler = async options => {
   const {
     auth: authTypeFlagValue,
     c: configFlagValue,
-    account: accountFlagValue,
+    providedAccountId,
     disableTracking,
+    useHiddenConfig,
   } = options;
   const authType =
     (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
@@ -112,7 +115,7 @@ exports.handler = async options => {
 
   const configPath =
     (configFlagValue && path.join(getCwd(), configFlagValue)) ||
-    getConfigPath();
+    getConfigPath('', useHiddenConfig);
   setLogLevel(options);
 
   if (!disableTracking) {
@@ -137,16 +140,25 @@ exports.handler = async options => {
     await trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
   }
 
-  createEmptyConfigFile({ path: configPath });
+  const doesOtherConfigFileExist = configFileExists(!useHiddenConfig);
+  if (doesOtherConfigFileExist) {
+    const path = getConfigPath('', !useHiddenConfig);
+    logger.error(i18n(`${i18nKey}.errors.bothConfigFilesNotAllowed`, { path }));
+    process.exit(EXIT_CODES.ERROR);
+  }
+
+  trackAuthAction('init', authType, TRACKING_STATUS.STARTED);
+  createEmptyConfigFile({ path: configPath }, useHiddenConfig);
+  //Needed to load deprecated config
+  loadConfig(configPath, options);
 
   handleExit(deleteEmptyConfigFile);
 
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](
       env,
-      accountFlagValue
+      providedAccountId
     );
-    const configPath = getConfigPath();
 
     try {
       checkAndAddConfigToGitignore(configPath);
@@ -154,10 +166,15 @@ exports.handler = async options => {
       debugError(e);
     }
 
+    let newConfigPath = configPath;
+    if (!newConfigPath && !useHiddenConfig) {
+      newConfigPath = `${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`;
+    }
+
     logger.log('');
     logger.success(
       i18n(`${i18nKey}.success.configFileCreated`, {
-        configPath,
+        configPath: newConfigPath,
       })
     );
     logger.success(
@@ -212,6 +229,10 @@ exports.builder = yargs => {
       type: 'boolean',
       hidden: true,
       default: false,
+    },
+    'use-hidden-config': {
+      describe: i18n(`${i18nKey}.options.useHiddenConfig.describe`),
+      type: 'boolean',
     },
   });
 
