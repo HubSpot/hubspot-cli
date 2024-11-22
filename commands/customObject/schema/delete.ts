@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { EXIT_CODES } from '../../../lib/enums/exitCodes';
-import { confirmPrompt, inputPrompt } from '../../../lib/prompts/promptUtils';
+import { confirmPrompt, listPrompt } from '../../../lib/prompts/promptUtils';
+import { fetchObjectSchemas } from '@hubspot/local-dev-lib/api/customObjects';
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { loadAndValidateOptions } = require('../../../lib/validation');
@@ -23,18 +24,27 @@ exports.handler = async options => {
 
   trackCommandUsage('custom-object-schema-delete', null, derivedAccountId);
 
-  // TODO: Fetch the schemas and show a list.  Allow the user to select one.
-  const name =
-    providedName || (await inputPrompt(i18n(`${i18nKey}.selectSchema`)));
-  const shouldDelete =
-    force || (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { name })));
-
-  if (!shouldDelete) {
-    logger.success(i18n(`${i18nKey}.deleteCancelled`, { name }));
-    return process.exit(EXIT_CODES.SUCCESS);
-  }
-
+  let name;
   try {
+    const {
+      data: { results },
+    } = await fetchObjectSchemas(derivedAccountId);
+    const schemaNames = results?.map(({ name: schemaName }) => schemaName);
+    name =
+      providedName ||
+      (await listPrompt(i18n(`${i18nKey}.selectSchema`), {
+        choices: schemaNames,
+      }));
+
+    const shouldDelete =
+      force ||
+      (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { name })));
+
+    if (!shouldDelete) {
+      logger.success(i18n(`${i18nKey}.deleteCancelled`, { name }));
+      return process.exit(EXIT_CODES.SUCCESS);
+    }
+
     await deleteObjectSchema(derivedAccountId, name);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
