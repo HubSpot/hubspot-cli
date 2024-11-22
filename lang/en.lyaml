@@ -1161,6 +1161,8 @@ en:
           describe: "Run command in QA mode"
         useEnv:
           describe: "Use environment variable config"
+        debug:
+          describe: "Set log level to debug"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"

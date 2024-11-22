@@ -19,7 +19,7 @@ export function addGlobalOptions(yargs: Argv) {
     .option('debug', {
       alias: 'd',
       default: false,
-      describe: 'Set log level to debug',
+      describe: i18n(`${i18nKey}.options.debug.describe`),
       type: 'boolean',
     })
     .version(false);
