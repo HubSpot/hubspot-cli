@@ -18,7 +18,7 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
 
-exports.command = 'marketplace-validate <src>';
+exports.command = 'marketplace-validate <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
@@ -61,8 +61,8 @@ exports.builder = yargs => {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+  yargs.positional('path', {
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   return yargs;

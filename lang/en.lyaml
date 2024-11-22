@@ -845,7 +845,7 @@ en:
             update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
             updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
     theme:
-      describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
+      describe: "Commands for managing themes."
       subcommands:
         generateSelectors:
           describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
@@ -855,10 +855,10 @@ en:
             noSelectorsFound: "No selectors found."
           success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
           positionals:
-            themePath:
+            path:
               describe: "The path of the theme you'd like to generate an editor-preview.json for."
         marketplaceValidate:
-          describe: "Validate a theme for the marketplace"
+          describe: "Validate a theme for the marketplace."
           errors:
             invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
           logs:
@@ -871,10 +871,10 @@ en:
               lineNumber: "Line number: {{ line }}"
             noErrors: "No errors"
           positionals:
-            src:
+            path:
               describe: "Path to the theme within the Design Manager."
         preview:
-          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
+          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site."
           errors:
             invalidPath: "The path \"{{ path }}\" is not a path to a directory"
             noThemeComponents: "Your project has no theme components available to preview."

@@ -25,7 +25,7 @@ const THEME_PATH_REGEX = new RegExp(/=\s*.*(theme\.(\w|\.)*)/, 'i');
 
 const i18nKey = 'commands.theme.subcommands.generateSelectors';
 
-exports.command = 'generate-selectors <themePath>';
+exports.command = 'generate-selectors <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = options => {
@@ -206,8 +206,8 @@ exports.handler = options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('themePath', {
-    describe: i18n(`${i18nKey}.positionals.themePath.describe`),
+  yargs.positional('path', {
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
 

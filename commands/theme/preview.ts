@@ -29,7 +29,7 @@ const { preview } = require('@hubspot/theme-preview-dev-server');
 const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
 
-exports.command = 'preview [--src] [--dest]';
+exports.command = 'preview [--path] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
@@ -232,7 +232,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
-  yargs.option('src', {
+  yargs.option('path', {
     describe: i18n(`${i18nKey}.options.src.describe`),
     type: 'string',
     requiresArg: true,

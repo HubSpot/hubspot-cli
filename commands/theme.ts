@@ -7,7 +7,7 @@ const { i18n } = require('../lib/lang');
 
 const i18nKey = 'commands.theme';
 
-exports.command = 'theme';
+exports.command = ['theme', 'themes'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
