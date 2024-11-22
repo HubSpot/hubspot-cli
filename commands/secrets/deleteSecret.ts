@@ -18,7 +18,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
@@ -28,18 +27,17 @@ exports.command = 'delete [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name, force } = options;
+  const { name, derivedAccountId, force } = options;
   let secretName = name;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-delete', null, accountId);
+  trackCommandUsage('secrets-delete', null, derivedAccountId);
 
   try {
     const {
       data: { results: secrets },
-    } = await fetchSecrets(accountId);
+    } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
       logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
@@ -65,10 +63,10 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
 
-    await deleteSecret(accountId, secretName);
+    await deleteSecret(derivedAccountId, secretName);
     logger.success(
       i18n(`${i18nKey}.success.delete`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -82,7 +80,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'delete a secret',
-        accountId,
+        accountId: derivedAccountId,
       })
     );
   }

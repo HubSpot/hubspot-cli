@@ -16,7 +16,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const {
   secretValuePrompt,
@@ -30,17 +29,17 @@ exports.command = 'update [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name } = options;
+  const { name, derivedAccountId } = options;
+
   let secretName = name;
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-update', null, accountId);
+  trackCommandUsage('secrets-update', null, derivedAccountId);
 
   try {
     const {
       data: { results: secrets },
-    } = await fetchSecrets(accountId);
+    } = await fetchSecrets(derivedAccountId);
 
     if (secretName && !secrets.includes(secretName)) {
       logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
@@ -57,10 +56,10 @@ exports.handler = async options => {
 
     const { secretValue } = await secretValuePrompt();
 
-    await updateSecret(accountId, secretName, secretValue);
+    await updateSecret(derivedAccountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.update`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -75,7 +74,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'update secret',
-        accountId,
+        accountId: derivedAccountId,
       })
     );
   }

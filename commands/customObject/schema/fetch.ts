@@ -12,7 +12,6 @@ const { getCwd } = require('@hubspot/local-dev-lib/path');
 
 const { loadAndValidateOptions } = require('../../../lib/validation');
 const { trackCommandUsage } = require('../../../lib/usageTracking');
-const { getAccountId } = require('../../../lib/commonOpts');
 const { i18n } = require('../../../lib/lang');
 const { logError } = require('../../../lib/errorHandlers');
 
@@ -22,18 +21,16 @@ exports.command = 'fetch <name> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name, dest } = options;
+  const { name, dest, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('custom-object-schema-fetch', null, accountId);
+  trackCommandUsage('custom-object-schema-fetch', null, derivedAccountId);
 
   try {
     if (isConfigFlagEnabled(CONFIG_FLAGS.USE_CUSTOM_OBJECT_HUBFILE)) {
       const fullpath = path.resolve(getCwd(), dest);
-      await fetchSchema(accountId, name, fullpath);
+      await fetchSchema(derivedAccountId, name, fullpath);
       logger.success(
         i18n(`${i18nKey}.success.save`, {
           name,
@@ -41,7 +38,7 @@ exports.handler = async options => {
         })
       );
     } else {
-      await downloadSchema(accountId, name, dest);
+      await downloadSchema(derivedAccountId, name, dest);
       logger.success(
         i18n(`${i18nKey}.success.savedToPath`, {
           path: getResolvedPath(dest, name),

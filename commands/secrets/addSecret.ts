@@ -14,7 +14,6 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
-  getAccountId,
 } = require('../../lib/commonOpts');
 const { uiAccountDescription } = require('../../lib/ui');
 const {
@@ -29,12 +28,12 @@ exports.command = 'add [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name } = options;
+  const { name, derivedAccountId } = options;
   let secretName = name;
+
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  trackCommandUsage('secrets-add', null, accountId);
+  trackCommandUsage('secrets-add', null, derivedAccountId);
 
   try {
     if (!secretName) {
@@ -44,7 +43,7 @@ exports.handler = async options => {
 
     const {
       data: { results: secrets },
-    } = await fetchSecrets(accountId);
+    } = await fetchSecrets(derivedAccountId);
 
     if (secrets.includes(secretName)) {
       logger.error(
@@ -58,10 +57,10 @@ exports.handler = async options => {
 
     const { secretValue } = await secretValuePrompt();
 
-    await addSecret(accountId, secretName, secretValue);
+    await addSecret(derivedAccountId, secretName, secretValue);
     logger.success(
       i18n(`${i18nKey}.success.add`, {
-        accountIdentifier: uiAccountDescription(accountId),
+        accountIdentifier: uiAccountDescription(derivedAccountId),
         secretName,
       })
     );
@@ -75,7 +74,7 @@ exports.handler = async options => {
       err,
       new ApiErrorContext({
         request: 'add secret',
-        accountId,
+        accountId: derivedAccountId,
       })
     );
   }

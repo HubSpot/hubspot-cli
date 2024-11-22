@@ -71,7 +71,7 @@ describe('hs create', () => {
   it('creates a module', async () => {
     await testState.cli.execute(
       ['create', 'module', FOLDERS.module.name],
-      ['label', ENTER, ENTER, ENTER, 'y', ENTER]
+      ['label', ENTER, ENTER, ENTER, 'y', ENTER, ENTER]
     );
 
     expect(testState.existsInTestOutputDirectory(FOLDERS.module.folder)).toBe(
