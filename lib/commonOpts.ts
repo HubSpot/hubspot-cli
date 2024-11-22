@@ -14,6 +14,17 @@ import { Mode } from '@hubspot/local-dev-lib/types/Files';
 
 const i18nKey = 'lib.commonOpts';
 
+export function addGlobalOptions(yargs: Argv) {
+  return yargs
+    .option('debug', {
+      alias: 'd',
+      default: false,
+      describe: 'Set log level to debug',
+      type: 'boolean',
+    })
+    .version(false);
+}
+
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('portal', {
     alias: ['p', 'account', 'a'],
@@ -123,6 +134,7 @@ export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
 }
 
 module.exports = {
+  addGlobalOptions,
   addAccountOptions,
   addConfigOptions,
   addOverwriteOptions,

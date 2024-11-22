@@ -1,5 +1,6 @@
 // @ts-nocheck
 const {
+  addGlobalOptions,
   addAccountOptions,
   addConfigOptions,
   getAccountId,
@@ -128,6 +129,7 @@ exports.builder = yargs => {
     ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
   ]);
 
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
