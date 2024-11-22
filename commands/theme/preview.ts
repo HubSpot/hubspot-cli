@@ -104,13 +104,12 @@ const determineSrcAndDest = async options => {
 
 exports.handler = async options => {
   const {
-    notify,
-    skipUpload,
-    noSsl,
-    port,
-    debug,
     derivedAccountId,
+    notify,
+    noSsl,
     resetSession,
+    port,
+    generateFieldsTypes,
   } = options;
 
   await loadAndValidateOptions(options);
@@ -181,17 +180,51 @@ exports.handler = async options => {
 
   trackCommandUsage('preview', derivedAccountId);
 
-  preview(derivedAccountId, absoluteSrc, dest, {
-    notify,
-    filePaths,
-    skipUpload,
-    noSsl,
-    port,
-    debug,
-    resetSession,
-    startProgressBar,
-    handleUserInput,
-  });
+  let createUnifiedDevServer;
+  try {
+    require.resolve('@hubspot/cms-dev-server');
+    const { createDevServer } = await import('@hubspot/cms-dev-server');
+    createUnifiedDevServer = createDevServer;
+  } catch (e) {
+    logger.warn(
+      'Unified dev server requires node 20 to run. Defaulting to legacy preview.'
+    );
+  }
+
+  const isUngatedForUnified = await hasFeature(
+    derivedAccountId,
+    'cms:react:unifiedThemePreview'
+  );
+  if (isUngatedForUnified && createUnifiedDevServer) {
+    if (port) {
+      process.env['PORT'] = port;
+    }
+    createUnifiedDevServer(
+      absoluteSrc,
+      false,
+      false,
+      false,
+      !noSsl,
+      generateFieldsTypes,
+      {
+        filePaths,
+        resetSession,
+        startProgressBar,
+        handleUserInput,
+        dest,
+      }
+    );
+  } else {
+    preview(derivedAccountId, absoluteSrc, dest, {
+      notify,
+      filePaths,
+      noSsl,
+      port,
+      resetSession,
+      startProgressBar,
+      handleUserInput,
+    });
+  }
 };
 
 exports.builder = yargs => {

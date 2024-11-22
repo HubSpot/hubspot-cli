@@ -8,13 +8,13 @@ export async function confirmPrompt(
   message: string,
   options: { defaultAnswer?: boolean; when?: boolean | (() => boolean) } = {}
 ): Promise<boolean> {
-  const { defaultAnswer, when } = options;
+  const { defaultAnswer = true, when } = options;
   const { choice } = await promptUser([
     {
       name: 'choice',
       type: 'confirm',
       message,
-      default: defaultAnswer || true,
+      default: defaultAnswer,
       when,
     },
   ]);
