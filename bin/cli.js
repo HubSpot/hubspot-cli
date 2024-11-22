@@ -17,6 +17,7 @@ const pkg = require('../package.json');
 const { i18n } = require('../lib/lang');
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 const { UI_COLORS, uiCommandReference } = require('../lib/ui');
+const { version } = require('../package.json');
 
 const removeCommand = require('../commands/remove');
 const initCommand = require('../commands/init');
@@ -135,17 +136,11 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
-const argv = yargs
+const _yargs = yargs
   .usage('The command line interface to interact with HubSpot.')
   .middleware([setLogLevel, setRequestHeaders])
   .exitProcess(false)
   .fail(handleFailure)
-  .option('debug', {
-    alias: 'd',
-    default: false,
-    describe: 'Set log level to debug',
-    type: 'boolean',
-  })
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',
@@ -158,7 +153,19 @@ const argv = yargs
     hidden: true,
     type: 'boolean',
   })
+  .version(false)
+  .option('version', {
+    description: 'Show version number',
+    type: 'boolean',
+    global: false,
+  })
   .check(performChecks)
+  .help(false)
+  .option('help', {
+    description: 'Show help',
+    type: 'boolean',
+    global: false,
+  })
   .command(authCommand)
   .command(initCommand)
   .command(logsCommand)
@@ -188,12 +195,20 @@ const argv = yargs
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
-  .help()
   .recommendCommands()
-  .demandCommand(1, '')
   .completion()
   .wrap(getTerminalWidth())
-  .strict().argv;
+  .strict();
+
+const argv = _yargs.argv;
+
+if (argv._.length === 0) {
+  if (argv.version && !argv.help) {
+    logger.log(version);
+  } else {
+    yargs.showHelp();
+  }
+}
 
 if (argv.help) {
   trackHelpUsage(getCommandName(argv));

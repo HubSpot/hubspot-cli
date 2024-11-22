@@ -74,6 +74,15 @@ export function addUseEnvironmentOptions(yargs: Argv): Argv {
   });
 }
 
+export function addGlobalOptions(yargs: Argv): Argv {
+  return yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: 'Set log level to debug',
+    type: 'boolean',
+  });
+}
+
 export function setLogLevel(options: Arguments<{ debug?: boolean }>): void {
   const { debug } = options;
   if (debug) {
