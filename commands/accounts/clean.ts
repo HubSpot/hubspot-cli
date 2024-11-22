@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { addConfigOptions } from '../../lib/commonOpts';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   accessTokenForPersonalAccessKey,
@@ -131,6 +133,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addConfigOptions(yargs);
   addTestingOptions(yargs);
 
   yargs.example([['$0 accounts clean']]);

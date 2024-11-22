@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { addConfigOptions } from '../../lib/commonOpts';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   getConfig,
@@ -111,6 +113,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addConfigOptions(yargs);
   yargs.example([['$0 accounts list']]);
   return yargs;
 };
