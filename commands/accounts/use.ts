@@ -14,7 +14,7 @@ const { loadAndValidateOptions } = require('../../lib/validation');
 
 const i18nKey = 'commands.accounts.subcommands.use';
 
-exports.command = 'use [--account]';
+exports.command = 'use [account]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
