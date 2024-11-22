@@ -1,7 +1,12 @@
 // @ts-nocheck
+import { EXIT_CODES } from '../../lib/enums/exitCodes';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
-const { updateSecret } = require('@hubspot/local-dev-lib/api/secrets');
+const {
+  updateSecret,
+  fetchSecrets,
+} = require('@hubspot/local-dev-lib/api/secrets');
 
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -13,23 +18,43 @@ const {
   addUseEnvironmentOptions,
   getAccountId,
 } = require('../../lib/commonOpts');
-const { secretValuePrompt } = require('../../lib/prompts/secretPrompt');
+const {
+  secretValuePrompt,
+  secretListPrompt,
+} = require('../../lib/prompts/secretPrompt');
 const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.secrets.subcommands.update';
 
-exports.command = 'update <name>';
+exports.command = 'update [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { name: secretName } = options;
-
+  const { name } = options;
+  let secretName = name;
   await loadAndValidateOptions(options);
 
   const accountId = getAccountId(options);
   trackCommandUsage('secrets-update', null, accountId);
 
   try {
+    const {
+      data: { results: secrets },
+    } = await fetchSecrets(accountId);
+
+    if (secretName && !secrets.includes(secretName)) {
+      logger.error(i18n(`${i18nKey}.errors.noSecret`, { secretName }));
+      process.exit(EXIT_CODES.ERROR);
+    }
+
+    if (!secretName) {
+      const { secretToModify } = await secretListPrompt(
+        secrets,
+        i18n(`${i18nKey}.selectSecret`)
+      );
+      secretName = secretToModify;
+    }
+
     const { secretValue } = await secretValuePrompt();
 
     await updateSecret(accountId, secretName, secretValue);

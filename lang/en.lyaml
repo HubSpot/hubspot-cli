@@ -795,35 +795,42 @@ en:
             account:
               describe: "Account name or id to delete"
     secrets:
-      describe: "Manage HubSpot secrets."
+      describe: "Commands for managing secrets."
       subcommands:
         add:
-          describe: "Add a HubSpot secret"
+          describe: "Create a new secret."
           errors:
             add: "The secret \"{{ secretName }}\" was not added"
+            alreadyExists: "The secret \"{{ secretName }}\" already exists, it's value can be modified with {{ command }}"
           positionals:
             name:
               describe: "Name of the secret"
           success:
             add: "The secret \"{{ secretName }}\" was added to the HubSpot account: {{ accountIdentifier }}"
         delete:
-          describe: "Delete a HubSpot secret"
+          describe: "Delete a secret."
+          selectSecret: "Select the secret you want to delete"
+          deleteCanceled: "Delete canceled"
+          confirmDelete: "Are you sure you want to delete the secret \"{{ secretName }}\"?"
           errors:
             delete: "The secret \"{{ secretName }}\" was not deleted"
+            noSecret: "Unable to delete secret with name \"{{ secretName }}\", it does not exist"
           positionals:
             name:
               describe: "Name of the secret"
           success:
             delete: "The secret \"{{ secretName }}\" was deleted from the HubSpot account: {{ accountIdentifier }}"
         list:
-          describe: "List all HubSpot secrets"
+          describe: "List all secrets."
           errors:
             list: "The secrets could not be listed"
           groupLabel: "Secrets for account {{ accountIdentifier }}:"
         update:
-          describe: "Update an existing HubSpot secret"
+          describe: "Update an existing secret."
+          selectSecret: "Select the secret you want to update"
           errors:
             update: "The secret \"{{ secretName }}\" was not updated"
+            noSecret: "Unable to update secret with name \"{{ secretName }}\", it does not exist"
           positionals:
             name:
               describe: "Name of the secret to be updated"
@@ -1269,6 +1276,9 @@ en:
           invalidType: "[--type] Could not find type {{ type }}. Please choose an available type."
       secretPrompt:
         enterValue: "Enter a value for your secret: "
+        enterName: "Enter a name for your secret: "
+        selectSecretUpdate: "Select the secret you want to update"
+        selectSecretDelete: "Select the secret you want to delete"
         errors:
           invalidValue: "You entered an invalid value. Please try again."
       sandboxesPrompt:
