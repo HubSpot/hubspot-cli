@@ -112,10 +112,10 @@ function isLogsResponse(
   logsResp: LogsResponse | Log
 ): logsResp is LogsResponse {
   return (
+    logsResp &&
     'results' in logsResp &&
     Array.isArray(logsResp.results) &&
-    logsResp.results !== undefined &&
-    logsResp.results.length > 0
+    logsResp.results !== undefined
   );
 }
 
@@ -123,7 +123,11 @@ function processLogs(
   logsResp: LogsResponse | Log,
   options: Options
 ): string | void {
-  if (isLogsResponse(logsResp)) {
+  const isLogsResp = isLogsResponse(logsResp);
+
+  if (!logsResp || (isLogsResp && logsResp.results!.length === 0)) {
+    return i18n(`${i18nKey}.noLogsFound`);
+  } else if (isLogsResp) {
     return logsResp
       .results!.map(log => {
         return processLog(log, options);

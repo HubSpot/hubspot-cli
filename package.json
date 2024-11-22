@@ -50,6 +50,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
+  "optionalDependencies": {
+    "@hubspot/cms-dev-server": "^0.18.9"
+  },
   "scripts": {
     "build": "ts-node ./scripts/build.ts",
     "lint": "eslint . && prettier --list-different ./**/*.{js,json}",
