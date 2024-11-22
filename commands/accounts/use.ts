@@ -58,11 +58,8 @@ exports.builder = yargs => {
   });
   yargs.example([
     ['$0 accounts use', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts use --account=MyAccount',
-      i18n(`${i18nKey}.examples.nameBased`),
-    ],
-    ['$0 accounts use --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
+    ['$0 accounts use MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
+    ['$0 accounts use 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;

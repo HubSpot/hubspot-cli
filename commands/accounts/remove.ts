@@ -75,10 +75,7 @@ exports.builder = yargs => {
   });
   yargs.example([
     ['$0 accounts remove', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts remove --account=MyAccount',
-      i18n(`${i18nKey}.examples.byName`),
-    ],
+    ['$0 accounts remove MyAccount', i18n(`${i18nKey}.examples.byName`)],
   ]);
 
   return yargs;
