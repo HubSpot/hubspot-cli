@@ -98,10 +98,10 @@ en:
       success:
         configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
     config:
-      describe: "Commands for working with the config file."
+      describe: "Commands for managing the CLI config file."
       subcommands:
         set:
-          describe: "Commands for modifying the CLI configuration"
+          describe: "Commands for modifying the CLI configuration."
           promptMessage: "Select a config option to update"
           examples:
             default: "Opens a prompt to select a config item to modify"
