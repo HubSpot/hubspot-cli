@@ -37,39 +37,45 @@ describe('Secrets Flow', () => {
     testState.cleanup();
   });
 
-  it('should create a new secret', async () => {
-    await testState.cli.executeWithTestConfig(
-      ['secrets', 'add', SECRET.name],
-      [SECRET.value, ENTER]
-    );
+  describe('hs secrets add', () => {
+    it('should create a new secret', async () => {
+      await testState.cli.executeWithTestConfig(
+        ['secrets', 'add', SECRET.name],
+        [SECRET.value, ENTER]
+      );
 
-    await waitForSecretsListToContainSecret(testState);
+      await waitForSecretsListToContainSecret(testState);
+    });
   });
 
-  it('should update the existing secret', async () => {
-    // Wait for the secret to exist before updating it
-    await waitForSecretsListToContainSecret(testState);
+  describe('hs secrets update', () => {
+    it('should update the existing secret', async () => {
+      // Wait for the secret to exist before updating it
+      await waitForSecretsListToContainSecret(testState);
 
-    await testState.cli.executeWithTestConfig(
-      ['secrets', 'update', SECRET.name],
-      ['a different secret value', ENTER]
-    );
+      await testState.cli.executeWithTestConfig(
+        ['secrets', 'update', SECRET.name],
+        ['a different secret value', ENTER]
+      );
+    });
   });
 
-  it('should delete the secret', async () => {
-    // Wait for the secret to exist before deleting it
-    await waitForSecretsListToContainSecret(testState);
+  describe('hs secrets delete', () => {
+    it('should delete the secret', async () => {
+      // Wait for the secret to exist before deleting it
+      await waitForSecretsListToContainSecret(testState);
 
-    await testState.cli.executeWithTestConfig(
-      ['secrets', 'delete', SECRET.name],
-      ['Y', ENTER]
-    );
+      await testState.cli.executeWithTestConfig(
+        ['secrets', 'delete', SECRET.name],
+        ['Y', ENTER]
+      );
 
-    await expect
-      .poll(
-        () => testState.cli.executeWithTestConfig(['secrets', 'list']),
-        secretPollingOptions
-      )
-      .not.toContain(SECRET.name);
+      await expect
+        .poll(
+          () => testState.cli.executeWithTestConfig(['secrets', 'list']),
+          secretPollingOptions
+        )
+        .not.toContain(SECRET.name);
+    });
   });
 });
