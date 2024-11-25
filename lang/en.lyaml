@@ -9,6 +9,10 @@ en:
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+    completion:
+      describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
+      examples:
+        default: "Generate shell completion scripts for the zsh shell"
     accounts:
       describe: "Commands for managing configured accounts."
       subcommands:

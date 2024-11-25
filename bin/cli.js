@@ -54,6 +54,7 @@ const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
+const completionCommand = require('../commands/completion');
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -220,11 +221,11 @@ const argv = yargs
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
+  .command(completionCommand)
   .help()
   .alias('h', 'help')
   .recommendCommands()
   .demandCommand(1, '')
-  .completion()
   .wrap(getTerminalWidth())
   .strict().argv;
 
