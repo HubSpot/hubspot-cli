@@ -29,7 +29,7 @@ const { preview } = require('@hubspot/theme-preview-dev-server');
 const { hasFeature } = require('../../lib/hasFeature');
 const i18nKey = 'commands.theme.subcommands.preview';
 
-exports.command = 'preview [--path] [--dest]';
+exports.command = 'preview [--src] [--dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const validateSrcPath = src => {
@@ -74,7 +74,7 @@ const determineSrcAndDest = async options => {
   if (!(projectDir && projectConfig)) {
     // Not in a project, prompt for src and dest of traditional theme
     const previewPromptAnswers = await previewPrompt(options);
-    const src = options.path || previewPromptAnswers.src;
+    const src = options.src || previewPromptAnswers.src;
     dest = options.dest || previewPromptAnswers.dest;
     absoluteSrc = path.resolve(getCwd(), src);
     if (!dest || !validateSrcPath(absoluteSrc)) {
@@ -232,8 +232,8 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
 
-  yargs.option('path', {
-    describe: i18n(`${i18nKey}.options.path.describe`),
+  yargs.option('src', {
+    describe: i18n(`${i18nKey}.options.src.describe`),
     type: 'string',
     requiresArg: true,
   });
