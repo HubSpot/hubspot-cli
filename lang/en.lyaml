@@ -1071,8 +1071,6 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
-      config:
-        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       uploadProjectFiles:
         add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
         fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -1083,6 +1081,11 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
+      validateProjectConfig:
+        configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
+        configMissingFields: "The project configuruation file is missing required fields."
+        srcDirNotFound: "Project source directory {{#bold}}{{ srcDir }}{{/bold}} could not be found in {{#bold}}{{ projectDir }}{{/bold}}."
+        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       ensureProjectExists:
         createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
         createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"

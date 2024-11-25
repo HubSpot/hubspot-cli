@@ -90,6 +90,13 @@ exports.handler = async options => {
     logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await trackCommandMetadataUsage(
+    'clone-app',
+    { status: 'STARTED' },
+    derivedAccountId
+  );
+
   try {
     SpinniesManager.init();
 
@@ -131,16 +138,6 @@ exports.handler = async options => {
       };
       const success = writeProjectConfig(configPath, configContent);
 
-      trackCommandMetadataUsage(
-        'clone-app',
-        {
-          type: projectName,
-          assetType: appId,
-          successful: success,
-        },
-        derivedAccountId
-      );
-
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
         succeedColor: 'white',
@@ -158,9 +155,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
-    trackCommandMetadataUsage(
+    await trackCommandMetadataUsage(
       'clone-app',
-      { projectName, appId, status: 'FAILURE', error },
+      { status: 'FAILURE' },
       derivedAccountId
     );
 
@@ -177,6 +174,13 @@ exports.handler = async options => {
       logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     }
   }
+
+  await trackCommandMetadataUsage(
+    'clone-app',
+    { status: 'SUCCESS' },
+    derivedAccountId
+  );
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

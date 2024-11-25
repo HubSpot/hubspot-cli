@@ -40,7 +40,12 @@ const { getCwd, getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
 const { downloadGithubRepoContents } = require('@hubspot/local-dev-lib/github');
 const { promptUser } = require('./prompts/promptUtils');
 const { EXIT_CODES } = require('./enums/exitCodes');
-const { uiLine, uiLink, uiAccountDescription } = require('./ui');
+const {
+  uiLine,
+  uiLink,
+  uiAccountDescription,
+  uiCommandReference,
+} = require('./ui');
 const { i18n } = require('./lang');
 const SpinniesManager = require('./ui/SpinniesManager');
 const { logError, ApiErrorContext } = require('./errorHandlers/index');
@@ -163,15 +168,15 @@ const createProjectConfig = async (
 const validateProjectConfig = (projectConfig, projectDir) => {
   if (!projectConfig) {
     logger.error(
-      `Project config not found. Try running 'hs project create' first.`
+      i18n(`${i18nKey}.validateProjectConfig.configNotFound`, {
+        createCommand: uiCommandReference('hs project create'),
+      })
     );
     return process.exit(EXIT_CODES.ERROR);
   }
 
   if (!projectConfig.name || !projectConfig.srcDir) {
-    logger.error(
-      'Project config is missing required fields. Try running `hs project create`.'
-    );
+    logger.error(i18n(`${i18nKey}.validateProjectConfig.configMissingFields`));
     return process.exit(EXIT_CODES.ERROR);
   }
 
@@ -182,7 +187,7 @@ const validateProjectConfig = (projectConfig, projectDir) => {
       path.join(projectDir, PROJECT_CONFIG_FILE)
     );
     logger.error(
-      i18n(`${i18nKey}.config.srcOutsideProjectDir`, {
+      i18n(`${i18nKey}.validateProjectConfig.srcOutsideProjectDir`, {
         srcDir: projectConfig.srcDir,
         projectConfig: projectConfigFile,
       })
@@ -192,8 +197,12 @@ const validateProjectConfig = (projectConfig, projectDir) => {
 
   if (!fs.existsSync(resolvedPath)) {
     logger.error(
-      `Project source directory '${projectConfig.srcDir}' could not be found in ${projectDir}.`
+      i18n(`${i18nKey}.validateProjectConfig.srcDirNotFound`, {
+        srcDir: projectConfig.srcDir,
+        projectDir: projectDir,
+      })
     );
+
     return process.exit(EXIT_CODES.ERROR);
   }
 };

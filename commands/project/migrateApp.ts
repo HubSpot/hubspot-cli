@@ -140,6 +140,12 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'STARTED' },
+    derivedAccountId
+  );
+
   logger.log('');
   uiLine();
   logger.warn(i18n(`${i18nKey}.warning.title`));
@@ -206,12 +212,6 @@ exports.handler = async options => {
         { includesRootDir: true, hideLogs: true }
       );
 
-      trackCommandMetadataUsage(
-        'migrate-app',
-        { type: projectName, assetType: appId, successful: status },
-        derivedAccountId
-      );
-
       SpinniesManager.succeed('migrateApp', {
         text: i18n(`${i18nKey}.migrationStatus.done`),
         succeedColor: 'white',
@@ -231,9 +231,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
-    trackCommandMetadataUsage(
+    await trackCommandMetadataUsage(
       'migrate-app',
-      { projectName, appId, status: 'FAILURE', error },
+      { status: 'FAILURE' },
       derivedAccountId
     );
     SpinniesManager.fail('migrateApp', {
@@ -248,6 +248,12 @@ exports.handler = async options => {
 
     process.exit(EXIT_CODES.ERROR);
   }
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'SUCCESS' },
+    derivedAccountId
+  );
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
