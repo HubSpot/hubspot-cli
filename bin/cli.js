@@ -221,6 +221,7 @@ const argv = yargs
   .command(feedbackCommand)
   .command(doctorCommand)
   .help()
+  .alias('h', 'help')
   .recommendCommands()
   .demandCommand(1, '')
   .completion()
