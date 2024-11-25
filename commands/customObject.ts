@@ -1,5 +1,9 @@
 // @ts-nocheck
-const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const {
+  addConfigOptions,
+  addAccountOptions,
+  addGlobalOptions,
+} = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
 const { i18n } = require('../lib/lang');
@@ -25,6 +29,7 @@ const logBetaMessage = () => {
 exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
 
   yargs
     .middleware([logBetaMessage])

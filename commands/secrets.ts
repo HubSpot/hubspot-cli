@@ -1,4 +1,5 @@
 // @ts-nocheck
+const { addGlobalOptions } = require('../lib/commonOpts');
 
 const addSecretCommand = require('./secrets/addSecret');
 const listSecretsCommand = require('./secrets/listSecrets');
@@ -12,6 +13,8 @@ exports.command = ['secret', 'secrets'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
+
   yargs
     .command(listSecretsCommand)
     .command(addSecretCommand)
