@@ -3,10 +3,11 @@ const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { clearHubDbTableRows } = require('@hubspot/local-dev-lib/hubdb');
 const { publishTable } = require('@hubspot/local-dev-lib/api/hubdb');
-
+const {
+  selectHubDBTablePrompt,
+} = require('../../lib/prompts/selectHubDBTablePrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { trackCommandUsage } = require('../../lib/usageTracking');
-
 const {
   addConfigOptions,
   addAccountOptions,
@@ -16,17 +17,25 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.hubdb.subcommands.clear';
 
-exports.command = 'clear <tableId>';
+exports.command = 'clear [table-id]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { tableId, derivedAccountId } = options;
+  const { derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('hubdb-clear', null, derivedAccountId);
 
   try {
+    const { tableId } =
+      'tableId' in options
+        ? options
+        : await selectHubDBTablePrompt({
+            accountId: derivedAccountId,
+            options,
+          });
+
     const { deletedRowCount } = await clearHubDbTableRows(
       derivedAccountId,
       tableId
@@ -64,7 +73,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.positional('tableId', {
+  yargs.positional('table-id', {
     describe: i18n(`${i18nKey}.positionals.tableId.describe`),
     type: 'string',
   });
