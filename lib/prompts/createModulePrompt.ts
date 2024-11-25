@@ -1,4 +1,3 @@
-// @ts-nocheck
 const { promptUser } = require('./promptUtils');
 const { i18n } = require('../lang');
 
@@ -7,7 +6,7 @@ const i18nKey = 'lib.prompts.createModulePrompt';
 const MODULE_LABEL_PROMPT = {
   name: 'moduleLabel',
   message: i18n(`${i18nKey}.enterLabel`),
-  validate(val) {
+  validate(val: string): boolean | string {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidLabel`);
     } else if (!val.length) {
@@ -43,7 +42,7 @@ const CONTENT_TYPES_PROMPT = {
     { name: 'Subscription', value: 'SUBSCRIPTION' },
     { name: 'Membership', value: 'MEMBERSHIP' },
   ],
-  validate: input => {
+  validate: (input: string[]): Promise<boolean | string> => {
     return new Promise(function(resolve, reject) {
       if (input.length > 0) {
         resolve(true);
@@ -67,7 +66,7 @@ const AVAILABLE_FOR_NEW_CONTENT = {
   default: true,
 };
 
-function createModulePrompt() {
+export function createModulePrompt() {
   return promptUser([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,
@@ -76,7 +75,3 @@ function createModulePrompt() {
     AVAILABLE_FOR_NEW_CONTENT,
   ]);
 }
-
-module.exports = {
-  createModulePrompt,
-};

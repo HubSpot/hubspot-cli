@@ -1,13 +1,12 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.createFunctionPrompt';
 
 const FUNCTIONS_FOLDER_PROMPT = {
   name: 'functionsFolder',
   message: i18n(`${i18nKey}.enterFolder`),
-  validate(val) {
+  validate(val: string): string | boolean {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -22,7 +21,7 @@ const FUNCTIONS_FOLDER_PROMPT = {
 const FUNCTION_FILENAME_PROMPT = {
   name: 'filename',
   message: i18n(`${i18nKey}.enterFilename`),
-  validate(val) {
+  validate(val: string): string | boolean {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -45,7 +44,7 @@ const ENDPOINT_METHOD_PROMPT = {
 const ENDPOINT_PATH_PROMPT = {
   name: 'endpointPath',
   message: i18n(`${i18nKey}.enterEndpointPath`),
-  validate(val) {
+  validate(val: string): string | boolean {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -57,7 +56,7 @@ const ENDPOINT_PATH_PROMPT = {
   },
 };
 
-function createFunctionPrompt() {
+export function createFunctionPrompt() {
   return promptUser([
     FUNCTIONS_FOLDER_PROMPT,
     FUNCTION_FILENAME_PROMPT,
@@ -65,7 +64,3 @@ function createFunctionPrompt() {
     ENDPOINT_PATH_PROMPT,
   ]);
 }
-
-module.exports = {
-  createFunctionPrompt,
-};

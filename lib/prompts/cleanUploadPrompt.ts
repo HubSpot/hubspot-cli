@@ -1,10 +1,12 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.cleanUploadPrompt';
 
-const cleanUploadPrompt = async (accountId, filePath) => {
+export async function cleanUploadPrompt(
+  accountId: number,
+  filePath: string
+): Promise<boolean> {
   const promptAnswer = await promptUser([
     {
       name: 'cleanUpload',
@@ -14,8 +16,4 @@ const cleanUploadPrompt = async (accountId, filePath) => {
     },
   ]);
   return promptAnswer.cleanUpload;
-};
-
-module.exports = {
-  cleanUploadPrompt,
-};
+}

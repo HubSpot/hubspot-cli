@@ -3,7 +3,7 @@ import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.secretPrompt';
 
-export function secretValuePrompt() {
+export function secretValuePrompt(): Promise<{ secretValue: string }> {
   return promptUser([
     {
       name: 'secretValue',
@@ -14,7 +14,7 @@ export function secretValuePrompt() {
   ]);
 }
 
-export function secretNamePrompt() {
+export function secretNamePrompt(): Promise<{ secretName: string }> {
   return promptUser([
     {
       name: 'secretName',
@@ -24,7 +24,10 @@ export function secretNamePrompt() {
   ]);
 }
 
-export function secretListPrompt(secrets: string, message: string) {
+export function secretListPrompt(
+  secrets: string[],
+  message: string
+): Promise<{ secretToModify: string }> {
   return promptUser([
     {
       name: 'secretToModify',
