@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { inputPrompt } from '../../lib/prompts/promptUtils';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
@@ -20,12 +22,17 @@ exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   const { path, name: providedName, derivedAccountId } = options;
+  let definitionPath = path;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 
-  const filePath = getAbsoluteFilePath(path);
+  if (!definitionPath) {
+    definitionPath = await inputPrompt(i18n(`${i18nKey}.inputPath`));
+  }
+
+  const filePath = getAbsoluteFilePath(definitionPath);
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!objectJson) {
@@ -42,7 +49,7 @@ exports.handler = async options => {
     logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
-        definition: path,
+        definition: definitionPath,
       })
     );
   }
@@ -57,6 +64,5 @@ exports.builder = yargs => {
     .option('path', {
       describe: i18n(`${i18nKey}.options.path.describe`),
       type: 'string',
-      required: true,
     });
 };

@@ -212,6 +212,7 @@ en:
           success:
             objectsCreated: "Objects created"
           inputSchema: "What would you like to name the schema?"
+          inputPath: "[--path] Where is the JSON file containing the object definitions?"
         schema:
           describe: "Commands for managing custom object schemas."
           subcommands:

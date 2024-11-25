@@ -41,7 +41,7 @@ exports.handler = async options => {
       (await confirmPrompt(i18n(`${i18nKey}.confirmDelete`, { name })));
 
     if (!shouldDelete) {
-      logger.success(i18n(`${i18nKey}.deleteCancelled`, { name }));
+      logger.info(i18n(`${i18nKey}.deleteCancelled`, { name }));
       return process.exit(EXIT_CODES.SUCCESS);
     }
 
