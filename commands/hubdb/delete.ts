@@ -35,7 +35,6 @@ exports.handler = async options => {
         : await selectHubDBTablePrompt({
             accountId: derivedAccountId,
             options,
-            isDeleteCommand: true,
           });
 
     if (!force) {
@@ -44,7 +43,6 @@ exports.handler = async options => {
         type: 'confirm',
         message: i18n(`${i18nKey}.shouldDeleteTable`, { tableId }),
       });
-      process.stdin.resume();
 
       if (!shouldDeleteTable) {
         process.exit(EXIT_CODES.SUCCESS);

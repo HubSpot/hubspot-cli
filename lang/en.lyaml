@@ -391,8 +391,11 @@ en:
               describe: "HubDB Table ID"
         create:
           describe: "Create a HubDB table."
+          enterPath: "[--path] Enter the local path to the file used for import:"
           errors:
-            create: "Creating the table at \"{{ providedFilePath }}\" failed"
+            create: "Creating the table at \"{{ filePath }}\" failed"
+            pathRequired: "A path to a local file with a HubDB schema is required to create a HubDB table"
+            invalidCharacters: "The selected file path contains invalid characters. Please provide a new path and try again."
           options:
             path:
               describe: "Local path to file used for import"
@@ -1327,13 +1330,11 @@ en:
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       selectHubDBTablePrompt:
-        selectTable: "Select a HubDB table:"
-        enterDest: "Enter the destination path:"
+        selectTable: "[--table-id] Select a HubDB table:"
+        enterDest: "[--dest] Enter the destination path:"
         errors:
           noTables: "No HubDB tables found in account {{ accountId }}"
-          allTablesEmpty: "All HubDB tables in account {{ accountId }} are empty"
           unableToFetchTables: "Unable to fetch HubDB tables in account {{ accountId }}"
-          tableEmpty: "Empty table"
           destRequired: "A destination is required"
           invalidDest: "The selected destination already exists. Please provide a new path."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
