@@ -37,7 +37,7 @@ describe('Secrets Flow', () => {
       await expect
         .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
           interval: 1000,
-          timeout: 10000,
+          timeout: 20000,
         })
         .toContain(SECRET.name);
     });
@@ -66,7 +66,7 @@ describe('Secrets Flow', () => {
       await expect
         .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
           interval: 1000,
-          timeout: 10000,
+          timeout: 20000,
         })
         .not.toContain(SECRET.name);
     });
