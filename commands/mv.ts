@@ -7,6 +7,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { isPathFolder } = require('../lib/filesystem');
@@ -77,9 +78,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
   yargs.positional('srcPath', {
     describe: 'Remote hubspot path',
     type: 'string',
@@ -88,5 +86,10 @@ exports.builder = yargs => {
     describe: 'Remote hubspot path',
     type: 'string',
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
   return yargs;
 };

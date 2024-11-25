@@ -9,8 +9,12 @@ en:
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+    completion:
+      describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
+      examples:
+        default: "Generate shell completion scripts for the zsh shell"
     accounts:
-      describe: "Commands for working with accounts."
+      describe: "Commands for managing configured accounts."
       subcommands:
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
@@ -22,7 +26,7 @@ en:
             authType: "Auth Type"
             name: "Name"
         rename:
-          describe: "Rename account in config."
+          describe: "Rename an account in the config."
           positionals:
             accountName:
               describe: "Name of account to be renamed."
@@ -63,7 +67,7 @@ en:
             accountRemoved: "Account \"{{ accountName }}\" removed from the config"
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
-          describe: "Print information about the default account, or about the account specified with the \"--account\" option."
+          describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           examples:
@@ -98,10 +102,10 @@ en:
       success:
         configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
     config:
-      describe: "Commands for working with the config file."
+      describe: "Commands for managing the CLI config file."
       subcommands:
         set:
-          describe: "Commands for modifying the CLI configuration"
+          describe: "Commands for modifying the CLI configuration."
           promptMessage: "Select a config option to update"
           examples:
             default: "Opens a prompt to select a config item to modify"
@@ -377,10 +381,10 @@ en:
             path:
               describe: "Path to local .functions folder"
     hubdb:
-      describe: "Manage HubDB tables."
+      describe: "Commands for managing HubDB tables."
       subcommands:
         clear:
-          describe: "Clear all rows in a HubDB table"
+          describe: "Clear all rows in a HubDB table."
           logs:
             removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
             rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
@@ -389,25 +393,32 @@ en:
             tableId:
               describe: "HubDB Table ID"
         create:
-          describe: "Create a HubDB table"
+          describe: "Create a HubDB table."
+          enterPath: "[--path] Enter the local path to the file used for import:"
           errors:
-            create: "Creating the table at \"{{ src }}\" failed"
-          positionals:
-            src:
+            create: "Creating the table at \"{{ filePath }}\" failed"
+            pathRequired: "A path to a local file with a HubDB schema is required to create a HubDB table"
+            invalidCharacters: "The selected file path contains invalid characters. Please provide a new path and try again."
+          options:
+            path:
               describe: "Local path to file used for import"
           success:
             create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
         delete:
-          describe: "Delete a HubDB table"
+          describe: "Delete a HubDB table."
+          shouldDeleteTable: "Proceed with deleting HubDB table {{ tableId }}?"
           errors:
             delete: "Deleting the table {{ tableId }} failed"
           positionals:
             tableId:
               describe: "HubDB Table ID"
+          options:
+            force:
+              describe: "Skips confirmation prompt when deleting a HubDB table"
           success:
             delete: "The table {{ tableId }} was deleted from {{ accountId }}"
         fetch:
-          describe: "Fetch a HubDB table"
+          describe: "Fetch the schema for a HubDB table."
           positionals:
             dest:
               describe: "Local destination folder to fetch table to"
@@ -1175,6 +1186,8 @@ en:
           describe: "Run command in QA mode"
         useEnv:
           describe: "Use environment variable config"
+        debug:
+          describe: "Set log level to debug"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"
@@ -1324,6 +1337,15 @@ en:
         prompt: "Open hubspot.com to install this app?"
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      selectHubDBTablePrompt:
+        selectTable: "Select a HubDB table:"
+        enterDest: "Enter the destination path:"
+        errors:
+          noTables: "No HubDB tables found in account {{ accountId }}"
+          errorFetchingTables: "Unable to fetch HubDB tables in account {{ accountId }}"
+          destRequired: "A destination is required"
+          invalidDest: "The selected destination already exists. Please provide a new path."
+          invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
     convertFields:
       positionals:
         src:

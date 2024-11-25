@@ -54,6 +54,7 @@ const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
 const doctorCommand = require('../commands/doctor');
+const completionCommand = require('../commands/completion');
 
 const notifier = updateNotifier({
   pkg: { ...pkg, name: '@hubspot/cli' },
@@ -178,12 +179,6 @@ const argv = yargs
   ])
   .exitProcess(false)
   .fail(handleFailure)
-  .option('debug', {
-    alias: 'd',
-    default: false,
-    describe: 'Set log level to debug',
-    type: 'boolean',
-  })
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',
@@ -226,10 +221,11 @@ const argv = yargs
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
+  .command(completionCommand)
   .help()
+  .alias('h', 'help')
   .recommendCommands()
   .demandCommand(1, '')
-  .completion()
   .wrap(getTerminalWidth())
   .strict().argv;
 

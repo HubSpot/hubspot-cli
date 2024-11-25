@@ -14,6 +14,17 @@ import { Argv, Arguments } from 'yargs';
 
 const i18nKey = 'lib.commonOpts';
 
+export function addGlobalOptions(yargs: Argv) {
+  yargs.version(false);
+
+  return yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: i18n(`${i18nKey}.options.debug.describe`),
+    type: 'boolean',
+  });
+}
+
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('portal', {
     alias: ['p', 'account', 'a'],
