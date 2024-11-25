@@ -186,7 +186,10 @@ function validateCmsPublishMode(options) {
   ).join(', ')}.`;
   if (cmsPublishMode != null) {
     logger.error(
-      [`The CMS publish mode "${mode}" is invalid.`, modesMessage].join(' ')
+      [
+        `The CMS publish mode "${cmsPublishMode}" is invalid.`,
+        modesMessage,
+      ].join(' ')
     );
   } else {
     logger.error(
