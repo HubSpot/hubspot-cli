@@ -7,6 +7,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { loadAndValidateOptions } = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
@@ -47,12 +48,15 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   return yargs;
 };

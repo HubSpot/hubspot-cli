@@ -6,6 +6,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   addOverwriteOptions,
+  addGlobalOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -49,6 +50,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addOverwriteOptions(yargs);

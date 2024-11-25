@@ -7,7 +7,11 @@ import {
   Validation,
 } from '@hubspot/local-dev-lib/types/HublValidation';
 const { logError } = require('../lib/errorHandlers/index');
-const { addConfigOptions, addAccountOptions } = require('../lib/commonOpts');
+const {
+  addConfigOptions,
+  addAccountOptions,
+  addGlobalOptions,
+} = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { loadAndValidateOptions } = require('../lib/validation');
@@ -92,6 +96,7 @@ export const handler = async options => {
 export const builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
   yargs.positional('path', {
     describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',

@@ -13,10 +13,10 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.functions.subcommands.list';
+const i18nKey = 'commands.function.subcommands.list';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'list';
+exports.command = ['list', 'ls'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {

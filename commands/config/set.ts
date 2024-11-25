@@ -72,27 +72,23 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      defaultMode: {
+      'default-mode': {
         describe: i18n(`${i18nKey}.options.defaultMode.describe`),
         type: 'string',
       },
-      allowUsageTracking: {
+      'allow-usage-tracking': {
         describe: i18n(`${i18nKey}.options.allowUsageTracking.describe`),
         type: 'boolean',
       },
-      httpTimeout: {
+      'http-timeout': {
         describe: i18n(`${i18nKey}.options.httpTimeout.describe`),
         type: 'string',
       },
     })
     .conflicts('defaultMode', 'allowUsageTracking')
     .conflicts('defaultMode', 'httpTimeout')
-    .conflicts('allowUsageTracking', 'httpTimeout');
-
-  yargs.example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
-
-  //TODO remove this when "hs accounts use" is fully rolled out
-  yargs.strict(false);
+    .conflicts('allowUsageTracking', 'httpTimeout')
+    .example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;
 };
