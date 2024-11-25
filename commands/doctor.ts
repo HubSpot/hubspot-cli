@@ -9,6 +9,7 @@ import { EXIT_CODES } from '../lib/enums/exitCodes';
 import path from 'path';
 import { ArgumentsCamelCase, BuilderCallback, Options } from 'yargs';
 import { getCwd } from '@hubspot/local-dev-lib/path';
+import { addGlobalOptions } from '../lib/commonOpts';
 const { i18n } = require('../lib/lang');
 
 export interface DoctorOptions {
@@ -78,4 +79,5 @@ export const builder: BuilderCallback<DoctorOptions, DoctorOptions> = yargs => {
     describe: i18n(`${i18nKey}.options.outputDir`),
     type: 'string',
   });
+  addGlobalOptions(yargs);
 };

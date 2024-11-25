@@ -11,7 +11,7 @@ import authCommand from '../auth';
 describe('commands/auth', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(authCommand.command).toEqual('auth [type] [--account]');
+      expect(authCommand.command).toEqual('auth');
     });
   });
 
@@ -22,25 +22,16 @@ describe('commands/auth', () => {
   });
 
   describe('builder', () => {
-    it('should support the correct positional arguments', () => {
-      authCommand.builder(yargs);
-
-      expect(yargs.positional).toHaveBeenCalledTimes(1);
-      expect(yargs.positional).toHaveBeenCalledWith(
-        'type',
-        expect.objectContaining({
-          type: 'string',
-          choices: ['personalaccesskey', 'oauth2'],
-          default: 'personalaccesskey',
-        })
-      );
-    });
-
     it('should support the correct options', () => {
       authCommand.builder(yargs);
 
       expect(yargs.options).toHaveBeenCalledTimes(1);
       expect(yargs.options).toHaveBeenCalledWith({
+        'auth-type': expect.objectContaining({
+          type: 'string',
+          choices: ['personalaccesskey', 'oauth2'],
+          default: 'personalaccesskey',
+        }),
         account: expect.objectContaining({ type: 'string' }),
       });
 

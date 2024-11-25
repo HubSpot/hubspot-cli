@@ -35,7 +35,7 @@ const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
-exports.command = 'delete [--account]';
+exports.command = 'delete';
 exports.describe = exports.describe = uiBetaTag(
   i18n(`${i18nKey}.describe`),
   false
@@ -233,10 +233,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
-  yargs.option('f', {
+  yargs.option('force', {
     type: 'boolean',
-    alias: 'force',
-    describe: i18n(`${i18nKey}.examples.force`),
+    alias: 'f',
+    describe: i18n(`${i18nKey}.options.force.describe`),
   });
 
   yargs.example([

@@ -9,8 +9,12 @@ en:
       setDefaultAccountMoved: "This command has moved. Try `hs accounts use` instead"
       loadConfigMiddleware:
         configFileExists: "A configuration file already exists at {{ configPath }}. To specify a new configuration file, delete the existing one and try again."
+    completion:
+      describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
+      examples:
+        default: "Generate shell completion scripts for the zsh shell"
     accounts:
-      describe: "Commands for working with accounts."
+      describe: "Commands for managing configured accounts."
       subcommands:
         list:
           accounts: "{{#bold}}Accounts{{/bold}}:"
@@ -22,7 +26,7 @@ en:
             authType: "Auth Type"
             name: "Name"
         rename:
-          describe: "Rename account in config."
+          describe: "Rename an account in the config."
           positionals:
             accountName:
               describe: "Name of account to be renamed."
@@ -63,7 +67,7 @@ en:
             accountRemoved: "Account \"{{ accountName }}\" removed from the config"
         info:
           accountId: "{{#bold}}Account ID{{/bold}}: {{ accountId }}"
-          describe: "Print information about the default account, or about the account specified with the \"--account\" option."
+          describe: "Print information about the default account, or about the account specified with the \"account\" option."
           errors:
             notUsingPersonalAccessKey: "This command currently only supports fetching scopes for the personal access key auth type."
           examples:
@@ -89,20 +93,19 @@ en:
       errors:
         noConfigFileFound: "No config file was found. To create a new config file, use the \"hs init\" command."
         unsupportedAuthType: "Unsupported auth type: {{ type }}. The only supported authentication protocols are {{ supportedProtocols }}."
-      positionals:
-        type:
-          describe: "Authentication mechanism"
-          defaultDescription: "\"{{ authMethod }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
       options:
+        authType:
+          describe: "Authentication mechanism"
+          defaultDescription: "\"{{ authMethod }}\": An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
       success:
         configFileUpdated: "Account \"{{ accountName }}\" updated in {{ configFilename }} using \"{{ authType }}\""
     config:
-      describe: "Commands for working with the config file."
+      describe: "Commands for managing the CLI config file."
       subcommands:
         set:
-          describe: "Commands for modifying the CLI configuration"
+          describe: "Commands for modifying the CLI configuration."
           promptMessage: "Select a config option to update"
           examples:
             default: "Opens a prompt to select a config item to modify"
@@ -332,8 +335,8 @@ en:
           success:
             upload: "Uploaded file from \"{{ src }}\" to \"{{ dest }}\" in the File Manager of account {{ accountId }}"
             uploadComplete: "Uploading files to \"{{ dest }}\" in the File Manager is complete"
-    functions:
-      describe: "Commands for working with functions."
+    function:
+      describe: "Commands for managing CMS serverless functions."
       subcommands:
         deploy:
           debug:
@@ -348,13 +351,13 @@ en:
           loadingFailed: "Failed to build and deploy bundle for \"{{ functionPath }}\" on {{ account }}"
           positionals:
             path:
-              describe: "Path to .functions folder"
+              describe: "Path to the \".functions\" folder"
           success:
             deployed: "Built and deployed bundle from package.json for {{ functionPath }} on account {{ accountId }} in {{ buildTimeSeconds }}s."
         list:
           debug:
             gettingFunctions: "Getting currently deployed functions"
-          describe: "List currently deployed functions"
+          describe: "List the currently deployed CMS serverless functions."
           info:
             noFunctions: "No functions found"
           options:
@@ -419,9 +422,9 @@ en:
     init:
       describe: "Initialize {{ configName }} for a HubSpot account."
       options:
-        auth:
-          describe: "Specify auth method to use [\"personalaccesskey\", \"oauth2\"]"
-          defaultDescription: "\"{{ defaultType }}\": \nAn access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
+        authType:
+          describe: "Authentication mechanism"
+          defaultDescription: "\"{{ authMethod }}\":  An access token tied to a specific user account. This is the recommended way of authenticating with local development tools."
         account:
           describe: "HubSpot account to authenticate"
         useHiddenConfig:
@@ -448,13 +451,14 @@ en:
         path:
           describe: "Remote directory to list contents"
     logs:
-      describe: "Get logs for a function."
+      describe: "View logs for a CMS serverless function."
       errors:
         noLogsFound: "No logs were found for the function path \"{{ functionPath }}\" in account \"{{ accountId }}\"."
       examples:
         default: "Get 5 most recent logs for function residing at /_hcms/api/my-endpoint"
         follow: "Poll for and output logs for function residing at /_hcms/api/my-endpoint immediately upon new execution"
         limit: "Get 10 most recent logs for function residing at /_hcms/api/my-endpoint"
+      endpointPrompt: "Enter a serverless function endpoint:"
       gettingLogs: "Getting {{#if latest}}latest {{/if}}logs for function with path: {{ functionPath }}."
       options:
         compact:
@@ -476,7 +480,7 @@ en:
         moveFailed: "Moving \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }} failed"
       move: "Moved \"{{ srcPath }}\" to \"{{ destPath }}\" in account {{ accountId }}"
     open:
-      describe: "Open a HubSpot page in your browser. Run \"hs open list\" to see all available shortcuts."
+      describe: "Open a HubSpot page in your browser."
       options:
         list:
           describe: "List all supported shortcuts"
@@ -759,18 +763,19 @@ en:
         path:
           describe: "Remote hubspot path"
     sandbox:
-      describe: "Commands for working with sandboxes."
+      describe: "Commands for managing sandboxes."
       subcommands:
         create:
-          describe: "Create a sandbox account"
+          describe: "Create a sandbox account."
           examples:
             default: "Creates a standard sandbox account named MySandboxAccount."
-            force: "Skips all confirmation prompts when creating a sandbox account."
           debug:
             error: "Error creating sandbox:"
           info:
             auth: "Run `hs auth` to authenticate with the new sandbox account."
           options:
+            force:
+              describe: "Skips all confirmation prompts when creating a sandbox account."
             name:
               describe: "Name to use for created sandbox"
             type:
@@ -783,13 +788,12 @@ en:
               \n- Run {{#bold}}hs accounts use{{/bold}} to switch to your default account to your production account.
               \n- Run {{#bold}}hs auth{{/bold}} to connect a production account to the HubSpot CLI.\n"
         delete:
-          describe: "Delete a sandbox account"
+          describe: "Delete a sandbox account."
           debug:
             deleting: "Deleting sandbox account \"{{ account }}\""
             error: "Error deleting sandbox account:"
           examples:
             default: "Deletes the sandbox account named MySandboxAccount."
-            force: "Skips all confirmation prompts when deleting a sandbox account."
           confirm: "Delete sandbox {{#bold}}{{ account }}{{/bold}}? All data for this sandbox will be permanently deleted."
           defaultAccountWarning: "The sandbox {{#bold}}{{ account }}{{/bold}} is currently set as the default account."
           success:
@@ -805,6 +809,8 @@ en:
             noParentPortalAvailable: "This sandbox can't be deleted from the CLI because you haven't given the CLI access to its parent account. To do this, run {{#bold}}{{ command }}{{/bold}}. You can also delete the sandbox from the HubSpot management tool: {{#bold}}{{ url }}{{/bold}}."
             invalidKey: "Your personal access key for account {{#bold}}{{ account }}{{/bold}} is inactive. To re-authenticate, please run {{#bold}}hs auth personalaccesskey{{/bold}}."
           options:
+            force:
+              describe: "Skips all confirmation prompts when deleting a sandbox account."
             account:
               describe: "Account name or id to delete"
     secrets:
@@ -1181,6 +1187,8 @@ en:
           describe: "Run command in QA mode"
         useEnv:
           describe: "Use environment variable config"
+        debug:
+          describe: "Set log level to debug"
     prompts:
       projectDevTargetAccountPrompt:
         createNewSandboxOption: "<Test on a new development sandbox>"

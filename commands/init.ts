@@ -9,7 +9,7 @@ const {
   loadConfig,
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
@@ -96,21 +96,26 @@ const AUTH_TYPE_NAMES = {
   [OAUTH_AUTH_METHOD.value]: OAUTH_AUTH_METHOD.name,
 };
 
-exports.command = 'init [--account]';
+exports.command = 'init';
 exports.describe = i18n(`${i18nKey}.describe`, {
   configName: DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
 });
 
 exports.handler = async options => {
   const {
-    auth: authType = PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    c,
-    account: optionalAccount,
-    'use-hidden-config': useHiddenConfig,
-    'disable-tracking': disableTracking,
+    auth: authTypeFlagValue,
+    c: configFlagValue,
+    providedAccountId,
+    disableTracking,
+    useHiddenConfig,
   } = options;
+  const authType =
+    (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+
   const configPath =
-    (c && path.join(getCwd(), c)) || getConfigPath('', useHiddenConfig);
+    (configFlagValue && path.join(getCwd(), configFlagValue)) ||
+    getConfigPath('', useHiddenConfig);
   setLogLevel(options);
 
   if (!disableTracking) {
@@ -152,7 +157,7 @@ exports.handler = async options => {
   try {
     const { accountId, name } = await CONFIG_CREATION_FLOWS[authType](
       env,
-      optionalAccount
+      providedAccountId
     );
 
     try {
@@ -201,21 +206,25 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      auth: {
-        describe: i18n(`${i18nKey}.options.auth.describe`),
+      'auth-type': {
+        describe: i18n(`${i18nKey}.options.authType.describe`),
         type: 'string',
         choices: [
           `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
           `${OAUTH_AUTH_METHOD.value}`,
         ],
         default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        defaultDescription: i18n(`${i18nKey}.options.auth.defaultDescription`, {
-          defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-        }),
+        defaultDescription: i18n(
+          `${i18nKey}.options.authType.defaultDescription`,
+          {
+            defaultType: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+          }
+        ),
       },
       account: {
         describe: i18n(`${i18nKey}.options.account.describe`),
         type: 'string',
+        alias: 'a',
       },
       'disable-tracking': {
         type: 'boolean',
@@ -231,6 +240,7 @@ exports.builder = yargs => {
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };
