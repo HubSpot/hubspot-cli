@@ -22,6 +22,7 @@ const {
   getConfig,
   getConfigPath,
   loadConfig,
+  getConfigDefaultAccount,
 } = require('@hubspot/local-dev-lib/config');
 const {
   commaSeparatedValues,
@@ -41,6 +42,7 @@ const {
   setLogLevel,
   getAccountId,
   addTestingOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackAuthAction, trackCommandUsage } = require('../lib/usageTracking');
 const { authenticateWithOauth } = require('../lib/oauth');
@@ -64,25 +66,32 @@ const SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT = commaSeparatedValues(
   ALLOWED_AUTH_METHODS
 );
 
-exports.command = 'auth [type] [--account]';
+exports.command = 'auth';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedProtocols: SUPPORTED_AUTHENTICATION_PROTOCOLS_TEXT,
 });
 
 exports.handler = async options => {
-  const { type, config: c, qa, account } = options;
+  const {
+    authType: authTypeFlagValue,
+    config: configFlagValue,
+    qa,
+    providedAccountId,
+  } = options;
   const authType =
-    (type && type.toLowerCase()) || PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
+    (authTypeFlagValue && authTypeFlagValue.toLowerCase()) ||
+    PERSONAL_ACCESS_KEY_AUTH_METHOD.value;
   setLogLevel(options);
 
-  if (!getConfigPath(c)) {
+  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
+  // Needed to load deprecated config
+  loadConfig(configFlagValue);
+  checkAndWarnGitInclusion(getConfigPath());
+
+  if (!getConfigPath(configFlagValue)) {
     logger.error(i18n(`${i18nKey}.errors.noConfigFileFound`));
     process.exit(EXIT_CODES.ERROR);
   }
-
-  const env = qa ? ENVIRONMENTS.QA : ENVIRONMENTS.PROD;
-  loadConfig(c);
-  checkAndWarnGitInclusion(getConfigPath());
 
   trackCommandUsage('auth');
   trackAuthAction('auth', authType, TRACKING_STATUS.STARTED);
@@ -104,7 +113,10 @@ exports.handler = async options => {
       successAuthMethod = OAUTH_AUTH_METHOD.name;
       break;
     case PERSONAL_ACCESS_KEY_AUTH_METHOD.value:
-      configData = await personalAccessKeyPrompt({ env, account });
+      configData = await personalAccessKeyPrompt({
+        env,
+        account: providedAccountId,
+      });
 
       try {
         token = await getAccessToken(configData.personalAccessKey, env);
@@ -171,7 +183,7 @@ exports.handler = async options => {
     const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: config.defaultPortal,
+        accountName: getConfigDefaultAccount(config),
       })
     );
   }
@@ -195,28 +207,32 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('type', {
-    describe: i18n(`${i18nKey}.positionals.type.describe`),
-    type: 'string',
-    choices: [
-      `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
-      `${OAUTH_AUTH_METHOD.value}`,
-    ],
-    default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    defaultDescription: i18n(`${i18nKey}.positionals.type.defaultDescription`, {
-      authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
-    }),
-  });
-
   yargs.options({
+    'auth-type': {
+      describe: i18n(`${i18nKey}.options.authType.describe`),
+      type: 'string',
+      choices: [
+        `${PERSONAL_ACCESS_KEY_AUTH_METHOD.value}`,
+        `${OAUTH_AUTH_METHOD.value}`,
+      ],
+      default: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+      defaultDescription: i18n(
+        `${i18nKey}.options.authType.defaultDescription`,
+        {
+          authMethod: PERSONAL_ACCESS_KEY_AUTH_METHOD.value,
+        }
+      ),
+    },
     account: {
       describe: i18n(`${i18nKey}.options.account.describe`),
       type: 'string',
+      alias: 'a',
     },
   });
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

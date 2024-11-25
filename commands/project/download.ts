@@ -2,10 +2,7 @@
 const path = require('path');
 const chalk = require('chalk');
 
-const {
-  getAccountId,
-  addUseEnvironmentOptions,
-} = require('../../lib/commonOpts');
+const { addUseEnvironmentOptions } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { getCwd, sanitizeFileName } = require('@hubspot/local-dev-lib/path');
 const { logError, ApiErrorContext } = require('../../lib/errorHandlers/index');
@@ -39,17 +36,15 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const { project, dest, buildNumber } = options;
+  const { project, dest, buildNumber, derivedAccountId } = options;
   const { project: promptedProjectName } = await downloadProjectPrompt(options);
   let projectName = promptedProjectName || project;
 
-  const accountId = getAccountId(options);
-
-  trackCommandUsage('project-download', null, accountId);
+  trackCommandUsage('project-download', null, derivedAccountId);
 
   try {
     const { projectExists } = await ensureProjectExists(
-      accountId,
+      derivedAccountId,
       projectName,
       {
         allowCreate: false,
@@ -61,7 +56,7 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountId: chalk.bold(accountId),
+          accountId: chalk.bold(derivedAccountId),
         })
       );
       const { name: promptedProjectName } = await downloadProjectPrompt(
@@ -76,7 +71,7 @@ exports.handler = async options => {
 
     if (!buildNumberToDownload) {
       const { data: projectBuildsResult } = await fetchProjectBuilds(
-        accountId,
+        derivedAccountId,
         projectName
       );
 
@@ -89,7 +84,7 @@ exports.handler = async options => {
     }
 
     const { data: zippedProject } = await downloadProject(
-      accountId,
+      derivedAccountId,
       projectName,
       buildNumberToDownload
     );
@@ -111,7 +106,10 @@ exports.handler = async options => {
   } catch (e) {
     logError(
       e,
-      new ApiErrorContext({ accountId, request: 'project download' })
+      new ApiErrorContext({
+        accountId: derivedAccountId,
+        request: 'project download',
+      })
     );
     process.exit(EXIT_CODES.ERROR);
   }

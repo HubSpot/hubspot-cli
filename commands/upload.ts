@@ -30,7 +30,7 @@ const {
   addAccountOptions,
   addCmsPublishModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
+  addGlobalOptions,
   getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
@@ -73,7 +73,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.WARNING);
   }
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
   const cmsPublishMode = getCmsPublishMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
@@ -130,7 +130,7 @@ exports.handler = async options => {
   trackCommandUsage(
     'upload',
     { mode: cmsPublishMode, type: stats.isFile() ? 'file' : 'folder' },
-    accountId
+    derivedAccountId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
     { isLocal: true, path: src },
@@ -160,7 +160,7 @@ exports.handler = async options => {
       return;
     }
     upload(
-      accountId,
+      derivedAccountId,
       absoluteSrcPath,
       normalizedDest,
       getFileMapperQueryValues(cmsPublishMode, options)
@@ -168,12 +168,12 @@ exports.handler = async options => {
       .then(() => {
         logger.success(
           i18n(`${i18nKey}.success.fileUploaded`, {
-            accountId,
+            accountId: derivedAccountId,
             dest: normalizedDest,
             src,
           })
         );
-        logThemePreview(src, accountId);
+        logThemePreview(src, derivedAccountId);
       })
       .catch(error => {
         logger.error(
@@ -185,7 +185,7 @@ exports.handler = async options => {
         logError(
           error,
           new ApiErrorContext({
-            accountId,
+            accountId: derivedAccountId,
             request: normalizedDest,
             payload: src,
           })
@@ -202,7 +202,7 @@ exports.handler = async options => {
   } else {
     logger.log(
       i18n(`${i18nKey}.uploading`, {
-        accountId,
+        accountId: derivedAccountId,
         dest,
         src,
       })
@@ -218,18 +218,21 @@ exports.handler = async options => {
       //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
       let cleanUpload = options.force;
       if (!options.force) {
-        cleanUpload = await cleanUploadPrompt(accountId, dest);
+        cleanUpload = await cleanUploadPrompt(derivedAccountId, dest);
       }
       if (cleanUpload) {
         try {
-          await deleteFile(accountId, dest);
+          await deleteFile(derivedAccountId, dest);
           logger.log(
-            i18n(`${i18nKey}.cleaning`, { accountId, filePath: dest })
+            i18n(`${i18nKey}.cleaning`, {
+              accountId: derivedAccountId,
+              filePath: dest,
+            })
           );
         } catch (error) {
           logger.error(
             i18n(`${i18nKey}.errors.deleteFailed`, {
-              accountId,
+              accountId: derivedAccountId,
               path: dest,
             })
           );
@@ -237,7 +240,7 @@ exports.handler = async options => {
       }
     }
     uploadFolder(
-      accountId,
+      derivedAccountId,
       absoluteSrcPath,
       dest,
       {
@@ -253,7 +256,7 @@ exports.handler = async options => {
               dest,
             })
           );
-          logThemePreview(src, accountId);
+          logThemePreview(src, derivedAccountId);
         } else {
           logger.error(
             i18n(`${i18nKey}.errors.someFilesFailed`, {
@@ -271,7 +274,7 @@ exports.handler = async options => {
           })
         );
         logError(error, {
-          accountId,
+          accountId: derivedAccountId,
         });
         process.exit(EXIT_CODES.WARNING);
       });
@@ -279,11 +282,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addCmsPublishModeOptions(yargs, { write: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -318,5 +316,12 @@ exports.builder = yargs => {
     type: 'boolean',
     default: false,
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addCmsPublishModeOptions(yargs, { write: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
+
   return yargs;
 };

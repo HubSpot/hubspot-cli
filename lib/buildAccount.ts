@@ -12,6 +12,9 @@ const {
   writeConfig,
   getAccountId,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { i18n } = require('./lang');
 const { cliAccountNamePrompt } = require('./prompts/accountNamePrompt');
@@ -101,7 +104,8 @@ async function buildNewAccount({
   SpinniesManager.init({
     succeedColor: 'white',
   });
-  const accountId = getAccountId(accountConfig.portalId);
+  const id = getAccountIdentifier(accountConfig);
+  const accountId = getAccountId(id);
   const isSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.STANDARD_SANDBOX ||
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;

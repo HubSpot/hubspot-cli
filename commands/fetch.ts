@@ -7,8 +7,8 @@ const {
   addOverwriteOptions,
   addCmsPublishModeOptions,
   addUseEnvironmentOptions,
-  getAccountId,
   getCmsPublishMode,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const {
@@ -39,7 +39,7 @@ exports.handler = async options => {
     process.exit(EXIT_CODES.ERROR);
   }
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
   const cmsPublishMode = getCmsPublishMode(options);
 
   trackCommandUsage('fetch', { mode: cmsPublishMode }, accountId);
@@ -47,7 +47,7 @@ exports.handler = async options => {
   try {
     // Fetch and write file/folder.
     await downloadFileOrFolder(
-      accountId,
+      derivedAccountId,
       src,
       resolveLocalPath(dest),
       cmsPublishMode,
@@ -60,12 +60,6 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addOverwriteOptions(yargs);
-  addCmsPublishModeOptions(yargs, { read: true });
-  addUseEnvironmentOptions(yargs);
-
   yargs.positional('src', {
     describe: i18n(`${i18nKey}.positionals.src.describe`),
     type: 'string',
@@ -91,6 +85,13 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.assetVersion.describe`),
     },
   });
+
+  addConfigOptions(yargs);
+  addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
+  addCmsPublishModeOptions(yargs, { read: true });
+  addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

@@ -6,6 +6,7 @@ import {
   DEFAULT_CMS_PUBLISH_MODE,
   CMS_PUBLISH_MODE,
 } from '@hubspot/local-dev-lib/constants/files';
+import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 import {
   getAccountId as getAccountIdFromConfig,
   getAccountConfig,
@@ -13,9 +14,19 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
-import { CmsPublishMode } from '@hubspot/local-dev-lib/types/Files';
 
 const i18nKey = 'lib.commonOpts';
+
+export function addGlobalOptions(yargs: Argv) {
+  yargs.version(false);
+
+  return yargs.option('debug', {
+    alias: 'd',
+    default: false,
+    describe: i18n(`${i18nKey}.options.debug.describe`),
+    type: 'boolean',
+  });
+}
 
 export function addAccountOptions(yargs: Argv): Argv {
   return yargs.option('portal', {
@@ -105,6 +116,29 @@ export function getAccountId(
   return getAccountIdFromConfig(portal || account);
 }
 
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+export async function injectAccountIdMiddleware(
+  options: Arguments<{
+    derivedAccountId?: number | null;
+    portal?: number | string;
+    account?: number | string;
+  }>
+): Promise<void> {
+  const { portal, account } = options;
+
+  // Preserves the original --account and --portal flags for certain commands.
+  options.providedAccountId = portal || account;
+
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    return;
+  }
+
+  options.derivedAccountId = getAccountIdFromConfig(portal || account);
+}
+
 export function getCmsPublishMode(
   options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
 ): CmsPublishMode {
@@ -129,16 +163,3 @@ export function getCmsPublishMode(
     DEFAULT_CMS_PUBLISH_MODE
   );
 }
-
-module.exports = {
-  addAccountOptions,
-  addConfigOptions,
-  addOverwriteOptions,
-  addCmsPublishModeOptions,
-  addTestingOptions,
-  addUseEnvironmentOptions,
-  getCommandName,
-  getCmsPublishMode,
-  getAccountId,
-  setLogLevel,
-};

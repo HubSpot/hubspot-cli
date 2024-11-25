@@ -8,17 +8,18 @@ const { trackCommandUsage } = require('../../lib/usageTracking');
 const { i18n } = require('../../lib/lang');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addUseEnvironmentOptions,
-  addTestingOptions,
-} = require('../../lib/commonOpts');
+const { addTestingOptions, addConfigOptions } = require('../../lib/commonOpts');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { getTableContents } = require('../../lib/ui/table');
 const SpinniesManager = require('../../lib/ui/SpinniesManager');
-const { getConfig, deleteAccount } = require('@hubspot/local-dev-lib/config');
 const { uiAccountDescription } = require('../../lib/ui');
+const {
+  deleteAccount,
+  getConfigAccounts,
+} = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.accounts.subcommands.clean';
@@ -30,11 +31,10 @@ exports.handler = async options => {
   const { qa } = options;
   await loadAndValidateOptions(options, false);
 
-  const config = getConfig();
-
   trackCommandUsage('accounts-clean', null);
 
-  const filteredTestAccounts = config.portals.filter(p =>
+  const accountsList = getConfigAccounts();
+  const filteredTestAccounts = accountsList.filter(p =>
     qa ? p.env === 'qa' : p.env !== 'qa'
   );
 
@@ -53,7 +53,10 @@ exports.handler = async options => {
 
   for (const account of filteredTestAccounts) {
     try {
-      await accessTokenForPersonalAccessKey(account.portalId, true);
+      await accessTokenForPersonalAccessKey(
+        getAccountIdentifier(account),
+        true
+      );
     } catch (error) {
       if (
         isSpecifiedError(error, {
@@ -86,7 +89,9 @@ exports.handler = async options => {
     });
     logger.log(
       getTableContents(
-        accountsToRemove.map(p => [uiAccountDescription(p.portalId)]),
+        accountsToRemove.map(p => [
+          uiAccountDescription(getAccountIdentifier(p)),
+        ]),
         { border: { bodyLeft: '  ' } }
       )
     );
@@ -127,8 +132,6 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs);
-  addAccountOptions(yargs);
-  addUseEnvironmentOptions(yargs);
   addTestingOptions(yargs);
 
   yargs.example([['$0 accounts clean']]);
