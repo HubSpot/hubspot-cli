@@ -29,16 +29,16 @@ exports.command = 'generate-selectors <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = options => {
-  const { themePath } = options;
+  const { path } = options;
 
-  const fieldsJsonPath = findFieldsJsonPath(themePath);
+  const fieldsJsonPath = findFieldsJsonPath(path);
   if (!fieldsJsonPath) {
     logger.error(i18n(`${i18nKey}.errors.fieldsNotFound`));
     process.exit(EXIT_CODES.ERROR);
   }
 
   let fieldsJson = JSON.parse(fs.readFileSync(fieldsJsonPath));
-  let cssString = combineThemeCss(themePath);
+  let cssString = combineThemeCss(path);
 
   /**
    * Creates map of HubL variable names to theme field paths
@@ -190,7 +190,7 @@ exports.handler = options => {
   }
 
   const selectorsMap = generateSelectorsMap(fieldsJson);
-  const selectorsPath = `${themePath}/editor-preview.json`;
+  const selectorsPath = `${path}/editor-preview.json`;
 
   fs.writeFileSync(
     selectorsPath,
@@ -199,7 +199,7 @@ exports.handler = options => {
 
   logger.success(
     i18n(`${i18nKey}.success`, {
-      themePath,
+      themePath: path,
       selectorsPath,
     })
   );

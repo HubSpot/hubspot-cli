@@ -22,7 +22,7 @@ exports.command = 'marketplace-validate <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, derivedAccountId } = options;
+  const { path, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
@@ -32,7 +32,7 @@ exports.handler = async options => {
 
   SpinniesManager.add('marketplaceValidation', {
     text: i18n(`${i18nKey}.logs.validatingTheme`, {
-      path: src,
+      path,
     }),
   });
 
@@ -40,7 +40,7 @@ exports.handler = async options => {
   const validationId = await kickOffValidation(
     derivedAccountId,
     assetType,
-    src
+    path
   );
   await pollForValidationFinish(derivedAccountId, validationId);
 
