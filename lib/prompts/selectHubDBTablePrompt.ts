@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
-import { logError } from '../errorHandlers/index';
+import { debugError } from '../errorHandlers/index';
 import { logger } from '@hubspot/local-dev-lib/logger';
 import { fetchTables } from '@hubspot/local-dev-lib/api/hubdb';
 import { EXIT_CODES } from '../enums/exitCodes';
@@ -21,7 +21,7 @@ async function fetchHubDBOptions(accountId: number) {
     }
     return tables;
   } catch (error) {
-    logError(error, { accountId });
+    debugError(error, { accountId });
     logger.error(i18n(`${i18nKey}.errors.errorFetchingTables`, { accountId }));
     process.exit(EXIT_CODES.ERROR);
   }

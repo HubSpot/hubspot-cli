@@ -1342,7 +1342,7 @@ en:
         enterDest: "Enter the destination path:"
         errors:
           noTables: "No HubDB tables found in account {{ accountId }}"
-          unableToFetchTables: "Unable to fetch HubDB tables in account {{ accountId }}"
+          errorFetchingTables: "Unable to fetch HubDB tables in account {{ accountId }}"
           destRequired: "A destination is required"
           invalidDest: "The selected destination already exists. Please provide a new path."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
