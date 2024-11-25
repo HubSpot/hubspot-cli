@@ -1330,8 +1330,8 @@ en:
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
       selectHubDBTablePrompt:
-        selectTable: "[--table-id] Select a HubDB table:"
-        enterDest: "[--dest] Enter the destination path:"
+        selectTable: "Select a HubDB table:"
+        enterDest: "Enter the destination path:"
         errors:
           noTables: "No HubDB tables found in account {{ accountId }}"
           unableToFetchTables: "Unable to fetch HubDB tables in account {{ accountId }}"
