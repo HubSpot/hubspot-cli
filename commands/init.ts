@@ -9,7 +9,7 @@ const {
   loadConfig,
   configFileExists,
 } = require('@hubspot/local-dev-lib/config');
-const { addConfigOptions } = require('../lib/commonOpts');
+const { addConfigOptions, addGlobalOptions } = require('../lib/commonOpts');
 const { handleExit } = require('../lib/process');
 const {
   checkAndAddConfigToGitignore,
@@ -240,6 +240,7 @@ exports.builder = yargs => {
 
   addConfigOptions(yargs);
   addTestingOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

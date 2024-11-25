@@ -3,6 +3,7 @@ const {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logger } = require('@hubspot/local-dev-lib/logger');
@@ -155,6 +156,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

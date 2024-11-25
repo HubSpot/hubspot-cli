@@ -4,6 +4,7 @@ const {
   addAccountOptions,
   addConfigOptions,
   addUseEnvironmentOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { logSiteLinks, getSiteLinksAsArray, openLink } = require('../lib/links');
@@ -70,6 +71,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
+  addGlobalOptions(yargs);
 
   return yargs;
 };

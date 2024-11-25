@@ -178,12 +178,6 @@ const argv = yargs
   ])
   .exitProcess(false)
   .fail(handleFailure)
-  .option('debug', {
-    alias: 'd',
-    default: false,
-    describe: 'Set log level to debug',
-    type: 'boolean',
-  })
   .option('noHyperlinks', {
     default: false,
     describe: 'prevent hyperlinks from displaying in the ui',

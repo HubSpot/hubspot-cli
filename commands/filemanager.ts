@@ -3,6 +3,7 @@ const {
   addConfigOptions,
   addAccountOptions,
   addOverwriteOptions,
+  addGlobalOptions,
 } = require('../lib/commonOpts');
 const upload = require('./filemanager/upload');
 const fetch = require('./filemanager/fetch');
@@ -17,6 +18,7 @@ exports.builder = yargs => {
   addOverwriteOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addGlobalOptions(yargs);
 
   yargs
     .command(upload)
