@@ -2,7 +2,7 @@
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { getAccountConfig } = require('@hubspot/local-dev-lib/config');
 const { getAccessToken } = require('@hubspot/local-dev-lib/personalAccessKey');
-const { addAccountOptions, addConfigOptions } = require('../../lib/commonOpts');
+const { addConfigOptions } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
 const { getTableContents } = require('../../lib/ui/table');
@@ -10,7 +10,7 @@ const { getTableContents } = require('../../lib/ui/table');
 const i18nKey = 'commands.accounts.subcommands.info';
 exports.describe = i18n(`${i18nKey}.describe`);
 
-exports.command = 'info [--account]';
+exports.command = 'info [account]';
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
@@ -40,15 +40,11 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addConfigOptions(yargs);
-  addAccountOptions(yargs);
 
   yargs.example([
     ['$0 accounts info', i18n(`${i18nKey}.examples.default`)],
-    [
-      '$0 accounts info --account=MyAccount',
-      i18n(`${i18nKey}.examples.nameBased`),
-    ],
-    ['$0 accounts info --account=1234567', i18n(`${i18nKey}.examples.idBased`)],
+    ['$0 accounts info MyAccount', i18n(`${i18nKey}.examples.nameBased`)],
+    ['$0 accounts info 1234567', i18n(`${i18nKey}.examples.idBased`)],
   ]);
 
   return yargs;
