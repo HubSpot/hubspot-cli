@@ -74,7 +74,7 @@ const determineSrcAndDest = async options => {
   if (!(projectDir && projectConfig)) {
     // Not in a project, prompt for src and dest of traditional theme
     const previewPromptAnswers = await previewPrompt(options);
-    const src = options.src || previewPromptAnswers.src;
+    const src = options.path || previewPromptAnswers.src;
     dest = options.dest || previewPromptAnswers.dest;
     absoluteSrc = path.resolve(getCwd(), src);
     if (!dest || !validateSrcPath(absoluteSrc)) {
@@ -233,7 +233,7 @@ exports.builder = yargs => {
   addAccountOptions(yargs);
 
   yargs.option('path', {
-    describe: i18n(`${i18nKey}.options.src.describe`),
+    describe: i18n(`${i18nKey}.options.path.describe`),
     type: 'string',
     requiresArg: true,
   });

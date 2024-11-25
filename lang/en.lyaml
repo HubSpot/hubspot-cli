@@ -879,7 +879,7 @@ en:
             invalidPath: "The path \"{{ path }}\" is not a path to a directory"
             noThemeComponents: "Your project has no theme components available to preview."
           options:
-            src:
+            path:
               describe: "Path to the local directory your theme is in, relative to your current working directory"
             dest:
               describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
