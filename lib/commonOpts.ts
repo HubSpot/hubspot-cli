@@ -3,6 +3,7 @@ import {
   setLogLevel as setLoggerLogLevel,
 } from '@hubspot/local-dev-lib/logger';
 import { DEFAULT_MODE, MODE } from '@hubspot/local-dev-lib/constants/files';
+import { Mode } from '@hubspot/local-dev-lib/types/Files';
 import {
   getAccountId as getAccountIdFromConfig,
   getAccountConfig,
@@ -10,7 +11,6 @@ import {
 } from '@hubspot/local-dev-lib/config';
 import { i18n } from './lang';
 import { Argv, Arguments } from 'yargs';
-import { Mode } from '@hubspot/local-dev-lib/types/Files';
 
 const i18nKey = 'lib.commonOpts';
 
@@ -113,6 +113,29 @@ export function getAccountId(
   return getAccountIdFromConfig(portal || account);
 }
 
+/**
+ * Auto-injects the derivedAccountId flag into all commands
+ */
+export async function injectAccountIdMiddleware(
+  options: Arguments<{
+    derivedAccountId?: number | null;
+    portal?: number | string;
+    account?: number | string;
+  }>
+): Promise<void> {
+  const { portal, account } = options;
+
+  // Preserves the original --account and --portal flags for certain commands.
+  options.providedAccountId = portal || account;
+
+  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+    return;
+  }
+
+  options.derivedAccountId = getAccountIdFromConfig(portal || account);
+}
+
 export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
   // 1. --mode
   const { mode } = options;
@@ -132,17 +155,3 @@ export function getMode(options: Arguments<{ mode?: Mode }>): Mode {
   const config = getAndLoadConfigIfNeeded();
   return (config && (config.defaultMode as Mode)) || DEFAULT_MODE;
 }
-
-module.exports = {
-  addGlobalOptions,
-  addAccountOptions,
-  addConfigOptions,
-  addOverwriteOptions,
-  addModeOptions,
-  addTestingOptions,
-  addUseEnvironmentOptions,
-  getCommandName,
-  getMode,
-  getAccountId,
-  setLogLevel,
-};

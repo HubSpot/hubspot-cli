@@ -3,7 +3,6 @@ const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addGlobalOptions,
   addUseEnvironmentOptions,
 } = require('../lib/commonOpts');
@@ -28,12 +27,11 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path } = options;
+  const { path, derivedAccountId } = options;
   const directoryPath = path || '/';
-  const accountId = getAccountId(options);
   let contentsResp;
 
-  trackCommandUsage('list', null, accountId);
+  trackCommandUsage('list', null, derivedAccountId);
 
   logger.debug(
     i18n(`${i18nKey}.gettingPathContents`, {
@@ -42,7 +40,10 @@ exports.handler = async options => {
   );
 
   try {
-    const { data } = await getDirectoryContentsByPath(accountId, directoryPath);
+    const { data } = await getDirectoryContentsByPath(
+      derivedAccountId,
+      directoryPath
+    );
     contentsResp = data;
   } catch (e) {
     logError(e);

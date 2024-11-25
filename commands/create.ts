@@ -26,11 +26,7 @@
 const fs = require('fs-extra');
 const { logError } = require('../lib/errorHandlers/index');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const {
-  setLogLevel,
-  getAccountId,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+const { setLogLevel, addGlobalOptions } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const assets = require('./create/index');
@@ -79,7 +75,8 @@ exports.handler = async options => {
   const argsToPass = { assetType, name, dest, getInternalVersion, options };
   dest = argsToPass.dest = resolveLocalPath(asset.dest(argsToPass));
 
-  trackCommandUsage('create', { assetType }, getAccountId(options));
+  const { derivedAccountId } = options;
+  trackCommandUsage('create', { assetType }, derivedAccountId);
 
   try {
     await fs.ensureDir(dest);

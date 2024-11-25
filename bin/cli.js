@@ -3,11 +3,21 @@
 const yargs = require('yargs');
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
+const fs = require('fs');
 
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { addUserAgentHeader } = require('@hubspot/local-dev-lib/http');
+const {
+  loadConfig,
+  configFileExists,
+  getConfigPath,
+} = require('@hubspot/local-dev-lib/config');
 const { logError } = require('../lib/errorHandlers/index');
-const { setLogLevel, getCommandName } = require('../lib/commonOpts');
+const {
+  setLogLevel,
+  getCommandName,
+  injectAccountIdMiddleware,
+} = require('../lib/commonOpts');
 const {
   trackHelpUsage,
   trackConvertFieldsUsage,
@@ -31,7 +41,7 @@ const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
 const secretsCommand = require('../commands/secrets');
 const customObjectCommand = require('../commands/customObject');
-const functionsCommand = require('../commands/functions');
+const functionCommands = require('../commands/function');
 const listCommand = require('../commands/list');
 const openCommand = require('../commands/open');
 const mvCommand = require('../commands/mv');
@@ -135,9 +145,37 @@ const setRequestHeaders = () => {
   addUserAgentHeader('HubSpot CLI', pkg.version);
 };
 
+const loadConfigMiddleware = async options => {
+  if (configFileExists(true)) {
+    loadConfig('', options);
+
+    if (options.config) {
+      logger.error(
+        i18n(`${i18nKey}.loadConfigMiddleware.configFileExists`, {
+          configPath: getConfigPath(),
+        })
+      );
+      process.exit(EXIT_CODES.ERROR);
+    }
+  }
+
+  // We need to load the config when options.config exists,
+  // so that getAccountIdFromConfig() in injectAccountIdMiddleware reads from the right config
+  if (options.config && fs.existsSync(options.config)) {
+    const { config: configPath } = options;
+    await loadConfig(configPath, options);
+  }
+};
+
 const argv = yargs
   .usage('The command line interface to interact with HubSpot.')
-  .middleware([setLogLevel, setRequestHeaders])
+  // loadConfigMiddleware loads the new hidden config for all commands
+  .middleware([
+    setLogLevel,
+    setRequestHeaders,
+    loadConfigMiddleware,
+    injectAccountIdMiddleware,
+  ])
   .exitProcess(false)
   .fail(handleFailure)
   .option('noHyperlinks', {
@@ -167,7 +205,7 @@ const argv = yargs
   .command(filemanagerCommand)
   .command(secretsCommand)
   .command(customObjectCommand)
-  .command(functionsCommand)
+  .command(functionCommands)
   .command({
     ...listCommand,
     aliases: 'ls',

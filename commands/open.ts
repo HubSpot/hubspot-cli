@@ -1,8 +1,8 @@
 // @ts-nocheck
+import { EXIT_CODES } from '../lib/enums/exitCodes';
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
@@ -33,20 +33,19 @@ exports.command = 'open [shortcut]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { shortcut, list } = options;
-  const accountId = getAccountId(options);
+  const { shortcut, list, derivedAccountId } = options;
 
-  trackCommandUsage('open', null, accountId);
+  trackCommandUsage('open', null, derivedAccountId);
 
   if (shortcut === undefined && !list) {
-    const choice = await createListPrompt(accountId);
-    openLink(accountId, choice.open);
-  } else if (list || shortcut === 'list') {
-    logSiteLinks(accountId);
-    return;
+    const choice = await createListPrompt(derivedAccountId);
+    openLink(derivedAccountId, choice.open);
+  } else if (list) {
+    logSiteLinks(derivedAccountId);
   } else {
-    openLink(accountId, shortcut);
+    openLink(derivedAccountId, shortcut);
   }
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {

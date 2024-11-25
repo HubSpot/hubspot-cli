@@ -1,7 +1,6 @@
 // @ts-nocheck
 const { loadAndValidateOptions } = require('../../lib/validation');
 const { i18n } = require('../../lib/lang');
-const { getAccountId } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
 const { promptUser } = require('../../lib/prompts/promptUtils');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
@@ -55,16 +54,16 @@ const handleConfigUpdate = async (accountId, options) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
+  const { derivedAccountId } = options;
 
-  trackCommandUsage('config-set', null, accountId);
+  trackCommandUsage('config-set', null, derivedAccountId);
 
-  const configUpdated = await handleConfigUpdate(accountId, options);
+  const configUpdated = await handleConfigUpdate(derivedAccountId, options);
 
   if (!configUpdated) {
     const selectedOptions = await selectOptions();
 
-    await handleConfigUpdate(accountId, selectedOptions);
+    await handleConfigUpdate(derivedAccountId, selectedOptions);
   }
 
   process.exit(EXIT_CODES.SUCCESS);
@@ -73,27 +72,23 @@ exports.handler = async options => {
 exports.builder = yargs => {
   yargs
     .options({
-      defaultMode: {
+      'default-mode': {
         describe: i18n(`${i18nKey}.options.defaultMode.describe`),
         type: 'string',
       },
-      allowUsageTracking: {
+      'allow-usage-tracking': {
         describe: i18n(`${i18nKey}.options.allowUsageTracking.describe`),
         type: 'boolean',
       },
-      httpTimeout: {
+      'http-timeout': {
         describe: i18n(`${i18nKey}.options.httpTimeout.describe`),
         type: 'string',
       },
     })
     .conflicts('defaultMode', 'allowUsageTracking')
     .conflicts('defaultMode', 'httpTimeout')
-    .conflicts('allowUsageTracking', 'httpTimeout');
-
-  yargs.example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
-
-  //TODO remove this when "hs accounts use" is fully rolled out
-  yargs.strict(false);
+    .conflicts('allowUsageTracking', 'httpTimeout')
+    .example([['$0 config set', i18n(`${i18nKey}.examples.default`)]]);
 
   return yargs;
 };

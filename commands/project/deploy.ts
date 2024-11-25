@@ -3,7 +3,6 @@ const chalk = require('chalk');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -65,12 +64,12 @@ const validateBuildId = (
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
+  const { derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
   const { project: projectOption, buildId: buildIdOption } = options;
   const accountType = accountConfig && accountConfig.accountType;
 
-  trackCommandUsage('project-deploy', { type: accountType }, accountId);
+  trackCommandUsage('project-deploy', { type: accountType }, derivedAccountId);
 
   const { projectConfig } = await getProjectConfig();
 
@@ -80,7 +79,7 @@ exports.handler = async options => {
     projectName = projectConfig.name;
   }
 
-  const namePromptResponse = await projectNamePrompt(accountId, {
+  const namePromptResponse = await projectNamePrompt(derivedAccountId, {
     project: projectName,
   });
 
@@ -93,7 +92,7 @@ exports.handler = async options => {
   try {
     const {
       data: { latestBuild, deployedBuildId },
-    } = await fetchProject(accountId, projectName);
+    } = await fetchProject(derivedAccountId, projectName);
 
     if (!latestBuild || !latestBuild.buildId) {
       logger.error(i18n(`${i18nKey}.errors.noBuilds`));
@@ -106,7 +105,7 @@ exports.handler = async options => {
         deployedBuildId,
         latestBuild.buildId,
         projectName,
-        accountId
+        derivedAccountId
       );
       if (validationResult !== true) {
         logger.error(validationResult);
@@ -126,10 +125,9 @@ exports.handler = async options => {
             deployedBuildId,
             latestBuild.buildId,
             projectName,
-            accountId
+            derivedAccountId
           ),
       });
-
       buildIdToDeploy = deployBuildIdPromptResponse.buildId;
     }
 
@@ -139,7 +137,7 @@ exports.handler = async options => {
     }
 
     const { data: deployResp } = await deployProject(
-      accountId,
+      derivedAccountId,
       projectName,
       buildIdToDeploy
     );
@@ -154,7 +152,7 @@ exports.handler = async options => {
     }
 
     await pollDeployStatus(
-      accountId,
+      derivedAccountId,
       projectName,
       deployResp.id,
       buildIdToDeploy
@@ -164,7 +162,7 @@ exports.handler = async options => {
       logger.error(
         i18n(`${i18nKey}.errors.projectNotFound`, {
           projectName: chalk.bold(projectName),
-          accountIdentifier: uiAccountDescription(accountId),
+          accountIdentifier: uiAccountDescription(derivedAccountId),
           command: uiCommandReference('hs project upload'),
         })
       );
@@ -173,7 +171,10 @@ exports.handler = async options => {
     } else {
       logError(
         e,
-        new ApiErrorContext({ accountId, request: 'project deploy' })
+        new ApiErrorContext({
+          accountId: derivedAccountId,
+          request: 'project deploy',
+        })
       );
     }
     return process.exit(EXIT_CODES.ERROR);

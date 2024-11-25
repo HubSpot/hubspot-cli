@@ -1,9 +1,5 @@
 // @ts-nocheck
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+const { addGlobalOptions } = require('../lib/commonOpts');
 const { i18n } = require('../lib/lang');
 const list = require('./accounts/list');
 const rename = require('./accounts/rename');
@@ -14,19 +10,14 @@ const clean = require('./accounts/clean');
 
 const i18nKey = 'commands.accounts';
 
-exports.command = 'accounts';
+exports.command = ['account', 'accounts'];
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
   yargs
-    .command({
-      ...list,
-      aliases: 'ls',
-    })
+    .command(list)
     .command(rename)
     .command(use)
     .command(info)

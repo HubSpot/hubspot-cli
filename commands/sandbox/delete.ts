@@ -19,18 +19,23 @@ const {
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
+  getConfigDefaultAccount,
+  getConfigAccounts,
 } = require('@hubspot/local-dev-lib/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 const { promptUser } = require('../../lib/prompts/promptUtils');
+const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 const { getHubSpotWebsiteOrigin } = require('@hubspot/local-dev-lib/urls');
 
 const { getValidEnv } = require('@hubspot/local-dev-lib/environment');
-const { uiAccountDescription, uiBetaTag } = require('../../lib/ui');
 
 const i18nKey = 'commands.sandbox.subcommands.delete';
 
-exports.command = 'delete [--account]';
+exports.command = 'delete';
 exports.describe = exports.describe = uiBetaTag(
   i18n(`${i18nKey}.describe`),
   false
@@ -39,13 +44,13 @@ exports.describe = exports.describe = uiBetaTag(
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const { account, force } = options;
+  const { providedAccountId, force } = options;
   const config = getConfig();
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
-  if (!account) {
+  if (!providedAccountId) {
     if (!force) {
       accountPrompt = await deleteSandboxPrompt(config);
     } else {
@@ -62,18 +67,19 @@ exports.handler = async options => {
   }
 
   const sandboxAccountId = getAccountId({
-    account: account || accountPrompt.account,
+    account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(config.defaultPortal);
+    sandboxAccountId === getAccountId(getConfigDefaultAccount(config));
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
   );
 
   let parentAccountId;
-  for (const portal of config.portals) {
-    if (portal.portalId === sandboxAccountId) {
+  const accountsList = getConfigAccounts();
+  for (const portal of accountsList) {
+    if (getAccountIdentifier(portal) === sandboxAccountId) {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
@@ -145,7 +151,7 @@ exports.handler = async options => {
     logger.log('');
     logger.success(
       i18n(deleteKey, {
-        account: account || accountPrompt.account,
+        account: providedAccountId || accountPrompt.account,
         sandboxHubId: sandboxAccountId,
       })
     );
@@ -227,10 +233,10 @@ exports.builder = yargs => {
     describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
-  yargs.option('f', {
+  yargs.option('force', {
     type: 'boolean',
-    alias: 'force',
-    describe: i18n(`${i18nKey}.examples.force`),
+    alias: 'f',
+    describe: i18n(`${i18nKey}.options.force.describe`),
   });
 
   yargs.example([

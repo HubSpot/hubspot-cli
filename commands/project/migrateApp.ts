@@ -3,7 +3,6 @@ const path = require('path');
 const {
   addAccountOptions,
   addConfigOptions,
-  getAccountId,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const {
@@ -55,11 +54,11 @@ exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const accountId = getAccountId(options);
-  const accountConfig = getAccountConfig(accountId);
-  const accountName = uiAccountDescription(accountId);
+  const { derivedAccountId } = options;
+  const accountConfig = getAccountConfig(derivedAccountId);
+  const accountName = uiAccountDescription(derivedAccountId);
 
-  trackCommandUsage('migrate-app', {}, accountId);
+  trackCommandUsage('migrate-app', {}, derivedAccountId);
 
   logger.log('');
   logger.log(uiBetaTag(i18n(`${i18nKey}.header.text`), false));
@@ -88,7 +87,7 @@ exports.handler = async options => {
     'appId' in options
       ? options
       : await selectPublicAppPrompt({
-          accountId,
+          accountId: derivedAccountId,
           accountName,
           isMigratingApp: true,
         });
@@ -96,7 +95,7 @@ exports.handler = async options => {
   try {
     const { data: selectedApp } = await fetchPublicAppMetadata(
       appId,
-      accountId
+      derivedAccountId
     );
     // preventProjectMigrations returns true if we have not added app to allowlist config.
     // listingInfo will only exist for marketplace apps
@@ -107,7 +106,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
-    logError(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -120,7 +119,7 @@ exports.handler = async options => {
     projectLocation = options.location || location;
 
     const { projectExists } = await ensureProjectExists(
-      accountId,
+      derivedAccountId,
       projectName,
       {
         allowCreate: false,
@@ -137,7 +136,7 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.ERROR);
     }
   } catch (error) {
-    logError(error, new ApiErrorContext({ accountId }));
+    logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -182,20 +181,20 @@ exports.handler = async options => {
     });
 
     const { data: migrateResponse } = await migrateApp(
-      accountId,
+      derivedAccountId,
       appId,
       projectName
     );
     const { id } = migrateResponse;
-    const pollResponse = await poll(checkMigrationStatus, accountId, id);
+    const pollResponse = await poll(checkMigrationStatus, derivedAccountId, id);
     const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
       const absoluteDestPath = path.resolve(getCwd(), projectLocation);
-      const { env } = getAccountConfig(accountId);
+      const { env } = accountConfig;
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
       const { data: zippedProject } = await downloadProject(
-        accountId,
+        derivedAccountId,
         projectName,
         1
       );
@@ -210,7 +209,7 @@ exports.handler = async options => {
       trackCommandMetadataUsage(
         'migrate-app',
         { type: projectName, assetType: appId, successful: status },
-        accountId
+        derivedAccountId
       );
 
       SpinniesManager.succeed('migrateApp', {
@@ -224,7 +223,7 @@ exports.handler = async options => {
       logger.log(
         uiLink(
           i18n(`${i18nKey}.projectDetailsLink`),
-          `${baseUrl}/developer-projects/${accountId}/project/${encodeURIComponent(
+          `${baseUrl}/developer-projects/${derivedAccountId}/project/${encodeURIComponent(
             project.name
           )}`
         )
@@ -235,7 +234,7 @@ exports.handler = async options => {
     trackCommandMetadataUsage(
       'migrate-app',
       { projectName, appId, status: 'FAILURE', error },
-      accountId
+      derivedAccountId
     );
     SpinniesManager.fail('migrateApp', {
       text: i18n(`${i18nKey}.migrationStatus.failure`),
@@ -244,7 +243,7 @@ exports.handler = async options => {
     if (error.errors) {
       error.errors.forEach(logError);
     } else {
-      logError(error, new ApiErrorContext({ accountId }));
+      logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     }
 
     process.exit(EXIT_CODES.ERROR);
