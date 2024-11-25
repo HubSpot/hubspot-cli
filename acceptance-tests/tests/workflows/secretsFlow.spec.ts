@@ -11,6 +11,20 @@ const SECRET = {
   value: 'an initial secret value',
 };
 
+const secretPollingOptions = {
+  interval: 2000,
+  timeout: 20000,
+};
+
+async function waitForSecretsListToContainSecret(testState: TestState) {
+  await expect
+    .poll(
+      () => testState.cli.executeWithTestConfig(['secrets', 'list']),
+      secretPollingOptions
+    )
+    .toContain(SECRET.name);
+}
+
 describe('Secrets Flow', () => {
   let testState: TestState;
 
@@ -23,52 +37,39 @@ describe('Secrets Flow', () => {
     testState.cleanup();
   });
 
-  describe('hs secrets add', () => {
-    it('should create a new secret', async () => {
-      await testState.cli.executeWithTestConfig(
-        ['secrets', 'add', SECRET.name],
-        [SECRET.value, ENTER]
-      );
-    });
+  it('should create a new secret', async () => {
+    await testState.cli.executeWithTestConfig(
+      ['secrets', 'add', SECRET.name],
+      [SECRET.value, ENTER]
+    );
+
+    await waitForSecretsListToContainSecret(testState);
   });
 
-  describe('hs secrets list', () => {
-    it('should list the secret', async () => {
-      await expect
-        .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
-          interval: 1000,
-          timeout: 20000,
-        })
-        .toContain(SECRET.name);
-    });
+  it('should update the existing secret', async () => {
+    // Wait for the secret to exist before updating it
+    await waitForSecretsListToContainSecret(testState);
+
+    await testState.cli.executeWithTestConfig(
+      ['secrets', 'update', SECRET.name],
+      ['a different secret value', ENTER]
+    );
   });
 
-  describe('hs secrets update', () => {
-    it('should update the existing secret', async () => {
-      await testState.cli.executeWithTestConfig(
-        ['secrets', 'update', SECRET.name],
-        ['a different secret value', ENTER]
-      );
-    });
-  });
+  it('should delete the secret', async () => {
+    // Wait for the secret to exist before deleting it
+    await waitForSecretsListToContainSecret(testState);
 
-  describe('hs secrets delete', () => {
-    it('should delete the secret', async () => {
-      await testState.cli.executeWithTestConfig(
-        ['secrets', 'delete', SECRET.name],
-        ['Y', ENTER]
-      );
-    });
-  });
+    await testState.cli.executeWithTestConfig(
+      ['secrets', 'delete', SECRET.name],
+      ['Y', ENTER]
+    );
 
-  describe('hs secrets list', () => {
-    it('should not list the secret', async () => {
-      await expect
-        .poll(() => testState.cli.executeWithTestConfig(['secrets', 'list']), {
-          interval: 1000,
-          timeout: 20000,
-        })
-        .not.toContain(SECRET.name);
-    });
+    await expect
+      .poll(
+        () => testState.cli.executeWithTestConfig(['secrets', 'list']),
+        secretPollingOptions
+      )
+      .not.toContain(SECRET.name);
   });
 });
