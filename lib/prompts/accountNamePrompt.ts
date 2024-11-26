@@ -5,21 +5,24 @@ import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
-type AccountNamePromptConfig = {
+// inquirer might have a util type to match this one. Need to revisit after we bump inquirer.
+type PromptValidationFunction = (name: string) => string | boolean;
+
+type AccountNamePromptResponse = {
   name: string;
   message: string;
   default: string;
-  validate(val: string): string | boolean;
+  validate: PromptValidationFunction;
 };
 
 export function getCliAccountNamePromptConfig(
   defaultName: string
-): AccountNamePromptConfig {
+): AccountNamePromptResponse {
   return {
     name: 'name',
     message: i18n(`${i18nKey}.enterAccountName`),
     default: defaultName,
-    validate(val: string): string | boolean {
+    validate(val) {
       if (typeof val !== 'string') {
         return i18n(`${i18nKey}.errors.invalidName`);
       } else if (!val.length) {
@@ -36,7 +39,7 @@ export function getCliAccountNamePromptConfig(
 
 export function cliAccountNamePrompt(
   defaultName: string
-): AccountNamePromptConfig {
+): AccountNamePromptResponse {
   return promptUser(getCliAccountNamePromptConfig(defaultName));
 }
 
@@ -46,7 +49,7 @@ export function hubspotAccountNamePrompt({
 }: {
   accountType: keyof typeof HUBSPOT_ACCOUNT_TYPES;
   currentPortalCount?: number;
-}): AccountNamePromptConfig {
+}): AccountNamePromptResponse {
   const isDevelopmentSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
   const isSandbox =
