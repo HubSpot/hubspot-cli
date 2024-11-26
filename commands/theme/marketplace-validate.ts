@@ -18,11 +18,11 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.theme.subcommands.marketplaceValidate';
 
-exports.command = 'marketplace-validate <src>';
+exports.command = 'marketplace-validate <path>';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, derivedAccountId } = options;
+  const { path, derivedAccountId } = options;
 
   await loadAndValidateOptions(options);
 
@@ -32,7 +32,7 @@ exports.handler = async options => {
 
   SpinniesManager.add('marketplaceValidation', {
     text: i18n(`${i18nKey}.logs.validatingTheme`, {
-      path: src,
+      path,
     }),
   });
 
@@ -40,7 +40,7 @@ exports.handler = async options => {
   const validationId = await kickOffValidation(
     derivedAccountId,
     assetType,
-    src
+    path
   );
   await pollForValidationFinish(derivedAccountId, validationId);
 
@@ -61,8 +61,8 @@ exports.builder = yargs => {
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
-  yargs.positional('src', {
-    describe: i18n(`${i18nKey}.positionals.src.describe`),
+  yargs.positional('path', {
+    describe: i18n(`${i18nKey}.positionals.path.describe`),
     type: 'string',
   });
   return yargs;
