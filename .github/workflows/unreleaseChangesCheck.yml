@@ -20,7 +20,7 @@ jobs:
           # Fetch all the release tags
           fetch-tags: true
       - name: Check for unreleased changes
-        run: ./scripts/github/unreleasedChanges.js
+        run: node scripts/github/unreleasedChanges.js
       - name: Unreleased changes Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ env.LOG != '' }} # Only post if there is a log
