@@ -1197,7 +1197,7 @@ en:
     commonOpts:
       options:
         account:
-          describe: "HubSpot portal id or name from config"
+          describe: "HubSpot account id or name from config"
         config:
           describe: "Path to a config file"
         overwrite:
