@@ -15,7 +15,7 @@ jobs:
           fetch-tags: true
       - name: Check for unreleased changes
         id: get-diff-log
-        run: npm run unrel
+        run: npm run unreleased-changes
       - name: Unreleased changes Slack Report
         uses: ravsamhq/notify-slack-action@v2
         if: ${{ env.LOG != '' }} # Only post if there is a log
