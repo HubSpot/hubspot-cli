@@ -15,7 +15,6 @@ const { deleteSandbox } = require('@hubspot/local-dev-lib/api/sandboxHubs');
 const { i18n } = require('../../lib/lang');
 const { deleteSandboxPrompt } = require('../../lib/prompts/sandboxesPrompt');
 const {
-  getConfig,
   getEnv,
   removeSandboxAccountFromConfig,
   updateDefaultAccount,
@@ -45,14 +44,13 @@ exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
   const { providedAccountId, force } = options;
-  const config = getConfig();
 
   trackCommandUsage('sandbox-delete', null);
 
   let accountPrompt;
   if (!providedAccountId) {
     if (!force) {
-      accountPrompt = await deleteSandboxPrompt(config);
+      accountPrompt = await deleteSandboxPrompt();
     } else {
       // Account is required, throw error if force flag is present and no account is specified
       logger.log('');
@@ -70,7 +68,7 @@ exports.handler = async options => {
     account: providedAccountId || accountPrompt.account,
   });
   const isDefaultAccount =
-    sandboxAccountId === getAccountId(getConfigDefaultAccount(config));
+    sandboxAccountId === getAccountId(getConfigDefaultAccount());
 
   const baseUrl = getHubSpotWebsiteOrigin(
     getValidEnv(getEnv(sandboxAccountId))
@@ -83,7 +81,7 @@ exports.handler = async options => {
       if (portal.parentAccountId) {
         parentAccountId = portal.parentAccountId;
       } else if (!force) {
-        const parentAccountPrompt = await deleteSandboxPrompt(config, true);
+        const parentAccountPrompt = await deleteSandboxPrompt(true);
         parentAccountId = getAccountId({
           account: parentAccountPrompt.account,
         });
@@ -161,7 +159,7 @@ exports.handler = async options => {
       sandboxAccountId
     );
     if (promptDefaultAccount && !force) {
-      const newDefaultAccount = await selectAccountFromConfig(getConfig());
+      const newDefaultAccount = await selectAccountFromConfig();
       updateDefaultAccount(newDefaultAccount);
     } else {
       // If force is specified, skip prompt and set the parent account id as the default account
@@ -214,7 +212,7 @@ exports.handler = async options => {
         sandboxAccountId
       );
       if (promptDefaultAccount && !force) {
-        const newDefaultAccount = await selectAccountFromConfig(getConfig());
+        const newDefaultAccount = await selectAccountFromConfig();
         updateDefaultAccount(newDefaultAccount);
       } else {
         // If force is specified, skip prompt and set the parent account id as the default account
