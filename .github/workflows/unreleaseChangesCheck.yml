@@ -1,5 +1,4 @@
 on:
-  push:
   schedule:
     - cron: '30 16 * * 1-5' # Run Monday through Friday at 9:30am
 jobs:
@@ -14,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Always checkout the main branch
-#          ref: main
+          ref: main
           # Do a deep checkout
           fetch-depth: 0
           # Fetch all the release tags
