@@ -1,5 +1,5 @@
 on:
-  workflow_dispatch:
+  push:
   schedule:
     - cron: '30 16 * * 1-5' # Run Monday through Friday at 9:30am
 jobs:
