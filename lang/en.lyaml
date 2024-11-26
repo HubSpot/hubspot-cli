@@ -1164,7 +1164,7 @@ en:
         noLogsFound: "No logs found."
     commonOpts:
       options:
-        portal:
+        account:
           describe: "HubSpot portal id or name from config"
         config:
           describe: "Path to a config file"

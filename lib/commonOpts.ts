@@ -29,9 +29,9 @@ export function addGlobalOptions(yargs: Argv) {
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
-  return yargs.option('portal', {
-    alias: ['p', 'account', 'a'],
-    describe: i18n(`${i18nKey}.options.portal.describe`),
+  return yargs.option('account', {
+    alias: 'a',
+    describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
 }
@@ -126,17 +126,17 @@ export async function injectAccountIdMiddleware(
     account?: number | string;
   }>
 ): Promise<void> {
-  const { portal, account } = options;
+  const { account } = options;
 
   // Preserves the original --account and --portal flags for certain commands.
-  options.providedAccountId = portal || account;
+  options.providedAccountId = account;
 
   if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
     options.derivedAccountId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
     return;
   }
 
-  options.derivedAccountId = getAccountIdFromConfig(portal || account);
+  options.derivedAccountId = getAccountIdFromConfig(account);
 }
 
 export function getCmsPublishMode(
