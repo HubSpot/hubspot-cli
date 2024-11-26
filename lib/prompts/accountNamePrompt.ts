@@ -2,6 +2,7 @@ import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
+import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
@@ -47,7 +48,7 @@ export function hubspotAccountNamePrompt({
   accountType,
   currentPortalCount = 0,
 }: {
-  accountType: keyof typeof HUBSPOT_ACCOUNT_TYPES;
+  accountType: AccountType;
   currentPortalCount?: number;
 }): AccountNamePromptResponse {
   const isDevelopmentSandbox =
