@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Always checkout the main branch
-          ref: main
+#          ref: main
           # Do a deep checkout
           fetch-depth: 0
           # Fetch all the release tags
