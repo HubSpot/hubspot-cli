@@ -77,7 +77,7 @@ en:
           name: "{{#bold}}Account name{{/bold}}: {{ name }}"
           scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
         clean:
-          describe: "Checks for inactive accounts and removes them from the CLI config"
+          describe: "Check for inactive accounts and removes them from the CLI config."
           noResults: "No inactive accounts found to remove."
           loading:
             add: "Looking for inactive accounts…"
@@ -105,15 +105,15 @@ en:
       describe: "Commands for managing the CLI config file."
       subcommands:
         set:
-          describe: "Commands for modifying the CLI configuration."
+          describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
           examples:
             default: "Opens a prompt to select a config item to modify"
           options:
             defaultMode:
-              describe: "Set the default mode"
-              promptMessage: "Select mode to be used as the default"
-              error: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+              describe: "Set the default CMS publish mode"
+              promptMessage: "Select CMS publish mode to be used as the default"
+              error: "The CMS publish mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
               success: "Default mode updated to: {{ mode }}"
             allowUsageTracking:
               describe: "Enable or disable usage tracking"
@@ -156,7 +156,7 @@ en:
             verbose:
               describe: "View a detailed output of the lighthouse sores"
         reactModule:
-          describe: "Get a specified default React module"
+          describe: "Get a specified default React module."
           options:
             name:
               describe: "Name of the react modules to be fetched"
@@ -749,7 +749,7 @@ en:
             default: "Opens the projects page for the specified account"
           success: "Successfully opened \"{{ projectName }}\""
         feedback:
-          describe: "Leave feedback on HubSpot projects or file a bug report"
+          describe: "Leave feedback on HubSpot projects or file a bug report."
           feedbackType:
             prompt: "What type of feedback would you like to leave?"
             bug: "[--bug] Report a bug"
@@ -763,7 +763,7 @@ en:
               describe: "Open Github issues in your browser to give feedback."
         installDeps:
           help:
-            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project"
+            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project."
             installAppDepsExample: "Install the dependencies for the project"
             addDepToSubComponentExample: "Install the dependencies to one or more project subcomponents"
           installLocationPrompt: "Choose the project components to install the dependencies:"
@@ -1014,7 +1014,7 @@ en:
         initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
         notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     convertFields:
-      describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
+      describe: "Converts a specific JavaScript fields file of a module or theme to JSON."
       positionals:
         src:
           describe: Path to JS Fields file or directory containing javascript fields files.
