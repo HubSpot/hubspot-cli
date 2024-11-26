@@ -1,5 +1,4 @@
 on:
-  push:
   schedule:
     - cron: '30 16 * * 1-5' # Run Monday through Friday at 9:30am
 jobs:
@@ -19,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Always checkout the main branch
-#          ref: main
+          ref: main
           # Do a deep checkout
           fetch-depth: 0
           # Fetch all the release tags
@@ -35,6 +34,6 @@ jobs:
           notify_when: 'success'
           notification_title: 'Unreleased Changes in the CLI'
           message_format: '${{ env.LOG }}'
-          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/${{env.LATEST_TAG}}...main|View latest Diff in GitHub> | | <https://github.com/HubSpot/hubspot-cli/compare/${{env.NEXT_TAG}}...main|View next Diff in GitHub>'
+          footer: '<{run_url}|View Run> | <https://github.com/HubSpot/hubspot-cli/compare/v${{env.LATEST_TAG}}...main|View latest Diff in GitHub> | <https://github.com/HubSpot/hubspot-cli/compare/v${{env.NEXT_TAG}}...main|View next Diff in GitHub>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
