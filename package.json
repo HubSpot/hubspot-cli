@@ -66,7 +66,7 @@
     "circular-deps": "yarn madge --circular .",
     "release": "yarn ts-node ./scripts/release.ts release",
     "hs": "yarn build && node ./dist/bin/hs",
-    "unreleased-changes": "ts-node ./scripts/unreleasedChanges.ts",
+    "unreleased-changes": "yarn ts-node ./scripts/unreleasedChanges.ts",
     "update-ldl": "yarn add --exact @hubspot/local-dev-lib@latest"
   },
   "lint-staged": {
