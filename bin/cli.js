@@ -39,7 +39,7 @@ const uploadCommand = require('../commands/upload');
 const createCommand = require('../commands/create');
 const fetchCommand = require('../commands/fetch');
 const filemanagerCommand = require('../commands/filemanager');
-const secretCommand = require('../commands/secret');
+const secretCommands = require('../commands/secret');
 const customObjectCommand = require('../commands/customObject');
 const functionCommands = require('../commands/function');
 const listCommand = require('../commands/list');
@@ -49,7 +49,7 @@ const projectCommands = require('../commands/project');
 const themeCommand = require('../commands/theme');
 const moduleCommand = require('../commands/module');
 const configCommand = require('../commands/config');
-const accountCommand = require('../commands/account');
+const accountCommands = require('../commands/account');
 const sandboxesCommand = require('../commands/sandbox');
 const cmsCommand = require('../commands/cms');
 const feedbackCommand = require('../commands/feedback');
@@ -204,7 +204,7 @@ const argv = yargs
   .command(createCommand)
   .command(fetchCommand)
   .command(filemanagerCommand)
-  .command(secretCommand)
+  .command(secretCommands)
   .command(customObjectCommand)
   .command(functionCommands)
   .command({
@@ -217,7 +217,7 @@ const argv = yargs
   .command(themeCommand)
   .command(moduleCommand)
   .command(configCommand)
-  .command(accountCommand)
+  .command(accountCommands)
   .command(sandboxesCommand)
   .command(feedbackCommand)
   .command(doctorCommand)
