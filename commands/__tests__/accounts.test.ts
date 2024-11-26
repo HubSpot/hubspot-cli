@@ -1,19 +1,19 @@
 // @ts-nocheck
 import yargs from 'yargs';
-import list from '../accounts/list';
-import rename from '../accounts/rename';
-import use from '../accounts/use';
-import info from '../accounts/info';
-import remove from '../accounts/remove';
-import clean from '../accounts/clean';
+import list from '../account/list';
+import rename from '../account/rename';
+import use from '../account/use';
+import info from '../account/info';
+import remove from '../account/remove';
+import clean from '../account/clean';
 
 jest.mock('yargs');
-jest.mock('../accounts/list');
-jest.mock('../accounts/rename');
-jest.mock('../accounts/use');
-jest.mock('../accounts/info');
-jest.mock('../accounts/remove');
-jest.mock('../accounts/clean');
+jest.mock('../account/list');
+jest.mock('../account/rename');
+jest.mock('../account/use');
+jest.mock('../account/info');
+jest.mock('../account/remove');
+jest.mock('../account/clean');
 jest.mock('../../lib/commonOpts');
 yargs.command.mockReturnValue(yargs);
 yargs.demandCommand.mockReturnValue(yargs);
