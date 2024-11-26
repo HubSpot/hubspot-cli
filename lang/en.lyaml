@@ -199,35 +199,38 @@ en:
             nameRequired: "The \"name\" argument is required when creating a Template."
     customObject:
       betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
-      describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+      describe: "Commands for managing custom objects."
       seeMoreLink: "View our docs to find out more."
       subcommands:
         create:
-          describe: "Create custom object instances"
+          describe: "Create custom object instances."
           errors:
             creationFailed: "Object creation from {{ definition }} failed"
-          positionals:
-            definition:
+          options:
+            path:
               describe: "Local path to the JSON file containing an array of object definitions"
+          positionals:
             name:
               describe: "Schema name to add the object instance to"
           success:
             objectsCreated: "Objects created"
+          inputSchema: "What would you like to name the schema?"
+          inputPath: "[--path] Where is the JSON file containing the object definitions?"
         schema:
-          describe: "Manage custom object schemas"
+          describe: "Commands for managing custom object schemas."
           subcommands:
             create:
-              describe: "Create a custom object schema"
+              describe: "Create a custom object schema."
               errors:
                 creationFailed: "Schema creation from {{ definition }} failed"
-              positionals:
+              options:
                 definition:
                   describe: "Local path to the JSON file containing the schema definition"
               success:
                 schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
                 schemaViewable: "Schema can be viewed at {{ url }}"
             delete:
-              describe: "Delete a custom object schema"
+              describe: "Delete a custom object schema."
               errors:
                 delete: "Unable to delete {{ name }}"
               examples:
@@ -235,10 +238,16 @@ en:
               positionals:
                 name:
                   describe: "Name of the target schema"
+              options:
+                force:
+                  describe: "Force the deletion of the schema."
               success:
                 delete: "Successfully initiated deletion of {{ name }}"
+              confirmDelete: "Are you sure you want to delete the schema \"{{ name }}\"?"
+              deleteCancelled: "Deletion of schema \"{{ name }}\" cancelled."
+              selectSchema: "Which schema would you like to delete?"
             fetchAll:
-              describe: "Fetch all custom object schemas for an account"
+              describe: "Fetch all custom object schemas for an account."
               errors:
                 fetch: "Unable to fetch schemas"
               examples:
@@ -249,8 +258,9 @@ en:
                   describe: "Local folder where schemas will be written"
               success:
                 fetch: "Saved schemas to {{ path }}"
+              inputDest: "Where would you like to save the schemas?"
             fetch:
-              describe: "Fetch a custom object schema"
+              describe: "Fetch a custom object schema."
               errors:
                 fetch: "Unable to fetch {{ name }}"
               examples:
@@ -261,25 +271,29 @@ en:
                   describe: "Local folder where schema will be written"
                 name:
                   describe: "Name of the target schema"
+              selectSchema: "Which schema would you like to fetch?"
+              inputDest: "What would you like to name the destination file?"
               success:
                 save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                 savedToPath: "Saved schema to {{ path }}"
             list:
-              describe: "List schemas available on your account"
+              describe: "List custom object schemas."
               errors:
                 list: "Unable to list schemas"
             update:
-              describe: "Update an existing custom object schema"
+              describe: "Update an existing custom object schema."
               errors:
                 update: "Schema update from {{ definition }} failed"
-              positionals:
-                definition:
+              options:
+                path:
                   describe: "Local path to the JSON file containing the schema definition"
+              positionals:
                 name:
                   describe: "Name of the target schema"
               success:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
+              selectSchema: "Which schema would you like to update?"
     doctor:
       describe: "Retrieve diagnostic information about your local HubSpot configurations."
       options:

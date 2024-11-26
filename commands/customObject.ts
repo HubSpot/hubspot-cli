@@ -1,7 +1,5 @@
 // @ts-nocheck
 const {
-  addConfigOptions,
-  addAccountOptions,
   addGlobalOptions,
 } = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
@@ -12,7 +10,7 @@ const { uiBetaTag, uiLink } = require('../lib/ui');
 
 const i18nKey = 'commands.customObject';
 
-exports.command = ['custom-object', 'custom', 'co'];
+exports.command = ['custom-object', 'custom-objects', 'co'];
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const logBetaMessage = () => {
@@ -27,8 +25,6 @@ const logBetaMessage = () => {
 };
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
   yargs

@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { inputPrompt } from '../../lib/prompts/promptUtils';
+
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const { logError } = require('../../lib/errorHandlers/index');
 const { getAbsoluteFilePath } = require('@hubspot/local-dev-lib/path');
@@ -15,22 +17,30 @@ const { i18n } = require('../../lib/lang');
 const i18nKey = 'commands.customObject.subcommands.create';
 const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
-exports.command = 'create <name> <definition>';
+exports.command = 'create [name]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { definition, name, derivedAccountId } = options;
+  const { path, name: providedName, derivedAccountId } = options;
+  let definitionPath = path;
 
   await loadAndValidateOptions(options);
 
   trackCommandUsage('custom-object-batch-create', null, derivedAccountId);
 
-  const filePath = getAbsoluteFilePath(definition);
+  if (!definitionPath) {
+    definitionPath = await inputPrompt(i18n(`${i18nKey}.inputPath`));
+  }
+
+  const filePath = getAbsoluteFilePath(definitionPath);
   const objectJson = checkAndConvertToJson(filePath);
 
   if (!objectJson) {
     process.exit(EXIT_CODES.ERROR);
   }
+
+  const name =
+    providedName || (await inputPrompt(i18n(`${i18nKey}.inputSchema`)));
 
   try {
     await batchCreateObjects(derivedAccountId, name, objectJson);
@@ -39,20 +49,20 @@ exports.handler = async options => {
     logError(e, { accountId: derivedAccountId });
     logger.error(
       i18n(`${i18nKey}.errors.creationFailed`, {
-        definition,
+        definition: definitionPath,
       })
     );
   }
 };
 
 exports.builder = yargs => {
-  yargs.positional('name', {
-    describe: i18n(`${i18nKey}.positionals.name.describe`),
-    type: 'string',
-  });
-
-  yargs.positional('definition', {
-    describe: i18n(`${i18nKey}.positionals.definition.describe`),
-    type: 'string',
-  });
+  yargs
+    .positional('name', {
+      describe: i18n(`${i18nKey}.positionals.name.describe`),
+      type: 'string',
+    })
+    .option('path', {
+      describe: i18n(`${i18nKey}.options.path.describe`),
+      type: 'string',
+    });
 };
