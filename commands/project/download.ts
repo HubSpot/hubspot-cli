@@ -4,6 +4,7 @@ const chalk = require('chalk');
 
 const {
   addAccountOptions,
+  addConfigOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { trackCommandUsage } = require('../../lib/usageTracking');
@@ -120,6 +121,7 @@ exports.handler = async options => {
 
 exports.builder = yargs => {
   addAccountOptions(yargs);
+  addConfigOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.options({
