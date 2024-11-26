@@ -7,7 +7,7 @@ const exec = util.promisify(_exec);
 
 async function gitLogForTag(tag) {
   const { stdout } = await exec(
-    `git log v${tag}...main --pretty=format:'- %s – @%al.' --no-merges`
+    `git log v${tag}...origin/main --pretty=format:'- %s – @%al.' --no-merges`
   );
   return stdout;
 }
