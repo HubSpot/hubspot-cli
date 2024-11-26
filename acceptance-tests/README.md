@@ -6,7 +6,7 @@ This project tests our CLI's `hs <*>` commands as if they were being used by an 
 
 The main test execution is kicked off by running `yarn test-cli` from the root of `hubspot-cli`. This will run the test suites defined in the `tests` directory.
 
-Note that if you are testing against a QA portal, not a PROD one, you'll need to run `yarn test-qa`. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
+Note that if you are testing against a QA account, not a PROD one, you'll need to run `yarn test-qa`. There is still an outstanding issue with this because we attempt to add the `--qa` flag to all `hs` commands, however it is not available for all commands.
 
 ### Setup
 

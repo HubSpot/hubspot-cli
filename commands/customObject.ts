@@ -1,7 +1,5 @@
 // @ts-nocheck
-const {
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+const { addGlobalOptions } = require('../lib/commonOpts');
 const schemaCommand = require('./customObject/schema');
 const createCommand = require('./customObject/create');
 const { i18n } = require('../lib/lang');

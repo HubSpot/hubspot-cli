@@ -29,9 +29,9 @@ export function addGlobalOptions(yargs: Argv) {
 }
 
 export function addAccountOptions(yargs: Argv): Argv {
-  return yargs.option('portal', {
-    alias: ['p', 'account', 'a'],
-    describe: i18n(`${i18nKey}.options.portal.describe`),
+  return yargs.option('account', {
+    alias: 'a',
+    describe: i18n(`${i18nKey}.options.account.describe`),
     type: 'string',
   });
 }
@@ -105,15 +105,15 @@ export function getCommandName(argv: Arguments<{ _?: string[] }>): string {
  * Obtains accountId using supplied --account flag or from environment variables
  */
 export function getAccountId(
-  options: Arguments<{ portal?: number | string; account?: number | string }>
+  options: Arguments<{ account?: number | string }>
 ): number | null {
-  const { portal, account } = options || {};
+  const { account } = options || {};
 
-  if (options?.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    return parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  if (options?.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    return parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
   }
 
-  return getAccountIdFromConfig(portal || account);
+  return getAccountIdFromConfig(account);
 }
 
 /**
@@ -122,32 +122,31 @@ export function getAccountId(
 export async function injectAccountIdMiddleware(
   options: Arguments<{
     derivedAccountId?: number | null;
-    portal?: number | string;
     account?: number | string;
   }>
 ): Promise<void> {
-  const { portal, account } = options;
+  const { account } = options;
 
-  // Preserves the original --account and --portal flags for certain commands.
-  options.providedAccountId = portal || account;
+  // Preserves the original --account flag for certain commands.
+  options.providedAccountId = account;
 
-  if (options.useEnv && process.env.HUBSPOT_PORTAL_ID) {
-    options.derivedAccountId = parseInt(process.env.HUBSPOT_PORTAL_ID, 10);
+  if (options.useEnv && process.env.HUBSPOT_ACCOUNT_ID) {
+    options.derivedAccountId = parseInt(process.env.HUBSPOT_ACCOUNT_ID, 10);
     return;
   }
 
-  options.derivedAccountId = getAccountIdFromConfig(portal || account);
+  options.derivedAccountId = getAccountIdFromConfig(account);
 }
 
 export function getCmsPublishMode(
   options: Arguments<{ cmsPublishMode?: CmsPublishMode }>
 ): CmsPublishMode {
-  // 1. --mode
+  // 1. --cmsPublishMode
   const { cmsPublishMode } = options;
   if (cmsPublishMode && typeof cmsPublishMode === 'string') {
     return cmsPublishMode.toLowerCase() as CmsPublishMode;
   }
-  // 2. config[portal].defaultMode
+  // 2. config[account].defaultCmsPublishMode
   const accountId = getAccountId(options);
   if (accountId) {
     const accountConfig = getAccountConfig(accountId);
@@ -155,8 +154,8 @@ export function getCmsPublishMode(
       return accountConfig.defaultCmsPublishMode;
     }
   }
-  // 3. config.defaultMode
-  // 4. DEFAULT_MODE
+  // 3. config.defaultCmsPublishMode
+  // 4. DEFAULT_CMS_PUBLISH_MODE
   const config = getAndLoadConfigIfNeeded();
   return (
     (config && (config.defaultCmsPublishMode as CmsPublishMode)) ||
