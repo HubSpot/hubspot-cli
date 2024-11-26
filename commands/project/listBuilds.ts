@@ -1,6 +1,4 @@
 // @ts-nocheck
-const path = require('path');
-
 const {
   addAccountOptions,
   addConfigOptions,
@@ -15,7 +13,6 @@ const {
   fetchProjectBuilds,
 } = require('@hubspot/local-dev-lib/api/projects');
 const { getTableContents, getTableHeader } = require('../../lib/ui/table');
-const { getCwd } = require('@hubspot/local-dev-lib/path');
 const { uiBetaTag, uiLink } = require('../../lib/ui');
 const { loadAndValidateOptions } = require('../../lib/validation');
 const {
@@ -29,22 +26,23 @@ const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 
 const i18nKey = 'commands.project.subcommands.listBuilds';
 
-exports.command = 'list-builds [path]';
+exports.command = 'list-builds';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { path: projectPath, limit, derivedAccountId } = options;
+  const { project: projectFlagValue, limit, derivedAccountId } = options;
 
   trackCommandUsage('project-list-builds', null, derivedAccountId);
 
-  const cwd = projectPath ? path.resolve(getCwd(), projectPath) : getCwd();
-  const { projectConfig, projectDir } = await getProjectConfig(cwd);
+  let projectName = projectFlagValue;
 
-  validateProjectConfig(projectConfig, projectDir);
-
-  logger.debug(`Fetching builds for project at path: ${projectPath}`);
+  if (!projectName) {
+    const { projectConfig, projectDir } = await getProjectConfig();
+    validateProjectConfig(projectConfig, projectDir);
+    projectName = projectConfig.name;
+  }
 
   const fetchAndDisplayBuilds = async (project, options) => {
     const {
@@ -53,20 +51,26 @@ exports.handler = async options => {
     const currentDeploy = project.deployedBuildId;
     if (options && options.after) {
       logger.log(
-        `Showing the next ${results.length} builds for ${project.name}`
+        i18n(`${i18nKey}.logs.showingNextBuilds`, {
+          count: results.length,
+          projectName: project.name,
+        })
       );
     } else {
       logger.log(
-        `Showing the ${results.length} most recent builds for ${project.name}. ` +
-          uiLink(
-            'View all builds in project details.',
+        i18n(`${i18nKey}.logs.showingRecentBuilds`, {
+          count: results.length,
+          projectName: project.name,
+          viewBuildsLink: uiLink(
+            i18n(`${i18nKey}.logs.viewAllBuildsLink`),
             getProjectDetailUrl(project.name, derivedAccountId)
-          )
+          ),
+        })
       );
     }
 
     if (results.length === 0) {
-      logger.log('No builds found.');
+      logger.log(i18n(`${i18nKey}.errors.noBuilds`));
     } else {
       const builds = results.map(build => {
         const isCurrentlyDeployed = build.buildId === currentDeploy;
@@ -108,28 +112,25 @@ exports.handler = async options => {
     if (paging && paging.next) {
       await promptUser({
         name: 'more',
-        message: 'Press <enter> to load more, or ctrl+c to exit',
+        message: i18n(`${i18nKey}.continueOrExitPrompt`),
       });
       await fetchAndDisplayBuilds(project, { limit, after: paging.next.after });
     }
   };
 
   try {
-    const { data: project } = await fetchProject(
-      derivedAccountId,
-      projectConfig.name
-    );
+    const { data: project } = await fetchProject(derivedAccountId, projectName);
 
     await fetchAndDisplayBuilds(project, { limit });
   } catch (e) {
     if (isHubSpotHttpError(e) && e.status === 404) {
-      logger.error(`Project ${projectConfig.name} not found. `);
+      logger.error(i18n(`${i18nKey}.errors.projectNotFound`, { projectName }));
     } else {
       logError(
         e,
         new ApiErrorContext({
           accountId: derivedAccountId,
-          projectName: projectConfig.name,
+          projectName,
         })
       );
     }
@@ -137,23 +138,19 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: 'Path to a project folder',
-    type: 'string',
-  });
-
   yargs.options({
+    project: {
+      describe: i18n(`${i18nKey}.options.project.describe`),
+      type: 'string',
+    },
     limit: {
-      describe: 'Max number of builds to load',
+      describe: i18n(`${i18nKey}.options.limit.describe`),
       type: 'string',
     },
   });
 
   yargs.example([
-    [
-      '$0 project list-builds myProjectFolder',
-      'Fetch a list of builds for a project within the myProjectFolder folder',
-    ],
+    ['$0 project list-builds', i18n(`${i18nKey}.examples.default`)],
   ]);
 
   addConfigOptions(yargs);

@@ -9,7 +9,7 @@ const { i18n } = require('../../lib/lang');
 
 const i18nKey = 'commands.customObject.subcommands.schema';
 
-exports.command = 'schema';
+exports.command = ['schema', 'schemas'];
 exports.describe = i18n(`${i18nKey}.describe`);
 exports.builder = yargs => {
   yargs

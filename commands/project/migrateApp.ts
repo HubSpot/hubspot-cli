@@ -111,12 +111,12 @@ exports.handler = async options => {
   }
 
   let projectName;
-  let projectLocation;
+  let projectDest;
   try {
-    const { name, location } = await createProjectPrompt('', options, true);
+    const { name, dest } = await createProjectPrompt('', options, true);
 
     projectName = options.name || name;
-    projectLocation = options.location || location;
+    projectDest = options.dest || dest;
 
     const { projectExists } = await ensureProjectExists(
       derivedAccountId,
@@ -139,6 +139,12 @@ exports.handler = async options => {
     logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'STARTED' },
+    derivedAccountId
+  );
 
   logger.log('');
   uiLine();
@@ -189,7 +195,7 @@ exports.handler = async options => {
     const pollResponse = await poll(checkMigrationStatus, derivedAccountId, id);
     const { status, project } = pollResponse;
     if (status === 'SUCCESS') {
-      const absoluteDestPath = path.resolve(getCwd(), projectLocation);
+      const absoluteDestPath = path.resolve(getCwd(), projectDest);
       const { env } = accountConfig;
       const baseUrl = getHubSpotWebsiteOrigin(env);
 
@@ -204,12 +210,6 @@ exports.handler = async options => {
         sanitizeFileName(projectName),
         path.resolve(absoluteDestPath),
         { includesRootDir: true, hideLogs: true }
-      );
-
-      trackCommandMetadataUsage(
-        'migrate-app',
-        { type: projectName, assetType: appId, successful: status },
-        derivedAccountId
       );
 
       SpinniesManager.succeed('migrateApp', {
@@ -231,9 +231,9 @@ exports.handler = async options => {
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
-    trackCommandMetadataUsage(
+    await trackCommandMetadataUsage(
       'migrate-app',
-      { projectName, appId, status: 'FAILURE', error },
+      { status: 'FAILURE' },
       derivedAccountId
     );
     SpinniesManager.fail('migrateApp', {
@@ -248,6 +248,12 @@ exports.handler = async options => {
 
     process.exit(EXIT_CODES.ERROR);
   }
+  await trackCommandMetadataUsage(
+    'migrate-app',
+    { status: 'SUCCESS' },
+    derivedAccountId
+  );
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
@@ -256,11 +262,11 @@ exports.builder = yargs => {
       describe: i18n(`${i18nKey}.options.name.describe`),
       type: 'string',
     },
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    appId: {
+    'app-id': {
       describe: i18n(`${i18nKey}.options.appId.describe`),
       type: 'number',
     },

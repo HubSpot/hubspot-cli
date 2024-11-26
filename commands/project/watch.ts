@@ -31,7 +31,7 @@ const { handleKeypress, handleExit } = require('../../lib/process');
 
 const i18nKey = 'commands.project.subcommands.watch';
 
-exports.command = 'watch [path]';
+exports.command = 'watch';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 const handleBuildStatus = async (accountId, projectName, buildId) => {
@@ -88,11 +88,11 @@ const handleUserInput = (accountId, projectName, currentBuildId) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { initialUpload, path: projectPath, derivedAccountId } = options;
+  const { initialUpload, derivedAccountId } = options;
 
   trackCommandUsage('project-watch', null, derivedAccountId);
 
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -152,20 +152,13 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
-  });
-
   yargs.option('initial-upload', {
     alias: 'i',
     describe: i18n(`${i18nKey}.options.initialUpload.describe`),
     type: 'boolean',
   });
 
-  yargs.example([
-    ['$0 project watch myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project watch', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);

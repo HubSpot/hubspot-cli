@@ -27,19 +27,19 @@ const { EXIT_CODES } = require('../../lib/enums/exitCodes');
 
 const i18nKey = 'commands.project.subcommands.upload';
 
-exports.command = 'upload [path] [--forceCreate] [--message]';
+exports.command = 'upload';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  const { forceCreate, path: projectPath, message, derivedAccountId } = options;
+  const { forceCreate, message, derivedAccountId } = options;
   const accountConfig = getAccountConfig(derivedAccountId);
   const accountType = accountConfig && accountConfig.accountType;
 
   trackCommandUsage('project-upload', { type: accountType }, derivedAccountId);
 
-  const { projectConfig, projectDir } = await getProjectConfig(projectPath);
+  const { projectConfig, projectDir } = await getProjectConfig();
 
   validateProjectConfig(projectConfig, projectDir);
 
@@ -114,27 +114,21 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
-  yargs.positional('path', {
-    describe: i18n(`${i18nKey}.positionals.path.describe`),
-    type: 'string',
+  yargs.options({
+    'force-create': {
+      describe: i18n(`${i18nKey}.options.forceCreate.describe`),
+      type: 'boolean',
+      default: false,
+    },
+    message: {
+      alias: 'm',
+      describe: i18n(`${i18nKey}.options.message.describe`),
+      type: 'string',
+      default: '',
+    },
   });
 
-  yargs.option('forceCreate', {
-    describe: i18n(`${i18nKey}.options.forceCreate.describe`),
-    type: 'boolean',
-    default: false,
-  });
-
-  yargs.option('message', {
-    alias: 'm',
-    describe: i18n(`${i18nKey}.options.message.describe`),
-    type: 'string',
-    default: '',
-  });
-
-  yargs.example([
-    ['$0 project upload myProjectFolder', i18n(`${i18nKey}.examples.default`)],
-  ]);
+  yargs.example([['$0 project upload', i18n(`${i18nKey}.examples.default`)]]);
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);
