@@ -1,14 +1,14 @@
 // @ts-nocheck
 const { addGlobalOptions } = require('../lib/commonOpts');
 const { i18n } = require('../lib/lang');
-const list = require('./accounts/list');
-const rename = require('./accounts/rename');
-const use = require('./accounts/use');
-const info = require('./accounts/info');
-const remove = require('./accounts/remove');
-const clean = require('./accounts/clean');
+const list = require('./account/list');
+const rename = require('./account/rename');
+const use = require('./account/use');
+const info = require('./account/info');
+const remove = require('./account/remove');
+const clean = require('./account/clean');
 
-const i18nKey = 'commands.accounts';
+const i18nKey = 'commands.account';
 
 exports.command = ['account', 'accounts'];
 exports.describe = i18n(`${i18nKey}.describe`);

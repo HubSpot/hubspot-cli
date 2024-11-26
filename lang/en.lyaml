@@ -13,7 +13,7 @@ en:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
         default: "Generate shell completion scripts for the zsh shell"
-    accounts:
+    account:
       describe: "Commands for managing configured accounts."
       subcommands:
         list:
@@ -834,7 +834,7 @@ en:
               describe: "Skips all confirmation prompts when deleting a sandbox account."
             account:
               describe: "Account name or id to delete"
-    secrets:
+    secret:
       describe: "Commands for managing secrets."
       subcommands:
         add:
