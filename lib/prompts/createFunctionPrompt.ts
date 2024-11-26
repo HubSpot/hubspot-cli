@@ -56,7 +56,14 @@ const ENDPOINT_PATH_PROMPT = {
   },
 };
 
-export function createFunctionPrompt() {
+type CreateFunctionPromptResponse = {
+  functionsFolder: string;
+  functionFilename: string;
+  endpointMethod: string;
+  endpointPath: string;
+};
+
+export function createFunctionPrompt(): Promise<CreateFunctionPromptResponse> {
   return promptUser([
     FUNCTIONS_FOLDER_PROMPT,
     FUNCTION_FILENAME_PROMPT,

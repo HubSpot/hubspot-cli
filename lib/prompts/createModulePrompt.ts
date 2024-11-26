@@ -66,7 +66,15 @@ const AVAILABLE_FOR_NEW_CONTENT = {
   default: true,
 };
 
-export function createModulePrompt() {
+type CreateModulePromptResponse = {
+  moduleLabel: string;
+  reactType: boolean;
+  contentTypes: string[];
+  global: boolean;
+  availableForNewContent: boolean;
+};
+
+export function createModulePrompt(): Promise<CreateModulePromptResponse> {
   return promptUser([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,

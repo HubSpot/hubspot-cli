@@ -19,7 +19,7 @@ export function getCliAccountNamePromptConfig(
     name: 'name',
     message: i18n(`${i18nKey}.enterAccountName`),
     default: defaultName,
-    validate(val: string) {
+    validate(val: string): string | boolean {
       if (typeof val !== 'string') {
         return i18n(`${i18nKey}.errors.invalidName`);
       } else if (!val.length) {
