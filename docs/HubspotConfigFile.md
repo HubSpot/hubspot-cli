@@ -39,7 +39,7 @@ description: Specifies the default portal(account) to use with the `hs` commands
 
 default: Whatever the first accountId added to the config is
 
-### defaultMode
+### defaultCmsPublishMode
 
 type: `draft` or `publish` or _Undefined_
 
