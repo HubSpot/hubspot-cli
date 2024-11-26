@@ -59,14 +59,7 @@ async function loadAndValidateOptions(options, shouldValidateAccount = true) {
  */
 async function validateAccount(options) {
   const accountId = getAccountId(options);
-  const {
-    portalId: portalIdOption,
-    portal: portalOption,
-    accountId: _accountIdOption,
-    account: _accountOption,
-  } = options;
-  const accountOption = portalOption || _accountOption;
-  const accountIdOption = portalIdOption || _accountIdOption;
+  const { accountId: accountIdOption, account: accountOption } = options;
 
   if (!accountId) {
     if (accountOption) {
