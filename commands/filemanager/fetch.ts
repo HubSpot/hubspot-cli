@@ -5,6 +5,8 @@ const { resolveLocalPath } = require('../../lib/filesystem');
 const {
   addConfigOptions,
   addAccountOptions,
+  addOverwriteOptions,
+  addGlobalOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
 const { loadAndValidateOptions } = require('../../lib/validation');
@@ -19,7 +21,7 @@ exports.command = 'fetch <src> [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
-  const { src, includeArchived, derivedAccountId } = options;
+  const { src, includeArchived, derivedAccountId, overwrite } = options;
 
   await loadAndValidateOptions(options);
 
@@ -38,7 +40,7 @@ exports.handler = async options => {
       derivedAccountId,
       src,
       dest,
-      false,
+      overwrite,
       includeArchived || false
     );
   } catch (err) {
@@ -48,8 +50,10 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
+  addOverwriteOptions(yargs);
   addUseEnvironmentOptions(yargs);
 
   yargs.positional('src', {

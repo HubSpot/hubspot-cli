@@ -14,6 +14,7 @@ const { shouldIgnoreFile } = require('@hubspot/local-dev-lib/ignoreRules');
 const { ApiErrorContext, logError } = require('../../lib/errorHandlers/index');
 const {
   addConfigOptions,
+  addGlobalOptions,
   addAccountOptions,
   addUseEnvironmentOptions,
 } = require('../../lib/commonOpts');
@@ -136,6 +137,7 @@ exports.handler = async options => {
 };
 
 exports.builder = yargs => {
+  addGlobalOptions(yargs);
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addUseEnvironmentOptions(yargs);
