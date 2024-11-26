@@ -1,16 +1,18 @@
-import { exec as _exec } from 'child_process';
-import util from 'util';
+#!/usr/bin/env node
+
+const { exec: _exec } = require('child_process');
+const util = require('util');
 
 const exec = util.promisify(_exec);
 
-async function gitLogForTag(tag: string) {
+async function gitLogForTag(tag) {
   const { stdout } = await exec(
     `git log v${tag}...main --pretty=format:'- %s – @%al.' --no-merges`
   );
   return stdout;
 }
 
-async function outputEnvVariable(name: string, value: string) {
+async function outputEnvVariable(name, value) {
   await exec(
     `echo "${name}<<EOF" >> $GITHUB_ENV && echo "${value}" >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV`
   );
