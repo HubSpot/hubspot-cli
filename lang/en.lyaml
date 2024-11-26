@@ -510,10 +510,10 @@ en:
           describe: "Shortcut of the link you'd like to open"
       selectLink: "Select a link to open"
     project:
-      describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
+      describe: "Commands for managing projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
       subcommands:
         dev:
-          describe: "Start local dev for the current project"
+          describe: "Start local dev for the current project."
           logs:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
@@ -525,14 +525,14 @@ en:
           examples:
             default: "Start local dev for the current project"
         create:
-          describe: "Create a new project"
+          describe: "Create a new project."
           logs:
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
           options:
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
             name:
               describe: "Project name (cannot be changed)"
             template:
@@ -540,14 +540,14 @@ en:
             templateSource:
               describe: "Path to custom GitHub repository from which to create project template"
         migrateApp:
-          describe: "Migrate a public app to the projects framework"
+          describe: "Migrate a public app to the projects framework."
           examples:
             default: "Migrate a public app to the projects framework"
           options:
             appId:
               describe: "The ID for the public app being migrated to the projects framework"
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
             name:
               describe: "Project name (cannot be changed)"
           header:
@@ -574,25 +574,25 @@ en:
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
         cloneApp:
-          describe: "Clone a public app using the projects framework"
+          describe: "Clone a public app using the projects framework."
           examples:
             default: "Clone a public app using the projects framework"
           options:
             appId:
               describe: "The ID for the public app being cloned"
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
           cloneStatus:
             inProgress: "Cloning app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             done: "Cloning app configuration to public-app.json component definition ... DONE"
-            success: "Your cloned project was created in {{ location }}"
+            success: "Your cloned project was created in {{ dest }}"
             failure: "Cloning app configuration to public-app.json component definition ... FAILED"
           errors:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
         add:
-          describe: "Create a new component within a project"
+          describe: "Create a new component within a project."
           options:
             name:
               describe: "The name for your newly created component"
@@ -608,7 +608,7 @@ en:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
-          describe: "Deploy a project build"
+          describe: "Deploy a project build."
           deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
@@ -629,9 +629,23 @@ en:
             project:
               describe: "Project name"
         listBuilds:
-          describe: "List the project's builds"
+          describe: "List the project's builds."
+          continueOrExitPrompt: "Press <enter> to load more, or ctrl+c to exit"
+          viewAllBuildsLink: "View all builds"
+          showingNextBuilds: "Showing the next {{ count }} builds for {{ projectName }}"
+          showingRecentBuilds: "Showing the most {{ count }} recent builds for {{ projectName }}. {{ viewAllBuildsLink }}."
+          errors:
+            noBuilds: "No builds for this project were found."
+            projectNotFound: "Project {{ projectName}} not found."
+          options:
+            project:
+              describe: "Project name"
+            limit:
+              describe: "Limit the number of builds to output"
+          examples:
+            default: "List the builds for the current project"
         logs:
-          describe: "Get execution logs for a serverless function within a project"
+          describe: "Get execution logs for a serverless function within a project."
           errors:
             noProjectConfig: "No project detected. Run this command again from a project directory."
             failedToFetchProjectDetails: "There was an error fetching project details"
@@ -664,9 +678,9 @@ en:
             function:
               describe: "App function name"
         upload:
-          describe: "Upload your project files and create a new build"
+          describe: "Upload your project files and create a new build."
           examples:
-            default: "Upload a project"
+            default: "Upload a project into your HubSpot account"
           logs:
             buildSucceeded: "Build #{{ buildId }} succeeded\n"
             readyToGoLive: "🚀 Ready to take your project live?"
@@ -679,13 +693,10 @@ en:
               describe: "Automatically create project if it does not exist"
             message:
               describe: "Add a message when you upload your project and create a build"
-          positionals:
-            path:
-              describe: "Path to a project folder"
         watch:
-          describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
+          describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot."
           examples:
-            default: "Watch a project within the myProjectFolder folder"
+            default: "Start watching the current project"
           logs:
             processExited: "Stopping watcher..."
             watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
@@ -695,9 +706,6 @@ en:
             deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
             watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
             previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
-          positionals:
-            path:
-              describe: "Path to a project folder"
           options:
             initialUpload:
               describe: "Upload directory before watching for updates"
@@ -714,7 +722,7 @@ en:
             deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
             deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
         download:
-          describe: "Download your project files from HubSpot and write to a path on your computer"
+          describe: "Download your project files from HubSpot."
           examples:
             default: "Download the project myProject into myProjectFolder folder"
           logs:
@@ -726,14 +734,14 @@ en:
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:
-            buildNumber:
-              describe: "The build number to download"
+            build:
+              describe: "The build to download"
             project:
               describe: "The name of the project to download"
             dest:
               describe: "Destination folder for the project"
         open:
-          describe: "Open the specified project's details page in the browser"
+          describe: "Open the project's details page in the browser."
           options:
             project:
               describe: "Name of project to open"
@@ -1084,8 +1092,6 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
-      config:
-        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       uploadProjectFiles:
         add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
         fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -1096,6 +1102,11 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
+      validateProjectConfig:
+        configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
+        configMissingFields: "The project configuruation file is missing required fields."
+        srcDirNotFound: "Project source directory {{#bold}}{{ srcDir }}{{/bold}} could not be found in {{#bold}}{{ projectDir }}{{/bold}}."
+        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       ensureProjectExists:
         createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
         createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
@@ -1280,12 +1291,12 @@ en:
           languageRequired: "Please select API sample app's language"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
-        enterLocation: "[--location] Enter the folder to create the project in:"
+        enterDest: "[--dest] Enter the folder to create the project in:"
         selectTemplate: "[--template] Choose a project template: "
         errors:
           nameRequired: "A project name is required"
-          locationRequired: "A project location is required"
-          invalidLocation: "The selected destination already exists. Please provide a new path for this project."
+          destRequired: "A project dest is required"
+          invalidDest: "The selected destination already exists. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
