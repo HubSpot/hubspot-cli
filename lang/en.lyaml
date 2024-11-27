@@ -1336,8 +1336,8 @@ en:
           developer: "Development sandbox (Includes production's object definitions)"
           standard: "Standard sandbox (Includes partial copy of production's assets)"
       uploadPrompt:
-        enterDest: "[--dest] Enter the destination path: "
-        enterSrc: "[--src] Enter the source path: "
+        enterDest: "Enter the destination path: "
+        enterSrc: "Enter the source path: "
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."

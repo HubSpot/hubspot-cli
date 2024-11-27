@@ -27,7 +27,7 @@ const i18nKey = 'commands.watch';
 
 const { EXIT_CODES } = require('../lib/enums/exitCodes');
 
-exports.command = 'watch [--src] [--dest]';
+exports.command = 'watch [src] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
