@@ -155,9 +155,10 @@ en:
               describe: "Medium to test against"
             verbose:
               describe: "View a detailed output of the lighthouse sores"
-        reactModule:
+        getReactModule:
           describe: "Get a specified default React module."
-          options:
+          selectModulePrompt: "Select a React module to download"
+          positionals:
             name:
               describe: "Name of the react modules to be fetched"
             dest:
@@ -167,7 +168,6 @@ en:
           errors:
             pathExists: "Folder already exists at \"{{ path }}\""
             invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
-          groupLabel: "React modules available to download:"
     create:
       describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
       errors:
