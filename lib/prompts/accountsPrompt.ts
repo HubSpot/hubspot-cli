@@ -16,7 +16,7 @@ const mapAccountChoices = portals =>
     value: p.name || getAccountIdentifier(p),
   }));
 
-const i18nKey = 'commands.accounts.subcommands.use';
+const i18nKey = 'commands.account.subcommands.use';
 
 const selectAccountFromConfig = async (config, prompt) => {
   const accountsList = getConfigAccounts();

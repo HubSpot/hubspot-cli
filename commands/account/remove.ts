@@ -15,7 +15,7 @@ const { i18n } = require('../../lib/lang');
 const { selectAccountFromConfig } = require('../../lib/prompts/accountsPrompt');
 const { loadAndValidateOptions } = require('../../lib/validation');
 
-const i18nKey = 'commands.accounts.subcommands.remove';
+const i18nKey = 'commands.account.subcommands.remove';
 
 exports.command = 'remove [account]';
 exports.describe = i18n(`${i18nKey}.describe`);

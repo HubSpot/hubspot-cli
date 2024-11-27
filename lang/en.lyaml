@@ -155,9 +155,10 @@ en:
               describe: "Medium to test against"
             verbose:
               describe: "View a detailed output of the lighthouse sores"
-        reactModule:
+        getReactModule:
           describe: "Get a specified default React module."
-          options:
+          selectModulePrompt: "Select a React module to download"
+          positionals:
             name:
               describe: "Name of the react modules to be fetched"
             dest:
@@ -167,7 +168,6 @@ en:
           errors:
             pathExists: "Folder already exists at \"{{ path }}\""
             invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
-          groupLabel: "React modules available to download:"
     create:
       describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
       errors:
@@ -911,11 +911,12 @@ en:
           errors:
             invalidPath: "The path \"{{ path }}\" is not a path to a directory"
             noThemeComponents: "Your project has no theme components available to preview."
-          options:
+          positionals:
             src:
               describe: "Path to the local directory your theme is in, relative to your current working directory"
             dest:
               describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
+          options:
             notify:
               describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
             noSsl:
@@ -1336,8 +1337,8 @@ en:
           developer: "Development sandbox (Includes production's object definitions)"
           standard: "Standard sandbox (Includes partial copy of production's assets)"
       uploadPrompt:
-        enterDest: "[--dest] Enter the destination path: "
-        enterSrc: "[--src] Enter the source path: "
+        enterDest: "Enter the destination path: "
+        enterSrc: "Enter the source path: "
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."

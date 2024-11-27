@@ -22,7 +22,7 @@ const {
 } = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { isSpecifiedError } = require('@hubspot/local-dev-lib/errors/index');
 
-const i18nKey = 'commands.accounts.subcommands.clean';
+const i18nKey = 'commands.account.subcommands.clean';
 
 exports.command = 'clean';
 exports.describe = i18n(`${i18nKey}.describe`);
