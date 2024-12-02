@@ -13,7 +13,7 @@ en:
       describe: "Enable bash completion shortcuts for commands. Concat the generated script to your .bashrc, .bash_profile, or .zshrc file."
       examples:
         default: "Generate shell completion scripts for the zsh shell"
-    accounts:
+    account:
       describe: "Commands for managing configured accounts."
       subcommands:
         list:
@@ -77,7 +77,7 @@ en:
           name: "{{#bold}}Account name{{/bold}}: {{ name }}"
           scopeGroups: "{{#bold}}Scopes available{{/bold}}:"
         clean:
-          describe: "Checks for inactive accounts and removes them from the CLI config"
+          describe: "Check for inactive accounts and removes them from the CLI config."
           noResults: "No inactive accounts found to remove."
           loading:
             add: "Looking for inactive accounts…"
@@ -105,15 +105,15 @@ en:
       describe: "Commands for managing the CLI config file."
       subcommands:
         set:
-          describe: "Commands for modifying the CLI configuration."
+          describe: "Set various configuration options within the hubspot.config.yml file."
           promptMessage: "Select a config option to update"
           examples:
             default: "Opens a prompt to select a config item to modify"
           options:
             defaultMode:
-              describe: "Set the default mode"
-              promptMessage: "Select mode to be used as the default"
-              error: "The mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
+              describe: "Set the default CMS publish mode"
+              promptMessage: "Select CMS publish mode to be used as the default"
+              error: "The CMS publish mode \"{{ mode }}\" is invalid. Valid values are {{ validModes }}."
               success: "Default mode updated to: {{ mode }}"
             allowUsageTracking:
               describe: "Enable or disable usage tracking"
@@ -155,9 +155,10 @@ en:
               describe: "Medium to test against"
             verbose:
               describe: "View a detailed output of the lighthouse sores"
-        reactModule:
-          describe: "Get a specified default React module"
-          options:
+        getReactModule:
+          describe: "Get a specified default React module."
+          selectModulePrompt: "Select a React module to download"
+          positionals:
             name:
               describe: "Name of the react modules to be fetched"
             dest:
@@ -167,7 +168,6 @@ en:
           errors:
             pathExists: "Folder already exists at \"{{ path }}\""
             invalidName: "Module not found with that name, please check the spelling of the module you are trying to download."
-          groupLabel: "React modules available to download:"
     create:
       describe: "Create HubSpot sample apps and CMS assets. Supported assets are {{ supportedAssetTypes }}."
       errors:
@@ -199,35 +199,38 @@ en:
             nameRequired: "The \"name\" argument is required when creating a Template."
     customObject:
       betaMessage: "The Custom Object CLI is currently in beta and is subject to change."
-      describe: "Manage Custom Objects. This feature is currently in beta and the CLI contract is subject to change."
+      describe: "Commands for managing custom objects."
       seeMoreLink: "View our docs to find out more."
       subcommands:
         create:
-          describe: "Create custom object instances"
+          describe: "Create custom object instances."
           errors:
             creationFailed: "Object creation from {{ definition }} failed"
-          positionals:
-            definition:
+          options:
+            path:
               describe: "Local path to the JSON file containing an array of object definitions"
+          positionals:
             name:
               describe: "Schema name to add the object instance to"
           success:
             objectsCreated: "Objects created"
+          inputSchema: "What would you like to name the schema?"
+          inputPath: "[--path] Where is the JSON file containing the object definitions?"
         schema:
-          describe: "Manage custom object schemas"
+          describe: "Commands for managing custom object schemas."
           subcommands:
             create:
-              describe: "Create a custom object schema"
+              describe: "Create a custom object schema."
               errors:
                 creationFailed: "Schema creation from {{ definition }} failed"
-              positionals:
+              options:
                 definition:
                   describe: "Local path to the JSON file containing the schema definition"
               success:
                 schemaCreated: "Your schema has been created in account \"{{ accountId }}\""
                 schemaViewable: "Schema can be viewed at {{ url }}"
             delete:
-              describe: "Delete a custom object schema"
+              describe: "Delete a custom object schema."
               errors:
                 delete: "Unable to delete {{ name }}"
               examples:
@@ -235,10 +238,16 @@ en:
               positionals:
                 name:
                   describe: "Name of the target schema"
+              options:
+                force:
+                  describe: "Force the deletion of the schema."
               success:
                 delete: "Successfully initiated deletion of {{ name }}"
+              confirmDelete: "Are you sure you want to delete the schema \"{{ name }}\"?"
+              deleteCancelled: "Deletion of schema \"{{ name }}\" cancelled."
+              selectSchema: "Which schema would you like to delete?"
             fetchAll:
-              describe: "Fetch all custom object schemas for an account"
+              describe: "Fetch all custom object schemas for an account."
               errors:
                 fetch: "Unable to fetch schemas"
               examples:
@@ -249,8 +258,9 @@ en:
                   describe: "Local folder where schemas will be written"
               success:
                 fetch: "Saved schemas to {{ path }}"
+              inputDest: "Where would you like to save the schemas?"
             fetch:
-              describe: "Fetch a custom object schema"
+              describe: "Fetch a custom object schema."
               errors:
                 fetch: "Unable to fetch {{ name }}"
               examples:
@@ -261,25 +271,29 @@ en:
                   describe: "Local folder where schema will be written"
                 name:
                   describe: "Name of the target schema"
+              selectSchema: "Which schema would you like to fetch?"
+              inputDest: "What would you like to name the destination file?"
               success:
                 save: "The schema \"{{ name }}\" has been saved to \"{{ path }}\""
                 savedToPath: "Saved schema to {{ path }}"
             list:
-              describe: "List schemas available on your account"
+              describe: "List custom object schemas."
               errors:
                 list: "Unable to list schemas"
             update:
-              describe: "Update an existing custom object schema"
+              describe: "Update an existing custom object schema."
               errors:
                 update: "Schema update from {{ definition }} failed"
-              positionals:
-                definition:
+              options:
+                path:
                   describe: "Local path to the JSON file containing the schema definition"
+              positionals:
                 name:
                   describe: "Name of the target schema"
               success:
                 update: "Your schema has been updated in account \"{{ accountId }}\""
                 viewAtUrl: "Schema can be viewed at {{ url }}"
+              selectSchema: "Which schema would you like to update?"
     doctor:
       describe: "Retrieve diagnostic information about your local HubSpot configurations."
       options:
@@ -303,10 +317,10 @@ en:
         src:
           describe: "Path in HubSpot Design Tools"
     filemanager:
-      describe: "Commands for working with the File Manager."
+      describe: "Commands for managing files in the File Manager."
       subcommands:
         fetch:
-          describe: "Download a folder or file from the HubSpot File Manager to your computer"
+          describe: "Fetch a folder or file from the File Manager."
           errors:
             sourceRequired: "A source to fetch is required."
           options:
@@ -318,7 +332,7 @@ en:
             src:
               describe: "Path to the local directory you would like the files to be placed, relative to your current working directory. If omitted, this argument will default to your current working directory"
         upload:
-          describe: "Upload a folder or file from your computer to the HubSpot File Manager"
+          describe: "Upload a folder or file to the File Manager."
           errors:
             destinationRequired: "A destination path needs to be passed"
             fileIgnored: "The file \"{{ path }}\" is being ignored via an .hsignore rule"
@@ -381,10 +395,10 @@ en:
             path:
               describe: "Path to local .functions folder"
     hubdb:
-      describe: "Manage HubDB tables."
+      describe: "Commands for managing HubDB tables."
       subcommands:
         clear:
-          describe: "Clear all rows in a HubDB table"
+          describe: "Clear all rows in a HubDB table."
           logs:
             removedRows: "Removed {{ deletedRowCount }} rows from HubDB table {{ tableId }}"
             rowCount: "HubDB table {{ tableId }} now contains {{ rowCount }} rows"
@@ -393,25 +407,32 @@ en:
             tableId:
               describe: "HubDB Table ID"
         create:
-          describe: "Create a HubDB table"
+          describe: "Create a HubDB table."
+          enterPath: "[--path] Enter the local path to the file used for import:"
           errors:
-            create: "Creating the table at \"{{ src }}\" failed"
-          positionals:
-            src:
+            create: "Creating the table at \"{{ filePath }}\" failed"
+            pathRequired: "A path to a local file with a HubDB schema is required to create a HubDB table"
+            invalidCharacters: "The selected file path contains invalid characters. Please provide a new path and try again."
+          options:
+            path:
               describe: "Local path to file used for import"
           success:
             create: "The table {{ tableId }} was created in {{ accountId }} with {{ rowCount }} rows"
         delete:
-          describe: "Delete a HubDB table"
+          describe: "Delete a HubDB table."
+          shouldDeleteTable: "Proceed with deleting HubDB table {{ tableId }}?"
           errors:
             delete: "Deleting the table {{ tableId }} failed"
           positionals:
             tableId:
               describe: "HubDB Table ID"
+          options:
+            force:
+              describe: "Skips confirmation prompt when deleting a HubDB table"
           success:
             delete: "The table {{ tableId }} was deleted from {{ accountId }}"
         fetch:
-          describe: "Fetch a HubDB table"
+          describe: "Fetch the schema for a HubDB table."
           positionals:
             dest:
               describe: "Local destination folder to fetch table to"
@@ -489,10 +510,10 @@ en:
           describe: "Shortcut of the link you'd like to open"
       selectLink: "Select a link to open"
     project:
-      describe: "Commands for working with projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
+      describe: "Commands for managing projects. For more information, visit our documentation: https://developers.hubspot.com/docs/platform/build-and-deploy-using-hubspot-projects"
       subcommands:
         dev:
-          describe: "Start local dev for the current project"
+          describe: "Start local dev for the current project."
           logs:
             betaMessage: "HubSpot projects local development"
             placeholderAccountSelection: "Using default account as target account (for now)"
@@ -504,14 +525,14 @@ en:
           examples:
             default: "Start local dev for the current project"
         create:
-          describe: "Create a new project"
+          describe: "Create a new project."
           logs:
             welcomeMessage: "Welcome to HubSpot Developer Projects!"
           examples:
             default: "Create a new project"
           options:
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
             name:
               describe: "Project name (cannot be changed)"
             template:
@@ -519,14 +540,14 @@ en:
             templateSource:
               describe: "Path to custom GitHub repository from which to create project template"
         migrateApp:
-          describe: "Migrate a public app to the projects framework"
+          describe: "Migrate a public app to the projects framework."
           examples:
             default: "Migrate a public app to the projects framework"
           options:
             appId:
               describe: "The ID for the public app being migrated to the projects framework"
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
             name:
               describe: "Project name (cannot be changed)"
           header:
@@ -553,25 +574,25 @@ en:
             projectAlreadyExists: "A project with name {{ projectName }} already exists. Please choose another name."
             invalidApp: "Could not migrate appId {{ appId }}. This app cannot be migrated at this time. Please choose another public app."
         cloneApp:
-          describe: "Clone a public app using the projects framework"
+          describe: "Clone a public app using the projects framework."
           examples:
             default: "Clone a public app using the projects framework"
           options:
             appId:
               describe: "The ID for the public app being cloned"
-            location:
-              describe: "Directory where project should be created"
+            dest:
+              describe: "Directory where the project should be created"
           cloneStatus:
             inProgress: "Cloning app configuration to {{#bold}}public-app.json{{/bold}} component definition ..."
             done: "Cloning app configuration to public-app.json component definition ... DONE"
-            success: "Your cloned project was created in {{ location }}"
+            success: "Your cloned project was created in {{ dest }}"
             failure: "Cloning app configuration to public-app.json component definition ... FAILED"
           errors:
             invalidAccountTypeTitle: "{{#bold}}Developer account not targeted{{/bold}}"
             invalidAccountTypeDescription: "Only public apps created in a developer account can be converted to a project component. Select a connected developer account with {{useCommand}} or {{authCommand}} and try again."
             couldNotWriteConfigPath: "Failed to write project config at {{ configPath }}"
         add:
-          describe: "Create a new component within a project"
+          describe: "Create a new component within a project."
           options:
             name:
               describe: "The name for your newly created component"
@@ -587,7 +608,7 @@ en:
             default: "Create a component within your project"
             withFlags: "Use --name and --type flags to bypass the prompt."
         deploy:
-          describe: "Deploy a project build"
+          describe: "Deploy a project build."
           deployBuildIdPrompt: "[--build] Deploy which build?"
           debug:
             deploying: "Deploying project at path: {{ path }}"
@@ -608,9 +629,23 @@ en:
             project:
               describe: "Project name"
         listBuilds:
-          describe: "List the project's builds"
+          describe: "List the project's builds."
+          continueOrExitPrompt: "Press <enter> to load more, or ctrl+c to exit"
+          viewAllBuildsLink: "View all builds"
+          showingNextBuilds: "Showing the next {{ count }} builds for {{ projectName }}"
+          showingRecentBuilds: "Showing the most {{ count }} recent builds for {{ projectName }}. {{ viewAllBuildsLink }}."
+          errors:
+            noBuilds: "No builds for this project were found."
+            projectNotFound: "Project {{ projectName}} not found."
+          options:
+            project:
+              describe: "Project name"
+            limit:
+              describe: "Limit the number of builds to output"
+          examples:
+            default: "List the builds for the current project"
         logs:
-          describe: "Get execution logs for a serverless function within a project"
+          describe: "Get execution logs for a serverless function within a project."
           errors:
             noProjectConfig: "No project detected. Run this command again from a project directory."
             failedToFetchProjectDetails: "There was an error fetching project details"
@@ -643,9 +678,9 @@ en:
             function:
               describe: "App function name"
         upload:
-          describe: "Upload your project files and create a new build"
+          describe: "Upload your project files and create a new build."
           examples:
-            default: "Upload a project"
+            default: "Upload a project into your HubSpot account"
           logs:
             buildSucceeded: "Build #{{ buildId }} succeeded\n"
             readyToGoLive: "🚀 Ready to take your project live?"
@@ -658,13 +693,10 @@ en:
               describe: "Automatically create project if it does not exist"
             message:
               describe: "Add a message when you upload your project and create a build"
-          positionals:
-            path:
-              describe: "Path to a project folder"
         watch:
-          describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot"
+          describe: "Watch your local project for changes and automatically upload changed files to a new build in HubSpot."
           examples:
-            default: "Watch a project within the myProjectFolder folder"
+            default: "Start watching the current project"
           logs:
             processExited: "Stopping watcher..."
             watchCancelledFromUi: "The watch process has been cancelled from the UI. Any changes made since cancelling have not been uploaded. To resume watching, rerun {{#yellow}}`hs project watch`{{/yellow}}."
@@ -674,9 +706,6 @@ en:
             deleteFolderSucceeded: "Deleted folder \"{{ remotePath }}\""
             watching: "Watcher is ready and watching \"{{ projectDir }}\". Any changes detected will be automatically uploaded."
             previousStagingBuildCancelled: "Killed the previous watch process. Please try running `hs project watch` again"
-          positionals:
-            path:
-              describe: "Path to a project folder"
           options:
             initialUpload:
               describe: "Upload directory before watching for updates"
@@ -693,7 +722,7 @@ en:
             deleteFileFailed: "Failed to delete file \"{{ remotePath }}\""
             deleteFolderFailed: "Failed to delete folder \"{{ remotePath }}\""
         download:
-          describe: "Download your project files from HubSpot and write to a path on your computer"
+          describe: "Download your project files from HubSpot."
           examples:
             default: "Download the project myProject into myProjectFolder folder"
           logs:
@@ -705,14 +734,14 @@ en:
           warnings:
             cannotDownloadWithinProject: "Cancelling project download. Please run the command again outside the context of an existing project."
           options:
-            buildNumber:
-              describe: "The build number to download"
+            build:
+              describe: "The build to download"
             project:
               describe: "The name of the project to download"
             dest:
               describe: "Destination folder for the project"
         open:
-          describe: "Open the specified project's details page in the browser"
+          describe: "Open the project's details page in the browser."
           options:
             project:
               describe: "Name of project to open"
@@ -720,7 +749,7 @@ en:
             default: "Opens the projects page for the specified account"
           success: "Successfully opened \"{{ projectName }}\""
         feedback:
-          describe: "Leave feedback on HubSpot projects or file a bug report"
+          describe: "Leave feedback on HubSpot projects or file a bug report."
           feedbackType:
             prompt: "What type of feedback would you like to leave?"
             bug: "[--bug] Report a bug"
@@ -734,7 +763,7 @@ en:
               describe: "Open Github issues in your browser to give feedback."
         installDeps:
           help:
-            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project"
+            describe: "Install the dependencies for your project, or add a dependency to a subcomponent of a project."
             installAppDepsExample: "Install the dependencies for the project"
             addDepToSubComponentExample: "Install the dependencies to one or more project subcomponents"
           installLocationPrompt: "Choose the project components to install the dependencies:"
@@ -805,7 +834,7 @@ en:
               describe: "Skips all confirmation prompts when deleting a sandbox account."
             account:
               describe: "Account name or id to delete"
-    secrets:
+    secret:
       describe: "Commands for managing secrets."
       subcommands:
         add:
@@ -849,7 +878,7 @@ en:
             update: "The secret \"{{ secretName }}\" was updated in the HubSpot account: {{ accountIdentifier }}"
             updateExplanation: "Existing serverless functions will start using this new value within 10 seconds."
     theme:
-      describe: "Commands for working with themes, including marketplace validation with the marketplace-validate subcommand."
+      describe: "Commands for managing themes."
       subcommands:
         generateSelectors:
           describe: "Automatically generates an editor-preview.json file for the given theme. The selectors this command generates are not perfect, so please edit editor-preview.json after running."
@@ -859,10 +888,10 @@ en:
             noSelectorsFound: "No selectors found."
           success: "Selectors generated for {{ themePath }}, please double check the selectors generated at {{ selectorsPath }} before uploading the theme."
           positionals:
-            themePath:
+            path:
               describe: "The path of the theme you'd like to generate an editor-preview.json for."
         marketplaceValidate:
-          describe: "Validate a theme for the marketplace"
+          describe: "Validate a theme for the marketplace."
           errors:
             invalidPath: "The path \"{{ path }}\" is not a path to a folder in the Design Manager"
           logs:
@@ -875,18 +904,19 @@ en:
               lineNumber: "Line number: {{ line }}"
             noErrors: "No errors"
           positionals:
-            src:
+            path:
               describe: "Path to the theme within the Design Manager."
         preview:
-          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site"
+          describe: "Upload and watch a theme directory on your computer for changes and start a local development server to preview theme changes on a site."
           errors:
             invalidPath: "The path \"{{ path }}\" is not a path to a directory"
             noThemeComponents: "Your project has no theme components available to preview."
-          options:
+          positionals:
             src:
               describe: "Path to the local directory your theme is in, relative to your current working directory"
             dest:
               describe: "Path in HubSpot Design Tools. Can be a net new path. If you wish to preview a site page using your theme changes it must match the path of the theme used by the site."
+          options:
             notify:
               describe: "Log to specified file when a watch task is triggered and after workers have gone idle. Ex. --notify path/to/file"
             noSsl:
@@ -985,7 +1015,7 @@ en:
         initialUpload: "To upload the directory run \"hs upload\" beforehand or add the \"--initial-upload\" option when running \"hs watch\"."
         notUploaded: "The \"hs watch\" command no longer uploads the watched directory when started. The directory \"{{ path }}\" was not uploaded."
     convertFields:
-      describe: "Converts a specific JavaScript fields file of a module or theme to JSON"
+      describe: "Converts a specific JavaScript fields file of a module or theme to JSON."
       positionals:
         src:
           describe: Path to JS Fields file or directory containing javascript fields files.
@@ -1063,8 +1093,6 @@ en:
       checkIfParentAccountIsAuthed:
         notAuthedError: "To develop this project locally, run {{ authCommand }} to authenticate the App Developer Account {{ accountId }} associated with {{ accountIdentifier }}."
     projects:
-      config:
-        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       uploadProjectFiles:
         add: "Uploading {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
         fail: "Failed to upload {{#bold}}{{ projectName }}{{/bold}} project files to {{ accountIdentifier }}"
@@ -1075,6 +1103,11 @@ en:
         compressed: "Project files compressed: {{ byteCount }} bytes"
         compressing: "Compressing build files to \"{{ path }}\""
         fileFiltered: "Ignore rule triggered for \"{{ filename }}\""
+      validateProjectConfig:
+        configNotFound: "Unable to locate a project configuration file. Try running again from a project directory, or run {{ createCommand }} to create a new project."
+        configMissingFields: "The project configuruation file is missing required fields."
+        srcDirNotFound: "Project source directory {{#bold}}{{ srcDir }}{{/bold}} could not be found in {{#bold}}{{ projectDir }}{{/bold}}."
+        srcOutsideProjectDir: "Invalid value for 'srcDir' in {{ projectConfig }}: {{#bold}}srcDir: \"{{ srcDir }}\"{{/bold}}\n\t'srcDir' must be a relative path to a folder under the project root, such as \".\" or \"./src\""
       ensureProjectExists:
         createPrompt: "The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
         createPromptUpload: "[--forceCreate] The project {{ projectName }} does not exist in {{ accountIdentifier }}. Would you like to create it?"
@@ -1164,8 +1197,8 @@ en:
         noLogsFound: "No logs found."
     commonOpts:
       options:
-        portal:
-          describe: "HubSpot portal id or name from config"
+        account:
+          describe: "HubSpot account id or name from config"
         config:
           describe: "Path to a config file"
         overwrite:
@@ -1259,12 +1292,12 @@ en:
           languageRequired: "Please select API sample app's language"
       createProjectPrompt:
         enterName: "[--name] Give your project a name: "
-        enterLocation: "[--location] Enter the folder to create the project in:"
+        enterDest: "[--dest] Enter the folder to create the project in:"
         selectTemplate: "[--template] Choose a project template: "
         errors:
           nameRequired: "A project name is required"
-          locationRequired: "A project location is required"
-          invalidLocation: "The selected destination already exists. Please provide a new path for this project."
+          destRequired: "A project dest is required"
+          invalidDest: "The selected destination already exists. Please provide a new path for this project."
           invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
           invalidTemplate: "[--template] Could not find template {{ template }}. Please choose an available template."
           noProjectsInConfig: "Please ensure that there is a config.json file that contains a \"projects\" field."
@@ -1304,8 +1337,8 @@ en:
           developer: "Development sandbox (Includes production's object definitions)"
           standard: "Standard sandbox (Includes partial copy of production's assets)"
       uploadPrompt:
-        enterDest: "[--dest] Enter the destination path: "
-        enterSrc: "[--src] Enter the source path: "
+        enterDest: "Enter the destination path: "
+        enterSrc: "Enter the source path: "
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."
@@ -1330,6 +1363,15 @@ en:
         prompt: "Open hubspot.com to install this app?"
         reinstallPrompt: "Open hubspot.com to reinstall this app?"
         decline: "To continue local development of this app, install it in your target test account and re-run {{#bold}}`hs project dev`{{/bold}}"
+      selectHubDBTablePrompt:
+        selectTable: "Select a HubDB table:"
+        enterDest: "Enter the destination path:"
+        errors:
+          noTables: "No HubDB tables found in account {{ accountId }}"
+          errorFetchingTables: "Unable to fetch HubDB tables in account {{ accountId }}"
+          destRequired: "A destination is required"
+          invalidDest: "The selected destination already exists. Please provide a new path."
+          invalidCharacters: "The selected destination contains invalid characters. Please provide a new path and try again."
     convertFields:
       positionals:
         src:

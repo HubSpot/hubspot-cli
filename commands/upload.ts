@@ -28,14 +28,17 @@ const {
 const {
   addConfigOptions,
   addAccountOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
   addGlobalOptions,
-  getMode,
+  getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
 const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
-const { validateMode, loadAndValidateOptions } = require('../lib/validation');
+const {
+  validateCmsPublishMode,
+  loadAndValidateOptions,
+} = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { getUploadableFileList } = require('../lib/upload');
 
@@ -48,7 +51,7 @@ const {
   cleanupTmpDirSync,
 } = require('@hubspot/local-dev-lib/cms/handleFieldsJS');
 
-exports.command = 'upload [--src] [--dest]';
+exports.command = 'upload [src] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 const logThemePreview = (filePath, accountId) => {
@@ -66,12 +69,12 @@ const logThemePreview = (filePath, accountId) => {
 exports.handler = async options => {
   await loadAndValidateOptions(options);
 
-  if (!validateMode(options)) {
+  if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.WARNING);
   }
 
   const { derivedAccountId } = options;
-  const mode = getMode(options);
+  const cmsPublishMode = getCmsPublishMode(options);
 
   const uploadPromptAnswers = await uploadPrompt(options);
   const src = options.src || uploadPromptAnswers.src;
@@ -126,7 +129,7 @@ exports.handler = async options => {
   const normalizedDest = convertToUnixPath(dest);
   trackCommandUsage(
     'upload',
-    { mode, type: stats.isFile() ? 'file' : 'folder' },
+    { mode: cmsPublishMode, type: stats.isFile() ? 'file' : 'folder' },
     derivedAccountId
   );
   const srcDestIssues = await validateSrcAndDestPaths(
@@ -160,7 +163,7 @@ exports.handler = async options => {
       derivedAccountId,
       absoluteSrcPath,
       normalizedDest,
-      getFileMapperQueryValues(mode, options)
+      getFileMapperQueryValues(cmsPublishMode, options)
     )
       .then(() => {
         logger.success(
@@ -241,7 +244,7 @@ exports.handler = async options => {
       absoluteSrcPath,
       dest,
       {
-        mode,
+        cmsPublishMode,
       },
       options,
       filePaths
@@ -316,7 +319,7 @@ exports.builder = yargs => {
 
   addConfigOptions(yargs);
   addAccountOptions(yargs);
-  addModeOptions(yargs, { write: true });
+  addCmsPublishModeOptions(yargs, { write: true });
   addUseEnvironmentOptions(yargs);
   addGlobalOptions(yargs);
 

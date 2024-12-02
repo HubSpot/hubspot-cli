@@ -15,7 +15,7 @@ describe('hs config', () => {
   });
 
   describe('hs config set', () => {
-    it('should set the default mode to draft', async () => {
+    it('should set the default CMS publish mode to draft', async () => {
       await testState.cli.executeWithTestConfig(
         ['config', 'set'],
         [ENTER, DOWN, ENTER]
@@ -23,7 +23,7 @@ describe('hs config', () => {
 
       const parsedConfig = testState.getParsedConfig();
 
-      expect(parsedConfig.defaultMode).toEqual('draft');
+      expect(parsedConfig.defaultCmsPublishMode).toEqual('draft');
     });
   });
 });

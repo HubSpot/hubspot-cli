@@ -93,9 +93,9 @@ const createProjectPrompt = async (
       },
     },
     {
-      name: 'location',
-      message: i18n(`${i18nKey}.enterLocation`),
-      when: !promptOptions.location,
+      name: 'dest',
+      message: i18n(`${i18nKey}.enterDest`),
+      when: !promptOptions.dest,
       default: answers => {
         const projectName = sanitizeFileName(
           answers.name || promptOptions.name
@@ -104,10 +104,10 @@ const createProjectPrompt = async (
       },
       validate: input => {
         if (!input) {
-          return i18n(`${i18nKey}.errors.locationRequired`);
+          return i18n(`${i18nKey}.errors.destRequired`);
         }
         if (fs.existsSync(input)) {
-          return i18n(`${i18nKey}.errors.invalidLocation`);
+          return i18n(`${i18nKey}.errors.invalidDest`);
         }
         if (!isValidPath(input)) {
           return i18n(`${i18nKey}.errors.invalidCharacters`);

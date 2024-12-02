@@ -188,7 +188,7 @@ exports.builder = yargs => {
       type: 'string',
     },
     build: {
-      alias: ['buildId'],
+      alias: ['build-id'],
       describe: i18n(`${i18nKey}.options.build.describe`),
       type: 'number',
     },

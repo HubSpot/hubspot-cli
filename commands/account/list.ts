@@ -21,7 +21,7 @@ const {
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
 
-const i18nKey = 'commands.accounts.subcommands.list';
+const i18nKey = 'commands.account.subcommands.list';
 
 exports.command = ['list', 'ls'];
 exports.describe = i18n(`${i18nKey}.describe`);

@@ -7,7 +7,7 @@ const {
 } = require('../lib/commonOpts');
 const lighthouseScore = require('./cms/lighthouseScore');
 const convertFields = require('./cms/convertFields');
-const reactModules = require('./cms/reactModules');
+const getReactModule = require('./cms/getReactModule');
 
 const i18nKey = 'commands.cms';
 
@@ -22,7 +22,7 @@ exports.builder = yargs => {
   yargs
     .command(lighthouseScore)
     .command(convertFields)
-    .command(reactModules)
+    .command(getReactModule)
     .demandCommand(1, '');
 
   return yargs;

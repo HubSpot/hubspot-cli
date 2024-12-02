@@ -38,7 +38,7 @@ const SUPPORTED_ASSET_TYPES = Object.keys(assets)
   .filter(t => !assets[t].hidden)
   .join(', ');
 
-exports.command = 'create <type> [name] [dest] [--internal]';
+exports.command = 'create <type> [name] [dest]';
 exports.describe = i18n(`${i18nKey}.describe`, {
   supportedAssetTypes: SUPPORTED_ASSET_TYPES,
 });

@@ -49,7 +49,7 @@ const deployCommand = require('../deploy');
 describe('commands/project/deploy', () => {
   const projectFlag = 'project';
   const buildFlag = 'build';
-  const buildAliases = ['buildId'];
+  const buildAliases = ['build-id'];
 
   describe('command', () => {
     it('should have the correct command structure', () => {

@@ -13,7 +13,6 @@ import add from '../project/add';
 import migrateApp from '../project/migrateApp';
 import cloneApp from '../project/cloneApp';
 import installDeps from '../project/installDeps';
-import { addConfigOptions, addAccountOptions } from '../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../project/deploy');
@@ -39,7 +38,7 @@ import projectCommand from '../project';
 describe('commands/project', () => {
   describe('command', () => {
     it('should have the correct command structure', () => {
-      expect(projectCommand.command).toEqual('project');
+      expect(projectCommand.command).toEqual(['project', 'projects']);
     });
   });
 
@@ -75,16 +74,6 @@ describe('commands/project', () => {
 
       expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
       expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
-    });
-
-    it('should support the correct options', () => {
-      projectCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should add the correct number of sub commands', () => {
