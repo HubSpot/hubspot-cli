@@ -18,9 +18,9 @@ const mapAccountChoices = portals =>
 
 const i18nKey = 'commands.accounts.subcommands.use';
 
-const selectAccountFromConfig = async (config, prompt) => {
+const selectAccountFromConfig = async (prompt = '') => {
   const accountsList = getConfigAccounts();
-  const defaultAccount = getConfigDefaultAccount(config);
+  const defaultAccount = getConfigDefaultAccount();
 
   const { default: selectedDefault } = await promptUser([
     {

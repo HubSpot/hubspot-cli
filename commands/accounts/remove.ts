@@ -25,8 +25,6 @@ exports.handler = async options => {
   const { account } = options;
   let accountToRemove = account;
 
-  let config = getConfig();
-
   if (accountToRemove && !getAccountIdFromConfig(accountToRemove)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
@@ -38,7 +36,6 @@ exports.handler = async options => {
 
   if (!accountToRemove || !getAccountIdFromConfig(accountToRemove)) {
     accountToRemove = await selectAccountFromConfig(
-      config,
       i18n(`${i18nKey}.prompts.selectAccountToRemove`)
     );
   }
@@ -59,12 +56,12 @@ exports.handler = async options => {
   );
 
   // Get updated version of the config
-  config = getConfig();
+  getConfig();
 
   if (accountToRemove === currentDefaultAccount) {
     logger.log();
     logger.log(i18n(`${i18nKey}.logs.replaceDefaultAccount`));
-    const newDefaultAccount = await selectAccountFromConfig(config);
+    const newDefaultAccount = await selectAccountFromConfig();
     updateDefaultAccount(newDefaultAccount);
   }
 };

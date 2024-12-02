@@ -19,7 +19,6 @@ const {
 const {
   updateAccountConfig,
   writeConfig,
-  getConfig,
   getConfigPath,
   loadConfig,
   getConfigDefaultAccount,
@@ -180,10 +179,9 @@ exports.handler = async options => {
       })
     );
   } else {
-    const config = getConfig();
     logger.info(
       i18n(`lib.prompts.setAsDefaultAccountPrompt.keepingCurrentDefault`, {
-        accountName: getConfigDefaultAccount(config),
+        accountName: getConfigDefaultAccount(),
       })
     );
   }

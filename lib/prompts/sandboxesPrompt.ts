@@ -58,7 +58,7 @@ const sandboxTypePrompt = () => {
   ]);
 };
 
-const deleteSandboxPrompt = (config, promptParentAccount = false) => {
+const deleteSandboxPrompt = (promptParentAccount = false) => {
   const accountsList = getConfigAccounts();
   const choices = promptParentAccount
     ? mapNonSandboxAccountChoices(accountsList)
@@ -78,7 +78,7 @@ const deleteSandboxPrompt = (config, promptParentAccount = false) => {
       look: false,
       pageSize: 20,
       choices,
-      default: getConfigDefaultAccount(config),
+      default: getConfigDefaultAccount(),
     },
   ]);
 };
