@@ -54,7 +54,10 @@ export function uiLink(linkText: string, url: string): string {
     : `${linkText}: ${encodedUrl}`;
 }
 
-export function uiAccountDescription(accountId: number, bold = true): string {
+export function uiAccountDescription(
+  accountId: number | undefined,
+  bold = true
+): string {
   const account = getAccountConfig(accountId);
   let message;
   if (account && account.accountType) {

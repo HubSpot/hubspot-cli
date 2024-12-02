@@ -1,24 +1,27 @@
-// @ts-nocheck
-const {
+import {
   getConfigDefaultAccount,
   getConfigAccounts,
-} = require('@hubspot/local-dev-lib/config');
-const {
-  getAccountIdentifier,
-} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
-const { uiAccountDescription } = require('../ui');
+} from '@hubspot/local-dev-lib/config';
+import { getAccountIdentifier } from '@hubspot/local-dev-lib/config/getAccountIdentifier';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { uiAccountDescription } from '../ui';
+import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
 
-const mapAccountChoices = portals =>
-  portals.map(p => ({
-    name: uiAccountDescription(getAccountIdentifier(p), false),
-    value: p.name || getAccountIdentifier(p),
-  }));
+function mapAccountChoices(
+  portals: CLIAccount[] | null | undefined
+): { name: string | undefined; value: string }[] | [] {
+  return portals
+    ? portals.map(p => ({
+        name: uiAccountDescription(getAccountIdentifier(p), false),
+        value: String(p.name || getAccountIdentifier(p)),
+      }))
+    : [];
+}
 
 const i18nKey = 'commands.account.subcommands.use';
 
-const selectAccountFromConfig = async (prompt = '') => {
+export async function selectAccountFromConfig(prompt = ''): Promise<string> {
   const accountsList = getConfigAccounts();
   const defaultAccount = getConfigDefaultAccount();
 
@@ -35,8 +38,4 @@ const selectAccountFromConfig = async (prompt = '') => {
   ]);
 
   return selectedDefault;
-};
-
-module.exports = {
-  selectAccountFromConfig,
-};
+}
