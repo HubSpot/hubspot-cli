@@ -22,4 +22,5 @@ export type PromptConfig<T extends GenericPromptResponse> = {
     | ((answer?: string) => PromptOperand | Promise<PromptOperand>)
     | ((answer: string[]) => PromptOperand | Promise<PromptOperand>);
   mask?: string;
+  filter?: (input: string) => string;
 };
