@@ -14,7 +14,7 @@ const {
 } = require('../../lib/commonOpts');
 const { i18n } = require('../../lib/lang');
 
-const i18nKey = 'commands.secrets.subcommands.list';
+const i18nKey = 'commands.secret.subcommands.list';
 
 exports.command = 'list';
 exports.describe = i18n(`${i18nKey}.describe`);
