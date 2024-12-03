@@ -165,12 +165,7 @@ async function buildNewAccount({
       handleSandboxCreateError({ err, env, accountConfig, name, accountId });
     }
     if (isDeveloperTestAccount) {
-      handleDeveloperTestAccountCreateError({
-        err,
-        env,
-        accountId,
-        portalLimit,
-      });
+      handleDeveloperTestAccountCreateError(err, env, accountId, portalLimit);
     }
   }
 
