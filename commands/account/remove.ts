@@ -2,7 +2,7 @@
 const { addConfigOptions } = require('../../lib/commonOpts');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfig,
+  loadConfig,
   getConfigPath,
   deleteAccount,
   getConfigDefaultAccount,
@@ -56,7 +56,7 @@ exports.handler = async options => {
   );
 
   // Get updated version of the config
-  getConfig();
+  loadConfig(getConfigPath(), options);
 
   if (accountToRemove === currentDefaultAccount) {
     logger.log();
