@@ -7,10 +7,11 @@ import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
 import { uiAccountDescription } from '../ui';
 import { CLIAccount } from '@hubspot/local-dev-lib/types/Accounts';
+import { PromptChoices } from '../../types/prompts';
 
 function mapAccountChoices(
   portals: CLIAccount[] | null | undefined
-): { name: string | undefined; value: string }[] | [] {
+): PromptChoices | [] {
   return portals
     ? portals.map(p => ({
         name: uiAccountDescription(getAccountIdentifier(p), false),
@@ -28,12 +29,11 @@ export async function selectAccountFromConfig(prompt = ''): Promise<string> {
   const { default: selectedDefault } = await promptUser([
     {
       type: 'list',
-      look: false,
       name: 'default',
       pageSize: 20,
       message: prompt || i18n(`${i18nKey}.promptMessage`),
       choices: mapAccountChoices(accountsList),
-      default: defaultAccount,
+      default: defaultAccount ?? undefined,
     },
   ]);
 

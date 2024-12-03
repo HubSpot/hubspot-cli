@@ -9,7 +9,7 @@ export type PromptChoices = string[] | Array<{ name: string; value: string }>;
 
 export type PromptWhen = boolean | (() => boolean);
 
-type PromptOperand = string | boolean | string[] | boolean[];
+type PromptOperand = string | number | boolean | string[] | boolean[];
 
 export type PromptConfig<T extends GenericPromptResponse> = {
   name: keyof T;
@@ -17,6 +17,7 @@ export type PromptConfig<T extends GenericPromptResponse> = {
   message?: string;
   choices?: PromptChoices;
   when?: PromptWhen;
+  pageSize?: number;
   default?: PromptOperand;
   validate?:
     | ((answer?: string) => PromptOperand | Promise<PromptOperand>)
