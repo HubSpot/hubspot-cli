@@ -1,12 +1,22 @@
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { PromptConfig } from '../../types/prompts';
+
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.createModulePrompt';
 
-const MODULE_LABEL_PROMPT = {
+type CreateModulePromptResponse = {
+  moduleLabel: string;
+  reactType: boolean;
+  contentTypes: string[];
+  global: boolean;
+  availableForNewContent: boolean;
+};
+
+const MODULE_LABEL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   name: 'moduleLabel',
   message: i18n(`${i18nKey}.enterLabel`),
-  validate(val: string): boolean | string {
+  validate(val?: string): boolean | string {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalidLabel`);
     } else if (!val.length) {
@@ -16,14 +26,14 @@ const MODULE_LABEL_PROMPT = {
   },
 };
 
-const REACT_TYPE_PROMPT = {
+const REACT_TYPE_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'reactType',
   message: i18n(`${i18nKey}.selectReactType`),
   default: false,
 };
 
-const CONTENT_TYPES_PROMPT = {
+const CONTENT_TYPES_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'checkbox',
   name: 'contentTypes',
   message: i18n(`${i18nKey}.selectContentType`),
@@ -42,8 +52,8 @@ const CONTENT_TYPES_PROMPT = {
     { name: 'Subscription', value: 'SUBSCRIPTION' },
     { name: 'Membership', value: 'MEMBERSHIP' },
   ],
-  validate: (input: string[]): Promise<boolean | string> => {
-    return new Promise(function(resolve, reject) {
+  validate: (input: string[]) => {
+    return new Promise<string | boolean>(function(resolve, reject) {
       if (input.length > 0) {
         resolve(true);
       }
@@ -52,30 +62,22 @@ const CONTENT_TYPES_PROMPT = {
   },
 };
 
-const GLOBAL_PROMPT = {
+const GLOBAL_PROMPT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'global',
   message: i18n(`${i18nKey}.confirmGlobal`),
   default: false,
 };
 
-const AVAILABLE_FOR_NEW_CONTENT = {
+const AVAILABLE_FOR_NEW_CONTENT: PromptConfig<CreateModulePromptResponse> = {
   type: 'confirm',
   name: 'availableForNewContent',
   message: i18n(`${i18nKey}.availableForNewContent`),
   default: true,
 };
 
-type CreateModulePromptResponse = {
-  moduleLabel: string;
-  reactType: boolean;
-  contentTypes: string[];
-  global: boolean;
-  availableForNewContent: boolean;
-};
-
 export function createModulePrompt(): Promise<CreateModulePromptResponse> {
-  return promptUser([
+  return promptUser<CreateModulePromptResponse>([
     MODULE_LABEL_PROMPT,
     REACT_TYPE_PROMPT,
     CONTENT_TYPES_PROMPT,

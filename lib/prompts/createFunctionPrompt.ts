@@ -1,12 +1,20 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
+import { PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createFunctionPrompt';
 
-const FUNCTIONS_FOLDER_PROMPT = {
+type CreateFunctionPromptResponse = {
+  functionsFolder: string;
+  filename: string;
+  endpointMethod: string;
+  endpointPath: string;
+};
+
+const FUNCTIONS_FOLDER_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'functionsFolder',
   message: i18n(`${i18nKey}.enterFolder`),
-  validate(val: string): string | boolean {
+  validate(val?: string) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -18,10 +26,10 @@ const FUNCTIONS_FOLDER_PROMPT = {
   },
 };
 
-const FUNCTION_FILENAME_PROMPT = {
+const FUNCTION_FILENAME_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'filename',
   message: i18n(`${i18nKey}.enterFilename`),
-  validate(val: string): string | boolean {
+  validate(val?: string) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -33,7 +41,7 @@ const FUNCTION_FILENAME_PROMPT = {
   },
 };
 
-const ENDPOINT_METHOD_PROMPT = {
+const ENDPOINT_METHOD_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   type: 'list',
   name: 'endpointMethod',
   message: i18n(`${i18nKey}.selectEndpointMethod`),
@@ -41,10 +49,10 @@ const ENDPOINT_METHOD_PROMPT = {
   choices: ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'],
 };
 
-const ENDPOINT_PATH_PROMPT = {
+const ENDPOINT_PATH_PROMPT: PromptConfig<CreateFunctionPromptResponse> = {
   name: 'endpointPath',
   message: i18n(`${i18nKey}.enterEndpointPath`),
-  validate(val: string): string | boolean {
+  validate(val?: string) {
     if (typeof val !== 'string') {
       return i18n(`${i18nKey}.errors.invalid`);
     } else if (!val.length) {
@@ -56,15 +64,8 @@ const ENDPOINT_PATH_PROMPT = {
   },
 };
 
-type CreateFunctionPromptResponse = {
-  functionsFolder: string;
-  functionFilename: string;
-  endpointMethod: string;
-  endpointPath: string;
-};
-
 export function createFunctionPrompt(): Promise<CreateFunctionPromptResponse> {
-  return promptUser([
+  return promptUser<CreateFunctionPromptResponse>([
     FUNCTIONS_FOLDER_PROMPT,
     FUNCTION_FILENAME_PROMPT,
     ENDPOINT_METHOD_PROMPT,

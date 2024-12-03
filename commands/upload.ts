@@ -34,7 +34,7 @@ const {
   getCmsPublishMode,
 } = require('../lib/commonOpts');
 const { uploadPrompt } = require('../lib/prompts/uploadPrompt');
-const { cleanUploadPrompt } = require('../lib/prompts/cleanUploadPrompt');
+const { confirmPrompt } = require('../lib/prompts/promptUtils');
 const {
   validateCmsPublishMode,
   loadAndValidateOptions,
@@ -218,7 +218,13 @@ exports.handler = async options => {
       //  If clean is true, will first delete the dest folder and then upload src. Cleans up files that only exist on HS.
       let cleanUpload = options.force;
       if (!options.force) {
-        cleanUpload = await cleanUploadPrompt(derivedAccountId, dest);
+        cleanUpload = await confirmPrompt(
+          i18n(`${i18nKey}.confirmCleanUpload`, {
+            accountId: derivedAccountId,
+            path: dest,
+          }),
+          { defaultAnswer: false }
+        );
       }
       if (cleanUpload) {
         try {

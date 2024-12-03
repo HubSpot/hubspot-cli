@@ -9,11 +9,15 @@ type ProjectLogsPromptOptions = {
   projectName?: string;
 };
 
+type ProjectLogsPromptResponse = {
+  functionName?: string;
+};
+
 export async function projectLogsPrompt({
   functionChoices,
   promptOptions,
   projectName = '',
-}: ProjectLogsPromptOptions): Promise<{ functionName?: string }> {
+}: ProjectLogsPromptOptions): Promise<ProjectLogsPromptResponse> {
   if (!functionChoices) {
     return {};
   }
@@ -21,7 +25,7 @@ export async function projectLogsPrompt({
     return { functionName: functionChoices[0] };
   }
 
-  return promptUser([
+  return promptUser<ProjectLogsPromptResponse>([
     {
       name: 'functionName',
       type: 'list',
