@@ -6,6 +6,11 @@ const output = {};
 
 const execAsync = util.promisify(exec);
 
+function generateCommand(parent: string, command: string) {
+  const parentCommand = parent !== '' ? `${parent} ` : '';
+  return `hs ${parentCommand}${command} --get-yargs-completions`;
+}
+
 async function extractCommands(
   toParse: string,
   parent: string,
@@ -26,11 +31,7 @@ async function extractCommands(
     ) {
       commands[arg] = {};
 
-      const commandToRun = `hs ${
-        parent !== '' ? `${parent} ` : ''
-      }${arg}  --get-yargs-completions`;
-
-      const { stdout } = await execAsync(commandToRun);
+      const { stdout } = await execAsync(generateCommand(parent, arg));
       await extractCommands(
         stdout,
         // Concatenate the parent command with the current command to recurse the subcommands
@@ -46,7 +47,7 @@ async function extractCommands(
   SpinniesManager.init();
   SpinniesManager.add('extractingCommands', { text: 'Extracting commands' });
 
-  const { stdout } = await execAsync('hs --get-yargs-completions');
+  const { stdout } = await execAsync(generateCommand('', ''));
   const result = await extractCommands(stdout, '', output);
 
   SpinniesManager.succeed('extractingCommands', {
