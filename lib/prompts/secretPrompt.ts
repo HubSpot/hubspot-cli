@@ -3,8 +3,12 @@ import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.secretPrompt';
 
-export function secretValuePrompt() {
-  return promptUser([
+type SecretValuePromptResponse = {
+  secretValue: string;
+};
+
+export function secretValuePrompt(): Promise<SecretValuePromptResponse> {
+  return promptUser<SecretValuePromptResponse>([
     {
       name: 'secretValue',
       type: 'password',
@@ -14,8 +18,12 @@ export function secretValuePrompt() {
   ]);
 }
 
-export function secretNamePrompt() {
-  return promptUser([
+type SecretNamePromptResponse = {
+  secretName: string;
+};
+
+export function secretNamePrompt(): Promise<SecretNamePromptResponse> {
+  return promptUser<SecretNamePromptResponse>([
     {
       name: 'secretName',
       type: 'input',
@@ -24,8 +32,15 @@ export function secretNamePrompt() {
   ]);
 }
 
-export function secretListPrompt(secrets: string, message: string) {
-  return promptUser([
+type SecretListPromptResponse = {
+  secretToModify: string;
+};
+
+export function secretListPrompt(
+  secrets: string[],
+  message: string
+): Promise<SecretListPromptResponse> {
+  return promptUser<SecretListPromptResponse>([
     {
       name: 'secretToModify',
       type: 'list',

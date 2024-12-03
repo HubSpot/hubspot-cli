@@ -1,18 +1,17 @@
-// @ts-nocheck
-const {
-  getConfig,
+import {
   updateDefaultAccount,
   getConfigDefaultAccount,
-} = require('@hubspot/local-dev-lib/config');
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+} from '@hubspot/local-dev-lib/config';
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
 
 const i18nKey = 'lib.prompts.setAsDefaultAccountPrompt';
 
-const setAsDefaultAccountPrompt = async accountName => {
-  const config = getConfig();
+export async function setAsDefaultAccountPrompt(
+  accountName: string
+): Promise<boolean> {
   // Accounts for deprecated and new config
-  const defaultAccount = getConfigDefaultAccount(config);
+  const defaultAccount = getConfigDefaultAccount();
 
   const { setAsDefault } = await promptUser([
     {
@@ -27,8 +26,4 @@ const setAsDefaultAccountPrompt = async accountName => {
     updateDefaultAccount(accountName);
   }
   return setAsDefault;
-};
-
-module.exports = {
-  setAsDefaultAccountPrompt,
-};
+}

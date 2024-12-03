@@ -61,7 +61,7 @@ export async function selectHubDBTablePrompt({
       name: 'dest',
       message: i18n(`${i18nKey}.enterDest`),
       when: !options.dest && !skipDestPrompt,
-      validate: (input: string) => {
+      validate: (input?: string) => {
         if (!input) {
           return i18n(`${i18nKey}.errors.destRequired`);
         }

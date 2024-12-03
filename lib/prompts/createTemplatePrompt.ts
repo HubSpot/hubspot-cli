@@ -1,29 +1,31 @@
-// @ts-nocheck
-const { promptUser } = require('./promptUtils');
-const { i18n } = require('../lang');
+import { promptUser } from './promptUtils';
+import { i18n } from '../lang';
+import { PromptChoices, PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createTemplatePrompt';
 
-const TEMPLATE_TYPE_PROMPT = {
+const templateTypeChoices: PromptChoices = [
+  { name: 'page', value: 'page-template' },
+  { name: 'email', value: 'email-template' },
+  { name: 'partial', value: 'partial' },
+  { name: 'global partial', value: 'global-partial' },
+  { name: 'blog listing', value: 'blog-listing-template' },
+  { name: 'blog post', value: 'blog-post-template' },
+  { name: 'search results', value: 'search-template' },
+] as const;
+
+interface CreateTemplatePromptResponse {
+  templateType: typeof templateTypeChoices[number]['value'];
+}
+
+const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
   type: 'list',
   name: 'templateType',
   message: i18n(`${i18nKey}.selectTemplate`),
   default: 'page',
-  choices: [
-    { name: 'page', value: 'page-template' },
-    { name: 'email', value: 'email-template' },
-    { name: 'partial', value: 'partial' },
-    { name: 'global partial', value: 'global-partial' },
-    { name: 'blog listing', value: 'blog-listing-template' },
-    { name: 'blog post', value: 'blog-post-template' },
-    { name: 'search results', value: 'search-template' },
-  ],
+  choices: templateTypeChoices,
 };
 
-function createTemplatePrompt() {
-  return promptUser([TEMPLATE_TYPE_PROMPT]);
+export function createTemplatePrompt(): Promise<CreateTemplatePromptResponse> {
+  return promptUser<CreateTemplatePromptResponse>([TEMPLATE_TYPE_PROMPT]);
 }
-
-module.exports = {
-  createTemplatePrompt,
-};

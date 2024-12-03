@@ -1,7 +1,6 @@
 // @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfig,
   getConfigPath,
   updateDefaultAccount,
   getAccountId: getAccountIdFromConfig,
@@ -20,12 +19,10 @@ exports.describe = i18n(`${i18nKey}.describe`);
 exports.handler = async options => {
   await loadAndValidateOptions(options, false);
 
-  const config = getConfig();
-
   let newDefaultAccount = options.account;
 
   if (!newDefaultAccount) {
-    newDefaultAccount = await selectAccountFromConfig(config);
+    newDefaultAccount = await selectAccountFromConfig();
   } else if (!getAccountIdFromConfig(newDefaultAccount)) {
     logger.error(
       i18n(`${i18nKey}.errors.accountNotFound`, {
@@ -33,7 +30,7 @@ exports.handler = async options => {
         configPath: getConfigPath(),
       })
     );
-    newDefaultAccount = await selectAccountFromConfig(config);
+    newDefaultAccount = await selectAccountFromConfig();
   }
 
   trackCommandUsage(

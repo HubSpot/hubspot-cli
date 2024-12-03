@@ -1,7 +1,6 @@
 // @ts-nocheck
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
-  getConfig,
   getConfigPath,
   getConfigDefaultAccount,
   getConfigAccounts,
@@ -88,7 +87,6 @@ exports.handler = async options => {
 
   trackCommandUsage('accounts-list', null, derivedAccountId);
 
-  const config = getConfig();
   const configPath = getConfigPath();
   const accountsList = getConfigAccounts();
   const mappedPortalData = sortAndMapPortals(accountsList);
@@ -104,7 +102,7 @@ exports.handler = async options => {
   logger.log(i18n(`${i18nKey}.configPath`, { configPath }));
   logger.log(
     i18n(`${i18nKey}.defaultAccount`, {
-      account: getConfigDefaultAccount(config),
+      account: getConfigDefaultAccount(),
     })
   );
   logger.log(i18n(`${i18nKey}.accounts`));
