@@ -10,13 +10,16 @@ async function extractCommands(
   toParse: string,
   parent: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commands: Record<string, any>
+  commands: any
 ) {
   for (const line of toParse.split('\n')) {
-    const arg = line.split(':')[0];
+    const [arg] = line.split(':');
 
     if (
       !commands[arg] &&
+      // filter out flags, empty strings from splitting, and the completion command
+      // because they lead to infinite loops because they display the root level commands
+      // all over again
       !arg.startsWith('-') &&
       arg !== '' &&
       arg !== 'completion'
@@ -30,6 +33,7 @@ async function extractCommands(
       const { stdout } = await execAsync(commandToRun);
       await extractCommands(
         stdout,
+        // Concatenate the parent command with the current command to recurse the subcommands
         `${parent !== '' ? `${parent} ` : ''}${arg}`,
         commands[arg]
       );
@@ -46,7 +50,7 @@ async function extractCommands(
   const result = await extractCommands(stdout, '', output);
 
   SpinniesManager.succeed('extractingCommands', {
-    text: 'Extracting commands',
+    text: 'Done extracting commands',
   });
 
   console.log(result);
