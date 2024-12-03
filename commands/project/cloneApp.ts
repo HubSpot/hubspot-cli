@@ -69,8 +69,8 @@ exports.handler = async options => {
   }
 
   let appId;
-  let name;
-  let location;
+  let projectName;
+  let projectDest;
   try {
     appId = options.appId;
     if (!appId) {
@@ -82,14 +82,21 @@ exports.handler = async options => {
       });
       appId = appIdResponse.appId;
     }
+    const { name, dest } = await createProjectPrompt('', options, true);
 
-    const projectResponse = await createProjectPrompt('', options, true);
-    name = projectResponse.name;
-    location = projectResponse.location;
+    projectName = name;
+    projectDest = options.dest || dest;
   } catch (error) {
     logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     process.exit(EXIT_CODES.ERROR);
   }
+
+  await trackCommandMetadataUsage(
+    'clone-app',
+    { status: 'STARTED' },
+    derivedAccountId
+  );
+
   try {
     SpinniesManager.init();
 
@@ -103,7 +110,7 @@ exports.handler = async options => {
     const { status } = await poll(checkCloneStatus, derivedAccountId, exportId);
     if (status === 'SUCCESS') {
       // Ensure correct project folder structure exists
-      const baseDestPath = path.resolve(getCwd(), location);
+      const baseDestPath = path.resolve(getCwd(), projectDest);
       const absoluteDestPath = path.resolve(baseDestPath, 'src', 'app');
       fs.mkdirSync(absoluteDestPath, { recursive: true });
 
@@ -114,7 +121,7 @@ exports.handler = async options => {
       );
       await extractZipArchive(
         zippedApp,
-        sanitizeFileName(name),
+        sanitizeFileName(projectName),
         absoluteDestPath,
         {
           includesRootDir: true,
@@ -125,21 +132,11 @@ exports.handler = async options => {
       // Create hsproject.json file
       const configPath = path.join(baseDestPath, PROJECT_CONFIG_FILE);
       const configContent = {
-        name,
+        name: projectName,
         srcDir: 'src',
         platformVersion: '2023.2',
       };
       const success = writeProjectConfig(configPath, configContent);
-
-      trackCommandMetadataUsage(
-        'clone-app',
-        {
-          type: name,
-          assetType: appId,
-          successful: success,
-        },
-        derivedAccountId
-      );
 
       SpinniesManager.succeed('cloneApp', {
         text: i18n(`${i18nKey}.cloneStatus.done`),
@@ -153,14 +150,14 @@ exports.handler = async options => {
       }
       logger.log('');
       uiLine();
-      logger.success(i18n(`${i18nKey}.cloneStatus.success`, { location }));
+      logger.success(i18n(`${i18nKey}.cloneStatus.success`, { dest }));
       logger.log('');
       process.exit(EXIT_CODES.SUCCESS);
     }
   } catch (error) {
-    trackCommandMetadataUsage(
+    await trackCommandMetadataUsage(
       'clone-app',
-      { projectName: name, appId, status: 'FAILURE', error },
+      { status: 'FAILURE' },
       derivedAccountId
     );
 
@@ -177,15 +174,22 @@ exports.handler = async options => {
       logError(error, new ApiErrorContext({ accountId: derivedAccountId }));
     }
   }
+
+  await trackCommandMetadataUsage(
+    'clone-app',
+    { status: 'SUCCESS' },
+    derivedAccountId
+  );
+  process.exit(EXIT_CODES.SUCCESS);
 };
 
 exports.builder = yargs => {
   yargs.options({
-    location: {
-      describe: i18n(`${i18nKey}.options.location.describe`),
+    dest: {
+      describe: i18n(`${i18nKey}.options.dest.describe`),
       type: 'string',
     },
-    appId: {
+    'app-id': {
       describe: i18n(`${i18nKey}.options.appId.describe`),
       type: 'number',
     },

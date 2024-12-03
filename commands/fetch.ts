@@ -5,13 +5,16 @@ const {
   addConfigOptions,
   addAccountOptions,
   addOverwriteOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
+  getCmsPublishMode,
   addGlobalOptions,
-  getMode,
 } = require('../lib/commonOpts');
 const { resolveLocalPath } = require('../lib/filesystem');
-const { validateMode, loadAndValidateOptions } = require('../lib/validation');
+const {
+  validateCmsPublishMode,
+  loadAndValidateOptions,
+} = require('../lib/validation');
 const { trackCommandUsage } = require('../lib/usageTracking');
 const { i18n } = require('../lib/lang');
 
@@ -27,7 +30,7 @@ exports.handler = async options => {
 
   await loadAndValidateOptions(options);
 
-  if (!validateMode(options)) {
+  if (!validateCmsPublishMode(options)) {
     process.exit(EXIT_CODES.ERROR);
   }
 
@@ -37,9 +40,9 @@ exports.handler = async options => {
   }
 
   const { derivedAccountId } = options;
-  const mode = getMode(options);
+  const cmsPublishMode = getCmsPublishMode(options);
 
-  trackCommandUsage('fetch', { mode }, derivedAccountId);
+  trackCommandUsage('fetch', { mode: cmsPublishMode }, accountId);
 
   try {
     // Fetch and write file/folder.
@@ -47,7 +50,7 @@ exports.handler = async options => {
       derivedAccountId,
       src,
       resolveLocalPath(dest),
-      mode,
+      cmsPublishMode,
       options
     );
   } catch (err) {
@@ -86,7 +89,7 @@ exports.builder = yargs => {
   addConfigOptions(yargs);
   addAccountOptions(yargs);
   addOverwriteOptions(yargs);
-  addModeOptions(yargs, { read: true });
+  addCmsPublishModeOptions(yargs, { read: true });
   addUseEnvironmentOptions(yargs);
   addGlobalOptions(yargs);
 

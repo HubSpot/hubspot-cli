@@ -2,11 +2,6 @@
 import yargs from 'yargs';
 import upload from '../filemanager/upload';
 import fetch from '../filemanager/fetch';
-import {
-  addAccountOptions,
-  addConfigOptions,
-  addOverwriteOptions,
-} from '../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../filemanager/upload');
@@ -42,19 +37,6 @@ describe('commands/filemanager', () => {
 
       expect(yargs.demandCommand).toHaveBeenCalledTimes(1);
       expect(yargs.demandCommand).toHaveBeenCalledWith(1, '');
-    });
-
-    it('should support the correct options', () => {
-      filemanagerCommand.builder(yargs);
-
-      expect(addConfigOptions).toHaveBeenCalledTimes(1);
-      expect(addConfigOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addAccountOptions).toHaveBeenCalledTimes(1);
-      expect(addAccountOptions).toHaveBeenCalledWith(yargs);
-
-      expect(addOverwriteOptions).toHaveBeenCalledTimes(1);
-      expect(addOverwriteOptions).toHaveBeenCalledWith(yargs);
     });
 
     it('should add the correct number of sub commands', () => {

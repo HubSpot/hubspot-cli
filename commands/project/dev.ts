@@ -52,7 +52,7 @@ const {
 
 const i18nKey = 'commands.project.subcommands.dev';
 
-exports.command = 'dev [--account]';
+exports.command = 'dev';
 exports.describe = uiBetaTag(i18n(`${i18nKey}.describe`), false);
 
 exports.handler = async options => {

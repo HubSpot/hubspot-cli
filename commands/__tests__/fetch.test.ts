@@ -4,7 +4,7 @@ import {
   addAccountOptions,
   addConfigOptions,
   addOverwriteOptions,
-  addModeOptions,
+  addCmsPublishModeOptions,
   addUseEnvironmentOptions,
 } from '../../lib/commonOpts';
 
@@ -66,8 +66,10 @@ describe('commands/fetch', () => {
       expect(addOverwriteOptions).toHaveBeenCalledTimes(1);
       expect(addOverwriteOptions).toHaveBeenCalledWith(yargs);
 
-      expect(addModeOptions).toHaveBeenCalledTimes(1);
-      expect(addModeOptions).toHaveBeenCalledWith(yargs, { read: true });
+      expect(addCmsPublishModeOptions).toHaveBeenCalledTimes(1);
+      expect(addCmsPublishModeOptions).toHaveBeenCalledWith(yargs, {
+        read: true,
+      });
 
       expect(addUseEnvironmentOptions).toHaveBeenCalledTimes(1);
       expect(addUseEnvironmentOptions).toHaveBeenCalledWith(yargs);

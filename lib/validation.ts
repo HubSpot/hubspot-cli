@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { logger } = require('@hubspot/local-dev-lib/logger');
-const { MODE } = require('@hubspot/local-dev-lib/constants/files');
+const { CMS_PUBLISH_MODE } = require('@hubspot/local-dev-lib/constants/files');
 const {
   API_KEY_AUTH_METHOD,
   OAUTH_AUTH_METHOD,
@@ -25,7 +25,11 @@ const {
   getCwd,
   getExt,
 } = require('@hubspot/local-dev-lib/path');
-const { getAccountId, getMode, setLogLevel } = require('./commonOpts');
+const {
+  getAccountId,
+  getCmsPublishMode,
+  setLogLevel,
+} = require('./commonOpts');
 const { EXIT_CODES } = require('./enums/exitCodes');
 const { checkAndWarnGitInclusion } = require('./ui/git');
 const { logError } = require('./errorHandlers/index');
@@ -55,14 +59,7 @@ async function loadAndValidateOptions(options, shouldValidateAccount = true) {
  */
 async function validateAccount(options) {
   const accountId = getAccountId(options);
-  const {
-    portalId: portalIdOption,
-    portal: portalOption,
-    accountId: _accountIdOption,
-    account: _accountOption,
-  } = options;
-  const accountOption = portalOption || _accountOption;
-  const accountIdOption = portalIdOption || _accountIdOption;
+  const { accountId: accountIdOption, account: accountOption } = options;
 
   if (!accountId) {
     if (accountOption) {
@@ -172,18 +169,25 @@ async function validateAccount(options) {
  * @param {object} command options
  * @returns {boolean}
  */
-function validateMode(options) {
-  const mode = getMode(options);
-  if (MODE[mode]) {
+function validateCmsPublishMode(options) {
+  const cmsPublishMode = getCmsPublishMode(options);
+  if (CMS_PUBLISH_MODE[cmsPublishMode]) {
     return true;
   }
-  const modesMessage = `Available modes are: ${Object.values(MODE).join(
-    ', '
-  )}.`;
-  if (mode != null) {
-    logger.error([`The mode "${mode}" is invalid.`, modesMessage].join(' '));
+  const modesMessage = `Available CMS publish modes are: ${Object.values(
+    CMS_PUBLISH_MODE
+  ).join(', ')}.`;
+  if (cmsPublishMode != null) {
+    logger.error(
+      [
+        `The CMS publish mode "${cmsPublishMode}" is invalid.`,
+        modesMessage,
+      ].join(' ')
+    );
   } else {
-    logger.error(['The mode option is missing.', modesMessage].join(' '));
+    logger.error(
+      ['The CMS publish mode option is missing.', modesMessage].join(' ')
+    );
   }
   return false;
 }
@@ -231,7 +235,7 @@ const checkAndConvertToJson = _path => {
 };
 
 module.exports = {
-  validateMode,
+  validateCmsPublishMode,
   validateAccount,
   checkAndConvertToJson,
   fileExists,

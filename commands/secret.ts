@@ -1,13 +1,13 @@
 // @ts-nocheck
 const { addGlobalOptions } = require('../lib/commonOpts');
 
-const addSecretCommand = require('./secrets/addSecret');
-const listSecretsCommand = require('./secrets/listSecrets');
-const deleteSecretCommand = require('./secrets/deleteSecret');
-const updateSecretCommand = require('./secrets/updateSecret');
+const addSecretCommand = require('./secret/addSecret');
+const listSecretsCommand = require('./secret/listSecrets');
+const deleteSecretCommand = require('./secret/deleteSecret');
+const updateSecretCommand = require('./secret/updateSecret');
 const { i18n } = require('../lib/lang');
 
-const i18nKey = 'commands.secrets';
+const i18nKey = 'commands.secret';
 
 exports.command = ['secret', 'secrets'];
 exports.describe = i18n(`${i18nKey}.describe`);

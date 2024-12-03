@@ -64,3 +64,22 @@ export async function listPrompt(
   ]);
   return choice;
 }
+
+export async function inputPrompt(
+  message: string,
+  {
+    when,
+  }: {
+    when?: boolean | (() => boolean);
+  } = {}
+): Promise<string> {
+  const { input } = await promptUser([
+    {
+      name: 'input',
+      type: 'input',
+      message,
+      when,
+    },
+  ]);
+  return input;
+}

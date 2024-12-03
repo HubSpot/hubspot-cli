@@ -1,9 +1,5 @@
 // @ts-nocheck
-const {
-  addConfigOptions,
-  addAccountOptions,
-  addGlobalOptions,
-} = require('../lib/commonOpts');
+const { addGlobalOptions } = require('../lib/commonOpts');
 const createCommand = require('./hubdb/create');
 const fetchCommand = require('./hubdb/fetch');
 const deleteCommand = require('./hubdb/delete');
@@ -16,8 +12,6 @@ exports.command = 'hubdb';
 exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.builder = yargs => {
-  addConfigOptions(yargs);
-  addAccountOptions(yargs);
   addGlobalOptions(yargs);
 
   yargs
