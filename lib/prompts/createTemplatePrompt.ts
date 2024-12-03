@@ -1,9 +1,10 @@
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
+import { PromptChoices, PromptConfig } from '../../types/prompts';
 
 const i18nKey = 'lib.prompts.createTemplatePrompt';
 
-const templateTypeChoices = [
+const templateTypeChoices: PromptChoices = [
   { name: 'page', value: 'page-template' },
   { name: 'email', value: 'email-template' },
   { name: 'partial', value: 'partial' },
@@ -13,7 +14,11 @@ const templateTypeChoices = [
   { name: 'search results', value: 'search-template' },
 ] as const;
 
-const TEMPLATE_TYPE_PROMPT = {
+interface CreateTemplatePromptResponse {
+  templateType: typeof templateTypeChoices[number]['value'];
+}
+
+const TEMPLATE_TYPE_PROMPT: PromptConfig<CreateTemplatePromptResponse> = {
   type: 'list',
   name: 'templateType',
   message: i18n(`${i18nKey}.selectTemplate`),
@@ -21,10 +26,6 @@ const TEMPLATE_TYPE_PROMPT = {
   choices: templateTypeChoices,
 };
 
-interface CreateTemplatePromptResponse {
-  templateType: typeof templateTypeChoices[number]['value'];
-}
-
 export function createTemplatePrompt(): Promise<CreateTemplatePromptResponse> {
-  return promptUser([TEMPLATE_TYPE_PROMPT]);
+  return promptUser<CreateTemplatePromptResponse>([TEMPLATE_TYPE_PROMPT]);
 }

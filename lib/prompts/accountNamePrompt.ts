@@ -1,29 +1,24 @@
 import { accountNameExistsInConfig } from '@hubspot/local-dev-lib/config';
 import { promptUser } from './promptUtils';
 import { i18n } from '../lang';
+import { PromptConfig } from '../../types/prompts';
 import { HUBSPOT_ACCOUNT_TYPES } from '@hubspot/local-dev-lib/constants/config';
 import { AccountType } from '@hubspot/local-dev-lib/types/Accounts';
 
 const i18nKey = 'lib.prompts.accountNamePrompt';
 
-// inquirer might have a util type to match this one. Need to revisit after we bump inquirer.
-type PromptValidationFunction = (name: string) => string | boolean;
-
 type AccountNamePromptResponse = {
   name: string;
-  message: string;
-  default: string;
-  validate: PromptValidationFunction;
 };
 
 export function getCliAccountNamePromptConfig(
   defaultName: string
-): AccountNamePromptResponse {
+): PromptConfig<AccountNamePromptResponse> {
   return {
     name: 'name',
     message: i18n(`${i18nKey}.enterAccountName`),
     default: defaultName,
-    validate(val) {
+    validate(val?: string) {
       if (typeof val !== 'string') {
         return i18n(`${i18nKey}.errors.invalidName`);
       } else if (!val.length) {
@@ -40,8 +35,10 @@ export function getCliAccountNamePromptConfig(
 
 export function cliAccountNamePrompt(
   defaultName: string
-): AccountNamePromptResponse {
-  return promptUser(getCliAccountNamePromptConfig(defaultName));
+): Promise<AccountNamePromptResponse> {
+  return promptUser<AccountNamePromptResponse>(
+    getCliAccountNamePromptConfig(defaultName)
+  );
 }
 
 export function hubspotAccountNamePrompt({
@@ -50,7 +47,7 @@ export function hubspotAccountNamePrompt({
 }: {
   accountType: AccountType;
   currentPortalCount?: number;
-}): AccountNamePromptResponse {
+}): Promise<AccountNamePromptResponse> {
   const isDevelopmentSandbox =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPMENT_SANDBOX;
   const isSandbox =
@@ -59,8 +56,8 @@ export function hubspotAccountNamePrompt({
   const isDeveloperTestAccount =
     accountType === HUBSPOT_ACCOUNT_TYPES.DEVELOPER_TEST;
 
-  let promptMessageString;
-  let defaultName;
+  let promptMessageString: string | undefined;
+  let defaultName: string | undefined;
   if (isSandbox) {
     promptMessageString = isDevelopmentSandbox
       ? i18n(`${i18nKey}.enterDevelopmentSandboxName`)
@@ -72,11 +69,11 @@ export function hubspotAccountNamePrompt({
     });
   }
 
-  return promptUser([
+  return promptUser<AccountNamePromptResponse>([
     {
       name: 'name',
       message: promptMessageString,
-      validate(val: string): string | boolean {
+      validate(val?: string) {
         if (typeof val !== 'string') {
           return i18n(`${i18nKey}.errors.invalidName`);
         } else if (!val.trim().length) {

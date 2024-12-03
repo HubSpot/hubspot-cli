@@ -953,6 +953,7 @@ en:
       uploading: "Uploading files from \"{{ src }}\" to \"{{ dest }}\" in the Design Manager of account {{ accountId }}"
       notUploaded: "There was an error processing \"{{ src }}\". The file has not been uploaded."
       cleaning: "Removing \"{{ filePath }}\" from account {{ accountId }} and uploading local..."
+      confirmCleanUpload: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
     watch:
       describe: "Watch a directory on your computer for changes and upload the changed files to the HubSpot CMS."
       errors:
@@ -1322,8 +1323,6 @@ en:
         errors:
           srcRequired: "You must specify a source directory."
           destRequired: "You must specify a destination directory."
-      cleanUploadPrompt:
-        message: "You are about to remove any remote files in \"{{ filePath }}\" on HubSpot account {{ accountId }} that don't exist locally. Are you sure you want to do this?"
       installPublicAppPrompt:
         explanation: "Local development requires this app to be installed in the target test account"
         reinstallExplanation: "This app's required scopes have been updated since it was last installed on the target test account. To avoid issues with local development, we recommend reinstalling the app with the updated scopes."
