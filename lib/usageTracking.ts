@@ -87,7 +87,9 @@ export async function trackCommandUsage(
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      logger.debug('Usage tracking failed: %s', e.message);
+      if (e instanceof Error) {
+        logger.debug('Usage tracking failed: %s', e.message);
+      }
     }
   });
 }
@@ -110,7 +112,9 @@ export async function trackHelpUsage(command: string): Promise<void> {
       command,
     });
   } catch (e) {
-    logger.debug('Usage tracking failed: %s', e.message);
+    if (e instanceof Error) {
+      logger.debug('Usage tracking failed: %s', e.message);
+    }
   }
 }
 
@@ -128,7 +132,9 @@ export async function trackConvertFieldsUsage(command: string): Promise<void> {
       command,
     });
   } catch (e) {
-    logger.debug('Usage tracking failed: %s', e.message);
+    if (e instanceof Error) {
+      logger.debug('Usage tracking failed: %s', e.message);
+    }
   }
 }
 
@@ -160,7 +166,9 @@ export async function trackAuthAction(
 
     logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
   } catch (e) {
-    logger.debug('Auth action tracking failed: %s', e.message);
+    if (e instanceof Error) {
+      logger.debug('Auth action tracking failed: %s', e.message);
+    }
   }
 }
 
@@ -200,7 +208,9 @@ export async function trackCommandMetadataUsage(
       );
       logger.debug('Sent usage tracking command event: %o', usageTrackingEvent);
     } catch (e) {
-      logger.debug('Metadata usage tracking failed: %s', e.message);
+      if (e instanceof Error) {
+        logger.debug('Metadata usage tracking failed: %s', e.message);
+      }
     }
   });
 }
