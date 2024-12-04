@@ -11,6 +11,9 @@ const {
   HUBSPOT_ACCOUNT_TYPES,
   HUBSPOT_ACCOUNT_TYPE_STRINGS,
 } = require('@hubspot/local-dev-lib/constants/config');
+const {
+  getAccountIdentifier,
+} = require('@hubspot/local-dev-lib/config/getAccountIdentifier');
 const { logger } = require('@hubspot/local-dev-lib/logger');
 const {
   fetchDeveloperTestAccounts,
@@ -19,7 +22,7 @@ const {
 const i18nKey = 'lib.prompts.projectDevTargetAccountPrompt';
 
 const mapNestedAccount = accountConfig => ({
-  name: uiAccountDescription(accountConfig.portalId, false),
+  name: uiAccountDescription(getAccountIdentifier(accountConfig), false),
   value: {
     targetAccountId: getAccountId(accountConfig.name),
     createNestedAccount: false,
@@ -125,7 +128,7 @@ const selectDeveloperTestTargetAccountPrompt = async (
 
   const devTestAccounts = [];
   if (devTestAccountsResponse && devTestAccountsResponse.results) {
-    const accountIds = accounts.map(account => account.portalId);
+    const accountIds = accounts.map(account => getAccountIdentifier(account));
 
     devTestAccountsResponse.results.forEach(acct => {
       const inConfig = accountIds.includes(acct.id);

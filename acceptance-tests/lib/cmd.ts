@@ -64,7 +64,7 @@ function executeWithInput(
   const { env, timeout = 1000, maxTimeout = 30000 } = opts;
 
   const childProcess = createProcess(config, args, env);
-  childProcess.stdin.setEncoding('utf-8');
+  childProcess.stdin!.setEncoding('utf-8');
 
   let currentInputTimeout: NodeJS.Timeout;
   let killIOTimeout: NodeJS.Timeout;
@@ -78,7 +78,7 @@ function executeWithInput(
     }
 
     if (!inputs.length) {
-      childProcess.stdin.end();
+      childProcess.stdin!.end();
 
       // Set a timeout to wait for CLI response. If CLI takes longer than
       // maxTimeout to respond, kill the childProcess and notify user
@@ -94,7 +94,7 @@ function executeWithInput(
       if (typeof inputs[0] === 'function') {
         await inputs[0]();
       } else {
-        childProcess.stdin.write(inputs[0]);
+        childProcess.stdin!.write(inputs[0]);
       }
 
       if (config.debug) {
@@ -106,14 +106,14 @@ function executeWithInput(
   };
 
   // Get errors from CLI for debugging
-  childProcess.stderr.on('data', (err: unknown) => {
+  childProcess.stderr!.on('data', (err: unknown) => {
     if (config.debug) {
       console.log('error:', String(err));
     }
   });
 
   // Get output from CLI for debugging
-  childProcess.stdout.on('data', (data: unknown) => {
+  childProcess.stdout!.on('data', (data: unknown) => {
     if (config.debug) {
       console.log('output:', String(data));
     }
@@ -123,7 +123,6 @@ function executeWithInput(
     const handleStderr = (err: unknown) => {
       // Ignore any allowed errors so tests can continue
       const allowedErrors = [
-        'DeprecationWarning', // Ignore package deprecation warnings.
         '[WARNING]', // Ignore our own CLI warning messages
       ];
 
@@ -134,12 +133,12 @@ function executeWithInput(
         }
 
         // Resubscribe if we ignored this error
-        childProcess.stderr.once('data', handleStderr);
+        childProcess.stderr!.once('data', handleStderr);
         return;
       }
 
       // If the childProcess errors out, stop all the pending inputs
-      childProcess.stdin.end();
+      childProcess.stdin!.end();
 
       if (currentInputTimeout) {
         clearTimeout(currentInputTimeout);
@@ -149,10 +148,10 @@ function executeWithInput(
       reject(error);
     };
 
-    childProcess.stderr.once('data', handleStderr);
+    childProcess.stderr!.once('data', handleStderr);
     childProcess.on('error', reject);
 
-    childProcess.stdout.pipe(
+    childProcess.stdout!.pipe(
       concat((result: unknown) => {
         if (killIOTimeout) {
           clearTimeout(killIOTimeout);

@@ -2,13 +2,13 @@
 import yargs from 'yargs';
 import lighthouseScore from '../cms/lighthouseScore';
 import convertFields from '../cms/convertFields';
-import reactModules from '../cms/reactModules';
+import getReactModule from '../cms/getReactModule';
 import { addAccountOptions, addConfigOptions } from '../../lib/commonOpts';
 
 jest.mock('yargs');
 jest.mock('../cms/lighthouseScore');
 jest.mock('../cms/convertFields');
-jest.mock('../cms/reactModules');
+jest.mock('../cms/getReactModule');
 jest.mock('../../lib/commonOpts');
 jest.mock('../../lib/usageTracking');
 
@@ -35,7 +35,7 @@ describe('commands/cms', () => {
     const subcommands = [
       ['lighthouseScore', lighthouseScore],
       ['convertFields', convertFields],
-      ['reactModules', reactModules],
+      ['getReactModule', getReactModule],
     ];
 
     it('should demand the command takes one positional argument', () => {
