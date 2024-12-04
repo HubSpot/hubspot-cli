@@ -353,6 +353,7 @@ en:
       describe: "Commands for managing CMS serverless functions."
       subcommands:
         deploy:
+          describe: "Deploy a CMS serverless function."
           debug:
             startingBuildAndDeploy: "Starting build and deploy for .functions folder with path: {{ functionPath }}"
           errors:
@@ -378,6 +379,7 @@ en:
             json:
               describe: "output raw json data"
         server:
+          describe: "Start local development for a CMS serverless function."
           debug:
             startingServer: "Starting local test server for .functions folder with path: {{ functionPath }}"
           examples:

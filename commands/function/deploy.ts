@@ -22,7 +22,7 @@ const { isHubSpotHttpError } = require('@hubspot/local-dev-lib/errors/index');
 const i18nKey = 'commands.function.subcommands.deploy';
 
 exports.command = 'deploy <path>';
-exports.describe = false;
+exports.describe = i18n(`${i18nKey}.describe`);
 
 exports.handler = async options => {
   await loadAndValidateOptions(options);
